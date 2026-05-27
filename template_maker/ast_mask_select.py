@@ -1,4 +1,5 @@
 import argparse
+import re
 from collections import Counter
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -38,7 +39,28 @@ PREFERRED_PLACEHOLDER_NAMES = {
     "MD_ALG",
     "PK_VERIFY_TYPE",
     "EXPECTED_SALT_LEN",
+    "DER_KIND",
+    "PARSE_API_KIND",
+    "TRAILING_GARBAGE_BYTES",
+    "TRAILING_GARBAGE_LEN",
+    "EXPECT_RET",
+    "TOP_LEVEL_SEQUENCE_END_CHECK",
+    "RSA_PRIVATE_PARSE_CALL",
+    "RSA_PUBLIC_PARSE_CALL",
 }
+
+LOG_LABEL_PLACEHOLDER_NAMES = {
+    "OK",
+    "BUG",
+    "INFO",
+    "WARN",
+    "ERROR",
+    "FAIL",
+    "PASS",
+    "DIFF",
+}
+
+PLACEHOLDER_PATTERN = re.compile(r"\[[A-Z0-9_]+\]")
 
 
 class NoAliasDumper(yaml.SafeDumper):
@@ -65,6 +87,97 @@ def clean_code(code: Any) -> str:
 
 def placeholder_name(placeholder: str) -> str:
     return str(placeholder or "").strip("[]")
+
+
+def placeholder_count(code: Any) -> int:
+    return len(set(PLACEHOLDER_PATTERN.findall(str(code or ""))))
+
+
+def is_log_label_placeholder(unit: Dict[str, Any]) -> bool:
+    return placeholder_name(unit.get("placeholder", "")) in LOG_LABEL_PLACEHOLDER_NAMES
+
+
+def is_comment_like(code: str) -> bool:
+    stripped = code.lstrip()
+    return stripped.startswith("/*") or stripped.startswith("* -") or stripped.startswith("//")
+
+
+def has_header_or_prototype_noise(code: str) -> bool:
+    lower = code.lower()
+    if "#include" in code:
+        return True
+    if "#ifndef" in code or "#define" in code or "#error" in code:
+        return True
+    if "parser functions exist" in lower or "public header may not expose" in lower:
+        return True
+    if "int mbedtls_" in code and ";" in code and "ret =" not in code:
+        return True
+    return False
+
+
+def is_actual_trigger_call(unit: Dict[str, Any]) -> bool:
+    code = clean_code(unit.get("code", ""))
+    if "ret =" not in code:
+        return False
+    return any(
+        call in code
+        for call in [
+            "mbedtls_rsa_parse_key(",
+            "mbedtls_rsa_parse_pubkey(",
+            "mbedtls_pk_parse_key(",
+            "parse_with_selected_api(",
+        ]
+    )
+
+
+def is_actual_oracle_statement(unit: Dict[str, Any]) -> bool:
+    code = clean_code(unit.get("code", ""))
+    if not any(token in code for token in ["ret", "[BUG]", "[OK]", "return 1", "return 0"]):
+        return False
+    return code.startswith("if ") or code.startswith("if (") or code.startswith("printf(") or " return " in code
+
+
+def is_noise_unit(unit: Dict[str, Any]) -> bool:
+    code = str(unit.get("code", "") or "")
+    source = str(unit.get("source", "") or "")
+    role = str(unit.get("role", "") or "")
+
+    if unit.get("function") in {"setbuf"}:
+        return True
+
+    if is_log_label_placeholder(unit):
+        return True
+
+    if source == "template_meta.mutation_points":
+        return False
+
+    if source == "tmpl_mbedtls.c.function_call" and code.lstrip().startswith("*/"):
+        return True
+
+    if is_actual_trigger_call(unit):
+        return False
+    if role == "oracle" and is_actual_oracle_statement(unit):
+        return False
+    if role == "cleanup":
+        return False
+
+    placeholders = placeholder_count(code)
+
+    if "#include" in code and placeholders >= 2:
+        return True
+
+    if source == "tmpl_mbedtls.c.placeholder_statement" and len(code) > 800:
+        return True
+
+    if is_comment_like(code) and not (
+        (is_actual_trigger_call(unit) or is_actual_oracle_statement(unit))
+    ):
+        return True
+
+    if has_header_or_prototype_noise(code) and placeholders >= 1:
+        return True
+
+    return False
 
 
 def contains_context_keyword(unit: Dict[str, Any]) -> bool:
@@ -95,12 +208,18 @@ def base_score(unit: Dict[str, Any]) -> int:
 
     if role == "mutation_point":
         score += 30
+    if unit.get("source") == "template_meta.mutation_points":
+        score += 35
     if level in {"value", "api_argument"}:
         score += 20
     if role == "trigger_call" and level in {"function_call", "statement"}:
         score += 50
+    if is_actual_trigger_call(unit):
+        score += 30
     if role == "oracle" and level in {"statement", "block"}:
         score += 45
+    if role == "oracle" and is_actual_oracle_statement(unit):
+        score += 20
     if role in {"input_preparation", "helper_function"} and contains_context_keyword(unit):
         score += 22
     if role == "cleanup":
@@ -122,7 +241,7 @@ def suggested_use_for(unit: Dict[str, Any]) -> str:
     role = unit.get("role", "")
     level = unit.get("mask_level", "")
 
-    if role == "trigger_call":
+    if role == "trigger_call" or is_actual_trigger_call(unit):
         return "migrate_api_call"
     if role == "oracle":
         return "preserve_oracle"
@@ -185,6 +304,10 @@ def add_selected(
     seen_code: set,
     dedupe_by_code: bool = False,
 ) -> None:
+    if is_noise_unit(unit):
+        rejected.append({"unit_id": unit.get("unit_id"), "reason": "noise_header_comment_or_log_label", "role": unit.get("role"), "mask_level": unit.get("mask_level")})
+        return
+
     exact = unit_key(unit)
     code_key = code_seen_key(unit)
     if exact in seen_exact or (dedupe_by_code and code_key in seen_code):
@@ -227,11 +350,16 @@ def select_units(ast_report: Dict[str, Any]) -> Tuple[List[Dict[str, Any]], List
             add_selected(selected, rejected, unit, "mutation_point", seen_exact, seen_code)
 
     for unit in sorted(units, key=lambda u: (-base_score(u), u.get("unit_id", ""))):
-        if unit.get("role") == "trigger_call" and unit.get("mask_level") in {"function_call", "statement"}:
+        role = unit.get("role")
+        level = unit.get("mask_level")
+        if (
+            (role == "trigger_call" and (level in {"function_call", "statement"} or is_actual_trigger_call(unit)))
+            or (is_actual_trigger_call(unit) and level in {"function_call", "statement"})
+        ):
             add_selected(selected, rejected, unit, "trigger_call", seen_exact, seen_code, dedupe_by_code=True)
 
     for unit in sorted(units, key=lambda u: (-base_score(u), u.get("unit_id", ""))):
-        if unit.get("role") == "oracle" and unit.get("mask_level") in {"statement", "block"}:
+        if unit.get("role") == "oracle" and (unit.get("mask_level") in {"statement", "block"} or is_actual_oracle_statement(unit)):
             add_selected(selected, rejected, unit, "oracle", seen_exact, seen_code, dedupe_by_code=True)
 
     for unit in sorted(units, key=lambda u: (-base_score(u), u.get("unit_id", ""))):

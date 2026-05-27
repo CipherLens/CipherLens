@@ -1,0 +1,352 @@
+template_id: RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE
+template_name: mbedtls RSA DER top-level SEQUENCE trailing-garbage template
+source_api: mbedtls_pk_parse_key
+selection_policy:
+  method: ast_lite_high_value_mask_unit_selection
+  rules:
+  - Prefer role=mutation_point units.
+  - Prefer mask_level=value or api_argument units.
+  - Always retain trigger_call function_call/statement units.
+  - Always retain oracle statement/block units.
+  - Retain input_preparation/helper_function/block only when boundary keywords are
+    present.
+  - Limit cleanup units to one or two representative statements.
+  - Deduplicate repeated code snippets.
+  context_keywords:
+  - canary
+  - prepare_output_with_canary
+  - buffer
+  - buf
+  - limb
+  - X->p
+  - X->n
+  - raw
+  - CANARY_SIZE
+  - BUFLEN
+selected_units:
+- unit_id: ASTLITE-0001
+  mask_level: value
+  role: mutation_point
+  placeholder: '[DER_KIND]'
+  code: DER_KIND
+  source: template_meta.mutation_points
+  reason: DER_KIND selects the base PKCS#1 RSA object shape.
+  priority: high
+  mutation_name: DER_KIND
+  mutation_type: enum
+  default: private
+  values:
+  - private
+  - public
+  selection_reason: Selected because [DER_KIND] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 109
+- unit_id: ASTLITE-0005
+  mask_level: value
+  role: mutation_point
+  placeholder: '[EXPECT_RET]'
+  code: EXPECT_RET
+  source: template_meta.mutation_points
+  reason: Expected fixed/safe rejection return code for bytes outside the top-level
+    RSA SEQUENCE.
+  priority: high
+  mutation_name: EXPECT_RET
+  mutation_type: int
+  default: MBEDTLS_ERR_RSA_BAD_INPUT_DATA
+  values:
+  - MBEDTLS_ERR_RSA_BAD_INPUT_DATA
+  selection_reason: Selected because [EXPECT_RET] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 109
+- unit_id: ASTLITE-0002
+  mask_level: value
+  role: mutation_point
+  placeholder: '[PARSE_API_KIND]'
+  code: PARSE_API_KIND
+  source: template_meta.mutation_points
+  reason: PARSE_API_KIND must be compatible with DER_KIND.
+  priority: high
+  mutation_name: PARSE_API_KIND
+  mutation_type: enum
+  default: rsa_private
+  values:
+  - rsa_private
+  - rsa_public
+  - pk_private
+  selection_reason: Selected because [PARSE_API_KIND] is a mutation point with value
+    granularity.
+  suggested_use: mutate_value
+  selection_score: 109
+- unit_id: ASTLITE-0007
+  mask_level: value
+  role: mutation_point
+  placeholder: '[RSA_PRIVATE_PARSE_CALL]'
+  code: RSA_PRIVATE_PARSE_CALL
+  source: template_meta.mutation_points
+  reason: Exercises PKCS#1 RSA private-key DER parser.
+  priority: high
+  mutation_name: RSA_PRIVATE_PARSE_CALL
+  mutation_type: function_call
+  default: mbedtls_rsa_parse_key(&rsa, der, der_len)
+  values: []
+  selection_reason: Selected because [RSA_PRIVATE_PARSE_CALL] is a mutation point
+    with value granularity.
+  suggested_use: mutate_value
+  selection_score: 109
+- unit_id: ASTLITE-0008
+  mask_level: value
+  role: mutation_point
+  placeholder: '[RSA_PUBLIC_PARSE_CALL]'
+  code: RSA_PUBLIC_PARSE_CALL
+  source: template_meta.mutation_points
+  reason: Exercises PKCS#1 RSA public-key DER parser.
+  priority: high
+  mutation_name: RSA_PUBLIC_PARSE_CALL
+  mutation_type: function_call
+  default: mbedtls_rsa_parse_pubkey(&rsa, der, der_len)
+  values: []
+  selection_reason: Selected because [RSA_PUBLIC_PARSE_CALL] is a mutation point with
+    value granularity.
+  suggested_use: mutate_value
+  selection_score: 109
+- unit_id: ASTLITE-0006
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TOP_LEVEL_SEQUENCE_END_CHECK]'
+  code: TOP_LEVEL_SEQUENCE_END_CHECK
+  source: template_meta.mutation_points
+  reason: Represents the source-level fix that rejects bytes outside the top-level
+    SEQUENCE.
+  priority: high
+  mutation_name: TOP_LEVEL_SEQUENCE_END_CHECK
+  mutation_type: statement
+  default: if (end != p + len) { return MBEDTLS_ERR_RSA_BAD_INPUT_DATA; }
+  values: []
+  selection_reason: Selected because [TOP_LEVEL_SEQUENCE_END_CHECK] is a mutation
+    point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 109
+- unit_id: ASTLITE-0003
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRAILING_GARBAGE_BYTES]'
+  code: TRAILING_GARBAGE_BYTES
+  source: template_meta.mutation_points
+  reason: Must be syntactically independent bytes appended after the complete top-level
+    SEQUENCE.
+  priority: high
+  mutation_name: TRAILING_GARBAGE_BYTES
+  mutation_type: hex_bytes
+  default: '020100'
+  values:
+  - '020100'
+  - '0500'
+  - '3000'
+  selection_reason: Selected because [TRAILING_GARBAGE_BYTES] is a mutation point
+    with value granularity.
+  suggested_use: mutate_value
+  selection_score: 109
+- unit_id: ASTLITE-0004
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[TRAILING_GARBAGE_LEN]'
+  code: TRAILING_GARBAGE_LEN
+  source: template_meta.mutation_points
+  reason: Must match the decoded byte length of TRAILING_GARBAGE_BYTES.
+  priority: medium
+  mutation_name: TRAILING_GARBAGE_LEN
+  mutation_type: size_t
+  default: 3
+  values:
+  - 1
+  - 2
+  - 3
+  selection_reason: Selected because [TRAILING_GARBAGE_LEN] is a mutation point with
+    api_argument granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 107
+- unit_id: ASTLITE-0063
+  mask_level: value
+  role: mutation_point
+  placeholder: '[RSA_PRIVATE_PARSE_CALL]'
+  code: /* [RSA_PRIVATE_PARSE_CALL] */ ret = mbedtls_rsa_parse_key(&rsa, der, der_len);
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Exercises PKCS#1 RSA private-key DER parser.
+  priority: high
+  line: 192
+  selection_reason: Selected because [RSA_PRIVATE_PARSE_CALL] is a mutation point
+    with value granularity.
+  suggested_use: migrate_api_call
+  selection_score: 104
+- unit_id: ASTLITE-0068
+  mask_level: value
+  role: mutation_point
+  placeholder: '[RSA_PUBLIC_PARSE_CALL]'
+  code: /* [RSA_PUBLIC_PARSE_CALL] */ ret = mbedtls_rsa_parse_pubkey(&rsa, der, der_len);
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Exercises PKCS#1 RSA public-key DER parser.
+  priority: high
+  line: 202
+  selection_reason: Selected because [RSA_PUBLIC_PARSE_CALL] is a mutation point with
+    value granularity.
+  suggested_use: migrate_api_call
+  selection_score: 104
+- unit_id: ASTLITE-0075
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: ret = mbedtls_pk_parse_key(&pk, der, der_len, NULL, 0);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_pk_parse_key' identified by AST-lite call matching.
+  priority: high
+  function: mbedtls_pk_parse_key
+  line: 216
+  selection_reason: Required trigger_call unit for preserving and migrating the source
+    API invocation.
+  suggested_use: migrate_api_call
+  selection_score: 91
+- unit_id: ASTLITE-0012
+  mask_level: value
+  role: trigger_call
+  placeholder: '[PARSE_API_KIND]'
+  code: ret = parse_with_selected_api(parse_api_kind, der_kind, der, der_len);
+  source: mask_report.roles.trigger_call
+  reason: Role-aware statement recorded by mask_report role 'trigger_call'.
+  priority: medium
+  order: 30
+  selection_reason: Required trigger_call unit for preserving and migrating the source
+    API invocation.
+  suggested_use: migrate_api_call
+  selection_score: 72
+- unit_id: ASTLITE-0013
+  mask_level: value
+  role: trigger_call
+  placeholder: '[RSA_PRIVATE_PARSE_CALL]'
+  code: ret = mbedtls_rsa_parse_key(&rsa, der, der_len);
+  source: mask_report.roles.trigger_call
+  reason: Role-aware statement recorded by mask_report role 'trigger_call'.
+  priority: medium
+  order: 31
+  selection_reason: Required trigger_call unit for preserving and migrating the source
+    API invocation.
+  suggested_use: migrate_api_call
+  selection_score: 72
+- unit_id: ASTLITE-0014
+  mask_level: value
+  role: trigger_call
+  placeholder: '[RSA_PUBLIC_PARSE_CALL]'
+  code: ret = mbedtls_rsa_parse_pubkey(&rsa, der, der_len);
+  source: mask_report.roles.trigger_call
+  reason: Role-aware statement recorded by mask_report role 'trigger_call'.
+  priority: medium
+  order: 32
+  selection_reason: Required trigger_call unit for preserving and migrating the source
+    API invocation.
+  suggested_use: migrate_api_call
+  selection_score: 72
+- unit_id: ASTLITE-0110
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: printf("[BUG] parser accepted trailing garbage after top-level SEQUENCE.\n");
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 284
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 69
+- unit_id: ASTLITE-0113
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: printf("[OK] parser rejected trailing garbage.\n");
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 291
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 69
+- unit_id: ASTLITE-0016
+  mask_level: value
+  role: oracle
+  placeholder: '[EXPECT_RET]'
+  code: if (ret == EXPECTED_RETURN_VALUE || ret == MBEDTLS_ERR_RSA_BAD_INPUT_DATA)
+    { printf("[OK] parser rejected trailing garbage.\n"); return 0; }
+  source: mask_report.roles.oracle
+  reason: Role-aware statement recorded by mask_report role 'oracle'.
+  priority: medium
+  order: 41
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 62
+- unit_id: ASTLITE-0017
+  mask_level: value
+  role: oracle
+  placeholder: '[TOP_LEVEL_SEQUENCE_END_CHECK]'
+  code: if (end != p + len) { return MBEDTLS_ERR_RSA_BAD_INPUT_DATA; }
+  source: mask_report.roles.oracle
+  reason: Role-aware statement recorded by mask_report role 'oracle'.
+  priority: medium
+  order: 42
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 62
+- unit_id: ASTLITE-0066
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_rsa_free(&rsa);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_rsa_free' identified by AST-lite call matching.
+  priority: medium
+  function: mbedtls_rsa_free
+  line: 194
+  selection_reason: Selected limited cleanup context needed to keep generated harnesses
+    well-scoped.
+  suggested_use: preserve_cleanup
+  selection_score: 17
+- unit_id: ASTLITE-0077
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_pk_free(&pk);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_pk_free' identified by AST-lite call matching.
+  priority: medium
+  function: mbedtls_pk_free
+  line: 217
+  selection_reason: Selected limited cleanup context needed to keep generated harnesses
+    well-scoped.
+  suggested_use: preserve_cleanup
+  selection_score: 17
+selection_summary:
+  selected_count: 20
+  source_unit_count: 116
+  by_role:
+    cleanup: 2
+    mutation_point: 10
+    oracle: 4
+    trigger_call: 4
+  by_mask_level:
+    api_argument: 1
+    function_call: 3
+    statement: 2
+    value: 14
+  by_suggested_use:
+    migrate_api_call: 6
+    mutate_api_argument: 1
+    mutate_value: 7
+    preserve_cleanup: 2
+    preserve_oracle: 4
+rejected_summary:
+  count: 38
+  by_reason:
+    cleanup_limit_reached: 6
+    duplicate_code_or_unit: 11
+    noise_header_comment_or_log_label: 21

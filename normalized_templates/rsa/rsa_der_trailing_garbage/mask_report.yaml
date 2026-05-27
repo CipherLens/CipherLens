@@ -1,0 +1,249 @@
+template_id: RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE
+template_name: mbedtls RSA DER top-level SEQUENCE trailing-garbage template
+source_file: data/pocs/core10/MBEDTLS-POC-0020/poc/poc_rsa_trailing_garbage.c
+source_library: mbedtls
+source_api: mbedtls_pk_parse_key
+language: c
+
+masking_design:
+  mode: ast_aware_lightweight
+  preserve_compilable_skeleton: true
+  note: >
+    This report records role-aware masking units for a lightweight normalized
+    C harness. Function and block masks are metadata anchors; concrete rendered
+    cases should keep the harness skeleton readable and compilable.
+
+poc_pattern:
+  pattern_id: MBEDTLS-POC-0020
+  pattern_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0020.yaml
+  template_id: RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE
+  source:
+    source_type: github_pr
+    source_label: "PR #8804"
+    url: https://github.com/Mbed-TLS/mbedtls/pull/8804
+    issue_refs:
+      - "8799"
+    fixed_commit: a7f651cf160a3753367e032c4471699822b37e30
+    buggy_commit: a7f651cf160a3753367e032c4471699822b37e30^1
+    library_fix_commit: 9de84bd67775e05fabca1907cd9f2ea33078d99a
+  classification:
+    poc_type: parser_or_encoding
+    bug_category: parser_accepts_trailing_garbage
+    failure_signal:
+      - malformed_der_accepted
+      - trailing_garbage_after_top_level_sequence
+      - accept_vs_reject_return_code
+
+includes:
+  - ctype.h
+  - stdio.h
+  - stdlib.h
+  - string.h
+  - mbedtls/pk.h
+  - mbedtls/rsa.h
+  - mbedtls/version.h
+
+mask_units:
+  - unit_id: DER_KIND
+    mask_level: value
+    role: input_construction
+    placeholder: "[DER_KIND]"
+    code: "#define DER_KIND_VALUE \"[DER_KIND]\""
+    source: tmpl_mbedtls.c
+    reason: Selects private or public PKCS#1 RSA DER base object.
+    priority: high
+
+  - unit_id: PARSE_API_KIND
+    mask_level: api_argument
+    role: trigger_call
+    placeholder: "[PARSE_API_KIND]"
+    code: "#define PARSE_API_KIND_VALUE \"[PARSE_API_KIND]\""
+    source: tmpl_mbedtls.c
+    reason: Selects public mbedtls_pk_parse_key context or internal RSA parser trigger path.
+    priority: high
+
+  - unit_id: TRAILING_GARBAGE_BYTES
+    mask_level: value
+    role: mutation_point
+    placeholder: "[TRAILING_GARBAGE_BYTES]"
+    code: "#define TRAILING_GARBAGE_HEX \"[TRAILING_GARBAGE_BYTES]\""
+    source: tmpl_mbedtls.c
+    reason: Controls DER bytes appended after the complete top-level SEQUENCE.
+    priority: high
+
+  - unit_id: TRAILING_GARBAGE_LEN
+    mask_level: value
+    role: mutation_point
+    placeholder: "[TRAILING_GARBAGE_LEN]"
+    code: "#define TRAILING_GARBAGE_EXPECTED_LEN ((size_t) [TRAILING_GARBAGE_LEN])"
+    source: tmpl_mbedtls.c
+    reason: Checks that rendered trailing garbage bytes decode to the expected length.
+    priority: medium
+
+  - unit_id: EXPECT_RET
+    mask_level: value
+    role: oracle
+    placeholder: "[EXPECT_RET]"
+    code: "#define EXPECTED_RETURN_VALUE [EXPECT_RET]"
+    source: tmpl_mbedtls.c
+    reason: Encodes the expected fixed/safe rejection return code.
+    priority: high
+
+  - unit_id: TOP_LEVEL_SEQUENCE_END_CHECK
+    mask_level: statement
+    role: oracle
+    placeholder: "[TOP_LEVEL_SEQUENCE_END_CHECK]"
+    code: "if (end != p + len) { return MBEDTLS_ERR_RSA_BAD_INPUT_DATA; }"
+    source: tf-psa-crypto/drivers/builtin/src/rsa.c
+    reason: Fixed guard that rejects bytes outside the top-level RSA SEQUENCE.
+    priority: high
+
+  - unit_id: RSA_PRIVATE_PARSE_CALL
+    mask_level: function_call
+    role: trigger_call
+    placeholder: "[RSA_PRIVATE_PARSE_CALL]"
+    code: "ret = mbedtls_rsa_parse_key(&rsa, der, der_len);"
+    source: tmpl_mbedtls.c
+    reason: Exercises PKCS#1 RSA private-key DER parser with trailing garbage.
+    priority: high
+
+  - unit_id: RSA_PUBLIC_PARSE_CALL
+    mask_level: function_call
+    role: trigger_call
+    placeholder: "[RSA_PUBLIC_PARSE_CALL]"
+    code: "ret = mbedtls_rsa_parse_pubkey(&rsa, der, der_len);"
+    source: tmpl_mbedtls.c
+    reason: Exercises PKCS#1 RSA public-key DER parser with trailing garbage.
+    priority: high
+
+roles:
+  input_construction:
+    - order: 10
+      code: "base_hex = select_base_der_hex(der_kind);"
+      placeholders:
+        - "[DER_KIND]"
+    - order: 20
+      code: "ret = build_der_with_trailing_garbage(base_hex, TRAILING_GARBAGE_HEX, der, sizeof(der), &der_len, &trailing_len);"
+      placeholders:
+        - "[TRAILING_GARBAGE_BYTES]"
+        - "[TRAILING_GARBAGE_LEN]"
+
+  trigger_call:
+    - order: 30
+      code: "ret = parse_with_selected_api(parse_api_kind, der_kind, der, der_len);"
+      placeholders:
+        - "[PARSE_API_KIND]"
+    - order: 31
+      code: "ret = mbedtls_rsa_parse_key(&rsa, der, der_len);"
+      placeholders:
+        - "[RSA_PRIVATE_PARSE_CALL]"
+    - order: 32
+      code: "ret = mbedtls_rsa_parse_pubkey(&rsa, der, der_len);"
+      placeholders:
+        - "[RSA_PUBLIC_PARSE_CALL]"
+
+  oracle:
+    - order: 40
+      code: "if (ret == 0) { printf(\"[BUG] parser accepted trailing garbage after top-level SEQUENCE.\\n\"); return 1; }"
+      placeholders: []
+    - order: 41
+      code: "if (ret == EXPECTED_RETURN_VALUE || ret == MBEDTLS_ERR_RSA_BAD_INPUT_DATA) { printf(\"[OK] parser rejected trailing garbage.\\n\"); return 0; }"
+      placeholders:
+        - "[EXPECT_RET]"
+    - order: 42
+      code: "if (end != p + len) { return MBEDTLS_ERR_RSA_BAD_INPUT_DATA; }"
+      placeholders:
+        - "[TOP_LEVEL_SEQUENCE_END_CHECK]"
+
+  cleanup:
+    - order: 50
+      code: "mbedtls_rsa_free(&rsa);"
+      placeholders: []
+    - order: 51
+      code: "mbedtls_pk_free(&pk);"
+      placeholders: []
+
+mutation_points:
+  - name: DER_KIND
+    placeholder: "[DER_KIND]"
+    mask_level: value_level
+    source_expr: "DER_KIND_VALUE"
+    reason: Selects RSA private/public DER parser path.
+    priority: high
+
+  - name: PARSE_API_KIND
+    placeholder: "[PARSE_API_KIND]"
+    mask_level: api_argument_level
+    source_expr: "parse_with_selected_api(parse_api_kind, der_kind, der, der_len)"
+    reason: Selects mbedTLS public PK parser context or internal RSA parser call.
+    priority: high
+
+  - name: TRAILING_GARBAGE_BYTES
+    placeholder: "[TRAILING_GARBAGE_BYTES]"
+    mask_level: value_level
+    source_expr: "020100"
+    reason: Extra DER INTEGER appended outside the top-level SEQUENCE.
+    priority: high
+
+  - name: TRAILING_GARBAGE_LEN
+    placeholder: "[TRAILING_GARBAGE_LEN]"
+    mask_level: value_level
+    source_expr: "3"
+    reason: Guards rendered trailing-garbage byte length.
+    priority: medium
+
+  - name: EXPECT_RET
+    placeholder: "[EXPECT_RET]"
+    mask_level: oracle_level
+    source_expr: "MBEDTLS_ERR_RSA_BAD_INPUT_DATA"
+    reason: Fixed/safe parser rejection code for top-level trailing garbage.
+    priority: high
+
+  - name: TOP_LEVEL_SEQUENCE_END_CHECK
+    placeholder: "[TOP_LEVEL_SEQUENCE_END_CHECK]"
+    mask_level: statement_level
+    source_expr: "if (end != p + len) { return MBEDTLS_ERR_RSA_BAD_INPUT_DATA; }"
+    reason: Root-cause fix that enforces exact top-level SEQUENCE consumption.
+    priority: high
+
+  - name: RSA_PRIVATE_PARSE_CALL
+    placeholder: "[RSA_PRIVATE_PARSE_CALL]"
+    mask_level: function_call_level
+    source_expr: "mbedtls_rsa_parse_key(&rsa, der, der_len)"
+    reason: Private-key trigger call from the minimal PoC.
+    priority: high
+
+  - name: RSA_PUBLIC_PARSE_CALL
+    placeholder: "[RSA_PUBLIC_PARSE_CALL]"
+    mask_level: function_call_level
+    source_expr: "mbedtls_rsa_parse_pubkey(&rsa, der, der_len)"
+    reason: Public-key trigger call from the minimal PoC.
+    priority: high
+
+occlusion_candidates:
+  identifier_level:
+    - end
+    - p
+    - len
+    - der_len
+    - trailing_len
+    - ret
+  expression_level:
+    - "end != p + len"
+    - "ret == 0"
+    - "ret == MBEDTLS_ERR_RSA_BAD_INPUT_DATA"
+  statement_level:
+    - "return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;"
+    - "ret = mbedtls_rsa_parse_key(&rsa, der, der_len);"
+    - "ret = mbedtls_rsa_parse_pubkey(&rsa, der, der_len);"
+  block_level:
+    - "top-level RSA SEQUENCE boundary rejection guard"
+
+expected_oracle:
+  oracle_type: return_code_semantic_oracle
+  bug_candidate:
+    - ret == 0
+    - parser_accepts_trailing_garbage
+  fixed_or_safe:
+    - ret == MBEDTLS_ERR_RSA_BAD_INPUT_DATA
+    - parser_rejects_trailing_garbage
