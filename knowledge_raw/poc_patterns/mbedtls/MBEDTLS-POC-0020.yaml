@@ -1,0 +1,209 @@
+pattern_id: MBEDTLS-POC-0020
+template_id: RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE
+status: reproduced
+
+source:
+  library: mbedtls
+  component: rsa/pkparse
+  api: mbedtls_pk_parse_key
+  related_apis:
+    - mbedtls_pk_parse_public_key
+  internal_functions:
+    - mbedtls_rsa_parse_key
+    - mbedtls_rsa_parse_pubkey
+  source_type: github_pr
+  source_label: "PR #8804"
+  url: "https://github.com/Mbed-TLS/mbedtls/pull/8804"
+  issue_refs:
+    - "8799"
+  fixed_commit: "a7f651cf160a3753367e032c4471699822b37e30"
+  buggy_commit: "a7f651cf160a3753367e032c4471699822b37e30^1"
+  library_fix_commit: "9de84bd67775e05fabca1907cd9f2ea33078d99a"
+
+library:
+  name: mbedtls
+  primary_module: rsa/pkparse
+  affected_api:
+    - mbedtls_pk_parse_key
+    - mbedtls_rsa_parse_key
+    - mbedtls_rsa_parse_pubkey
+  affected_file:
+    - library/rsa.c
+    - library/pem.c
+
+classification:
+  poc_type: parser_or_encoding
+  bug_category: parser_accepts_trailing_garbage
+  failure_signal:
+    - malformed_der_accepted
+    - trailing_garbage_after_top_level_sequence
+    - accept_vs_reject_return_code
+
+root_cause:
+  summary: >
+    In the buggy version, mbedtls_rsa_parse_key() and
+    mbedtls_rsa_parse_pubkey() parse the top-level ASN.1 SEQUENCE for an RSA
+    private or public key but do not verify that the input buffer ends exactly
+    at the end of that SEQUENCE. DER data containing a valid RSA key followed
+    by trailing bytes outside the top-level SEQUENCE is therefore accepted.
+  root_cause_location:
+    file: library/rsa.c
+    function: mbedtls_rsa_parse_key
+    related_functions:
+      - mbedtls_rsa_parse_pubkey
+    branch_condition: "end != p + len"
+  buggy_logic:
+    - "parse top-level RSA SEQUENCE length"
+    - "continue without checking whether bytes remain outside the SEQUENCE"
+    - "return success for DER with trailing garbage"
+  fixed_logic:
+    - "if (end != p + len) { return MBEDTLS_ERR_RSA_BAD_INPUT_DATA; }"
+  critical_fixed_statement: "if (end != p + len) { return MBEDTLS_ERR_RSA_BAD_INPUT_DATA; }"
+
+trigger:
+  input_format: DER_PKCS1_RSA_key
+  cases:
+    - RSA private key with extra INTEGER outside the top-level SEQUENCE
+    - RSA public key with extra INTEGER outside the top-level SEQUENCE
+  public_api_context: >
+    Higher-level key parsing such as mbedtls_pk_parse_key can reach RSA DER
+    parsing; the local minimal PoC calls mbedtls_rsa_parse_key() and
+    mbedtls_rsa_parse_pubkey() directly because those parser functions exist in
+    the target source but may not be exposed by the public header configuration.
+
+buggy_behavior:
+  private_ret: 0
+  public_ret: 0
+  signal: malformed_key_accepted
+  sample_output: "[BUG] both RSA parsers accepted trailing garbage."
+
+fixed_behavior:
+  private_ret: -16512
+  public_ret: -16512
+  signal: trailing_garbage_rejected
+  sample_output: "[OK] both RSA parsers rejected trailing garbage."
+
+mutation_points:
+  - name: TOP_LEVEL_SEQUENCE_END_CHECK
+    placeholder: "[TOP_LEVEL_SEQUENCE_END_CHECK]"
+    mask_level: block_level
+    source_expr: "if (end != p + len) { return MBEDTLS_ERR_RSA_BAD_INPUT_DATA; }"
+    reason: >
+      Rejects bytes outside the top-level RSAPrivateKey or RSAPublicKey
+      SEQUENCE.
+    priority: high
+
+  - name: TRAILING_GARBAGE_BYTES
+    placeholder: "[TRAILING_GARBAGE_BYTES]"
+    mask_level: value_level
+    source_expr: "extra INTEGER outside the SEQUENCE"
+    reason: >
+      Controls whether the parser sees a syntactically valid key followed by
+      unexpected data.
+    priority: high
+
+  - name: RSA_PRIVATE_PARSE_CALL
+    placeholder: "[RSA_PRIVATE_PARSE_CALL]"
+    mask_level: function_call_level
+    source_expr: "mbedtls_rsa_parse_key(&rsa, der, der_len)"
+    reason: >
+      Exercises trailing-garbage acceptance for RSA private keys.
+    priority: high
+
+  - name: RSA_PUBLIC_PARSE_CALL
+    placeholder: "[RSA_PUBLIC_PARSE_CALL]"
+    mask_level: function_call_level
+    source_expr: "mbedtls_rsa_parse_pubkey(&rsa, der, der_len)"
+    reason: >
+      Exercises trailing-garbage acceptance for RSA public keys.
+    priority: high
+
+occlusion_candidates:
+  identifier_level:
+    - end
+    - p
+    - len
+  expression_level:
+    - "end != p + len"
+  statement_level:
+    - "return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;"
+  block_level:
+    - "trailing-garbage rejection guard after top-level RSA SEQUENCE"
+
+vulnerability_path_features:
+  must_preserve:
+    - der_key_parser
+    - top_level_asn1_sequence_length
+    - valid_object_followed_by_trailing_bytes
+    - parser_accepts_vs_rejects_extra_data
+    - observable_return_code
+  optional:
+    - rsa_private_key_path
+    - rsa_public_key_path
+    - pkcs1_der_encoding
+  not_required:
+    - exact RSA key values
+    - exact extra INTEGER bytes
+    - exact internal parser function names
+
+oracle:
+  oracle_type: accept_vs_reject_return_code
+  bug_signals:
+    - private_parser_returns_0
+    - public_parser_returns_0
+    - malformed_RSA_DER_with_trailing_garbage_accepted
+  fixed_or_safe_signals:
+    - private_parser_returns_MBEDTLS_ERR_RSA_BAD_INPUT_DATA
+    - public_parser_returns_MBEDTLS_ERR_RSA_BAD_INPUT_DATA
+    - trailing_garbage_rejected
+
+migration_guidance:
+  good_target_api_features:
+    - parses DER encoded RSA or public/private key objects
+    - exposes complete-input-consumed validation
+    - can be given valid object plus trailing bytes
+    - returns observable success or invalid-input error
+  weak_or_missing_features:
+    - parser always consumes a stream and permits extra records by design
+    - API hides whether trailing bytes are accepted
+    - only PEM armor is accepted without direct DER length control
+  migration_notes:
+    - >
+      Preserve the top-level object boundary condition: the parser must reject
+      bytes after a complete RSA key SEQUENCE.
+    - >
+      Higher-level APIs may wrap the RSA parser; direct internal parser calls
+      are useful for isolating the root cause but should be represented as
+      internal functions in the pattern.
+
+references:
+  source_pr: "https://github.com/Mbed-TLS/mbedtls/pull/8804"
+  issue_refs:
+    - "8799"
+  commit_refs:
+    - "a7f651cf160a3753367e032c4471699822b37e30"
+    - "9de84bd67775e05fabca1907cd9f2ea33078d99a"
+
+evidence_files:
+  metadata: data/pocs/core10/MBEDTLS-POC-0020/metadata.json
+  notes: data/pocs/core10/MBEDTLS-POC-0020/notes.md
+  reproduction: data/pocs/core10/MBEDTLS-POC-0020/reproduction_result.md
+  poc_source: data/pocs/core10/MBEDTLS-POC-0020/poc/poc_rsa_trailing_garbage.c
+  buggy_log: data/pocs/core10/MBEDTLS-POC-0020/poc/run_buggy.log
+  fixed_log: data/pocs/core10/MBEDTLS-POC-0020/poc/run_fixed.log
+  commits: data/pocs/core10/MBEDTLS-POC-0020/commits.txt
+  fix_commits: data/pocs/core10/MBEDTLS-POC-0020/fix_commits.txt
+  library_files: data/pocs/core10/MBEDTLS-POC-0020/library_files.txt
+  test_files: data/pocs/core10/MBEDTLS-POC-0020/test_files.txt
+
+notes:
+  - >
+    No local fix.patch file is present. fix_commits.txt confirms the merge and
+    library fix commits.
+  - >
+    The local PoC directly declares and calls mbedtls_rsa_parse_key() and
+    mbedtls_rsa_parse_pubkey(); source.api is normalized to the public
+    higher-level key parsing API mbedtls_pk_parse_key, while the RSA parser
+    functions are recorded as internal_functions.
+  - >
+    commits.txt contains noise value 1953825050, which is not a Git commit hash.

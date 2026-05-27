@@ -1,5 +1,5 @@
 inventory_name: api_constraints_inventory
-status: updated_for_mbedtls_openssl_rag_round
+status: updated_for_poc_0011_0017_0020_0028_rag_knowledge
 
 source_versions:
   mbedtls_current:
@@ -118,6 +118,84 @@ mbedtls_poc_patterns:
         - knowledge_raw/unit_tests/mbedtls/4.1.0/mbedtls_core_api_test_evidence.md
     missing_knowledge: []
 
+  - pattern_id: MBEDTLS-POC-0011
+    source:
+      library: mbedtls
+      component: pem
+      api: mbedtls_pem_read_buffer
+      internal_functions:
+        - pem_check_pkcs_padding
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pem_read_buffer.md
+        - knowledge_raw/api_constraints/mbedtls/4.1.0/pem_check_pkcs_padding.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/mbedtls/4.1.0/MBEDTLS-POC-0011_pem_underflow_evidence.md
+    missing_knowledge:
+      - local tests cover malformed encrypted PEM errors but not the historical ASAN heap-buffer-underflow oracle directly
+
+  - pattern_id: MBEDTLS-POC-0017
+    source:
+      library: mbedtls
+      component: x509/asn1
+      api: mbedtls_x509_crt_parse_der
+      internal_functions:
+        - x509_get_attr_type_value
+        - mbedtls_x509_get_crt_ext
+        - mbedtls_x509_get_crl_ext
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_x509_crt_parse_der.md
+        - knowledge_raw/api_constraints/mbedtls/4.1.0/x509_asn1_nested_helpers.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/mbedtls/4.1.0/MBEDTLS-POC-0017_x509_asn1_boundary_evidence.md
+    missing_knowledge: []
+
+  - pattern_id: MBEDTLS-POC-0020
+    source:
+      library: mbedtls
+      component: rsa/pkparse
+      api: mbedtls_pk_parse_key
+      internal_functions:
+        - mbedtls_rsa_parse_key
+        - mbedtls_rsa_parse_pubkey
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_parse_key.md
+        - knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_rsa_parse_key.md
+        - knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_rsa_parse_pubkey.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/mbedtls/4.1.0/MBEDTLS-POC-0020_rsa_der_trailing_garbage_evidence.md
+    missing_knowledge: []
+
+  - pattern_id: MBEDTLS-POC-0028
+    source:
+      library: mbedtls
+      component: psa/aead
+      api: psa_aead_decrypt_setup
+      related_apis:
+        - psa_aead_setup
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/mbedtls/4.1.0/psa_aead_decrypt_setup.md
+        - knowledge_raw/api_constraints/mbedtls/4.1.0/psa_aead_setup.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/mbedtls/4.1.0/MBEDTLS-POC-0028_psa_aead_invalid_tag_evidence.md
+    missing_knowledge:
+      - local generated tests cover invalid shortened CCM tag lengths but the searched evidence did not find the exact tag length 3 case as a named local test
+
 openssl_target_candidates:
   - target_api: BN_bn2binpad
     api_constraints:
@@ -220,6 +298,196 @@ openssl_target_candidates:
         - knowledge_raw/unit_tests/openssl/3.5.5/openssl_core_api_test_evidence.md
     missing_knowledge: []
 
+  - target_api: PEM_read_bio_PrivateKey
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/pem_target_api_evidence.md
+    missing_knowledge: []
+
+  - target_api: PEM_read_bio_PUBKEY
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/pem_target_api_evidence.md
+    missing_knowledge: []
+
+  - target_api: PEM_read_bio_X509
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/pem_target_api_evidence.md
+    missing_knowledge: []
+
+  - target_api: PEM_bytes_read_bio
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/PEM_bytes_read_bio.md
+    unit_test_or_example_evidence:
+      exists: false
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/pem_target_api_evidence.md
+    missing_knowledge:
+      - no direct local top-level unit test found; local evidence reaches it through higher-level PEM readers and implementation callers
+
+  - target_api: d2i_X509
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/der_asn1_target_api_evidence.md
+    missing_knowledge: []
+
+  - target_api: d2i_X509_bio
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509_bio.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/der_asn1_target_api_evidence.md
+    missing_knowledge: []
+
+  - target_api: ASN1_item_d2i
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/ASN1_item_d2i.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/der_asn1_target_api_evidence.md
+    missing_knowledge:
+      - local evidence is implementation/internal usage rather than a dedicated direct top-level unit test
+
+  - target_api: d2i_PrivateKey
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/d2i_PrivateKey.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/der_asn1_target_api_evidence.md
+    missing_knowledge: []
+
+  - target_api: d2i_AutoPrivateKey
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/d2i_AutoPrivateKey.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/der_asn1_target_api_evidence.md
+    missing_knowledge: []
+
+  - target_api: d2i_RSAPrivateKey
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/d2i_RSAPrivateKey.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/der_asn1_target_api_evidence.md
+    missing_knowledge: []
+
+  - target_api: d2i_RSA_PUBKEY
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/d2i_RSA_PUBKEY.md
+    unit_test_or_example_evidence:
+      exists: false
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/der_asn1_target_api_evidence.md
+    missing_knowledge:
+      - no direct local top-level unit test found for d2i_RSA_PUBKEY
+
+  - target_api: d2i_PUBKEY
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/d2i_PUBKEY.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/der_asn1_target_api_evidence.md
+    missing_knowledge: []
+
+  - target_api: EVP_DecryptInit_ex
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/EVP_DecryptInit_ex.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/evp_aead_target_api_evidence.md
+    missing_knowledge: []
+
+  - target_api: EVP_CIPHER_CTX_ctrl
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/EVP_CIPHER_CTX_ctrl.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/evp_aead_target_api_evidence.md
+    missing_knowledge: []
+
+  - target_api: EVP_DecryptUpdate
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/EVP_DecryptUpdate.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/evp_aead_target_api_evidence.md
+    missing_knowledge: []
+
+  - target_api: EVP_aes_128_ccm
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/EVP_aes_128_ccm.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/evp_aead_target_api_evidence.md
+    missing_knowledge: []
+
+  - target_api: EVP_aes_128_gcm
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/EVP_aes_128_gcm.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/evp_aead_target_api_evidence.md
+    missing_knowledge: []
+
 not_found_in_local_tests:
   - api: mbedtls_pk_rsa
     status: not_found_in_local_tests
@@ -239,6 +507,34 @@ not_found_in_local_tests:
       - mbedTLS 官方 GitHub 仓库中的 tests/suites/
       - mbedTLS 官方 GitHub 仓库中的 programs/
       - mbedTLS 官方 GitHub 仓库中的 library/
+
+  - api: PEM_bytes_read_bio
+    status: not_found_in_local_tests
+    searched_paths:
+      - /home/wen/work/clean_sources/openssl-3.5.5/test
+      - /home/wen/work/clean_sources/openssl-3.5.5/apps
+      - /home/wen/work/clean_sources/openssl-3.5.5/demos
+      - /home/wen/work/clean_sources/openssl-3.5.5/crypto/pem
+    missing_reason: no direct local top-level unit test found; local evidence reaches it through higher-level PEM readers and implementation callers
+    recommended_next_search:
+      - upstream_github_tests
+      - upstream_github_regression_tests
+      - upstream_github_commit_diff
+      - upstream_github_issue_or_pr_discussion
+
+  - api: d2i_RSA_PUBKEY
+    status: not_found_in_local_tests
+    searched_paths:
+      - /home/wen/work/clean_sources/openssl-3.5.5/test
+      - /home/wen/work/clean_sources/openssl-3.5.5/apps
+      - /home/wen/work/clean_sources/openssl-3.5.5/demos
+      - /home/wen/work/clean_sources/openssl-3.5.5/crypto/x509
+    missing_reason: implementation exists in crypto/x509/x_pubkey.c, but no direct local top-level unit test was found for this API
+    recommended_next_search:
+      - upstream_github_tests
+      - upstream_github_regression_tests
+      - upstream_github_commit_diff
+      - upstream_github_issue_or_pr_discussion
 
 upstream_search_targets_for_future_round:
   mbedtls:

@@ -1,0 +1,219 @@
+pattern_id: MBEDTLS-POC-0017
+template_id: X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY
+status: reproduced
+
+source:
+  library: mbedtls
+  component: x509/asn1
+  api: mbedtls_x509_crt_parse_der
+  internal_functions:
+    - x509_get_attr_type_value
+    - mbedtls_x509_get_crt_ext
+    - mbedtls_x509_get_crl_ext
+  source_type: github_pr
+  source_label: "PR #2442"
+  url: "https://github.com/Mbed-TLS/mbedtls/pull/2442"
+  issue_refs:
+    - "2430"
+    - "2431"
+    - "2437"
+  fixed_commit: "7af080a9f9601449601e9c97d21256bdc2205d02"
+  buggy_commit: "7af080a9f9601449601e9c97d21256bdc2205d02^1"
+  library_fix_commit: "12f62fb82c81aa3f52bed49dff0f9e038d115f75"
+  equivalent_fix_commits:
+    - "1de13dbc49afff1b746407dd1231c889156a6d1e"
+    - "4e1bfc19cc290be576615f7a2825d8aaea66bf74"
+
+library:
+  name: mbedtls
+  primary_module: x509/asn1
+  affected_api:
+    - mbedtls_x509_crt_parse_der
+  affected_file:
+    - library/x509.c
+    - library/x509_crt.c
+    - library/x509_crl.c
+
+classification:
+  poc_type: parser_or_encoding
+  bug_category: asn1_nested_substructure_boundary
+  failure_signal:
+    - differential_error_code
+    - parser_crosses_inner_asn1_boundary
+    - malformed_certificate_boundary_behavior
+
+root_cause:
+  summary: >
+    In the buggy version, some X.509 ASN.1 parsing routines continue using the
+    parent structure's end pointer while parsing nested substructures. This
+    allows parsing inside an inner ASN.1 substructure to cross that
+    substructure's boundary. The reproduced malformed certificate changes from
+    an unexpected-tag path in the buggy version to an out-of-data boundary path
+    in the fixed version.
+  root_cause_location:
+    file: library/x509.c
+    function: x509_get_attr_type_value
+    related_functions:
+      - library/x509_crt.c:mbedtls_x509_get_crt_ext
+      - library/x509_crl.c:mbedtls_x509_get_crl_ext
+    branch_condition: "inner parser end should be set to *p + len"
+  buggy_logic:
+    - "nested ASN.1 parser keeps using parent end pointer"
+    - "fields can be read across the inner AttributeTypeAndValue boundary"
+    - "malformed zero-length inner structures reach the wrong parser error path"
+  fixed_logic:
+    - "end = *p + len;"
+    - "if (*p != end) { return MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_LENGTH_MISMATCH; }"
+    - "extension parsers return early when *p == end and update end to the inner extension boundary"
+  critical_fixed_statement: "end = *p + len;"
+
+trigger:
+  input_format: DER_certificate
+  public_api: mbedtls_x509_crt_parse_der
+  malformed_structure: "TBSCertificate issuer with two empty inner AttributeTypeAndValue structures"
+  expected_buggy_ret: -9186
+  expected_fixed_ret: -9184
+  description: >
+    The PoC passes a regression-test-derived malformed DER certificate to
+    mbedtls_x509_crt_parse_der(). The issuer contains empty nested ASN.1
+    AttributeTypeAndValue structures. The buggy parser crosses the inner
+    boundary and reports an unexpected tag; the fixed parser reports out of
+    data at the inner boundary.
+
+buggy_behavior:
+  ret: -9186
+  signal: parser_crossed_inner_boundary
+  sample_output: "[BUG] buggy behavior: parser crossed inner ASN.1 substructure bounds."
+
+fixed_behavior:
+  ret: -9184
+  signal: parser_obeyed_inner_boundary
+  sample_output: "[OK] fixed behavior: parser obeyed inner ASN.1 substructure bounds."
+
+mutation_points:
+  - name: INNER_END_BOUND
+    placeholder: "[INNER_END_BOUND]"
+    mask_level: statement_level
+    source_expr: "end = *p + len;"
+    reason: >
+      Updates the parser bound from the parent object to the current nested
+      ASN.1 substructure.
+    priority: high
+
+  - name: TRAILING_INNER_DATA_CHECK
+    placeholder: "[TRAILING_INNER_DATA_CHECK]"
+    mask_level: block_level
+    source_expr: "if (*p != end) { return MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_LENGTH_MISMATCH; }"
+    reason: >
+      Rejects data that remains after parsing the inner AttributeTypeAndValue
+      sequence.
+    priority: high
+
+  - name: EMPTY_EXTENSION_RETURN
+    placeholder: "[EMPTY_EXTENSION_RETURN]"
+    mask_level: statement_level
+    source_expr: "if (*p == end) return 0;"
+    reason: >
+      Prevents extension parsing from continuing past an empty nested
+      extension structure.
+    priority: medium
+
+  - name: MALFORMED_DER_STRUCTURE
+    placeholder: "[MALFORMED_DER_STRUCTURE]"
+    mask_level: value_level
+    source_expr: "DER issuer has two empty inner set datas / AttributeTypeAndValue structures"
+    reason: >
+      The malformed input triggers the parser-boundary difference.
+    priority: high
+
+occlusion_candidates:
+  identifier_level:
+    - end
+    - len
+    - "*p"
+  expression_level:
+    - "*p + len"
+    - "*p != end"
+    - "*p == end"
+  statement_level:
+    - "end = *p + len;"
+    - "end = crt->v3_ext.p + crt->v3_ext.len;"
+    - "end = ext->p + ext->len;"
+  block_level:
+    - "inner ASN.1 substructure boundary check"
+
+vulnerability_path_features:
+  must_preserve:
+    - asn1_der_parser_entrypoint
+    - nested_substructure_length_field
+    - parent_end_vs_inner_end_boundary
+    - malformed_nested_empty_structure
+    - differential_parser_error_or_rejection_path
+  optional:
+    - x509_certificate_der
+    - issuer_name_attribute_type_value
+    - crt_extension_or_crl_extension_helpers
+  not_required:
+    - exact certificate bytes
+    - exact numeric error code values
+    - exact helper function names
+
+oracle:
+  oracle_type: differential_error_code_parser_boundary
+  bug_signals:
+    - ret_is_MBEDTLS_ERR_X509_INVALID_NAME_plus_MBEDTLS_ERR_ASN1_UNEXPECTED_TAG
+    - parser_crossed_inner_asn1_substructure_bounds
+  fixed_or_safe_signals:
+    - ret_is_MBEDTLS_ERR_X509_INVALID_NAME_plus_MBEDTLS_ERR_ASN1_OUT_OF_DATA
+    - parser_obeyed_inner_asn1_substructure_bounds
+
+migration_guidance:
+  good_target_api_features:
+    - parses DER or ASN.1 nested structures
+    - has explicit parent and child length/end boundaries
+    - exposes differential error codes or parse failure classes
+    - accepts malformed nested structures as harness input
+  weak_or_missing_features:
+    - parser flattens nested structures without observable inner-boundary errors
+    - parser only returns a generic parse failure
+    - no way to craft or feed DER-level malformed input
+  migration_notes:
+    - >
+      This is a parser-boundary migration pattern. Preserve the inner
+      substructure end pointer behavior rather than treating it as a generic
+      malformed certificate case.
+
+references:
+  source_pr: "https://github.com/Mbed-TLS/mbedtls/pull/2442"
+  issue_refs:
+    - "2430"
+    - "2431"
+    - "2437"
+  commit_refs:
+    - "7af080a9f9601449601e9c97d21256bdc2205d02"
+    - "12f62fb82c81aa3f52bed49dff0f9e038d115f75"
+    - "1de13dbc49afff1b746407dd1231c889156a6d1e"
+    - "4e1bfc19cc290be576615f7a2825d8aaea66bf74"
+
+evidence_files:
+  metadata: data/pocs/core10/MBEDTLS-POC-0017/metadata.json
+  notes: data/pocs/core10/MBEDTLS-POC-0017/notes.md
+  reproduction: data/pocs/core10/MBEDTLS-POC-0017/reproduction_result.md
+  poc_source: data/pocs/core10/MBEDTLS-POC-0017/poc/poc_x509_asn1_bounds.c
+  buggy_log: data/pocs/core10/MBEDTLS-POC-0017/poc/run_buggy.log
+  fixed_log: data/pocs/core10/MBEDTLS-POC-0017/poc/run_fixed.log
+  commits: data/pocs/core10/MBEDTLS-POC-0017/commits.txt
+  fix_commits: data/pocs/core10/MBEDTLS-POC-0017/fix_commits.txt
+  library_files: data/pocs/core10/MBEDTLS-POC-0017/library_files.txt
+  test_files: data/pocs/core10/MBEDTLS-POC-0017/test_files.txt
+
+notes:
+  - >
+    metadata.classification.affected_api is empty, so source.api is normalized
+    to the public API used by the local PoC: mbedtls_x509_crt_parse_der.
+  - >
+    No local fix.patch file is present. The library fix commit is taken from
+    fix_commits.txt and reproduction_result.md.
+  - >
+    commits.txt contains a noise commit that only corrects ChangeLog placement;
+    it is not used as the library fix.

@@ -1,0 +1,210 @@
+pattern_id: MBEDTLS-POC-0011
+template_id: PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW
+status: reproduced
+
+source:
+  library: mbedtls
+  component: pem
+  api: mbedtls_pem_read_buffer
+  related_apis:
+    - mbedtls_pk_parse
+  internal_functions:
+    - pem_check_pkcs_padding
+  source_type: cve_advisory
+  source_label: "CVE-2025-52497"
+  url: "https://github.com/Mbed-TLS/mbedtls-docs/blob/main/security-advisories/mbedtls-security-advisory-2025-06-2.md"
+  advisory_refs:
+    - "https://lists.debian.org/debian-lts-announce/2025/08/msg00013.html"
+  fixed_commit: "3f82706cb76b80f5c136b91edc6688dea299fbdb"
+  buggy_commit: "3f82706cb76b80f5c136b91edc6688dea299fbdb^1"
+  library_fix_commit: "6165e715899a9b370851e2868fe312d7e0a2cb83"
+  regression_test_commit: "9325883d9fb270cae63af5a254eb6a855813a189"
+
+library:
+  name: mbedtls
+  primary_module: pem
+  affected_api:
+    - mbedtls_pem_read_buffer
+    - mbedtls_pk_parse
+  affected_file:
+    - library/pem.c
+
+classification:
+  poc_type: memory_safety
+  bug_category: one_byte_heap_buffer_underflow
+  failure_signal:
+    - asan_heap_buffer_underflow
+    - one_byte_read_before_heap_region
+    - malformed_pem_parser_error_path
+
+root_cause:
+  summary: >
+    In the buggy version, malformed encrypted PEM input with fewer than four
+    base64 characters can decode to an effectively empty buffer. The PEM parser
+    then calls pem_check_pkcs_padding() with input_len == 0. That helper reads
+    input[input_len - 1] without first checking input_len >= 1, causing a
+    one-byte heap-buffer-underflow.
+  root_cause_location:
+    file: library/pem.c
+    function: pem_check_pkcs_padding
+    caller: mbedtls_pem_read_buffer
+    branch_condition: "input_len < 1"
+  buggy_logic:
+    - "malformed encrypted PEM reaches padding check with input_len == 0"
+    - "pem_check_pkcs_padding() reads input[input_len - 1]"
+    - "read occurs one byte before the heap-allocated decoded buffer"
+  fixed_logic:
+    - "if (input_len < 1) { return MBEDTLS_ERR_PEM_INVALID_DATA; }"
+  critical_fixed_statement: "if (input_len < 1) { return MBEDTLS_ERR_PEM_INVALID_DATA; }"
+
+trigger:
+  pem_kind: encrypted_ec_private_key
+  encryption: AES-128-CBC
+  password: "pwd"
+  malformed_base64_body: "8Q"
+  description: >
+    The PoC passes an encrypted EC private key PEM block to
+    mbedtls_pem_read_buffer(). The base64 body has fewer than four characters
+    before the footer, so the decoded content can be empty and the padding
+    checker receives input_len == 0.
+
+buggy_behavior:
+  signal: asan_heap_buffer_underflow
+  exit_code: 1
+  sample_output: "READ of size 1 in pem_check_pkcs_padding; address is 1 byte before a 2-byte heap region"
+
+fixed_behavior:
+  ret: -4352
+  expected_ret: -4352
+  use_len: 140
+  signal: safe_invalid_data_return
+  sample_output: "[OK] fixed behavior: malformed PEM rejected safely."
+
+mutation_points:
+  - name: PEM_BODY_LENGTH
+    placeholder: "[PEM_BODY_LENGTH]"
+    mask_level: value_level
+    source_expr: "malformed base64 body: 8Q"
+    reason: >
+      Controls whether encrypted PEM decoding produces an empty or too-short
+      buffer that reaches the padding checker.
+    priority: high
+
+  - name: ENCRYPTION_HEADER
+    placeholder: "[ENCRYPTION_HEADER]"
+    mask_level: input_construction_level
+    source_expr: "Proc-Type: 4,ENCRYPTED; DEK-Info: AES-128-CBC,..."
+    reason: >
+      Selects the encrypted PEM path that invokes PKCS padding validation.
+    priority: high
+
+  - name: INPUT_LEN_GUARD
+    placeholder: "[INPUT_LEN_GUARD]"
+    mask_level: statement_level
+    source_expr: "if (input_len < 1) { return MBEDTLS_ERR_PEM_INVALID_DATA; }"
+    reason: >
+      This fixed guard prevents reading input[input_len - 1] on an empty
+      decoded buffer.
+    priority: high
+
+  - name: PEM_READ_CALL
+    placeholder: "[PEM_READ_CALL]"
+    mask_level: function_call_level
+    source_expr: "mbedtls_pem_read_buffer(&ctx, header, footer, pem, password, password_len, &use_len)"
+    reason: >
+      Exposes the public parser call, returned error code, and use_len oracle.
+    priority: high
+
+occlusion_candidates:
+  identifier_level:
+    - input_len
+    - input
+    - use_len
+  expression_level:
+    - "input_len < 1"
+    - "input[input_len - 1]"
+  statement_level:
+    - "return MBEDTLS_ERR_PEM_INVALID_DATA;"
+  block_level:
+    - "if (input_len < 1) { return MBEDTLS_ERR_PEM_INVALID_DATA; }"
+
+vulnerability_path_features:
+  must_preserve:
+    - pem_parser_entrypoint
+    - encrypted_pem_path
+    - malformed_or_short_base64_body
+    - decoded_buffer_length_can_be_zero
+    - padding_check_reads_last_byte
+    - observable_asan_underflow_or_safe_error
+  optional:
+    - AES_128_CBC_dek_info
+    - EC_PRIVATE_KEY_label
+    - password_based_decryption_path
+  not_required:
+    - exact heap address
+    - exact PEM line wrapping
+    - exact ASan wording
+
+oracle:
+  oracle_type: asan_heap_underflow_vs_safe_error_return
+  bug_signals:
+    - AddressSanitizer heap-buffer-overflow or heap-buffer-underflow
+    - READ of size 1 in pem_check_pkcs_padding
+    - address is 1 byte before heap-allocated region
+    - exit_code_1
+  fixed_or_safe_signals:
+    - ret_is_MBEDTLS_ERR_PEM_INVALID_DATA
+    - no_ASan_error
+    - malformed_PEM_rejected_safely
+
+migration_guidance:
+  good_target_api_features:
+    - parses PEM or armored base64 cryptographic material
+    - supports encrypted PEM with padding validation
+    - decodes attacker-controlled text into binary buffer
+    - has explicit invalid-data return for malformed decoded content
+    - sanitizer can observe one-byte read before decoded buffer
+  weak_or_missing_features:
+    - parser rejects malformed base64 before decryption/padding path
+    - parser hides decoded buffer and only exposes coarse parse failure
+    - no encrypted PEM or padding-check path
+  migration_notes:
+    - >
+      Preserve the parser boundary pattern: short decoded buffer reaches a
+      final-byte padding check. Do not reduce this to generic PEM parse failure.
+    - >
+      Safe targets should reject empty decoded buffers before reading the last
+      byte.
+
+references:
+  cve:
+    - "CVE-2025-52497"
+  advisory_refs:
+    - "https://github.com/Mbed-TLS/mbedtls-docs/blob/main/security-advisories/mbedtls-security-advisory-2025-06-2.md"
+    - "https://lists.debian.org/debian-lts-announce/2025/08/msg00013.html"
+  commit_refs:
+    - "3f82706cb76b80f5c136b91edc6688dea299fbdb"
+    - "6165e715899a9b370851e2868fe312d7e0a2cb83"
+    - "9325883d9fb270cae63af5a254eb6a855813a189"
+
+evidence_files:
+  metadata: data/pocs/core10/MBEDTLS-POC-0011/metadata.json
+  notes: data/pocs/core10/MBEDTLS-POC-0011/notes.md
+  reproduction: data/pocs/core10/MBEDTLS-POC-0011/reproduction_result.md
+  poc_source: data/pocs/core10/MBEDTLS-POC-0011/poc/poc_pem_underflow.c
+  buggy_log: data/pocs/core10/MBEDTLS-POC-0011/poc/run_buggy.log
+  fixed_log: data/pocs/core10/MBEDTLS-POC-0011/poc/run_fixed.log
+  commits: data/pocs/core10/MBEDTLS-POC-0011/commits.txt
+  fix_commits: data/pocs/core10/MBEDTLS-POC-0011/fix_commits.txt
+  library_files: data/pocs/core10/MBEDTLS-POC-0011/library_files.txt
+  test_files: data/pocs/core10/MBEDTLS-POC-0011/test_files.txt
+
+notes:
+  - >
+    No local fix.patch file is present. The pattern uses fix_commits.txt,
+    reproduction_result.md, the PoC source, and buggy/fixed logs as primary
+    evidence.
+  - >
+    metadata.json contains broad CVE search evidence; the narrowed confirmed
+    root cause is pem_check_pkcs_padding() reading input[input_len - 1] without
+    an input_len < 1 guard.

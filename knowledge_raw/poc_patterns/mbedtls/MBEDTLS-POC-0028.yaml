@@ -1,0 +1,210 @@
+pattern_id: MBEDTLS-POC-0028
+template_id: PSA_AEAD_INVALID_SHORTENED_TAG_SETUP
+status: reproduced
+
+source:
+  library: mbedtls
+  component: psa/aead
+  api: psa_aead_decrypt_setup
+  related_apis:
+    - psa_aead_setup
+  internal_functions:
+    - psa_validate_tag_length
+  source_type: github_pr
+  source_label: "PR #5350"
+  url: "https://github.com/Mbed-TLS/mbedtls/pull/5350"
+  issue_refs:
+    - "5285"
+  fixed_commit: "6d6d93ea4abe7b374ad9e2080c948c59c9752823"
+  buggy_commit: "6d6d93ea4abe7b374ad9e2080c948c59c9752823^1"
+  library_fix_commit: "f881601c912b608a7fa62c100b2d0aa7352996ee"
+  regression_test_commit: "f881601c912b608a7fa62c100b2d0aa7352996ee"
+
+library:
+  name: mbedtls
+  primary_module: psa/aead
+  affected_api:
+    - psa_aead_setup
+    - psa_aead_decrypt_setup
+  affected_file:
+    - library/psa_crypto.c
+    - library/psa_crypto_driver_wrappers.h
+
+classification:
+  poc_type: crypto_algorithm_or_api
+  bug_category: invalid_aead_tag_length_accepted
+  failure_signal:
+    - invalid_parameter_accepted
+    - PSA_SUCCESS_for_invalid_CCM_tag_length
+    - invalid_argument_after_fix
+
+root_cause:
+  summary: >
+    In the buggy version, psa_aead_setup() does not validate whether a requested
+    shortened AEAD tag length is legal for the selected algorithm. For CCM, tag
+    length 3 is invalid, but psa_aead_decrypt_setup() can accept setup and
+    return PSA_SUCCESS. The fixed version validates tag length during setup
+    using psa_validate_tag_length() and rejects the operation with
+    PSA_ERROR_INVALID_ARGUMENT.
+  root_cause_location:
+    file: library/psa_crypto.c
+    function: psa_aead_setup
+    helper: psa_validate_tag_length
+    branch_condition: "invalid shortened tag length for selected AEAD algorithm"
+  buggy_logic:
+    - "construct PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 3)"
+    - "setup path accepts the operation without validating CCM tag length"
+    - "psa_aead_decrypt_setup() returns PSA_SUCCESS"
+  fixed_logic:
+    - "call psa_validate_tag_length(operation, alg) during psa_aead_setup()"
+    - "return PSA_ERROR_INVALID_ARGUMENT for invalid CCM tag length 3"
+  critical_fixed_statement: "if( ( status = psa_validate_tag_length( operation, alg ) ) != PSA_SUCCESS ) goto exit;"
+
+trigger:
+  key_type: PSA_KEY_TYPE_AES
+  key_bits: 128
+  operation_api: psa_aead_decrypt_setup
+  algorithm: "PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 3)"
+  invalid_tag_length: 3
+  valid_ccm_tag_lengths:
+    - 4
+    - 6
+    - 8
+    - 10
+    - 12
+    - 14
+    - 16
+  description: >
+    The PoC initializes PSA crypto, imports an AES key with AEAD usage, and
+    calls psa_aead_decrypt_setup() with CCM shortened tag length 3. CCM only
+    permits even tag lengths from 4 to 16, so length 3 must be rejected.
+
+buggy_behavior:
+  setup_status: 0
+  expected_buggy: 0
+  signal: invalid_tag_length_accepted
+  sample_output: "[BUG] invalid AEAD tag length accepted during setup."
+
+fixed_behavior:
+  setup_status: -135
+  expected_fixed: -135
+  signal: invalid_argument_return
+  sample_output: "[OK] invalid AEAD tag length rejected during setup."
+
+mutation_points:
+  - name: AEAD_ALGORITHM
+    placeholder: "[AEAD_ALGORITHM]"
+    mask_level: api_argument_level
+    source_expr: "PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 3)"
+    reason: >
+      Selects the AEAD mode and shortened tag length validation path.
+    priority: high
+
+  - name: TAG_LENGTH
+    placeholder: "[TAG_LENGTH]"
+    mask_level: value_level
+    source_expr: "3"
+    reason: >
+      Tag length 3 is invalid for CCM and triggers the setup validation
+      difference.
+    priority: high
+
+  - name: AEAD_SETUP_CALL
+    placeholder: "[AEAD_SETUP_CALL]"
+    mask_level: function_call_level
+    source_expr: "psa_aead_decrypt_setup(&operation, key_id, alg)"
+    reason: >
+      Public API call whose return code is the oracle.
+    priority: high
+
+  - name: TAG_LENGTH_VALIDATION_CALL
+    placeholder: "[TAG_LENGTH_VALIDATION_CALL]"
+    mask_level: statement_level
+    source_expr: "psa_validate_tag_length(operation, alg)"
+    reason: >
+      Fixed helper call that enforces algorithm-specific tag length rules during
+      setup.
+    priority: high
+
+occlusion_candidates:
+  identifier_level:
+    - tag_len
+    - alg
+    - operation
+  expression_level:
+    - "tag_len < 4"
+    - "tag_len > 16"
+    - "tag_len % 2"
+  statement_level:
+    - "psa_validate_tag_length( operation, alg )"
+  block_level:
+    - "CCM/GCM/ChaCha20-Poly1305 tag length validation switch"
+
+vulnerability_path_features:
+  must_preserve:
+    - psa_aead_setup_or_decrypt_setup_entrypoint
+    - aead_algorithm_with_shortened_tag
+    - algorithm_specific_tag_length_rules
+    - invalid_parameter_accepted_vs_rejected
+    - observable_psa_status_return
+  optional:
+    - AES_key_type
+    - CCM_algorithm
+    - decrypt_setup_path
+  not_required:
+    - exact AES key bytes
+    - exact key identifier value
+    - exact driver wrapper path
+
+oracle:
+  oracle_type: invalid_parameter_return_code
+  bug_signals:
+    - psa_aead_decrypt_setup_returns_PSA_SUCCESS
+    - invalid_CCM_tag_length_3_accepted
+  fixed_or_safe_signals:
+    - psa_aead_decrypt_setup_returns_PSA_ERROR_INVALID_ARGUMENT
+    - invalid_AEAD_tag_length_rejected_during_setup
+
+migration_guidance:
+  good_target_api_features:
+    - AEAD setup API accepts algorithm with tag length parameter
+    - algorithm-specific tag length constraints are documented or enforceable
+    - setup returns observable invalid-argument status
+    - harness can import or create a key and call setup without full decrypt
+  weak_or_missing_features:
+    - tag length only checked during final decrypt/authentication
+    - API normalizes invalid tag length silently
+    - no explicit shortened-tag algorithm representation
+  migration_notes:
+    - >
+      Preserve the setup-time validation path. This pattern is about rejecting
+      invalid AEAD parameters before operation use, not about ciphertext
+      authentication failure.
+
+references:
+  source_pr: "https://github.com/Mbed-TLS/mbedtls/pull/5350"
+  issue_refs:
+    - "5285"
+  commit_refs:
+    - "6d6d93ea4abe7b374ad9e2080c948c59c9752823"
+    - "f881601c912b608a7fa62c100b2d0aa7352996ee"
+
+evidence_files:
+  metadata: data/pocs/core10/MBEDTLS-POC-0028/metadata.json
+  notes: data/pocs/core10/MBEDTLS-POC-0028/notes.md
+  reproduction: data/pocs/core10/MBEDTLS-POC-0028/reproduction_result.md
+  poc_source: data/pocs/core10/MBEDTLS-POC-0028/poc/poc_psa_aead_invalid_tag_setup.c
+  buggy_log: data/pocs/core10/MBEDTLS-POC-0028/poc/run_buggy.log
+  fixed_log: data/pocs/core10/MBEDTLS-POC-0028/poc/run_fixed.log
+  commits: data/pocs/core10/MBEDTLS-POC-0028/commits.txt
+  fix_commits: data/pocs/core10/MBEDTLS-POC-0028/fix_commits.txt
+  library_files: data/pocs/core10/MBEDTLS-POC-0028/library_files.txt
+  test_files: data/pocs/core10/MBEDTLS-POC-0028/test_files.txt
+
+notes:
+  - >
+    metadata.classification.affected_api is empty, so source.api is normalized
+    to the public API used by the local PoC: psa_aead_decrypt_setup.
+  - >
+    No local fix.patch file is present. fix_commits.txt confirms the merge and
+    library fix commits.
