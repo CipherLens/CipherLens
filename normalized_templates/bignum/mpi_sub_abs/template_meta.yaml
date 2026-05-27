@@ -1,0 +1,147 @@
+template_id: BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY
+template_name: mbedtls_mpi_sub_abs limb-boundary template
+backend: api_harness
+language: c
+status: normalized
+poc_source:
+  file: poc_mpi_sub_abs_min.c
+  library: mbedtls
+  api: mbedtls_mpi_sub_abs
+operation:
+  abstract: bignum_subtract_absolute
+  api_family: BignumArithmetic
+  bug_class:
+  - limb_boundary_oob_write
+  - insufficient_output_limb_allocation
+  - canary_detected_oob_write
+source_api:
+  library: mbedtls
+  function: mbedtls_mpi_sub_abs
+mutation_points:
+- name: A_VALUE
+  placeholder: '[A_VALUE]'
+  type: string_number
+  default: '5'
+  values:
+  - '0'
+  - '1'
+  - '5'
+  - '3'
+  - '15'
+  - '255'
+  strategy: boundary_values
+  constraint: Check for zero, maximum value, and typical value.
+  priority: high
+  normalized: true
+- name: B_VALUE
+  placeholder: '[B_VALUE]'
+  type: string_hex
+  default: 123456789abcdef01
+  values:
+  - 123456789abcdef01
+  - '100000000'
+  - ffffffffffffffff
+  - ffffffffffffffffffffffff
+  - deadbeefdeadbeef
+  strategy: boundary_values
+  constraint: Check for zero, maximum hex value, and typical hex value.
+  priority: high
+  normalized: true
+- name: A_BASE
+  placeholder: '[A_BASE]'
+  type: enum
+  default: 10
+  values:
+  - 10
+  - 16
+  strategy: enum_values
+  constraint: Check all possible enum values.
+  priority: medium
+  normalized: true
+- name: B_BASE
+  placeholder: '[B_BASE]'
+  type: enum
+  default: 16
+  values:
+  - 10
+  - 16
+  strategy: enum_values
+  constraint: Check all possible enum values.
+  priority: medium
+  normalized: true
+- name: X_LIMB_COUNT
+  placeholder: '[X_LIMB_COUNT]'
+  type: size_t
+  default: 1
+  values:
+  - 1
+  - 2
+  - 3
+  - 4
+  strategy: boundary_values
+  constraint: Check for zero, one, maximum limbs, and maximum value.
+  priority: high
+  normalized: true
+- name: CANARY_SIZE
+  placeholder: '[CANARY_SIZE]'
+  type: size_t
+  default: 16
+  values:
+  - 8
+  - 16
+  - 32
+  strategy: boundary_values
+  constraint: Check for zero, typical canary size, and larger values.
+  priority: high
+  normalized: true
+oracle:
+  memory_safety:
+  - no_crash
+  - asan_clean
+  - canary_intact
+  behavior:
+  - negative_result_should_be_rejected
+  - no_write_beyond_x_limbs
+verdict:
+  true_positive:
+    condition: canary_corrupted == true
+    exit_code: 1
+  expected_rejection:
+    condition: ret == MBEDTLS_ERR_MPI_NEGATIVE_VALUE && canary_corrupted == false
+    exit_code: 0
+generation_policy:
+  max_cases: 128
+  priority:
+  - X_LIMB_COUNT_boundary
+  - B_VALUE_large_limb_count
+  compile_with:
+  - asan
+  - ubsan
+rag_requirements:
+  retrieve:
+  - mbedtls_mpi_sub_abs API constraints
+  - library unit-test call patterns
+  - cross-library candidate mappings
+  - related oracle knowledge
+cross_library:
+  openssl:
+    status: candidate_mapping
+    api_family: BignumArithmetic
+    candidate_api: BN_usub
+    migration_confidence: medium
+llm_enrichment:
+  source: glm
+  oracle_notes:
+  - Ensure that the subtraction does not result in a negative value when canaries
+    are intact.
+  - Verify that no out-of-bounds writes occur beyond the allocated limbs.
+  - Check for canary corruption as an indicator of out-of-bounds writes.
+  generation_notes:
+  - The mutation points focus on boundary values for limb counts and canary sizes
+    to trigger out-of-bounds writes.
+  - Enum values are tested to ensure correct base handling in the subtraction operation.
+  - Zero and maximum values are included to stress-test edge cases in the bignum subtraction
+    logic.
+normalization:
+  enabled: true
+  policy: template_id_specific_safe_whitelist

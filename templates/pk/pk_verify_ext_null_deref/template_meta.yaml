@@ -1,0 +1,163 @@
+template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+template_name: "mbedtls_pk_verify_ext opaque RSA-PSS null-deref template"
+
+backend: api_harness
+language: c
+status: golden_example
+
+poc_source:
+  file: poc_pk_verify_ext_null_deref_v2.c
+  library: mbedtls
+  api: mbedtls_pk_verify_ext
+  root_cause_summary: >
+    The PoC creates a legacy RSA key, imports it into PSA, converts the PK
+    context into an opaque context, and then calls mbedtls_pk_verify_ext with
+    MBEDTLS_PK_RSASSA_PSS. A buggy implementation may enter the RSA-PSS path
+    without checking whether the opaque context exposes an RSA object, leading
+    to a NULL dereference. The fixed behavior is to return
+    MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE safely.
+
+operation:
+  abstract: pk_verify_ext_opaque_key
+  api_family: SignatureVerify
+  bug_class:
+    - null_pointer_dereference
+    - opaque_key_type_confusion
+    - missing_context_type_check
+    - unsafe_rsa_pss_verify_path
+
+source_api:
+  library: mbedtls
+  function: mbedtls_pk_verify_ext
+  signature: "int mbedtls_pk_verify_ext(mbedtls_pk_type_t type, const void *options, const mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg, const unsigned char *hash, size_t hash_len, const unsigned char *sig, size_t sig_len)"
+
+mutation_points:
+  - name: KEY_BITS
+    placeholder: "[KEY_BITS]"
+    type: int
+    default: 1024
+    values:
+      - 1024
+      - 2048
+    strategy: small_valid_key_first
+    critical: false
+
+  - name: HASH_LEN
+    placeholder: "[HASH_LEN]"
+    type: size_t
+    default: 32
+    values:
+      - 20
+      - 32
+      - 48
+      - 64
+    strategy: md_length_boundary
+    critical: false
+
+  - name: SIG_LEN
+    placeholder: "[SIG_LEN]"
+    type: size_t
+    default: 128
+    values:
+      - 64
+      - 128
+      - 256
+    strategy: key_size_related
+    critical: false
+
+  - name: MD_ALG
+    placeholder: "[MD_ALG]"
+    type: enum
+    default: MBEDTLS_MD_SHA256
+    values:
+      - MBEDTLS_MD_SHA256
+      - MBEDTLS_MD_SHA384
+      - MBEDTLS_MD_SHA512
+    strategy: supported_hashes
+    critical: true
+
+  - name: PK_VERIFY_TYPE
+    placeholder: "[PK_VERIFY_TYPE]"
+    type: enum
+    default: MBEDTLS_PK_RSASSA_PSS
+    values:
+      - MBEDTLS_PK_RSASSA_PSS
+      - MBEDTLS_PK_RSA
+    strategy: rsa_pss_first
+    critical: true
+
+  - name: EXPECTED_SALT_LEN
+    placeholder: "[EXPECTED_SALT_LEN]"
+    type: enum
+    default: MBEDTLS_RSA_SALT_LEN_ANY
+    values:
+      - MBEDTLS_RSA_SALT_LEN_ANY
+    strategy: fixed_initially
+    critical: false
+
+oracle:
+  memory_safety:
+    - no_crash
+    - asan_clean
+    - ubsan_clean
+  behavior:
+    - opaque_unsupported_path_should_fail_safely
+    - fixed_version_returns_MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE
+    - no_null_deref
+
+verdict:
+  true_positive:
+    condition: "process_crash_or_asan_null_deref == true"
+    exit_code: "nonzero_or_signal"
+    description: "Crash or ASAN null dereference in mbedtls_pk_verify_ext path."
+
+  fixed_behavior:
+    condition: "ret == MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE"
+    exit_code: 0
+    description: "Fixed behavior: opaque RSA-PSS verify_ext rejected safely."
+
+  safe_other_error:
+    condition: "ret != 0 and no_crash"
+    exit_code: 0
+    description: "Returned an error without crash. Needs semantic triage."
+
+  harness_error:
+    condition: "key_generation_or_psa_import_failed"
+    exit_code: 2
+    description: "Harness failed before reaching trigger call."
+
+generation_policy:
+  max_cases: 32
+  priority:
+    - PK_VERIFY_TYPE_RSASSA_PSS
+    - opaque_key_context
+    - supported_hash_algorithms
+  compile_with:
+    - asan
+    - ubsan
+
+cross_library:
+  openssl:
+    status: not_generated_initially
+    api_family: SignatureVerify
+    migration_confidence: low
+    notes: >
+      This PoC is strongly tied to mbedTLS PSA opaque-key internals and
+      mbedtls_pk_context behavior. Do not generate an OpenSSL harness until a
+      comparable opaque-provider key path and RSA-PSS verify extension path is
+      identified.
+
+  botan:
+    status: not_generated_initially
+    api_family: SignatureVerify
+    migration_confidence: low
+    notes: >
+      Botan has different key ownership and verification abstractions. Treat
+      this as an mbedTLS-specific API harness template initially.
+
+rag_requirements:
+  retrieve:
+    - mbedtls_pk_verify_ext API constraints
+    - mbedtls_pk_setup_opaque usage
+    - PSA opaque key import examples
+    - RSA-PSS verify behavior

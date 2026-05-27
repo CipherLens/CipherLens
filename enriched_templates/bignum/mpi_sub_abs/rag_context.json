@@ -1,0 +1,82 @@
+[
+  {
+    "metadata": {
+      "library": "mbedtls",
+      "layer": "api_constraints",
+      "doc_type": "api_constraint",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__bignum_core.c.md"
+    },
+    "distance": 0.401457279920578,
+    "text": "mbedtls_mpi_uint *table,\n                                           size_t limbs,\n                                           size_t count,\n                                           size_t index)\n{\n    for (size_t i = 0; i < count; i++, table += limbs) {\n        mbedtls_ct_condition_t assign = mbedtls_ct_uint_eq(i, index);\n```"
+  },
+  {
+    "metadata": {
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__bignum.c.md",
+      "layer": "api_constraints",
+      "doc_type": "api_constraint",
+      "library": "mbedtls"
+    },
+    "distance": 0.4286595582962036,
+    "text": "lication: X = A * b\n */\nint mbedtls_mpi_mul_int(mbedtls_mpi *X, const mbedtls_mpi *A, mbedtls_mpi_uint b)\n{\n    size_t n = A->n;\n    while (n > 0 && A->p[n - 1] == 0) {\n        --n;\n    }\n\n    /* The general method below doesn't work if b==0. */\n    if (b == 0 || n == 0) {\n        return mbedtls_mpi_lset(X, 0);\n```\n\n## Snippet 23\n\n```c\n*/\nint mbedtls_mpi_mul_int(mbedtls_mpi *X, const mbedtls_mpi *A, mbedtls_mpi_uint b)\n{\n    size_t n = A->n;\n    while (n > 0 && A->p[n - 1] == 0) {\n        --n;\n    }\n\n    /* The general method below doesn't work if b==0. */\n    if (b == 0 || n == 0) {\n        return mbedtls_mpi_lset(X, 0);\n    }\n\n    /* Calculate A*b as A + A*(b-1) to take advantage of mbedtls_mpi_core_mla */\n    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;\n    /* In general, A * b requires 1 limb more than b. If\n     * A->p[n - 1] * b / b == A->p[n - 1], then A * b fits in the same\n     * number of limbs as A and the call to grow() is not required since\n     * copy() will take care"
+  },
+  {
+    "metadata": {
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__bignum.c.md",
+      "library": "mbedtls",
+      "doc_type": "api_constraint",
+      "layer": "api_constraints"
+    },
+    "distance": 0.45334726572036743,
+    "text": "{\n        return MBEDTLS_ERR_MPI_BAD_INPUT_DATA;\n    }\n\n    mbedtls_mpi_init(&Y);\n\n    n = BITS_TO_LIMBS(nbits);\n\n    if ((flags & MBEDTLS_MPI_GEN_PRIME_FLAG_LOW_ERR) == 0) {\n        /*\n         * 2^-80 error probability, number of rounds chosen per HAC, table 4.4\n         */\n        rounds = ((nbits >= 1300) ?  2 : (nbits >=  850) ?  3 :\n                  (nbits >=  650) ?  4 : (nbits >=  350) ?  8 :\n                  (nbits >=  250) ? 12 : (nbits >=  150) ? 18 : 27);\n    } else {\n        /*\n         * 2^-100 error probability, number of rounds computed based on HAC,\n         * fact 4.48\n         */\n        rounds = ((nbits >= 1450) ?  4 : (nbits >=  1150) ?  5 :\n                  (nbits >= 1000) ?  6 : (nbits >=   850) ?  7 :\n```\n\n## Snippet 56\n\n```c\n* so up Y by 6 and X by 12.\n                 */\n                MBEDTLS_MPI_CHK(mbedtls_mpi_add_int(X,  X, 12));\n                MBEDTLS_MPI_CHK(mbedtls_mpi_add_int(&Y, &Y, 6));\n            }\n        }\n    }\n\ncleanup:\n\n    mbedtls_mpi_fr"
+  },
+  {
+    "metadata": {
+      "library": "mbedtls",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__include__mbedtls__private__bignum.h.md",
+      "doc_type": "api_constraint",
+      "layer": "api_constraints"
+    },
+    "distance": 0.46255332231521606,
+    "text": "# Official API knowledge snippets: mbedtls\n\nLibrary: mbedtls\nVersion: 4.1.0\nSource file: /home/wen/work/clean_sources/mbedtls-4.1.0/tf-psa-crypto/drivers/builtin/include/mbedtls/private/bignum.h\nKnowledge type: api_constraints\n\n## Snippet 1\n\n```c\n/** Sign: -1 if the mpi is negative, 1 otherwise.\n     *\n     * The number 0 must be represented with `s = +1`. Although many library\n     * functions treat all-limbs-zero as equivalent to a valid representation\n     * of 0 regardless of the sign bit, there are exceptions, so bignum\n     * functions and external callers must always set \\c s to +1 for the\n     * number zero.\n     *\n     * Note that this implies that calloc() or `... = {0}` does not create\n     * a valid MPI representation. You must call mbedtls_mpi_init().\n     */\n    signed short MBEDTLS_PRIVATE(s);\n\n    /** Total number of limbs in \\c p.  */\n    unsigned short MBEDTLS_PRIVATE(n);\n    /* Make sure that MBEDTLS_MPI_MAX_LIMBS fits in n.\n     * Use the same limit value on all pla"
+  },
+  {
+    "metadata": {
+      "library": "mbedtls",
+      "doc_type": "api_constraint",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__bignum.c.md",
+      "layer": "api_constraints"
+    },
+    "distance": 0.47003984451293945,
+    "text": "pet 4\n\n```c\nstatic int mbedtls_mpi_resize_clear(mbedtls_mpi *X, size_t limbs)\n{\n    if (limbs == 0) {\n        mbedtls_mpi_free(X);\n        return 0;\n    } else if (X->n == limbs) {\n        memset(X->p, 0, limbs * ciL);\n        X->s = 1;\n        return 0;\n    } else {\n        mbedtls_mpi_free(X);\n        return mbedtls_mpi_grow(X, limbs);\n    }\n}\n\n/*\n * Copy the contents of Y into X.\n *\n * This function is not constant-time. Leading zeros in Y may be removed.\n *\n * Ensure that X does not shrink. This is not guaranteed by the public API,\n * but some code in the bignum module might still rely on this property.\n */\nint mbedtls_mpi_copy(mbedtls_mpi *X, const mbedtls_mpi *Y)\n{\n    int ret = 0;\n    size_t i;\n```\n\n## Snippet 5\n\n```c\nreturn (mbedtls_mpi_uint) 0 - (mbedtls_mpi_uint) z;\n}\n\n/* Convert x to a sign, i.e. to 1, if x is positive, or -1, if x is negative.\n * This looks awkward but generates smaller code than (x < 0 ? -1 : 1) */\n#define TO_SIGN(x) ((mbedtls_mpi_sint) (((mbedtls_mpi_uint"
+  },
+  {
+    "metadata": {
+      "library": "mbedtls",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__bignum.c.md",
+      "layer": "api_constraints",
+      "doc_type": "api_constraint"
+    },
+    "distance": 0.480255126953125,
+    "text": "int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;\n    mbedtls_mpi TA, TB;\n\n    mbedtls_mpi_init(&TA); mbedtls_mpi_init(&TB);\n\n    /* Make copies and take absolute values */\n    MBEDTLS_MPI_CHK(mbedtls_mpi_copy(&TA, A));\n```\n\n## Snippet 36\n\n```c\n/*\n * Greatest common divisor: G = gcd(A, B)\n * Wrapper around mbedtls_mpi_gcd_modinv() that removes its restrictions.\n */\nint mbedtls_mpi_gcd(mbedtls_mpi *G, const mbedtls_mpi *A, const mbedtls_mpi *B)\n{\n    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;\n    mbedtls_mpi TA, TB;\n\n    mbedtls_mpi_init(&TA); mbedtls_mpi_init(&TB);\n\n    /* Make copies and take absolute values */\n    MBEDTLS_MPI_CHK(mbedtls_mpi_copy(&TA, A));\n    MBEDTLS_MPI_CHK(mbedtls_mpi_copy(&TB, B));\n    TA.s = TB.s = 1;\n\n    /* Make the two values the same (non-zero) number of limbs.\n     * This is needed to use mbedtls_mpi_core functions below. */\n    MBEDTLS_MPI_CHK(mbedtls_mpi_grow(&TA, TB.n != 0 ? TB.n : 1));\n    MBEDTLS_MPI_CHK(mbedtls_mpi_grow(&TB, TA.n)); // non-ze"
+  },
+  {
+    "metadata": {
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__bignum_mod.c.md",
+      "doc_type": "api_constraint",
+      "library": "mbedtls"
+    },
+    "distance": 0.4853469729423523,
+    "text": "RR.p = NULL;\n    }\n\ncleanup:\n    mbedtls_mpi_free(&N);\n    mbedtls_mpi_free(&RR);\n    ret = (ret != 0) ? MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED : 0;\n    return ret;\n}\n\nstatic inline void standard_modulus_setup(mbedtls_mpi_mod_modulus *N,\n                                          const mbedtls_mpi_uint *p,\n                                          size_t p_limbs,\n                                          mbedtls_mpi_mod_rep_selector int_rep)\n{\n    N->p = p;\n    N->limbs = p_limbs;\n    N->bits = mbedtls_mpi_core_bitlen(p, p_limbs);\n    N->int_rep = int_rep;\n}\n\nint mbedtls_mpi_mod_modulus_setup(mbedtls_mpi_mod_modulus *N,\n```\n\n## Snippet 4\n\n```c\nret = mbedtls_mpi_core_get_mont_r2_unsafe(&RR, &N);\n\n    if (ret == 0) {\n        *X = RR.p;\n        RR.p = NULL;\n    }\n\ncleanup:\n    mbedtls_mpi_free(&N);\n    mbedtls_mpi_free(&RR);\n    ret = (ret != 0) ? MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED : 0;\n    return ret;\n}\n\nstatic inline void standard_modulus_setup(mbedtls_mpi_mod_modulus *N,"
+  },
+  {
+    "metadata": {
+      "library": "mbedtls",
+      "doc_type": "api_constraint",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__include__mbedtls__private__bignum.h.md",
+      "layer": "api_constraints"
+    },
+    "distance": 0.4914127290248871,
+    "text": ");\n    /* Make sure that MBEDTLS_MPI_MAX_LIMBS fits in n.\n     * Use the same limit value on all platforms so that we don't have to\n     * think about different behavior on the rare platforms where\n     * unsigned short can store values larger than the minimum required by\n     * the C language, which is 65535.\n     */\n#if MBEDTLS_MPI_MAX_LIMBS > 65535\n#error \"MBEDTLS_MPI_MAX_LIMBS > 65535 is not supported\"\n#endif\n}\nmbedtls_mpi;\n```\n\n## Snippet 2\n\n```c\n#if defined(MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS)\n/**\n * \\brief           Initialize an MPI context.\n *\n *                  This makes the MPI ready to be set or freed,\n *                  but does not define a value for the MPI.\n *\n * \\param X         The MPI context to initialize. This must not be \\c NULL.\n */\nvoid mbedtls_mpi_init(mbedtls_mpi *X);\n\n/**\n * \\brief          This function frees the components of an MPI context.\n *\n * \\param X        The MPI context to be cleared. This may be \\c NULL,\n *                 in which case this fu"
+  }
+]

@@ -1,0 +1,140 @@
+source_file: pocs/mbedtls/poc_mpi_sub_abs_min.c
+language: c
+library: mbedtls
+includes:
+- stdio.h
+- stdlib.h
+- string.h
+- mbedtls/bignum.h
+macros:
+  CANARY_SIZE: '16'
+  CANARY_BYTE: '0xA5'
+function_calls:
+- order: 15
+  function: main
+  args:
+  - void
+  raw: '} int main(void) { int ret;'
+  is_api: false
+- order: 19
+  function: mbedtls_mpi_init
+  args:
+  - '&X'
+  raw: mbedtls_mpi_init(&X);
+  is_api: true
+- order: 20
+  function: mbedtls_mpi_init
+  args:
+  - '&A'
+  raw: mbedtls_mpi_init(&A);
+  is_api: true
+- order: 21
+  function: mbedtls_mpi_init
+  args:
+  - '&B'
+  raw: mbedtls_mpi_init(&B);
+  is_api: true
+- order: 22
+  function: mbedtls_mpi_read_string
+  args:
+  - '&A'
+  - '10'
+  - '"5"'
+  raw: ret = mbedtls_mpi_read_string(&A, 10, "5");
+  is_api: true
+- order: 25
+  function: mbedtls_mpi_read_string
+  args:
+  - '&B'
+  - '16'
+  - '"123456789abcdef01"'
+  raw: '} ret = mbedtls_mpi_read_string(&B, 16, "123456789abcdef01");'
+  is_api: true
+- order: 32
+  function: mbedtls_mpi_sub_abs
+  args:
+  - '&X'
+  - '&A'
+  - '&B'
+  raw: ret = mbedtls_mpi_sub_abs(&X, &A, &B);
+  is_api: true
+- order: 41
+  function: mbedtls_mpi_free
+  args:
+  - '&A'
+  raw: 'cleanup_no_free_xp: mbedtls_mpi_free(&A);'
+  is_api: true
+- order: 42
+  function: mbedtls_mpi_free
+  args:
+  - '&B'
+  raw: mbedtls_mpi_free(&B);
+  is_api: true
+api_calls:
+- order: 19
+  function: mbedtls_mpi_init
+  args:
+  - '&X'
+  raw: mbedtls_mpi_init(&X);
+  is_api: true
+- order: 20
+  function: mbedtls_mpi_init
+  args:
+  - '&A'
+  raw: mbedtls_mpi_init(&A);
+  is_api: true
+- order: 21
+  function: mbedtls_mpi_init
+  args:
+  - '&B'
+  raw: mbedtls_mpi_init(&B);
+  is_api: true
+- order: 22
+  function: mbedtls_mpi_read_string
+  args:
+  - '&A'
+  - '10'
+  - '"5"'
+  raw: ret = mbedtls_mpi_read_string(&A, 10, "5");
+  is_api: true
+- order: 25
+  function: mbedtls_mpi_read_string
+  args:
+  - '&B'
+  - '16'
+  - '"123456789abcdef01"'
+  raw: '} ret = mbedtls_mpi_read_string(&B, 16, "123456789abcdef01");'
+  is_api: true
+- order: 32
+  function: mbedtls_mpi_sub_abs
+  args:
+  - '&X'
+  - '&A'
+  - '&B'
+  raw: ret = mbedtls_mpi_sub_abs(&X, &A, &B);
+  is_api: true
+- order: 41
+  function: mbedtls_mpi_free
+  args:
+  - '&A'
+  raw: 'cleanup_no_free_xp: mbedtls_mpi_free(&A);'
+  is_api: true
+- order: 42
+  function: mbedtls_mpi_free
+  args:
+  - '&B'
+  raw: mbedtls_mpi_free(&B);
+  is_api: true
+trigger_call:
+  order: 32
+  function: mbedtls_mpi_sub_abs
+  args:
+  - '&X'
+  - '&A'
+  - '&B'
+  raw: ret = mbedtls_mpi_sub_abs(&X, &A, &B);
+  is_api: true
+oracle_functions:
+- canary_corrupted
+- prepare_output_with_canary
+- fixed_ret_check:MBEDTLS_ERR_MPI_NEGATIVE_VALUE

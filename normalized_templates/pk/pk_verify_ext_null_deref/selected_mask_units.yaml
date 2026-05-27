@@ -1,0 +1,391 @@
+template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+template_name: mbedtls_pk_verify_ext opaque RSA-PSS null-deref template
+source_api: mbedtls_pk_verify_ext
+selection_policy:
+  method: ast_lite_high_value_mask_unit_selection
+  rules:
+  - Prefer role=mutation_point units.
+  - Prefer mask_level=value or api_argument units.
+  - Always retain trigger_call function_call/statement units.
+  - Always retain oracle statement/block units.
+  - Retain input_preparation/helper_function/block only when boundary keywords are
+    present.
+  - Limit cleanup units to one or two representative statements.
+  - Deduplicate repeated code snippets.
+  context_keywords:
+  - canary
+  - prepare_output_with_canary
+  - buffer
+  - buf
+  - limb
+  - X->p
+  - X->n
+  - raw
+  - CANARY_SIZE
+  - BUFLEN
+selected_units:
+- unit_id: ASTLITE-0098
+  mask_level: function_call
+  role: trigger_call
+  placeholder: '[PK_VERIFY_TYPE]'
+  code: '* returns MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE. */ ret = mbedtls_pk_verify_ext([PK_VERIFY_TYPE],
+    &pss_opts, &pk, [MD_ALG], hash, sizeof(hash), sig, sizeof(sig));'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_pk_verify_ext' identified by AST-lite call matching.
+  priority: high
+  function: mbedtls_pk_verify_ext
+  line: 124
+  selection_reason: Selected because [PK_VERIFY_TYPE] is a mutation point with function_call
+    granularity.
+  suggested_use: migrate_api_call
+  selection_score: 79
+- unit_id: ASTLITE-0045
+  mask_level: value
+  role: mutation_point
+  placeholder: '[HASH_LEN]'
+  code: '#define HASH_LEN [HASH_LEN]'
+  source: mask_report.masking_levels.macro_level
+  reason: Macro-level placeholder controls a generated constant or buffer size.
+  priority: medium
+  macro: HASH_LEN
+  selection_reason: Selected because [HASH_LEN] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 78
+- unit_id: ASTLITE-0044
+  mask_level: value
+  role: mutation_point
+  placeholder: '[KEY_BITS]'
+  code: '#define KEY_BITS [KEY_BITS]'
+  source: mask_report.masking_levels.macro_level
+  reason: Macro-level placeholder controls a generated constant or buffer size.
+  priority: medium
+  macro: KEY_BITS
+  selection_reason: Selected because [KEY_BITS] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 78
+- unit_id: ASTLITE-0046
+  mask_level: value
+  role: mutation_point
+  placeholder: '[SIG_LEN]'
+  code: '#define SIG_LEN [SIG_LEN]'
+  source: mask_report.masking_levels.macro_level
+  reason: Macro-level placeholder controls a generated constant or buffer size.
+  priority: medium
+  macro: SIG_LEN
+  selection_reason: Selected because [SIG_LEN] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 78
+- unit_id: ASTLITE-0002
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[HASH_LEN]'
+  code: HASH_LEN
+  source: template_meta.mutation_points
+  reason: Must match the hash size for the chosen MD_ALG
+  priority: high
+  mutation_name: HASH_LEN
+  mutation_type: size_t
+  default: 32
+  values:
+  - 32
+  - 64
+  - 20
+  - 48
+  selection_reason: Selected because [HASH_LEN] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 74
+- unit_id: ASTLITE-0050
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[HASH_LEN]'
+  code: '#include <stdio.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/rsa.h"
+    #include "mbedtls/md.h" #include "mbedtls/ctr_drbg.h" #include "mbedtls/entropy.h"
+    #include "psa/crypto.h" #define KEY_BITS [KEY_BITS] #define HASH_LEN [HASH_LEN]
+    #define SIG_LEN [SIG_LEN] int main(void) {'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Must match the hash size for the chosen MD_ALG
+  priority: high
+  line: 1
+  selection_reason: Selected because [HASH_LEN] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 74
+- unit_id: ASTLITE-0060
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[HASH_LEN]'
+  code: unsigned char hash[HASH_LEN];
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Must match the hash size for the chosen MD_ALG
+  priority: high
+  line: 26
+  selection_reason: Selected because [HASH_LEN] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 74
+- unit_id: ASTLITE-0001
+  mask_level: value
+  role: mutation_point
+  placeholder: '[KEY_BITS]'
+  code: KEY_BITS
+  source: template_meta.mutation_points
+  reason: Must be a valid key size for RSA-PSS
+  priority: high
+  mutation_name: KEY_BITS
+  mutation_type: int
+  default: 1024
+  values:
+  - 1024
+  - 2048
+  selection_reason: Selected because [KEY_BITS] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 74
+- unit_id: ASTLITE-0049
+  mask_level: value
+  role: mutation_point
+  placeholder: '[KEY_BITS]'
+  code: '#include <stdio.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/rsa.h"
+    #include "mbedtls/md.h" #include "mbedtls/ctr_drbg.h" #include "mbedtls/entropy.h"
+    #include "psa/crypto.h" #define KEY_BITS [KEY_BITS] #define HASH_LEN [HASH_LEN]
+    #define SIG_LEN [SIG_LEN] int main(void) {'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Must be a valid key size for RSA-PSS
+  priority: high
+  line: 1
+  selection_reason: Selected because [KEY_BITS] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 74
+- unit_id: ASTLITE-0003
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[SIG_LEN]'
+  code: SIG_LEN
+  source: template_meta.mutation_points
+  reason: Must be a valid RSA-PSS signature length
+  priority: high
+  mutation_name: SIG_LEN
+  mutation_type: size_t
+  default: 128
+  values:
+  - 128
+  - 256
+  selection_reason: Selected because [SIG_LEN] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 74
+- unit_id: ASTLITE-0051
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[SIG_LEN]'
+  code: '#include <stdio.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/rsa.h"
+    #include "mbedtls/md.h" #include "mbedtls/ctr_drbg.h" #include "mbedtls/entropy.h"
+    #include "psa/crypto.h" #define KEY_BITS [KEY_BITS] #define HASH_LEN [HASH_LEN]
+    #define SIG_LEN [SIG_LEN] int main(void) {'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Must be a valid RSA-PSS signature length
+  priority: high
+  line: 1
+  selection_reason: Selected because [SIG_LEN] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 74
+- unit_id: ASTLITE-0062
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[SIG_LEN]'
+  code: unsigned char sig[SIG_LEN];
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Must be a valid RSA-PSS signature length
+  priority: high
+  line: 27
+  selection_reason: Selected because [SIG_LEN] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 74
+- unit_id: ASTLITE-0006
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[EXPECTED_SALT_LEN]'
+  code: EXPECTED_SALT_LEN
+  source: template_meta.mutation_points
+  reason: Must be a valid salt length for RSA-PSS
+  priority: medium
+  mutation_name: EXPECTED_SALT_LEN
+  mutation_type: enum
+  default: MBEDTLS_RSA_SALT_LEN_ANY
+  values:
+  - MBEDTLS_RSA_SALT_LEN_ANY
+  selection_reason: Selected because [EXPECTED_SALT_LEN] is a mutation point with
+    api_argument granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 72
+- unit_id: ASTLITE-0067
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[EXPECTED_SALT_LEN]'
+  code: pss_opts.expected_salt_len = [EXPECTED_SALT_LEN];
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Must be a valid salt length for RSA-PSS
+  priority: medium
+  line: 33
+  selection_reason: Selected because [EXPECTED_SALT_LEN] is a mutation point with
+    api_argument granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 72
+- unit_id: ASTLITE-0004
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[MD_ALG]'
+  code: MD_ALG
+  source: template_meta.mutation_points
+  reason: Must be a valid hash algorithm for RSA-PSS
+  priority: medium
+  mutation_name: MD_ALG
+  mutation_type: enum
+  default: MBEDTLS_MD_SHA256
+  values:
+  - MBEDTLS_MD_SHA256
+  - MBEDTLS_MD_SHA384
+  - MBEDTLS_MD_SHA512
+  selection_reason: Selected because [MD_ALG] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 72
+- unit_id: ASTLITE-0066
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[MD_ALG]'
+  code: pss_opts.mgf1_hash_id = [MD_ALG];
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Must be a valid hash algorithm for RSA-PSS
+  priority: medium
+  line: 32
+  selection_reason: Selected because [MD_ALG] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 72
+- unit_id: ASTLITE-0005
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[PK_VERIFY_TYPE]'
+  code: PK_VERIFY_TYPE
+  source: template_meta.mutation_points
+  reason: Must be a valid RSA-PSS verification type
+  priority: medium
+  mutation_name: PK_VERIFY_TYPE
+  mutation_type: enum
+  default: MBEDTLS_PK_RSASSA_PSS
+  values:
+  - MBEDTLS_PK_RSASSA_PSS
+  - MBEDTLS_PK_RSA
+  selection_reason: Selected because [PK_VERIFY_TYPE] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 72
+- unit_id: ASTLITE-0105
+  mask_level: value
+  role: mutation_point
+  placeholder: '[INFO]'
+  code: printf("[INFO] returned without crash, ret=%d\n", ret);
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 141
+  selection_reason: Selected because [INFO] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 64
+- unit_id: ASTLITE-0100
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: printf("expected fixed ret=%d\n", MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE);
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 136
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 49
+- unit_id: ASTLITE-0103
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: 'printf("[OK] fixed behavior: unsupported opaque verify_ext rejected safely.\n");'
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 139
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 49
+- unit_id: ASTLITE-0068
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: setbuf(stdout, NULL);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'setbuf' identified by AST-lite call matching.
+  priority: medium
+  function: setbuf
+  line: 35
+  selection_reason: Selected as high-value input/helper context because it references
+    canary, buffer, limb, or output-boundary state.
+  suggested_use: preserve_input_preparation
+  selection_score: 37
+- unit_id: ASTLITE-0089
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_pk_free(&pk);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_pk_free' identified by AST-lite call matching.
+  priority: medium
+  function: mbedtls_pk_free
+  line: 103
+  selection_reason: Selected limited cleanup context needed to keep generated harnesses
+    well-scoped.
+  suggested_use: preserve_cleanup
+  selection_score: 17
+- unit_id: ASTLITE-0111
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_ctr_drbg_free(&ctr_drbg);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_ctr_drbg_free' identified by AST-lite call matching.
+  priority: medium
+  function: mbedtls_ctr_drbg_free
+  line: 151
+  selection_reason: Selected limited cleanup context needed to keep generated harnesses
+    well-scoped.
+  suggested_use: preserve_cleanup
+  selection_score: 17
+selection_summary:
+  selected_count: 23
+  source_unit_count: 115
+  by_role:
+    cleanup: 2
+    helper_function: 1
+    mutation_point: 17
+    oracle: 2
+    trigger_call: 1
+  by_mask_level:
+    api_argument: 11
+    function_call: 4
+    statement: 2
+    value: 6
+  by_suggested_use:
+    migrate_api_call: 1
+    mutate_api_argument: 11
+    mutate_value: 6
+    preserve_cleanup: 2
+    preserve_input_preparation: 1
+    preserve_oracle: 2
+rejected_summary:
+  count: 21
+  by_reason:
+    cleanup_limit_reached: 14
+    duplicate_code_or_unit: 7

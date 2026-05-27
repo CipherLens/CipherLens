@@ -1,0 +1,1104 @@
+template_id: BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY
+template_name: mbedtls_mpi_sub_abs limb-boundary template
+source_api: mbedtls_mpi_sub_abs
+source_library: mbedtls
+summary:
+  method: ast_lite_regex_template_role_aware
+  template_dir: normalized_templates/bignum/mpi_sub_abs
+  unit_count: 106
+  note: Lightweight AST-like report generated from template metadata, mask_report
+    roles, and regex/template-aware analysis of tmpl_mbedtls.c.
+ast_mask_units:
+- unit_id: ASTLITE-0001
+  mask_level: value
+  role: mutation_point
+  placeholder: '[A_VALUE]'
+  code: mbedtls_mpi_read_string(&A, 10, "5")
+  source: template_meta.mutation_points
+  reason: 'Controls the magnitude and effective limb count of A. The reproduced bug
+    requires A to have fewer effective limbs than B.
+
+    '
+  priority: high
+  mutation_name: A_VALUE
+  mutation_type: string_number
+  default: '5'
+  values:
+  - '0'
+  - '1'
+  - '5'
+  - '3'
+  - '15'
+  - '255'
+- unit_id: ASTLITE-0002
+  mask_level: value
+  role: mutation_point
+  placeholder: '[B_VALUE]'
+  code: mbedtls_mpi_read_string(&B, 16, "123456789abcdef01")
+  source: template_meta.mutation_points
+  reason: 'Controls the magnitude and effective limb count of B. The trigger uses
+    a B value with two limbs while A and X have one limb.
+
+    '
+  priority: high
+  mutation_name: B_VALUE
+  mutation_type: string_hex
+  default: 123456789abcdef01
+  values:
+  - 123456789abcdef01
+  - '100000000'
+  - ffffffffffffffff
+  - ffffffffffffffffffffffff
+  - deadbeefdeadbeef
+- unit_id: ASTLITE-0003
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[A_BASE]'
+  code: A_BASE
+  source: template_meta.mutation_points
+  reason: Check all possible enum values.
+  priority: medium
+  mutation_name: A_BASE
+  mutation_type: enum
+  default: 10
+  values:
+  - 10
+  - 16
+- unit_id: ASTLITE-0004
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[B_BASE]'
+  code: B_BASE
+  source: template_meta.mutation_points
+  reason: Check all possible enum values.
+  priority: medium
+  mutation_name: B_BASE
+  mutation_type: enum
+  default: 16
+  values:
+  - 10
+  - 16
+- unit_id: ASTLITE-0005
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[X_LIMB_COUNT]'
+  code: X_LIMB_COUNT
+  source: template_meta.mutation_points
+  reason: Check for zero, one, maximum limbs, and maximum value.
+  priority: high
+  mutation_name: X_LIMB_COUNT
+  mutation_type: size_t
+  default: 1
+  values:
+  - 1
+  - 2
+  - 3
+  - 4
+- unit_id: ASTLITE-0006
+  mask_level: value
+  role: mutation_point
+  placeholder: '[CANARY_SIZE]'
+  code: '#define CANARY_SIZE 16'
+  source: template_meta.mutation_points
+  reason: 'Controls the canary detection region immediately after X->p.
+
+    '
+  priority: low
+  mutation_name: CANARY_SIZE
+  mutation_type: size_t
+  default: 16
+  values:
+  - 8
+  - 16
+  - 32
+- unit_id: ASTLITE-0007
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[A_RADIX]'
+  code: mbedtls_mpi_read_string(&A, 10, ...)
+  source: mask_report.poc_pattern.mutation_points
+  reason: 'Controls parsing of the A operand. It is part of the regression-test input
+    but is not the core memory-boundary condition.
+
+    '
+  priority: medium
+  mutation_name: A_RADIX
+  mutation_type: ''
+  default: ''
+  values: []
+- unit_id: ASTLITE-0008
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[B_RADIX]'
+  code: mbedtls_mpi_read_string(&B, 16, ...)
+  source: mask_report.poc_pattern.mutation_points
+  reason: 'Controls parsing of the B operand and is needed to reproduce the two-limb
+    B value used by the regression-derived PoC.
+
+    '
+  priority: medium
+  mutation_name: B_RADIX
+  mutation_type: ''
+  default: ''
+  values: []
+- unit_id: ASTLITE-0009
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[OUTPUT_LIMBS]'
+  code: prepare_output_with_canary(&X, 1)
+  source: mask_report.poc_pattern.mutation_points
+  reason: 'Controls the manually prepared X->n and X->p allocation boundary. The bug
+    is observable when X has fewer limbs than the helper writes.
+
+    '
+  priority: high
+  mutation_name: OUTPUT_LIMBS
+  mutation_type: ''
+  default: ''
+  values: []
+- unit_id: ASTLITE-0010
+  mask_level: statement
+  role: input_preparation
+  placeholder: ''
+  code: mbedtls_mpi_init(&X);
+  source: mask_report.roles.init
+  reason: Role-aware statement recorded by mask_report role 'init'.
+  priority: medium
+  order: 19
+- unit_id: ASTLITE-0011
+  mask_level: statement
+  role: input_preparation
+  placeholder: ''
+  code: mbedtls_mpi_init(&A);
+  source: mask_report.roles.init
+  reason: Role-aware statement recorded by mask_report role 'init'.
+  priority: medium
+  order: 20
+- unit_id: ASTLITE-0012
+  mask_level: statement
+  role: input_preparation
+  placeholder: ''
+  code: mbedtls_mpi_init(&B);
+  source: mask_report.roles.init
+  reason: Role-aware statement recorded by mask_report role 'init'.
+  priority: medium
+  order: 21
+- unit_id: ASTLITE-0013
+  mask_level: statement
+  role: input_construction
+  placeholder: ''
+  code: '} static int prepare_output_with_canary(mbedtls_mpi *X, size_t limbs) { size_t
+    alloc_size = limbs * sizeof(mbedtls_mpi_uint) + CANARY_SIZE;'
+  source: mask_report.roles.input_construction
+  reason: Role-aware statement recorded by mask_report role 'input_construction'.
+  priority: medium
+  order: 7
+- unit_id: ASTLITE-0014
+  mask_level: api_argument
+  role: input_construction
+  placeholder: '[A_BASE]'
+  code: ret = mbedtls_mpi_read_string(&A, [A_BASE], "[A_VALUE]");
+  source: mask_report.roles.input_construction
+  reason: Role-aware statement recorded by mask_report role 'input_construction'.
+  priority: medium
+  order: 22
+- unit_id: ASTLITE-0015
+  mask_level: value
+  role: input_construction
+  placeholder: '[A_VALUE]'
+  code: ret = mbedtls_mpi_read_string(&A, [A_BASE], "[A_VALUE]");
+  source: mask_report.roles.input_construction
+  reason: Role-aware statement recorded by mask_report role 'input_construction'.
+  priority: medium
+  order: 22
+- unit_id: ASTLITE-0016
+  mask_level: api_argument
+  role: input_construction
+  placeholder: '[B_BASE]'
+  code: '} ret = mbedtls_mpi_read_string(&B, [B_BASE], "[B_VALUE]");'
+  source: mask_report.roles.input_construction
+  reason: Role-aware statement recorded by mask_report role 'input_construction'.
+  priority: medium
+  order: 25
+- unit_id: ASTLITE-0017
+  mask_level: value
+  role: input_construction
+  placeholder: '[B_VALUE]'
+  code: '} ret = mbedtls_mpi_read_string(&B, [B_BASE], "[B_VALUE]");'
+  source: mask_report.roles.input_construction
+  reason: Role-aware statement recorded by mask_report role 'input_construction'.
+  priority: medium
+  order: 25
+- unit_id: ASTLITE-0018
+  mask_level: api_argument
+  role: input_construction
+  placeholder: '[X_LIMB_COUNT]'
+  code: '} if (prepare_output_with_canary(&X, [X_LIMB_COUNT]) != 0) { printf("prepare_output_with_canary
+    failed\n");'
+  source: mask_report.roles.input_construction
+  reason: Role-aware statement recorded by mask_report role 'input_construction'.
+  priority: medium
+  order: 28
+- unit_id: ASTLITE-0019
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: ret = mbedtls_mpi_sub_abs(&X, &A, &B);
+  source: mask_report.roles.trigger_call
+  reason: Role-aware statement recorded by mask_report role 'trigger_call'.
+  priority: medium
+  order: 32
+- unit_id: ASTLITE-0020
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: static int canary_corrupted(mbedtls_mpi *X) { if (X->p == NULL || X->n ==
+    0) { return 0;
+  source: mask_report.roles.oracle
+  reason: Role-aware statement recorded by mask_report role 'oracle'.
+  priority: medium
+  order: 0
+- unit_id: ASTLITE-0021
+  mask_level: value
+  role: oracle
+  placeholder: '[BUG]'
+  code: 'if (canary_corrupted(&X)) { printf("[BUG] Canary corrupted: mbedtls_mpi_sub_abs
+    wrote beyond X->p.\n");'
+  source: mask_report.roles.oracle
+  reason: Role-aware statement recorded by mask_report role 'oracle'.
+  priority: medium
+  order: 35
+- unit_id: ASTLITE-0022
+  mask_level: value
+  role: oracle
+  placeholder: '[OK]'
+  code: '} else { printf("[OK] Canary intact.\n");'
+  source: mask_report.roles.oracle
+  reason: Role-aware statement recorded by mask_report role 'oracle'.
+  priority: medium
+  order: 37
+- unit_id: ASTLITE-0023
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: goto cleanup;
+  source: mask_report.roles.cleanup
+  reason: Role-aware statement recorded by mask_report role 'cleanup'.
+  priority: medium
+  order: 24
+- unit_id: ASTLITE-0024
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: goto cleanup_no_free_xp;
+  source: mask_report.roles.cleanup
+  reason: Role-aware statement recorded by mask_report role 'cleanup'.
+  priority: medium
+  order: 30
+- unit_id: ASTLITE-0025
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: '} cleanup: free(X.p);'
+  source: mask_report.roles.cleanup
+  reason: Role-aware statement recorded by mask_report role 'cleanup'.
+  priority: medium
+  order: 38
+- unit_id: ASTLITE-0026
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: 'cleanup_no_free_xp: mbedtls_mpi_free(&A);'
+  source: mask_report.roles.cleanup
+  reason: Role-aware statement recorded by mask_report role 'cleanup'.
+  priority: medium
+  order: 41
+- unit_id: ASTLITE-0027
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_mpi_free(&B);
+  source: mask_report.roles.cleanup
+  reason: Role-aware statement recorded by mask_report role 'cleanup'.
+  priority: medium
+  order: 42
+- unit_id: ASTLITE-0028
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: size_t used = X->n * sizeof(mbedtls_mpi_uint);
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 2
+- unit_id: ASTLITE-0029
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: '} memset(raw + limbs * sizeof(mbedtls_mpi_uint), CANARY_BYTE, CANARY_SIZE);'
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 10
+- unit_id: ASTLITE-0030
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: X->p = (mbedtls_mpi_uint *) raw;
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 13
+- unit_id: ASTLITE-0031
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: mbedtls_mpi X;
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 16
+- unit_id: ASTLITE-0032
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: mbedtls_mpi A;
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 17
+- unit_id: ASTLITE-0033
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: mbedtls_mpi B;
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 18
+- unit_id: ASTLITE-0034
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: '} printf("A.n=%zu B.n=%zu X.n=%zu sizeof(mbedtls_mpi_uint)=%zu\n", A.n, B.n,
+    X.n, sizeof(mbedtls_mpi_uint));'
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 31
+- unit_id: ASTLITE-0035
+  mask_level: value
+  role: mutation_point
+  placeholder: '[CANARY_SIZE]'
+  code: '#define CANARY_SIZE [CANARY_SIZE]'
+  source: mask_report.masking_levels.macro_level
+  reason: Macro-level placeholder controls a generated constant or buffer size.
+  priority: medium
+  macro: CANARY_SIZE
+- unit_id: ASTLITE-0036
+  mask_level: api_argument
+  role: input_construction
+  placeholder: '[A_BASE]'
+  code: ret = mbedtls_mpi_read_string(&A, [A_BASE], "[A_VALUE]");
+  source: mask_report.masking_levels.api_argument_or_value_level
+  reason: Check all possible enum values.
+  priority: medium
+  api_or_function: mbedtls_mpi_read_string
+- unit_id: ASTLITE-0037
+  mask_level: api_argument
+  role: input_construction
+  placeholder: '[A_VALUE]'
+  code: ret = mbedtls_mpi_read_string(&A, [A_BASE], "[A_VALUE]");
+  source: mask_report.masking_levels.api_argument_or_value_level
+  reason: Check for zero, maximum value, and typical value.
+  priority: high
+  api_or_function: mbedtls_mpi_read_string
+- unit_id: ASTLITE-0038
+  mask_level: api_argument
+  role: input_construction
+  placeholder: '[B_BASE]'
+  code: '} ret = mbedtls_mpi_read_string(&B, [B_BASE], "[B_VALUE]");'
+  source: mask_report.masking_levels.api_argument_or_value_level
+  reason: Check all possible enum values.
+  priority: medium
+  api_or_function: mbedtls_mpi_read_string
+- unit_id: ASTLITE-0039
+  mask_level: api_argument
+  role: input_construction
+  placeholder: '[B_VALUE]'
+  code: '} ret = mbedtls_mpi_read_string(&B, [B_BASE], "[B_VALUE]");'
+  source: mask_report.masking_levels.api_argument_or_value_level
+  reason: Check for zero, maximum hex value, and typical hex value.
+  priority: high
+  api_or_function: mbedtls_mpi_read_string
+- unit_id: ASTLITE-0040
+  mask_level: api_argument
+  role: input_construction
+  placeholder: '[X_LIMB_COUNT]'
+  code: '} if (prepare_output_with_canary(&X, [X_LIMB_COUNT]) != 0) { printf("prepare_output_with_canary
+    failed\n");'
+  source: mask_report.masking_levels.api_argument_or_value_level
+  reason: Check for zero, one, maximum limbs, and maximum value.
+  priority: high
+  api_or_function: prepare_output_with_canary
+- unit_id: ASTLITE-0041
+  mask_level: identifier
+  role: mutation_point
+  placeholder: ''
+  code: n
+  source: mask_report.poc_pattern.occlusion_candidates.identifier_level
+  reason: PoC pattern occlusion candidate for multi-granularity masking.
+  priority: medium
+- unit_id: ASTLITE-0042
+  mask_level: identifier
+  role: mutation_point
+  placeholder: ''
+  code: A->n
+  source: mask_report.poc_pattern.occlusion_candidates.identifier_level
+  reason: PoC pattern occlusion candidate for multi-granularity masking.
+  priority: medium
+- unit_id: ASTLITE-0043
+  mask_level: identifier
+  role: mutation_point
+  placeholder: ''
+  code: X->n
+  source: mask_report.poc_pattern.occlusion_candidates.identifier_level
+  reason: PoC pattern occlusion candidate for multi-granularity masking.
+  priority: medium
+- unit_id: ASTLITE-0044
+  mask_level: identifier
+  role: mutation_point
+  placeholder: ''
+  code: X->p
+  source: mask_report.poc_pattern.occlusion_candidates.identifier_level
+  reason: PoC pattern occlusion candidate for multi-granularity masking.
+  priority: medium
+- unit_id: ASTLITE-0045
+  mask_level: identifier
+  role: mutation_point
+  placeholder: ''
+  code: B->p
+  source: mask_report.poc_pattern.occlusion_candidates.identifier_level
+  reason: PoC pattern occlusion candidate for multi-granularity masking.
+  priority: medium
+- unit_id: ASTLITE-0046
+  mask_level: statement
+  role: mutation_point
+  placeholder: ''
+  code: n > A->n
+  source: mask_report.poc_pattern.occlusion_candidates.expression_level
+  reason: PoC pattern occlusion candidate for multi-granularity masking.
+  priority: medium
+- unit_id: ASTLITE-0047
+  mask_level: statement
+  role: mutation_point
+  placeholder: ''
+  code: ret = MBEDTLS_ERR_MPI_NEGATIVE_VALUE;
+  source: mask_report.poc_pattern.occlusion_candidates.statement_level
+  reason: PoC pattern occlusion candidate for multi-granularity masking.
+  priority: medium
+- unit_id: ASTLITE-0048
+  mask_level: statement
+  role: mutation_point
+  placeholder: ''
+  code: goto cleanup;
+  source: mask_report.poc_pattern.occlusion_candidates.statement_level
+  reason: PoC pattern occlusion candidate for multi-granularity masking.
+  priority: medium
+- unit_id: ASTLITE-0049
+  mask_level: statement
+  role: mutation_point
+  placeholder: ''
+  code: mpi_sub_hlp( n, X->p, B->p )
+  source: mask_report.poc_pattern.occlusion_candidates.statement_level
+  reason: PoC pattern occlusion candidate for multi-granularity masking.
+  priority: medium
+- unit_id: ASTLITE-0050
+  mask_level: block
+  role: mutation_point
+  placeholder: ''
+  code: if( n > A->n ) { ret = MBEDTLS_ERR_MPI_NEGATIVE_VALUE; goto cleanup; }
+  source: mask_report.poc_pattern.occlusion_candidates.block_level
+  reason: PoC pattern occlusion candidate for multi-granularity masking.
+  priority: medium
+- unit_id: ASTLITE-0051
+  mask_level: block
+  role: helper_function
+  placeholder: ''
+  code: static int canary_corrupted(mbedtls_mpi *X) { if (X->p == NULL || X->n ==
+    0) { return 0; } unsigned char *raw = (unsigned char *) X->p; size_t used = X->n
+    * sizeof(mbedtls_mpi_uint); for (size_t i = 0; i < CANARY_SIZE; i++) { if (raw[used
+    + i] != CANARY_BYTE) { return 1; } } return 0; }
+  source: tmpl_mbedtls.c.helper_function
+  reason: Static helper function block 'canary_corrupted' identified by AST-lite brace
+    matching.
+  priority: medium
+  function: canary_corrupted
+  line: 10
+- unit_id: ASTLITE-0052
+  mask_level: block
+  role: helper_function
+  placeholder: ''
+  code: static int prepare_output_with_canary(mbedtls_mpi *X, size_t limbs) { size_t
+    alloc_size = limbs * sizeof(mbedtls_mpi_uint) + CANARY_SIZE; unsigned char *raw
+    = (unsigned char *) calloc(1, alloc_size); if (raw == NULL) { return -1; } memset(raw
+    + limbs * sizeof(mbedtls_mpi_uint), CANARY_BYTE, CANARY_SIZE); X->s = 1; X->n
+    = limbs; X->p = (mbedtls_mpi_uint *) raw; return 0; }
+  source: tmpl_mbedtls.c.helper_function
+  reason: Static helper function block 'prepare_output_with_canary' identified by
+    AST-lite brace matching.
+  priority: medium
+  function: prepare_output_with_canary
+  line: 28
+- unit_id: ASTLITE-0053
+  mask_level: api_argument
+  role: oracle
+  placeholder: '[CANARY_SIZE]'
+  code: '#include <stdio.h> #include <stdlib.h> #include <string.h> #include "mbedtls/bignum.h"
+    #define CANARY_SIZE [CANARY_SIZE] #define CANARY_BYTE 0xA5 static int canary_corrupted(mbedtls_mpi
+    *X) {'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Check for zero, typical canary size, and larger values.
+  priority: high
+  line: 1
+- unit_id: ASTLITE-0054
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: '#include <stdio.h> #include <stdlib.h> #include <string.h> #include "mbedtls/bignum.h"
+    #define CANARY_SIZE [CANARY_SIZE] #define CANARY_BYTE 0xA5 static int canary_corrupted(mbedtls_mpi
+    *X) {'
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 1
+- unit_id: ASTLITE-0055
+  mask_level: function_call
+  role: oracle
+  placeholder: '[CANARY_SIZE]'
+  code: '#include <stdio.h> #include <stdlib.h> #include <string.h> #include "mbedtls/bignum.h"
+    #define CANARY_SIZE [CANARY_SIZE] #define CANARY_BYTE 0xA5 static int canary_corrupted(mbedtls_mpi
+    *X) {'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'canary_corrupted' identified by AST-lite call matching.
+  priority: medium
+  function: canary_corrupted
+  line: 1
+- unit_id: ASTLITE-0056
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: unsigned char *raw = (unsigned char *) X->p;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 16
+- unit_id: ASTLITE-0057
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: size_t used = X->n * sizeof(mbedtls_mpi_uint);
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 17
+- unit_id: ASTLITE-0058
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: static int prepare_output_with_canary(mbedtls_mpi *X, size_t limbs) {
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 28
+- unit_id: ASTLITE-0059
+  mask_level: function_call
+  role: oracle
+  placeholder: ''
+  code: static int prepare_output_with_canary(mbedtls_mpi *X, size_t limbs) {
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'prepare_output_with_canary' identified by AST-lite call matching.
+  priority: medium
+  function: prepare_output_with_canary
+  line: 28
+- unit_id: ASTLITE-0060
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: size_t alloc_size = limbs * sizeof(mbedtls_mpi_uint) + CANARY_SIZE;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 30
+- unit_id: ASTLITE-0061
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: unsigned char *raw = (unsigned char *) calloc(1, alloc_size);
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 31
+- unit_id: ASTLITE-0062
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: unsigned char *raw = (unsigned char *) calloc(1, alloc_size);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'calloc' identified by AST-lite call matching.
+  priority: medium
+  function: calloc
+  line: 31
+- unit_id: ASTLITE-0063
+  mask_level: function_call
+  role: input_construction
+  placeholder: ''
+  code: memset(raw + limbs * sizeof(mbedtls_mpi_uint), CANARY_BYTE, CANARY_SIZE);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'memset' identified by AST-lite call matching.
+  priority: medium
+  function: memset
+  line: 37
+- unit_id: ASTLITE-0064
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: int main(void) {
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'main' identified by AST-lite call matching.
+  priority: medium
+  function: main
+  line: 46
+- unit_id: ASTLITE-0065
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: int ret;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 48
+- unit_id: ASTLITE-0066
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: mbedtls_mpi X;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 49
+- unit_id: ASTLITE-0067
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: mbedtls_mpi A;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 50
+- unit_id: ASTLITE-0068
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: mbedtls_mpi B;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 51
+- unit_id: ASTLITE-0069
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: mbedtls_mpi_init(&X);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_mpi_init' identified by AST-lite call matching.
+  priority: medium
+  function: mbedtls_mpi_init
+  line: 53
+- unit_id: ASTLITE-0070
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: mbedtls_mpi_init(&A);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_mpi_init' identified by AST-lite call matching.
+  priority: medium
+  function: mbedtls_mpi_init
+  line: 54
+- unit_id: ASTLITE-0071
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: mbedtls_mpi_init(&B);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_mpi_init' identified by AST-lite call matching.
+  priority: medium
+  function: mbedtls_mpi_init
+  line: 55
+- unit_id: ASTLITE-0072
+  mask_level: api_argument
+  role: input_construction
+  placeholder: '[A_BASE]'
+  code: '* mbedtls_mpi_sub_abs:10:"5":16:"123456789abcdef01":10:"0":MBEDTLS_ERR_MPI_NEGATIVE_VALUE
+    * * |B| has more limbs than |A|. The fixed version rejects early. * The buggy
+    version continues to mpi_sub_hlp(n, X->p, B->p), which can write beyond X->p.
+    */ ret = mbedtls_mpi_read_string(&A, [A_BASE], "[A_VALUE]");'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Check all possible enum values.
+  priority: medium
+  line: 59
+- unit_id: ASTLITE-0073
+  mask_level: value
+  role: input_construction
+  placeholder: '[A_VALUE]'
+  code: '* mbedtls_mpi_sub_abs:10:"5":16:"123456789abcdef01":10:"0":MBEDTLS_ERR_MPI_NEGATIVE_VALUE
+    * * |B| has more limbs than |A|. The fixed version rejects early. * The buggy
+    version continues to mpi_sub_hlp(n, X->p, B->p), which can write beyond X->p.
+    */ ret = mbedtls_mpi_read_string(&A, [A_BASE], "[A_VALUE]");'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Check for zero, maximum value, and typical value.
+  priority: high
+  line: 59
+- unit_id: ASTLITE-0074
+  mask_level: function_call
+  role: input_construction
+  placeholder: '[A_BASE]'
+  code: '* mbedtls_mpi_sub_abs:10:"5":16:"123456789abcdef01":10:"0":MBEDTLS_ERR_MPI_NEGATIVE_VALUE
+    * * |B| has more limbs than |A|. The fixed version rejects early. * The buggy
+    version continues to mpi_sub_hlp(n, X->p, B->p), which can write beyond X->p.
+    */ ret = mbedtls_mpi_read_string(&A, [A_BASE], "[A_VALUE]");'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mpi_sub_hlp' identified by AST-lite call matching.
+  priority: medium
+  function: mpi_sub_hlp
+  line: 59
+- unit_id: ASTLITE-0075
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: 'printf("read A failed: %d\n", ret);'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 67
+- unit_id: ASTLITE-0076
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: goto cleanup;
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as cleanup by AST-lite role rules.
+  priority: medium
+  line: 68
+- unit_id: ASTLITE-0077
+  mask_level: api_argument
+  role: input_construction
+  placeholder: '[B_BASE]'
+  code: ret = mbedtls_mpi_read_string(&B, [B_BASE], "[B_VALUE]");
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Check all possible enum values.
+  priority: medium
+  line: 71
+- unit_id: ASTLITE-0078
+  mask_level: value
+  role: input_construction
+  placeholder: '[B_VALUE]'
+  code: ret = mbedtls_mpi_read_string(&B, [B_BASE], "[B_VALUE]");
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Check for zero, maximum hex value, and typical hex value.
+  priority: high
+  line: 71
+- unit_id: ASTLITE-0079
+  mask_level: function_call
+  role: input_construction
+  placeholder: '[B_BASE]'
+  code: ret = mbedtls_mpi_read_string(&B, [B_BASE], "[B_VALUE]");
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_mpi_read_string' identified by AST-lite call matching.
+  priority: medium
+  function: mbedtls_mpi_read_string
+  line: 71
+- unit_id: ASTLITE-0080
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: 'printf("read B failed: %d\n", ret);'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 73
+- unit_id: ASTLITE-0081
+  mask_level: api_argument
+  role: oracle
+  placeholder: '[X_LIMB_COUNT]'
+  code: /* * Prepare X with only one limb plus a canary immediately after it. * This
+    makes the buggy write observable. */ if (prepare_output_with_canary(&X, [X_LIMB_COUNT])
+    != 0) {
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Check for zero, one, maximum limbs, and maximum value.
+  priority: high
+  line: 77
+- unit_id: ASTLITE-0082
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: /* * Prepare X with only one limb plus a canary immediately after it. * This
+    makes the buggy write observable. */ if (prepare_output_with_canary(&X, [X_LIMB_COUNT])
+    != 0) {
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 77
+- unit_id: ASTLITE-0083
+  mask_level: function_call
+  role: oracle
+  placeholder: '[X_LIMB_COUNT]'
+  code: /* * Prepare X with only one limb plus a canary immediately after it. * This
+    makes the buggy write observable. */ if (prepare_output_with_canary(&X, [X_LIMB_COUNT])
+    != 0) {
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'prepare_output_with_canary' identified by AST-lite call matching.
+  priority: medium
+  function: prepare_output_with_canary
+  line: 77
+- unit_id: ASTLITE-0084
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("prepare_output_with_canary failed\n");
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 82
+- unit_id: ASTLITE-0085
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: goto cleanup_no_free_xp;
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as cleanup by AST-lite role rules.
+  priority: medium
+  line: 84
+- unit_id: ASTLITE-0086
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("A.n=%zu B.n=%zu X.n=%zu sizeof(mbedtls_mpi_uint)=%zu\n", A.n, B.n,
+    X.n, sizeof(mbedtls_mpi_uint));
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 87
+- unit_id: ASTLITE-0087
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: ret = mbedtls_mpi_sub_abs(&X, &A, &B);
+  source: tmpl_mbedtls.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 90
+- unit_id: ASTLITE-0088
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: ret = mbedtls_mpi_sub_abs(&X, &A, &B);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_mpi_sub_abs' identified by AST-lite call matching.
+  priority: high
+  function: mbedtls_mpi_sub_abs
+  line: 90
+- unit_id: ASTLITE-0089
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("ret=%d\n", ret);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 92
+- unit_id: ASTLITE-0090
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("expected=%d\n", MBEDTLS_ERR_MPI_NEGATIVE_VALUE);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 93
+- unit_id: ASTLITE-0091
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: if (canary_corrupted(&X)) {
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 95
+- unit_id: ASTLITE-0092
+  mask_level: function_call
+  role: oracle
+  placeholder: ''
+  code: if (canary_corrupted(&X)) {
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'canary_corrupted' identified by AST-lite call matching.
+  priority: medium
+  function: canary_corrupted
+  line: 95
+- unit_id: ASTLITE-0093
+  mask_level: value
+  role: oracle
+  placeholder: '[BUG]'
+  code: 'printf("[BUG] Canary corrupted: mbedtls_mpi_sub_abs wrote beyond X->p.\n");'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 96
+- unit_id: ASTLITE-0094
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: 'printf("[BUG] Canary corrupted: mbedtls_mpi_sub_abs wrote beyond X->p.\n");'
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 96
+- unit_id: ASTLITE-0095
+  mask_level: function_call
+  role: oracle
+  placeholder: '[BUG]'
+  code: 'printf("[BUG] Canary corrupted: mbedtls_mpi_sub_abs wrote beyond X->p.\n");'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 96
+- unit_id: ASTLITE-0096
+  mask_level: value
+  role: oracle
+  placeholder: '[OK]'
+  code: printf("[OK] Canary intact.\n");
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 99
+- unit_id: ASTLITE-0097
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: printf("[OK] Canary intact.\n");
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 99
+- unit_id: ASTLITE-0098
+  mask_level: function_call
+  role: oracle
+  placeholder: '[OK]'
+  code: printf("[OK] Canary intact.\n");
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 99
+- unit_id: ASTLITE-0099
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: 'cleanup:'
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as cleanup by AST-lite role rules.
+  priority: medium
+  line: 102
+- unit_id: ASTLITE-0100
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: /* * mbedtls_mpi_free(&X) would free X.p, which points to our custom allocation.
+    * It is still safe because it was allocated by calloc(), but we free it manually
+    * to avoid surprises after possible memory corruption. */ free(X.p);
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as cleanup by AST-lite role rules.
+  priority: medium
+  line: 103
+- unit_id: ASTLITE-0101
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: /* * mbedtls_mpi_free(&X) would free X.p, which points to our custom allocation.
+    * It is still safe because it was allocated by calloc(), but we free it manually
+    * to avoid surprises after possible memory corruption. */ free(X.p);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_mpi_free' identified by AST-lite call matching.
+  priority: medium
+  function: mbedtls_mpi_free
+  line: 103
+- unit_id: ASTLITE-0102
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: 'cleanup_no_free_xp:'
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as cleanup by AST-lite role rules.
+  priority: medium
+  line: 112
+- unit_id: ASTLITE-0103
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_mpi_free(&A);
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as cleanup by AST-lite role rules.
+  priority: medium
+  line: 113
+- unit_id: ASTLITE-0104
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_mpi_free(&A);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_mpi_free' identified by AST-lite call matching.
+  priority: medium
+  function: mbedtls_mpi_free
+  line: 113
+- unit_id: ASTLITE-0105
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_mpi_free(&B);
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as cleanup by AST-lite role rules.
+  priority: medium
+  line: 114
+- unit_id: ASTLITE-0106
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_mpi_free(&B);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_mpi_free' identified by AST-lite call matching.
+  priority: medium
+  function: mbedtls_mpi_free
+  line: 114
+role_summary:
+  cleanup: 15
+  helper_function: 25
+  input_construction: 18
+  input_preparation: 6
+  mutation_point: 20
+  oracle: 19
+  trigger_call: 3
+mask_level_summary:
+  api_argument: 18
+  block: 3
+  function_call: 24
+  identifier: 5
+  statement: 36
+  type: 8
+  value: 12

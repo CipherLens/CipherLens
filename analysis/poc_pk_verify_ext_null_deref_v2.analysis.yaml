@@ -1,0 +1,311 @@
+source_file: pocs/mbedtls/poc_pk_verify_ext_null_deref_v2.c
+language: c
+library: mbedtls
+includes:
+- stdio.h
+- string.h
+- mbedtls/pk.h
+- mbedtls/rsa.h
+- mbedtls/md.h
+- mbedtls/ctr_drbg.h
+- mbedtls/entropy.h
+- psa/crypto.h
+macros:
+  KEY_BITS: '1024'
+  HASH_LEN: '32'
+  SIG_LEN: '128'
+function_calls:
+- order: 16
+  function: mbedtls_pk_init
+  args:
+  - '&pk'
+  raw: mbedtls_pk_init(&pk);
+  is_api: true
+- order: 17
+  function: mbedtls_entropy_init
+  args:
+  - '&entropy'
+  raw: mbedtls_entropy_init(&entropy);
+  is_api: true
+- order: 18
+  function: mbedtls_ctr_drbg_init
+  args:
+  - '&ctr_drbg'
+  raw: mbedtls_ctr_drbg_init(&ctr_drbg);
+  is_api: true
+- order: 19
+  function: mbedtls_ctr_drbg_seed
+  args:
+  - '&ctr_drbg'
+  - mbedtls_entropy_func
+  - '&entropy'
+  - (const unsigned char *) pers
+  - strlen(pers)
+  raw: ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const
+    unsigned char *) pers, strlen(pers));
+  is_api: true
+- order: 22
+  function: psa_crypto_init
+  args: []
+  raw: '} status = psa_crypto_init();'
+  is_api: true
+- order: 26
+  function: mbedtls_pk_setup
+  args:
+  - '&pk'
+  - mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)
+  raw: '} ret = mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA));'
+  is_api: true
+- order: 29
+  function: mbedtls_rsa_gen_key
+  args:
+  - mbedtls_pk_rsa(pk)
+  - mbedtls_ctr_drbg_random
+  - '&ctr_drbg'
+  - KEY_BITS
+  - '65537'
+  raw: '} ret = mbedtls_rsa_gen_key(mbedtls_pk_rsa(pk), mbedtls_ctr_drbg_random, &ctr_drbg,
+    KEY_BITS, 65537);'
+  is_api: true
+- order: 32
+  function: mbedtls_rsa_set_padding
+  args:
+  - mbedtls_pk_rsa(pk)
+  - MBEDTLS_RSA_PKCS_V21
+  - MBEDTLS_MD_NONE
+  raw: '} mbedtls_rsa_set_padding(mbedtls_pk_rsa(pk), MBEDTLS_RSA_PKCS_V21, MBEDTLS_MD_NONE);'
+  is_api: true
+- order: 33
+  function: mbedtls_pk_get_psa_attributes
+  args:
+  - '&pk'
+  - PSA_KEY_USAGE_SIGN_HASH
+  - '&key_attr'
+  raw: ret = mbedtls_pk_get_psa_attributes(&pk, PSA_KEY_USAGE_SIGN_HASH, &key_attr);
+  is_api: true
+- order: 36
+  function: mbedtls_pk_import_into_psa
+  args:
+  - '&pk'
+  - '&key_attr'
+  - '&key_id'
+  raw: '} ret = mbedtls_pk_import_into_psa(&pk, &key_attr, &key_id);'
+  is_api: true
+- order: 39
+  function: mbedtls_pk_free
+  args:
+  - '&pk'
+  raw: '} mbedtls_pk_free(&pk);'
+  is_api: true
+- order: 40
+  function: mbedtls_pk_init
+  args:
+  - '&pk'
+  raw: mbedtls_pk_init(&pk);
+  is_api: true
+- order: 41
+  function: mbedtls_pk_setup_opaque
+  args:
+  - '&pk'
+  - key_id
+  raw: ret = mbedtls_pk_setup_opaque(&pk, key_id);
+  is_api: true
+- order: 44
+  function: mbedtls_pk_get_type
+  args:
+  - '&pk)'
+  raw: '} printf("opaque pk type = %d\n", (int) mbedtls_pk_get_type(&pk));'
+  is_api: true
+- order: 46
+  function: mbedtls_pk_verify_ext
+  args:
+  - MBEDTLS_PK_RSASSA_PSS
+  - '&pss_opts'
+  - '&pk'
+  - MBEDTLS_MD_SHA256
+  - hash
+  - sizeof(hash)
+  - sig
+  - sizeof(sig)
+  raw: ret = mbedtls_pk_verify_ext(MBEDTLS_PK_RSASSA_PSS, &pss_opts, &pk, MBEDTLS_MD_SHA256,
+    hash, sizeof(hash), sig, sizeof(sig));
+  is_api: true
+- order: 51
+  function: mbedtls_pk_free
+  args:
+  - '&pk'
+  raw: '} cleanup: mbedtls_pk_free(&pk);'
+  is_api: true
+- order: 53
+  function: mbedtls_ctr_drbg_free
+  args:
+  - '&ctr_drbg'
+  raw: '} mbedtls_ctr_drbg_free(&ctr_drbg);'
+  is_api: true
+- order: 54
+  function: mbedtls_entropy_free
+  args:
+  - '&entropy'
+  raw: mbedtls_entropy_free(&entropy);
+  is_api: true
+- order: 55
+  function: mbedtls_psa_crypto_free
+  args: []
+  raw: mbedtls_psa_crypto_free();
+  is_api: true
+api_calls:
+- order: 16
+  function: mbedtls_pk_init
+  args:
+  - '&pk'
+  raw: mbedtls_pk_init(&pk);
+  is_api: true
+- order: 17
+  function: mbedtls_entropy_init
+  args:
+  - '&entropy'
+  raw: mbedtls_entropy_init(&entropy);
+  is_api: true
+- order: 18
+  function: mbedtls_ctr_drbg_init
+  args:
+  - '&ctr_drbg'
+  raw: mbedtls_ctr_drbg_init(&ctr_drbg);
+  is_api: true
+- order: 19
+  function: mbedtls_ctr_drbg_seed
+  args:
+  - '&ctr_drbg'
+  - mbedtls_entropy_func
+  - '&entropy'
+  - (const unsigned char *) pers
+  - strlen(pers)
+  raw: ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const
+    unsigned char *) pers, strlen(pers));
+  is_api: true
+- order: 22
+  function: psa_crypto_init
+  args: []
+  raw: '} status = psa_crypto_init();'
+  is_api: true
+- order: 26
+  function: mbedtls_pk_setup
+  args:
+  - '&pk'
+  - mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)
+  raw: '} ret = mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA));'
+  is_api: true
+- order: 29
+  function: mbedtls_rsa_gen_key
+  args:
+  - mbedtls_pk_rsa(pk)
+  - mbedtls_ctr_drbg_random
+  - '&ctr_drbg'
+  - KEY_BITS
+  - '65537'
+  raw: '} ret = mbedtls_rsa_gen_key(mbedtls_pk_rsa(pk), mbedtls_ctr_drbg_random, &ctr_drbg,
+    KEY_BITS, 65537);'
+  is_api: true
+- order: 32
+  function: mbedtls_rsa_set_padding
+  args:
+  - mbedtls_pk_rsa(pk)
+  - MBEDTLS_RSA_PKCS_V21
+  - MBEDTLS_MD_NONE
+  raw: '} mbedtls_rsa_set_padding(mbedtls_pk_rsa(pk), MBEDTLS_RSA_PKCS_V21, MBEDTLS_MD_NONE);'
+  is_api: true
+- order: 33
+  function: mbedtls_pk_get_psa_attributes
+  args:
+  - '&pk'
+  - PSA_KEY_USAGE_SIGN_HASH
+  - '&key_attr'
+  raw: ret = mbedtls_pk_get_psa_attributes(&pk, PSA_KEY_USAGE_SIGN_HASH, &key_attr);
+  is_api: true
+- order: 36
+  function: mbedtls_pk_import_into_psa
+  args:
+  - '&pk'
+  - '&key_attr'
+  - '&key_id'
+  raw: '} ret = mbedtls_pk_import_into_psa(&pk, &key_attr, &key_id);'
+  is_api: true
+- order: 39
+  function: mbedtls_pk_free
+  args:
+  - '&pk'
+  raw: '} mbedtls_pk_free(&pk);'
+  is_api: true
+- order: 40
+  function: mbedtls_pk_init
+  args:
+  - '&pk'
+  raw: mbedtls_pk_init(&pk);
+  is_api: true
+- order: 41
+  function: mbedtls_pk_setup_opaque
+  args:
+  - '&pk'
+  - key_id
+  raw: ret = mbedtls_pk_setup_opaque(&pk, key_id);
+  is_api: true
+- order: 44
+  function: mbedtls_pk_get_type
+  args:
+  - '&pk)'
+  raw: '} printf("opaque pk type = %d\n", (int) mbedtls_pk_get_type(&pk));'
+  is_api: true
+- order: 46
+  function: mbedtls_pk_verify_ext
+  args:
+  - MBEDTLS_PK_RSASSA_PSS
+  - '&pss_opts'
+  - '&pk'
+  - MBEDTLS_MD_SHA256
+  - hash
+  - sizeof(hash)
+  - sig
+  - sizeof(sig)
+  raw: ret = mbedtls_pk_verify_ext(MBEDTLS_PK_RSASSA_PSS, &pss_opts, &pk, MBEDTLS_MD_SHA256,
+    hash, sizeof(hash), sig, sizeof(sig));
+  is_api: true
+- order: 51
+  function: mbedtls_pk_free
+  args:
+  - '&pk'
+  raw: '} cleanup: mbedtls_pk_free(&pk);'
+  is_api: true
+- order: 53
+  function: mbedtls_ctr_drbg_free
+  args:
+  - '&ctr_drbg'
+  raw: '} mbedtls_ctr_drbg_free(&ctr_drbg);'
+  is_api: true
+- order: 54
+  function: mbedtls_entropy_free
+  args:
+  - '&entropy'
+  raw: mbedtls_entropy_free(&entropy);
+  is_api: true
+- order: 55
+  function: mbedtls_psa_crypto_free
+  args: []
+  raw: mbedtls_psa_crypto_free();
+  is_api: true
+trigger_call:
+  order: 46
+  function: mbedtls_pk_verify_ext
+  args:
+  - MBEDTLS_PK_RSASSA_PSS
+  - '&pss_opts'
+  - '&pk'
+  - MBEDTLS_MD_SHA256
+  - hash
+  - sizeof(hash)
+  - sig
+  - sizeof(sig)
+  raw: ret = mbedtls_pk_verify_ext(MBEDTLS_PK_RSASSA_PSS, &pss_opts, &pk, MBEDTLS_MD_SHA256,
+    hash, sizeof(hash), sig, sizeof(sig));
+  is_api: true
+oracle_functions:
+- fixed_ret_check:MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE

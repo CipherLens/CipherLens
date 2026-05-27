@@ -1,0 +1,85 @@
+{
+  "mutation_updates": {
+    "A_VALUE": {
+      "values": [
+        "0",
+        "1",
+        "UINT_MAX",
+        "5",
+        "65535"
+      ],
+      "strategy": "boundary_values",
+      "constraint": "Check for zero, maximum value, and typical value.",
+      "priority": "high"
+    },
+    "B_VALUE": {
+      "values": [
+        "0",
+        "1",
+        "0xffffffffffffffff",
+        "123456789abcdef01",
+        "abcdef1234567890"
+      ],
+      "strategy": "boundary_values",
+      "constraint": "Check for zero, maximum hex value, and typical hex value.",
+      "priority": "high"
+    },
+    "A_BASE": {
+      "values": [
+        "2",
+        "8",
+        "10",
+        "16",
+        "36"
+      ],
+      "strategy": "enum_values",
+      "constraint": "Check all possible enum values.",
+      "priority": "medium"
+    },
+    "B_BASE": {
+      "values": [
+        "2",
+        "8",
+        "10",
+        "16",
+        "36"
+      ],
+      "strategy": "enum_values",
+      "constraint": "Check all possible enum values.",
+      "priority": "medium"
+    },
+    "X_LIMB_COUNT": {
+      "values": [
+        "0",
+        "1",
+        "MBEDTLS_MPI_MAX_LIMBS",
+        "UINT_MAX"
+      ],
+      "strategy": "boundary_values",
+      "constraint": "Check for zero, one, maximum limbs, and maximum value.",
+      "priority": "high"
+    },
+    "CANARY_SIZE": {
+      "values": [
+        "0",
+        "8",
+        "16",
+        "32",
+        "64"
+      ],
+      "strategy": "boundary_values",
+      "constraint": "Check for zero, typical canary size, and larger values.",
+      "priority": "high"
+    }
+  },
+  "oracle_notes": [
+    "Ensure that the subtraction does not result in a negative value when canaries are intact.",
+    "Verify that no out-of-bounds writes occur beyond the allocated limbs.",
+    "Check for canary corruption as an indicator of out-of-bounds writes."
+  ],
+  "generation_notes": [
+    "The mutation points focus on boundary values for limb counts and canary sizes to trigger out-of-bounds writes.",
+    "Enum values are tested to ensure correct base handling in the subtraction operation.",
+    "Zero and maximum values are included to stress-test edge cases in the bignum subtraction logic."
+  ]
+}

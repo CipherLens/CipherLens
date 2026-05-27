@@ -1,0 +1,23 @@
+commit eff335d575e0949ba25b60a358f31461eab055fe
+Author: Hanno Becker <hanno.becker@arm.com>
+Date:   Fri Feb 1 16:41:30 2019 +0000
+
+    Fix 1-byte buffer overflow in mbedtls_mpi_write_string()
+    
+    This can only occur for negative numbers. Fixes #2404.
+
+diff --git a/library/bignum.c b/library/bignum.c
+index f6e50b986a..54ab7e3ec5 100644
+--- a/library/bignum.c
++++ b/library/bignum.c
+@@ -572,7 +572,10 @@ int mbedtls_mpi_write_string( const mbedtls_mpi *X, int radix,
+     mbedtls_mpi_init( &T );
+ 
+     if( X->s == -1 )
++    {
+         *p++ = '-';
++        buflen--;
++    }
+ 
+     if( radix == 16 )
+     {

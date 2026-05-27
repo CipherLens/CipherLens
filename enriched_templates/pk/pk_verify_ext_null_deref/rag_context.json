@@ -1,0 +1,82 @@
+[
+  {
+    "metadata": {
+      "layer": "api_constraints",
+      "doc_type": "api_constraint",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__rsa.c.md",
+      "library": "mbedtls"
+    },
+    "distance": 0.49908870458602905,
+    "text": "/* MBEDTLS_PKCS1_V15 */\n    return ret;\n}\n\n#endif /* MBEDTLS_SELF_TEST */\n\n#endif /* MBEDTLS_RSA_C */\n```"
+  },
+  {
+    "metadata": {
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__ecjpake.c.md",
+      "doc_type": "api_constraint",
+      "library": "mbedtls",
+      "layer": "api_constraints"
+    },
+    "distance": 0.5148898363113403,
+    "text": "X\n */\nstatic int ecjpake_kkp_read(const mbedtls_md_type_t md_type,\n                            const mbedtls_ecp_group *grp,\n                            const int pf,\n```\n\n## Snippet 14\n\n```c\nret = MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL;\n        goto cleanup;\n    }\n\n    *(*p)++ = MBEDTLS_BYTE_0(len);\n    MBEDTLS_MPI_CHK(mbedtls_mpi_write_binary(&h, *p, len));     /* r */\n    *p += len;\n\ncleanup:\n    mbedtls_ecp_point_free(&V);\n    mbedtls_mpi_free(&v);\n    mbedtls_mpi_free(&h);\n\n    return ret;\n}\n\n/*\n * Parse a ECJPAKEKeyKP (7.4.2.2.1) and check proof\n * Output: verified public key X\n */\nstatic int ecjpake_kkp_read(const mbedtls_md_type_t md_type,\n                            const mbedtls_ecp_group *grp,\n                            const int pf,\n                            const mbedtls_ecp_point *G,\n                            mbedtls_ecp_point *X,\n                            const char *id,\n                            const unsigned char **p,\n                            const unsigned char"
+  },
+  {
+    "metadata": {
+      "layer": "api_constraints",
+      "doc_type": "api_constraint",
+      "library": "mbedtls",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__psa_crypto_ecp.c.md"
+    },
+    "distance": 0.5248950123786926,
+    "text": "ngth));\n}\n\n#if defined(MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED)\nstatic psa_status_t ecdh_everest_shared_secret(\n    const uint8_t *key_buffer, size_t key_buffer_size,\n    const uint8_t *peer_key, size_t peer_key_length,\n    uint8_t *shared_secret, size_t shared_secret_size,\n    size_t *shared_secret_length)\n{\n    /* This static function is only called when we know the curve is x25519,\n     * so we know key_buffer_size is correct unless the keystore is corrupted.\n     * However even in that case we don't want the consequence to be a memory\n     * error, so check anyway. This cannot be covered by tests though. */\n    if (key_buffer_size != MBEDTLS_X25519_KEY_SIZE_BYTES) {\n        return PSA_ERROR_INVALID_ARGUMENT;\n    }\n```\n\n## Snippet 12\n\n```c\nsize_t *shared_secret_length)\n{\n    *shared_secret_length = PSA_BITS_TO_BYTES(grp->pbits);\n    if (shared_secret_size < *shared_secret_length) {\n        return PSA_ERROR_BUFFER_TOO_SMALL;\n    }\n\n    return mbedtls_to_psa_error(\n        mbedtls_ecp_ge"
+  },
+  {
+    "metadata": {
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__ecjpake.c.md",
+      "layer": "api_constraints",
+      "doc_type": "api_constraint",
+      "library": "mbedtls"
+    },
+    "distance": 0.5261263847351074,
+    "text": "muladd(&ctx->grp, K,\n                                       &one, &ctx->Xp,\n                                       &m_xm2_s, &ctx->Xp2));\n    MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&ctx->grp, K, &ctx->xm2, K,\n                                    f_rng, p_rng));\n\ncleanup:\n    mbedtls_mpi_free(&m_xm2_s);\n    mbedtls_mpi_free(&one);\n\n    return ret;\n}\n\nint mbedtls_ecjpake_derive_secret(mbedtls_ecjpake_context *ctx,\n                                  unsigned char *buf, size_t len, size_t *olen,\n                                  int (*f_rng)(void *, unsigned char *, size_t),\n                                  void *p_rng)\n{\n    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;\n    mbedtls_ecp_point K;\n    unsigned char kx[MBEDTLS_ECP_MAX_BYTES];\n    size_t x_bytes;\n\n    *olen = mbedtls_md_get_size_from_type(ctx->md_type);\n    if (len < *olen) {\n```\n\n## Snippet 27\n\n```c\nMBEDTLS_MPI_CHK(ecjpake_mul_secret(&m_xm2_s, -1, &ctx->xm2, &ctx->s,\n                                       &ctx->grp.N, f_rng, p_rng"
+  },
+  {
+    "metadata": {
+      "library": "mbedtls",
+      "layer": "api_constraints",
+      "doc_type": "api_constraint",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__ecjpake.c.md"
+    },
+    "distance": 0.5432537794113159,
+    "text": "*olen = mbedtls_md_get_size_from_type(ctx->md_type);\n    if (len < *olen) {\n        return MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL;\n```\n\n## Snippet 28\n\n```c\nmbedtls_ecp_point_init(&K);\n\n    ret = mbedtls_ecjpake_derive_k(ctx, &K, f_rng, p_rng);\n    if (ret) {\n        goto cleanup;\n    }\n\n    /* PMS = SHA-256( K.X ) */\n    x_bytes = (ctx->grp.pbits + 7) / 8;\n    MBEDTLS_MPI_CHK(mbedtls_mpi_write_binary(&K.X, kx, x_bytes));\n    MBEDTLS_MPI_CHK(mbedtls_ecjpake_compute_hash(ctx->md_type,\n                                                 kx, x_bytes, buf));\n\ncleanup:\n    mbedtls_ecp_point_free(&K);\n\n    return ret;\n}\n\nint mbedtls_ecjpake_write_shared_key(mbedtls_ecjpake_context *ctx,\n                                     unsigned char *buf, size_t len, size_t *olen,\n                                     int (*f_rng)(void *, unsigned char *, size_t),\n                                     void *p_rng)\n{\n    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;\n    mbedtls_ecp_point K;\n```"
+  },
+  {
+    "metadata": {
+      "layer": "api_constraints",
+      "library": "mbedtls",
+      "doc_type": "api_constraint",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__rsa_alt_helpers.c.md"
+    },
+    "distance": 0.5618491172790527,
+    "text": "rime_ext(P, 50, f_rng, p_rng)) != 0) {\n        ret = MBEDTLS_ERR_RSA_KEY_CHECK_FAILED;\n        goto cleanup;\n    }\n```\n\n## Snippet 8\n\n```c\nint mbedtls_rsa_validate_params(const mbedtls_mpi *N, const mbedtls_mpi *P,\n                                const mbedtls_mpi *Q, const mbedtls_mpi *D,\n                                const mbedtls_mpi *E,\n                                int (*f_rng)(void *, unsigned char *, size_t),\n                                void *p_rng)\n{\n    int ret = 0;\n    mbedtls_mpi K, L;\n\n    mbedtls_mpi_init(&K);\n    mbedtls_mpi_init(&L);\n\n    /*\n     * Step 1: If PRNG provided, check that P and Q are prime\n     */\n\n#if defined(MBEDTLS_GENPRIME)\n    /*\n     * When generating keys, the strongest security we support aims for an error\n     * rate of at most 2^-100 and we are aiming for the same certainty here as\n     * well.\n     */\n    if (f_rng != NULL && P != NULL &&\n        (ret = mbedtls_mpi_is_prime_ext(P, 50, f_rng, p_rng)) != 0) {\n        ret = MBEDTLS_ERR_RSA_KE"
+  },
+  {
+    "metadata": {
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__psa_crypto_ecp.c.md",
+      "library": "mbedtls",
+      "doc_type": "api_constraint",
+      "layer": "api_constraints"
+    },
+    "distance": 0.5624253153800964,
+    "text": "signature + curve_bytes,\n                                                          curve_bytes));\n    if (status != PSA_SUCCESS) {\n```\n\n## Snippet 9\n\n```c\nstatus = mbedtls_psa_ecp_load_public_part(ecp);\n    if (status != PSA_SUCCESS) {\n        goto cleanup;\n    }\n\n    status = mbedtls_to_psa_error(mbedtls_ecdsa_verify(&ecp->grp, hash,\n                                                       hash_length, &ecp->Q,\n                                                       &r, &s));\ncleanup:\n    mbedtls_mpi_free(&r);\n    mbedtls_mpi_free(&s);\n    mbedtls_ecp_keypair_free(ecp);\n    mbedtls_free(ecp);\n\n    return status;\n}\n\n#endif /* defined(MBEDTLS_PSA_BUILTIN_ALG_ECDSA) || \\\n        * defined(MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA) */\n\n/****************************************************************/\n/* ECDH Key Agreement */\n/****************************************************************/\n\n#if defined(MBEDTLS_PSA_BUILTIN_ALG_ECDH)\nstatic psa_status_t ecdh_write_secret(const mbedtls_ecp"
+  },
+  {
+    "metadata": {
+      "library": "mbedtls",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__ecdsa.c.md",
+      "doc_type": "api_constraint",
+      "layer": "api_constraints"
+    },
+    "distance": 0.562436044216156,
+    "text": "if (ret != 0) {\n        return ret;\n    }\n```\n\n## Snippet 26\n\n```c\n/* At this point we know that the buffer starts with a valid signature.\n     * Return 0 if the buffer just contains the signature, and a specific\n     * error code if the valid signature is followed by more data. */\n    if (p != end) {\n        ret = MBEDTLS_ERR_ECP_VERIFY_FAILED;\n    }\n\ncleanup:\n    mbedtls_mpi_free(&r);\n    mbedtls_mpi_free(&s);\n\n    return ret;\n}\n\n/*\n * Generate key pair\n */\nint mbedtls_ecdsa_genkey(mbedtls_ecdsa_context *ctx, mbedtls_ecp_group_id gid,\n                         int (*f_rng)(void *, unsigned char *, size_t), void *p_rng)\n{\n    int ret = 0;\n    ret = mbedtls_ecp_group_load(&ctx->grp, gid);\n    if (ret != 0) {\n        return ret;\n    }\n\n    return mbedtls_ecp_gen_keypair(&ctx->grp, &ctx->d,\n```"
+  }
+]

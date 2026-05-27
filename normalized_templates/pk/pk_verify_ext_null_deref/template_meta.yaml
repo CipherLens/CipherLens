@@ -1,0 +1,133 @@
+template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+template_name: mbedtls_pk_verify_ext opaque RSA-PSS null-deref template
+backend: api_harness
+language: c
+status: normalized
+poc_source:
+  file: poc_pk_verify_ext_null_deref_v2.c
+  library: mbedtls
+  api: mbedtls_pk_verify_ext
+operation:
+  abstract: pk_verify_ext_opaque_key
+  api_family: SignatureVerify
+  bug_class:
+  - null_pointer_dereference
+  - opaque_key_type_confusion
+  - missing_context_type_check
+source_api:
+  library: mbedtls
+  function: mbedtls_pk_verify_ext
+mutation_points:
+- name: KEY_BITS
+  placeholder: '[KEY_BITS]'
+  type: int
+  default: 1024
+  values:
+  - 1024
+  - 2048
+  strategy: boundary_values
+  constraint: Must be a valid key size for RSA-PSS
+  priority: high
+  normalized: true
+- name: HASH_LEN
+  placeholder: '[HASH_LEN]'
+  type: size_t
+  default: 32
+  values:
+  - 32
+  - 64
+  - 20
+  - 48
+  strategy: boundary_values
+  constraint: Must match the hash size for the chosen MD_ALG
+  priority: high
+  normalized: true
+- name: SIG_LEN
+  placeholder: '[SIG_LEN]'
+  type: size_t
+  default: 128
+  values:
+  - 128
+  - 256
+  strategy: boundary_values
+  constraint: Must be a valid RSA-PSS signature length
+  priority: high
+  normalized: true
+- name: MD_ALG
+  placeholder: '[MD_ALG]'
+  type: enum
+  default: MBEDTLS_MD_SHA256
+  values:
+  - MBEDTLS_MD_SHA256
+  - MBEDTLS_MD_SHA384
+  - MBEDTLS_MD_SHA512
+  strategy: enum_values
+  constraint: Must be a valid hash algorithm for RSA-PSS
+  priority: medium
+  normalized: true
+- name: PK_VERIFY_TYPE
+  placeholder: '[PK_VERIFY_TYPE]'
+  type: enum
+  default: MBEDTLS_PK_RSASSA_PSS
+  values:
+  - MBEDTLS_PK_RSASSA_PSS
+  - MBEDTLS_PK_RSA
+  strategy: enum_values
+  constraint: Must be a valid RSA-PSS verification type
+  priority: medium
+  normalized: true
+- name: EXPECTED_SALT_LEN
+  placeholder: '[EXPECTED_SALT_LEN]'
+  type: enum
+  default: MBEDTLS_RSA_SALT_LEN_ANY
+  values:
+  - MBEDTLS_RSA_SALT_LEN_ANY
+  strategy: enum_values
+  constraint: Must be a valid salt length for RSA-PSS
+  priority: medium
+  normalized: true
+oracle:
+  memory_safety:
+  - no_crash
+  - asan_clean
+  - no_null_deref
+  behavior:
+  - fixed_version_returns_MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE
+verdict:
+  true_positive:
+    condition: process_crash_or_asan_null_deref == true
+    exit_code: nonzero_or_signal
+  fixed_behavior:
+    condition: ret == MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE
+    exit_code: 0
+generation_policy:
+  max_cases: 32
+  priority:
+  - PK_VERIFY_TYPE_RSASSA_PSS
+  - opaque_key_context
+  compile_with:
+  - asan
+  - ubsan
+rag_requirements:
+  retrieve:
+  - mbedtls_pk_verify_ext API constraints
+  - library unit-test call patterns
+  - cross-library candidate mappings
+  - related oracle knowledge
+llm_enrichment:
+  source: glm
+  oracle_notes:
+  - Check for null pointer dereferences and crashes using ASan
+  - Verify that the function returns MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE under specific
+    conditions
+  - Ensure that the behavior matches the expected fixed version behavior
+  generation_notes:
+  - The mutation points focus on boundary values and enum-like macros to trigger potential
+    null-dereference vulnerabilities.
+  - The priority is set based on the likelihood of triggering the bug class (null_pointer_dereference,
+    opaque_key_type_confusion, missing_context_type_check).
+  - The values chosen for buffer sizes and enum-like macros are based on the API constraints
+    and typical usage patterns.
+normalization:
+  enabled: true
+  policy: template_id_specific_safe_whitelist

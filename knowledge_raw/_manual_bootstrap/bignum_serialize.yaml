@@ -1,0 +1,103 @@
+operation: bignum_serialize
+api_family: BignumSerialize
+description: Serialize a big integer into binary or string output.
+
+vulnerability_class:
+  - output_buffer_oob_write
+  - incorrect_return_code
+  - negative_integer_serialization
+  - length_boundary_error
+
+abstract_trigger:
+  value_sign: negative
+  output_buffer: undersized
+  radix:
+    - 2
+    - 10
+    - 16
+
+abstract_oracle:
+  - no_crash
+  - asan_clean
+  - canary_intact
+  - reasonable_return_code
+  - output_length_reasonable
+
+libraries:
+  mbedtls:
+    apis:
+      - mbedtls_mpi_write_string
+      - mbedtls_mpi_write_binary
+    init_sequence:
+      - mbedtls_mpi_init
+      - mbedtls_mpi_lset
+      - mbedtls_mpi_write_string
+      - mbedtls_mpi_free
+    notes:
+      - C API.
+      - Uses explicit output buffer and buflen.
+      - olen records output length or required length.
+      - Suitable for canary-based small-buffer tests.
+
+  openssl:
+    apis:
+      - BN_new
+      - BN_set_word
+      - BN_set_negative
+      - BN_bn2binpad
+      - BN_free
+    init_sequence:
+      - BN_new
+      - BN_set_word
+      - BN_set_negative
+      - BN_bn2binpad
+      - BN_free
+    notes:
+      - C API.
+      - BN_bn2binpad uses explicit output buffer.
+      - BN_bn2hex and BN_bn2dec allocate strings internally.
+      - Adapter should normalize return values.
+
+  botan:
+    apis:
+      - Botan::BigInt
+      - Botan::BigInt::encode
+      - Botan::BigInt::to_dec_string
+      - Botan::BigInt::to_hex_string
+    init_sequence:
+      - Botan::BigInt construction
+      - encode or stringify
+    notes:
+      - C++ API.
+      - Exceptions should be caught by adapter.
+      - Adapter should normalize exceptions into return codes.
+
+mutation_points:
+  - name: VALUE_SIGN
+    values:
+      - negative
+      - zero
+      - positive
+  - name: VALUE_MAGNITUDE
+    values:
+      - -1
+      - -2
+      - -255
+      - large_negative
+      - 0
+      - 1
+      - large_positive
+  - name: RADIX
+    values:
+      - 2
+      - 10
+      - 16
+  - name: BUFFER_LENGTH
+    values:
+      - 0
+      - 1
+      - 2
+      - 3
+      - 4
+      - 8
+      - 16

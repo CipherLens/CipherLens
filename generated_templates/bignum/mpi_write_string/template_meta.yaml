@@ -1,0 +1,66 @@
+template_id: BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER
+template_name: mbedtls_mpi_write_string negative small-buffer template
+backend: api_harness
+language: c
+status: generated_by_mask
+poc_source:
+  file: poc_mpi_write_string_min.c
+  library: mbedtls
+  api: mbedtls_mpi_write_string
+operation:
+  abstract: bignum_serialize_to_string
+  api_family: BignumSerialize
+  bug_class:
+  - output_buffer_boundary
+  - negative_integer_serialization
+  - canary_detected_oob_write
+source_api:
+  library: mbedtls
+  function: mbedtls_mpi_write_string
+mutation_points:
+- name: VALUE
+  placeholder: '[VALUE]'
+  type: signed_integer
+  default: -1
+- name: RADIX
+  placeholder: '[RADIX]'
+  type: enum
+  default: 2
+- name: BUFLEN
+  placeholder: '[BUFLEN]'
+  type: size_t
+  default: 4
+- name: CANARY_SIZE
+  placeholder: '[CANARY_SIZE]'
+  type: size_t
+  default: 16
+oracle:
+  memory_safety:
+  - no_crash
+  - asan_clean
+  - canary_intact
+  behavior:
+  - insufficient_buffer_should_fail
+  - output_length_should_be_reasonable
+verdict:
+  true_positive:
+    condition: canary_corrupted == true
+    exit_code: 1
+  safe_behavior:
+    condition: canary_corrupted == false
+    exit_code: 0
+generation_policy:
+  max_cases: 64
+  priority:
+  - negative_values
+  - small_buffer_lengths
+  - radix_boundaries
+  compile_with:
+  - asan
+  - ubsan
+rag_requirements:
+  retrieve:
+  - mbedtls_mpi_write_string API constraints
+  - library unit-test call patterns
+  - cross-library candidate mappings
+  - related oracle knowledge

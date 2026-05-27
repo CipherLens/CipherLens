@@ -1,0 +1,30 @@
+project_name: crypto-pattern-fuzz
+
+embedding:
+  provider: ollama
+  model_name: mxbai-embed-large
+  base_url: http://localhost:11434
+  endpoint: /api/embed
+  batch_size: 8
+  timeout: 600
+
+chroma:
+  persist_dir: knowledge_base/chroma
+  collection_name: crypto_knowledge
+
+raw_dirs:
+  api_constraints: knowledge_raw/api_constraints
+  unit_tests: knowledge_raw/_empty_unit_tests
+  wycheproof_vectors: knowledge_raw/wycheproof_vectors
+  poc_patterns: knowledge_raw/poc_patterns
+  cross_lib_equivalence: knowledge_raw/_empty_cross_lib_equivalence
+
+chunking:
+  max_chars: 1000
+  overlap_chars: 100
+
+limits:
+  wycheproof_per_result_per_file: 5
+  wycheproof_include_patterns:
+    - "aes_gcm_test"
+    - "hmac_sha256_test"

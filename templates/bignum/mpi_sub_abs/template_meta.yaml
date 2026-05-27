@@ -1,0 +1,181 @@
+template_id: BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY
+template_name: "mbedtls_mpi_sub_abs limb-boundary canary template"
+
+backend: api_harness
+language: c
+status: golden_example
+
+poc_source:
+  file: poc_mpi_sub_abs_min.c
+  library: mbedtls
+  api: mbedtls_mpi_sub_abs
+  root_cause_summary: >
+    The source PoC prepares A and B such that |B| has more limbs than |A|,
+    manually preallocates X with a small number of limbs, places canary bytes
+    after X->p, and calls mbedtls_mpi_sub_abs. A buggy implementation may write
+    beyond the preallocated limb buffer.
+
+operation:
+  abstract: bignum_subtract_absolute
+  api_family: BignumArithmetic
+  bug_class:
+    - limb_boundary_oob_write
+    - insufficient_output_limb_allocation
+    - canary_detected_oob_write
+
+source_api:
+  library: mbedtls
+  function: mbedtls_mpi_sub_abs
+  signature: "int mbedtls_mpi_sub_abs(mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *B)"
+
+mutation_points:
+  - name: A_VALUE
+    placeholder: "[A_VALUE]"
+    type: string_number
+    default: "5"
+    values:
+      - "0"
+      - "1"
+      - "3"
+      - "5"
+      - "15"
+      - "255"
+    strategy: small_number
+    critical: true
+    description: "Small value for A. Prefer values whose limb count is smaller than B."
+
+  - name: B_VALUE
+    placeholder: "[B_VALUE]"
+    type: string_hex
+    default: "123456789abcdef01"
+    values:
+      - "100000000"
+      - "123456789abcdef01"
+      - "ffffffffffffffff"
+      - "ffffffffffffffffffffffff"
+      - "deadbeefdeadbeef"
+    strategy: large_hex
+    critical: true
+    description: "Large value for B. Prefer values whose limb count is greater than A."
+
+  - name: A_BASE
+    placeholder: "[A_BASE]"
+    type: enum
+    default: 10
+    values:
+      - 10
+      - 16
+      - 2
+      - 8
+    strategy: fixed_or_small_set
+    critical: false
+
+  - name: B_BASE
+    placeholder: "[B_BASE]"
+    type: enum
+    default: 16
+    values:
+      - 16
+      - 10
+      - 2
+      - 8
+    strategy: fixed_or_small_set
+    critical: false
+
+  - name: X_LIMB_COUNT
+    placeholder: "[X_LIMB_COUNT]"
+    type: size_t
+    default: 1
+    values:
+      - 1
+      - 2
+      - 3
+      - 4
+    strategy: boundary
+    critical: true
+    description: "Number of limbs manually allocated for X."
+
+  - name: CANARY_SIZE
+    placeholder: "[CANARY_SIZE]"
+    type: size_t
+    default: 16
+    values:
+      - 8
+      - 16
+      - 32
+    strategy: fixed_or_small_set
+    critical: false
+
+oracle:
+  memory_safety:
+    - no_crash
+    - asan_clean
+    - canary_intact
+  behavior:
+    - negative_result_should_be_rejected
+    - return_code_should_be_normalized
+    - no_write_beyond_x_limbs
+
+verdict:
+  true_positive:
+    condition: "canary_corrupted == true"
+    exit_code: 1
+    description: "Canary after X->p is corrupted, indicating possible OOB write."
+
+  expected_rejection:
+    condition: "ret == MBEDTLS_ERR_MPI_NEGATIVE_VALUE && canary_corrupted == false"
+    exit_code: 0
+    description: "Fixed behavior: A < B is rejected safely without canary corruption."
+
+  safe_other:
+    condition: "canary_corrupted == false"
+    exit_code: 0
+    description: "No canary corruption observed. Return code needs semantic triage."
+
+  harness_error:
+    condition: "input construction failed"
+    exit_code: 2
+    description: "Harness failed before reaching the trigger call."
+
+generation_policy:
+  max_cases: 128
+  priority:
+    - X_LIMB_COUNT_boundary
+    - B_VALUE_large_limb_count
+    - A_VALUE_small_limb_count
+  compile_with:
+    - asan
+    - ubsan
+
+cross_library:
+  openssl:
+    status: candidate_mapping
+    api_family: BignumArithmetic
+    candidate_api: BN_usub
+    template: tmpl_openssl.c
+    semantic_equivalence: medium_high
+    parameter_structure_equivalence: medium
+    vulnerability_path_equivalence: needs_validation
+    migration_confidence: medium
+    equivalent_trigger: "Call BN_usub(R, A, B) when A < B."
+    notes: >
+      OpenSSL BN_usub is a candidate for unsigned bignum subtraction with A < B.
+      The vulnerability path is not assumed equivalent because OpenSSL may reject
+      or grow internal buffers differently. The generated harness should be used
+      for candidate validation, not as proof of the same bug.
+
+  botan:
+    status: not_generated_initially
+    api_family: BignumArithmetic
+    migration_confidence: low
+    notes: >
+      Botan BigInt arithmetic usually uses managed objects rather than exposing
+      caller-controlled limb buffers. Do not generate a canary OOB harness until
+      a caller-controlled buffer path is confirmed.
+
+rag_requirements:
+  retrieve:
+    - mbedtls_mpi_sub_abs API constraints
+    - mbedtls bignum unit tests
+    - OpenSSL BN_usub or BN_sub API constraints
+    - cross-library bignum arithmetic mappings

@@ -1,0 +1,155 @@
+template_id: BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER
+template_name: "mbedtls_mpi_write_string negative integer small-buffer boundary template"
+
+backend: api_harness
+language: c
+status: golden_example
+
+poc_source:
+  file: poc_mpi_write_string_min.c
+  library: mbedtls
+  api: mbedtls_mpi_write_string
+  root_cause_summary: >
+    A negative MPI value is serialized into an undersized caller-provided
+    output buffer. The harness places canary bytes after the buffer to check
+    whether the implementation writes out of bounds.
+
+operation:
+  abstract: bignum_serialize_to_string
+  api_family: BignumSerialize
+  bug_class:
+    - output_buffer_boundary
+    - negative_integer_serialization
+    - canary_detected_oob_write
+
+source_api:
+  library: mbedtls
+  function: mbedtls_mpi_write_string
+  signature: "int mbedtls_mpi_write_string(const mbedtls_mpi *X, int radix, char *buf, size_t buflen, size_t *olen)"
+
+mutation_points:
+  - name: VALUE
+    placeholder: "[VALUE]"
+    type: signed_integer
+    default: -1
+    values:
+      - -1
+      - -2
+      - -15
+      - -255
+      - 0
+      - 1
+      - 255
+    strategy: boundary
+    critical: true
+    description: "MPI value assigned by mbedtls_mpi_lset."
+
+  - name: RADIX
+    placeholder: "[RADIX]"
+    type: enum
+    default: 2
+    values:
+      - 2
+      - 10
+      - 16
+    strategy: boundary
+    critical: true
+    description: "Base used by mbedtls_mpi_write_string."
+
+  - name: BUFLEN
+    placeholder: "[BUFLEN]"
+    type: size_t
+    default: 4
+    values:
+      - 0
+      - 1
+      - 2
+      - 3
+      - 4
+      - 8
+      - 16
+      - 32
+    strategy: small_buffer_first
+    critical: true
+    description: "Caller-provided output buffer length."
+
+  - name: CANARY_SIZE
+    placeholder: "[CANARY_SIZE]"
+    type: size_t
+    default: 16
+    values:
+      - 8
+      - 16
+      - 32
+    strategy: fixed_or_small_set
+    critical: false
+    description: "Number of canary bytes appended after the output buffer."
+
+oracle:
+  memory_safety:
+    - no_crash
+    - asan_clean
+    - canary_intact
+  behavior:
+    - insufficient_buffer_should_fail
+    - output_length_should_be_reasonable
+    - return_code_should_be_normalized
+
+verdict:
+  true_positive:
+    condition: "canary_corrupted == true"
+    exit_code: 1
+    description: "Canary bytes after the output buffer were modified, indicating a possible out-of-bounds write."
+
+  safe_rejection:
+    condition: "ret != 0 && canary_corrupted == false"
+    exit_code: 0
+    description: "The implementation rejected the input or insufficient buffer safely."
+
+  safe_success:
+    condition: "ret == 0 && canary_corrupted == false"
+    exit_code: 0
+    description: "The implementation completed without corrupting canary bytes."
+
+generation_policy:
+  max_cases: 64
+  priority:
+    - negative_values
+    - small_buffer_lengths
+    - radix_boundaries
+  compile_with:
+    - asan
+    - ubsan
+
+cross_library:
+  openssl:
+    status: candidate_only
+    api_family: BignumSerialize
+    candidate_apis:
+      - BN_bn2binpad
+      - BN_bn2hex
+      - BN_bn2dec
+    migration_confidence: medium
+    notes: >
+      OpenSSL BIGNUM serialization APIs are semantically related, but the exact
+      string serialization and negative integer behavior differ from mbedTLS.
+      Generate candidate harness only after checking parameter and vulnerability-path equivalence.
+
+  botan:
+    status: weak_candidate
+    api_family: BignumSerialize
+    candidate_apis:
+      - Botan::BigInt::encode
+      - Botan::BigInt::to_dec_string
+      - Botan::BigInt::to_hex_string
+    migration_confidence: low
+    notes: >
+      Botan BigInt serialization may not expose the same caller-provided small-buffer path.
+      Prefer semantic serialization tests unless a caller-buffer API is confirmed.
+
+rag_requirements:
+  retrieve:
+    - mbedtls_mpi_write_string API constraints
+    - mbedtls bignum unit tests
+    - cross-library bignum serialization mappings
+    - Wycheproof bignum or serialization boundary references if available

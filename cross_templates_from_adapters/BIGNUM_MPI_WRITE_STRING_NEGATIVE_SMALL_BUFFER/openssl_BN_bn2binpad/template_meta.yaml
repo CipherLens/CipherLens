@@ -1,0 +1,141 @@
+template_id: BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER__OPENSSL_BN_BN2BINPAD
+template_name: mbedtls_mpi_write_string negative small-buffer template
+backend: api_harness
+language: c
+status: cross_generated_from_llm_adapter
+poc_source:
+  file: poc_mpi_write_string_min.c
+  library: mbedtls
+  api: mbedtls_mpi_write_string
+operation:
+  abstract: bignum_serialize_to_string
+  api_family: BignumSerialize
+  bug_class:
+  - output_buffer_boundary
+  - negative_integer_serialization
+  - canary_detected_oob_write
+source_api:
+  library: mbedtls
+  function: mbedtls_mpi_write_string
+mutation_points:
+- name: VALUE
+  placeholder: '[VALUE]'
+  type: signed_integer
+  default: -1
+  values:
+  - -1
+  - -2
+  - -15
+  - -255
+  - 0
+  - 1
+  - 255
+  strategy: negative_values
+  constraint: VALUE must be a negative integer
+  priority: high
+  normalized: true
+- name: RADIX
+  placeholder: '[RADIX]'
+  type: enum
+  default: 2
+  values:
+  - 2
+  - 10
+  - 16
+  strategy: radix_boundaries
+  constraint: RADIX must be a valid base between 2 and 36, inclusive
+  priority: medium
+  normalized: true
+- name: BUFLEN
+  placeholder: '[BUFLEN]'
+  type: size_t
+  default: 4
+  values:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 8
+  - 16
+  - 32
+  strategy: small_buffer_lengths
+  constraint: BUFLEN must be a non-negative size_t value, including zero and small
+    values
+  priority: high
+  normalized: true
+- name: CANARY_SIZE
+  placeholder: '[CANARY_SIZE]'
+  type: size_t
+  default: 16
+  values:
+  - 8
+  - 16
+  - 32
+  strategy: boundary_values
+  constraint: CANARY_SIZE must be a non-negative size_t value, including zero and
+    small values
+  priority: medium
+  normalized: true
+oracle:
+  memory_safety:
+  - no_crash
+  - asan_clean
+  - canary_intact
+  behavior:
+  - insufficient_buffer_should_fail
+  - output_length_should_be_reasonable
+verdict:
+  true_positive:
+    condition: canary_corrupted == true
+    exit_code: 1
+  safe_behavior:
+    condition: canary_corrupted == false
+    exit_code: 0
+generation_policy:
+  max_cases: 64
+  priority:
+  - negative_values
+  - small_buffer_lengths
+  - radix_boundaries
+  compile_with:
+  - asan
+  - ubsan
+rag_requirements:
+  retrieve:
+  - mbedtls_mpi_write_string API constraints
+  - library unit-test call patterns
+  - cross-library candidate mappings
+  - related oracle knowledge
+llm_enrichment:
+  source: glm
+  oracle_notes:
+  - The oracle should check for no crash and canary integrity for memory safety.
+  - The oracle should verify that the function fails with an insufficient buffer and
+    that the output length is reasonable when the buffer is too small.
+  generation_notes:
+  - The mutation points focus on negative values, small buffer lengths, and radix
+    boundaries to trigger potential buffer overflows and canary corruption.
+  - The CANARY_SIZE mutation point is included to test for canary corruption due to
+    out-of-bounds writes.
+  - Boundary values for buffer sizes and canary sizes are included to stress the boundaries
+    of the buffer handling logic.
+normalization:
+  enabled: true
+  policy: template_id_specific_safe_whitelist
+source_template_id: BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER
+cross_library:
+  openssl:
+    target_api: BN_bn2binpad
+    target_template: tmpl_openssl.c
+    adapter_source: llm_adapter_yaml
+    applicability: generate
+    preserved_features:
+    - caller_provided_output_buffer
+    - explicit_output_buffer_length
+    - library_writes_to_caller_buffer
+    - observable_boundary_oracle
+    lost_or_weakened_features:
+    - radix_parameter
+    - textual_sign_byte_before_digits
+    llm_status: ok

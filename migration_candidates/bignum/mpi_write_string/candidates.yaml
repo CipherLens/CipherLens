@@ -1,0 +1,156 @@
+template_id: BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER
+source:
+  library: mbedtls
+  api: mbedtls_mpi_write_string
+  pattern_id: MBEDTLS-POC-0001
+  root_cause_summary: 'In the buggy version, mbedtls_mpi_write_string() writes the
+    negative sign ''-'' for negative MPI values, but does not decrement buflen afterwards.
+    The remaining conversion logic therefore receives an incorrect remaining buffer
+    length and can write one byte past the caller-provided output buffer.
+
+    '
+  vulnerability_path_features:
+    must_preserve:
+    - negative_integer_path
+    - sign_byte_written_before_digits
+    - caller_provided_output_buffer
+    - explicit_output_buffer_length
+    - library_writes_to_caller_buffer
+    - observable_boundary_oracle
+    optional:
+    - radix_parameter
+    - explicit_output_length_pointer
+    not_required:
+    - exact_return_code_convention
+    - exact_function_name
+  migration_guidance:
+    good_target_api_features:
+    - accepts big integer object
+    - supports negative integer representation or sign handling
+    - writes serialized output to caller-provided buffer
+    - accepts explicit output length
+    - returns observable success/failure or output length
+    bad_target_api_features:
+    - returns only library-allocated string
+    - hides output allocation internally
+    - has no caller-controlled output buffer length
+    - cannot represent or observe negative-number serialization path
+scoring_policy:
+  operation_family: 0.15
+  function_behavior: 0.2
+  parameter_structure: 0.2
+  vulnerability_path: 0.3
+  harness_feasibility: 0.15
+  decision_rule:
+    generate: final >= 75 and vulnerability_path >= 70
+    needs_llm_review: final >= 55 and vulnerability_path >= 50
+    skip: otherwise
+target_candidates:
+- library: openssl
+  api: BN_bn2binpad
+  scores:
+    operation_family: 80
+    function_behavior: 65
+    parameter_structure: 60
+    vulnerability_path: 90
+    harness_feasibility: 85
+    final: 77
+  decision: generate
+  reason: BN_bn2binpad serializes a BIGNUM into a caller-provided output buffer with
+    an explicit length. It preserves the key boundary-risk path, although it does
+    not preserve radix-based text formatting.
+  parameter_mapping:
+    '[VALUE]': BN_set_word(X, abs(VALUE)) plus BN_set_negative(X, 1) for negative
+      values
+    '[BUFLEN]': 'BN_bn2binpad third argument: tolen'
+    '[CANARY_SIZE]': same canary region after caller buffer
+    '[RADIX]': no direct counterpart; target serializes big-endian binary
+    X: BIGNUM *X
+    buf: unsigned char *to
+  preserved_vulnerability_features:
+  - caller_provided_output_buffer
+  - explicit_output_buffer_length
+  - library_writes_to_caller_buffer
+  - observable_boundary_oracle
+  lost_or_weakened_features:
+  - radix_parameter
+  - textual_sign_byte_before_digits
+- library: openssl
+  api: BN_signed_bn2bin
+  scores:
+    operation_family: 80
+    function_behavior: 75
+    parameter_structure: 70
+    vulnerability_path: 85
+    harness_feasibility: 80
+    final: 78
+  decision: generate
+  reason: BN_signed_bn2bin is closer to the negative integer serialization path because
+    it preserves signed binary encoding and caller-provided output buffer length.
+    It is a strong candidate if the target OpenSSL version supports this API.
+  parameter_mapping:
+    '[VALUE]': BN_set_word plus BN_set_negative
+    '[BUFLEN]': 'BN_signed_bn2bin third argument: tolen'
+    '[CANARY_SIZE]': same canary guard layout
+    '[RADIX]': no direct counterpart; signed binary encoding
+    X: BIGNUM *X
+    buf: unsigned char *to
+  preserved_vulnerability_features:
+  - negative_integer_path
+  - caller_provided_output_buffer
+  - explicit_output_buffer_length
+  - library_writes_to_caller_buffer
+  - observable_boundary_oracle
+  lost_or_weakened_features:
+  - radix_parameter
+  - textual radix string representation
+- library: openssl
+  api: BN_bn2hex
+  scores:
+    operation_family: 75
+    function_behavior: 45
+    parameter_structure: 30
+    vulnerability_path: 20
+    harness_feasibility: 80
+    final: 44
+  decision: skip
+  reason: BN_bn2hex performs bignum serialization, but returns a library-allocated
+    string. It does not preserve the caller-provided small output buffer boundary
+    path.
+  parameter_mapping:
+    '[VALUE]': BIGNUM construction possible
+    '[RADIX]': hex output is fixed
+    '[BUFLEN]': no caller-provided buffer length counterpart
+    '[CANARY_SIZE]': canary oracle not naturally applicable
+  preserved_vulnerability_features:
+  - bignum_serialization
+  lost_or_weakened_features:
+  - caller_provided_output_buffer
+  - explicit_output_buffer_length
+  - library_writes_to_caller_buffer
+  - observable_boundary_oracle
+- library: openssl
+  api: BN_bn2dec
+  scores:
+    operation_family: 75
+    function_behavior: 45
+    parameter_structure: 30
+    vulnerability_path: 20
+    harness_feasibility: 80
+    final: 44
+  decision: skip
+  reason: BN_bn2dec is semantically related to decimal serialization, but it returns
+    a library-allocated string and does not expose caller-controlled output buffer
+    length.
+  parameter_mapping:
+    '[VALUE]': BIGNUM construction possible
+    '[RADIX]': decimal output is fixed
+    '[BUFLEN]': no caller-provided buffer length counterpart
+    '[CANARY_SIZE]': canary oracle not naturally applicable
+  preserved_vulnerability_features:
+  - bignum_serialization
+  lost_or_weakened_features:
+  - caller_provided_output_buffer
+  - explicit_output_buffer_length
+  - library_writes_to_caller_buffer
+  - observable_boundary_oracle

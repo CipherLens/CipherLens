@@ -1,0 +1,509 @@
+template_id: BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY
+template_name: mbedtls_mpi_sub_abs limb-boundary template
+source_file: poc_mpi_sub_abs_min.c
+source_library: mbedtls
+source_api: mbedtls_mpi_sub_abs
+language: c
+masking_design:
+  mode: ast_aware_lightweight
+  preserve_compilable_skeleton: true
+  note: This report records AST-like masking roles and source-level contexts. The
+    generated C template remains compilable; block-level masks are recorded as metadata
+    rather than replacing code with <|BLOCK|>.
+poc_pattern:
+  pattern_id: MBEDTLS-POC-0002
+  pattern_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0002.yaml
+  source:
+    source_type: github_pr
+    source_label: 'PR #4096'
+    url: https://github.com/Mbed-TLS/mbedtls/pull/4096
+    issue_refs:
+    - '4042'
+    merge_fixed_commit: bbd2bfb666c134fe534104e66a7f34f66f555781
+    buggy_commit: bbd2bfb666c134fe534104e66a7f34f66f555781^1
+    library_fix_commit: c8a917711097eff2775415d1ef68058696194928
+    regression_test_commit: 43e89e1b1583a5847520573ddb761bd5a842e70f
+  classification:
+    poc_type: memory_safety
+    bug_category: output_limb_boundary
+    failure_signal:
+    - canary_corrupted
+    - out_of_bounds_write
+    - buffer_overflow
+    - incorrect_success_return
+  root_cause:
+    summary: 'In the buggy version, mbedtls_mpi_sub_abs() does not reject the case
+      where the effective limb count of B is greater than A->n. The function then
+      proceeds to mpi_sub_hlp(n, X->p, B->p), where n can exceed the allocated limb
+      count of X, causing an out-of-bounds write into memory after X->p.
+
+      '
+    root_cause_location:
+      file: library/bignum.c
+      function: mbedtls_mpi_sub_abs
+      branch_condition: n > A->n
+    buggy_logic:
+    - missing early rejection when n > A->n
+    - continues to mpi_sub_hlp(n, X->p, B->p) with n larger than X->n
+    fixed_logic:
+    - if( n > A->n ) { ret = MBEDTLS_ERR_MPI_NEGATIVE_VALUE; goto cleanup; }
+    critical_fixed_statement: if( n > A->n ) { ret = MBEDTLS_ERR_MPI_NEGATIVE_VALUE;
+      goto cleanup; }
+  trigger:
+    A_radix: 10
+    A_value: '5'
+    B_radix: 16
+    B_value: 123456789abcdef01
+    output_limbs: 1
+    canary_size: 16
+    description: 'A is a one-limb MPI value and B is a two-limb MPI value. The PoC
+      prepares X with only one output limb followed immediately by a canary region.
+      In the buggy version, mbedtls_mpi_sub_abs(&X, &A, &B) returns success and corrupts
+      the canary. The fixed version returns MBEDTLS_ERR_MPI_NEGATIVE_VALUE.
+
+      '
+  buggy_behavior:
+    ret: 0
+    expected_ret: -10
+    internal_state: A.n=1 B.n=2 X.n=1 sizeof(mbedtls_mpi_uint)=8
+    signal: canary_corrupted
+    sample_output: '[BUG] Canary corrupted: mbedtls_mpi_sub_abs wrote beyond X->p.'
+  fixed_behavior:
+    ret: -10
+    expected_ret: -10
+    internal_state: A.n=1 B.n=2 X.n=1 sizeof(mbedtls_mpi_uint)=8
+    signal: canary_intact
+    sample_output: '[OK] Canary intact.'
+  mutation_points:
+  - name: A_VALUE
+    placeholder: '[A_VALUE]'
+    mask_level: value_level
+    source_expr: mbedtls_mpi_read_string(&A, 10, "5")
+    reason: 'Controls the magnitude and effective limb count of A. The reproduced
+      bug requires A to have fewer effective limbs than B.
+
+      '
+    priority: high
+  - name: B_VALUE
+    placeholder: '[B_VALUE]'
+    mask_level: value_level
+    source_expr: mbedtls_mpi_read_string(&B, 16, "123456789abcdef01")
+    reason: 'Controls the magnitude and effective limb count of B. The trigger uses
+      a B value with two limbs while A and X have one limb.
+
+      '
+    priority: high
+  - name: A_RADIX
+    placeholder: '[A_RADIX]'
+    mask_level: api_argument_level
+    source_expr: mbedtls_mpi_read_string(&A, 10, ...)
+    reason: 'Controls parsing of the A operand. It is part of the regression-test
+      input but is not the core memory-boundary condition.
+
+      '
+    priority: medium
+  - name: B_RADIX
+    placeholder: '[B_RADIX]'
+    mask_level: api_argument_level
+    source_expr: mbedtls_mpi_read_string(&B, 16, ...)
+    reason: 'Controls parsing of the B operand and is needed to reproduce the two-limb
+      B value used by the regression-derived PoC.
+
+      '
+    priority: medium
+  - name: OUTPUT_LIMBS
+    placeholder: '[OUTPUT_LIMBS]'
+    mask_level: memory_layout_level
+    source_expr: prepare_output_with_canary(&X, 1)
+    reason: 'Controls the manually prepared X->n and X->p allocation boundary. The
+      bug is observable when X has fewer limbs than the helper writes.
+
+      '
+    priority: high
+  - name: CANARY_SIZE
+    placeholder: '[CANARY_SIZE]'
+    mask_level: oracle_level
+    source_expr: '#define CANARY_SIZE 16'
+    reason: 'Controls the canary detection region immediately after X->p.
+
+      '
+    priority: low
+  occlusion_candidates:
+    identifier_level:
+    - n
+    - A->n
+    - X->n
+    - X->p
+    - B->p
+    expression_level:
+    - n > A->n
+    statement_level:
+    - ret = MBEDTLS_ERR_MPI_NEGATIVE_VALUE;
+    - goto cleanup;
+    - mpi_sub_hlp( n, X->p, B->p )
+    block_level:
+    - if( n > A->n ) { ret = MBEDTLS_ERR_MPI_NEGATIVE_VALUE; goto cleanup; }
+  vulnerability_path_features:
+    must_preserve:
+    - bignum_absolute_subtraction
+    - lhs_operand_has_fewer_limbs_than_rhs_operand
+    - caller_or_harness_controls_output_limb_storage
+    - explicit_output_limb_boundary
+    - library_writes_to_output_limb_storage
+    - observable_boundary_oracle
+    - negative_result_rejection_or_error_path
+    optional:
+    - radix_based_operand_parsing
+    - exact_mbedtls_limb_size
+    - exact_error_code_value
+    not_required:
+    - exact_function_name
+    - exact internal helper name
+    - exact regression test syntax
+  migration_guidance:
+    good_target_api_features:
+    - accepts big integer operands
+    - performs absolute or unsigned bignum subtraction
+    - exposes or allows harness control over output limb storage
+    - can observe output storage boundary writes with a canary or sanitizer
+    - returns an observable error when subtraction would be negative
+    weak_target_api_features:
+    - performs bignum subtraction but fully owns output allocation and limb growth
+    - exposes only high-level result semantics without caller-controlled limb storage
+    bad_target_api_features:
+    - hides all result storage allocation internally
+    - cannot expose output limb boundary behavior
+    - cannot distinguish negative-result rejection from ordinary subtraction behavior
+    candidate_api_notes:
+    - 'OpenSSL BN_usub and BN_sub are functionally related to bignum subtraction,
+      but they do not naturally preserve the same manual X->p/X->n limb boundary vulnerability
+      path. They are therefore weak candidates for automatic migration unless a specialized
+      harness can control or instrument internal result limb storage.
+
+      '
+  expected_oracle:
+    memory_safety:
+    - canary_intact_after_X_p
+    - asan_clean
+    bug_candidate:
+    - canary_corrupted_after_X_p
+    - out_of_bounds_write
+    - ret_unexpected_success_zero
+    fixed_or_safe:
+    - ret_is_MBEDTLS_ERR_MPI_NEGATIVE_VALUE
+    - no_canary_corruption
+    - no_sanitizer_crash
+  evidence_files:
+    metadata: data/pocs/core10/MBEDTLS-POC-0002/metadata.json
+    notes: data/pocs/core10/MBEDTLS-POC-0002/notes.md
+    reproduction: data/pocs/core10/MBEDTLS-POC-0002/reproduction_result.md
+    poc_source: data/pocs/core10/MBEDTLS-POC-0002/poc/poc_mpi_sub_abs_min.c
+    buggy_log: data/pocs/core10/MBEDTLS-POC-0002/poc/run_min_buggy.log
+    fixed_log: data/pocs/core10/MBEDTLS-POC-0002/poc/run_min_fixed.log
+    library_files: data/pocs/core10/MBEDTLS-POC-0002/library_files.txt
+    test_files: data/pocs/core10/MBEDTLS-POC-0002/test_files.txt
+    commits: data/pocs/core10/MBEDTLS-POC-0002/commits.txt
+    fix_commits: data/pocs/core10/MBEDTLS-POC-0002/fix_commits.txt
+includes:
+- stdio.h
+- stdlib.h
+- string.h
+- mbedtls/bignum.h
+roles:
+  init:
+  - order: 19
+    code: mbedtls_mpi_init(&X);
+    placeholders: []
+  - order: 20
+    code: mbedtls_mpi_init(&A);
+    placeholders: []
+  - order: 21
+    code: mbedtls_mpi_init(&B);
+    placeholders: []
+  input_construction:
+  - order: 7
+    code: '} static int prepare_output_with_canary(mbedtls_mpi *X, size_t limbs) {
+      size_t alloc_size = limbs * sizeof(mbedtls_mpi_uint) + CANARY_SIZE;'
+    placeholders: []
+  - order: 22
+    code: ret = mbedtls_mpi_read_string(&A, [A_BASE], "[A_VALUE]");
+    placeholders:
+    - '[A_BASE]'
+    - '[A_VALUE]'
+  - order: 25
+    code: '} ret = mbedtls_mpi_read_string(&B, [B_BASE], "[B_VALUE]");'
+    placeholders:
+    - '[B_BASE]'
+    - '[B_VALUE]'
+  - order: 28
+    code: '} if (prepare_output_with_canary(&X, [X_LIMB_COUNT]) != 0) { printf("prepare_output_with_canary
+      failed\n");'
+    placeholders:
+    - '[X_LIMB_COUNT]'
+  trigger_call:
+  - order: 32
+    code: ret = mbedtls_mpi_sub_abs(&X, &A, &B);
+    placeholders: []
+  oracle:
+  - order: 0
+    code: static int canary_corrupted(mbedtls_mpi *X) { if (X->p == NULL || X->n ==
+      0) { return 0;
+    placeholders: []
+  - order: 35
+    code: 'if (canary_corrupted(&X)) { printf("[BUG] Canary corrupted: mbedtls_mpi_sub_abs
+      wrote beyond X->p.\n");'
+    placeholders: []
+  - order: 37
+    code: '} else { printf("[OK] Canary intact.\n");'
+    placeholders: []
+  cleanup:
+  - order: 24
+    code: goto cleanup;
+    placeholders: []
+  - order: 27
+    code: goto cleanup;
+    placeholders: []
+  - order: 30
+    code: goto cleanup_no_free_xp;
+    placeholders: []
+  - order: 38
+    code: '} cleanup: free(X.p);'
+    placeholders: []
+  - order: 41
+    code: 'cleanup_no_free_xp: mbedtls_mpi_free(&A);'
+    placeholders: []
+  - order: 42
+    code: mbedtls_mpi_free(&B);
+    placeholders: []
+  other_context:
+  - order: 2
+    code: size_t used = X->n * sizeof(mbedtls_mpi_uint);
+    placeholders: []
+  - order: 10
+    code: '} memset(raw + limbs * sizeof(mbedtls_mpi_uint), CANARY_BYTE, CANARY_SIZE);'
+    placeholders: []
+  - order: 13
+    code: X->p = (mbedtls_mpi_uint *) raw;
+    placeholders: []
+  - order: 16
+    code: mbedtls_mpi X;
+    placeholders: []
+  - order: 17
+    code: mbedtls_mpi A;
+    placeholders: []
+  - order: 18
+    code: mbedtls_mpi B;
+    placeholders: []
+  - order: 31
+    code: '} printf("A.n=%zu B.n=%zu X.n=%zu sizeof(mbedtls_mpi_uint)=%zu\n", A.n,
+      B.n, X.n, sizeof(mbedtls_mpi_uint));'
+    placeholders: []
+masking_levels:
+  macro_level:
+  - macro: CANARY_SIZE
+    original: '#define CANARY_SIZE 16'
+    masked: '#define CANARY_SIZE [CANARY_SIZE]'
+    placeholders:
+    - '[CANARY_SIZE]'
+    ast_kind: preproc_def
+    mask_level: macro_level
+  api_argument_or_value_level:
+  - api_or_function: mbedtls_mpi_read_string
+    role: input_construction
+    statement: ret = mbedtls_mpi_read_string(&A, [A_BASE], "[A_VALUE]");
+    placeholder: '[A_BASE]'
+    mutation_point:
+      name: A_BASE
+      type: enum
+      default: 10
+      values:
+      - 10
+      - 16
+      strategy: enum_values
+      constraint: Check all possible enum values.
+      priority: medium
+    ast_kind: call_expression_or_argument
+    mask_level: api_argument_level
+  - api_or_function: mbedtls_mpi_read_string
+    role: input_construction
+    statement: ret = mbedtls_mpi_read_string(&A, [A_BASE], "[A_VALUE]");
+    placeholder: '[A_VALUE]'
+    mutation_point:
+      name: A_VALUE
+      type: string_number
+      default: '5'
+      values:
+      - '0'
+      - '1'
+      - '5'
+      - '3'
+      - '15'
+      - '255'
+      strategy: boundary_values
+      constraint: Check for zero, maximum value, and typical value.
+      priority: high
+    ast_kind: call_expression_or_argument
+    mask_level: api_argument_level
+  - api_or_function: mbedtls_mpi_read_string
+    role: input_construction
+    statement: '} ret = mbedtls_mpi_read_string(&B, [B_BASE], "[B_VALUE]");'
+    placeholder: '[B_BASE]'
+    mutation_point:
+      name: B_BASE
+      type: enum
+      default: 16
+      values:
+      - 10
+      - 16
+      strategy: enum_values
+      constraint: Check all possible enum values.
+      priority: medium
+    ast_kind: call_expression_or_argument
+    mask_level: api_argument_level
+  - api_or_function: mbedtls_mpi_read_string
+    role: input_construction
+    statement: '} ret = mbedtls_mpi_read_string(&B, [B_BASE], "[B_VALUE]");'
+    placeholder: '[B_VALUE]'
+    mutation_point:
+      name: B_VALUE
+      type: string_hex
+      default: 123456789abcdef01
+      values:
+      - 123456789abcdef01
+      - '100000000'
+      - ffffffffffffffff
+      - ffffffffffffffffffffffff
+      - deadbeefdeadbeef
+      strategy: boundary_values
+      constraint: Check for zero, maximum hex value, and typical hex value.
+      priority: high
+    ast_kind: call_expression_or_argument
+    mask_level: api_argument_level
+  - api_or_function: prepare_output_with_canary
+    role: input_construction
+    statement: '} if (prepare_output_with_canary(&X, [X_LIMB_COUNT]) != 0) { printf("prepare_output_with_canary
+      failed\n");'
+    placeholder: '[X_LIMB_COUNT]'
+    mutation_point:
+      name: X_LIMB_COUNT
+      type: size_t
+      default: 1
+      values:
+      - 1
+      - 2
+      - 3
+      - 4
+      strategy: boundary_values
+      constraint: Check for zero, one, maximum limbs, and maximum value.
+      priority: high
+    ast_kind: call_expression_or_argument
+    mask_level: api_argument_level
+  - api_or_function: printf
+    role: input_construction
+    statement: '} if (prepare_output_with_canary(&X, [X_LIMB_COUNT]) != 0) { printf("prepare_output_with_canary
+      failed\n");'
+    placeholder: '[X_LIMB_COUNT]'
+    mutation_point:
+      name: X_LIMB_COUNT
+      type: size_t
+      default: 1
+      values:
+      - 1
+      - 2
+      - 3
+      - 4
+      strategy: boundary_values
+      constraint: Check for zero, one, maximum limbs, and maximum value.
+      priority: high
+    ast_kind: call_expression_or_argument
+    mask_level: api_argument_level
+  statement_level:
+    enabled: true
+    strategy: classify statements into init/input/trigger/oracle/cleanup roles
+  block_level:
+    enabled: metadata_only
+    strategy: record logical blocks without replacing compilable C blocks
+rag_query_context: 'template_id: BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY
+
+  api: mbedtls_mpi_sub_abs
+
+  operation: bignum_subtract_absolute
+
+  bug_class: limb_boundary_oob_write insufficient_output_limb_allocation canary_detected_oob_write
+
+  input_construction: } static int prepare_output_with_canary(mbedtls_mpi *X, size_t
+  limbs) { size_t alloc_size = limbs * sizeof(mbedtls_mpi_uint) + CANARY_SIZE;
+
+  input_construction: ret = mbedtls_mpi_read_string(&A, [A_BASE], "[A_VALUE]");
+
+  input_construction: } ret = mbedtls_mpi_read_string(&B, [B_BASE], "[B_VALUE]");
+
+  input_construction: } if (prepare_output_with_canary(&X, [X_LIMB_COUNT]) != 0) {
+  printf("prepare_output_with_canary failed\n");
+
+  trigger_call: ret = mbedtls_mpi_sub_abs(&X, &A, &B);
+
+  oracle: static int canary_corrupted(mbedtls_mpi *X) { if (X->p == NULL || X->n ==
+  0) { return 0;
+
+  oracle: if (canary_corrupted(&X)) { printf("[BUG] Canary corrupted: mbedtls_mpi_sub_abs
+  wrote beyond X->p.\n");
+
+  oracle: } else { printf("[OK] Canary intact.\n");
+
+
+  ## PoC Pattern Knowledge
+
+  pattern_id: MBEDTLS-POC-0002
+
+  root_cause_summary: In the buggy version, mbedtls_mpi_sub_abs() does not reject
+  the case where the effective limb count of B is greater than A->n. The function
+  then proceeds to mpi_sub_hlp(n, X->p, B->p), where n can exceed the allocated limb
+  count of X, causing an out-of-bounds write into memory after X->p.
+
+
+  root_cause_location: {''file'': ''library/bignum.c'', ''function'': ''mbedtls_mpi_sub_abs'',
+  ''branch_condition'': ''n > A->n''}
+
+  buggy_logic: [''missing early rejection when n > A->n'', ''continues to mpi_sub_hlp(n,
+  X->p, B->p) with n larger than X->n'']
+
+  fixed_logic: [''if( n > A->n ) { ret = MBEDTLS_ERR_MPI_NEGATIVE_VALUE; goto cleanup;
+  }'']
+
+  trigger: {''A_radix'': 10, ''A_value'': ''5'', ''B_radix'': 16, ''B_value'': ''123456789abcdef01'',
+  ''output_limbs'': 1, ''canary_size'': 16, ''description'': ''A is a one-limb MPI
+  value and B is a two-limb MPI value. The PoC prepares X with only one output limb
+  followed immediately by a canary region. In the buggy version, mbedtls_mpi_sub_abs(&X,
+  &A, &B) returns success and corrupts the canary. The fixed version returns MBEDTLS_ERR_MPI_NEGATIVE_VALUE.\n''}
+
+  must_preserve_features: [''bignum_absolute_subtraction'', ''lhs_operand_has_fewer_limbs_than_rhs_operand'',
+  ''caller_or_harness_controls_output_limb_storage'', ''explicit_output_limb_boundary'',
+  ''library_writes_to_output_limb_storage'', ''observable_boundary_oracle'', ''negative_result_rejection_or_error_path'']
+
+  optional_features: [''radix_based_operand_parsing'', ''exact_mbedtls_limb_size'',
+  ''exact_error_code_value'']
+
+  not_required_features: [''exact_function_name'', ''exact internal helper name'',
+  ''exact regression test syntax'']
+
+  good_target_api_features: [''accepts big integer operands'', ''performs absolute
+  or unsigned bignum subtraction'', ''exposes or allows harness control over output
+  limb storage'', ''can observe output storage boundary writes with a canary or sanitizer'',
+  ''returns an observable error when subtraction would be negative'']
+
+  bad_target_api_features: [''hides all result storage allocation internally'', ''cannot
+  expose output limb boundary behavior'', ''cannot distinguish negative-result rejection
+  from ordinary subtraction behavior'']'
+cross_generation_hints:
+  semantic_operation: bignum_subtract_absolute
+  api_family: BignumArithmetic
+  bug_class:
+  - limb_boundary_oob_write
+  - insufficient_output_limb_allocation
+  - canary_detected_oob_write
+  must_preserve:
+  - input construction role
+  - trigger API role
+  - oracle role
+  - cleanup role

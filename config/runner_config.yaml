@@ -1,0 +1,48 @@
+compiler:
+  cc: clang
+  cxx: clang++
+  common_flags:
+    - -g
+    - -O0
+    - -Wall
+    - -Wextra
+    - -fsanitize=address,undefined
+    - -fno-omit-frame-pointer
+    - -DMBEDTLS_ALLOW_PRIVATE_ACCESS
+
+runtime:
+  timeout_seconds: 20
+  env:
+    ASAN_OPTIONS: "detect_leaks=0:abort_on_error=1:symbolize=1"
+    UBSAN_OPTIONS: "print_stacktrace=1:halt_on_error=1"
+
+libraries:
+  mbedtls:
+    include_dirs:
+      - /home/wen/work/clean_sources/mbedtls-3.6.4/include
+      - /home/wen/work/clean_sources/mbedtls-3.6.4/include
+      - /home/wen/work/clean_sources/mbedtls-3.6.4/include
+    lib_dirs:
+      - /home/wen/work/clean_sources/mbedtls-3.6.4/build/library
+      - /home/wen/work/clean_sources/mbedtls-3.6.4/build/library
+    libs:
+      - mbedtls
+      - mbedx509
+      - mbedcrypto
+
+  openssl:
+    include_dirs:
+      - /home/wen/work/clean_sources/openssl-3.5.5/include
+    lib_dirs:
+      - /home/wen/work/clean_sources/openssl-3.5.5
+    libs:
+      - crypto
+      - ssl
+
+  botan:
+    include_dirs:
+      - /home/wen/work/clean_sources/botan-3.10.0/build/include/public
+    lib_dirs:
+      - /home/wen/work/clean_sources/botan-3.10.0
+    libs:
+      - botan-3

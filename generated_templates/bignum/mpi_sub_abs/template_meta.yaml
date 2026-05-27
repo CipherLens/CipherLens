@@ -1,0 +1,79 @@
+template_id: BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY
+template_name: mbedtls_mpi_sub_abs limb-boundary template
+backend: api_harness
+language: c
+status: generated_by_mask
+poc_source:
+  file: poc_mpi_sub_abs_min.c
+  library: mbedtls
+  api: mbedtls_mpi_sub_abs
+operation:
+  abstract: bignum_subtract_absolute
+  api_family: BignumArithmetic
+  bug_class:
+  - limb_boundary_oob_write
+  - insufficient_output_limb_allocation
+  - canary_detected_oob_write
+source_api:
+  library: mbedtls
+  function: mbedtls_mpi_sub_abs
+mutation_points:
+- name: A_VALUE
+  placeholder: '[A_VALUE]'
+  type: string_number
+  default: '5'
+- name: B_VALUE
+  placeholder: '[B_VALUE]'
+  type: string_hex
+  default: 123456789abcdef01
+- name: A_BASE
+  placeholder: '[A_BASE]'
+  type: enum
+  default: 10
+- name: B_BASE
+  placeholder: '[B_BASE]'
+  type: enum
+  default: 16
+- name: X_LIMB_COUNT
+  placeholder: '[X_LIMB_COUNT]'
+  type: size_t
+  default: 1
+- name: CANARY_SIZE
+  placeholder: '[CANARY_SIZE]'
+  type: size_t
+  default: 16
+oracle:
+  memory_safety:
+  - no_crash
+  - asan_clean
+  - canary_intact
+  behavior:
+  - negative_result_should_be_rejected
+  - no_write_beyond_x_limbs
+verdict:
+  true_positive:
+    condition: canary_corrupted == true
+    exit_code: 1
+  expected_rejection:
+    condition: ret == MBEDTLS_ERR_MPI_NEGATIVE_VALUE && canary_corrupted == false
+    exit_code: 0
+generation_policy:
+  max_cases: 128
+  priority:
+  - X_LIMB_COUNT_boundary
+  - B_VALUE_large_limb_count
+  compile_with:
+  - asan
+  - ubsan
+rag_requirements:
+  retrieve:
+  - mbedtls_mpi_sub_abs API constraints
+  - library unit-test call patterns
+  - cross-library candidate mappings
+  - related oracle knowledge
+cross_library:
+  openssl:
+    status: candidate_mapping
+    api_family: BignumArithmetic
+    candidate_api: BN_usub
+    migration_confidence: medium

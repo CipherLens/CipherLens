@@ -1,0 +1,115 @@
+source_file: pocs/mbedtls/poc_mpi_write_string_min.c
+language: c
+library: mbedtls
+includes:
+- stdio.h
+- stdlib.h
+- string.h
+- mbedtls/bignum.h
+macros:
+  BUFLEN: '4'
+  CANARY_SIZE: '16'
+  CANARY_BYTE: '0xA5'
+function_calls:
+- order: 4
+  function: main
+  args:
+  - void
+  raw: '} int main(void) { mbedtls_mpi X;'
+  is_api: false
+- order: 10
+  function: mbedtls_mpi_init
+  args:
+  - '&X'
+  raw: mbedtls_mpi_init(&X);
+  is_api: true
+- order: 11
+  function: mbedtls_mpi_lset
+  args:
+  - '&X'
+  - '-1'
+  raw: ret = mbedtls_mpi_lset(&X, -1);
+  is_api: true
+- order: 13
+  function: mbedtls_mpi_free
+  args:
+  - '&X'
+  raw: mbedtls_mpi_free(&X);
+  is_api: true
+- order: 15
+  function: mbedtls_mpi_write_string
+  args:
+  - '&X'
+  - '2'
+  - (char *) buf
+  - BUFLEN
+  - '&olen'
+  raw: '} ret = mbedtls_mpi_write_string( &X, 2, (char *) buf, BUFLEN, &olen );'
+  is_api: true
+- order: 26
+  function: mbedtls_mpi_free
+  args:
+  - '&X'
+  raw: mbedtls_mpi_free(&X);
+  is_api: true
+- order: 29
+  function: mbedtls_mpi_free
+  args:
+  - '&X'
+  raw: mbedtls_mpi_free(&X);
+  is_api: true
+api_calls:
+- order: 10
+  function: mbedtls_mpi_init
+  args:
+  - '&X'
+  raw: mbedtls_mpi_init(&X);
+  is_api: true
+- order: 11
+  function: mbedtls_mpi_lset
+  args:
+  - '&X'
+  - '-1'
+  raw: ret = mbedtls_mpi_lset(&X, -1);
+  is_api: true
+- order: 13
+  function: mbedtls_mpi_free
+  args:
+  - '&X'
+  raw: mbedtls_mpi_free(&X);
+  is_api: true
+- order: 15
+  function: mbedtls_mpi_write_string
+  args:
+  - '&X'
+  - '2'
+  - (char *) buf
+  - BUFLEN
+  - '&olen'
+  raw: '} ret = mbedtls_mpi_write_string( &X, 2, (char *) buf, BUFLEN, &olen );'
+  is_api: true
+- order: 26
+  function: mbedtls_mpi_free
+  args:
+  - '&X'
+  raw: mbedtls_mpi_free(&X);
+  is_api: true
+- order: 29
+  function: mbedtls_mpi_free
+  args:
+  - '&X'
+  raw: mbedtls_mpi_free(&X);
+  is_api: true
+trigger_call:
+  order: 15
+  function: mbedtls_mpi_write_string
+  args:
+  - '&X'
+  - '2'
+  - (char *) buf
+  - BUFLEN
+  - '&olen'
+  raw: '} ret = mbedtls_mpi_write_string( &X, 2, (char *) buf, BUFLEN, &olen );'
+  is_api: true
+oracle_functions:
+- canary_corrupted

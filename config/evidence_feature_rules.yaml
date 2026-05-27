@@ -1,0 +1,167 @@
+generic_features:
+  caller_provided_output_buffer:
+    description: Target API accepts a caller-provided writable output buffer.
+    positive:
+    - unsigned char *to
+    - unsigned char *out
+    - unsigned char *buf
+    - char *buf
+    - void *out
+    - caller-provided buffer
+    negative:
+    - returns char *
+    - OPENSSL_free
+    - allocated string
+    - library-allocated
+  explicit_output_buffer_length:
+    description: Target API accepts an explicit output buffer length parameter.
+    positive:
+    - int tolen
+    - size_t buflen
+    - size_t out_len
+    - output buffer length
+    - length of the buffer
+    - tolen
+    - buflen
+    negative:
+    - no length parameter
+    - allocated string
+    - returns char *
+  library_writes_to_caller_buffer:
+    description: Library writes serialized output into the provided buffer.
+    positive:
+    - unsigned char *to
+    - unsigned char *out
+    - memcpy
+    - BN_bn2binpad
+    - BN_signed_bn2bin
+    - write to buffer
+    negative:
+    - returns char *
+    - OPENSSL_free
+    - allocated string
+  library_allocated_output:
+    description: Target API allocates and returns output internally.
+    positive:
+    - returns char *
+    - OPENSSL_free
+    - allocated string
+    - library allocated
+    - must be freed
+    negative:
+    - caller-provided buffer
+    - unsigned char *to
+  signed_or_negative_encoding:
+    description: Target API preserves signed or negative integer encoding.
+    positive:
+    - signed
+    - negative
+    - BN_set_negative
+    - BN_signed
+    - two's complement
+    negative:
+    - magnitude only
+  radix_or_textual_base_context:
+    description: Target API has radix/base/textual conversion semantics.
+    positive:
+    - radix
+    - base
+    - hex
+    - decimal
+    - binary string
+    negative:
+    - raw binary
+    - big-endian binary
+  bignum_subtraction:
+    description: Target API performs big integer subtraction.
+    positive:
+    - BN_sub
+    - BN_usub
+    - subtraction
+    - subtract
+    - r = a - b
+    negative: []
+  manual_output_limb_boundary_control:
+    description: Harness can manually restrict output limb capacity.
+    positive:
+    - limb
+    - word capacity
+    - manual allocation
+    - internal limbs
+    negative:
+    - expands automatically
+    - BN_expand
+    - managed internally
+  direct_canary_after_output_limbs:
+    description: Harness can place canary directly after output limbs.
+    positive:
+    - guard after limbs
+    - raw limb buffer
+    - canary after output limbs
+    - limb canary
+    negative:
+    - opaque
+    - managed internally
+  explicit_tag_input:
+    description: API accepts an explicit authentication tag input.
+    positive:
+    - tag
+    - auth tag
+    - authentication tag
+    negative: []
+  tag_length_parameter:
+    description: API accepts explicit tag length.
+    positive:
+    - tag_len
+    - tag length
+    - mac_len
+    negative: []
+  verification_return_code:
+    description: API exposes verification success or failure through return code.
+    positive:
+    - return 0
+    - verify failed
+    - bad signature
+    - authentication failed
+    negative: []
+bug_class_requirements:
+  output_buffer_boundary:
+    required:
+    - caller_provided_output_buffer
+    - explicit_output_buffer_length
+    - library_writes_to_caller_buffer
+    disallowed:
+    - library_allocated_output
+  canary_detected_oob_write:
+    required:
+    - caller_provided_output_buffer
+    - explicit_output_buffer_length
+    disallowed:
+    - library_allocated_output
+  negative_integer_serialization:
+    required:
+    - signed_or_negative_encoding
+    optional:
+    - radix_or_textual_base_context
+  bignum_limb_boundary:
+    required:
+    - manual_output_limb_boundary_control
+    - direct_canary_after_output_limbs
+    disallowed: []
+  authentication_tag_validation:
+    required:
+    - explicit_tag_input
+    - tag_length_parameter
+    - verification_return_code
+    disallowed: []
+  signature_validation:
+    required:
+    - verification_return_code
+    disallowed: []
+template_bug_class_fallback:
+  BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY:
+  - bignum_limb_boundary
+  BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER:
+  - output_buffer_boundary
+  - negative_integer_serialization
+  - canary_detected_oob_write

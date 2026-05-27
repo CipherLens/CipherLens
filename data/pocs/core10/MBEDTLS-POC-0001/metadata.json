@@ -1,0 +1,78 @@
+{
+  "poc_id": "MBEDTLS-POC-0001",
+  "dataset_status": "accepted_reconstructable",
+  "source": {
+    "source_type": "github_pr",
+    "source_id": "2405",
+    "source_label": "PR #2405",
+    "url": "https://github.com/Mbed-TLS/mbedtls/pull/2405"
+  },
+  "classification": {
+    "poc_type": "memory_safety",
+    "bug_category": "memory_safety",
+    "module": "bignum;mpi;tls",
+    "primary_module": "bignum/mpi",
+    "affected_api": [
+      "mbedtls_mpi_write_string"
+    ],
+    "bug_keywords": [
+      "buffer overflow",
+      "bug",
+      "fix",
+      "fixed",
+      "fixes",
+      "hang",
+      "out-of-bounds",
+      "overflow",
+      "security"
+    ]
+  },
+  "experiment_fields": {
+    "failure_signal": "buffer overflow / out-of-bounds write",
+    "target_function": "mbedtls_mpi_write_string",
+    "poc_source": "regression_test_or_pr",
+    "test_file": "tests/suites/test_suite_mpi.data",
+    "buggy_behavior": "negative MPI string conversion can write past the output buffer",
+    "fixed_behavior": "output length calculation and boundary check prevent one-byte overflow",
+    "experiment_status": "selected_core10"
+  },
+  "annotation": {
+    "root_cause": "Missing boundary check in output buffer length calculation for negative MPI string conversion.",
+    "mutation_point": "library/bignum.c: mbedtls_mpi_write_string(), output length calculation and 1-byte boundary check for negative MPIs.",
+    "reproduction_status": "reconstructable",
+    "usable_for_occlusion": "yes",
+    "usable_for_rag": "yes",
+    "review_notes": "Primary fix candidate PR #2405; has library patch, issue reference, and MPI regression tests."
+  },
+  "evidence": {
+    "patch_evidence": "yes",
+    "test_evidence": "yes",
+    "library_files": [
+      "library/bignum.c"
+    ],
+    "test_files": [
+      "tests/suites/test_suite_mpi.data",
+      "tests/suites/test_suite_mpi.function"
+    ],
+    "cves": [],
+    "issue_refs": [
+      "2404"
+    ],
+    "pr_refs": [
+      "2405"
+    ],
+    "commit_refs": [
+      "86d8c673c2954e8b1a925a8d1e68b059dab07747",
+      "b6a59f66cdea97465d04be7a3cb1367770c97dd1"
+    ]
+  },
+  "traceability": {
+    "review_priority": "P0",
+    "quality_score_auto": "20",
+    "source_max_score": "20",
+    "normalized_score": "1.0",
+    "poc_suitability": "high_patch_and_regression_candidate",
+    "original_global_id": "POC-CAND-000014",
+    "original_review_label": "keep"
+  }
+}

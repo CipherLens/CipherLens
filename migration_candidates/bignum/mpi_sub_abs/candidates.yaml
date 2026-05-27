@@ -1,0 +1,116 @@
+template_id: BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY
+source:
+  library: mbedtls
+  api: mbedtls_mpi_sub_abs
+  pattern_id: MBEDTLS-POC-0002
+  root_cause_summary: 'In the buggy version, mbedtls_mpi_sub_abs() does not reject
+    the case where the effective limb count of B is greater than A->n. The function
+    then proceeds to mpi_sub_hlp(n, X->p, B->p), where n can exceed the allocated
+    limb count of X, causing an out-of-bounds write into memory after X->p.
+
+    '
+  vulnerability_path_features:
+    must_preserve:
+    - bignum_absolute_subtraction
+    - lhs_operand_has_fewer_limbs_than_rhs_operand
+    - caller_or_harness_controls_output_limb_storage
+    - explicit_output_limb_boundary
+    - library_writes_to_output_limb_storage
+    - observable_boundary_oracle
+    - negative_result_rejection_or_error_path
+    optional:
+    - radix_based_operand_parsing
+    - exact_mbedtls_limb_size
+    - exact_error_code_value
+    not_required:
+    - exact_function_name
+    - exact internal helper name
+    - exact regression test syntax
+  migration_guidance:
+    good_target_api_features:
+    - accepts big integer operands
+    - performs absolute or unsigned bignum subtraction
+    - exposes or allows harness control over output limb storage
+    - can observe output storage boundary writes with a canary or sanitizer
+    - returns an observable error when subtraction would be negative
+    weak_target_api_features:
+    - performs bignum subtraction but fully owns output allocation and limb growth
+    - exposes only high-level result semantics without caller-controlled limb storage
+    bad_target_api_features:
+    - hides all result storage allocation internally
+    - cannot expose output limb boundary behavior
+    - cannot distinguish negative-result rejection from ordinary subtraction behavior
+    candidate_api_notes:
+    - 'OpenSSL BN_usub and BN_sub are functionally related to bignum subtraction,
+      but they do not naturally preserve the same manual X->p/X->n limb boundary vulnerability
+      path. They are therefore weak candidates for automatic migration unless a specialized
+      harness can control or instrument internal result limb storage.
+
+      '
+scoring_policy:
+  operation_family: 0.15
+  function_behavior: 0.2
+  parameter_structure: 0.2
+  vulnerability_path: 0.3
+  harness_feasibility: 0.15
+  decision_rule:
+    generate: final >= 75 and vulnerability_path >= 70
+    needs_llm_review: final >= 55 and vulnerability_path >= 50
+    skip: otherwise
+target_candidates:
+- library: openssl
+  api: BN_usub
+  scores:
+    operation_family: 85
+    function_behavior: 70
+    parameter_structure: 60
+    vulnerability_path: 45
+    harness_feasibility: 70
+    final: 63
+  decision: skip
+  reason: BN_usub is functionally related to unsigned bignum subtraction, but OpenSSL
+    generally manages BIGNUM expansion internally. The source pattern depends on output
+    limb boundary control, so vulnerability-path equivalence is uncertain.
+  migration_applicability: migration_not_applicable
+  migration_reason: 'Functionally related but migration_not_applicable for automatic
+    generation: vulnerability-path mismatch; missing manual output limb boundary control;
+    missing direct canary after output limbs.'
+  parameter_mapping:
+    '[A_VALUE]': BIGNUM *A
+    '[B_VALUE]': BIGNUM *B
+    '[X_LIMB_COUNT]': no direct public counterpart for forcing result limb capacity
+    '[CANARY_SIZE]': not directly applicable unless internal buffer control is exposed
+  preserved_vulnerability_features:
+  - bignum_subtraction
+  - A_B_operand_relation
+  lost_or_weakened_features:
+  - manual_output_limb_boundary_control
+  - direct_canary_after_output_limbs
+- library: openssl
+  api: BN_sub
+  scores:
+    operation_family: 85
+    function_behavior: 75
+    parameter_structure: 60
+    vulnerability_path: 40
+    harness_feasibility: 75
+    final: 63
+  decision: skip
+  reason: BN_sub supports signed subtraction behavior, but the original mbedtls_mpi_sub_abs
+    pattern is tied to output limb allocation and negative-result boundary checks.
+    The migration should be reviewed rather than directly generated.
+  migration_applicability: migration_not_applicable
+  migration_reason: 'Functionally related but migration_not_applicable for automatic
+    generation: vulnerability-path mismatch; missing manual output limb boundary control;
+    missing direct canary after output limbs.'
+  parameter_mapping:
+    '[A_VALUE]': BIGNUM *A
+    '[B_VALUE]': BIGNUM *B
+    '[X_LIMB_COUNT]': no direct public equivalent
+    '[CANARY_SIZE]': not naturally applicable
+  preserved_vulnerability_features:
+  - bignum_subtraction
+  - signed_result_behavior
+  lost_or_weakened_features:
+  - manual_output_limb_boundary_control
+  - direct_canary_after_output_limbs
