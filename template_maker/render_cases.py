@@ -155,6 +155,18 @@ def parse_int_or_none(v: Any) -> int | None:
         return None
 
 
+def hex_byte_len_or_none(v: Any) -> int | None:
+    s = str(v or "").strip().lower()
+    if s.startswith("0x"):
+        s = s[2:]
+    s = "".join(s.split())
+    if not s or len(s) % 2 != 0:
+        return None
+    if not all(c in "0123456789abcdef" for c in s):
+        return None
+    return len(s) // 2
+
+
 def is_valid_case(template_id: str, raw_values: Dict[str, Any]) -> bool:
     """
     Project-side constraint filtering.
@@ -196,6 +208,27 @@ def is_valid_case(template_id: str, raw_values: Dict[str, Any]) -> bool:
         if buflen is None or buflen < 0:
             return False
         if canary_size is None or canary_size <= 0:
+            return False
+
+        return True
+
+    if template_id.startswith("RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE"):
+        der_kind = str(raw_values.get("DER_KIND", "")).strip().lower()
+        trailing_bytes = raw_values.get("TRAILING_GARBAGE_BYTES")
+        trailing_len = parse_int_or_none(raw_values.get("TRAILING_GARBAGE_LEN"))
+        decoded_len = hex_byte_len_or_none(trailing_bytes)
+
+        template_id_lower = template_id.lower()
+        if "d2i_rsaprivatekey" in template_id_lower and der_kind != "private":
+            return False
+        if "d2i_privatekey" in template_id_lower and der_kind != "private":
+            return False
+        if "d2i_rsa_pubkey" in template_id_lower and der_kind != "public":
+            return False
+
+        if decoded_len is None or trailing_len is None:
+            return False
+        if decoded_len != trailing_len:
             return False
 
         return True

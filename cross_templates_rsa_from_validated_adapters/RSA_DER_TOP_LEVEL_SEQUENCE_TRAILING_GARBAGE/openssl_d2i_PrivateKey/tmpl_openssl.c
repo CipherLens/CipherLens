@@ -1,52 +1,14 @@
-/*
- * Normalized template for MBEDTLS-POC-0020:
- * RSA DER parser accepts trailing garbage after the top-level SEQUENCE.
- *
- * Source public API: mbedtls_pk_parse_key
- * Internal isolation APIs: mbedtls_rsa_parse_key, mbedtls_rsa_parse_pubkey
- *
- * Mask anchors:
- * - [DER_KIND]
- * - [PARSE_API_KIND]
- * - [TRAILING_GARBAGE_BYTES]
- * - [TRAILING_GARBAGE_LEN]
- * - [EXPECT_RET]
- * - [TOP_LEVEL_SEQUENCE_END_CHECK]
- * - [RSA_PRIVATE_PARSE_CALL]
- * - [RSA_PUBLIC_PARSE_CALL]
- */
-
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
-#include "mbedtls/pk.h"
-#include "mbedtls/private/rsa.h"
-#include "mbedtls/version.h"
+#include <openssl/evp.h>
+#include <openssl/rsa.h>
 
-/*
- * These functions are present in the mbedTLS RSA parser implementation used by
- * the source PoC, but may not be declared by the public headers under all build
- * configurations. The normalized source API remains mbedtls_pk_parse_key.
- */
-int mbedtls_rsa_parse_key(mbedtls_rsa_context *rsa,
-                          const unsigned char *key,
-                          size_t keylen);
-
-int mbedtls_rsa_parse_pubkey(mbedtls_rsa_context *rsa,
-                             const unsigned char *key,
-                             size_t keylen);
-
-#ifndef MBEDTLS_ERR_RSA_BAD_INPUT_DATA
-#error "MBEDTLS_ERR_RSA_BAD_INPUT_DATA is not defined"
-#endif
-
-#define DER_KIND_VALUE "[DER_KIND]"
-#define PARSE_API_KIND_VALUE "[PARSE_API_KIND]"
+#define MAX_DER_SIZE 1024
 #define TRAILING_GARBAGE_HEX "[TRAILING_GARBAGE_BYTES]"
 #define TRAILING_GARBAGE_EXPECTED_LEN ((size_t) [TRAILING_GARBAGE_LEN])
-#define EXPECTED_RETURN_VALUE [EXPECT_RET]
 
 static int hexval(int c)
 {
@@ -102,15 +64,6 @@ static int hex_to_bin(const char *hex,
 
     *out_len = n;
     return 0;
-}
-
-static void rsa_init_compat(mbedtls_rsa_context *rsa)
-{
-#if defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER < 0x03000000
-    mbedtls_rsa_init(rsa, MBEDTLS_RSA_PKCS_V15, 0);
-#else
-    mbedtls_rsa_init(rsa);
-#endif
 }
 
 static const char *select_base_der_hex(const char *der_kind)
@@ -178,61 +131,19 @@ static int build_der_with_trailing_garbage(const char *base_hex,
     return 0;
 }
 
-static int parse_with_selected_api(const char *parse_api_kind,
-                                   const char *der_kind,
-                                   const unsigned char *der,
-                                   size_t der_len)
-{
-    int ret = -1;
-
-    if (strcmp(parse_api_kind, "rsa_private") == 0) {
-        mbedtls_rsa_context rsa;
-
-        rsa_init_compat(&rsa);
-        /* [RSA_PRIVATE_PARSE_CALL] */
-        ret = mbedtls_rsa_parse_key(&rsa, der, der_len);
-        mbedtls_rsa_free(&rsa);
-        return ret;
-    }
-
-    if (strcmp(parse_api_kind, "rsa_public") == 0) {
-        mbedtls_rsa_context rsa;
-
-        rsa_init_compat(&rsa);
-        /* [RSA_PUBLIC_PARSE_CALL] */
-        ret = mbedtls_rsa_parse_pubkey(&rsa, der, der_len);
-        mbedtls_rsa_free(&rsa);
-        return ret;
-    }
-
-    if (strcmp(parse_api_kind, "pk_private") == 0) {
-        mbedtls_pk_context pk;
-
-        if (strcmp(der_kind, "private") != 0) {
-            return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
-        }
-
-        mbedtls_pk_init(&pk);
-        ret = mbedtls_pk_parse_key(&pk, der, der_len, NULL, 0);
-        mbedtls_pk_free(&pk);
-        return ret;
-    }
-
-    return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
-}
-
 int main(void)
 {
-    const char *der_kind = DER_KIND_VALUE;
-    const char *parse_api_kind = PARSE_API_KIND_VALUE;
+    const char *der_kind = "[DER_KIND]";
     const char *base_hex = NULL;
-    unsigned char *der = NULL;
-    const size_t der_capacity = 512;
+    unsigned char der[MAX_DER_SIZE];
     size_t der_len = 0;
     size_t trailing_len = 0;
-    int ret;
+    const unsigned char *p = NULL;
+    long consumed_len = 0;
+    int ret = 0;
 
     setbuf(stdout, NULL);
+    memset(der, 0, sizeof(der));
 
     base_hex = select_base_der_hex(der_kind);
     if (base_hex == NULL) {
@@ -240,60 +151,59 @@ int main(void)
         return 2;
     }
 
-    der = calloc(der_capacity, 1);
-    if (der == NULL) {
-        printf("[ERROR] allocation failed\n");
-        return 2;
-    }
-
     ret = build_der_with_trailing_garbage(base_hex,
                                           TRAILING_GARBAGE_HEX,
                                           der,
-                                          der_capacity,
+                                          sizeof(der),
                                           &der_len,
                                           &trailing_len);
     if (ret != 0) {
         printf("[ERROR] DER construction failed: %d\n", ret);
-        free(der);
         return 2;
     }
 
     if (trailing_len != TRAILING_GARBAGE_EXPECTED_LEN) {
         printf("[ERROR] trailing garbage length mismatch: got=%zu expected=%zu\n",
                trailing_len, TRAILING_GARBAGE_EXPECTED_LEN);
-        free(der);
         return 2;
     }
 
-    printf("DER kind: %s\n", der_kind);
-    printf("Parse API kind: %s\n", parse_api_kind);
-    printf("DER length with trailing garbage: %zu\n", der_len);
-    printf("Trailing garbage length: %zu\n", trailing_len);
+    /*
+     * Adapter-generated initialization.
+     */
+    EVP_PKEY *pkey = NULL;
 
     /*
-     * Fixed source guard represented by [TOP_LEVEL_SEQUENCE_END_CHECK]:
-     * if (end != p + len) { return MBEDTLS_ERR_RSA_BAD_INPUT_DATA; }
+     * Adapter-generated input construction.
      */
-    ret = parse_with_selected_api(parse_api_kind, der_kind, der, der_len);
+    p = der;
+    consumed_len = 0;
+
+    /*
+     * Adapter-generated trigger call.
+     * target_api: d2i_PrivateKey
+     */
+    pkey = d2i_PrivateKey(EVP_PKEY_RSA, NULL, &p, der_len);
+    ret = (pkey != NULL) ? 0 : -1;
+    consumed_len = (long)(p - der);
 
     printf("ret=%d\n", ret);
-    printf("expected_buggy=0\n");
-    printf("expected_fixed_or_safe=%d\n", EXPECTED_RETURN_VALUE);
+    printf("der_len=%zu\n", der_len);
+    printf("consumed_len=%ld\n", consumed_len);
 
-    if (ret == 0) {
-        printf("[BUG] parser accepted trailing garbage after top-level SEQUENCE.\n");
-        free(der);
+    if (ret == 0 && consumed_len < (long) der_len) {
+        printf("[BUG] target decoded first DER object but left trailing garbage unconsumed.\n");
+        EVP_PKEY_free(pkey);
         return 1;
     }
 
-    if (ret == EXPECTED_RETURN_VALUE ||
-        ret == MBEDTLS_ERR_RSA_BAD_INPUT_DATA) {
-        printf("[OK] parser rejected trailing garbage.\n");
-        free(der);
+    if (ret == 0 && consumed_len == (long) der_len) {
+        printf("[OK] target decoded and consumed full input exactly.\n");
+        EVP_PKEY_free(pkey);
         return 0;
     }
 
-    printf("[INFO] parser rejected trailing garbage with alternate ret=%d\n", ret);
-    free(der);
+    printf("[OK] target rejected trailing-garbage input.\n");
+    EVP_PKEY_free(pkey);
     return 0;
 }

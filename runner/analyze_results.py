@@ -31,10 +31,19 @@ BUG_PATTERNS = [
     "wrote beyond",
 ]
 
+DER_TRAILING_GARBAGE_BUG_PATTERNS = [
+    "[BUG] target decoded first DER object but left trailing garbage unconsumed.",
+]
+
 SAFE_PATTERNS = [
     "[OK] Canary intact",
     "fixed behavior",
     "rejected safely",
+]
+
+DER_TRAILING_GARBAGE_SAFE_REJECT_PATTERNS = [
+    "[OK] parser rejected trailing garbage.",
+    "[INFO] parser rejected trailing garbage with alternate ret=",
 ]
 
 HARNESS_ERROR_PATTERNS = [
@@ -178,6 +187,11 @@ def classify_record(record: Dict[str, Any]) -> Dict[str, Any]:
         result["reason"] = "UBSAN-like runtime error pattern found in output."
         return result
 
+    if contains_any(text, DER_TRAILING_GARBAGE_BUG_PATTERNS):
+        result["verdict"] = "bug_candidate"
+        result["reason"] = "DER parser decoded the leading object but left trailing garbage unconsumed."
+        return result
+
     if contains_any(text, BUG_PATTERNS):
         result["verdict"] = "bug_candidate"
         result["reason"] = "Harness reported explicit BUG/canary corruption pattern."
@@ -191,6 +205,11 @@ def classify_record(record: Dict[str, Any]) -> Dict[str, Any]:
     if ret_info["ret_matches_expected"]:
         result["verdict"] = "fixed_behavior"
         result["reason"] = "Return code matches expected fixed behavior and no bug/crash pattern was observed."
+        return result
+
+    if contains_any(text, DER_TRAILING_GARBAGE_SAFE_REJECT_PATTERNS):
+        result["verdict"] = "safe_reject_behavior"
+        result["reason"] = "DER parser rejected the trailing-garbage input."
         return result
 
     if contains_any(text, SAFE_PATTERNS):

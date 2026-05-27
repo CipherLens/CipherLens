@@ -1,0 +1,319 @@
+template_id: RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE
+source_template_id: RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE
+source:
+  library: mbedtls
+  api: mbedtls_pk_parse_key
+  pattern_id: MBEDTLS-POC-0020
+  internal_apis:
+    - mbedtls_rsa_parse_key
+    - mbedtls_rsa_parse_pubkey
+  root_cause_summary: >
+    The source RSA DER parsers accepted valid PKCS#1 RSA private/public key DER
+    followed by bytes outside the top-level ASN.1 SEQUENCE because the parser did
+    not enforce exact consumption of the input buffer after reading the top-level
+    SEQUENCE length.
+  vulnerability_path_features:
+    must_preserve:
+      - der_key_parser
+      - rsa_private_or_public_key_path
+      - top_level_asn1_sequence_length
+      - valid_object_followed_by_trailing_bytes
+      - parser_accepts_vs_rejects_extra_data
+      - observable_return_or_pointer_consumption_oracle
+    optional:
+      - pkcs1_der_encoding
+      - subject_public_key_info_public_key_encoding
+      - generic_evp_private_key_decode_path
+    not_required:
+      - exact_mbedtls_error_code
+      - exact_internal_mbedtls_parser_function_name
+
+scoring_policy:
+  operation_family: 0.15
+  function_behavior: 0.20
+  parameter_structure: 0.20
+  vulnerability_path: 0.30
+  harness_feasibility: 0.15
+  decision_rule:
+    generate: final >= 75 and vulnerability_path >= 70
+    skip: otherwise
+  score_notes:
+    - Pointer advancement through const unsigned char **pp is treated as a strong
+      oracle for exact top-level DER object consumption.
+    - Generic EVP decoders are scored lower than RSA-specific decoders when they
+      weaken the raw PKCS#1 object-shape equivalence.
+
+required_features:
+  - target parses DER encoded key material
+  - target can receive valid DER followed by appended trailing garbage bytes
+  - target returns an observable success or failure value
+  - target exposes pointer advancement or another exact-consumption oracle
+  - harness can distinguish accepted trailing bytes from complete rejection
+
+target_candidates:
+  - target_library: openssl
+    target_api: d2i_RSAPrivateKey
+    library: openssl
+    api: d2i_RSAPrivateKey
+    source_template_id: RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE
+    source_api: mbedtls_pk_parse_key
+    decision: generate
+    migration_applicability: applicable
+    scores:
+      operation_family: 95
+      function_behavior: 95
+      parameter_structure: 90
+      vulnerability_path: 95
+      harness_feasibility: 90
+      final: 93
+    preserved_features:
+      - DER key parser
+      - RSA private key path
+      - PKCS#1 RSAPrivateKey top-level ASN.1 SEQUENCE
+      - caller-controlled DER buffer and explicit input length
+      - valid object followed by appended trailing garbage
+      - return pointer success/failure oracle
+      - pointer advancement oracle via const unsigned char **ppin
+    preserved_vulnerability_features:
+      - DER key parser
+      - RSA private key path
+      - PKCS#1 RSAPrivateKey top-level ASN.1 SEQUENCE
+      - caller-controlled DER buffer and explicit input length
+      - valid object followed by appended trailing garbage
+      - return pointer success/failure oracle
+      - pointer advancement oracle via const unsigned char **ppin
+    lost_or_weakened_features:
+      - exact mbedTLS MBEDTLS_ERR_RSA_BAD_INPUT_DATA return code is not preserved
+      - OpenSSL d2i success may advance only to the consumed object, so harness must
+        explicitly check p == der + der_len to detect accepted trailing bytes
+    migration_reason: >
+      Strongest private-key candidate. It decodes a PKCS#1 RSA private key from a
+      caller-provided DER buffer with an explicit length and advances the input
+      pointer on success, preserving the exact top-level object consumption oracle.
+    required_features:
+      - PKCS#1 RSA private DER input
+      - appended trailing garbage after the top-level SEQUENCE
+      - check return value is NULL/non-NULL
+      - check p == der + der_len after success
+      - free returned RSA with RSA_free
+    notes:
+      - Deprecated in OpenSSL 3.x, but still useful for RSA-specific migration
+        harnesses when deprecated API visibility is enabled.
+      - Treat non-NULL with p < der + der_len as accepted-with-trailing-data unless
+        the harness policy requires exact consumption.
+
+  - target_library: openssl
+    target_api: d2i_PrivateKey
+    library: openssl
+    api: d2i_PrivateKey
+    source_template_id: RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE
+    source_api: mbedtls_pk_parse_key
+    decision: generate
+    migration_applicability: applicable
+    scores:
+      operation_family: 90
+      function_behavior: 85
+      parameter_structure: 88
+      vulnerability_path: 85
+      harness_feasibility: 88
+      final: 87
+    preserved_features:
+      - DER private key parser
+      - RSA private key path when type is EVP_PKEY_RSA
+      - caller-controlled DER buffer and explicit input length
+      - valid object followed by appended trailing garbage
+      - return pointer success/failure oracle
+      - pointer advancement oracle via const unsigned char **pp
+    preserved_vulnerability_features:
+      - DER private key parser
+      - RSA private key path when type is EVP_PKEY_RSA
+      - caller-controlled DER buffer and explicit input length
+      - valid object followed by appended trailing garbage
+      - return pointer success/failure oracle
+      - pointer advancement oracle via const unsigned char **pp
+    lost_or_weakened_features:
+      - generic EVP private-key path is less RSA-specific than mbedtls_rsa_parse_key
+      - may accept PKCS#8 PrivateKeyInfo as well as key-specific formats
+      - exact PKCS#1 top-level object shape can be weakened unless adapter fixes the input format
+      - exact mbedTLS return code is not preserved
+    migration_reason: >
+      Applicable generic private-key candidate. With EVP_PKEY_RSA it preserves RSA
+      private-key DER parsing and exposes pointer advancement, but it is weaker than
+      d2i_RSAPrivateKey because the accepted key container may be generic EVP/PKCS#8.
+    required_features:
+      - pass type EVP_PKEY_RSA
+      - construct RSA private DER plus trailing bytes
+      - check returned EVP_PKEY pointer
+      - check p == der + der_len or detect p stops before trailing garbage
+      - free returned EVP_PKEY with EVP_PKEY_free
+    notes:
+      - Generate only with an explicit type parameter and an adapter note about
+        PKCS#1 versus PKCS#8 input shape.
+
+  - target_library: openssl
+    target_api: d2i_AutoPrivateKey
+    library: openssl
+    api: d2i_AutoPrivateKey
+    source_template_id: RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE
+    source_api: mbedtls_pk_parse_key
+    decision: generate
+    migration_applicability: applicable
+    scores:
+      operation_family: 88
+      function_behavior: 82
+      parameter_structure: 88
+      vulnerability_path: 82
+      harness_feasibility: 86
+      final: 85
+    preserved_features:
+      - DER private key parser
+      - auto-detected RSA private key path
+      - caller-controlled DER buffer and explicit input length
+      - valid object followed by appended trailing garbage
+      - return pointer success/failure oracle
+      - pointer advancement oracle via const unsigned char **pp
+    preserved_vulnerability_features:
+      - DER private key parser
+      - auto-detected RSA private key path
+      - caller-controlled DER buffer and explicit input length
+      - valid object followed by appended trailing garbage
+      - return pointer success/failure oracle
+      - pointer advancement oracle via const unsigned char **pp
+    lost_or_weakened_features:
+      - auto-detection weakens exact algorithm/container control
+      - may route through decoder or legacy fallback paths rather than a single RSA parser
+      - exact PKCS#1 RSA top-level SEQUENCE semantics need harness-side assertion
+      - exact mbedTLS return code is not preserved
+    migration_reason: >
+      Applicable as a generalized private-key DER target. It can test whether
+      OpenSSL accepts trailing bytes after a DER private key and exposes pointer
+      advancement, but it is weaker than RSA-specific d2i_RSAPrivateKey.
+    required_features:
+      - provide an RSA private key DER object
+      - append trailing garbage after the top-level object
+      - check returned EVP_PKEY pointer
+      - check pointer advancement for exact input consumption
+      - free returned EVP_PKEY with EVP_PKEY_free
+    notes:
+      - Useful as a broad private-key migration candidate when the adapter wants to
+        model mbedtls_pk_parse_key rather than the internal RSA parser directly.
+
+  - target_library: openssl
+    target_api: d2i_RSA_PUBKEY
+    library: openssl
+    api: d2i_RSA_PUBKEY
+    source_template_id: RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE
+    source_api: mbedtls_pk_parse_key
+    decision: generate
+    migration_applicability: applicable
+    scores:
+      operation_family: 90
+      function_behavior: 82
+      parameter_structure: 88
+      vulnerability_path: 80
+      harness_feasibility: 84
+      final: 84
+    preserved_features:
+      - DER public key parser
+      - RSA public key path
+      - caller-controlled DER buffer and explicit input length
+      - valid object followed by appended trailing garbage
+      - return pointer success/failure oracle
+      - pointer advancement oracle via const unsigned char **pp
+    preserved_vulnerability_features:
+      - DER public key parser
+      - RSA public key path
+      - caller-controlled DER buffer and explicit input length
+      - valid object followed by appended trailing garbage
+      - return pointer success/failure oracle
+      - pointer advancement oracle via const unsigned char **pp
+    lost_or_weakened_features:
+      - requested OpenSSL API expects SubjectPublicKeyInfo rather than raw PKCS#1 RSAPublicKey
+      - adapter must wrap the RSA public key in SPKI to match API expectations
+      - exact mbedTLS raw RSAPublicKey top-level SEQUENCE shape is weakened
+      - exact mbedTLS return code is not preserved
+    migration_reason: >
+      Applicable public-key path candidate when the harness adapts the source raw
+      RSA public key to SubjectPublicKeyInfo. Pointer advancement still supports a
+      trailing-garbage oracle, but the public-key encoding container differs.
+    required_features:
+      - construct an RSA SubjectPublicKeyInfo DER object
+      - append trailing garbage after the SPKI top-level SEQUENCE
+      - check returned RSA pointer
+      - check p == der + der_len or detect unconsumed trailing bytes
+      - free returned RSA with RSA_free
+    notes:
+      - For raw PKCS#1 public key equivalence, OpenSSL d2i_RSAPublicKey would be
+        closer, but it is outside the requested candidate set.
+
+  - target_library: openssl
+    target_api: d2i_PUBKEY
+    library: openssl
+    api: d2i_PUBKEY
+    source_template_id: RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE
+    source_api: mbedtls_pk_parse_key
+    decision: generate
+    migration_applicability: applicable
+    scores:
+      operation_family: 88
+      function_behavior: 80
+      parameter_structure: 88
+      vulnerability_path: 78
+      harness_feasibility: 86
+      final: 83
+    preserved_features:
+      - DER public key parser
+      - RSA public key path through EVP_PKEY
+      - caller-controlled DER buffer and explicit input length
+      - valid object followed by appended trailing garbage
+      - return pointer success/failure oracle
+      - pointer advancement oracle via const unsigned char **pp
+    preserved_vulnerability_features:
+      - DER public key parser
+      - RSA public key path through EVP_PKEY
+      - caller-controlled DER buffer and explicit input length
+      - valid object followed by appended trailing garbage
+      - return pointer success/failure oracle
+      - pointer advancement oracle via const unsigned char **pp
+    lost_or_weakened_features:
+      - generic EVP_PKEY public-key parser is less RSA-specific
+      - expects SubjectPublicKeyInfo rather than raw PKCS#1 RSAPublicKey
+      - exact source internal mbedtls_rsa_parse_pubkey object shape is weakened
+      - exact mbedTLS return code is not preserved
+    migration_reason: >
+      Applicable generic public-key candidate. It preserves the DER public-key
+      trailing-garbage test via SPKI and pointer advancement, but weakens the raw
+      PKCS#1 RSA public-key shape used by the minimal source PoC.
+    required_features:
+      - construct an RSA SubjectPublicKeyInfo DER object
+      - append trailing garbage after the SPKI top-level SEQUENCE
+      - check returned EVP_PKEY pointer and RSA key type
+      - check pointer advancement for exact input consumption
+      - free returned EVP_PKEY with EVP_PKEY_free
+    notes:
+      - Good public API target when the migration is phrased as EVP public-key DER
+        parsing rather than low-level RSA parsing.
+
+evidence_sources:
+  source_template:
+    - normalized_templates/rsa/rsa_der_trailing_garbage/template_meta.yaml
+    - normalized_templates/rsa/rsa_der_trailing_garbage/mask_report.yaml
+    - normalized_templates/rsa/rsa_der_trailing_garbage/selected_mask_units.yaml
+  source_pattern:
+    - knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0020.yaml
+  source_constraints:
+    - knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_parse_key.md
+    - knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_rsa_parse_key.md
+    - knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_rsa_parse_pubkey.md
+  target_constraints:
+    - knowledge_raw/api_constraints/openssl/3.5.5/d2i_RSAPrivateKey.md
+    - knowledge_raw/api_constraints/openssl/3.5.5/d2i_PrivateKey.md
+    - knowledge_raw/api_constraints/openssl/3.5.5/d2i_AutoPrivateKey.md
+    - knowledge_raw/api_constraints/openssl/3.5.5/d2i_RSA_PUBKEY.md
+    - knowledge_raw/api_constraints/openssl/3.5.5/d2i_PUBKEY.md
+
+notes:
+  - This file is a manually curated OpenSSL candidate set for MBEDTLS-POC-0020.
+  - No GLM call, adapter generation, rendered cases, or runner changes are required.
+  - The key OpenSSL oracle is not the exact error code; it is return pointer plus
+    input pointer advancement and exact-consumption checking.

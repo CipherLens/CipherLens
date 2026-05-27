@@ -15,6 +15,7 @@ BUG_VERDICTS = {
 SAFE_VERDICTS = {
     "safe_behavior",
     "fixed_behavior",
+    "safe_reject_behavior",
 }
 
 HARNESS_ERROR_VERDICTS = {

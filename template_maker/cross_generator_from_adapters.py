@@ -3,7 +3,7 @@ import copy
 import re
 import shutil
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 import yaml
 
@@ -57,6 +57,27 @@ def normalize_init_block(block: str) -> str:
     return block
 
 
+def normalize_include_header(header: Any) -> str:
+    h = str(header or "").strip()
+    h = h.strip("<>\"")
+    if h.startswith("include/"):
+        h = h[len("include/"):]
+    return h
+
+
+def render_include_lines(adapter: Dict[str, Any], default_headers: List[str]) -> str:
+    headers = []
+    seen = set()
+
+    for h in default_headers + list(adapter.get("include_headers") or []):
+        h = normalize_include_header(h)
+        if h and h not in seen:
+            seen.add(h)
+            headers.append(h)
+
+    return "\n".join(f"#include <{h}>" for h in headers)
+
+
 def copy_if_exists(src_dir: Path, out_dir: Path, names: List[str]) -> None:
     for name in names:
         src = src_dir / name
@@ -64,16 +85,82 @@ def copy_if_exists(src_dir: Path, out_dir: Path, names: List[str]) -> None:
             shutil.copy2(src, out_dir / name)
 
 
-def render_target_c_from_adapter(adapter: Dict[str, Any]) -> str:
-    includes = adapter.get("include_headers") or []
-    include_lines = []
-    for h in includes:
-        h = str(h).strip()
-        if h:
-            include_lines.append(f"#include <{h}>")
+def infer_source_template_id(adapter: Dict[str, Any], adapter_file: Path, adapter_root: Path) -> Optional[str]:
+    for key in ["source_template_id", "template_id"]:
+        value = adapter.get(key)
+        if value:
+            return str(value)
 
-    if not include_lines:
-        include_lines.append("#include <openssl/bn.h>")
+    try:
+        rel = adapter_file.parent.relative_to(adapter_root)
+        if len(rel.parts) >= 2:
+            return rel.parts[0]
+    except ValueError:
+        pass
+
+    parent = adapter_file.parent.parent.name
+    return parent or None
+
+
+def find_normalized_template_dir(template_id: str, root: Path = Path("normalized_templates")) -> Optional[Path]:
+    if not template_id or not root.exists():
+        return None
+
+    for meta_path in sorted(root.rglob("template_meta.yaml")):
+        meta = load_yaml(meta_path)
+        if meta.get("template_id") == template_id or meta.get("source_template_id") == template_id:
+            return meta_path.parent
+
+    return None
+
+
+def load_or_infer_adapter_meta(
+    adapter: Dict[str, Any],
+    adapter_file: Path,
+    adapter_root: Path,
+) -> Dict[str, Any]:
+    meta_path = adapter_file.parent / "adapter_meta.yaml"
+    if meta_path.exists():
+        return load_yaml(meta_path)
+
+    template_id = infer_source_template_id(adapter, adapter_file, adapter_root)
+    source_template_dir = find_normalized_template_dir(str(template_id or ""))
+    if source_template_dir is None:
+        raise FileNotFoundError(
+            f"adapter_meta.yaml missing and no normalized template found for template_id={template_id!r}"
+        )
+
+    target_library = adapter.get("target_library")
+    target_api = adapter.get("target_api")
+
+    return {
+        "candidate": {
+            "target_api": target_api,
+            "target_library": target_library,
+        },
+        "source_files": {
+            "template_meta": str(source_template_dir / "template_meta.yaml"),
+            "mask_report": str(source_template_dir / "mask_report.yaml"),
+            "source_template": str(source_template_dir / "tmpl_mbedtls.c"),
+        },
+        "inferred_adapter_meta": True,
+    }
+
+
+def optional_path(value: Any) -> Optional[Path]:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    return Path(text)
+
+
+def render_buffer_canary_harness(
+    adapter: Dict[str, Any],
+    source_template_dir: Path,
+    source_meta: Dict[str, Any],
+    mask_report: Dict[str, Any],
+) -> str:
+    include_lines = render_include_lines(adapter, ["openssl/bn.h"])
 
     init_block = normalize_init_block(adapter.get("init_block", "X = BN_new();"))
     input_block = strip_code_fence(adapter.get("input_construction_block", ""))
@@ -86,7 +173,7 @@ def render_target_c_from_adapter(adapter: Dict[str, Any]) -> str:
 #include <stdlib.h>
 #include <string.h>
 
-{chr(10).join(include_lines)}
+{include_lines}
 
 #define BUFLEN [BUFLEN]
 #define CANARY_SIZE [CANARY_SIZE]
@@ -167,6 +254,304 @@ int main(void)
 '''
 
 
+def normalize_der_init_block(block: str) -> str:
+    block = strip_code_fence(block)
+    # The DER pointer-consumption skeleton owns these common oracle variables.
+    patterns = [
+        r"^\s*const\s+unsigned\s+char\s+\*p\s*=\s*NULL\s*;\s*$",
+        r"^\s*long\s+consumed_len\s*=\s*0\s*;\s*$",
+        r"^\s*size_t\s+consumed_len\s*=\s*0\s*;\s*$",
+    ]
+    lines = []
+    for line in block.splitlines():
+        if any(re.match(pat, line) for pat in patterns):
+            continue
+        lines.append(line)
+    return "\n".join(lines).strip()
+
+
+def extract_static_function(source: str, name: str) -> str:
+    marker = f"{name}("
+    idx = source.find(marker)
+    if idx < 0:
+        return ""
+
+    start = source.rfind("static ", 0, idx)
+    if start < 0:
+        return ""
+
+    brace = source.find("{", idx)
+    if brace < 0:
+        return ""
+
+    depth = 0
+    for pos in range(brace, len(source)):
+        ch = source[pos]
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                return source[start:pos + 1].strip()
+
+    return ""
+
+
+def der_helper_fallback() -> str:
+    return r'''static int hexval(int c)
+{
+    if (c >= '0' && c <= '9') {
+        return c - '0';
+    }
+    if (c >= 'a' && c <= 'f') {
+        return c - 'a' + 10;
+    }
+    if (c >= 'A' && c <= 'F') {
+        return c - 'A' + 10;
+    }
+    return -1;
+}
+
+static int hex_to_bin(const char *hex,
+                      unsigned char *out,
+                      size_t out_size,
+                      size_t *out_len)
+{
+    size_t n = 0;
+    int hi = -1;
+
+    while (*hex != '\0') {
+        int v;
+
+        if (isspace((unsigned char) *hex)) {
+            hex++;
+            continue;
+        }
+
+        v = hexval((unsigned char) *hex);
+        if (v < 0) {
+            return -1;
+        }
+
+        if (hi < 0) {
+            hi = v;
+        } else {
+            if (n >= out_size) {
+                return -2;
+            }
+            out[n++] = (unsigned char) ((hi << 4) | v);
+            hi = -1;
+        }
+
+        hex++;
+    }
+
+    if (hi >= 0) {
+        return -3;
+    }
+
+    *out_len = n;
+    return 0;
+}
+
+static const char *select_base_der_hex(const char *der_kind)
+{
+    static const char *private_base_hex =
+        "3063020100021100cc8ab070369ede72920e5a51523c8571"
+        "02030100010211009a6318982a7231de1894c54aa4909201"
+        "020900f3058fd8dc484d61020900d7770dbd8b78a2110209"
+        "009471f14c26428401020813425f060c4b72210208052b93"
+        "d01747a87c";
+    static const char *public_base_hex =
+        "308189028181009f091e6968b474f76f0e9c237c1d895996"
+        "ae704b4f6d706acec8d2daac6209bf524aa3f658d0283a"
+        "dba1077f6cbe92e425dcde52290b239cade91be86c884254"
+        "34986806e85734e159768f3dfea932baaa9409d25bace8ee"
+        "9dce0cdde0903207299de575ae60feccf0daf82334ab836"
+        "38539b0da74072f253acea8afc8e66bb70203010001";
+
+    if (strcmp(der_kind, "private") == 0) {
+        return private_base_hex;
+    }
+    if (strcmp(der_kind, "public") == 0) {
+        return public_base_hex;
+    }
+    return NULL;
+}
+
+static int build_der_with_trailing_garbage(const char *base_hex,
+                                           const char *trailing_hex,
+                                           unsigned char *der,
+                                           size_t der_size,
+                                           size_t *der_len,
+                                           size_t *trailing_len)
+{
+    int ret;
+    size_t base_len = 0;
+
+    ret = hex_to_bin(base_hex, der, der_size, &base_len);
+    if (ret != 0) {
+        return ret;
+    }
+
+    ret = hex_to_bin(trailing_hex,
+                     der + base_len,
+                     der_size - base_len,
+                     trailing_len);
+    if (ret != 0) {
+        return ret;
+    }
+
+    *der_len = base_len + *trailing_len;
+    return 0;
+}'''
+
+
+def extract_der_helpers(source_template_dir: Path) -> str:
+    source_path = source_template_dir / "tmpl_mbedtls.c"
+    source = source_path.read_text(encoding="utf-8", errors="ignore") if source_path.exists() else ""
+    names = [
+        "hexval",
+        "hex_to_bin",
+        "select_base_der_hex",
+        "build_der_with_trailing_garbage",
+    ]
+    helpers = [extract_static_function(source, name) for name in names]
+    if all(helpers):
+        return "\n\n".join(helpers)
+    return der_helper_fallback()
+
+
+def render_der_pointer_consumption_harness(
+    adapter: Dict[str, Any],
+    source_template_dir: Path,
+    source_meta: Dict[str, Any],
+    mask_report: Dict[str, Any],
+) -> str:
+    extra_headers = []
+    if adapter.get("target_api") in {"d2i_RSA_PUBKEY", "d2i_PUBKEY"}:
+        extra_headers.append("openssl/x509.h")
+
+    adapter_for_includes = dict(adapter)
+    adapter_for_includes["include_headers"] = list(adapter.get("include_headers") or []) + extra_headers
+    include_lines = render_include_lines(adapter_for_includes, [])
+    helpers = extract_der_helpers(source_template_dir)
+
+    init_block = normalize_der_init_block(adapter.get("init_block", ""))
+    input_block = strip_code_fence(adapter.get("input_construction_block", ""))
+    trigger_block = strip_code_fence(adapter.get("trigger_block", ""))
+    cleanup_block = strip_code_fence(adapter.get("cleanup_block", ""))
+    target_api = adapter.get("target_api", "unknown_target_api")
+
+    return f'''#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+{include_lines}
+
+#define MAX_DER_SIZE 1024
+#define TRAILING_GARBAGE_HEX "[TRAILING_GARBAGE_BYTES]"
+#define TRAILING_GARBAGE_EXPECTED_LEN ((size_t) [TRAILING_GARBAGE_LEN])
+
+{helpers}
+
+int main(void)
+{{
+    const char *der_kind = "[DER_KIND]";
+    const char *base_hex = NULL;
+    unsigned char der[MAX_DER_SIZE];
+    size_t der_len = 0;
+    size_t trailing_len = 0;
+    const unsigned char *p = NULL;
+    long consumed_len = 0;
+    int ret = 0;
+
+    setbuf(stdout, NULL);
+    memset(der, 0, sizeof(der));
+
+    base_hex = select_base_der_hex(der_kind);
+    if (base_hex == NULL) {{
+        printf("[ERROR] unsupported DER_KIND: %s\\n", der_kind);
+        return 2;
+    }}
+
+    ret = build_der_with_trailing_garbage(base_hex,
+                                          TRAILING_GARBAGE_HEX,
+                                          der,
+                                          sizeof(der),
+                                          &der_len,
+                                          &trailing_len);
+    if (ret != 0) {{
+        printf("[ERROR] DER construction failed: %d\\n", ret);
+        return 2;
+    }}
+
+    if (trailing_len != TRAILING_GARBAGE_EXPECTED_LEN) {{
+        printf("[ERROR] trailing garbage length mismatch: got=%zu expected=%zu\\n",
+               trailing_len, TRAILING_GARBAGE_EXPECTED_LEN);
+        return 2;
+    }}
+
+    /*
+     * Adapter-generated initialization.
+     */
+{indent_block(init_block, 4)}
+
+    /*
+     * Adapter-generated input construction.
+     */
+{indent_block(input_block, 4)}
+
+    /*
+     * Adapter-generated trigger call.
+     * target_api: {target_api}
+     */
+{indent_block(trigger_block, 4)}
+
+    printf("ret=%d\\n", ret);
+    printf("der_len=%zu\\n", der_len);
+    printf("consumed_len=%ld\\n", consumed_len);
+
+    if (ret == 0 && consumed_len < (long) der_len) {{
+        printf("[BUG] target decoded first DER object but left trailing garbage unconsumed.\\n");
+{indent_block(cleanup_block, 8)}
+        return 1;
+    }}
+
+    if (ret == 0 && consumed_len == (long) der_len) {{
+        printf("[OK] target decoded and consumed full input exactly.\\n");
+{indent_block(cleanup_block, 8)}
+        return 0;
+    }}
+
+    printf("[OK] target rejected trailing-garbage input.\\n");
+{indent_block(cleanup_block, 4)}
+    return 0;
+}}
+'''
+
+
+RENDERERS: Dict[str, Callable[[Dict[str, Any], Path, Dict[str, Any], Dict[str, Any]], str]] = {
+    "buffer_canary_boundary": render_buffer_canary_harness,
+    "der_pointer_consumption": render_der_pointer_consumption_harness,
+}
+
+
+def render_target_c_from_adapter(
+    adapter: Dict[str, Any],
+    source_template_dir: Path,
+    source_meta: Dict[str, Any],
+    mask_report: Dict[str, Any],
+) -> str:
+    harness_family = source_meta.get("harness_family") or "buffer_canary_boundary"
+    renderer = RENDERERS.get(harness_family)
+    if renderer is None:
+        known = ", ".join(sorted(RENDERERS))
+        raise ValueError(f"unknown harness_family={harness_family!r}; known: {known}")
+    return renderer(adapter, source_template_dir, source_meta, mask_report)
+
+
 def build_cross_meta(source_meta: Dict[str, Any], adapter: Dict[str, Any]) -> Dict[str, Any]:
     cross_meta = copy.deepcopy(source_meta)
     cross_meta["status"] = "cross_generated_from_llm_adapter"
@@ -237,17 +622,22 @@ def build_cross_mapping(
 
 def generate_one(adapter_file: Path, adapter_root: Path, out_root: Path) -> bool:
     adapter = load_yaml(adapter_file)
-    adapter_meta = load_yaml(adapter_file.parent / "adapter_meta.yaml")
+    adapter_meta = load_or_infer_adapter_meta(adapter, adapter_file, adapter_root)
 
     source_files = adapter_meta.get("source_files", {})
-    mask_report_path = Path(source_files.get("mask_report", ""))
+    template_meta_path = optional_path(source_files.get("template_meta"))
+    mask_report_path = optional_path(source_files.get("mask_report"))
 
-    if not mask_report_path.exists():
+    if mask_report_path is None or not mask_report_path.exists():
         print(f"[FAIL] missing mask_report for adapter: {adapter_file}")
         return False
 
-    source_template_dir = mask_report_path.parent
-    source_meta = load_yaml(source_template_dir / "template_meta.yaml")
+    if template_meta_path is not None and template_meta_path.exists():
+        source_template_dir = template_meta_path.parent
+        source_meta = load_yaml(template_meta_path)
+    else:
+        source_template_dir = mask_report_path.parent
+        source_meta = load_yaml(source_template_dir / "template_meta.yaml")
     mask_report = load_yaml(mask_report_path)
 
     rel = adapter_file.parent.relative_to(adapter_root)
@@ -272,10 +662,42 @@ def generate_one(adapter_file: Path, adapter_root: Path, out_root: Path) -> bool
     cross_meta = build_cross_meta(source_meta, adapter)
     dump_yaml(out_dir / "template_meta.yaml", cross_meta)
 
-    write_text(out_dir / f"tmpl_{target_lib}.c", render_target_c_from_adapter(adapter))
+    write_text(
+        out_dir / f"tmpl_{target_lib}.c",
+        render_target_c_from_adapter(adapter, source_template_dir, source_meta, mask_report),
+    )
 
     cross_mapping = build_cross_mapping(source_meta, mask_report, adapter, adapter_meta)
     dump_yaml(out_dir / "cross_mapping.yaml", cross_mapping)
+
+    harness_family = source_meta.get("harness_family") or "buffer_canary_boundary"
+    if harness_family == "der_pointer_consumption":
+        oracle_text = """The migrated harness uses a pointer-consumption semantic oracle for DER parsing.
+
+Bug candidate behavior:
+
+- target decoder returns success;
+- `consumed_len < der_len`, meaning the first DER object was decoded while trailing garbage remained unconsumed.
+
+Safe behavior:
+
+- target decoder rejects the trailing-garbage input; or
+- target decoder succeeds and `consumed_len == der_len`.
+"""
+    else:
+        oracle_text = """The migrated harness uses a memory-safety oracle inherited from the source PoC pattern. The target API is executed with a caller-provided output buffer followed by a canary region.
+
+Bug candidate behavior:
+
+- canary corruption;
+- sanitizer crash;
+- out-of-bounds write signal.
+
+Safe behavior:
+
+- canary region remains intact;
+- no sanitizer crash is observed.
+"""
 
     readme = f"""# Cross-Library Template Generated from LLM Adapter
 
@@ -284,6 +706,7 @@ def generate_one(adapter_file: Path, adapter_root: Path, out_root: Path) -> bool
 - Source template: `{source_meta.get("template_id")}`
 - Source API: `{source_meta.get("poc_source", {}).get("api")}`
 - Source library: `{source_meta.get("poc_source", {}).get("library")}`
+- Harness family: `{harness_family}`
 
 ## Target API
 
@@ -297,18 +720,7 @@ This template migrates the source vulnerability path using a structured adapter 
 
 ## Oracle
 
-The migrated harness uses a memory-safety oracle inherited from the source PoC pattern. The target API is executed with a caller-provided output buffer followed by a canary region.
-
-Bug candidate behavior:
-
-- canary corruption;
-- sanitizer crash;
-- out-of-bounds write signal.
-
-Safe behavior:
-
-- canary region remains intact;
-- no sanitizer crash is observed.
+{oracle_text}
 
 ## Adapter
 
@@ -337,8 +749,7 @@ def main() -> int:
     adapter_root = Path(args.adapter_root)
     out_root = Path(args.out_root)
 
-    if out_root.exists():
-        shutil.rmtree(out_root)
+    out_root.mkdir(parents=True, exist_ok=True)
 
     count = 0
 
