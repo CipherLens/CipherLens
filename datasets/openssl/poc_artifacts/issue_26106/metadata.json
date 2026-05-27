@@ -1,0 +1,57 @@
+{
+  "issue_number": 26106,
+  "title": "Segmentation fault in X509_ALGOR_get0 during PKCS#12 processing ",
+  "source_url": "https://github.com/openssl/openssl/issues/26106",
+  "poc_type": "INPUT_SEED+CLI+SANITIZER_LOG",
+  "quality": "HQ",
+  "component": "PKCS12/X509_ALGOR",
+  "trigger_behavior": "NULL_DEREFERENCE_CRASH",
+  "affected_version": "3.4, 3.5.0-dev",
+  "critical_api_or_function": [
+    "X509_ALGOR_get0"
+  ],
+  "root_cause": "NULL pointer dereference in X509_ALGOR_get0 during PKCS#12 processing",
+  "reproduction_command": [
+    "(gdb) r",
+    "Starting program: /home/user/gits/openssl/apps/openssl pkcs12 -in X509_ALGOR_get0_testpassword.pk12 -passin pass:testpassword",
+    "Program received signal SIGSEGV, Segmentation fault.",
+    "0x00000000005327f9 in X509_ALGOR_get0 ()",
+    "(gdb) bt",
+    "#0  0x00000000005327f9 in X509_ALGOR_get0 ()",
+    "#1  0x00000000004314c0 in pkcs12_main ()",
+    "#2  0x000000000042cab2 in do_cmd ()",
+    "#3  0x000000000040240d in main ()"
+  ],
+  "input_artifact": [
+    "X509_ALGOR_get0_testpassword.pk12.gz"
+  ],
+  "artifact_class": "B2_cli_to_c_candidate",
+  "source_artifact_class": "B_cli_artifact",
+  "poc_origin": "translated_from_cli_command",
+  "translated_from_cli": "openssl pkcs12 -in X509_ALGOR_get0_testpassword.pk12 -passin pass:testpassword",
+  "generated_c_api_path": [
+    "fopen",
+    "d2i_PKCS12_fp",
+    "PKCS12_parse",
+    "PKCS12_free"
+  ],
+  "expected_input_file": [
+    "inputs/test.p12"
+  ],
+  "local_compile": true,
+  "local_run": true,
+  "strict_reproduction": false,
+  "input_status": "placeholder_input_used",
+  "local_test_result": "compiled_and_executed_with_placeholder_input",
+  "template_name": "pkcs12_parse",
+  "artifact_files": [
+    "metadata.json",
+    "README.md",
+    "poc.c",
+    "run.sh",
+    "inputs/"
+  ],
+  "missing_original_input": true,
+  "tested_library": "OpenSSL 3.0.13 / system libssl-libcrypto",
+  "validation_notes": "PKCS12 parse harness compiled and executed with generated PKCS#12 placeholder input. Valgrind reported 0 errors. This validates the generated C harness structure and API path, but does not strictly reproduce the original issue because the original PoC input artifacts have not been recovered."
+}

@@ -1,0 +1,37 @@
+{
+  "issue_number": 28669,
+  "title": "NULL rwlock dereference in CRYPTO_secure_used when secure heap is not initialized",
+  "source_url": "https://github.com/openssl/openssl/issues/28669",
+  "state": "closed",
+  "has_poc": "YES",
+  "poc_type": "C_API+STACKTRACE",
+  "quality": null,
+  "component": "CRYPTO/MEM_SEC",
+  "trigger_behavior": "NULL_DEREFERENCE_CRASH",
+  "affected_version": null,
+  "critical_api_or_function": [
+    "CRYPTO_secure_used"
+  ],
+  "root_cause": null,
+  "reproduction_command": [
+    "int main(){\n    // Call without initializing the secure heap\n    size_t u = CRYPTO_secure_used();\n    (void)u;\n    return 0;\n}"
+  ],
+  "input_artifact": [],
+  "fix_evidence": null,
+  "reason": null,
+  "artifact_class": "A_ast_ready",
+  "artifact_files": [
+    "metadata.json",
+    "README.md",
+    "poc.c",
+    "run.sh"
+  ],
+  "local_compile": true,
+  "local_run": false,
+  "strict_reproduction": false,
+  "tested_library": "OpenSSL 3.0.13 / libcrypto.so.3",
+  "local_test_result": "segmentation_fault_and_valgrind_invalid_read",
+  "notes": "Generated C PoC artifact. strict_reproduction=false until tested against the original affected OpenSSL version.",
+  "crash_observed": true,
+  "validation_notes": "Compiled successfully against system OpenSSL 3.0.13. Normal execution triggered SIGSEGV with exit code 139. Valgrind reported Invalid read of size 4 and ERROR SUMMARY: 1 errors from 1 contexts. This is local artifact validation, not strict reproduction against the original affected version."
+}

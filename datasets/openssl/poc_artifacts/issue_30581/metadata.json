@@ -1,0 +1,67 @@
+{
+  "issue_number": 30581,
+  "title": "NULL pointer dereference in openssl pkcs12 -info when printing PBMAC1 salt metadata",
+  "source_url": "https://github.com/openssl/openssl/issues/30581",
+  "poc_type": "CLI+INPUT_SEED+CLI+SANITIZER_LOG",
+  "quality": "HIGH_CANDIDATE",
+  "component": "PKCS12/ASN1",
+  "trigger_behavior": "NULL_DEREFERENCE_CRASH",
+  "affected_version": "OpenSSL 4.1.0-dev",
+  "critical_api_or_function": [
+    "ASN1_STRING_length",
+    "pkcs12_main",
+    "do_cmd",
+    "main",
+    "BIO_puts",
+    "BIO_printf",
+    "ASN1_INTEGER_get"
+  ],
+  "root_cause": "Dereferencing a NULL pointer when decoding PBKDF2 salt as ASN.1 NULL in the CLI info path.",
+  "reproduction_command": [
+    "cd /tmp",
+    "git clone --depth=1 https://github.com/openssl/openssl openssl-asan",
+    "cd /tmp/openssl-asan",
+    "make distclean",
+    "./config enable-asan no-shared",
+    "make include/openssl/opensslv.h",
+    "make -j4 apps/openssl",
+    "ASAN_OPTIONS=detect_leaks=0 \\",
+    "OPENSSL_MODULES=/tmp/openssl-asan/providers \\",
+    "/tmp/openssl-asan/apps/openssl pkcs12 \\",
+    "  -in /tmp/pbmac1_null_salt.p12 -info -noout -passin pass:any"
+  ],
+  "input_artifact": [
+    "/tmp/pbmac1_null_salt.p12"
+  ],
+  "artifact_class": "B2_cli_to_c_candidate",
+  "source_artifact_class": "B_cli_artifact",
+  "poc_origin": "translated_from_cli_command",
+  "translated_from_cli": "openssl pkcs12 -in test.p12 -info -noout -passin pass:testpassword",
+  "generated_c_api_path": [
+    "fopen",
+    "d2i_PKCS12_fp",
+    "PKCS12_mac_present",
+    "PKCS12_verify_mac",
+    "PKCS12_parse",
+    "PKCS12_free"
+  ],
+  "expected_input_file": [
+    "inputs/test.p12"
+  ],
+  "local_compile": true,
+  "local_run": true,
+  "strict_reproduction": false,
+  "input_status": "placeholder_input_used",
+  "local_test_result": "compiled_and_executed_with_placeholder_input",
+  "template_name": "pkcs12_info_parse",
+  "artifact_files": [
+    "metadata.json",
+    "README.md",
+    "poc.c",
+    "run.sh",
+    "inputs/"
+  ],
+  "missing_original_input": true,
+  "tested_library": "OpenSSL 3.0.13 / system libssl-libcrypto",
+  "validation_notes": "The generated C harness was translated from a CLI PoC candidate and compiled/executed using placeholder local inputs. This validates the harness structure and API path, but does not strictly reproduce the original issue because the original PoC input artifacts or environment have not been recovered."
+}

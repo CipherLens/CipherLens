@@ -1,0 +1,69 @@
+{
+  "issue_number": 23325,
+  "title": "X509: wrongly rejects cert without CDP if CRL contains IDP with name matching cert issuer",
+  "source_url": "https://github.com/openssl/openssl/issues/23325",
+  "poc_type": "CLI+INPUT_SEED",
+  "quality": "HIGH_CANDIDATE",
+  "component": "X509/CRL",
+  "trigger_behavior": "WRONG_RESULT",
+  "affected_version": null,
+  "critical_api_or_function": [
+    "X509_V_ERR_DIFFERENT_CRL_SCOPE",
+    "crl_crldp_check",
+    "get_crl_score"
+  ],
+  "root_cause": "Incomplete implementation of CRL scope checks in case an IDP is present in a CRL but no CDPs are present in the target cert.",
+  "reproduction_command": [
+    "openssl verify -attime 1705520210 -trusted cacert.pem -crl_check -CRLfile crl-no-IDP.pem cert-no-CDP.pem cert-no-CDP.pem: OK",
+    "openssl verify -attime 1705520210 -trusted cacert.pem -crl_check -CRLfile crl-no-IDP.pem cert-with-CDP.pem cert-with-CDP.pem: OK",
+    "openssl verify -attime 1705520210 -trusted cacert.pem -crl_check -CRLfile crl-with-IDP.pem cert-with-CDP.pem cert-with-CDP.pem: OK",
+    "openssl verify -attime 1705520210 -trusted cacert.pem -crl_check -CRLfile crl-with-IDP.pem cert-no-CDP.pem CN=x509-check-test error 44 at 0 depth lookup: different CRL scope error cert-no-CDP.pem: verification failed",
+    "openssl verify -attime 1768585400 -trusted demoCA/cacert2.pem -crl_check -CRLfile demoCA/crl-with-macthing-IDP.pem demoCA/cert2-no-CDP.pem CN=x509-check-test2 error 44 at 0 depth lookup: different CRL scope error demoCA/cert2-no-CDP.pem: verification failed"
+  ],
+  "input_artifact": [
+    "demoCA.zip",
+    "crl-no-IDP.pem",
+    "cert-no-CDP.pem",
+    "cert-with-CDP.pem",
+    "crl-with-IDP.pem",
+    "demoCA/cacert2.pem",
+    "demoCA/crl-with-macthing-IDP.pem",
+    "demoCA/cert2-no-CDP.pem"
+  ],
+  "artifact_class": "B2_cli_to_c_candidate",
+  "source_artifact_class": "B_cli_artifact",
+  "poc_origin": "translated_from_cli_command",
+  "translated_from_cli": "openssl verify -trusted cacert.pem -crl_check -CRLfile crl.pem cert.pem",
+  "generated_c_api_path": [
+    "PEM_read_bio_X509",
+    "PEM_read_bio_X509_CRL",
+    "X509_STORE_new",
+    "X509_STORE_add_cert",
+    "X509_STORE_add_crl",
+    "X509_STORE_set_flags",
+    "X509_STORE_CTX_new",
+    "X509_STORE_CTX_init",
+    "X509_verify_cert"
+  ],
+  "expected_input_file": [
+    "inputs/cacert.pem",
+    "inputs/crl.pem",
+    "inputs/cert.pem"
+  ],
+  "local_compile": true,
+  "local_run": true,
+  "strict_reproduction": false,
+  "input_status": "placeholder_input_used",
+  "local_test_result": "compiled_and_executed_with_placeholder_crl_validation_inputs",
+  "template_name": "verify_with_crl",
+  "artifact_files": [
+    "metadata.json",
+    "README.md",
+    "poc.c",
+    "run.sh",
+    "inputs/"
+  ],
+  "missing_original_input": true,
+  "tested_library": "OpenSSL 3.0.13 / system libssl-libcrypto",
+  "validation_notes": "The generated C harness was translated from an OpenSSL verify command using CRL checking. It compiled and executed with generated placeholder CA, end-entity certificate, and CRL inputs. Valgrind reported 0 errors. This validates the X509_STORE CRL verification API path, but does not strictly reproduce the original issue because the original CA/CRL/certificate inputs have not been recovered."
+}

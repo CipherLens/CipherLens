@@ -1,0 +1,56 @@
+{
+  "issue_number": 22388,
+  "title": "Support X25519 and X448 in CMS",
+  "source_url": "https://github.com/openssl/openssl/issues/22388",
+  "poc_type": "CLI+INPUT_SEED",
+  "quality": "HIGH_CANDIDATE",
+  "component": "CMS/X509",
+  "trigger_behavior": "WRONG_RESULT",
+  "affected_version": "3.0.8",
+  "critical_api_or_function": [
+    "evp_pkey_asym_cipher_init",
+    "ossl_cms_pkey_get_ri_type"
+  ],
+  "root_cause": "operation not supported for this keytype",
+  "reproduction_command": [
+    "[create key and certificate X25519/X448](https://github.com/zablockil/enc/blob/main/smime/standalone/standalone_EDWARDS_dual-key.sh)",
+    "$ echo \"Hello world\\!\" > hello.txt",
+    "$ openssl cms -encrypt -stream -binary -keyid -outform DER -recip \"public_user/user_E.crt\" -in \"hello.txt\" -out \"hello.der\""
+  ],
+  "input_artifact": [
+    "hello.txt",
+    "public_user/user_E.crt"
+  ],
+  "artifact_class": "B2_cli_to_c_candidate",
+  "source_artifact_class": "B_cli_artifact",
+  "poc_origin": "translated_from_cli_command",
+  "translated_from_cli": "openssl cms -encrypt -stream -binary -keyid -outform DER -recip cert.pem -in hello.txt -out hello.der",
+  "generated_c_api_path": [
+    "PEM_read_bio_X509",
+    "PEM_read_bio_PrivateKey",
+    "BIO_new_file",
+    "CMS_encrypt",
+    "CMS_decrypt"
+  ],
+  "expected_input_file": [
+    "inputs/cert.pem",
+    "inputs/key.pem",
+    "inputs/hello.txt"
+  ],
+  "local_compile": true,
+  "local_run": true,
+  "strict_reproduction": false,
+  "input_status": "placeholder_input_used",
+  "local_test_result": "compiled_and_executed_with_placeholder_input",
+  "template_name": "cms_encrypt_decrypt",
+  "artifact_files": [
+    "metadata.json",
+    "README.md",
+    "poc.c",
+    "run.sh",
+    "inputs/"
+  ],
+  "missing_original_input": true,
+  "tested_library": "OpenSSL 3.0.13 / system libssl-libcrypto",
+  "validation_notes": "The generated C harness was translated from a CLI PoC candidate and compiled/executed using placeholder local inputs. This validates the harness structure and API path, but does not strictly reproduce the original issue because the original PoC input artifacts or environment have not been recovered."
+}

@@ -1,0 +1,49 @@
+{
+  "issue_number": 11567,
+  "title": "semantic bug when verifying certificate file",
+  "source_url": "https://github.com/openssl/openssl/issues/11567",
+  "has_poc": "YES",
+  "poc_type": "CLI+INPUT_SEED",
+  "quality": "HIGH_CANDIDATE",
+  "component": "X509/ASN1",
+  "trigger_behavior": "WRONG_RESULT",
+  "affected_version": "Libressl (3.1.0), openssl (commit 031c9bd3f3e9a02fa126c7dbc47f3d934678a195), openssl-1.0.2t",
+  "critical_api_or_function": [
+    "X509v3 Subject Key Identifier",
+    "X509v3 Authority Key Identifier",
+    "X509v3 Basic Constraints",
+    "md5WithRSAEncryption"
+  ],
+  "root_cause": "Newer OpenSSL versions do not support zero serial numbers, which is non-conforming with RFC 5280.",
+  "reproduction_command": [
+    "openssl x509 -in $PoC -text -noout"
+  ],
+  "input_artifact": [
+    "https://github.com/SuhwanSong/PoC/blob/master/ssl/issue%2311567",
+    "https://github.com/openssl/openssl/issues/11567#issuecomment-4498267"
+  ],
+  "artifact_class": "B2_cli_to_c_candidate",
+  "source_artifact_class": "B_cli_artifact",
+  "poc_origin": "translated_from_cli_command",
+  "translated_from_cli": "openssl x509 -in $PoC -text -noout",
+  "generated_c_api_path": [
+    "BIO_new_file",
+    "PEM_read_bio_X509",
+    "X509_print_fp"
+  ],
+  "artifact_files": [
+    "metadata.json",
+    "poc.c",
+    "run.sh",
+    "inputs/"
+  ],
+  "local_compile": true,
+  "local_run": true,
+  "strict_reproduction": false,
+  "notes": "This is a candidate C harness translated from a CLI PoC. It requires the original input certificate as inputs/poc.pem.",
+  "input_status": "placeholder_input_used",
+  "missing_original_input": true,
+  "local_test_result": "compiled_and_executed_with_non_buggy_sample_input",
+  "tested_library": "OpenSSL 3.0.13 / libcrypto.so.3",
+  "validation_notes": "Translated from CLI command `openssl x509 -in $PoC -text -noout`. The generated C harness compiled and executed successfully using a system certificate copied to inputs/poc.pem. Valgrind reported 0 errors. This validates the harness structure, but does not strictly reproduce the original issue because the original PoC certificate has not been recovered."
+}

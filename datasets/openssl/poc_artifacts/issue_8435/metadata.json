@@ -1,0 +1,58 @@
+{
+  "issue_number": 8435,
+  "title": "SM2 private key cannot produce valid signatures",
+  "source_url": "https://github.com/openssl/openssl/issues/8435",
+  "has_poc": "YES",
+  "poc_type": "CLI+INPUT_SEED",
+  "quality": "HIGH_CANDIDATE",
+  "component": "PKEY/ECC/SM2",
+  "trigger_behavior": "WRONG_RESULT",
+  "affected_version": null,
+  "critical_api_or_function": [
+    "pkey",
+    "pkeyutl",
+    "sm2_id"
+  ],
+  "root_cause": "OpenSSL treats SM2 keys like normal ECC keys, leading to invalid private keys.",
+  "reproduction_command": [
+    "openssl pkey -in sm2_bad.key -pubout > sm2_bad.key.pub",
+    "openssl pkeyutl -inkey sm2_bad.key -in /etc/lsb-release -rawin -sign -pkeyopt sm2_id:Alice > sm2_bad.sig",
+    "openssl pkeyutl -inkey sm2_bad.key.pub -pubin -in /etc/lsb-release -rawin -verify -pkeyopt sm2_id:Alice -sigfile sm2_bad.sig"
+  ],
+  "input_artifact": [
+    "sm2_bad.key",
+    "/etc/lsb-release"
+  ],
+  "artifact_class": "B2_cli_to_c_candidate",
+  "source_artifact_class": "B_cli_artifact",
+  "poc_origin": "translated_from_cli_command",
+  "translated_from_cli": "openssl pkey -in sm2_bad.key -pubout; openssl pkeyutl -inkey sm2_bad.key -rawin -sign -pkeyopt sm2_id:Alice; openssl pkeyutl -pubin -rawin -verify -pkeyopt sm2_id:Alice",
+  "generated_c_api_path": [
+    "PEM_read_bio_PrivateKey",
+    "PEM_write_bio_PUBKEY",
+    "EVP_DigestSignInit",
+    "EVP_PKEY_CTX_set1_id",
+    "EVP_DigestSign",
+    "EVP_DigestVerifyInit",
+    "EVP_DigestVerify"
+  ],
+  "expected_input_file": [
+    "inputs/sm2_bad.key",
+    "inputs/message.txt"
+  ],
+  "artifact_files": [
+    "metadata.json",
+    "poc.c",
+    "run.sh",
+    "inputs/"
+  ],
+  "local_compile": true,
+  "local_run": true,
+  "strict_reproduction": false,
+  "input_status": "placeholder_input_used",
+  "local_test_result": "compiled_and_executed_with_generated_sm2_key",
+  "notes": "Candidate C harness translated from CLI PoC. Strict reproduction requires the original SM2 private key.",
+  "missing_original_input": true,
+  "tested_library": "OpenSSL 3.0.13 / system libssl-libcrypto",
+  "validation_notes": "The generated C harness was translated from the original CLI commands involving `openssl pkey` and `openssl pkeyutl` with SM2 id Alice. It compiled and executed using a generated SM2 key and placeholder message. This validates the PKEY/SM2 sign/verify API path, but does not strictly reproduce the original issue because the original sm2_bad.key input has not been recovered."
+}

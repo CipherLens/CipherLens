@@ -1,0 +1,56 @@
+{
+  "issue_number": 18168,
+  "title": "Assertion failure in WPACKET_put_bytes__, packet.c:387, openssl-rsa",
+  "source_url": "https://github.com/openssl/openssl/issues/18168",
+  "has_poc": "YES",
+  "poc_type": "CLI+INPUT_SEED+SANITIZER_LOG",
+  "quality": "HQ",
+  "component": "WPACKET/DER_WRITER/RSA",
+  "trigger_behavior": "ASSERTION_FAILURE",
+  "affected_version": "3.1.0-dev",
+  "critical_api_or_function": [
+    "WPACKET_put_bytes__",
+    "int_der_w_integer",
+    "ossl_DER_w_ulong",
+    "ossl_DER_w_RSASSA_PSS_params",
+    "prepare_rsa_params",
+    "key_to_pki_pem_priv_bio",
+    "key2any_encode",
+    "rsapss_to_PrivateKeyInfo_pem_encode"
+  ],
+  "root_cause": null,
+  "reproduction_command": [
+    "# CFLAGS=\"-g -O0\" CXXFLAGS=\"-g -O0\" ./Configure no-shared no-module -DPEDANTIC enable-tls1_3 enable-weak-ssl-ciphers enable-rc5 enable-md2 enable-ssl3 enable-ssl3-method enable-nextprotoneg enable-ec_nistp_64_gcc_128 --debug",
+    "# make -j; make install; make clean",
+    "# openssl rsa -in poc -out /tmp/foo"
+  ],
+  "input_artifact": [
+    "poc.zip"
+  ],
+  "artifact_class": "B2_cli_to_c_candidate",
+  "source_artifact_class": "B_cli_artifact",
+  "poc_origin": "translated_from_cli_command",
+  "translated_from_cli": "openssl rsa -in poc -out /tmp/foo",
+  "generated_c_api_path": [
+    "BIO_new_file",
+    "PEM_read_bio_RSAPrivateKey",
+    "PEM_write_bio_RSAPrivateKey",
+    "RSA_free"
+  ],
+  "expected_input_file": "inputs/poc",
+  "artifact_files": [
+    "metadata.json",
+    "poc.c",
+    "run.sh",
+    "inputs/"
+  ],
+  "local_compile": true,
+  "local_run": true,
+  "strict_reproduction": false,
+  "input_status": "placeholder_input_used",
+  "local_test_result": "compiled_and_executed_with_generated_rsa_key",
+  "notes": "Candidate C harness translated from CLI PoC. Strict reproduction requires the original RSA private key input.",
+  "missing_original_input": true,
+  "tested_library": "OpenSSL 3.0.13 / system libssl-libcrypto",
+  "validation_notes": "The generated C harness was translated from the original CLI command `openssl rsa -in poc -out /tmp/foo`. It compiled and executed successfully using a generated RSA private key as placeholder input. This validates the RSA key read/write API path, but does not strictly reproduce the original issue because the original `poc` key file has not been recovered."
+}

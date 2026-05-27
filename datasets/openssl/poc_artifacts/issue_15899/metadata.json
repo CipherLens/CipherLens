@@ -1,0 +1,50 @@
+{
+  "issue_number": 15899,
+  "title": "openssl rsa -modulus segfaults: bn_expand_internal: Assertion `b->top <= words' failed",
+  "source_url": "https://github.com/openssl/openssl/issues/15899",
+  "has_poc": "YES",
+  "poc_type": "CLI+SANITIZER_LOG",
+  "quality": "HQ",
+  "component": "BN/ASN1",
+  "trigger_behavior": "NULL_DEREFERENCE_CRASH",
+  "affected_version": "3.0.0-beta2-dev",
+  "critical_api_or_function": [
+    "bn_expand_internal",
+    "EVP_PKEY_get_bn_param"
+  ],
+  "root_cause": "Uninitialized BIGNUM variable 'n' passed to EVP_PKEY_get_bn_param",
+  "reproduction_command": [
+    "LD_LIBRARY_PATH=$(pwd) apps/openssl x509 -noout -modulus -in /tmp/httpd.crt"
+  ],
+  "input_artifact": [
+    "/tmp/httpd.crt"
+  ],
+  "artifact_class": "B2_cli_to_c_candidate",
+  "source_artifact_class": "B_cli_artifact",
+  "poc_origin": "translated_from_cli_command",
+  "translated_from_cli": "openssl x509 -noout -modulus -in /tmp/httpd.crt",
+  "generated_c_api_path": [
+    "BIO_new_file",
+    "PEM_read_bio_X509",
+    "X509_get_pubkey",
+    "EVP_PKEY_get1_RSA",
+    "RSA_get0_key",
+    "BN_print_fp"
+  ],
+  "expected_input_file": "inputs/httpd.crt",
+  "artifact_files": [
+    "metadata.json",
+    "poc.c",
+    "run.sh",
+    "inputs/"
+  ],
+  "local_compile": true,
+  "local_run": true,
+  "strict_reproduction": false,
+  "input_status": "placeholder_input_used",
+  "local_test_result": "compiled_and_executed_with_non_buggy_sample_input",
+  "notes": "Candidate C harness translated from CLI PoC. Strict reproduction requires the original certificate input.",
+  "missing_original_input": true,
+  "tested_library": "OpenSSL 3.0.13 / system libssl-libcrypto",
+  "validation_notes": "The generated C harness was translated from the original CLI command `openssl x509 -noout -modulus -in /tmp/httpd.crt`. It compiled and executed successfully using a placeholder local certificate copied from the system CA bundle. The harness extracted and printed the RSA modulus through X509_get_pubkey, EVP_PKEY_get1_RSA, RSA_get0_key and BN_print_fp. Valgrind reported 0 errors. This validates the harness structure and API path, but does not strictly reproduce the original issue because the original /tmp/httpd.crt input has not been recovered."
+}

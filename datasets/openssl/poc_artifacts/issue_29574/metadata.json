@@ -1,0 +1,57 @@
+{
+  "issue_number": 29574,
+  "title": "Loading \"short\" certificate is accepted but corrupts openssl",
+  "source_url": "https://github.com/openssl/openssl/issues/29574",
+  "poc_type": "C_API+CLI+INPUT_SEED",
+  "quality": "HIGH_CANDIDATE",
+  "component": "X509/X509V3/ASN1",
+  "trigger_behavior": "CORRUPTED_STATE",
+  "affected_version": null,
+  "critical_api_or_function": [
+    "SSL_CTX_use_PrivateKey_ASN1",
+    "SSL_CTX_use_certificate_ASN1",
+    "X509_Object::choose_sig_format",
+    "X509_CA::make_cert",
+    "PKCS8::PEM_encode",
+    "PEM_encode"
+  ],
+  "root_cause": null,
+  "reproduction_command": [
+    "g++ main.cpp --std=c++23 -I/usr/include/botan-3 -lbotan-3",
+    "$ openssl x509 -noout -text -in cert.disk"
+  ],
+  "input_artifact": [
+    "cert.disk",
+    "key.disk"
+  ],
+  "artifact_class": "B2_cli_to_c_candidate",
+  "source_artifact_class": "B_cli_artifact",
+  "poc_origin": "translated_from_cli_command",
+  "translated_from_cli": "openssl x509 -noout -text -in cert.disk",
+  "generated_c_api_path": [
+    "BIO_new_file",
+    "PEM_read_bio_X509",
+    "d2i_X509_bio",
+    "X509_print_fp",
+    "X509_free"
+  ],
+  "expected_input_file": [
+    "inputs/cert.disk"
+  ],
+  "local_compile": true,
+  "local_run": true,
+  "strict_reproduction": false,
+  "input_status": "placeholder_input_used",
+  "local_test_result": "compiled_and_executed_with_placeholder_input",
+  "template_name": "x509_short_cert_parse",
+  "artifact_files": [
+    "metadata.json",
+    "README.md",
+    "poc.c",
+    "run.sh",
+    "inputs/"
+  ],
+  "missing_original_input": true,
+  "tested_library": "OpenSSL 3.0.13 / system libssl-libcrypto",
+  "validation_notes": "The generated C harness was translated from a CLI PoC candidate and compiled/executed using placeholder local inputs. This validates the harness structure and API path, but does not strictly reproduce the original issue because the original PoC input artifacts or environment have not been recovered."
+}

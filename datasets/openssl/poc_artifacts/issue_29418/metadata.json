@@ -1,0 +1,52 @@
+{
+  "issue_number": 29418,
+  "title": "openssl x509 -purpose produces inconsistent results depending on parsing options",
+  "source_url": "https://github.com/openssl/openssl/issues/29418",
+  "has_poc": "YES",
+  "poc_type": "CLI+INPUT_SEED",
+  "quality": "HQ",
+  "component": "X509/X509V3/ASN1",
+  "trigger_behavior": "WRONG_RESULT",
+  "affected_version": "3.0.13",
+  "critical_api_or_function": [
+    "X509_get_ext_count",
+    "X509_get_ext",
+    "OBJ_nid2sn",
+    "X509_EXTENSION_free",
+    "X509_delete_ext"
+  ],
+  "root_cause": "Inconsistent handling of extensions when using the -ext option with openssl x509 command.",
+  "reproduction_command": [
+    "openssl x509 -in ./openssl/test/certs/servercert.pem -noout -purpose",
+    "openssl x509 -in ./openssl/test/certs/servercert.pem -ext subjectAltName -noout -purpose"
+  ],
+  "input_artifact": [
+    "./openssl/test/certs/servercert.pem"
+  ],
+  "artifact_class": "B2_cli_to_c_candidate",
+  "source_artifact_class": "B_cli_artifact",
+  "poc_origin": "translated_from_cli_command",
+  "translated_from_cli": "openssl x509 -in servercert.pem -noout -purpose",
+  "generated_c_api_path": [
+    "BIO_new_file",
+    "PEM_read_bio_X509",
+    "X509_check_purpose"
+  ],
+  "expected_input_file": "inputs/servercert.pem",
+  "artifact_files": [
+    "metadata.json",
+    "README.md",
+    "poc.c",
+    "run.sh",
+    "inputs/"
+  ],
+  "local_compile": true,
+  "local_run": true,
+  "strict_reproduction": false,
+  "input_status": "placeholder_input_used",
+  "local_test_result": "compiled_and_executed_with_non_buggy_sample_input",
+  "notes": "Candidate C harness translated from a CLI PoC. Strict reproduction requires the original input artifact.",
+  "missing_original_input": true,
+  "tested_library": "OpenSSL 3.0.13 / system libssl-libcrypto",
+  "validation_notes": "The generated C harness was translated from the original CLI command and compiled/executed using a placeholder local input. This validates the harness structure but does not strictly reproduce the original issue because the original PoC input artifact has not been recovered."
+}

@@ -1,0 +1,49 @@
+{
+  "issue_number": 19524,
+  "title": "ED25519_sign and ED448_sign missing check for private_key leading to segfault",
+  "source_url": "https://github.com/openssl/openssl/issues/19524",
+  "poc_type": "C_API",
+  "quality": "HQ",
+  "component": "PKEY/ED25519/ED448",
+  "trigger_behavior": "NULL_DEREFERENCE_CRASH",
+  "affected_version": "openssl3.0.2, openssl 1.1.1r",
+  "critical_api_or_function": [
+    "EVP_PKEY_new_raw_public_key",
+    "EVP_MD_CTX_new",
+    "EVP_DigestSignInit",
+    "EVP_DigestSign",
+    "OPENSSL_hexstr2buf",
+    "OPENSSL_zalloc"
+  ],
+  "root_cause": "EVP_DigestUpdate() allows NULL to get passed to it, and digests don't check for NULL.",
+  "reproduction_command": [
+    "OPENSSL_init();\r\nint ret = 0;\r\nint res;\r\nunsigned char *public = OPENSSL_hexstr2buf(\"7d4d0e7f6153a69b6242b522abbee685fda4420f8834b108c3bdae369ef549fa\", NULL);\r\nunsigned char *msg = OPENSSL_hexstr2buf(\"54657374\", NULL);\r\n\r\nsize_t sig_len;\r\nunsigned char *sigg = NULL;\r\n\r\nEVP_PKEY *pkey = EVP_PKEY_new_raw_public_key(NID_ED25519, NULL, public, 32);\r\nassert(pkey != NULL);\r\nEVP_MD_CTX *ctx = EVP_MD_CTX_new();\r\nres = EVP_DigestSignInit(ctx, NULL, NULL, NULL, pkey);\r\nassert(res == 1);\r\n\r\nif (EVP_DigestSign(ctx, NULL, &sig_len, msg, 4) != 1)\r\n   printf(\"EVP_DigestSign get the size of signature buffer fail\\n\");\r\nsigg = OPENSSL_zalloc(sig_len);\r\nif (EVP_DigestSign(ctx, sigg, &sig_len, msg, 4) != 1)\r\n   printf(\"EVP_DigestSign fail\\n\");\r\n\r\nprintf(\"ok\\n\");\r\nexit(ret);"
+  ],
+  "input_artifact": [],
+  "artifact_class": "C_rag_seed_to_c_candidate",
+  "source_artifact_class": "C_rag_seed",
+  "poc_origin": "generated_from_rag_seed",
+  "generated_c_api_path": [
+    "EVP_PKEY_new_raw_public_key",
+    "EVP_MD_CTX_new",
+    "EVP_DigestSignInit",
+    "EVP_DigestSign",
+    "EVP_MD_CTX_free",
+    "EVP_PKEY_free"
+  ],
+  "expected_input_file": [],
+  "local_compile": null,
+  "local_run": null,
+  "strict_reproduction": false,
+  "input_status": "no_external_input_required",
+  "local_test_result": null,
+  "template_name": "ed25519_digestsign_candidate",
+  "notes": "candidate harness generated from semantic seed; not strict reproduction",
+  "artifact_files": [
+    "metadata.json",
+    "README.md",
+    "poc.c",
+    "run.sh",
+    "inputs/"
+  ]
+}

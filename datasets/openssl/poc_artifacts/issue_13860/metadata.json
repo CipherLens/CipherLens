@@ -1,0 +1,51 @@
+{
+  "issue_number": 13860,
+  "title": "openssl-x509: change of behaviour for public key output between versions 1.0.2 and 1.1.1",
+  "source_url": "https://github.com/openssl/openssl/issues/13860",
+  "has_poc": "YES",
+  "poc_type": "CLI+INPUT_SEED",
+  "quality": "HIGH_CANDIDATE",
+  "component": "X509/X509V3/ASN1",
+  "trigger_behavior": "UNKNOWN",
+  "affected_version": "1.0.2, 1.1.1",
+  "critical_api_or_function": [
+    "X509_parse",
+    "X509_get_pubkey"
+  ],
+  "root_cause": "Change in behavior of public key output in OpenSSL x509 command between versions 1.0.2 and 1.1.1",
+  "reproduction_command": [
+    "openssl x509 -in cert.crt -inform der -out cert.pem -pubkey > pubkey.pem",
+    "openssl x509 -in servercert.pem  -out /tmp/servercert.pem -pubkey > /tmp/pubkey.pem"
+  ],
+  "input_artifact": [
+    "cert.crt",
+    "servercert.pem"
+  ],
+  "artifact_class": "B2_cli_to_c_candidate",
+  "source_artifact_class": "B_cli_artifact",
+  "poc_origin": "translated_from_cli_command",
+  "translated_from_cli": "openssl x509 -in cert.crt -inform der -out cert.pem -pubkey",
+  "generated_c_api_path": [
+    "BIO_new_file",
+    "d2i_X509_bio",
+    "X509_get_pubkey",
+    "PEM_write_PUBKEY"
+  ],
+  "expected_input_file": "inputs/cert.crt",
+  "artifact_files": [
+    "metadata.json",
+    "README.md",
+    "poc.c",
+    "run.sh",
+    "inputs/"
+  ],
+  "local_compile": true,
+  "local_run": true,
+  "strict_reproduction": false,
+  "input_status": "placeholder_input_used",
+  "local_test_result": "compiled_and_executed_with_non_buggy_sample_input",
+  "notes": "Candidate C harness translated from a CLI PoC. Strict reproduction requires the original input artifact.",
+  "missing_original_input": true,
+  "tested_library": "OpenSSL 3.0.13 / system libssl-libcrypto",
+  "validation_notes": "The generated C harness was translated from the original CLI command and compiled/executed using a placeholder local input. This validates the harness structure but does not strictly reproduce the original issue because the original PoC input artifact has not been recovered."
+}

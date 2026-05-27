@@ -1,0 +1,79 @@
+{
+  "issue_number": 6788,
+  "title": "openssl crl does not work properly if -CAfile contains multiple CA certs with the same subject",
+  "source_url": "https://github.com/openssl/openssl/issues/6788",
+  "poc_type": "CLI+INPUT_SEED",
+  "quality": "HIGH_CANDIDATE",
+  "component": "CRL/X509",
+  "trigger_behavior": "WRONG_RESULT",
+  "affected_version": null,
+  "critical_api_or_function": [
+    "X509_STORE_CTX_get_obj_by_subject",
+    "X509_verify_cert"
+  ],
+  "root_cause": "The crl application's use of X509_STORE_CTX_get_obj_by_subject, which matches the first certificate with an identical subject, relies on the unstable qsort function to sort certificates before the lookup, resulting in inconsistent verification behavior.",
+  "reproduction_command": [
+    "/usr/local/bin/openssl genpkey -algorithm RSA -out ca1.key",
+    "/usr/local/bin/openssl genpkey -algorithm RSA -out ca2.key",
+    "/usr/local/bin/openssl genpkey -algorithm RSA -out ca3.key",
+    "/usr/local/bin/openssl genpkey -algorithm RSA -out ca4.key",
+    "/usr/local/bin/openssl req -new -x509 -days 3650 -key ca1.key -out ca1.crt -config identical.cnf -batch",
+    "/usr/local/bin/openssl req -new -x509 -days 3650 -key ca2.key -out ca2.crt -config identical.cnf -batch",
+    "/usr/local/bin/openssl req -new -x509 -days 3650 -key ca3.key -out ca3.crt -config ca3.cnf -batch",
+    "/usr/local/bin/openssl req -new -x509 -days 3650 -key ca4.key -out ca4.crt -config ca3.cnf -batch",
+    "cat ca1.crt ca2.crt ca3.crt ca4.crt > ca_bundle.pem",
+    "mkdir ca_dir",
+    "touch ca_dir/index.txt",
+    "cp ca2.crt ca_dir/ca.crt",
+    "cp ca2.key ca_dir/ca.key",
+    "/usr/local/bin/openssl crl -in crl_test.crl -inform DER -CAfile CA.pem -noout"
+  ],
+  "input_artifact": [
+    "ca1.key",
+    "ca2.key",
+    "ca3.key",
+    "ca4.key",
+    "ca1.crt",
+    "ca2.crt",
+    "ca3.crt",
+    "ca4.crt",
+    "ca_bundle.pem",
+    "ca_dir/index.txt",
+    "ca_dir/ca.crt",
+    "ca_dir/ca.key",
+    "crl_test.crl",
+    "CA.pem",
+    "identical.cnf",
+    "ca3.cnf"
+  ],
+  "artifact_class": "B2_cli_to_c_candidate",
+  "source_artifact_class": "B_cli_artifact",
+  "poc_origin": "translated_from_cli_command",
+  "translated_from_cli": "openssl crl -in crl.pem -noout -issuer",
+  "generated_c_api_path": [
+    "BIO_new_file",
+    "PEM_read_bio_X509_CRL",
+    "X509_CRL_get_issuer",
+    "X509_NAME_print_ex_fp",
+    "X509_CRL_free"
+  ],
+  "expected_input_file": [
+    "inputs/crl.pem"
+  ],
+  "local_compile": true,
+  "local_run": true,
+  "strict_reproduction": false,
+  "input_status": "placeholder_input_used",
+  "local_test_result": "compiled_and_executed_with_placeholder_input",
+  "template_name": "crl_parse",
+  "artifact_files": [
+    "metadata.json",
+    "README.md",
+    "poc.c",
+    "run.sh",
+    "inputs/"
+  ],
+  "missing_original_input": true,
+  "tested_library": "OpenSSL 3.0.13 / system libssl-libcrypto",
+  "validation_notes": "CRL parse harness compiled and executed with generated CRL placeholder input. Valgrind reported 0 errors. This validates the generated C harness structure and API path, but does not strictly reproduce the original issue because the original PoC input artifacts have not been recovered."
+}

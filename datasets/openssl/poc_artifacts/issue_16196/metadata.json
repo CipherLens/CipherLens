@@ -1,0 +1,50 @@
+{
+  "issue_number": 16196,
+  "title": "openssl req segfault",
+  "source_url": "https://github.com/openssl/openssl/issues/16196",
+  "has_poc": "YES",
+  "poc_type": "CLI+INPUT_SEED",
+  "quality": "HIGH_CANDIDATE",
+  "component": "REQ/ASN1",
+  "trigger_behavior": "NULL_DEREFERENCE_CRASH",
+  "affected_version": null,
+  "critical_api_or_function": [
+    "BN_print"
+  ],
+  "root_cause": null,
+  "reproduction_command": [
+    "openssl req -newkey rsa:2048 -keyout test.key -out test.csr",
+    "openssl req -modulus -in test.csr -noout"
+  ],
+  "input_artifact": [
+    "test.csr"
+  ],
+  "artifact_class": "B2_cli_to_c_candidate",
+  "source_artifact_class": "B_cli_artifact",
+  "poc_origin": "translated_from_cli_command",
+  "translated_from_cli": "openssl req -modulus -in test.csr -noout",
+  "generated_c_api_path": [
+    "BIO_new_file",
+    "PEM_read_bio_X509_REQ",
+    "X509_REQ_get_pubkey",
+    "EVP_PKEY_get1_RSA",
+    "RSA_get0_key",
+    "BN_print_fp"
+  ],
+  "expected_input_file": "inputs/test.csr",
+  "artifact_files": [
+    "metadata.json",
+    "poc.c",
+    "run.sh",
+    "inputs/"
+  ],
+  "local_compile": true,
+  "local_run": true,
+  "strict_reproduction": false,
+  "input_status": "placeholder_input_used",
+  "local_test_result": "compiled_and_executed_with_generated_csr",
+  "notes": "Candidate C harness translated from CLI PoC. Strict reproduction requires the original CSR input.",
+  "missing_original_input": true,
+  "tested_library": "OpenSSL 3.0.13 / system libssl-libcrypto",
+  "validation_notes": "The generated C harness was translated from the CLI command `openssl req -modulus -in test.csr -noout`. It compiled and executed with a generated RSA CSR as placeholder input. This validates the CSR parsing and RSA modulus extraction path, but does not strictly reproduce the original issue."
+}

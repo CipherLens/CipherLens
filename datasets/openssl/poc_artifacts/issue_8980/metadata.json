@@ -1,0 +1,41 @@
+{
+  "issue_number": 8980,
+  "title": "OpenSSL 1.0.2 branch on uninitialized memory in EVP_CIPHER_CTX_copy",
+  "source_url": "https://github.com/openssl/openssl/issues/8980",
+  "state": "closed",
+  "has_poc": "YES",
+  "poc_type": "C_API",
+  "quality": "HIGH_CANDIDATE",
+  "component": "EVP/AES_GCM",
+  "trigger_behavior": "NULL_DEREFERENCE_CRASH",
+  "affected_version": "1.0.2",
+  "critical_api_or_function": [
+    "EVP_CIPHER_CTX_new",
+    "EVP_aes_128_gcm",
+    "EVP_EncryptInit_ex",
+    "EVP_CIPHER_CTX_copy"
+  ],
+  "root_cause": "Uninitialized memory access in EVP_CIPHER_CTX_copy",
+  "reproduction_command": [
+    "gcc poc.c -o poc -lssl -lcrypto",
+    "./poc"
+  ],
+  "input_artifact": [],
+  "fix_evidence": "mattcaswell: 'Hmm. Probably this is just a bug. Since 1.0.2 is in security-fix only mode I think we'll probably not fix this.'",
+  "reason": "The issue is closed with a clear statement from the maintainer that it will not be fixed, but it is still considered a high-quality candidate due to the clear reproduction command and evidence provided.",
+  "artifact_class": "A_ast_ready",
+  "poc_origin": "extracted_c_code_from_issue_evidence",
+  "artifact_files": [
+    "metadata.json",
+    "README.md",
+    "poc.c",
+    "run.sh"
+  ],
+  "local_compile": true,
+  "local_run": true,
+  "strict_reproduction": false,
+  "input_status": "no_external_input_required",
+  "tested_library": "OpenSSL 3.0.13 / system libssl-libcrypto",
+  "local_test_result": "compiled_and_executed_with_local_openssl",
+  "validation_notes": "The C PoC was extracted from issue evidence and compiled/executed locally. This validates the local harness structure. Strict reproduction requires testing against the original affected OpenSSL version listed in metadata."
+}

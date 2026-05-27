@@ -1,0 +1,51 @@
+{
+  "issue_number": 14675,
+  "title": "openssl verify silently ignores any but the first certificate in the certificates argument",
+  "source_url": "https://github.com/openssl/openssl/issues/14675",
+  "has_poc": "YES",
+  "poc_type": "CLI+INPUT_SEED",
+  "quality": "HIGH_CANDIDATE",
+  "component": "X509/VERIFY",
+  "trigger_behavior": "WRONG_ALERT_OR_PROTOCOL_BEHAVIOR",
+  "affected_version": "1.1.1f",
+  "critical_api_or_function": [
+    "X509_verify_cert"
+  ],
+  "root_cause": "openssl verify does not process multiple certificates in the input file",
+  "reproduction_command": [
+    "cp /etc/ssl/certs/Certigna_Root_CA.pem /tmp/poc.pem",
+    "echo \"unverifiable garbage\" >> /tmp/poc.pem",
+    "openssl verify /tmp/poc.pem"
+  ],
+  "input_artifact": [
+    "/tmp/poc.pem"
+  ],
+  "artifact_class": "B2_cli_to_c_candidate",
+  "source_artifact_class": "B_cli_artifact",
+  "poc_origin": "translated_from_cli_command",
+  "translated_from_cli": "openssl verify /tmp/poc.pem",
+  "generated_c_api_path": [
+    "PEM_read_bio_X509",
+    "X509_STORE_new",
+    "X509_STORE_add_cert",
+    "X509_STORE_CTX_new",
+    "X509_STORE_CTX_init",
+    "X509_verify_cert"
+  ],
+  "expected_input_file": "inputs/poc.pem",
+  "artifact_files": [
+    "metadata.json",
+    "poc.c",
+    "run.sh",
+    "inputs/"
+  ],
+  "local_compile": true,
+  "local_run": true,
+  "strict_reproduction": false,
+  "input_status": "placeholder_input_used",
+  "local_test_result": "compiled_and_executed_with_placeholder_cert_bundle",
+  "notes": "Candidate C harness translated from CLI verify PoC. Strict reproduction requires original certificate bundle semantics.",
+  "missing_original_input": true,
+  "tested_library": "OpenSSL 3.0.13 / system libssl-libcrypto",
+  "validation_notes": "The generated C harness was translated from the CLI command `openssl verify /tmp/poc.pem`. It compiled and executed using a placeholder certificate bundle with appended garbage. This validates the X509 verification API path, but does not strictly reproduce the original issue semantics."
+}

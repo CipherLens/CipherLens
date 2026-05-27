@@ -1,0 +1,60 @@
+{
+  "issue_number": 30291,
+  "title": "CMS regression: signed attributes with ED448",
+  "source_url": "https://github.com/openssl/openssl/issues/30291",
+  "poc_type": "CLI+INPUT_SEED",
+  "quality": "HIGH_CANDIDATE",
+  "component": "CMS/ED448",
+  "trigger_behavior": "REGRESSION_TEST",
+  "affected_version": "3.5, 3.6",
+  "critical_api_or_function": [
+    "CMS_sign",
+    "CMS_verify"
+  ],
+  "root_cause": "REGRESSION",
+  "reproduction_command": [
+    "openssl req -x509 -newkey ed448 -keyout key.pem -out cert.pem -nodes -subj \"/CN=blah\" -addext keyUsage=nonRepudiation,digitalSignature,keyEncipherment",
+    "echo \"text to sign\" > text.txt",
+    "openssl cms -sign -signer cert.pem -inkey key.pem -in text.txt -out out.cms -md shake256",
+    "openssl cms -verify -in out.cms -CAfile cert.pem -content text.txt"
+  ],
+  "input_artifact": [
+    "key.pem",
+    "cert.pem",
+    "text.txt",
+    "out.cms"
+  ],
+  "artifact_class": "B2_cli_to_c_candidate",
+  "source_artifact_class": "B_cli_artifact",
+  "poc_origin": "translated_from_cli_command",
+  "translated_from_cli": "openssl cms -sign -signer cert.pem -inkey key.pem -in text.txt -out out.cms -md shake256; openssl cms -verify -in out.cms -CAfile cert.pem -content text.txt",
+  "generated_c_api_path": [
+    "PEM_read_bio_X509",
+    "PEM_read_bio_PrivateKey",
+    "BIO_new_file",
+    "CMS_sign",
+    "CMS_verify",
+    "CMS_ContentInfo_free"
+  ],
+  "expected_input_file": [
+    "inputs/cert.pem",
+    "inputs/key.pem",
+    "inputs/text.txt"
+  ],
+  "local_compile": true,
+  "local_run": true,
+  "strict_reproduction": false,
+  "input_status": "placeholder_input_used",
+  "local_test_result": "compiled_and_executed_with_placeholder_input",
+  "template_name": "cms_sign_verify",
+  "artifact_files": [
+    "metadata.json",
+    "README.md",
+    "poc.c",
+    "run.sh",
+    "inputs/"
+  ],
+  "missing_original_input": true,
+  "tested_library": "OpenSSL 3.0.13 / system libssl-libcrypto",
+  "validation_notes": "CMS sign/verify harness compiled and executed with generated certificate/key/text placeholder inputs. Valgrind reported 0 errors. This validates the generated C harness structure and API path, but does not strictly reproduce the original issue because the original PoC input artifacts have not been recovered."
+}

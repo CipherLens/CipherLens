@@ -1,0 +1,74 @@
+{
+  "issue_number": 17715,
+  "title": "DRBG fails to initialize cipher_data prior to EVP_EncryptUpdate leading to segfault",
+  "source_url": "https://github.com/openssl/openssl/issues/17715",
+  "poc_type": "CLI+SANITIZER_LOG",
+  "quality": "HIGH_CANDIDATE",
+  "component": "RAND_DRBG/EVP_CIPHER_CTX",
+  "trigger_behavior": "NULL_DEREFERENCE_CRASH",
+  "affected_version": "1.1.1a",
+  "critical_api_or_function": [
+    "RAND_DRBG_generate",
+    "EVP_EncryptUpdate",
+    "EVP_CipherUpdate",
+    "drbg_ctr_generate",
+    "aesni_ecb_encrypt"
+  ],
+  "root_cause": "ctx->cipher_data is not being initialized prior to EVP_EncryptUpdate",
+  "reproduction_command": [
+    "openssl x509 -in input.pem -out output.pem",
+    "openssl req -new -key key.pem -out req.pem",
+    "openssl pkcs12 -export -in cert.pem -out pkcs12.pem -name user",
+    "openssl pkey -in pkey.pem -out pkey_out.pem",
+    "openssl rsa -in rsa.pem -out rsa_out.pem",
+    "openssl s_client -connect example.com:443",
+    "openssl s_server -port 443"
+  ],
+  "input_artifact": [
+    "input.pem",
+    "output.pem",
+    "req.pem",
+    "key.pem",
+    "cert.pem",
+    "pkcs12.pem",
+    "pkey.pem",
+    "pkey_out.pem",
+    "rsa.pem",
+    "rsa_out.pem"
+  ],
+  "artifact_class": "B2_cli_to_c_candidate",
+  "source_artifact_class": "B_cli_artifact",
+  "poc_origin": "translated_from_cli_command",
+  "translated_from_cli": "openssl x509 -in input.pem -out output.pem; openssl req -new -key key.pem -out req.pem; openssl pkcs12 -export -in cert.pem -out pkcs12.pem -name user; openssl pkey -in pkey.pem -out pkey_out.pem; openssl rsa -in rsa.pem -out rsa_out.pem",
+  "generated_c_api_path": [
+    "PEM_read_bio_X509",
+    "PEM_read_bio_X509_REQ",
+    "d2i_PKCS12_fp",
+    "PKCS12_parse",
+    "PEM_read_bio_PrivateKey",
+    "PEM_write_bio_PrivateKey"
+  ],
+  "expected_input_file": [
+    "inputs/input.pem",
+    "inputs/req.pem",
+    "inputs/pkcs12.pem",
+    "inputs/pkey.pem",
+    "inputs/rsa.pem"
+  ],
+  "local_compile": true,
+  "local_run": true,
+  "strict_reproduction": false,
+  "input_status": "placeholder_input_used",
+  "local_test_result": "compiled_and_executed_with_placeholder_input",
+  "template_name": "multi_crypto_cli_path",
+  "artifact_files": [
+    "metadata.json",
+    "README.md",
+    "poc.c",
+    "run.sh",
+    "inputs/"
+  ],
+  "missing_original_input": true,
+  "tested_library": "OpenSSL 3.0.13 / system libssl-libcrypto",
+  "validation_notes": "The generated C harness was translated from a CLI PoC candidate and compiled/executed using placeholder local inputs. This validates the harness structure and API path, but does not strictly reproduce the original issue because the original PoC input artifacts or environment have not been recovered."
+}

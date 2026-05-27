@@ -1,0 +1,53 @@
+{
+  "issue_number": 30889,
+  "title": "Segfault in 'openssl pkey' for interactive encryption (v4.0.0)",
+  "source_url": "https://github.com/openssl/openssl/issues/30889",
+  "poc_type": "CLI",
+  "quality": "HQ",
+  "component": "PKEY/ML-DSA/RSA",
+  "trigger_behavior": "SEGV",
+  "affected_version": "4.0.0",
+  "critical_api_or_function": [
+    "pkey_main",
+    "encode_private_key"
+  ],
+  "root_cause": "NULL_DEREFERENCE_CRASH",
+  "reproduction_command": [
+    "sudo ./config --prefix=/usr/local/ssl -d no-asm -O0",
+    "sudo make -j$(nproc)",
+    "sudo make install",
+    "/usr/local/ssl/bin/openssl genpkey -algorithm ML-DSA-65 -out plain.pem",
+    "/usr/local/ssl/bin/openssl pkey -in plain.pem -aes-256-cbc -out enc.pem"
+  ],
+  "input_artifact": [
+    "plain.pem"
+  ],
+  "artifact_class": "B2_cli_to_c_candidate",
+  "source_artifact_class": "B_cli_artifact",
+  "poc_origin": "translated_from_cli_command",
+  "translated_from_cli": "openssl pkey -in plain.pem -aes-256-cbc -out enc.pem",
+  "generated_c_api_path": [
+    "PEM_read_bio_PrivateKey",
+    "PEM_write_bio_PrivateKey",
+    "EVP_PKEY_free"
+  ],
+  "expected_input_file": [
+    "inputs/plain.pem"
+  ],
+  "local_compile": true,
+  "local_run": true,
+  "strict_reproduction": false,
+  "input_status": "placeholder_input_used",
+  "local_test_result": "compiled_and_executed_with_placeholder_input",
+  "template_name": "pkey_encrypt_output",
+  "artifact_files": [
+    "metadata.json",
+    "README.md",
+    "poc.c",
+    "run.sh",
+    "inputs/"
+  ],
+  "missing_original_input": true,
+  "tested_library": "OpenSSL 3.0.13 / system libssl-libcrypto",
+  "validation_notes": "The generated C harness was translated from a CLI PoC candidate and compiled/executed using placeholder local inputs. This validates the harness structure and API path, but does not strictly reproduce the original issue because the original PoC input artifacts or environment have not been recovered."
+}

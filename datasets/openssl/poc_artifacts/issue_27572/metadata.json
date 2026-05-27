@@ -1,0 +1,50 @@
+{
+  "issue_number": 27572,
+  "title": "openssl cmp -cmd cr corrupts UTF-8 subject names",
+  "source_url": "https://github.com/openssl/openssl/issues/27572",
+  "has_poc": "YES",
+  "poc_type": "CLI+INPUT_SEED",
+  "quality": "HQ",
+  "component": "CMP/ASN1",
+  "trigger_behavior": "WRONG_OUTPUT",
+  "affected_version": "3.3.3",
+  "critical_api_or_function": [
+    "parse_name"
+  ],
+  "root_cause": "Hardcoded use of MBSTRING_ASC when calling parse_name",
+  "reproduction_command": [
+    "$ openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:prime256v1 -out key.pem",
+    "$ openssl cmp -cmd cr -config \"\" -unprotected_requests -secret pass: -recipient / -subject \"/CN=Dämlich\" -newkey key.pem -reqout_only req.der",
+    "$ openssl asn1parse -inform DER -in req.der"
+  ],
+  "input_artifact": [
+    "key.pem",
+    "req.der"
+  ],
+  "artifact_class": "B2_cli_to_c_candidate",
+  "source_artifact_class": "B_cli_artifact",
+  "poc_origin": "translated_from_cli_command",
+  "translated_from_cli": "openssl asn1parse -inform DER -in req.der",
+  "generated_c_api_path": [
+    "BIO_new_file",
+    "BIO_read",
+    "ASN1_parse_dump"
+  ],
+  "expected_input_file": "inputs/req.der",
+  "artifact_files": [
+    "metadata.json",
+    "README.md",
+    "poc.c",
+    "run.sh",
+    "inputs/"
+  ],
+  "local_compile": true,
+  "local_run": true,
+  "strict_reproduction": false,
+  "input_status": "placeholder_input_used",
+  "local_test_result": "compiled_and_executed_with_non_buggy_sample_input",
+  "notes": "Candidate C harness translated from a CLI PoC. Strict reproduction requires the original input artifact.",
+  "missing_original_input": true,
+  "tested_library": "OpenSSL 3.0.13 / system libssl-libcrypto",
+  "validation_notes": "The generated C harness was translated from the original CLI command and compiled/executed using a placeholder local input. This validates the harness structure but does not strictly reproduce the original issue because the original PoC input artifact has not been recovered."
+}
