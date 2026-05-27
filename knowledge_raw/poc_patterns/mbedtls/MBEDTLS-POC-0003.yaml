@@ -1,0 +1,228 @@
+pattern_id: MBEDTLS-POC-0003
+template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+status: reproduced
+
+source:
+  library: mbedtls
+  component: pk
+  api: mbedtls_pk_verify_ext
+  source_type: github_pr
+  source_label: "PR #8942"
+  url: "https://github.com/Mbed-TLS/mbedtls/pull/8942"
+  issue_refs:
+    - "8937"
+  merge_fixed_commit: "b2b90682646629698ddc0287b4e3967591e1cebc"
+  buggy_commit: "b2b90682646629698ddc0287b4e3967591e1cebc^1"
+  library_fix_commit: "07500fd874fd8688d008e28d349a948a5dd00835"
+  regression_test_commit: "d59caf4e515b5ba52f42146f60d2ddf8020e3aea"
+  test_update_commit: "da47518554b5e56e3c5d08fdad304fb282baaba4"
+
+library:
+  name: mbedtls
+  primary_module: pk/rsa
+  affected_api:
+    - mbedtls_pk_verify_ext
+  affected_file:
+    - library/pk.c
+
+classification:
+  poc_type: memory_safety
+  bug_category: null_pointer_dereference
+  failure_signal:
+    - segmentation_fault
+    - null_pointer_dereference
+    - crash_vs_safe_error_return
+
+root_cause:
+  summary: >
+    In the buggy version, mbedtls_pk_verify_ext() can enter the RSASSA-PSS
+    verification path without first checking that the supplied PK context is an
+    RSA context. For opaque keys, mbedtls_pk_rsa(*ctx) can return NULL. The
+    RSA-PSS-specific verification path then dereferences that NULL RSA context,
+    causing a segmentation fault.
+  root_cause_location:
+    file: library/pk.c
+    function: mbedtls_pk_verify_ext
+    branch_condition: "type == MBEDTLS_PK_RSASSA_PSS with ctx not typed as MBEDTLS_PK_RSA"
+  buggy_logic:
+    - "enters RSA-PSS verification path for an opaque PK context"
+    - "calls mbedtls_pk_rsa(*ctx) without first requiring mbedtls_pk_get_type(ctx) == MBEDTLS_PK_RSA"
+    - "dereferences a NULL RSA context"
+  fixed_logic:
+    - "if (mbedtls_pk_get_type(ctx) != MBEDTLS_PK_RSA) { return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE; }"
+  critical_fixed_statement: "if (mbedtls_pk_get_type(ctx) != MBEDTLS_PK_RSA) { return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE; }"
+
+trigger:
+  key_bits: 1024
+  pk_type: MBEDTLS_PK_OPAQUE
+  verify_type: MBEDTLS_PK_RSASSA_PSS
+  md_alg: MBEDTLS_MD_SHA256
+  hash_len: 32
+  sig_len: 128
+  description: >
+    The v2 PoC creates a legacy RSA key, imports it into PSA, replaces the PK
+    context with an opaque key, and then calls mbedtls_pk_verify_ext() with
+    MBEDTLS_PK_RSASSA_PSS. The supplied context reports an opaque PK type
+    instead of MBEDTLS_PK_RSA, exposing the missing type guard.
+
+buggy_behavior:
+  pk_type: 7
+  signal: segmentation_fault
+  exit_code: 139
+  sample_output: "opaque pk type = 7; calling mbedtls_pk_verify_ext...; exit_code=139"
+
+fixed_behavior:
+  pk_type: 7
+  ret: -14720
+  expected_ret: -14720
+  signal: safe_error_return
+  sample_output: "[OK] fixed behavior: unsupported opaque verify_ext rejected safely."
+
+mutation_points:
+  - name: VERIFY_TYPE
+    placeholder: "[VERIFY_TYPE]"
+    mask_level: api_argument_level
+    source_expr: "mbedtls_pk_verify_ext(MBEDTLS_PK_RSASSA_PSS, ...)"
+    reason: >
+      Selects the RSA-PSS-specific verification path where the missing PK type
+      guard is relevant.
+    priority: high
+
+  - name: PK_CONTEXT_KIND
+    placeholder: "[PK_CONTEXT_KIND]"
+    mask_level: input_construction_level
+    source_expr: "mbedtls_pk_setup_opaque(&pk, key_id)"
+    reason: >
+      Controls whether the PK context is an opaque key rather than a direct RSA
+      context. The crash depends on this type mismatch.
+    priority: high
+
+  - name: TYPE_GUARD
+    placeholder: "[TYPE_GUARD]"
+    mask_level: statement_level
+    source_expr: "if (mbedtls_pk_get_type(ctx) != MBEDTLS_PK_RSA) { return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE; }"
+    reason: >
+      This is the fixed validation statement that prevents NULL RSA context
+      dereference.
+    priority: high
+
+  - name: HASH_LENGTH
+    placeholder: "[HASH_LENGTH]"
+    mask_level: value_level
+    source_expr: "#define HASH_LEN 32"
+    reason: >
+      Provides the digest length used by the verification call. It is required
+      for a realistic RSA-PSS verification path but is not the root memory
+      safety boundary.
+    priority: medium
+
+  - name: SIGNATURE_LENGTH
+    placeholder: "[SIGNATURE_LENGTH]"
+    mask_level: value_level
+    source_expr: "#define SIG_LEN 128"
+    reason: >
+      Provides a syntactically plausible signature buffer for the trigger call.
+      The crash happens before normal signature validation completes.
+    priority: medium
+
+occlusion_candidates:
+  identifier_level:
+    - ctx
+    - type
+    - pk_info
+    - mbedtls_pk_rsa
+  expression_level:
+    - "mbedtls_pk_get_type(ctx) != MBEDTLS_PK_RSA"
+  statement_level:
+    - "return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;"
+    - "mbedtls_pk_verify_ext(MBEDTLS_PK_RSASSA_PSS, ...)"
+  block_level:
+    - "if (mbedtls_pk_get_type(ctx) != MBEDTLS_PK_RSA) { return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE; }"
+
+vulnerability_path_features:
+  must_preserve:
+    - signature_verification_api
+    - rsa_pss_specific_verification_path
+    - opaque_or_incompatible_key_context
+    - missing_type_or_null_validation_before_rsa_access
+    - internal_rsa_context_lookup_can_return_null
+    - observable_crash_or_safe_error_return
+  optional:
+    - psa_opaque_key_import
+    - exact_hash_algorithm
+    - exact_signature_length
+  not_required:
+    - exact_mbedtls_error_code_value
+    - exact key size
+    - exact random generation sequence
+
+migration_guidance:
+  good_target_api_features:
+    - accepts a generic or polymorphic public-key context
+    - has an RSA-PSS verification mode or type argument
+    - internally dispatches from generic key context to RSA-specific state
+    - can represent opaque, provider-backed, or otherwise incompatible key handles
+    - returns observable error codes for unsupported key/type combinations
+  weak_target_api_features:
+    - performs RSA-PSS verification but only accepts a concrete RSA key type
+    - rejects incompatible keys before API entry, making the vulnerable dispatch path unreachable
+  bad_target_api_features:
+    - has no generic key dispatch layer
+    - cannot represent opaque or incompatible key contexts
+    - does not expose a safe error-vs-crash oracle
+
+oracle:
+  memory_safety:
+    - no_segmentation_fault
+    - no_null_pointer_dereference
+    - sanitizer_clean
+  bug_candidate:
+    - segmentation_fault
+    - exit_code_139
+    - sanitizer_null_dereference
+  fixed_or_safe:
+    - ret_is_MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE
+    - unsupported_key_type_rejected_safely
+    - no_crash
+
+expected_oracle:
+  memory_safety:
+    - no_segmentation_fault
+    - sanitizer_clean
+  bug_candidate:
+    - segmentation_fault
+    - exit_code_139
+  fixed_or_safe:
+    - ret_is_MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE
+    - no_crash
+
+references:
+  source_pr: "https://github.com/Mbed-TLS/mbedtls/pull/8942"
+  issue_refs:
+    - "8937"
+  commit_refs:
+    - "b2b90682646629698ddc0287b4e3967591e1cebc"
+    - "07500fd874fd8688d008e28d349a948a5dd00835"
+    - "d59caf4e515b5ba52f42146f60d2ddf8020e3aea"
+    - "da47518554b5e56e3c5d08fdad304fb282baaba4"
+
+evidence_files:
+  metadata: data/pocs/core10/MBEDTLS-POC-0003/metadata.json
+  notes: data/pocs/core10/MBEDTLS-POC-0003/notes.md
+  reproduction: data/pocs/core10/MBEDTLS-POC-0003/reproduction_result.md
+  poc_source: data/pocs/core10/MBEDTLS-POC-0003/poc/poc_pk_verify_ext_null_deref_v2.c
+  buggy_log: data/pocs/core10/MBEDTLS-POC-0003/poc/run_v2_buggy.log
+  fixed_log: data/pocs/core10/MBEDTLS-POC-0003/poc/run_v2_fixed.log
+  library_files: data/pocs/core10/MBEDTLS-POC-0003/library_files.txt
+  test_files: data/pocs/core10/MBEDTLS-POC-0003/test_files.txt
+  commits: data/pocs/core10/MBEDTLS-POC-0003/commits.txt
+  fix_commits: data/pocs/core10/MBEDTLS-POC-0003/fix_commits.txt
+
+notes:
+  - >
+    The older poc_pk_verify_ext_null_deref.c and run_buggy.log did not trigger
+    the crash because signing failed first. The pattern is based on the v2 PoC
+    and run_v2_buggy.log/run_v2_fixed.log, as recommended by the inventory.
+  - >
+    No local fix.patch file is present in data/pocs/core10/MBEDTLS-POC-0003;
+    commit evidence and reproduction logs are used instead.

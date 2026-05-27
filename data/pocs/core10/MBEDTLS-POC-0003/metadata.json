@@ -1,0 +1,73 @@
+{
+  "poc_id": "MBEDTLS-POC-0003",
+  "dataset_status": "accepted_reconstructable",
+  "source": {
+    "source_type": "github_pr",
+    "source_id": "8942",
+    "source_label": "PR #8942",
+    "url": "https://github.com/Mbed-TLS/mbedtls/pull/8942"
+  },
+  "classification": {
+    "poc_type": "memory_safety",
+    "bug_category": "memory_safety",
+    "module": "pk;rsa;tls",
+    "primary_module": "pk/rsa",
+    "affected_api": [
+      "mbedtls_pk_verify_ext"
+    ],
+    "bug_keywords": [
+      "bug",
+      "crash",
+      "fix",
+      "fixes",
+      "hang",
+      "null dereference"
+    ]
+  },
+  "experiment_fields": {
+    "failure_signal": "NULL dereference crash",
+    "target_function": "mbedtls_pk_verify_ext",
+    "poc_source": "regression_test_or_pr",
+    "test_file": "tests/suites/test_suite_pk.function",
+    "buggy_behavior": "opaque RSA key path can dereference a NULL pointer",
+    "fixed_behavior": "NULL validation prevents invalid key access",
+    "experiment_status": "selected_core10"
+  },
+  "annotation": {
+    "root_cause": "Missing NULL pointer validation before RSA key access in extended PK verification.",
+    "mutation_point": "library/pk.c: mbedtls_pk_verify_ext(), NULL check before RSA key access for opaque RSA keys.",
+    "reproduction_status": "reconstructable",
+    "usable_for_occlusion": "yes",
+    "usable_for_rag": "yes",
+    "review_notes": "Primary fix PR #8942; explicit NULL dereference crash with test evidence."
+  },
+  "evidence": {
+    "patch_evidence": "yes",
+    "test_evidence": "yes",
+    "library_files": [
+      "library/pk.c"
+    ],
+    "test_files": [
+      "tests/suites/test_suite_pk.function"
+    ],
+    "cves": [],
+    "issue_refs": [
+      "8937"
+    ],
+    "pr_refs": [
+      "8942"
+    ],
+    "commit_refs": [
+      "b2b90682646629698ddc0287b4e3967591e1cebc"
+    ]
+  },
+  "traceability": {
+    "review_priority": "P0",
+    "quality_score_auto": "20",
+    "source_max_score": "20",
+    "normalized_score": "1.0",
+    "poc_suitability": "high_patch_and_regression_candidate",
+    "original_global_id": "POC-CAND-000091",
+    "original_review_label": "keep"
+  }
+}

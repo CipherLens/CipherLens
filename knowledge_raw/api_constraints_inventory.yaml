@@ -1,0 +1,251 @@
+inventory_name: api_constraints_inventory
+status: updated_for_mbedtls_openssl_rag_round
+
+source_versions:
+  mbedtls_current:
+    version: "4.1.0"
+    path: /home/wen/work/clean_sources/mbedtls-4.1.0
+    role: current_rag_source
+  mbedtls_lts_fallback:
+    version: "3.6.4"
+    path: /home/wen/work/clean_sources/mbedtls-3.6.4
+    role: lts_compatibility_fallback
+  openssl_current:
+    version: "3.5.5"
+    path: /home/wen/work/clean_sources/openssl-3.5.5
+    role: current_rag_source
+  botan_future:
+    version: "3.10.0"
+    path: /home/wen/work/clean_sources/botan-3.10.0
+    role: future_todo_not_processed_this_round
+
+rag_raw_dirs:
+  api_constraints: knowledge_raw/api_constraints
+  poc_patterns: knowledge_raw/poc_patterns
+  unit_tests: knowledge_raw/unit_tests
+  cross_lib_equivalence: knowledge_raw/cross_lib_equivalence
+  wycheproof_vectors: knowledge_raw/wycheproof_vectors
+
+botan:
+  directory_exists: true
+  processed_this_round: false
+  missing_knowledge:
+    - botan_api_constraints
+    - botan_unit_tests_or_examples
+  notes:
+    - Botan source is recorded for future work but intentionally excluded from this extraction round.
+
+mbedtls_poc_patterns:
+  - pattern_id: MBEDTLS-POC-0001
+    source:
+      library: mbedtls
+      component: bignum
+      api: mbedtls_mpi_write_string
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_mpi_write_string.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/mbedtls/4.1.0/mbedtls_core_api_test_evidence.md
+    missing_knowledge: []
+
+  - pattern_id: MBEDTLS-POC-0002
+    source:
+      library: mbedtls
+      component: bignum
+      api: mbedtls_mpi_sub_abs
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_mpi_sub_abs.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/mbedtls/4.1.0/mbedtls_core_api_test_evidence.md
+    missing_knowledge:
+      - direct local tests do not expose the custom canary-after-output-limbs oracle used by the PoC harness
+
+  - pattern_id: MBEDTLS-POC-0003
+    source:
+      library: mbedtls
+      component: pk
+      api: mbedtls_pk_verify_ext
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_verify_ext.md
+        - knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_rsa.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/mbedtls/4.1.0/mbedtls_core_api_test_evidence.md
+    missing_knowledge:
+      - mbedtls_pk_rsa is not available as a current mbedTLS 4.1.0 public API; see mbedtls_pk_rsa.md compatibility note
+
+  - pattern_id: MBEDTLS-POC-0004
+    source:
+      library: mbedtls
+      component: cipher
+      api: mbedtls_cipher_finish
+      internal_functions:
+        - get_pkcs_padding
+        - mbedtls_get_pkcs_padding
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_cipher_finish.md
+        - knowledge_raw/api_constraints/mbedtls/4.1.0/get_pkcs_padding.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/mbedtls/4.1.0/mbedtls_core_api_test_evidence.md
+    missing_knowledge: []
+
+  - pattern_id: MBEDTLS-POC-0005
+    source:
+      library: mbedtls
+      component: asn1
+      api: mbedtls_asn1_store_named_data
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_asn1_store_named_data.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/mbedtls/4.1.0/mbedtls_core_api_test_evidence.md
+    missing_knowledge: []
+
+openssl_target_candidates:
+  - target_api: BN_bn2binpad
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/BN_bn2binpad.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/openssl_core_api_test_evidence.md
+    missing_knowledge: []
+
+  - target_api: BN_signed_bn2bin
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/BN_signed_bn2bin.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/openssl_core_api_test_evidence.md
+    missing_knowledge: []
+
+  - target_api: BN_usub
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/BN_usub.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/openssl_core_api_test_evidence.md
+    missing_knowledge:
+      - no caller-controlled output limb storage; this is a migration-path limitation rather than missing documentation
+
+  - target_api: BN_sub
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/BN_sub.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/openssl_core_api_test_evidence.md
+    missing_knowledge:
+      - no caller-controlled output limb storage; this is a migration-path limitation rather than missing documentation
+
+  - target_api: EVP_DigestVerifyInit
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerifyInit.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/openssl_core_api_test_evidence.md
+    missing_knowledge: []
+
+  - target_api: EVP_DigestVerify
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerify.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/openssl_core_api_test_evidence.md
+    missing_knowledge: []
+
+  - target_api: EVP_PKEY_verify
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/EVP_PKEY_verify.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/openssl_core_api_test_evidence.md
+    missing_knowledge: []
+
+  - target_api: EVP_CipherFinal_ex
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/EVP_CipherFinal_ex.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/openssl_core_api_test_evidence.md
+    missing_knowledge: []
+
+  - target_api: EVP_DecryptFinal_ex
+    api_constraints:
+      exists: true
+      files:
+        - knowledge_raw/api_constraints/openssl/3.5.5/EVP_DecryptFinal_ex.md
+    unit_test_or_example_evidence:
+      exists: true
+      files:
+        - knowledge_raw/unit_tests/openssl/3.5.5/openssl_core_api_test_evidence.md
+    missing_knowledge: []
+
+not_found_in_local_tests:
+  - api: mbedtls_pk_rsa
+    status: not_found_in_local_tests
+    searched_paths:
+      - /home/wen/work/clean_sources/mbedtls-4.1.0/tf-psa-crypto/include
+      - /home/wen/work/clean_sources/mbedtls-4.1.0/tf-psa-crypto/extras
+      - /home/wen/work/clean_sources/mbedtls-4.1.0/include
+      - /home/wen/work/clean_sources/mbedtls-4.1.0/library
+      - /home/wen/work/clean_sources/mbedtls-4.1.0/tests
+      - /home/wen/work/clean_sources/mbedtls-4.1.0/programs
+    missing_reason: 本地 mbedTLS 4.1.0 源码中未检索到当前 public mbedtls_pk_rsa API 或与该 API 直接相关的测试或示例
+    recommended_next_search:
+      - upstream_github_tests
+      - upstream_github_regression_tests
+      - upstream_github_commit_diff
+      - upstream_github_issue_or_pr_discussion
+      - mbedTLS 官方 GitHub 仓库中的 tests/suites/
+      - mbedTLS 官方 GitHub 仓库中的 programs/
+      - mbedTLS 官方 GitHub 仓库中的 library/
+
+upstream_search_targets_for_future_round:
+  mbedtls:
+    - mbedTLS 官方 GitHub 仓库中的 tests/suites/
+    - mbedTLS 官方 GitHub 仓库中的 programs/
+    - mbedTLS 官方 GitHub 仓库中的 library/
+  openssl:
+    - OpenSSL 官方 GitHub 仓库中的 test/
+    - OpenSSL 官方 GitHub 仓库中的 crypto/
+    - OpenSSL 官方 GitHub 仓库中的 doc/man3/

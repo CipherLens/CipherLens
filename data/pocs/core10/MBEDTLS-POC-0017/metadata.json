@@ -1,0 +1,77 @@
+{
+  "poc_id": "MBEDTLS-POC-0017",
+  "dataset_status": "accepted_reconstructable",
+  "source": {
+    "source_type": "github_pr",
+    "source_id": "2442",
+    "source_label": "PR #2442",
+    "url": "https://github.com/Mbed-TLS/mbedtls/pull/2442"
+  },
+  "classification": {
+    "poc_type": "parser_or_encoding",
+    "bug_category": "parser_or_encoding",
+    "module": "asn1;md;tls;x509",
+    "primary_module": "x509/asn1",
+    "affected_api": [],
+    "bug_keywords": [
+      "fix",
+      "fixes",
+      "hang"
+    ]
+  },
+  "experiment_fields": {
+    "failure_signal": "parser bounds violation / malformed certificate handling",
+    "target_function": "X.509 CRT ASN.1 parsing functions",
+    "poc_source": "regression_test_or_pr",
+    "test_file": "tests/suites/test_suite_x509parse.data",
+    "buggy_behavior": "ASN.1 substructure bounds are not strictly enforced during X.509 CRT parsing",
+    "fixed_behavior": "parser enforces substructure bounds before reading nested fields",
+    "experiment_status": "selected_core10"
+  },
+  "annotation": {
+    "root_cause": "Incorrect ASN.1 length/bounds validation in parser or writer.",
+    "mutation_point": "library/x509_crt.c: ASN.1 substructure bounds validation in certificate parser.",
+    "reproduction_status": "reconstructable",
+    "usable_for_occlusion": "yes",
+    "usable_for_rag": "yes",
+    "review_notes": "Defect semantics with library patch and test/patch evidence; reconstructable candidate."
+  },
+  "evidence": {
+    "patch_evidence": "yes",
+    "test_evidence": "yes",
+    "library_files": [
+      "library/x509.c",
+      "library/x509_crl.c",
+      "library/x509_crt.c"
+    ],
+    "test_files": [
+      "tests/data_files/Makefile",
+      "tests/data_files/cert_md2.crt",
+      "tests/data_files/cert_md4.crt",
+      "tests/data_files/cert_md5.crt",
+      "tests/suites/test_suite_x509parse.data",
+      "tests/suites/test_suite_x509parse.function"
+    ],
+    "cves": [],
+    "issue_refs": [
+      "2430",
+      "2431",
+      "2437"
+    ],
+    "pr_refs": [
+      "2442"
+    ],
+    "commit_refs": [
+      "3c03a881eb37b0ad63d7cdb6813e1106d5f30d74"
+    ]
+  },
+  "traceability": {
+    "review_priority": "P0",
+    "quality_score_auto": "20",
+    "source_max_score": "20",
+    "normalized_score": "1.0",
+    "poc_suitability": "high_patch_and_regression_candidate",
+    "original_global_id": "POC-CAND-000016",
+    "original_review_label": "keep"
+  }
+}

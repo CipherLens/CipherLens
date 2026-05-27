@@ -1,0 +1,255 @@
+inventory_root: data/pocs/core10
+inventory_scope: core10 local PoC artifact inventory
+summary:
+  total: 10
+  level_counts:
+    A: 9
+    B: 1
+    C: 0
+  notes:
+    - Level A means the PoC has a local C harness, buggy/fixed logs, root cause, oracle, and mutation-point evidence.
+    - Level B means reproduction is documented but the local core10 directory lacks a portable C PoC or captured buggy/fixed run logs.
+    - Missing fix.patch is recorded as an artifact gap, but does not lower readiness when fix_commits and reproduction evidence are present.
+
+pocs:
+  - poc_id: MBEDTLS-POC-0001
+    library: mbedtls
+    component: bignum/mpi
+    affected_api:
+      - mbedtls_mpi_write_string
+    bug_class: output_buffer_boundary / negative MPI serialization / one-byte overflow
+    oracle_type: canary_corruption_and_return_observation
+    has_poc_c_file: true
+    has_buggy_log: true
+    has_fixed_log: true
+    has_fix_patch: true
+    has_fix_commit: true
+    has_metadata: true
+    has_reproduction_result: true
+    template_readiness:
+      level: A
+      reason: Minimal C PoC, buggy/fixed logs, confirmed root cause, canary oracle, and mutation points are present.
+    missing_fields: []
+    recommended_next_action:
+      - Already suitable for formal PoC Pattern and template workflow.
+      - Keep as baseline example for negative MPI serialization boundary migration.
+
+  - poc_id: MBEDTLS-POC-0002
+    library: mbedtls
+    component: bignum/mpi
+    affected_api:
+      - mbedtls_mpi_sub_abs
+    bug_class: output_limb_boundary / bignum absolute subtraction overflow
+    oracle_type: canary_after_output_limbs_and_return_code
+    has_poc_c_file: true
+    has_buggy_log: true
+    has_fixed_log: true
+    has_fix_patch: false
+    has_fix_commit: true
+    has_metadata: true
+    has_reproduction_result: true
+    template_readiness:
+      level: A
+      reason: Minimal C PoC, buggy/fixed logs, root cause, canary oracle, and statement-level mutation point are present.
+    missing_fields:
+      - fix.patch
+    recommended_next_action:
+      - Already suitable for formal PoC Pattern and template workflow.
+      - Use as primary bignum limb-boundary migration case.
+
+  - poc_id: MBEDTLS-POC-0003
+    library: mbedtls
+    component: pk/rsa
+    affected_api:
+      - mbedtls_pk_verify_ext
+    bug_class: null_pointer_dereference / opaque RSA-PSS context validation
+    oracle_type: crash_vs_safe_error_return
+    has_poc_c_file: true
+    has_buggy_log: true
+    has_fixed_log: true
+    has_fix_patch: false
+    has_fix_commit: true
+    has_metadata: true
+    has_reproduction_result: true
+    template_readiness:
+      level: A
+      reason: v2 C PoC has buggy crash log, fixed safe-return log, confirmed root cause, and PK type-check mutation point.
+    missing_fields:
+      - fix.patch
+    recommended_next_action:
+      - Promote to PoC Pattern for opaque key / signature verification null-deref migration.
+      - Prefer poc_pk_verify_ext_null_deref_v2.c and run_v2_* logs over the older non-triggering logs.
+
+  - poc_id: MBEDTLS-POC-0004
+    library: mbedtls
+    component: cipher/pkcs_padding
+    affected_api:
+      - mbedtls_cipher_finish
+      - get_pkcs_padding
+    bug_class: invalid_padding_output_length_underflow
+    oracle_type: return_code_plus_output_length_safety
+    has_poc_c_file: true
+    has_buggy_log: true
+    has_fixed_log: true
+    has_fix_patch: false
+    has_fix_commit: true
+    has_metadata: true
+    has_reproduction_result: true
+    template_readiness:
+      level: A
+      reason: C PoC, buggy/fixed logs, root cause, output-length oracle, and padding validation mutation point are present.
+    missing_fields:
+      - fix.patch
+    recommended_next_action:
+      - Promote to PoC Pattern for error-path output length safety.
+      - Capture mutation points around padding_len validation before data_len assignment.
+
+  - poc_id: MBEDTLS-POC-0005
+    library: mbedtls
+    component: asn1write
+    affected_api:
+      - mbedtls_asn1_store_named_data
+    bug_class: null_pointer_dereference / stale length after zero-length ASN.1 value
+    oracle_type: crash_vs_successful_reallocation
+    has_poc_c_file: true
+    has_buggy_log: true
+    has_fixed_log: true
+    has_fix_patch: false
+    has_fix_commit: true
+    has_metadata: true
+    has_reproduction_result: true
+    template_readiness:
+      level: A
+      reason: C PoC, segmentation-fault buggy log, fixed reallocation log, root cause, and mutation point are present.
+    missing_fields:
+      - fix.patch
+    recommended_next_action:
+      - Promote to PoC Pattern for stale internal state / pointer-length consistency.
+      - Model mutation around clearing cur->val.len when cur->val.p is freed.
+
+  - poc_id: MBEDTLS-POC-0011
+    library: mbedtls
+    component: pem
+    affected_api:
+      - mbedtls_pem_read_buffer
+      - mbedtls_pk_parse
+    bug_class: one_byte_heap_buffer_underflow / malformed PEM padding
+    oracle_type: asan_heap_underflow_vs_safe_error_return
+    has_poc_c_file: true
+    has_buggy_log: true
+    has_fixed_log: true
+    has_fix_patch: false
+    has_fix_commit: true
+    has_metadata: true
+    has_reproduction_result: true
+    template_readiness:
+      level: A
+      reason: ASan-backed C PoC, buggy/fixed logs, root cause, oracle, and bounds-check mutation point are present.
+    missing_fields:
+      - fix.patch
+    recommended_next_action:
+      - Promote to PoC Pattern for parser underflow and empty decoded-buffer handling.
+      - Preserve ASan failure signal and safe MBEDTLS_ERR_PEM_INVALID_DATA oracle.
+
+  - poc_id: MBEDTLS-POC-0017
+    library: mbedtls
+    component: x509/asn1
+    affected_api:
+      - mbedtls_x509_crt_parse_der
+      - X.509 CRT ASN.1 parsing functions
+    bug_class: parser_bounds_violation / ASN.1 nested substructure boundary
+    oracle_type: differential_error_code_parser_boundary
+    has_poc_c_file: true
+    has_buggy_log: true
+    has_fixed_log: true
+    has_fix_patch: false
+    has_fix_commit: true
+    has_metadata: true
+    has_reproduction_result: true
+    template_readiness:
+      level: A
+      reason: C PoC, buggy/fixed logs, root cause, differential parser oracle, and confirmed mutation points are present.
+    missing_fields:
+      - fix.patch
+      - metadata.classification.affected_api
+    recommended_next_action:
+      - Promote to PoC Pattern for ASN.1 nested-boundary parser migration.
+      - Normalize affected API around mbedtls_x509_crt_parse_der and lower-level ASN.1 helper mutation points.
+
+  - poc_id: MBEDTLS-POC-0020
+    library: mbedtls
+    component: rsa/pkparse
+    affected_api:
+      - mbedtls_pk_parse_key
+      - mbedtls_rsa_parse_key
+      - mbedtls_rsa_parse_pubkey
+    bug_class: parser_accepts_trailing_garbage
+    oracle_type: accept_vs_reject_return_code
+    has_poc_c_file: true
+    has_buggy_log: true
+    has_fixed_log: true
+    has_fix_patch: false
+    has_fix_commit: true
+    has_metadata: true
+    has_reproduction_result: true
+    template_readiness:
+      level: A
+      reason: C PoC, buggy/fixed logs, root cause, parser acceptance oracle, and fixed boundary check evidence are present.
+    missing_fields:
+      - fix.patch
+    recommended_next_action:
+      - Promote to PoC Pattern for DER parser end-boundary enforcement.
+      - Model mutation around rejecting bytes after the top-level RSA SEQUENCE.
+
+  - poc_id: MBEDTLS-POC-0027
+    library: mbedtls
+    component: tls/x509/semantic_correctness
+    affected_api:
+      - mbedtls_ssl_get_verify_result
+    bug_class: semantic_verification_flag_not_propagated
+    oracle_type: regression_script_output_pattern / verify_result_flag_presence
+    has_poc_c_file: false
+    has_buggy_log: false
+    has_fixed_log: false
+    has_fix_patch: false
+    has_fix_commit: true
+    has_metadata: true
+    has_reproduction_result: true
+    template_readiness:
+      level: B
+      reason: Reproduction is documented via ssl-opt regression expectations, but the core10 directory lacks a portable C PoC and local buggy/fixed run logs.
+    missing_fields:
+      - poc/*.c
+      - poc/run_buggy.log
+      - poc/run_fixed.log
+      - fix.patch
+      - portable minimal harness or checked-in reproduction script
+    recommended_next_action:
+      - Add a local reproduction script or minimal harness artifact under the PoC directory.
+      - Capture buggy and fixed run logs from the ssl-opt keyUsage/extKeyUsage scenario.
+      - Then promote to semantic correctness PoC Pattern.
+
+  - poc_id: MBEDTLS-POC-0028
+    library: mbedtls
+    component: psa/aead
+    affected_api:
+      - psa_aead_setup
+      - psa_aead_decrypt_setup
+    bug_class: invalid_aead_tag_length_accepted
+    oracle_type: invalid_parameter_return_code
+    has_poc_c_file: true
+    has_buggy_log: true
+    has_fixed_log: true
+    has_fix_patch: false
+    has_fix_commit: true
+    has_metadata: true
+    has_reproduction_result: true
+    template_readiness:
+      level: A
+      reason: C PoC, buggy/fixed logs, root cause, invalid-parameter oracle, and tag-length validation mutation point are present.
+    missing_fields:
+      - fix.patch
+      - metadata.classification.affected_api
+    recommended_next_action:
+      - Promote to PoC Pattern for AEAD parameter validation migration.
+      - Use tag length, AEAD algorithm, setup function, and PSA error code as mutation/oracle axes.

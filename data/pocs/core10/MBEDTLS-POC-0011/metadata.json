@@ -1,0 +1,99 @@
+{
+  "poc_id": "MBEDTLS-POC-0011",
+  "dataset_status": "accepted_reconstructable",
+  "source": {
+    "source_type": "cve_advisory",
+    "source_id": "CVE-2025-52497",
+    "source_label": "CVE-2025-52497",
+    "url": "https://lists.debian.org/debian-lts-announce/2025/08/msg00013.html | https://github.com/Mbed-TLS/mbedtls-docs/blob/main/security-advisories/mbedtls-security-advisory-2025-06-2.md"
+  },
+  "classification": {
+    "poc_type": "memory_safety",
+    "bug_category": "memory_safety",
+    "module": "aes;asn1;bignum;ccm;chacha20",
+    "primary_module": "pem",
+    "affected_api": [
+      "mbedtls_pem_read_buffer",
+      "mbedtls_pk_parse"
+    ],
+    "bug_keywords": [
+      "buffer",
+      "heap",
+      "tls",
+      "underflow"
+    ]
+  },
+  "experiment_fields": {
+    "failure_signal": "one-byte heap buffer underflow",
+    "target_function": "mbedtls_pem_read_buffer",
+    "poc_source": "cve_advisory_and_commit",
+    "test_file": "tests/include/alt-dummy/aes_alt.h",
+    "buggy_behavior": "empty or malformed PEM content can trigger one-byte underflow",
+    "fixed_behavior": "PEM parser rejects empty/malformed contents before unsafe access",
+    "experiment_status": "selected_core10"
+  },
+  "annotation": {
+    "root_cause": "Missing PEM parse bounds check causing one-byte heap-based buffer underflow on untrusted PEM input.",
+    "mutation_point": "library/pem.c: mbedtls_pem_read_buffer(), boundary check around PEM buffer parsing and empty PEM content handling.",
+    "reproduction_status": "reconstructable",
+    "usable_for_occlusion": "yes",
+    "usable_for_rag": "yes",
+    "review_notes": "CVE advisory explicitly names PEM underflow, but commit/file evidence is broad; needs fixing commit narrowing. | Upgraded from maybe; clear PEM parser heap-buffer-underflow root cause. Focused evidence includes pem: reject empty PEM contents and related PEM parser tests. Exact fixing commit should still be confirmed during reproduction."
+  },
+  "evidence": {
+    "patch_evidence": "yes",
+    "test_evidence": "yes",
+    "library_files": [
+      "library/asn1parse.c",
+      "library/certs.c",
+      "library/debug.c",
+      "library/error.c",
+      "library/net_sockets.c",
+      "library/pem.c",
+      "library/pkcs11.c",
+      "library/pkparse.c",
+      "library/ssl_cache.c",
+      "library/ssl_ciphersuites.c",
+      "library/ssl_cli.c",
+      "library/ssl_cookie.c"
+    ],
+    "test_files": [
+      "tests/include/alt-dummy/aes_alt.h",
+      "tests/include/alt-dummy/aria_alt.h",
+      "tests/include/alt-dummy/camellia_alt.h",
+      "tests/include/alt-dummy/ccm_alt.h",
+      "tests/include/alt-dummy/chacha20_alt.h",
+      "tests/include/alt-dummy/chachapoly_alt.h",
+      "tests/include/alt-dummy/cmac_alt.h",
+      "tests/include/alt-dummy/des_alt.h",
+      "tests/include/alt-dummy/dhm_alt.h",
+      "tests/include/alt-dummy/ecjpake_alt.h",
+      "tests/include/alt-dummy/ecp_alt.h",
+      "tests/include/alt-dummy/gcm_alt.h"
+    ],
+    "cves": [
+      "CVE-2025-52497"
+    ],
+    "issue_refs": [],
+    "pr_refs": [],
+    "commit_refs": [
+      "02f30230c4fb8fe8bf4d75e4146620a5bea914a9",
+      "06986de4ea3e62a1276d070ab62b51ad257e0ab2",
+      "07c0f12302c21806b12a6dca0f3f45b15a3a4276",
+      "08a24a464edd2d3b6fc33604724f690fcdcbdc11",
+      "08d8cc57dbe7be54fe3f88ecbc2729300c48d450",
+      "0ca219575ad7059235a5edb91cf834fc70be9c53",
+      "0f286d5453488acbc0ae2191ea80f1156eabbbb4",
+      "133ab2c8ee5873aed6a0aca52ec1a49272c8d599"
+    ]
+  },
+  "traceability": {
+    "review_priority": "P0",
+    "quality_score_auto": "8",
+    "source_max_score": "10",
+    "normalized_score": "0.8",
+    "poc_suitability": "high_patch_and_regression_candidate",
+    "original_global_id": "POC-CAND-000519",
+    "original_review_label": "keep"
+  }
+}

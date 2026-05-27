@@ -1,0 +1,233 @@
+pattern_id: MBEDTLS-POC-0005
+template_id: ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE
+status: reproduced
+
+source:
+  library: mbedtls
+  component: asn1
+  api: mbedtls_asn1_store_named_data
+  source_type: cve_advisory
+  source_label: "CVE-2025-48965"
+  url: "https://github.com/Mbed-TLS/mbedtls-docs/blob/main/security-advisories/mbedtls-security-advisory-2025-06-6.md"
+  advisory_refs:
+    - "https://lists.debian.org/debian-lts-announce/2025/08/msg00013.html"
+    - "https://mbed-tls.readthedocs.io/en/latest/tech-updates/security-advisories/"
+  fixed_commit: "2df7ab7c0c3d5bb8a31481073c494521d10d4eba"
+  buggy_commit: "2df7ab7c0c3d5bb8a31481073c494521d10d4eba^"
+  library_fix_commit: "2df7ab7c0c3d5bb8a31481073c494521d10d4eba"
+  unit_test_commit: "12df5f3a16a2bc53881b9d88556192dcbc2f6774"
+
+library:
+  name: mbedtls
+  primary_module: asn1write
+  affected_api:
+    - mbedtls_asn1_store_named_data
+  affected_file:
+    - library/asn1write.c
+
+classification:
+  poc_type: memory_safety
+  bug_category: null_pointer_dereference
+  failure_signal:
+    - segmentation_fault
+    - null_pointer_dereference
+    - stale_pointer_length_state
+
+root_cause:
+  summary: >
+    In the buggy version, mbedtls_asn1_store_named_data() frees cur->val.p when
+    val_len == 0 and sets cur->val.p to NULL, but does not reset cur->val.len.
+    This leaves the named-data entry in the inconsistent state cur->val.p ==
+    NULL while cur->val.len remains nonzero. A later call with the same OID and
+    a value length equal to the stale cur->val.len can skip reallocation and
+    memcpy() into cur->val.p == NULL.
+  root_cause_location:
+    file: library/asn1write.c
+    function: mbedtls_asn1_store_named_data
+    branch_condition: "val_len == 0"
+  buggy_logic:
+    - "frees cur->val.p and sets it to NULL for zero-length values"
+    - "missing cur->val.len = 0 after freeing the value buffer"
+    - "later same-length nonzero update skips allocation and copies into NULL"
+  fixed_logic:
+    - "cur->val.len = 0;"
+  critical_fixed_statement: "cur->val.len = 0;"
+
+trigger:
+  oid: "2.5.4.3 commonName"
+  oid_der_content_hex: "550403"
+  first_val_len: 4
+  zero_val_len: 0
+  third_val_len: 4
+  description: >
+    The PoC calls mbedtls_asn1_store_named_data() three times with the same OID:
+    first with a nonzero 4-byte value, then with a zero-length value, then again
+    with a nonzero 4-byte value. The buggy second call clears val.p without
+    clearing val.len, so the third call can skip allocation and dereference NULL.
+
+buggy_behavior:
+  after_step1: "val.p != NULL, val.len = 4"
+  after_step2: "val.p = NULL, val.len = 4"
+  signal: segmentation_fault
+  exit_code: 139
+  sample_output: "after step2: val.p=(nil) val.len=4; step3 ...; exit_code=139"
+
+fixed_behavior:
+  after_step1: "val.p != NULL, val.len = 4"
+  after_step2: "val.p = NULL, val.len = 0"
+  after_step3: "val.p != NULL, val.len = 4"
+  signal: successful_reallocation
+  sample_output: "[OK] fixed behavior: value buffer was safely reallocated and updated."
+
+mutation_points:
+  - name: OID
+    placeholder: "[OID]"
+    mask_level: value_level
+    source_expr: "const char oid_cn[] = \"\\x55\\x04\\x03\""
+    reason: >
+      Reusing the same OID ensures that all three calls update the same
+      mbedtls_asn1_named_data entry.
+    priority: high
+
+  - name: INITIAL_VALUE_LENGTH
+    placeholder: "[INITIAL_VALUE_LENGTH]"
+    mask_level: value_level
+    source_expr: "val1, sizeof(val1)"
+    reason: >
+      Establishes a nonzero cur->val.len and allocated cur->val.p before the
+      zero-length update.
+    priority: high
+
+  - name: ZERO_LENGTH_UPDATE
+    placeholder: "[ZERO_LENGTH_UPDATE]"
+    mask_level: api_argument_level
+    source_expr: "mbedtls_asn1_store_named_data(&head, oid_cn, oid_len, NULL, 0)"
+    reason: >
+      Enters the vulnerable val_len == 0 branch that frees val.p and should
+      also clear val.len.
+    priority: high
+
+  - name: REUSE_VALUE_LENGTH
+    placeholder: "[REUSE_VALUE_LENGTH]"
+    mask_level: value_level
+    source_expr: "val2, sizeof(val2)"
+    reason: >
+      Uses a nonzero value length equal to the stale cur->val.len, allowing the
+      buggy path to skip reallocation and memcpy into NULL.
+    priority: high
+
+  - name: CLEAR_STALE_LENGTH
+    placeholder: "[CLEAR_STALE_LENGTH]"
+    mask_level: statement_level
+    source_expr: "cur->val.len = 0;"
+    reason: >
+      This fixed statement restores pointer-length consistency after the
+      zero-length update.
+    priority: high
+
+occlusion_candidates:
+  identifier_level:
+    - cur->val.p
+    - cur->val.len
+    - val_len
+    - oid
+  expression_level:
+    - "val_len == 0"
+    - "cur->val.len == val_len"
+  statement_level:
+    - "cur->val.len = 0;"
+    - "memcpy(cur->val.p, val, val_len)"
+  block_level:
+    - "the val_len == 0 branch in mbedtls_asn1_store_named_data()"
+
+vulnerability_path_features:
+  must_preserve:
+    - mutable_named_data_entry
+    - repeated_update_for_same_identifier
+    - zero_length_update_frees_or_clears_value_pointer
+    - stale_length_field_after_pointer_clear
+    - later_same_length_nonzero_update_can_skip_allocation
+    - observable_null_dereference_or_safe_reallocation
+  optional:
+    - ASN1_OID_commonName
+    - exact_value_length_four
+    - linked_list_named_data_storage
+  not_required:
+    - exact CVE advisory source
+    - exact pointer addresses
+    - exact allocator behavior beyond pointer_reallocation_observable
+
+migration_guidance:
+  good_target_api_features:
+    - stores mutable named attributes or ASN.1-like OID/value pairs
+    - supports repeated updates of the same key or OID
+    - treats zero-length values as a special state transition
+    - maintains separate pointer and length fields for stored values
+    - can observe stale pointer-length inconsistency through crash or state checks
+  weak_target_api_features:
+    - supports repeated metadata updates but hides all storage state
+    - always reallocates on every update, weakening the stale-length path
+  bad_target_api_features:
+    - immutable attribute storage
+    - no zero-length update path
+    - no separate pointer/length consistency invariant
+
+oracle:
+  memory_safety:
+    - no_null_pointer_dereference
+    - value_pointer_length_consistent
+    - sanitizer_clean
+  bug_candidate:
+    - after_zero_length_update_val_p_null_and_val_len_nonzero
+    - segmentation_fault_on_later_same_length_update
+    - exit_code_139
+  fixed_or_safe:
+    - after_zero_length_update_val_p_null_and_val_len_zero
+    - later_nonzero_update_reallocates_successfully
+    - no_crash
+
+expected_oracle:
+  memory_safety:
+    - pointer_length_state_consistent
+    - no_segmentation_fault
+  bug_candidate:
+    - stale_val_len_after_val_p_cleared
+    - segmentation_fault
+    - exit_code_139
+  fixed_or_safe:
+    - cur_val_len_reset_to_zero
+    - successful_reallocation_on_step3
+    - no_crash
+
+references:
+  cve:
+    - "CVE-2025-48965"
+  advisory_refs:
+    - "https://github.com/Mbed-TLS/mbedtls-docs/blob/main/security-advisories/mbedtls-security-advisory-2025-06-6.md"
+    - "https://lists.debian.org/debian-lts-announce/2025/08/msg00013.html"
+    - "https://mbed-tls.readthedocs.io/en/latest/tech-updates/security-advisories/"
+  commit_refs:
+    - "2df7ab7c0c3d5bb8a31481073c494521d10d4eba"
+    - "12df5f3a16a2bc53881b9d88556192dcbc2f6774"
+
+evidence_files:
+  metadata: data/pocs/core10/MBEDTLS-POC-0005/metadata.json
+  notes: data/pocs/core10/MBEDTLS-POC-0005/notes.md
+  reproduction: data/pocs/core10/MBEDTLS-POC-0005/reproduction_result.md
+  poc_source: data/pocs/core10/MBEDTLS-POC-0005/poc/poc_asn1_store_named_data_null_deref.c
+  buggy_log: data/pocs/core10/MBEDTLS-POC-0005/poc/run_buggy.log
+  fixed_log: data/pocs/core10/MBEDTLS-POC-0005/poc/run_fixed.log
+  library_files: data/pocs/core10/MBEDTLS-POC-0005/library_files.txt
+  test_files: data/pocs/core10/MBEDTLS-POC-0005/test_files.txt
+  commits: data/pocs/core10/MBEDTLS-POC-0005/commits.txt
+  fix_commits: data/pocs/core10/MBEDTLS-POC-0005/fix_commits.txt
+
+notes:
+  - >
+    No local fix.patch file is present in data/pocs/core10/MBEDTLS-POC-0005;
+    fix_commits.txt narrows the library fix to
+    2df7ab7c0c3d5bb8a31481073c494521d10d4eba.
+  - >
+    metadata.json contains broad commit and file evidence from the CVE search.
+    This pattern uses the narrowed fixing commit, local PoC, and reproduction
+    logs as the primary evidence.

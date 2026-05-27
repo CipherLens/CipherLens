@@ -1,0 +1,97 @@
+{
+  "poc_id": "MBEDTLS-POC-0005",
+  "dataset_status": "accepted_reconstructable",
+  "source": {
+    "source_type": "cve_advisory",
+    "source_id": "CVE-2025-48965",
+    "source_label": "CVE-2025-48965",
+    "url": "https://lists.debian.org/debian-lts-announce/2025/08/msg00013.html | https://github.com/Mbed-TLS/mbedtls-docs/blob/main/security-advisories/mbedtls-security-advisory-2025-06-6.md | https://mbed-tls.readthedocs.io/en/latest/tech-updates/security-advisories/"
+  },
+  "classification": {
+    "poc_type": "memory_safety",
+    "bug_category": "memory_safety",
+    "module": "aes;asn1;bignum;ccm;chacha20",
+    "primary_module": "asn1write",
+    "affected_api": [
+      "mbedtls_asn1_store_named_data"
+    ],
+    "bug_keywords": [
+      "asn1",
+      "null pointer",
+      "tls"
+    ]
+  },
+  "experiment_fields": {
+    "failure_signal": "NULL pointer dereference",
+    "target_function": "mbedtls_asn1_store_named_data",
+    "poc_source": "cve_advisory_and_commit",
+    "test_file": "tests/.gitignore",
+    "buggy_behavior": "conflicting val.p NULL and val.len > 0 state can cause NULL dereference",
+    "fixed_behavior": "invalid ASN.1 named-data state is rejected or handled safely",
+    "experiment_status": "selected_core10"
+  },
+  "annotation": {
+    "root_cause": "Missing validation for conflicting ASN.1 named-data value pointer and nonzero length, allowing NULL pointer dereference.",
+    "mutation_point": "library/asn1write.c: mbedtls_asn1_store_named_data(), validation of val.p == NULL with val.len > 0.",
+    "reproduction_status": "reconstructable",
+    "usable_for_occlusion": "yes",
+    "usable_for_rag": "yes",
+    "review_notes": "CVE advisory has clear NULL dereference semantics, but commit/file evidence is broad; needs fixing commit narrowing. | Upgraded from maybe; clear ASN.1 named-data NULL pointer root cause. CVE advisory identifies mbedtls_asn1_store_named_data(); searched commits include Fix bug in mbedtls_asn1_store_named_data() and related unit tests. Exact fixing commit should still be confirmed during reproduction."
+  },
+  "evidence": {
+    "patch_evidence": "yes",
+    "test_evidence": "yes",
+    "library_files": [
+      "library/asn1write.c",
+      "library/bignum.c",
+      "library/bignum_core.c",
+      "library/bignum_mod.c",
+      "library/bignum_mod.h",
+      "library/certs.c",
+      "library/common.h",
+      "library/debug.c",
+      "library/error.c",
+      "library/net_sockets.c",
+      "library/pkcs11.c",
+      "library/psa_crypto.c"
+    ],
+    "test_files": [
+      "tests/.gitignore",
+      "tests/CMakeLists.txt",
+      "tests/Descriptions.txt",
+      "tests/Makefile",
+      "tests/compat.sh",
+      "tests/data_files/Readme-x509.txt",
+      "tests/data_files/bitstring-in-dn.pem",
+      "tests/data_files/cert_example_multi.crt",
+      "tests/data_files/cert_example_multi_nocn.crt",
+      "tests/data_files/cert_example_wildcard.crt",
+      "tests/data_files/cert_md2.crt",
+      "tests/data_files/cert_md4.crt"
+    ],
+    "cves": [
+      "CVE-2025-48965"
+    ],
+    "issue_refs": [],
+    "pr_refs": [],
+    "commit_refs": [
+      "01bf63115950753170a8e452026333cd61c13eff",
+      "04fe95d95b1609b7a28e5665bd86066f58f00484",
+      "08a24a464edd2d3b6fc33604724f690fcdcbdc11",
+      "08d8cc57dbe7be54fe3f88ecbc2729300c48d450",
+      "09c0a2364b9603936bf4e56e839ea7d10dcc120a",
+      "12df5f3a16a2bc53881b9d88556192dcbc2f6774",
+      "14400c8fb04e406a042695f28762b40cc7b2aa7b",
+      "1ba7e24e14307ff57675b3b5e2816265cd21c938"
+    ]
+  },
+  "traceability": {
+    "review_priority": "P0",
+    "quality_score_auto": "9",
+    "source_max_score": "10",
+    "normalized_score": "0.9",
+    "poc_suitability": "high_patch_and_regression_candidate",
+    "original_global_id": "POC-CAND-000310",
+    "original_review_label": "keep"
+  }
+}

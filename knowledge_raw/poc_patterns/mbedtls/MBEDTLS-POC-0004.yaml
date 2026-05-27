@@ -1,0 +1,241 @@
+pattern_id: MBEDTLS-POC-0004
+template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+status: reproduced
+
+source:
+  library: mbedtls
+  component: cipher
+  api: mbedtls_cipher_finish
+  internal_functions:
+    - get_pkcs_padding
+  source_type: github_pr
+  source_label: "PR #9082"
+  url: "https://github.com/Mbed-TLS/mbedtls/pull/9082"
+  issue_refs:
+    - "9083"
+  related_pr_refs:
+    - "9132"
+  merge_fixed_commit: "94f07689d6af26030184c176ba44ecd148eff75a"
+  buggy_commit: "94f07689d6af26030184c176ba44ecd148eff75a^1"
+  library_fix_commit: "30666d478b44082744c0a1832b68f98ad69a0c9f"
+  regression_test_commit: "043aa9e2a2013b1a9472420f75b616b98f494777"
+  combined_fix_test_commit_candidate: "3711734a0a078f200fbb02edce46ee7f4fd16cf4"
+
+library:
+  name: mbedtls
+  primary_module: cipher/pkcs_padding
+  affected_api:
+    - mbedtls_cipher_finish
+    - get_pkcs_padding
+  affected_file:
+    - library/cipher.c
+
+classification:
+  poc_type: memory_safety
+  bug_category: invalid_padding_output_length_underflow
+  failure_signal:
+    - unsafe_output_length_on_error
+    - size_t_underflow
+    - potential_caller_side_overflow
+
+root_cause:
+  summary: >
+    In the buggy version, get_pkcs_padding() reads padding_len from the final
+    decrypted block byte and computes *data_len = input_len - padding_len before
+    rejecting invalid padding lengths. When padding_len is greater than
+    input_len, the size_t subtraction underflows and leaves a huge output length
+    on the mbedtls_cipher_finish() error path.
+  root_cause_location:
+    file: library/cipher.c
+    function: get_pkcs_padding
+    branch_condition: "padding_len == 0 || padding_len > input_len"
+  buggy_logic:
+    - "reads padding_len from input[input_len - 1]"
+    - "computes *data_len = input_len - padding_len before rejecting impossible padding lengths"
+    - "returns MBEDTLS_ERR_CIPHER_INVALID_PADDING with an unsafe nonzero output length"
+  fixed_logic:
+    - "if (padding_len == 0 || padding_len > input_len) { return MBEDTLS_ERR_CIPHER_INVALID_PADDING; }"
+    - "*data_len = input_len - padding_len only after padding_len is valid"
+  critical_fixed_statement: "if (padding_len == 0 || padding_len > input_len) { return MBEDTLS_ERR_CIPHER_INVALID_PADDING; }"
+
+trigger:
+  cipher: MBEDTLS_CIPHER_AES_128_CBC
+  operation: MBEDTLS_DECRYPT
+  padding_mode: MBEDTLS_PADDING_PKCS7
+  input_len: 16
+  invalid_padding_byte: 0x80
+  padding_len: 128
+  description: >
+    The PoC encrypts a single 16-byte plaintext block without padding, where
+    the last byte is 0x80. It then decrypts the ciphertext with PKCS#7 padding
+    enabled. The decrypted final byte is interpreted as padding_len = 128,
+    which is greater than input_len = 16.
+
+buggy_behavior:
+  ret: -25088
+  expected_ret: -25088
+  update_olen: 0
+  finish_olen: 18446744073709551504
+  signal: unsafe_nonzero_oversized_output_length
+  sample_output: "[BUG] invalid padding rejected but outlen is unsafe/nonzero."
+
+fixed_behavior:
+  ret: -25088
+  expected_ret: -25088
+  update_olen: 0
+  finish_olen: 0
+  signal: safe_error_return_with_zero_output_length
+  sample_output: "[OK] fixed behavior: invalid padding rejected and outlen remains zero."
+
+mutation_points:
+  - name: PADDING_BYTE
+    placeholder: "[PADDING_BYTE]"
+    mask_level: value_level
+    source_expr: "bad_plain[15] = 0x80"
+    reason: >
+      Controls padding_len. The reproduced unsafe output length requires a
+      final byte larger than the decrypted block length.
+    priority: high
+
+  - name: INPUT_LEN
+    placeholder: "[INPUT_LEN]"
+    mask_level: value_level
+    source_expr: "#define BLOCK_SIZE 16"
+    reason: >
+      Defines the final-block length against which padding_len must be checked.
+      The vulnerability path depends on padding_len > input_len.
+    priority: high
+
+  - name: PADDING_MODE
+    placeholder: "[PADDING_MODE]"
+    mask_level: api_argument_level
+    source_expr: "mbedtls_cipher_set_padding_mode(&ctx, MBEDTLS_PADDING_PKCS7)"
+    reason: >
+      Selects the PKCS#7 padding finalization path that calls
+      get_pkcs_padding().
+    priority: high
+
+  - name: CIPHER_FINISH_CALL
+    placeholder: "[CIPHER_FINISH_CALL]"
+    mask_level: function_call_level
+    source_expr: "mbedtls_cipher_finish(&ctx, output + update_olen, &finish_olen)"
+    reason: >
+      Exposes the error-path output length returned to the caller.
+    priority: high
+
+  - name: INVALID_PADDING_GUARD
+    placeholder: "[INVALID_PADDING_GUARD]"
+    mask_level: statement_level
+    source_expr: "if (padding_len == 0 || padding_len > input_len) { return MBEDTLS_ERR_CIPHER_INVALID_PADDING; }"
+    reason: >
+      This fixed validation prevents size_t underflow before *data_len is
+      assigned.
+    priority: high
+
+occlusion_candidates:
+  identifier_level:
+    - padding_len
+    - input_len
+    - data_len
+    - finish_olen
+  expression_level:
+    - "padding_len == 0 || padding_len > input_len"
+    - "input_len - padding_len"
+  statement_level:
+    - "*data_len = input_len - padding_len;"
+    - "return MBEDTLS_ERR_CIPHER_INVALID_PADDING;"
+  block_level:
+    - "if (padding_len == 0 || padding_len > input_len) { return MBEDTLS_ERR_CIPHER_INVALID_PADDING; }"
+
+vulnerability_path_features:
+  must_preserve:
+    - block_cipher_decrypt_finalization
+    - pkcs7_padding_validation
+    - padding_length_derived_from_last_plaintext_byte
+    - output_length_pointer_visible_to_caller
+    - invalid_padding_error_path
+    - unsafe_or_safe_output_length_observable_after_error
+  optional:
+    - AES_128_CBC
+    - exact_invalid_padding_byte_0x80
+    - separate update_and_finish_calls
+  not_required:
+    - exact error code value
+    - exact encryption helper used to construct ciphertext
+    - exact output buffer contents
+
+migration_guidance:
+  good_target_api_features:
+    - supports block-cipher decryption with PKCS-style padding
+    - exposes a finalization API that writes an output length through a pointer
+    - reports invalid padding with an observable error
+    - leaves output length observable on both success and error paths
+    - permits crafted final plaintext padding bytes
+  weak_target_api_features:
+    - validates PKCS padding but does not expose output length on error
+    - combines update and finalization in a way that hides the vulnerable state
+  bad_target_api_features:
+    - does not implement padded block-cipher finalization
+    - never exposes caller-visible output length
+    - always overwrites output length to zero before any error is observable
+
+oracle:
+  memory_safety:
+    - output_length_zero_or_bounded_on_error
+    - no_size_t_underflow_observed
+    - sanitizer_clean
+  bug_candidate:
+    - ret_is_invalid_padding
+    - finish_olen_nonzero_on_error
+    - finish_olen_huge_size_t_value
+  fixed_or_safe:
+    - ret_is_MBEDTLS_ERR_CIPHER_INVALID_PADDING
+    - finish_olen_is_zero
+    - no_sanitizer_crash
+
+expected_oracle:
+  memory_safety:
+    - output_length_zero_or_bounded_on_error
+    - no_size_t_underflow_observed
+  bug_candidate:
+    - invalid_padding_rejected_but_finish_olen_is_huge
+    - potential_caller_side_overflow_if_outlen_is_trusted
+  fixed_or_safe:
+    - ret_is_MBEDTLS_ERR_CIPHER_INVALID_PADDING
+    - finish_olen_is_zero
+
+references:
+  source_pr: "https://github.com/Mbed-TLS/mbedtls/pull/9082"
+  issue_refs:
+    - "9083"
+  related_pr_refs:
+    - "9132"
+  commit_refs:
+    - "94f07689d6af26030184c176ba44ecd148eff75a"
+    - "30666d478b44082744c0a1832b68f98ad69a0c9f"
+    - "043aa9e2a2013b1a9472420f75b616b98f494777"
+    - "3711734a0a078f200fbb02edce46ee7f4fd16cf4"
+
+evidence_files:
+  metadata: data/pocs/core10/MBEDTLS-POC-0004/metadata.json
+  notes: data/pocs/core10/MBEDTLS-POC-0004/notes.md
+  reproduction: data/pocs/core10/MBEDTLS-POC-0004/reproduction_result.md
+  poc_source: data/pocs/core10/MBEDTLS-POC-0004/poc/poc_get_pkcs_padding_outlen.c
+  buggy_log: data/pocs/core10/MBEDTLS-POC-0004/poc/run_buggy.log
+  fixed_log: data/pocs/core10/MBEDTLS-POC-0004/poc/run_fixed.log
+  library_files: data/pocs/core10/MBEDTLS-POC-0004/library_files.txt
+  test_files: data/pocs/core10/MBEDTLS-POC-0004/test_files.txt
+  commits: data/pocs/core10/MBEDTLS-POC-0004/commits.txt
+  fix_commits: data/pocs/core10/MBEDTLS-POC-0004/fix_commits.txt
+
+notes:
+  - >
+    No local fix.patch file is present in data/pocs/core10/MBEDTLS-POC-0004;
+    commit evidence and reproduction logs are used instead.
+  - >
+    The value 18446744073709551516 in commits.txt is documented in notes.md as
+    the oversized output length, not a commit hash.
+  - >
+    This pattern's oracle is not a direct crash in the local PoC. It is an
+    error return combined with an unsafe caller-visible output length that could
+    drive caller-side overflow if trusted.
