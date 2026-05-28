@@ -1,0 +1,587 @@
+template_id: X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY
+template_name: mbedtls X.509 ASN.1 inner substructure boundary template
+source_api: mbedtls_x509_crt_parse_der
+source_library: mbedtls
+summary:
+  method: ast_lite_regex_template_role_aware
+  template_dir: normalized_templates/x509/x509_asn1_inner_boundary
+  unit_count: 53
+  note: Lightweight AST-like report generated from template metadata, mask_report
+    roles, and regex/template-aware analysis of tmpl_mbedtls.c.
+ast_mask_units:
+- unit_id: ASTLITE-0001
+  mask_level: value
+  role: mutation_point
+  placeholder: '[INNER_END_BOUND]'
+  code: INNER_END_BOUND
+  source: template_meta.mutation_points
+  reason: Represents whether the parser sets end to the inner substructure boundary.
+  priority: high
+  mutation_name: INNER_END_BOUND
+  mutation_type: enum
+  default: inner_bound_enforced
+  values:
+  - inner_bound_enforced
+  - parent_bound_buggy
+- unit_id: ASTLITE-0002
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRAILING_INNER_DATA_CHECK]'
+  code: TRAILING_INNER_DATA_CHECK
+  source: template_meta.mutation_points
+  reason: Represents the guard that rejects bytes remaining after the inner AttributeTypeAndValue
+    parse.
+  priority: high
+  mutation_name: TRAILING_INNER_DATA_CHECK
+  mutation_type: enum
+  default: reject_trailing_inner_data
+  values:
+  - reject_trailing_inner_data
+  - allow_cross_inner_boundary
+- unit_id: ASTLITE-0003
+  mask_level: value
+  role: mutation_point
+  placeholder: '[EMPTY_EXTENSION_RETURN]'
+  code: EMPTY_EXTENSION_RETURN
+  source: template_meta.mutation_points
+  reason: Represents the fixed extension parser behavior when the inner extension
+    is empty.
+  priority: medium
+  mutation_name: EMPTY_EXTENSION_RETURN
+  mutation_type: enum
+  default: return_on_empty_extension
+  values:
+  - return_on_empty_extension
+  - continue_past_empty_extension
+- unit_id: ASTLITE-0004
+  mask_level: value
+  role: mutation_point
+  placeholder: '[MALFORMED_DER_STRUCTURE]'
+  code: MALFORMED_DER_STRUCTURE
+  source: template_meta.mutation_points
+  reason: Regression-test-derived malformed DER certificate from MBEDTLS-POC-0017.
+  priority: high
+  mutation_name: MALFORMED_DER_STRUCTURE
+  mutation_type: enum
+  default: issuer_two_empty_atv
+  values:
+  - issuer_two_empty_atv
+- unit_id: ASTLITE-0005
+  mask_level: value
+  role: input_construction
+  placeholder: '[MALFORMED_DER_STRUCTURE]'
+  code: der = select_malformed_der(MALFORMED_DER_STRUCTURE_MODE, &der_len);
+  source: mask_report.roles.input_construction
+  reason: Role-aware statement recorded by mask_report role 'input_construction'.
+  priority: medium
+  order: 10
+- unit_id: ASTLITE-0006
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: ret = mbedtls_x509_crt_parse_der(&crt, der, der_len);
+  source: mask_report.roles.trigger_call
+  reason: Role-aware statement recorded by mask_report role 'trigger_call'.
+  priority: medium
+  order: 20
+- unit_id: ASTLITE-0007
+  mask_level: value
+  role: oracle
+  placeholder: '[OK]'
+  code: 'if (ret == expected_fixed) { printf("[OK] fixed behavior: parser obeyed inner
+    ASN.1 substructure bounds.\n"); return 0; }'
+  source: mask_report.roles.oracle
+  reason: Role-aware statement recorded by mask_report role 'oracle'.
+  priority: medium
+  order: 30
+- unit_id: ASTLITE-0008
+  mask_level: value
+  role: oracle
+  placeholder: '[BUG]'
+  code: 'if (ret == expected_buggy) { printf("[BUG] buggy behavior: parser crossed
+    inner ASN.1 substructure bounds.\n"); return 1; }'
+  source: mask_report.roles.oracle
+  reason: Role-aware statement recorded by mask_report role 'oracle'.
+  priority: medium
+  order: 31
+- unit_id: ASTLITE-0009
+  mask_level: value
+  role: oracle
+  placeholder: '[TRAILING_INNER_DATA_CHECK]'
+  code: if (*p != end) { return MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_LENGTH_MISMATCH;
+    }
+  source: mask_report.roles.oracle
+  reason: Role-aware statement recorded by mask_report role 'oracle'.
+  priority: medium
+  order: 32
+- unit_id: ASTLITE-0010
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_x509_crt_free(&crt);
+  source: mask_report.roles.cleanup
+  reason: Role-aware statement recorded by mask_report role 'cleanup'.
+  priority: medium
+  order: 40
+- unit_id: ASTLITE-0011
+  mask_level: value
+  role: mutation_point
+  placeholder: '[INNER_END_BOUND]'
+  code: '#include <stdio.h> #include <string.h> #include "mbedtls/asn1.h" #include
+    "mbedtls/x509.h" #include "mbedtls/x509_crt.h" #define INNER_END_BOUND_MODE "[INNER_END_BOUND]"
+    #define TRAILING_INNER_DATA_CHECK_MODE "[TRAILING_INNER_DATA_CHECK]" #define EMPTY_EXTENSION_RETURN_MODE
+    "[EMPTY_EXTENSION_RETURN]" #define MALFORMED_DER_STRUCTURE_MODE "[MALFORMED_DER_STRUCTURE]"
+    /* * Template for MBEDTLS-POC-0017. * * Placeholders:'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Represents whether the parser sets end to the inner substructure boundary.
+  priority: high
+  line: 1
+- unit_id: ASTLITE-0012
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRAILING_INNER_DATA_CHECK]'
+  code: '#include <stdio.h> #include <string.h> #include "mbedtls/asn1.h" #include
+    "mbedtls/x509.h" #include "mbedtls/x509_crt.h" #define INNER_END_BOUND_MODE "[INNER_END_BOUND]"
+    #define TRAILING_INNER_DATA_CHECK_MODE "[TRAILING_INNER_DATA_CHECK]" #define EMPTY_EXTENSION_RETURN_MODE
+    "[EMPTY_EXTENSION_RETURN]" #define MALFORMED_DER_STRUCTURE_MODE "[MALFORMED_DER_STRUCTURE]"
+    /* * Template for MBEDTLS-POC-0017. * * Placeholders:'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Represents the guard that rejects bytes remaining after the inner AttributeTypeAndValue
+    parse.
+  priority: high
+  line: 1
+- unit_id: ASTLITE-0013
+  mask_level: value
+  role: mutation_point
+  placeholder: '[EMPTY_EXTENSION_RETURN]'
+  code: '#include <stdio.h> #include <string.h> #include "mbedtls/asn1.h" #include
+    "mbedtls/x509.h" #include "mbedtls/x509_crt.h" #define INNER_END_BOUND_MODE "[INNER_END_BOUND]"
+    #define TRAILING_INNER_DATA_CHECK_MODE "[TRAILING_INNER_DATA_CHECK]" #define EMPTY_EXTENSION_RETURN_MODE
+    "[EMPTY_EXTENSION_RETURN]" #define MALFORMED_DER_STRUCTURE_MODE "[MALFORMED_DER_STRUCTURE]"
+    /* * Template for MBEDTLS-POC-0017. * * Placeholders:'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Represents the fixed extension parser behavior when the inner extension
+    is empty.
+  priority: medium
+  line: 1
+- unit_id: ASTLITE-0014
+  mask_level: value
+  role: mutation_point
+  placeholder: '[MALFORMED_DER_STRUCTURE]'
+  code: '#include <stdio.h> #include <string.h> #include "mbedtls/asn1.h" #include
+    "mbedtls/x509.h" #include "mbedtls/x509_crt.h" #define INNER_END_BOUND_MODE "[INNER_END_BOUND]"
+    #define TRAILING_INNER_DATA_CHECK_MODE "[TRAILING_INNER_DATA_CHECK]" #define EMPTY_EXTENSION_RETURN_MODE
+    "[EMPTY_EXTENSION_RETURN]" #define MALFORMED_DER_STRUCTURE_MODE "[MALFORMED_DER_STRUCTURE]"
+    /* * Template for MBEDTLS-POC-0017. * * Placeholders:'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Regression-test-derived malformed DER certificate from MBEDTLS-POC-0017.
+  priority: high
+  line: 1
+- unit_id: ASTLITE-0015
+  mask_level: value
+  role: mutation_point
+  placeholder: '[INNER_END_BOUND]'
+  code: '* - [INNER_END_BOUND] * - [TRAILING_INNER_DATA_CHECK] * - [EMPTY_EXTENSION_RETURN]
+    * - [MALFORMED_DER_STRUCTURE] * * The concrete DER below is copied from the local
+    minimal PoC. It models a * malformed X.509 certificate whose issuer contains empty
+    inner * AttributeTypeAndValue structures. */ static const unsigned char *select_malformed_der(const
+    char *structure_id, size_t *der_len) {'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Represents whether the parser sets end to the inner substructure boundary.
+  priority: high
+  line: 17
+- unit_id: ASTLITE-0016
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRAILING_INNER_DATA_CHECK]'
+  code: '* - [INNER_END_BOUND] * - [TRAILING_INNER_DATA_CHECK] * - [EMPTY_EXTENSION_RETURN]
+    * - [MALFORMED_DER_STRUCTURE] * * The concrete DER below is copied from the local
+    minimal PoC. It models a * malformed X.509 certificate whose issuer contains empty
+    inner * AttributeTypeAndValue structures. */ static const unsigned char *select_malformed_der(const
+    char *structure_id, size_t *der_len) {'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Represents the guard that rejects bytes remaining after the inner AttributeTypeAndValue
+    parse.
+  priority: high
+  line: 17
+- unit_id: ASTLITE-0017
+  mask_level: value
+  role: mutation_point
+  placeholder: '[EMPTY_EXTENSION_RETURN]'
+  code: '* - [INNER_END_BOUND] * - [TRAILING_INNER_DATA_CHECK] * - [EMPTY_EXTENSION_RETURN]
+    * - [MALFORMED_DER_STRUCTURE] * * The concrete DER below is copied from the local
+    minimal PoC. It models a * malformed X.509 certificate whose issuer contains empty
+    inner * AttributeTypeAndValue structures. */ static const unsigned char *select_malformed_der(const
+    char *structure_id, size_t *der_len) {'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Represents the fixed extension parser behavior when the inner extension
+    is empty.
+  priority: medium
+  line: 17
+- unit_id: ASTLITE-0018
+  mask_level: value
+  role: mutation_point
+  placeholder: '[MALFORMED_DER_STRUCTURE]'
+  code: '* - [INNER_END_BOUND] * - [TRAILING_INNER_DATA_CHECK] * - [EMPTY_EXTENSION_RETURN]
+    * - [MALFORMED_DER_STRUCTURE] * * The concrete DER below is copied from the local
+    minimal PoC. It models a * malformed X.509 certificate whose issuer contains empty
+    inner * AttributeTypeAndValue structures. */ static const unsigned char *select_malformed_der(const
+    char *structure_id, size_t *der_len) {'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Regression-test-derived malformed DER certificate from MBEDTLS-POC-0017.
+  priority: high
+  line: 17
+- unit_id: ASTLITE-0019
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[INNER_END_BOUND]'
+  code: '* - [INNER_END_BOUND] * - [TRAILING_INNER_DATA_CHECK] * - [EMPTY_EXTENSION_RETURN]
+    * - [MALFORMED_DER_STRUCTURE] * * The concrete DER below is copied from the local
+    minimal PoC. It models a * malformed X.509 certificate whose issuer contains empty
+    inner * AttributeTypeAndValue structures. */ static const unsigned char *select_malformed_der(const
+    char *structure_id, size_t *der_len) {'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'select_malformed_der' identified by AST-lite call matching.
+  priority: medium
+  function: select_malformed_der
+  line: 17
+- unit_id: ASTLITE-0020
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: if (strcmp(structure_id, "issuer_two_empty_atv") == 0 || strcmp(structure_id,
+    "default") == 0) {
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'strcmp' identified by AST-lite call matching.
+  priority: medium
+  function: strcmp
+  line: 47
+- unit_id: ASTLITE-0021
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: int main(void) {
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'main' identified by AST-lite call matching.
+  priority: medium
+  function: main
+  line: 57
+- unit_id: ASTLITE-0022
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: int ret;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 59
+- unit_id: ASTLITE-0023
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: int expected_buggy;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 60
+- unit_id: ASTLITE-0024
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: int expected_fixed;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 61
+- unit_id: ASTLITE-0025
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: size_t der_len = 0;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 62
+- unit_id: ASTLITE-0026
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: const unsigned char *der = NULL;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 63
+- unit_id: ASTLITE-0027
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: mbedtls_x509_crt crt;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 64
+- unit_id: ASTLITE-0028
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: setbuf(stdout, NULL);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'setbuf' identified by AST-lite call matching.
+  priority: medium
+  function: setbuf
+  line: 66
+- unit_id: ASTLITE-0029
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: der = select_malformed_der(MALFORMED_DER_STRUCTURE_MODE, &der_len);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'select_malformed_der' identified by AST-lite call matching.
+  priority: medium
+  function: select_malformed_der
+  line: 73
+- unit_id: ASTLITE-0030
+  mask_level: value
+  role: mutation_point
+  placeholder: '[ERROR]'
+  code: printf("[ERROR] malformed DER construction failed.\n");
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 75
+- unit_id: ASTLITE-0031
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[ERROR]'
+  code: printf("[ERROR] malformed DER construction failed.\n");
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 75
+- unit_id: ASTLITE-0032
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("template_mutation INNER_END_BOUND=%s\n", INNER_END_BOUND_MODE);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 79
+- unit_id: ASTLITE-0033
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("template_mutation TRAILING_INNER_DATA_CHECK=%s\n", TRAILING_INNER_DATA_CHECK_MODE);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 80
+- unit_id: ASTLITE-0034
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("template_mutation EMPTY_EXTENSION_RETURN=%s\n", EMPTY_EXTENSION_RETURN_MODE);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 81
+- unit_id: ASTLITE-0035
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("template_mutation MALFORMED_DER_STRUCTURE=%s\n", MALFORMED_DER_STRUCTURE_MODE);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 82
+- unit_id: ASTLITE-0036
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("calling mbedtls_x509_crt_parse_der...\n");
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 83
+- unit_id: ASTLITE-0037
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("der_len=%zu\n", der_len);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 84
+- unit_id: ASTLITE-0038
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: mbedtls_x509_crt_init(&crt);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_x509_crt_init' identified by AST-lite call matching.
+  priority: medium
+  function: mbedtls_x509_crt_init
+  line: 86
+- unit_id: ASTLITE-0039
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: ret = mbedtls_x509_crt_parse_der(&crt, der, der_len);
+  source: tmpl_mbedtls.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 87
+- unit_id: ASTLITE-0040
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: ret = mbedtls_x509_crt_parse_der(&crt, der, der_len);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_x509_crt_parse_der' identified by AST-lite call matching.
+  priority: high
+  function: mbedtls_x509_crt_parse_der
+  line: 87
+- unit_id: ASTLITE-0041
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("ret=%d\n", ret);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 89
+- unit_id: ASTLITE-0042
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("expected_buggy=%d\n", expected_buggy);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 90
+- unit_id: ASTLITE-0043
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("expected_fixed=%d\n", expected_fixed);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 91
+- unit_id: ASTLITE-0044
+  mask_level: value
+  role: oracle
+  placeholder: '[OK]'
+  code: 'printf("[OK] fixed behavior: parser obeyed inner ASN.1 substructure bounds.\n");'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 94
+- unit_id: ASTLITE-0045
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: 'printf("[OK] fixed behavior: parser obeyed inner ASN.1 substructure bounds.\n");'
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 94
+- unit_id: ASTLITE-0046
+  mask_level: function_call
+  role: oracle
+  placeholder: '[OK]'
+  code: 'printf("[OK] fixed behavior: parser obeyed inner ASN.1 substructure bounds.\n");'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 94
+- unit_id: ASTLITE-0047
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_x509_crt_free(&crt);
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as cleanup by AST-lite role rules.
+  priority: medium
+  line: 95
+- unit_id: ASTLITE-0048
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_x509_crt_free(&crt);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_x509_crt_free' identified by AST-lite call matching.
+  priority: medium
+  function: mbedtls_x509_crt_free
+  line: 95
+- unit_id: ASTLITE-0049
+  mask_level: value
+  role: oracle
+  placeholder: '[BUG]'
+  code: 'printf("[BUG] buggy behavior: parser crossed inner ASN.1 substructure bounds.\n");'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 100
+- unit_id: ASTLITE-0050
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: 'printf("[BUG] buggy behavior: parser crossed inner ASN.1 substructure bounds.\n");'
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 100
+- unit_id: ASTLITE-0051
+  mask_level: function_call
+  role: oracle
+  placeholder: '[BUG]'
+  code: 'printf("[BUG] buggy behavior: parser crossed inner ASN.1 substructure bounds.\n");'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 100
+- unit_id: ASTLITE-0052
+  mask_level: value
+  role: mutation_point
+  placeholder: '[INFO]'
+  code: 'printf("[INFO] unexpected behavior: ret=%d\n", ret);'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 105
+- unit_id: ASTLITE-0053
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[INFO]'
+  code: 'printf("[INFO] unexpected behavior: ret=%d\n", ret);'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 105
+role_summary:
+  cleanup: 3
+  helper_function: 19
+  input_construction: 1
+  input_preparation: 1
+  mutation_point: 17
+  oracle: 9
+  trigger_call: 3
+mask_level_summary:
+  function_call: 21
+  statement: 6
+  type: 6
+  value: 20

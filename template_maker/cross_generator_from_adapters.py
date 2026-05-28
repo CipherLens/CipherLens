@@ -422,6 +422,45 @@ def extract_der_helpers(source_template_dir: Path) -> str:
     return der_helper_fallback()
 
 
+def x509_malformed_der_helper_fallback() -> str:
+    return r'''static const unsigned char *select_malformed_der(const char *structure_id,
+                                                 size_t *der_len)
+{
+    static const unsigned char issuer_two_empty_atv_der[] = {
+        0x30, 0x24, 0x30, 0x22,
+        0xa0, 0x03, 0x02, 0x01, 0x02,
+        0x82, 0x04, 0xde, 0xad, 0xbe, 0xef,
+        0x30, 0x0d, 0x06, 0x09,
+        0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x0b,
+        0x05, 0x00,
+        0x30, 0x06,
+        0x31, 0x04,
+        0x30, 0x00,
+        0x30, 0x00
+    };
+
+    if (der_len == NULL) {
+        return NULL;
+    }
+
+    if (strcmp(structure_id, "issuer_two_empty_atv") == 0 ||
+        strcmp(structure_id, "default") == 0) {
+        *der_len = sizeof(issuer_two_empty_atv_der);
+        return issuer_two_empty_atv_der;
+    }
+
+    *der_len = sizeof(issuer_two_empty_atv_der);
+    return issuer_two_empty_atv_der;
+}'''
+
+
+def extract_x509_malformed_der_helper(source_template_dir: Path) -> str:
+    source_path = source_template_dir / "tmpl_mbedtls.c"
+    source = source_path.read_text(encoding="utf-8", errors="ignore") if source_path.exists() else ""
+    helper = extract_static_function(source, "select_malformed_der")
+    return helper or x509_malformed_der_helper_fallback()
+
+
 def render_der_pointer_consumption_harness(
     adapter: Dict[str, Any],
     source_template_dir: Path,
@@ -532,9 +571,113 @@ int main(void)
 '''
 
 
+def render_x509_asn1_inner_boundary_harness(
+    adapter: Dict[str, Any],
+    source_template_dir: Path,
+    source_meta: Dict[str, Any],
+    mask_report: Dict[str, Any],
+) -> str:
+    target_api = adapter.get("target_api", "unknown_target_api")
+    if target_api != "d2i_X509":
+        raise ValueError(
+            "x509_asn1_inner_boundary renderer currently supports only target_api=d2i_X509"
+        )
+
+    include_lines = render_include_lines(adapter, ["openssl/x509.h", "openssl/err.h"])
+    helper = extract_x509_malformed_der_helper(source_template_dir)
+
+    init_block = strip_code_fence(adapter.get("init_block", ""))
+    input_block = strip_code_fence(adapter.get("input_construction_block", ""))
+    trigger_block = strip_code_fence(adapter.get("trigger_block", ""))
+    cleanup_block = strip_code_fence(adapter.get("cleanup_block", "X509_free(x509);"))
+
+    expected_buggy = (
+        source_meta.get("expected_buggy_behavior", {}).get("return_code")
+        or mask_report.get("oracle", {}).get("bug_signals", [""])[0]
+    )
+    expected_fixed = (
+        source_meta.get("expected_fixed_behavior", {}).get("return_code")
+        or mask_report.get("oracle", {}).get("fixed_or_safe_signals", [""])[0]
+    )
+
+    return f'''#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+{include_lines}
+
+#define MALFORMED_DER_STRUCTURE_MODE "[MALFORMED_DER_STRUCTURE]"
+
+/*
+ * Cross-library harness for MBEDTLS-POC-0017.
+ *
+ * Source mbedTLS oracle:
+ * - buggy signal: ret={expected_buggy}
+ * - fixed signal: ret={expected_fixed}
+ *
+ * OpenSSL d2i_X509 does not expose the same internal mbedTLS error codes.
+ * This harness observes return-code and input-pointer consumption semantics.
+ */
+
+{helper}
+
+int main(void)
+{{
+    const unsigned char *der = NULL;
+    size_t der_len = 0;
+    int ret = 0;
+
+    setbuf(stdout, NULL);
+
+    der = select_malformed_der(MALFORMED_DER_STRUCTURE_MODE, &der_len);
+    if (der == NULL || der_len == 0) {{
+        printf("[ERROR] malformed DER construction failed.\\n");
+        return 2;
+    }}
+
+    printf("template_mutation MALFORMED_DER_STRUCTURE=%s\\n", MALFORMED_DER_STRUCTURE_MODE);
+    printf("calling d2i_X509...\\n");
+    printf("der_len=%zu\\n", der_len);
+
+    /*
+     * Adapter-generated initialization.
+     */
+{indent_block(init_block, 4)}
+
+    /*
+     * Adapter-generated input construction.
+     */
+{indent_block(input_block, 4)}
+
+    /*
+     * Adapter-generated trigger call.
+     * target_api: {target_api}
+     */
+{indent_block(trigger_block, 4)}
+
+    printf("ret=%d\\n", ret);
+    printf("consumed_len=%ld\\n", consumed_len);
+    printf("der_len=%zu\\n", der_len);
+
+    if (ret == 0) {{
+        printf("[BUG] target accepted malformed X509/ASN1 inner-boundary input. consumed_len=%ld der_len=%zu\\n",
+               consumed_len, der_len);
+{indent_block(cleanup_block, 8)}
+        return 1;
+    }}
+
+    printf("[OK] target rejected malformed X509/ASN1 inner-boundary input.\\n");
+{indent_block(cleanup_block, 4)}
+    return 0;
+}}
+'''
+
+
 RENDERERS: Dict[str, Callable[[Dict[str, Any], Path, Dict[str, Any], Dict[str, Any]], str]] = {
     "buffer_canary_boundary": render_buffer_canary_harness,
     "der_pointer_consumption": render_der_pointer_consumption_harness,
+    "x509_asn1_inner_boundary": render_x509_asn1_inner_boundary_harness,
+    "asn1_inner_boundary": render_x509_asn1_inner_boundary_harness,
 }
 
 
@@ -612,6 +755,15 @@ def build_cross_mapping(
         "candidate": adapter_meta.get("candidate", {}),
         "preserved_vulnerability_features": adapter.get("preserved_features", []),
         "lost_or_weakened_features": adapter.get("lost_or_weakened_features", []),
+        "source_expected_behavior": {
+            "buggy": source_meta.get("expected_buggy_behavior", {}),
+            "fixed": source_meta.get("expected_fixed_behavior", {}),
+            "note": (
+                "OpenSSL d2i_X509 is not expected to reproduce exact mbedTLS "
+                "numeric error codes; cross-library validation uses return-code "
+                "and pointer-consumption semantics."
+            ),
+        },
         "notes": [
             "Generated from LLM-filled structured adapter YAML.",
             "The C harness skeleton is fixed; the target-specific blocks come from adapter.yaml.",
@@ -683,6 +835,21 @@ Safe behavior:
 
 - target decoder rejects the trailing-garbage input; or
 - target decoder succeeds and `consumed_len == der_len`.
+"""
+    elif harness_family in {"x509_asn1_inner_boundary", "asn1_inner_boundary"}:
+        oracle_text = """The migrated harness uses an X.509 / ASN.1 inner-boundary semantic oracle.
+
+Bug candidate behavior:
+
+- `d2i_X509()` returns a non-NULL X509 object;
+- the harness maps this to `ret == 0`, meaning the target accepted malformed inner-boundary DER.
+
+Safe behavior:
+
+- `d2i_X509()` returns NULL;
+- the harness maps this to `ret != 0`, meaning the target rejected the malformed DER.
+
+The harness also records `consumed_len` for pointer-consumption analysis, but it does not require OpenSSL to reproduce mbedTLS numeric error codes.
 """
     else:
         oracle_text = """The migrated harness uses a memory-safety oracle inherited from the source PoC pattern. The target API is executed with a caller-provided output buffer followed by a canary region.

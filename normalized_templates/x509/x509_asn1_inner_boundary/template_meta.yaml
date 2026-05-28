@@ -1,0 +1,163 @@
+template_id: X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY
+template_name: mbedtls X.509 ASN.1 inner substructure boundary template
+backend: api_harness
+language: c
+status: normalized
+harness_family: x509_asn1_inner_boundary
+
+source_pattern_id: MBEDTLS-POC-0017
+source_poc: MBEDTLS-POC-0017
+source_library: mbedtls
+source_api:
+  library: mbedtls
+  function: mbedtls_x509_crt_parse_der
+source_api_name: mbedtls_x509_crt_parse_der
+internal_apis:
+  - x509_get_attr_type_value
+  - mbedtls_x509_get_crt_ext
+  - mbedtls_x509_get_crl_ext
+
+poc_source:
+  file: data/pocs/core10/MBEDTLS-POC-0017/poc/poc_x509_asn1_bounds.c
+  library: mbedtls
+  api: mbedtls_x509_crt_parse_der
+
+operation:
+  abstract: x509_asn1_nested_substructure_boundary
+  api_family: X509ASN1Parsing
+  bug_class:
+    - asn1_nested_substructure_boundary
+    - parent_end_vs_inner_end_pointer
+    - differential_parser_error_path
+
+bug_class: asn1_nested_substructure_boundary
+oracle_type: inner_asn1_boundary_semantic_oracle
+
+mutation_points:
+  - name: INNER_END_BOUND
+    placeholder: "[INNER_END_BOUND]"
+    type: enum
+    default: inner_bound_enforced
+    values:
+      - inner_bound_enforced
+      - parent_bound_buggy
+    strategy: inner_parser_end_pointer_selection
+    constraint: Represents whether the parser sets end to the inner substructure boundary.
+    priority: high
+    normalized: true
+
+  - name: TRAILING_INNER_DATA_CHECK
+    placeholder: "[TRAILING_INNER_DATA_CHECK]"
+    type: enum
+    default: reject_trailing_inner_data
+    values:
+      - reject_trailing_inner_data
+      - allow_cross_inner_boundary
+    strategy: inner_substructure_remainder_check
+    constraint: Represents the guard that rejects bytes remaining after the inner AttributeTypeAndValue parse.
+    priority: high
+    normalized: true
+
+  - name: EMPTY_EXTENSION_RETURN
+    placeholder: "[EMPTY_EXTENSION_RETURN]"
+    type: enum
+    default: return_on_empty_extension
+    values:
+      - return_on_empty_extension
+      - continue_past_empty_extension
+    strategy: empty_nested_extension_guard
+    constraint: Represents the fixed extension parser behavior when the inner extension is empty.
+    priority: medium
+    normalized: true
+
+  - name: MALFORMED_DER_STRUCTURE
+    placeholder: "[MALFORMED_DER_STRUCTURE]"
+    type: enum
+    default: issuer_two_empty_atv
+    values:
+      - issuer_two_empty_atv
+    strategy: malformed_x509_issuer_inner_attribute_sequence
+    constraint: Regression-test-derived malformed DER certificate from MBEDTLS-POC-0017.
+    priority: high
+    normalized: true
+
+expected_buggy_behavior:
+  signal: parser_crossed_inner_boundary
+  return_code: -9186
+  description: parser uses a parent boundary and reports unexpected tag after crossing the inner ASN.1 substructure
+  sample_output:
+    - "[BUG] buggy behavior: parser crossed inner ASN.1 substructure bounds."
+
+expected_fixed_behavior:
+  signal: parser_obeyed_inner_boundary
+  return_code: -9184
+  description: parser obeys the inner ASN.1 substructure boundary and reports out-of-data
+  sample_output:
+    - "[OK] fixed behavior: parser obeyed inner ASN.1 substructure bounds."
+
+oracle:
+  type: inner_asn1_boundary_semantic_oracle
+  bug_signals:
+    - ret == -9186
+    - MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_UNEXPECTED_TAG
+    - parser crossed inner ASN.1 substructure bounds
+  fixed_or_safe_signals:
+    - ret == -9184
+    - MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_OUT_OF_DATA
+    - parser obeyed inner ASN.1 substructure bounds
+  primary_observation:
+    - return_code
+    - stdout_status_label
+
+verdict:
+  true_positive:
+    condition: ret == MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_UNEXPECTED_TAG
+    exit_code: 1
+  safe_behavior:
+    condition: ret == MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_OUT_OF_DATA
+    exit_code: 0
+
+placeholders:
+  INNER_END_BOUND: "[INNER_END_BOUND]"
+  TRAILING_INNER_DATA_CHECK: "[TRAILING_INNER_DATA_CHECK]"
+  EMPTY_EXTENSION_RETURN: "[EMPTY_EXTENSION_RETURN]"
+  MALFORMED_DER_STRUCTURE: "[MALFORMED_DER_STRUCTURE]"
+
+default_cases:
+  - name: fixed_inner_boundary_malformed_issuer
+    inner_end_bound: inner_bound_enforced
+    trailing_inner_data_check: reject_trailing_inner_data
+    empty_extension_return: return_on_empty_extension
+    malformed_der_structure: issuer_two_empty_atv
+
+generation_policy:
+  max_cases: 8
+  priority:
+    - inner_parser_end_pointer_selection
+    - inner_substructure_remainder_check
+    - malformed_x509_issuer_inner_attribute_sequence
+  compile_with:
+    - asan
+    - ubsan
+
+rag_requirements:
+  retrieve:
+    - knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.yaml
+    - knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.md
+    - knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_x509_crt_parse_der.md
+    - knowledge_raw/api_constraints/mbedtls/4.1.0/x509_asn1_nested_helpers.md
+    - knowledge_raw/unit_tests/mbedtls/4.1.0/MBEDTLS-POC-0017_x509_asn1_boundary_evidence.md
+
+notes:
+  - Do not call GLM and do not require API keys for this normalized template.
+  - This template keeps the local PoC's malformed DER bytes and differential mbedTLS return-code oracle.
+  - Cross-library targets should not rely on exact numeric mbedTLS error codes.
+  - The OpenSSL side may expose only generic ASN.1/X.509 parse failure plus pointer-consumption behavior; treat exact inner error-class mapping as uncertain until adapter validation.
+  - >
+    Runner convergence note: original commit-level evidence records buggy ret=-9186
+    and fixed ret=-9184, but in the current mbedTLS 4.1.0 runner environment both
+    the original PoC and rendered source harness return ret=-96 for this malformed
+    DER. ret=-96 maps to MBEDTLS_ERR_ASN1_OUT_OF_DATA, a lower-level ASN.1 error.
+    Treat this as current-version public API safe rejection, not a crash. Exact
+    -9186/-9184 reproduction requires the original buggy/fixed commit worktrees or
+    original reproduction environment.

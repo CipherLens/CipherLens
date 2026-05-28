@@ -1,0 +1,270 @@
+template_id: X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY
+source_template_id: X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY
+source:
+  library: mbedtls
+  api: mbedtls_x509_crt_parse_der
+  pattern_id: MBEDTLS-POC-0017
+  root_cause_summary: >
+    X.509 ASN.1 nested parser used a parent end pointer while parsing an inner
+    substructure. The malformed certificate with empty inner
+    AttributeTypeAndValue structures differentiates buggy unexpected-tag behavior
+    from fixed out-of-data inner-boundary behavior.
+  vulnerability_path_features:
+    must_preserve:
+      - asn1_der_parser_entrypoint
+      - nested_substructure_length_field
+      - parent_end_vs_inner_end_boundary
+      - malformed_nested_empty_structure
+      - differential_parser_error_or_rejection_path
+    optional:
+      - x509_certificate_der
+      - issuer_name_attribute_type_value
+      - consumed_pointer_or_error_queue_observation
+    not_required:
+      - exact_mbedtls_error_code
+      - exact_internal_mbedtls_parser_function_name
+
+scoring_policy:
+  operation_family: 0.15
+  function_behavior: 0.20
+  parameter_structure: 0.20
+  vulnerability_path: 0.30
+  harness_feasibility: 0.15
+  decision_rule:
+    generate: final >= 75 and vulnerability_path >= 70
+    skip: otherwise
+  score_notes:
+    - DER/X.509 parser compatibility and nested ASN.1 boundary observability are weighted more than name similarity.
+    - Exact mbedTLS numeric return codes are not required for OpenSSL migration.
+    - Pointer advancement and error queue reason are useful but may not fully recover the same inner-boundary class.
+
+required_features:
+  - target parses caller-provided DER or ASN.1 bytes
+  - target reaches X.509 or generic ASN.1 nested parser code
+  - target can receive malformed nested substructure bytes
+  - target exposes an observable return value, error queue, consumed pointer, or equivalent rejection oracle
+  - harness can compare accept/reject/error-path behavior for malformed DER
+
+target_candidates:
+  - target_library: openssl
+    target_api: d2i_X509
+    library: openssl
+    api: d2i_X509
+    source_template_id: X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY
+    source_api: mbedtls_x509_crt_parse_der
+    decision: generate
+    migration_applicability: applicable
+    applicability: strong_candidate
+    scores:
+      operation_family: 95
+      function_behavior: 92
+      parameter_structure: 90
+      vulnerability_path: 88
+      harness_feasibility: 90
+      final: 91
+    preserved_features:
+      - DER X.509 certificate parser
+      - caller-provided DER buffer and explicit length
+      - nested ASN.1 parsing under X.509 certificate object
+      - malformed DER certificate can be supplied directly
+      - return NULL/non-NULL parse oracle
+      - consumed pointer advancement through const unsigned char **pp
+      - OpenSSL error queue can provide parse failure class
+    preserved_vulnerability_features:
+      - asn1_der_parser_entrypoint
+      - x509_certificate_der
+      - nested_substructure_length_field
+      - malformed_nested_empty_structure
+      - differential_parser_error_or_rejection_path
+      - consumed_pointer_or_error_queue_observation
+    weakened_features:
+      - exact mbedTLS error codes are not preserved
+      - OpenSSL error reason may be generic and may not map exactly to inner-boundary out-of-data vs unexpected-tag
+    lost_or_weakened_features:
+      - exact_mbedtls_error_code
+      - exact_internal_mbedtls_parser_function_name
+    migration_reason: >
+      Strongest target candidate. It is the direct OpenSSL memory-buffer DER
+      X.509 certificate decoder and exposes both return status and pointer
+      advancement, making it suitable for malformed nested ASN.1 boundary tests.
+    required_features:
+      - construct malformed X.509 DER from the source PoC
+      - call d2i_X509(NULL, &p, der_len)
+      - observe returned X509 pointer or NULL
+      - inspect p advancement and OpenSSL error queue if available
+      - free returned X509 with X509_free
+    notes:
+      - Prefer this candidate before BIO or PEM wrappers.
+
+  - target_library: openssl
+    target_api: ASN1_item_d2i
+    library: openssl
+    api: ASN1_item_d2i
+    source_template_id: X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY
+    source_api: mbedtls_x509_crt_parse_der
+    decision: generate
+    migration_applicability: applicable
+    applicability: strong_candidate_with_adapter_complexity
+    scores:
+      operation_family: 92
+      function_behavior: 88
+      parameter_structure: 88
+      vulnerability_path: 90
+      harness_feasibility: 78
+      final: 88
+    preserved_features:
+      - generic DER ASN.1 parser
+      - explicit ASN.1 item descriptor can select X509
+      - caller-provided DER buffer and explicit length
+      - nested ASN.1 template boundary machinery
+      - malformed DER input can be supplied directly
+      - consumed pointer advancement through const unsigned char **in
+    preserved_vulnerability_features:
+      - asn1_der_parser_entrypoint
+      - nested_substructure_length_field
+      - parent_end_vs_inner_end_boundary
+      - malformed_nested_empty_structure
+      - differential_parser_error_or_rejection_path
+      - consumed_pointer_or_error_queue_observation
+    weakened_features:
+      - requires correct ASN1_ITEM descriptor selection in adapter
+      - lower-level generic API is less source-public-API-like than d2i_X509
+      - freeing returned ASN1_VALUE requires matching item-specific cleanup
+    lost_or_weakened_features:
+      - exact_mbedtls_error_code
+      - source_public_api_shape
+    migration_reason: >
+      Strong semantic candidate because the vulnerability is an ASN.1 nested
+      boundary issue. It may preserve the inner-boundary mechanics better than a
+      high-level wrapper, but adapter generation is more delicate.
+    required_features:
+      - select ASN1_ITEM_rptr(X509) or another justified descriptor
+      - call ASN1_item_d2i with caller-provided DER and length
+      - observe NULL/non-NULL and pointer advancement
+      - free decoded object with matching ASN.1 item free routine
+    notes:
+      - Use after d2i_X509 if the experiment wants to isolate generic ASN.1 decoder behavior.
+
+  - target_library: openssl
+    target_api: d2i_X509_bio
+    library: openssl
+    api: d2i_X509_bio
+    source_template_id: X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY
+    source_api: mbedtls_x509_crt_parse_der
+    decision: generate
+    migration_applicability: applicable
+    applicability: weak_candidate
+    scores:
+      operation_family: 90
+      function_behavior: 84
+      parameter_structure: 70
+      vulnerability_path: 70
+      harness_feasibility: 84
+      final: 79
+    preserved_features:
+      - DER X.509 certificate parser
+      - malformed certificate bytes can be supplied through memory BIO
+      - return NULL/non-NULL parse oracle
+      - reaches ASN1_item_d2i_bio and X.509 decode path
+    preserved_vulnerability_features:
+      - asn1_der_parser_entrypoint
+      - x509_certificate_der
+      - nested_substructure_length_field
+      - malformed_nested_empty_structure
+      - differential_parser_error_or_rejection_path
+    weakened_features:
+      - BIO wrapper weakens direct consumed pointer observation
+      - exact buffer consumption is less visible than d2i_X509
+      - error queue may be needed for semantic distinction
+    lost_or_weakened_features:
+      - consumed_pointer_or_error_queue_observation
+      - exact_mbedtls_error_code
+    migration_reason: >
+      Useful weak candidate for X.509 DER parsing through BIO, but less precise
+      than d2i_X509 because exact input pointer consumption is hidden behind the
+      BIO abstraction.
+    required_features:
+      - wrap malformed DER with BIO_new_mem_buf
+      - call d2i_X509_bio
+      - observe NULL/non-NULL and OpenSSL error queue
+      - free BIO and X509
+    notes:
+      - Generate only if the adapter can report a meaningful rejection/error oracle.
+
+  - target_library: openssl
+    target_api: PEM_read_bio_X509
+    library: openssl
+    api: PEM_read_bio_X509
+    source_template_id: X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY
+    source_api: mbedtls_x509_crt_parse_der
+    decision: skip
+    migration_applicability: migration_not_applicable
+    applicability: weak_or_skip
+    scores:
+      operation_family: 82
+      function_behavior: 68
+      parameter_structure: 55
+      vulnerability_path: 45
+      harness_feasibility: 78
+      final: 63
+    preserved_features:
+      - X.509 certificate parser after PEM decoding
+      - return NULL/non-NULL parse oracle
+      - local tests show direct PEM_read_bio_X509 usage
+    preserved_vulnerability_features:
+      - x509_certificate_der
+      - differential_parser_error_or_rejection_path
+    weakened_features:
+      - PEM armor layer can fail before DER nested parser is reached
+      - caller must base64-wrap malformed DER, adding unrelated text decoding behavior
+      - direct DER buffer and consumed pointer semantics are not preserved
+      - inner ASN.1 boundary signal may be obscured by PEM read path
+    lost_or_weakened_features:
+      - asn1_der_parser_entrypoint
+      - direct_caller_provided_der_buffer
+      - consumed_pointer_or_error_queue_observation
+      - exact_mbedtls_error_code
+    migration_reason: >
+      Functionally related to X.509 parsing but not suitable as the first
+      automatic migration target. PEM decoding adds a wrapper layer that can hide
+      the DER nested-boundary path.
+    required_features:
+      - PEM-wrap malformed DER without changing DER payload
+      - ensure DER decoder is actually reached
+      - use OpenSSL error queue to separate PEM and DER failures
+    notes:
+      - Keep as context evidence; prefer d2i_X509 for automatic adapter generation.
+
+  - target_library: openssl
+    target_api: X509_parse_from_buffer
+    library: openssl
+    api: X509_parse_from_buffer
+    source_template_id: X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY
+    source_api: mbedtls_x509_crt_parse_der
+    decision: skip
+    migration_applicability: migration_not_applicable
+    applicability: not_found_in_local_constraints
+    scores:
+      operation_family: 40
+      function_behavior: 30
+      parameter_structure: 20
+      vulnerability_path: 10
+      harness_feasibility: 10
+      final: 22
+    preserved_features: []
+    preserved_vulnerability_features: []
+    weakened_features:
+      - no matching OpenSSL 3.5.5 local API constraint was found
+      - no local test evidence was found
+      - likely not an OpenSSL public API in this source tree
+    lost_or_weakened_features:
+      - der_x509_parser_entrypoint
+      - nested_substructure_length_field
+      - observable_parser_boundary_oracle
+    migration_reason: >
+      Mentioned only as a searched possibility. It is skipped because local
+      constraints and tests do not establish this as an OpenSSL 3.5.5 public API.
+    required_features:
+      - local declaration and ownership semantics would need to be found first
+    notes:
+      - Do not generate an adapter for this name without new evidence.

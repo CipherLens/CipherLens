@@ -1,0 +1,52 @@
+target_library: openssl
+target_api: d2i_X509
+applicability: generate
+include_headers:
+- openssl/x509.h
+- openssl/err.h
+type_mapping:
+  der input buffer: const unsigned char *der
+  der length: size_t der_len
+  parsed certificate: X509 *x509
+  consumed length: long consumed_len
+constant_mapping: {}
+init_block: |-
+  X509 *x509 = NULL;
+  const unsigned char *p = NULL;
+  long consumed_len = 0;
+input_construction_block: |-
+  p = der;
+  consumed_len = 0;
+trigger_block: |-
+  x509 = d2i_X509(NULL, &p, (long) der_len);
+  ret = (x509 != NULL) ? 0 : -1;
+  consumed_len = (long)(p - der);
+return_value_semantics: d2i_X509 returns a non-NULL X509 object on successful DER
+  decode and NULL on parse failure. The adapter maps non-NULL to ret == 0 and
+  NULL to ret != 0 while separately recording pointer consumption.
+oracle_strategy:
+  oracle_type: pointer-consumption / return-code semantic oracle
+  semantic_checks:
+  - ret == 0 means d2i_X509 returned non-NULL and parsing succeeded.
+  - consumed_len < der_len means only the DER prefix was consumed and trailing bytes remain.
+  - ret != 0 means malformed DER or the boundary case was rejected.
+  - This oracle observes pointer consumption and return-code semantics, not crash behavior.
+  safe_signals:
+  - ret != 0 for malformed nested ASN.1 boundary cases
+  - ret == 0 with consumed_len == der_len for fully consumed valid DER
+  bug_signals:
+  - ret == 0 with consumed_len < der_len for unexpected prefix-only acceptance
+cleanup_block: X509_free(x509);
+preserved_features:
+- x509_der_parser
+- asn1_nested_structure
+- malformed_der_input
+- pointer_consumption_observable
+- return_code_observable
+lost_or_weakened_features:
+- OpenSSL d2i_X509 ppin semantics allow callers to check whether the input was fully consumed.
+- Inner ASN.1 boundary exact internal error codes may not map one-to-one to mbedTLS ret=-9184/-9186.
+notes:
+- Manually repaired adapter for MBEDTLS-POC-0017 d2i_X509 after fallback output mixed in a bignum skeleton.
+_llm_status: fallback
+_llm_error: Connection error.

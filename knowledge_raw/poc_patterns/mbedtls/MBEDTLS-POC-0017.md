@@ -116,3 +116,19 @@ generic malformed-certificate pattern.
 - Evidence: `data/pocs/core10/MBEDTLS-POC-0017/reproduction_result.md`
 - PoC: `data/pocs/core10/MBEDTLS-POC-0017/poc/poc_x509_asn1_bounds.c`
 - Logs: `data/pocs/core10/MBEDTLS-POC-0017/poc/run_buggy.log`, `data/pocs/core10/MBEDTLS-POC-0017/poc/run_fixed.log`
+
+## Runner Convergence Note
+
+The original commit-level evidence remains:
+
+- buggy ret=`-9186`
+- fixed ret=`-9184`
+
+In the current mbedTLS 4.1.0 runner environment, the original PoC and the
+rendered source harness return ret=`-96` for the same malformed DER input.
+ret=`-96` maps to `MBEDTLS_ERR_ASN1_OUT_OF_DATA`, a lower-level ASN.1 error.
+
+This is an error return and safe rejection, not a crash. Do not force the
+historical `-9186`/`-9184` oracle onto the current-version public API run. Exact
+reproduction of those two values requires the original buggy/fixed commit
+worktrees or the original reproduction environment.

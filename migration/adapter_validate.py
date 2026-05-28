@@ -75,6 +75,17 @@ OPENSSL_TRIGGER_BY_API = {
     "BN_signed_bn2bin": "ret = BN_signed_bn2bin(X, buf, BUFLEN);",
 }
 
+D2I_X509_FORBIDDEN_RESIDUE = [
+    "BIGNUM",
+    "BN_new",
+    "BN_free",
+    "BN_set_word",
+    "BUFLEN",
+    "signed_value",
+    "magnitude",
+    "openssl/bn.h",
+]
+
 
 class NoAliasDumper(yaml.SafeDumper):
     def ignore_aliases(self, data):
@@ -276,6 +287,48 @@ def validate_code_blocks(adapter: Dict[str, Any], errors: List[str], warnings: L
                 )
 
 
+def validate_d2i_x509_adapter(adapter: Dict[str, Any], errors: List[str]) -> None:
+    if adapter.get("target_api") != "d2i_X509":
+        return
+
+    headers = [str(x).strip() for x in ensure_list(adapter.get("include_headers"))]
+    if "openssl/x509.h" not in headers:
+        errors.append("d2i_X509 adapter must include openssl/x509.h")
+
+    init_text = "\n".join(iter_string_values(adapter.get("init_block")))
+    input_text = "\n".join(iter_string_values(adapter.get("input_construction_block")))
+    trigger_text = "\n".join(iter_string_values(adapter.get("trigger_block")))
+    cleanup_text = "\n".join(iter_string_values(adapter.get("cleanup_block")))
+    semantic_text = "\n".join([init_text, input_text, trigger_text])
+    adapter_text = "\n".join(iter_string_values(adapter))
+
+    for token in D2I_X509_FORBIDDEN_RESIDUE:
+        if token in adapter_text:
+            errors.append(f"d2i_X509 adapter contains bignum residue: {token}")
+
+    if "d2i_X509" not in trigger_text:
+        errors.append("d2i_X509 adapter trigger_block must call d2i_X509")
+
+    if "X509_free" not in cleanup_text:
+        errors.append("d2i_X509 adapter cleanup_block must call X509_free")
+
+    if not re.search(r"\bX509\s*\*", semantic_text):
+        errors.append("d2i_X509 adapter init/input/trigger must declare or use an X509 pointer")
+
+    has_input_pointer = (
+        re.search(r"\bconst\s+unsigned\s+char\s*\*\s*p\b", semantic_text) is not None
+        or ("p = der" in input_text and "&p" in trigger_text)
+    )
+    if not has_input_pointer:
+        errors.append("d2i_X509 adapter must expose a const unsigned char *p style input pointer")
+
+    if "der_len" not in trigger_text:
+        errors.append("d2i_X509 adapter trigger_block must use der_len")
+
+    if "consumed_len" not in trigger_text and "p - der" not in trigger_text:
+        errors.append("d2i_X509 adapter trigger_block must record consumed_len or p - der")
+
+
 def normalize_and_validate(obj: Dict[str, Any]) -> Dict[str, Any]:
     raw, used_schema_wrapper = find_required_output_schema(obj)
     adapter = build_standard_adapter(raw, obj)
@@ -293,6 +346,7 @@ def normalize_and_validate(obj: Dict[str, Any]) -> Dict[str, Any]:
     normalize_openssl(adapter, warnings)
     validate_required_fields(adapter, errors)
     validate_code_blocks(adapter, errors, warnings)
+    validate_d2i_x509_adapter(adapter, errors)
 
     adapter["validation"] = {
         "status": "needs_repair" if errors else "ok",

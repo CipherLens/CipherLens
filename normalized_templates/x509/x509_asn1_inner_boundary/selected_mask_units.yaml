@@ -1,0 +1,189 @@
+template_id: X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY
+template_name: mbedtls X.509 ASN.1 inner substructure boundary template
+source_api: mbedtls_x509_crt_parse_der
+selection_policy:
+  method: ast_lite_high_value_mask_unit_selection
+  rules:
+  - Prefer role=mutation_point units.
+  - Prefer mask_level=value or api_argument units.
+  - Always retain trigger_call function_call/statement units.
+  - Always retain oracle statement/block units.
+  - Retain input_preparation/helper_function/block only when boundary keywords are
+    present.
+  - Limit cleanup units to one or two representative statements.
+  - Deduplicate repeated code snippets.
+  context_keywords:
+  - canary
+  - prepare_output_with_canary
+  - buffer
+  - buf
+  - limb
+  - X->p
+  - X->n
+  - raw
+  - CANARY_SIZE
+  - BUFLEN
+selected_units:
+- unit_id: ASTLITE-0001
+  mask_level: value
+  role: mutation_point
+  placeholder: '[INNER_END_BOUND]'
+  code: INNER_END_BOUND
+  source: template_meta.mutation_points
+  reason: Represents whether the parser sets end to the inner substructure boundary.
+  priority: high
+  mutation_name: INNER_END_BOUND
+  mutation_type: enum
+  default: inner_bound_enforced
+  values:
+  - inner_bound_enforced
+  - parent_bound_buggy
+  selection_reason: Selected because [INNER_END_BOUND] is a mutation point with value
+    granularity.
+  suggested_use: mutate_value
+  selection_score: 101
+- unit_id: ASTLITE-0004
+  mask_level: value
+  role: mutation_point
+  placeholder: '[MALFORMED_DER_STRUCTURE]'
+  code: MALFORMED_DER_STRUCTURE
+  source: template_meta.mutation_points
+  reason: Regression-test-derived malformed DER certificate from MBEDTLS-POC-0017.
+  priority: high
+  mutation_name: MALFORMED_DER_STRUCTURE
+  mutation_type: enum
+  default: issuer_two_empty_atv
+  values:
+  - issuer_two_empty_atv
+  selection_reason: Selected because [MALFORMED_DER_STRUCTURE] is a mutation point
+    with value granularity.
+  suggested_use: mutate_value
+  selection_score: 101
+- unit_id: ASTLITE-0002
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRAILING_INNER_DATA_CHECK]'
+  code: TRAILING_INNER_DATA_CHECK
+  source: template_meta.mutation_points
+  reason: Represents the guard that rejects bytes remaining after the inner AttributeTypeAndValue
+    parse.
+  priority: high
+  mutation_name: TRAILING_INNER_DATA_CHECK
+  mutation_type: enum
+  default: reject_trailing_inner_data
+  values:
+  - reject_trailing_inner_data
+  - allow_cross_inner_boundary
+  selection_reason: Selected because [TRAILING_INNER_DATA_CHECK] is a mutation point
+    with value granularity.
+  suggested_use: mutate_value
+  selection_score: 101
+- unit_id: ASTLITE-0003
+  mask_level: value
+  role: mutation_point
+  placeholder: '[EMPTY_EXTENSION_RETURN]'
+  code: EMPTY_EXTENSION_RETURN
+  source: template_meta.mutation_points
+  reason: Represents the fixed extension parser behavior when the inner extension
+    is empty.
+  priority: medium
+  mutation_name: EMPTY_EXTENSION_RETURN
+  mutation_type: enum
+  default: return_on_empty_extension
+  values:
+  - return_on_empty_extension
+  - continue_past_empty_extension
+  selection_reason: Selected because [EMPTY_EXTENSION_RETURN] is a mutation point
+    with value granularity.
+  suggested_use: mutate_value
+  selection_score: 99
+- unit_id: ASTLITE-0045
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: 'printf("[OK] fixed behavior: parser obeyed inner ASN.1 substructure bounds.\n");'
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 94
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 69
+- unit_id: ASTLITE-0050
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: 'printf("[BUG] buggy behavior: parser crossed inner ASN.1 substructure bounds.\n");'
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 100
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 69
+- unit_id: ASTLITE-0040
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: ret = mbedtls_x509_crt_parse_der(&crt, der, der_len);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_x509_crt_parse_der' identified by AST-lite call matching.
+  priority: high
+  function: mbedtls_x509_crt_parse_der
+  line: 87
+  selection_reason: Required trigger_call unit for preserving and migrating the source
+    API invocation.
+  suggested_use: migrate_api_call
+  selection_score: 61
+- unit_id: ASTLITE-0009
+  mask_level: value
+  role: oracle
+  placeholder: '[TRAILING_INNER_DATA_CHECK]'
+  code: if (*p != end) { return MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_LENGTH_MISMATCH;
+    }
+  source: mask_report.roles.oracle
+  reason: Role-aware statement recorded by mask_report role 'oracle'.
+  priority: medium
+  order: 32
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 54
+- unit_id: ASTLITE-0048
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_x509_crt_free(&crt);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_x509_crt_free' identified by AST-lite call matching.
+  priority: medium
+  function: mbedtls_x509_crt_free
+  line: 95
+  selection_reason: Selected limited cleanup context needed to keep generated harnesses
+    well-scoped.
+  suggested_use: preserve_cleanup
+  selection_score: 17
+selection_summary:
+  selected_count: 9
+  source_unit_count: 53
+  by_role:
+    cleanup: 1
+    mutation_point: 4
+    oracle: 3
+    trigger_call: 1
+  by_mask_level:
+    function_call: 2
+    statement: 2
+    value: 5
+  by_suggested_use:
+    migrate_api_call: 1
+    mutate_value: 4
+    preserve_cleanup: 1
+    preserve_oracle: 3
+rejected_summary:
+  count: 21
+  by_reason:
+    duplicate_code_or_unit: 4
+    noise_header_comment_or_log_label: 17

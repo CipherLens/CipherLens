@@ -1,0 +1,1799 @@
+template_id: X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY
+source_template_id: X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY
+source:
+  library: mbedtls
+  api: mbedtls_x509_crt_parse_der
+  pattern_id: MBEDTLS-POC-0017
+  root_cause_summary: 'X.509 ASN.1 nested parser used a parent end pointer while parsing
+    an inner substructure. The malformed certificate with empty inner AttributeTypeAndValue
+    structures differentiates buggy unexpected-tag behavior from fixed out-of-data
+    inner-boundary behavior.
+
+    '
+  vulnerability_path_features:
+    must_preserve:
+    - asn1_der_parser_entrypoint
+    - nested_substructure_length_field
+    - parent_end_vs_inner_end_boundary
+    - malformed_nested_empty_structure
+    - differential_parser_error_or_rejection_path
+    optional:
+    - x509_certificate_der
+    - issuer_name_attribute_type_value
+    - consumed_pointer_or_error_queue_observation
+    not_required:
+    - exact_mbedtls_error_code
+    - exact_internal_mbedtls_parser_function_name
+scoring_policy:
+  operation_family: 0.15
+  function_behavior: 0.2
+  parameter_structure: 0.2
+  vulnerability_path: 0.3
+  harness_feasibility: 0.15
+  decision_rule:
+    generate: final >= 75 and vulnerability_path >= 70
+    skip: otherwise
+  score_notes:
+  - DER/X.509 parser compatibility and nested ASN.1 boundary observability are weighted
+    more than name similarity.
+  - Exact mbedTLS numeric return codes are not required for OpenSSL migration.
+  - Pointer advancement and error queue reason are useful but may not fully recover
+    the same inner-boundary class.
+required_features:
+- target parses caller-provided DER or ASN.1 bytes
+- target reaches X.509 or generic ASN.1 nested parser code
+- target can receive malformed nested substructure bytes
+- target exposes an observable return value, error queue, consumed pointer, or equivalent
+  rejection oracle
+- harness can compare accept/reject/error-path behavior for malformed DER
+target_candidates:
+- target_library: openssl
+  target_api: d2i_X509
+  library: openssl
+  api: d2i_X509
+  source_template_id: X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY
+  source_api: mbedtls_x509_crt_parse_der
+  decision: generate
+  migration_applicability: applicable
+  applicability: strong_candidate
+  scores:
+    operation_family: 95
+    function_behavior: 92
+    parameter_structure: 90
+    vulnerability_path: 88
+    harness_feasibility: 90
+    final: 91
+  preserved_features:
+  - DER X.509 certificate parser
+  - caller-provided DER buffer and explicit length
+  - nested ASN.1 parsing under X.509 certificate object
+  - malformed DER certificate can be supplied directly
+  - return NULL/non-NULL parse oracle
+  - consumed pointer advancement through const unsigned char **pp
+  - OpenSSL error queue can provide parse failure class
+  preserved_vulnerability_features:
+  - asn1_der_parser_entrypoint
+  - x509_certificate_der
+  - nested_substructure_length_field
+  - malformed_nested_empty_structure
+  - differential_parser_error_or_rejection_path
+  - consumed_pointer_or_error_queue_observation
+  weakened_features:
+  - exact mbedTLS error codes are not preserved
+  - OpenSSL error reason may be generic and may not map exactly to inner-boundary
+    out-of-data vs unexpected-tag
+  lost_or_weakened_features:
+  - exact_mbedtls_error_code
+  - exact_internal_mbedtls_parser_function_name
+  migration_reason: 'Strongest target candidate. It is the direct OpenSSL memory-buffer
+    DER X.509 certificate decoder and exposes both return status and pointer advancement,
+    making it suitable for malformed nested ASN.1 boundary tests.
+
+    '
+  required_features:
+  - construct malformed X.509 DER from the source PoC
+  - call d2i_X509(NULL, &p, der_len)
+  - observe returned X509 pointer or NULL
+  - inspect p advancement and OpenSSL error queue if available
+  - free returned X509 with X509_free
+  notes:
+  - Prefer this candidate before BIO or PEM wrappers.
+  evidence:
+    top_k: 5
+    queries:
+    - query: "X.509 ASN.1 parsing helpers used a parent end pointer while parsing\
+        \ a nested substructure. The fixed parser updates the end pointer to the inner\
+        \ substructure and rejects data that remains after parsing it.\n asn1_der_parser_entrypoint\
+        \ nested_substructure_length_field parent_end_vs_inner_end_boundary malformed_nested_empty_structure\
+        \ differential_parser_error_or_rejection_path"
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7030211543913806
+        distance: 0.4224323034286499
+        layer: poc_patterns
+        source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.md
+        text: "# MBEDTLS-POC-0017: X.509 ASN.1 inner substructure boundary\n\n## Source\n\
+          \nThis pattern comes from Mbed TLS PR #2442 and issues #2430, #2431, and\
+          \ #2437.\nThe affected public API for the local PoC is `mbedtls_x509_crt_parse_der`.\n\
+          The root cause is in lower-level X.509 ASN.1 parsing helpers.\n\nThe confirmed\
+          \ fixed merge commit is\n`7af080a9f9601449601e9c97d21256bdc2205d02`; the\
+          \ local buggy worktree used\n`7af080a9f9601449601e9c97d21256bdc2205d02^1`.\
+          \ The library fix commit is\n`12f62fb82c81aa3f52bed49dff0f9e038d115f75`.\n\
+          \n## Root Cause\n\nSome parser routines used the parent ASN.1 structure's\
+          \ `end` pointer while\nparsing a nested substructure. This allowed fields\
+          \ inside an inner structure to\ncross the inner boundary.\n\nThe central\
+          \ fixed behavior is to set the parse bound to the inner structure:\n\n```c\n\
+          end = *p + len;\n```\n\nand reject trailing inner data, for example:\n\n\
+          ```c\nif (*p != end) {\n    return MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_LENGTH_MISMATCH;\n\
+          }\n```\n\n## Trigger Condition\n\nThe PoC ca"
+        metadata:
+          doc_type: poc_pattern
+          source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.md
+          library: mbedtls
+          layer: poc_patterns
+      - rank: 2
+        score: 0.6906023980434515
+        distance: 0.448011189699173
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/x509_asn1_nested_helpers.md
+        text: 'nt ASN.1 object being parsed.
+
+          - `cur`: parsed X.509 name node storing OID and value buffers.
+
+
+          ## Return Value Semantics
+
+
+          - `0`: nested object parsed and cursor ends exactly at the nested object
+          end.
+
+          - `MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_OUT_OF_DATA`: not enough
+          bytes inside the nested structure.
+
+          - `MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_UNEXPECTED_TAG`: unexpected
+          type/value tag.
+
+          - `MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_LENGTH_MISMATCH`: trailing
+          bytes remain inside the nested object.
+
+          - Extension helpers similarly return `MBEDTLS_ERR_X509_INVALID_EXTENSIONS
+          + MBEDTLS_ERR_ASN1_*`.
+
+
+          ## Ownership and Buffer Constraints
+
+
+          - These helpers do not own the input DER buffer.
+
+          - They store pointers into the parsed certificate buffer, so the surrounding
+          certificate object controls lifetime.
+
+          - Cursor/end arithmetic is the critical safety boundary.
+
+
+          ## Harness Generation Notes
+
+
+          - Prefer public entry points such as `mbedtls_x509_crt_parse_der()` and
+          malformed DER byt'
+        metadata:
+          source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/x509_asn1_nested_helpers.md
+          layer: api_constraints
+          library: mbedtls
+          doc_type: api_constraint
+      - rank: 3
+        score: 0.6746961458343157
+        distance: 0.482148677110672
+        layer: poc_patterns
+        source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.md
+        text: 'ue is `MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_OUT_OF_DATA`,
+
+          - parser obeyed the inner substructure boundary.
+
+
+          ## Mutation Points
+
+
+          - `INNER_END_BOUND`: `end = *p + len;`
+
+          - `TRAILING_INNER_DATA_CHECK`: `*p != end` rejection block.
+
+          - `EMPTY_EXTENSION_RETURN`: `if (*p == end) return 0;`
+
+          - `MALFORMED_DER_STRUCTURE`: crafted DER with empty inner structures.
+
+
+          ## Vulnerability Path Features
+
+
+          Must preserve:
+
+
+          - ASN.1 DER parser entrypoint,
+
+          - nested substructure length field,
+
+          - parent-end versus inner-end boundary,
+
+          - malformed nested empty structure,
+
+          - differential parser error or rejection path.
+
+
+          Optional:
+
+
+          - X.509 certificate DER,
+
+          - issuer name AttributeTypeAndValue,
+
+          - CRT/CRL extension helper paths.
+
+
+          Not required:
+
+
+          - exact DER bytes,
+
+          - exact numeric error values,
+
+          - exact helper names.
+
+
+          ## Migration Guidance
+
+
+          Good target APIs parse DER/ASN.1 nested structures, maintain explicit parent
+
+          and child end pointers, expose parse error classes, and allow harnesses
+          to feed
+
+          malformed nested inpu'
+        metadata:
+          library: mbedtls
+          source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.md
+          layer: poc_patterns
+          doc_type: poc_pattern
+      - rank: 4
+        score: 0.6675244997375712
+        distance: 0.4980723559856415
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/x509_asn1_nested_helpers.md
+        text: "# API Constraints: X.509 / ASN.1 Nested Parsing Helpers (mbedTLS 4.1.0)\n\
+          \nSource version: `/home/wen/work/clean_sources/mbedtls-4.1.0`\n\n## APIs\n\
+          \n- Internal helper: `x509_get_attr_type_value`\n- Related extension parser\
+          \ paths: certificate extension parsing in `library/x509_crt.c`, CRL extension\
+          \ parsing in `library/x509_crl.c`\n- Source files:\n  - `library/x509.c`\n\
+          \  - `library/x509_crt.c`\n  - `library/x509_crl.c`\n\n## Relevant Signatures\n\
+          \n```c\nstatic int x509_get_attr_type_value(unsigned char **p,\n       \
+          \                             const unsigned char *end,\n              \
+          \                      mbedtls_x509_name *cur);\n```\n\nThe current source\
+          \ also uses local parser end boundaries such as:\n\n```c\nend = *p + len;\n\
+          end = crt->v3_ext.p + crt->v3_ext.len;\nend = ext->p + ext->len;\n```\n\n\
+          ## Parameter Semantics\n\n- `p`: in/out ASN.1 cursor; successful parsing\
+          \ advances it.\n- `end`: end pointer for the current ASN.1 object being\
+          \ parsed.\n- `cur`: parsed X.509 name node storing OID and value buffers.\n\
+          \n## Ret"
+        metadata:
+          doc_type: api_constraint
+          source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/x509_asn1_nested_helpers.md
+          layer: api_constraints
+          library: mbedtls
+      - rank: 5
+        score: 0.6639659321831862
+        distance: 0.5061013698577881
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_x509_crt_parse_der.md
+        text: 'A`, `MBEDTLS_ERR_ASN1_LENGTH_MISMATCH`, and `MBEDTLS_ERR_ASN1_UNEXPECTED_TAG`.
+
+
+          ## Ownership and Buffer Constraints
+
+
+          - `mbedtls_x509_crt_parse_der()` calls the internal parser with `make_copy
+          = 1`, so it makes an internal copy of `buf`.
+
+          - `mbedtls_x509_crt_parse_der_nocopy()` is the stricter lifetime variant.
+
+          - On parse failure, temporary chain nodes are freed or detached.
+
+
+          ## Harness Generation Notes
+
+
+          - Initialize with `mbedtls_x509_crt_init()`, call `psa_crypto_init()` if
+          required by the build, parse DER, observe `ret`, then call `mbedtls_x509_crt_free()`.
+
+          - For `MBEDTLS-POC-0017`, use malformed DER whose nested issuer `AttributeTypeAndValue`
+          substructure is empty or shorter than the parent parser would allow.
+
+
+          ## Vulnerability-Pattern Migration Notes
+
+
+          - Relevant to `MBEDTLS-POC-0017`.
+
+          - The source path is nested ASN.1 parsing where inner substructure bounds
+          must be `*p + len`, not the parent object end.
+
+          - Good target candidates include DER/X.509 APIs exposing different parse
+          error c'
+        metadata:
+          source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_x509_crt_parse_der.md
+          library: mbedtls
+          layer: api_constraints
+          doc_type: api_constraint
+      error: ''
+      stdout_preview: "{\n  \"query\": \"X.509 ASN.1 parsing helpers used a parent\
+        \ end pointer while parsing a nested substructure. The fixed parser updates\
+        \ the end pointer to the inner substructure and rejects data that remains\
+        \ after parsing it.\\n asn1_der_parser_entrypoint nested_substructure_length_field\
+        \ parent_end_vs_inner_end_boundary malformed_nested_empty_structure differential_parser_error_or_rejection_path\"\
+        ,\n  \"top_k\": 5,\n  \"results\": [\n    {\n      \"rank\": 1,\n      \"\
+        score\": 0.7030211543913806,\n      \"distance\": 0.4224323034286499,\n  \
+        \    \"layer\": \"poc_patterns\",\n      \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.md\"\
+        ,\n      \"text\": \"# MBEDTLS-POC-0017: X.509 ASN.1 inner substructure boundary\\\
+        n\\n## Source\\n\\nThis pattern comes from Mbed TLS PR #2442 and issues #2430,\
+        \ #2431, and #2437.\\nThe affected public API for the local PoC is `mbedtls_x509_crt_parse_der`.\\\
+        nThe root cause is in lower-level X.509 ASN.1 parsing helpers.\\n\\nThe confirmed\
+        \ fixed merge commit is\\n`7af080a9f9601449601e9c97d21256bdc2205d02`; the\
+        \ local buggy worktree used\\n`7af080a9f9601449601e9c97d21256bdc2205d02^1`.\
+        \ The library fix commit is\\n`12f62fb82c81aa3f52bed49dff0f9e038d115f75`.\\\
+        n\\n## Root Cause\\n\\nSome parser routines used the parent ASN.1 structure's\
+        \ `end` pointer while\\nparsing a nested substructure. This allowed fields\
+        \ inside an inner structure to\\ncross the inner boundary.\\n\\nThe central\
+        \ fixed behavior is to set the parse bound to the inner structure:\\n\\n```c\\\
+        nend = *p + len;\\n```\\n\\nand reject trailing inner data, for example:\\\
+        n\\n```c\\nif (*p != end) {\\n    return MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_LENGTH_MISMATCH;\\\
+        n}\\n```\\n\\n## Trigger Condition\\n\\nThe PoC ca\",\n      \"metadata\"\
+        : {\n        \"doc_type\": \"poc_pattern\",\n        \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.md\"\
+        ,\n        \"library\": \"mbedtls\",\n        \"layer\": \"poc_patterns\"\n\
+        \      }\n    },\n    {\n      \"rank\": 2,\n      \"score\": 0.6906023980434515,\n\
+        \      \"distance\": 0.448011189699173,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/mbedtls/4.1.0/x509_asn1_nested_helpers.md\"\
+        ,\n      \"text\": \"nt ASN.1 object being parsed.\\n- `cur`: parsed X.509\
+        \ name node storing OID and value buffers.\\n\\n## Return Value Semantics\\\
+        n\\n- `0`: nested object parsed and cursor ends exactly at the nested object\
+        \ end.\\n- `MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_OUT_OF_DATA`:\
+        \ not enough bytes inside the nested structure.\\n- `MBEDTLS_ERR_X509_INVALID_NAME\
+        \ + MBEDTLS_ERR_ASN1_UNEXPECTED_TAG`: unexpected type/value tag.\\n- `MBEDTLS_ERR_X509_INVALID_NAME\
+        \ + MBEDTLS_ERR_ASN1_LENGTH_MISMATCH`: trailing bytes remain inside the nested\
+        \ object.\\n- Extension helpers similarly return `MBEDTLS_ERR_X509_INVALID_EXTENSIONS\
+        \ + MBEDTLS_ERR_ASN1_*`.\\n\\n## Ownership and Buffer Constraints\\n\\n- These\
+        \ helpers do not own the input DER buffer.\\n- They store pointers into the\
+        \ parsed certificate buffer, so the surrounding certificate object controls\
+        \ lifetime.\\n- Cursor/end arithmetic is the critical safety boundary.\\n\\\
+        n## Harness Generation Notes\\n\\n- Prefer public entry points such as `mbedtls_x509_crt_parse_der()`\
+        \ and malformed DER byt\",\n      \"metadata\": {\n        \"source_file\"\
+        : \"knowledge_raw/api_constraints/mbedtls/4.1.0/x509_asn1_nested_helpers.md\"\
+        ,\n        \"layer\": \"api_constraints\",\n        \"library\": \"mbedtls\"\
+        ,\n        \"doc_type\": \"api_constraint\"\n      }\n    },\n    {\n    \
+        \  \"rank\": 3,\n      \"score\": 0.6746961458343157,\n      \"distance\"\
+        : 0.482148677110672,\n      \"layer\": \"poc_patterns\",\n      \"source_file\"\
+        : \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.md\",\n      \"text\"\
+        : \"ue is `MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_OUT_OF_DATA`,\\\
+        n- parser obeyed the inner substructure boundary.\\n\\n## Mutation Points\\\
+        n\\n- `INNER_END_BOUND`: `end = *p + len;`\\n- `TRAILING_INNER_DATA_CHECK`:\
+        \ `*p != end` rejection block.\\n- `EMPTY_EXTENSION_RETURN`: `if (*p == end)\
+        \ return 0;`\\n- `MALFORMED_DER_STRUCTURE`: crafted DER with empty inner structures.\\\
+        n\\n## Vulnerability Path Features\\n\\nMust preserve:\\n\\n- ASN.1 DER parser\
+        \ entrypoint,\\n- nested substructure length field,\\n- parent-end versus\
+        \ inner-end boundary,\\n- malformed nested empty structure,\\n- differential\
+        \ parser error or rejection path.\\n\\nOptional:\\n\\n- X.509 certificate\
+        \ DER,\\n- issuer name AttributeTypeAndValue,\\n- CRT/CRL extension helper\
+        \ paths.\\n\\nNot required:\\n\\n- exact DER bytes,\\n- exact numeric error\
+        \ values,\\n- exact helper names.\\n\\n## Migration Guidance\\n\\nGood target\
+        \ APIs parse DER/ASN.1 nested structures, maintain explicit parent\\nand child\
+        \ end pointers, expose parse error classes, and allow harnesses to feed\\\
+        nmalformed nested inpu\",\n      \"metadata\": {\n        \"library\": \"\
+        mbedtls\",\n        \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.md\"\
+        ,\n        \"layer\": \"poc_patterns\",\n        \"doc_type\": \"poc_pattern\"\
+        \n      }\n    },\n    {\n      \"rank\": 4,\n      \"score\": 0.6675244997375712,\n\
+        \      \"distance\": 0.4980723559856415,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/mbedtls/4.1.0/x509_asn1_nested_helpers.md\"\
+        ,\n      \"text\": \"# API Constraints: X.509 / ASN.1 Nested Parsing Helpers\
+        \ (mbedTLS 4.1.0)\\n\\nSource version: `/home/wen/work/clean_sources/mbedtls-4.1.0`\\\
+        n\\n## APIs\\n\\n- Internal helper: `x509_get_attr_type_value`\\n- Related\
+        \ extension parser paths: certificate extension parsing in `library/x509_crt.c`,\
+        \ CRL extension parsing in `library/x509_crl.c`\\n- Source files:\\n  - `library/x509.c`\\\
+        n  - `library/x509_crt.c`\\n  - `library/x509_crl.c`\\n\\n## Relevant Signatures\\\
+        n\\n```c\\nstatic int x509_get_attr_type_value(unsigned char **p,\\n     \
+        \                               const unsigned char *end,\\n             \
+        \                       mbedtls_x509_name *cur);\\n```\\n\\nThe current source\
+        \ also uses local parser end boundaries such as:\\n\\n```c\\nend = *p + len;\\\
+        nend = crt->v3_ext.p + crt->v3_ext.len;\\nend = ext->p + ext->len;\\n```\\\
+        n\\n## Parameter Semantics\\n\\n- `p`: in/out ASN.1 cursor; successful parsing\
+        \ advances i"
+      stderr_preview: ''
+      truncated: true
+      kind: source_pattern
+      use_for_feature_inference: source_only
+    - query: openssl d2i_X509 function declaration signature parameters return value
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.662557941480265
+        distance: 0.5093019604682922
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509.md
+        text: '# API Constraints: d2i_X509 (OpenSSL 3.5.5)
+
+
+          Source version: `/home/wen/work/clean_sources/openssl-3.5.5`
+
+
+          ## API
+
+
+          - API/function name: `d2i_X509`
+
+          - Header/manpage: `include/openssl/x509.h`, `doc/man3/d2i_X509.pod`
+
+          - Implementation file: generated by `IMPLEMENT_ASN1_FUNCTIONS(X509)` in
+          `crypto/x509/x_x509.c`
+
+          - Signature:
+
+
+          ```c
+
+          X509 *d2i_X509(X509 **a, const unsigned char **pp, long length);
+
+          ```
+
+
+          ## Semantics
+
+
+          - DER-decodes an X.509 certificate from memory.
+
+          - On success, advances `*pp` past the consumed DER object.
+
+
+          ## Return Value Semantics
+
+
+          - Returns `X509 *` on success.
+
+          - Returns `NULL` on ASN.1/X.509 parse failure; error details are in OpenSSL
+          error queue.
+
+
+          ## Ownership and Buffer Constraints
+
+
+          - Returned certificate is caller-owned and freed with `X509_free()`.
+
+          - Input bytes remain caller-owned.
+
+          - Pointer advancement lets harnesses detect whether trailing bytes were
+          consumed or left unconsumed.
+
+
+          ## Harness Generation Notes
+
+
+          - Use `const unsigned char *p = der; X509 *x = d2i_X509(NUL'
+        metadata:
+          layer: api_constraints
+          library: openssl
+          doc_type: api_constraint
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509.md
+      - rank: 2
+        score: 0.6434900221783918
+        distance: 0.5540256500244141
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/d2i_RSAPrivateKey.md
+        text: "# API Constraints: d2i_RSAPrivateKey (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `d2i_RSAPrivateKey`\n- Header/manpage: `include/openssl/rsa.h`,\
+          \ `doc/man3/d2i_RSAPrivateKey.pod`\n- Implementation family: ASN.1 item\
+          \ functions for `RSAPrivateKey`\n- Signature:\n\n```c\nRSA *d2i_RSAPrivateKey(RSA\
+          \ **a,\n                       const unsigned char **ppin,\n           \
+          \            long length);\n```\n\n## Semantics\n\n- Deprecated OpenSSL\
+          \ 3.x API for DER decoding a PKCS#1 `RSAPrivateKey`.\n- Expects PKCS#1 RSA\
+          \ private key structure.\n- Advances `*ppin` after successful decode.\n\n\
+          ## Return Value Semantics\n\n- Returns `RSA *` on success.\n- Returns `NULL`\
+          \ on ASN.1/RSA decode failure.\n\n## Ownership and Buffer Constraints\n\n\
+          - Returned `RSA` is caller-owned and freed with `RSA_free()`.\n- Input bytes\
+          \ remain caller-owned.\n- Pointer advancement can reveal unconsumed trailing\
+          \ bytes.\n\n## Harness Generation Notes\n\n- Build with deprecated API visibility\
+          \ enabled"
+        metadata:
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/d2i_RSAPrivateKey.md
+          doc_type: api_constraint
+          layer: api_constraints
+          library: openssl
+      - rank: 3
+        score: 0.6398444958006765
+        distance: 0.562879741191864
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+        text: "/* OPENSSL_NO_DEPRECATED_3_0 */\n#endif /* OPENSSL_NO_EC */\n\nstatic\
+          \ int test_EVP_PKEY_sign(int tst)\n{\n    int ret = 0;\n    EVP_PKEY *pkey\
+          \ = NULL;\n    unsigned char *sig = NULL;\n    size_t sig_len = 0, shortsig_len\
+          \ = 1;\n    EVP_PKEY_CTX *ctx = NULL;\n    unsigned char tbs[] = {\n   \
+          \     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a,\
+          \ 0x0b,\n        0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13\n    };\n\
+          \n    if (tst == 0) {\n        if (!TEST_ptr(pkey = load_example_rsa_key()))\n\
+          \            goto out;\n    } else if (tst == 1) {\n#ifndef OPENSSL_NO_DSA\n\
+          \        if (!TEST_ptr(pkey = load_example_dsa_key()))\n            goto\
+          \ out;\n#else\n        ret = 1;\n```\n\n## Call pattern 22\n\n```c\nOSSL_PARAM\
+          \ *params = NULL;\n    BIGNUM *p = NULL, *q = NULL, *g = NULL, *pub = NULL,\
+          \ *priv = NULL;\n    EVP_PKEY_CTX *pctx = NULL;\n    EVP_PKEY *pkey = NULL;\n\
+          \    int ret = 0;\n\n    /*\n     * Setup the parameters for our DSA object.\
+          \ For our purposes they don't\n     * have to actually be *valid* parameters.\
+          \ W"
+        metadata:
+          doc_type: unit_test_call_pattern
+          library: openssl
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+          layer: unit_tests
+      - rank: 4
+        score: 0.6326387305667928
+        distance: 0.5806809663772583
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/d2i_PrivateKey.md
+        text: "# API Constraints: d2i_PrivateKey (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `d2i_PrivateKey`\n- Header/manpage: `include/openssl/evp.h`, `doc/man3/d2i_PrivateKey.pod`\n\
+          - Implementation file: `crypto/asn1/d2i_pr.c`\n- Signature:\n\n```c\nEVP_PKEY\
+          \ *d2i_PrivateKey(int type, EVP_PKEY **a,\n                        const\
+          \ unsigned char **pp, long length);\n```\n\n## Semantics\n\n- DER-decodes\
+          \ a private key of a specified algorithm type.\n- Attempts key-specific\
+          \ format and PKCS#8 unencrypted `PrivateKeyInfo`.\n- Advances `*pp` after\
+          \ successful decode.\n\n## Return Value Semantics\n\n- Returns `EVP_PKEY\
+          \ *` on success.\n- Returns `NULL` on decode/type mismatch/fetch failure.\n\
+          \n## Ownership and Buffer Constraints\n\n- Returned key is caller-owned\
+          \ and freed with `EVP_PKEY_free()`.\n- If `a != NULL`, `*a` can be overwritten\
+          \ with the returned key.\n- Input bytes are caller-owned.\n\n## Harness\
+          \ Generation Notes\n\n- For RSA use `EVP_PKEY_RSA` as `type`.\n- Compare"
+        metadata:
+          layer: api_constraints
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/d2i_PrivateKey.md
+          library: openssl
+          doc_type: api_constraint
+      - rank: 5
+        score: 0.6320254714626299
+        distance: 0.5822147130966187
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509_bio.md
+        text: '# API Constraints: d2i_X509_bio (OpenSSL 3.5.5)
+
+
+          Source version: `/home/wen/work/clean_sources/openssl-3.5.5`
+
+
+          ## API
+
+
+          - API/function name: `d2i_X509_bio`
+
+          - Header declaration: `include/openssl/x509.h`
+
+          - Implementation file: `crypto/x509/x_all.c`
+
+          - Signature:
+
+
+          ```c
+
+          X509 *d2i_X509_bio(BIO *bp, X509 **x509);
+
+          ```
+
+
+          ## Semantics
+
+
+          - DER-decodes an X.509 certificate from a BIO through `ASN1_item_d2i_bio()`.
+
+
+          ## Return Value Semantics
+
+
+          - Returns `X509 *` on success.
+
+          - Returns `NULL` on read or ASN.1 parse failure.
+
+
+          ## Ownership and Buffer Constraints
+
+
+          - Returned object is caller-owned.
+
+          - Input stream is caller-owned; exact pointer-consumption observation is
+          weaker than memory `d2i_X509()`.
+
+
+          ## Harness Generation Notes
+
+
+          - Use `BIO_new_mem_buf(der, len)` for in-memory DER.
+
+          - Prefer `d2i_X509()` when a harness needs exact trailing-byte pointer checks.
+
+
+          ## Vulnerability-Pattern Migration Notes
+
+
+          - Candidate for X.509 parser boundary migration with BIO input.
+
+          - Useful when target harness framework s'
+        metadata:
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509_bio.md
+          doc_type: api_constraint
+          library: openssl
+          layer: api_constraints
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl d2i_X509 function declaration signature\
+        \ parameters return value\",\n  \"top_k\": 5,\n  \"results\": [\n    {\n \
+        \     \"rank\": 1,\n      \"score\": 0.662557941480265,\n      \"distance\"\
+        : 0.5093019604682922,\n      \"layer\": \"api_constraints\",\n      \"source_file\"\
+        : \"knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509.md\",\n      \"text\"\
+        : \"# API Constraints: d2i_X509 (OpenSSL 3.5.5)\\n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\\
+        n\\n## API\\n\\n- API/function name: `d2i_X509`\\n- Header/manpage: `include/openssl/x509.h`,\
+        \ `doc/man3/d2i_X509.pod`\\n- Implementation file: generated by `IMPLEMENT_ASN1_FUNCTIONS(X509)`\
+        \ in `crypto/x509/x_x509.c`\\n- Signature:\\n\\n```c\\nX509 *d2i_X509(X509\
+        \ **a, const unsigned char **pp, long length);\\n```\\n\\n## Semantics\\n\\\
+        n- DER-decodes an X.509 certificate from memory.\\n- On success, advances\
+        \ `*pp` past the consumed DER object.\\n\\n## Return Value Semantics\\n\\\
+        n- Returns `X509 *` on success.\\n- Returns `NULL` on ASN.1/X.509 parse failure;\
+        \ error details are in OpenSSL error queue.\\n\\n## Ownership and Buffer Constraints\\\
+        n\\n- Returned certificate is caller-owned and freed with `X509_free()`.\\\
+        n- Input bytes remain caller-owned.\\n- Pointer advancement lets harnesses\
+        \ detect whether trailing bytes were consumed or left unconsumed.\\n\\n##\
+        \ Harness Generation Notes\\n\\n- Use `const unsigned char *p = der; X509\
+        \ *x = d2i_X509(NUL\",\n      \"metadata\": {\n        \"layer\": \"api_constraints\"\
+        ,\n        \"library\": \"openssl\",\n        \"doc_type\": \"api_constraint\"\
+        ,\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 2,\n      \"score\": 0.6434900221783918,\n\
+        \      \"distance\": 0.5540256500244141,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/d2i_RSAPrivateKey.md\"\
+        ,\n      \"text\": \"# API Constraints: d2i_RSAPrivateKey (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `d2i_RSAPrivateKey`\\n- Header/manpage: `include/openssl/rsa.h`,\
+        \ `doc/man3/d2i_RSAPrivateKey.pod`\\n- Implementation family: ASN.1 item functions\
+        \ for `RSAPrivateKey`\\n- Signature:\\n\\n```c\\nRSA *d2i_RSAPrivateKey(RSA\
+        \ **a,\\n                       const unsigned char **ppin,\\n           \
+        \            long length);\\n```\\n\\n## Semantics\\n\\n- Deprecated OpenSSL\
+        \ 3.x API for DER decoding a PKCS#1 `RSAPrivateKey`.\\n- Expects PKCS#1 RSA\
+        \ private key structure.\\n- Advances `*ppin` after successful decode.\\n\\\
+        n## Return Value Semantics\\n\\n- Returns `RSA *` on success.\\n- Returns\
+        \ `NULL` on ASN.1/RSA decode failure.\\n\\n## Ownership and Buffer Constraints\\\
+        n\\n- Returned `RSA` is caller-owned and freed with `RSA_free()`.\\n- Input\
+        \ bytes remain caller-owned.\\n- Pointer advancement can reveal unconsumed\
+        \ trailing bytes.\\n\\n## Harness Generation Notes\\n\\n- Build with deprecated\
+        \ API visibility enabled\",\n      \"metadata\": {\n        \"source_file\"\
+        : \"knowledge_raw/api_constraints/openssl/3.5.5/d2i_RSAPrivateKey.md\",\n\
+        \        \"doc_type\": \"api_constraint\",\n        \"layer\": \"api_constraints\"\
+        ,\n        \"library\": \"openssl\"\n      }\n    },\n    {\n      \"rank\"\
+        : 3,\n      \"score\": 0.6398444958006765,\n      \"distance\": 0.562879741191864,\n\
+        \      \"layer\": \"unit_tests\",\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n      \"text\": \"/* OPENSSL_NO_DEPRECATED_3_0 */\\n#endif /* OPENSSL_NO_EC\
+        \ */\\n\\nstatic int test_EVP_PKEY_sign(int tst)\\n{\\n    int ret = 0;\\\
+        n    EVP_PKEY *pkey = NULL;\\n    unsigned char *sig = NULL;\\n    size_t\
+        \ sig_len = 0, shortsig_len = 1;\\n    EVP_PKEY_CTX *ctx = NULL;\\n    unsigned\
+        \ char tbs[] = {\\n        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,\
+        \ 0x08, 0x09, 0x0a, 0x0b,\\n        0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12,\
+        \ 0x13\\n    };\\n\\n    if (tst == 0) {\\n        if (!TEST_ptr(pkey = load_example_rsa_key()))\\\
+        n            goto out;\\n    } else if (tst == 1) {\\n#ifndef OPENSSL_NO_DSA\\\
+        n        if (!TEST_ptr(pkey = load_example_dsa_key()))\\n            goto\
+        \ out;\\n#else\\n        ret = 1;\\n```\\n\\n## Call pattern 22\\n\\n```c\\\
+        nOSSL_PARAM *params = NULL;\\n    BIGNUM *p = NULL, *q = NULL, *g = NULL,\
+        \ *pub = NULL, *priv = NULL;\\n    EVP_PKEY_CTX *pctx = NULL;\\n    EVP_PKEY\
+        \ *pkey = NULL;\\n    int ret = 0;\\n\\n    /*\\n     * Setup the parameters\
+        \ for our DSA object. For our purposes they don't\\n     * have to actually\
+        \ be *valid* parameters. W\",\n      \"metadata\": {\n        \"doc_type\"\
+        : \"unit_test_call_pattern\",\n        \"library\": \"openssl\",\n       \
+        \ \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n        \"layer\": \"unit_tests\"\n      }\n    },\n    {\n      \"rank\"\
+        : 4,\n      \"score\": 0.6326387305667928,\n      \"distance\": 0.5806809663772583,\n\
+        \      \"layer\": \"api_constraints\",\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/d2i_PrivateKey.md\"\
+        ,\n      \"text\": \"# API Constraints: d2i_PrivateKey (OpenSSL 3.5.5)\\n\\\
+        nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `d2i_PrivateKey`\\n- Header/manpage: `include/openssl/evp.h`,\
+        \ `doc/man3/d2i_PrivateKey.pod`\\n- Implementation file: `crypto/asn1/d2i_pr.c`\\\
+        n- Signature:\\n\\n```c\\nEVP_PKEY *d2i_PrivateKey(int type, EVP_PKEY **a,\\\
+        n                        const unsigned char **pp, long length);\\n```\\n\\\
+        n## Semantics\\n\\n- DER-decodes a private key of a specified algorithm type.\\\
+        n- Attempts key-specific format and PKCS#8 unencrypted `PrivateKeyInfo`.\\\
+        n- Advances `*pp` after successful decode.\\n\\n## Return Value Semantics\\\
+        n\\n- Returns `EVP_PKEY *` on success.\\n- Returns `NULL` on decode/type mismatch/fetch\
+        \ failure.\\n\\n## Ownership and Buffer Constraints\\n\\n- Returned key is\
+        \ caller-owned and freed with `EVP_PKEY_free()`.\\n- If `a != NULL`, `*a`\
+        \ can be overwritten with the returned key.\\n- Input bytes are caller-owned.\\\
+        n\\n## Harness Generation Notes\\n\\n- For RSA use `EVP_PKEY_RSA` as `type`.\\\
+        n- Compare\",\n      \"metadata\": {\n        \"layer\": \"api_cons"
+      stderr_preview: ''
+      truncated: true
+      kind: target_api_signature
+      use_for_feature_inference: target
+    - query: openssl d2i_X509 implementation source code parameters return error
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.6979990874165307
+        distance: 0.4326666295528412
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509.md
+        text: '# API Constraints: d2i_X509 (OpenSSL 3.5.5)
+
+
+          Source version: `/home/wen/work/clean_sources/openssl-3.5.5`
+
+
+          ## API
+
+
+          - API/function name: `d2i_X509`
+
+          - Header/manpage: `include/openssl/x509.h`, `doc/man3/d2i_X509.pod`
+
+          - Implementation file: generated by `IMPLEMENT_ASN1_FUNCTIONS(X509)` in
+          `crypto/x509/x_x509.c`
+
+          - Signature:
+
+
+          ```c
+
+          X509 *d2i_X509(X509 **a, const unsigned char **pp, long length);
+
+          ```
+
+
+          ## Semantics
+
+
+          - DER-decodes an X.509 certificate from memory.
+
+          - On success, advances `*pp` past the consumed DER object.
+
+
+          ## Return Value Semantics
+
+
+          - Returns `X509 *` on success.
+
+          - Returns `NULL` on ASN.1/X.509 parse failure; error details are in OpenSSL
+          error queue.
+
+
+          ## Ownership and Buffer Constraints
+
+
+          - Returned certificate is caller-owned and freed with `X509_free()`.
+
+          - Input bytes remain caller-owned.
+
+          - Pointer advancement lets harnesses detect whether trailing bytes were
+          consumed or left unconsumed.
+
+
+          ## Harness Generation Notes
+
+
+          - Use `const unsigned char *p = der; X509 *x = d2i_X509(NUL'
+        metadata:
+          doc_type: api_constraint
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509.md
+          library: openssl
+          layer: api_constraints
+      - rank: 2
+        score: 0.6645702163245847
+        distance: 0.5047318935394287
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509_bio.md
+        text: '# API Constraints: d2i_X509_bio (OpenSSL 3.5.5)
+
+
+          Source version: `/home/wen/work/clean_sources/openssl-3.5.5`
+
+
+          ## API
+
+
+          - API/function name: `d2i_X509_bio`
+
+          - Header declaration: `include/openssl/x509.h`
+
+          - Implementation file: `crypto/x509/x_all.c`
+
+          - Signature:
+
+
+          ```c
+
+          X509 *d2i_X509_bio(BIO *bp, X509 **x509);
+
+          ```
+
+
+          ## Semantics
+
+
+          - DER-decodes an X.509 certificate from a BIO through `ASN1_item_d2i_bio()`.
+
+
+          ## Return Value Semantics
+
+
+          - Returns `X509 *` on success.
+
+          - Returns `NULL` on read or ASN.1 parse failure.
+
+
+          ## Ownership and Buffer Constraints
+
+
+          - Returned object is caller-owned.
+
+          - Input stream is caller-owned; exact pointer-consumption observation is
+          weaker than memory `d2i_X509()`.
+
+
+          ## Harness Generation Notes
+
+
+          - Use `BIO_new_mem_buf(der, len)` for in-memory DER.
+
+          - Prefer `d2i_X509()` when a harness needs exact trailing-byte pointer checks.
+
+
+          ## Vulnerability-Pattern Migration Notes
+
+
+          - Candidate for X.509 parser boundary migration with BIO input.
+
+          - Useful when target harness framework s'
+        metadata:
+          layer: api_constraints
+          library: openssl
+          doc_type: api_constraint
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509_bio.md
+      - rank: 3
+        score: 0.6460191435914914
+        distance: 0.5479417443275452
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/d2i_PUBKEY.md
+        text: "# API Constraints: d2i_PUBKEY (OpenSSL 3.5.5)\n\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\
+          \n## API\n\n- API/function name: `d2i_PUBKEY`\n- Header/manpage: `include/openssl/x509.h`,\
+          \ `doc/man3/X509_PUBKEY_new.pod`\n- Implementation file: `crypto/x509/x_pubkey.c`\n\
+          - Signature:\n\n```c\nEVP_PKEY *d2i_PUBKEY(EVP_PKEY **a,\n             \
+          \        const unsigned char **pp,\n                     long length);\n\
+          ```\n\n## Semantics\n\n- DER-decodes an `EVP_PKEY` public key using RFC\
+          \ 5280 `SubjectPublicKeyInfo`.\n- Advances `*pp` after successful decode.\n\
+          \n## Return Value Semantics\n\n- Returns `EVP_PKEY *` on success.\n- Returns\
+          \ `NULL` on ASN.1, provider, or unsupported-key failure.\n\n## Ownership\
+          \ and Buffer Constraints\n\n- Returned key is caller-owned and freed with\
+          \ `EVP_PKEY_free()`.\n- Input buffer remains caller-owned.\n- Pointer advancement\
+          \ is observable for exact-consumption checks.\n\n## Harness Generation Notes\n\
+          \n- Use `const unsigned char *p = der; EVP_PKEY *k = d2i_PUBKEY(NULL, &p,\
+          \ len);`.\n- For R"
+        metadata:
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/d2i_PUBKEY.md
+          layer: api_constraints
+          library: openssl
+          doc_type: api_constraint
+      - rank: 4
+        score: 0.6446929011836882
+        distance: 0.5511261224746704
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/d2i_PrivateKey.md
+        text: "# API Constraints: d2i_PrivateKey (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `d2i_PrivateKey`\n- Header/manpage: `include/openssl/evp.h`, `doc/man3/d2i_PrivateKey.pod`\n\
+          - Implementation file: `crypto/asn1/d2i_pr.c`\n- Signature:\n\n```c\nEVP_PKEY\
+          \ *d2i_PrivateKey(int type, EVP_PKEY **a,\n                        const\
+          \ unsigned char **pp, long length);\n```\n\n## Semantics\n\n- DER-decodes\
+          \ a private key of a specified algorithm type.\n- Attempts key-specific\
+          \ format and PKCS#8 unencrypted `PrivateKeyInfo`.\n- Advances `*pp` after\
+          \ successful decode.\n\n## Return Value Semantics\n\n- Returns `EVP_PKEY\
+          \ *` on success.\n- Returns `NULL` on decode/type mismatch/fetch failure.\n\
+          \n## Ownership and Buffer Constraints\n\n- Returned key is caller-owned\
+          \ and freed with `EVP_PKEY_free()`.\n- If `a != NULL`, `*a` can be overwritten\
+          \ with the returned key.\n- Input bytes are caller-owned.\n\n## Harness\
+          \ Generation Notes\n\n- For RSA use `EVP_PKEY_RSA` as `type`.\n- Compare"
+        metadata:
+          layer: api_constraints
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/d2i_PrivateKey.md
+          doc_type: api_constraint
+          library: openssl
+      - rank: 5
+        score: 0.6415471883104319
+        distance: 0.5587317943572998
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+        text: "/* OPENSSL_NO_DEPRECATED_3_0 */\n#endif /* OPENSSL_NO_EC */\n\nstatic\
+          \ int test_EVP_PKEY_sign(int tst)\n{\n    int ret = 0;\n    EVP_PKEY *pkey\
+          \ = NULL;\n    unsigned char *sig = NULL;\n    size_t sig_len = 0, shortsig_len\
+          \ = 1;\n    EVP_PKEY_CTX *ctx = NULL;\n    unsigned char tbs[] = {\n   \
+          \     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a,\
+          \ 0x0b,\n        0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13\n    };\n\
+          \n    if (tst == 0) {\n        if (!TEST_ptr(pkey = load_example_rsa_key()))\n\
+          \            goto out;\n    } else if (tst == 1) {\n#ifndef OPENSSL_NO_DSA\n\
+          \        if (!TEST_ptr(pkey = load_example_dsa_key()))\n            goto\
+          \ out;\n#else\n        ret = 1;\n```\n\n## Call pattern 22\n\n```c\nOSSL_PARAM\
+          \ *params = NULL;\n    BIGNUM *p = NULL, *q = NULL, *g = NULL, *pub = NULL,\
+          \ *priv = NULL;\n    EVP_PKEY_CTX *pctx = NULL;\n    EVP_PKEY *pkey = NULL;\n\
+          \    int ret = 0;\n\n    /*\n     * Setup the parameters for our DSA object.\
+          \ For our purposes they don't\n     * have to actually be *valid* parameters.\
+          \ W"
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+          library: openssl
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl d2i_X509 implementation source code\
+        \ parameters return error\",\n  \"top_k\": 5,\n  \"results\": [\n    {\n \
+        \     \"rank\": 1,\n      \"score\": 0.6979990874165307,\n      \"distance\"\
+        : 0.4326666295528412,\n      \"layer\": \"api_constraints\",\n      \"source_file\"\
+        : \"knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509.md\",\n      \"text\"\
+        : \"# API Constraints: d2i_X509 (OpenSSL 3.5.5)\\n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\\
+        n\\n## API\\n\\n- API/function name: `d2i_X509`\\n- Header/manpage: `include/openssl/x509.h`,\
+        \ `doc/man3/d2i_X509.pod`\\n- Implementation file: generated by `IMPLEMENT_ASN1_FUNCTIONS(X509)`\
+        \ in `crypto/x509/x_x509.c`\\n- Signature:\\n\\n```c\\nX509 *d2i_X509(X509\
+        \ **a, const unsigned char **pp, long length);\\n```\\n\\n## Semantics\\n\\\
+        n- DER-decodes an X.509 certificate from memory.\\n- On success, advances\
+        \ `*pp` past the consumed DER object.\\n\\n## Return Value Semantics\\n\\\
+        n- Returns `X509 *` on success.\\n- Returns `NULL` on ASN.1/X.509 parse failure;\
+        \ error details are in OpenSSL error queue.\\n\\n## Ownership and Buffer Constraints\\\
+        n\\n- Returned certificate is caller-owned and freed with `X509_free()`.\\\
+        n- Input bytes remain caller-owned.\\n- Pointer advancement lets harnesses\
+        \ detect whether trailing bytes were consumed or left unconsumed.\\n\\n##\
+        \ Harness Generation Notes\\n\\n- Use `const unsigned char *p = der; X509\
+        \ *x = d2i_X509(NUL\",\n      \"metadata\": {\n        \"doc_type\": \"api_constraint\"\
+        ,\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509.md\"\
+        ,\n        \"library\": \"openssl\",\n        \"layer\": \"api_constraints\"\
+        \n      }\n    },\n    {\n      \"rank\": 2,\n      \"score\": 0.6645702163245847,\n\
+        \      \"distance\": 0.5047318935394287,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509_bio.md\"\
+        ,\n      \"text\": \"# API Constraints: d2i_X509_bio (OpenSSL 3.5.5)\\n\\\
+        nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `d2i_X509_bio`\\n- Header declaration: `include/openssl/x509.h`\\\
+        n- Implementation file: `crypto/x509/x_all.c`\\n- Signature:\\n\\n```c\\nX509\
+        \ *d2i_X509_bio(BIO *bp, X509 **x509);\\n```\\n\\n## Semantics\\n\\n- DER-decodes\
+        \ an X.509 certificate from a BIO through `ASN1_item_d2i_bio()`.\\n\\n## Return\
+        \ Value Semantics\\n\\n- Returns `X509 *` on success.\\n- Returns `NULL` on\
+        \ read or ASN.1 parse failure.\\n\\n## Ownership and Buffer Constraints\\\
+        n\\n- Returned object is caller-owned.\\n- Input stream is caller-owned; exact\
+        \ pointer-consumption observation is weaker than memory `d2i_X509()`.\\n\\\
+        n## Harness Generation Notes\\n\\n- Use `BIO_new_mem_buf(der, len)` for in-memory\
+        \ DER.\\n- Prefer `d2i_X509()` when a harness needs exact trailing-byte pointer\
+        \ checks.\\n\\n## Vulnerability-Pattern Migration Notes\\n\\n- Candidate for\
+        \ X.509 parser boundary migration with BIO input.\\n- Useful when target harness\
+        \ framework s\",\n      \"metadata\": {\n        \"layer\": \"api_constraints\"\
+        ,\n        \"library\": \"openssl\",\n        \"doc_type\": \"api_constraint\"\
+        ,\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509_bio.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 3,\n      \"score\": 0.6460191435914914,\n\
+        \      \"distance\": 0.5479417443275452,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/d2i_PUBKEY.md\"\
+        ,\n      \"text\": \"# API Constraints: d2i_PUBKEY (OpenSSL 3.5.5)\\n\\nSource\
+        \ version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\n\\n-\
+        \ API/function name: `d2i_PUBKEY`\\n- Header/manpage: `include/openssl/x509.h`,\
+        \ `doc/man3/X509_PUBKEY_new.pod`\\n- Implementation file: `crypto/x509/x_pubkey.c`\\\
+        n- Signature:\\n\\n```c\\nEVP_PKEY *d2i_PUBKEY(EVP_PKEY **a,\\n          \
+        \           const unsigned char **pp,\\n                     long length);\\\
+        n```\\n\\n## Semantics\\n\\n- DER-decodes an `EVP_PKEY` public key using RFC\
+        \ 5280 `SubjectPublicKeyInfo`.\\n- Advances `*pp` after successful decode.\\\
+        n\\n## Return Value Semantics\\n\\n- Returns `EVP_PKEY *` on success.\\n-\
+        \ Returns `NULL` on ASN.1, provider, or unsupported-key failure.\\n\\n## Ownership\
+        \ and Buffer Constraints\\n\\n- Returned key is caller-owned and freed with\
+        \ `EVP_PKEY_free()`.\\n- Input buffer remains caller-owned.\\n- Pointer advancement\
+        \ is observable for exact-consumption checks.\\n\\n## Harness Generation Notes\\\
+        n\\n- Use `const unsigned char *p = der; EVP_PKEY *k = d2i_PUBKEY(NULL, &p,\
+        \ len);`.\\n- For R\",\n      \"metadata\": {\n        \"source_file\": \"\
+        knowledge_raw/api_constraints/openssl/3.5.5/d2i_PUBKEY.md\",\n        \"layer\"\
+        : \"api_constraints\",\n        \"library\": \"openssl\",\n        \"doc_type\"\
+        : \"api_constraint\"\n      }\n    },\n    {\n      \"rank\": 4,\n      \"\
+        score\": 0.6446929011836882,\n      \"distance\": 0.5511261224746704,\n  \
+        \    \"layer\": \"api_constraints\",\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/d2i_PrivateKey.md\"\
+        ,\n      \"text\": \"# API Constraints: d2i_PrivateKey (OpenSSL 3.5.5)\\n\\\
+        nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `d2i_PrivateKey`\\n- Header/manpage: `include/openssl/evp.h`,\
+        \ `doc/man3/d2i_PrivateKey.pod`\\n- Implementation file: `crypto/asn1/d2i_pr.c`\\\
+        n- Signature:\\n\\n```c\\nEVP_PKEY *d2i_PrivateKey(int type, EVP_PKEY **a,\\\
+        n                        const unsigned char **pp, long length);\\n```\\n\\\
+        n## Semantics\\n\\n- DER-decodes a private key of a specified algorithm type.\\\
+        n- Attempts key-specific format and PKCS#8 unencrypted `PrivateKeyInfo`.\\\
+        n- Advances `*pp` after successful decode.\\n\\n## Return Value Semantics\\\
+        n\\n- Returns `EVP_PKEY *` on success.\\n- Returns `NULL` on decode/type mismatch/fetch\
+        \ failure.\\n\\n## Ownership and Buffer Constraints\\n\\n- Returned key is\
+        \ caller-owned and freed with `EVP_PKEY_free()`.\\n- If `a != NULL`, `*a`\
+        \ can be overwritten with the returned key.\\n- Input bytes are caller-owned.\\\
+        n\\n## Harness Generation Notes\\n\\n- For RSA use `EVP_PKEY_RSA` as `type`.\\\
+        n- Compare\",\n      \"metadata\": {\n        \"layer\": \"api_constraints\"\
+        ,\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/d2i_PrivateKey.md\"\
+        ,\n        \"do"
+      stderr_preview: ''
+      truncated: true
+      kind: target_api_implementation
+      use_for_feature_inference: target
+    - query: openssl d2i_X509 usage example unit test API call pattern
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7152848917847623
+        distance: 0.3980443477630615
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/3.5.5/der_asn1_target_api_evidence.md
+        text: "# Unit Test / Example Evidence: OpenSSL DER / ASN.1 Target APIs\n\n\
+          Source version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## APIs\
+          \ Covered\n\n- `d2i_X509`\n- `d2i_X509_bio`\n- `ASN1_item_d2i`\n- `d2i_PrivateKey`\n\
+          - `d2i_AutoPrivateKey`\n- `d2i_RSAPrivateKey`\n- `d2i_RSA_PUBKEY`\n- `d2i_PUBKEY`\n\
+          \n## Found Evidence\n\nstatus: partially_found_in_local_tests\n\n- `test/x509_test.c`\n\
+          \  - Direct `d2i_X509()`, `d2i_PUBKEY()`, and `d2i_PrivateKey()` calls.\n\
+          - `test/pkcs7_test.c`\n  - Direct `d2i_X509_bio()` calls.\n- `test/evp_extra_test.c`\n\
+          \  - `test_d2i_AutoPrivateKey` checks returned key type and `p == input\
+          \ + input_len`.\n- `test/evp_extra_test2.c`\n  - `test_d2i_AutoPrivateKey_ex`\
+          \ and legacy `d2i_RSAPrivateKey()` usage.\n- `crypto/x509/v3_lib.c`\n  -\
+          \ Internal extension decode through `ASN1_item_d2i()`.\n\n## Missing Local\
+          \ Evidence\n\nstatus: not_found_in_local_tests\n\napi: `d2i_RSA_PUBKEY`\n\
+          \nsearched_paths:\n- `/home/wen/work/clean_sources/openssl-3.5.5/test`\n\
+          - `/home/wen/work/clean_sources/openssl-3.5.5/apps`\n- `"
+        metadata:
+          library: openssl
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/3.5.5/der_asn1_target_api_evidence.md
+      - rank: 2
+        score: 0.6829232213802651
+        distance: 0.4642934501171112
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/3.5.5/der_asn1_target_api_evidence.md
+        text: 'e/wen/work/clean_sources/openssl-3.5.5/test`
+
+          - `/home/wen/work/clean_sources/openssl-3.5.5/apps`
+
+          - `/home/wen/work/clean_sources/openssl-3.5.5/demos`
+
+          - `/home/wen/work/clean_sources/openssl-3.5.5/crypto/x509`
+
+
+          missing_reason: local source contains the implementation in `crypto/x509/x_pubkey.c`,
+          but no direct local unit test was found that calls `d2i_RSA_PUBKEY()` as
+          the top-level API.
+
+
+          recommended_next_search:
+
+          - upstream_github_tests
+
+          - upstream_github_regression_tests
+
+          - upstream_github_commit_diff
+
+          - upstream_github_issue_or_pr_discussion
+
+
+          ## Harness Relevance
+
+
+          - `d2i_X509()` and `ASN1_item_d2i()` are strong candidates for nested ASN.1
+          boundary migration.
+
+          - `d2i_RSAPrivateKey()`, `d2i_AutoPrivateKey()`, `d2i_PrivateKey()`, and
+          `d2i_PUBKEY()` are useful for DER trailing-garbage migration, especially
+          when pointer advancement is checked.'
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/3.5.5/der_asn1_target_api_evidence.md
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+          library: openssl
+      - rank: 3
+        score: 0.6785085105273828
+        distance: 0.47382086515426636
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509.md
+        text: '# API Constraints: d2i_X509 (OpenSSL 3.5.5)
+
+
+          Source version: `/home/wen/work/clean_sources/openssl-3.5.5`
+
+
+          ## API
+
+
+          - API/function name: `d2i_X509`
+
+          - Header/manpage: `include/openssl/x509.h`, `doc/man3/d2i_X509.pod`
+
+          - Implementation file: generated by `IMPLEMENT_ASN1_FUNCTIONS(X509)` in
+          `crypto/x509/x_x509.c`
+
+          - Signature:
+
+
+          ```c
+
+          X509 *d2i_X509(X509 **a, const unsigned char **pp, long length);
+
+          ```
+
+
+          ## Semantics
+
+
+          - DER-decodes an X.509 certificate from memory.
+
+          - On success, advances `*pp` past the consumed DER object.
+
+
+          ## Return Value Semantics
+
+
+          - Returns `X509 *` on success.
+
+          - Returns `NULL` on ASN.1/X.509 parse failure; error details are in OpenSSL
+          error queue.
+
+
+          ## Ownership and Buffer Constraints
+
+
+          - Returned certificate is caller-owned and freed with `X509_free()`.
+
+          - Input bytes remain caller-owned.
+
+          - Pointer advancement lets harnesses detect whether trailing bytes were
+          consumed or left unconsumed.
+
+
+          ## Harness Generation Notes
+
+
+          - Use `const unsigned char *p = der; X509 *x = d2i_X509(NUL'
+        metadata:
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509.md
+          doc_type: api_constraint
+          layer: api_constraints
+          library: openssl
+      - rank: 4
+        score: 0.675268987202938
+        distance: 0.4808913469314575
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__params_test.c.md
+        text: "# Official test/example call patterns: openssl\n\nLibrary: openssl\n\
+          Version: 3.5.5\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/test/params_test.c\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\n\"\
+          4142434445464748494a4b4c4d4e4f50\" \\\n    \"5152535455565758595a616263646566\"\
+          \ \\\n    \"6768696a6b6c6d6e6f70717273747576\" \\\n    \"7778797a30313233343536373839\"\
+          \n#define p4_init \"BLAKE2s256\" /* Random string */\n#define p5_init \"\
+          Hellow World\" /* Random string */ /* codespell:ignore */\n#define p6_init\
+          \ OPENSSL_FULL_VERSION_STR /* Static string */\n\nstatic void cleanup_object(void\
+          \ *vobj)\n{\n    struct object_st *obj = vobj;\n\n    BN_free(obj->p3);\n\
+          \    obj->p3 = NULL;\n    OPENSSL_free(obj->p4);\n    obj->p4 = NULL;\n\
+          \    OPENSSL_free(obj);\n}\n\nstatic void *init_object(void)\n{\n    struct\
+          \ object_st *obj;\n\n    if (!TEST_ptr(obj = OPENSSL_zalloc(sizeof(*obj))))\n\
+          \        return NULL;\n\n    obj->p1 = p1_init;\n    obj->p2 = p2_init;\n\
+          \    if (!TEST_true(BN_hex2bn(&obj->p3, p3_init)))\n        goto fail"
+        metadata:
+          library: openssl
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__params_test.c.md
+      - rank: 5
+        score: 0.6678275047289078
+        distance: 0.4973926544189453
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_libctx_test.c.md
+        text: "# Official test/example call patterns: openssl\n\nLibrary: openssl\n\
+          Version: 3.5.5\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/test/evp_libctx_test.c\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\nif\
+          \ (!TEST_ptr(dup_pk = EVP_PKEY_dup(pkey))\n            || !TEST_int_eq(EVP_PKEY_eq(pkey,\
+          \ dup_pk), 1))\n            goto err;\n    }\n\n    ret = 1;\nerr:\n   \
+          \ EVP_PKEY_free(pkey);\n    EVP_PKEY_free(dup_pk);\n    EVP_PKEY_CTX_free(gen_ctx);\n\
+          \    EVP_PKEY_free(pkey_parm);\n    DSA_free(dsa);\n    BN_free(g);\n  \
+          \  BN_free(q);\n    BN_free(p);\n    return ret;\n}\n#endif /* OPENSSL_NO_DSA\
+          \ */\n\n#ifndef OPENSSL_NO_DH\nstatic int do_dh_param_keygen(int tstid,\
+          \ const BIGNUM **bn)\n{\n    int ret = 0;\n    int expected;\n    EVP_PKEY_CTX\
+          \ *gen_ctx = NULL;\n    EVP_PKEY *pkey_parm = NULL;\n    EVP_PKEY *pkey\
+          \ = NULL, *dup_pk = NULL;\n    DH *dh = NULL;\n    int pind, qind, gind;\n\
+          \    BIGNUM *p = NULL, *q = NULL, *g = NULL;\n\n    /*\n     * These tests\
+          \ are using bad values for p, q, g by reusing the values."
+        metadata:
+          library: openssl
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_libctx_test.c.md
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl d2i_X509 usage example unit test\
+        \ API call pattern\",\n  \"top_k\": 5,\n  \"results\": [\n    {\n      \"\
+        rank\": 1,\n      \"score\": 0.7152848917847623,\n      \"distance\": 0.3980443477630615,\n\
+        \      \"layer\": \"unit_tests\",\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/3.5.5/der_asn1_target_api_evidence.md\"\
+        ,\n      \"text\": \"# Unit Test / Example Evidence: OpenSSL DER / ASN.1 Target\
+        \ APIs\\n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\\
+        n\\n## APIs Covered\\n\\n- `d2i_X509`\\n- `d2i_X509_bio`\\n- `ASN1_item_d2i`\\\
+        n- `d2i_PrivateKey`\\n- `d2i_AutoPrivateKey`\\n- `d2i_RSAPrivateKey`\\n- `d2i_RSA_PUBKEY`\\\
+        n- `d2i_PUBKEY`\\n\\n## Found Evidence\\n\\nstatus: partially_found_in_local_tests\\\
+        n\\n- `test/x509_test.c`\\n  - Direct `d2i_X509()`, `d2i_PUBKEY()`, and `d2i_PrivateKey()`\
+        \ calls.\\n- `test/pkcs7_test.c`\\n  - Direct `d2i_X509_bio()` calls.\\n-\
+        \ `test/evp_extra_test.c`\\n  - `test_d2i_AutoPrivateKey` checks returned\
+        \ key type and `p == input + input_len`.\\n- `test/evp_extra_test2.c`\\n \
+        \ - `test_d2i_AutoPrivateKey_ex` and legacy `d2i_RSAPrivateKey()` usage.\\\
+        n- `crypto/x509/v3_lib.c`\\n  - Internal extension decode through `ASN1_item_d2i()`.\\\
+        n\\n## Missing Local Evidence\\n\\nstatus: not_found_in_local_tests\\n\\napi:\
+        \ `d2i_RSA_PUBKEY`\\n\\nsearched_paths:\\n- `/home/wen/work/clean_sources/openssl-3.5.5/test`\\\
+        n- `/home/wen/work/clean_sources/openssl-3.5.5/apps`\\n- `\",\n      \"metadata\"\
+        : {\n        \"library\": \"openssl\",\n        \"layer\": \"unit_tests\"\
+        ,\n        \"doc_type\": \"unit_test_call_pattern\",\n        \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/3.5.5/der_asn1_target_api_evidence.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 2,\n      \"score\": 0.6829232213802651,\n\
+        \      \"distance\": 0.4642934501171112,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/3.5.5/der_asn1_target_api_evidence.md\"\
+        ,\n      \"text\": \"e/wen/work/clean_sources/openssl-3.5.5/test`\\n- `/home/wen/work/clean_sources/openssl-3.5.5/apps`\\\
+        n- `/home/wen/work/clean_sources/openssl-3.5.5/demos`\\n- `/home/wen/work/clean_sources/openssl-3.5.5/crypto/x509`\\\
+        n\\nmissing_reason: local source contains the implementation in `crypto/x509/x_pubkey.c`,\
+        \ but no direct local unit test was found that calls `d2i_RSA_PUBKEY()` as\
+        \ the top-level API.\\n\\nrecommended_next_search:\\n- upstream_github_tests\\\
+        n- upstream_github_regression_tests\\n- upstream_github_commit_diff\\n- upstream_github_issue_or_pr_discussion\\\
+        n\\n## Harness Relevance\\n\\n- `d2i_X509()` and `ASN1_item_d2i()` are strong\
+        \ candidates for nested ASN.1 boundary migration.\\n- `d2i_RSAPrivateKey()`,\
+        \ `d2i_AutoPrivateKey()`, `d2i_PrivateKey()`, and `d2i_PUBKEY()` are useful\
+        \ for DER trailing-garbage migration, especially when pointer advancement\
+        \ is checked.\",\n      \"metadata\": {\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/3.5.5/der_asn1_target_api_evidence.md\"\
+        ,\n        \"doc_type\": \"unit_test_call_pattern\",\n        \"layer\": \"\
+        unit_tests\",\n        \"library\": \"openssl\"\n      }\n    },\n    {\n\
+        \      \"rank\": 3,\n      \"score\": 0.6785085105273828,\n      \"distance\"\
+        : 0.47382086515426636,\n      \"layer\": \"api_constraints\",\n      \"source_file\"\
+        : \"knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509.md\",\n      \"text\"\
+        : \"# API Constraints: d2i_X509 (OpenSSL 3.5.5)\\n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\\
+        n\\n## API\\n\\n- API/function name: `d2i_X509`\\n- Header/manpage: `include/openssl/x509.h`,\
+        \ `doc/man3/d2i_X509.pod`\\n- Implementation file: generated by `IMPLEMENT_ASN1_FUNCTIONS(X509)`\
+        \ in `crypto/x509/x_x509.c`\\n- Signature:\\n\\n```c\\nX509 *d2i_X509(X509\
+        \ **a, const unsigned char **pp, long length);\\n```\\n\\n## Semantics\\n\\\
+        n- DER-decodes an X.509 certificate from memory.\\n- On success, advances\
+        \ `*pp` past the consumed DER object.\\n\\n## Return Value Semantics\\n\\\
+        n- Returns `X509 *` on success.\\n- Returns `NULL` on ASN.1/X.509 parse failure;\
+        \ error details are in OpenSSL error queue.\\n\\n## Ownership and Buffer Constraints\\\
+        n\\n- Returned certificate is caller-owned and freed with `X509_free()`.\\\
+        n- Input bytes remain caller-owned.\\n- Pointer advancement lets harnesses\
+        \ detect whether trailing bytes were consumed or left unconsumed.\\n\\n##\
+        \ Harness Generation Notes\\n\\n- Use `const unsigned char *p = der; X509\
+        \ *x = d2i_X509(NUL\",\n      \"metadata\": {\n        \"source_file\": \"\
+        knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509.md\",\n        \"doc_type\"\
+        : \"api_constraint\",\n        \"layer\": \"api_constraints\",\n        \"\
+        library\": \"openssl\"\n      }\n    },\n    {\n      \"rank\": 4,\n     \
+        \ \"score\": 0.675268987202938,\n      \"distance\": 0.4808913469314575,\n\
+        \      \"layer\": \"unit_tests\",\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__params_test.c.md\"\
+        ,\n      \"text\": \"# Official test/example call patterns: openssl\\n\\nLibrary:\
+        \ openssl\\nVersion: 3.5.5\\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/test/params_test.c\\\
+        nKnowledge type: unit_tests_or_examples\\n\\n## Call pattern 1\\n\\n```c\\\
+        n\\\"4142434445464748494a4b4c4d4e4f50\\\" \\\\\\n    \\\"5152535455565758595a616263646566\\\
+        \" \\\\\\n    \\\"6768696a6b6c6d6e6f70717273747576\\\" \\\\\\n    \\\"7778797a30313233343536373839\\\
+        \"\\n#define p4_init \\\"BLAKE2s256\\\" /* Random string */\\n#define p5_init\
+        \ \\\"Hellow World\\\" /* Random string */ /* codespell:ignore */\\n#define\
+        \ p6_init OPENSSL_FULL_VERSION_STR /* Static string */\\n\\nstatic void cleanup_object(void\
+        \ *vobj)\\n{\\n    struct object_st *obj = vobj;\\n\\n    BN_free(obj->p3);\\\
+        n    obj->p3 = NULL;\\n    OPENSSL_free(obj->p4);\\n    obj->p4 = NULL;\\\
+        n    OPENSSL_free(obj);\\n}\\n\\nstatic void *init_object(void)\\n{\\n   \
+        \ struct object_st *obj;\\n\\n    if (!TEST_ptr(obj = OPENSSL_zalloc(sizeof(*obj))))\\\
+        n        return NULL;\\n\\n    obj->p1 = p1_init;\\n    obj->p2 = p2_init;\\\
+        n    if (!TEST_true(BN_hex2bn(&obj->p3, p3_init)))\\n        goto fail\",\n\
+        \      \"metadata\": {\n        \"library\": \"openssl\",\n        \"layer\"\
+        : \"unit_tests\",\n        \"doc_type\": \"unit_test_call_pattern\",\n   \
+        \     \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test_"
+      stderr_preview: ''
+      truncated: true
+      kind: target_api_usage
+      use_for_feature_inference: target
+    - query: 'openssl d2i_X509 asn1_nested_substructure_boundary parent_end_vs_inner_end_pointer
+        differential_parser_error_path asn1_der_parser_entrypoint nested_substructure_length_field
+        parent_end_vs_inner_end_boundary malformed_nested_empty_structure differential_parser_error_or_rejection_path
+        asn1_der_parser_entrypoint nested_substructure_length_field parent_end_vs_inner_end_boundary
+        malformed_nested_empty_structure differential_parser_error_or_rejection_path
+        asn1_der_parser_entrypoint x509_certificate_der nested_substructure_length_field
+        malformed_nested_empty_structure differential_parser_error_or_rejection_path
+        consumed_pointer_or_error_queue_observation exact_mbedtls_error_code exact_internal_mbedtls_parser_function_name '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7762576575915895
+        distance: 0.28823205828666687
+        layer: poc_patterns
+        source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.md
+        text: 'ue is `MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_OUT_OF_DATA`,
+
+          - parser obeyed the inner substructure boundary.
+
+
+          ## Mutation Points
+
+
+          - `INNER_END_BOUND`: `end = *p + len;`
+
+          - `TRAILING_INNER_DATA_CHECK`: `*p != end` rejection block.
+
+          - `EMPTY_EXTENSION_RETURN`: `if (*p == end) return 0;`
+
+          - `MALFORMED_DER_STRUCTURE`: crafted DER with empty inner structures.
+
+
+          ## Vulnerability Path Features
+
+
+          Must preserve:
+
+
+          - ASN.1 DER parser entrypoint,
+
+          - nested substructure length field,
+
+          - parent-end versus inner-end boundary,
+
+          - malformed nested empty structure,
+
+          - differential parser error or rejection path.
+
+
+          Optional:
+
+
+          - X.509 certificate DER,
+
+          - issuer name AttributeTypeAndValue,
+
+          - CRT/CRL extension helper paths.
+
+
+          Not required:
+
+
+          - exact DER bytes,
+
+          - exact numeric error values,
+
+          - exact helper names.
+
+
+          ## Migration Guidance
+
+
+          Good target APIs parse DER/ASN.1 nested structures, maintain explicit parent
+
+          and child end pointers, expose parse error classes, and allow harnesses
+          to feed
+
+          malformed nested inpu'
+        metadata:
+          layer: poc_patterns
+          doc_type: poc_pattern
+          source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.md
+          library: mbedtls
+      - rank: 2
+        score: 0.7500240344805442
+        distance: 0.33329060673713684
+        layer: poc_patterns
+        source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.md
+        text: "# MBEDTLS-POC-0017: X.509 ASN.1 inner substructure boundary\n\n## Source\n\
+          \nThis pattern comes from Mbed TLS PR #2442 and issues #2430, #2431, and\
+          \ #2437.\nThe affected public API for the local PoC is `mbedtls_x509_crt_parse_der`.\n\
+          The root cause is in lower-level X.509 ASN.1 parsing helpers.\n\nThe confirmed\
+          \ fixed merge commit is\n`7af080a9f9601449601e9c97d21256bdc2205d02`; the\
+          \ local buggy worktree used\n`7af080a9f9601449601e9c97d21256bdc2205d02^1`.\
+          \ The library fix commit is\n`12f62fb82c81aa3f52bed49dff0f9e038d115f75`.\n\
+          \n## Root Cause\n\nSome parser routines used the parent ASN.1 structure's\
+          \ `end` pointer while\nparsing a nested substructure. This allowed fields\
+          \ inside an inner structure to\ncross the inner boundary.\n\nThe central\
+          \ fixed behavior is to set the parse bound to the inner structure:\n\n```c\n\
+          end = *p + len;\n```\n\nand reject trailing inner data, for example:\n\n\
+          ```c\nif (*p != end) {\n    return MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_LENGTH_MISMATCH;\n\
+          }\n```\n\n## Trigger Condition\n\nThe PoC ca"
+        metadata:
+          layer: poc_patterns
+          doc_type: poc_pattern
+          library: mbedtls
+          source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.md
+      - rank: 3
+        score: 0.7471796524628354
+        distance: 0.33836621046066284
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/x509_asn1_nested_helpers.md
+        text: 'nt ASN.1 object being parsed.
+
+          - `cur`: parsed X.509 name node storing OID and value buffers.
+
+
+          ## Return Value Semantics
+
+
+          - `0`: nested object parsed and cursor ends exactly at the nested object
+          end.
+
+          - `MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_OUT_OF_DATA`: not enough
+          bytes inside the nested structure.
+
+          - `MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_UNEXPECTED_TAG`: unexpected
+          type/value tag.
+
+          - `MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_LENGTH_MISMATCH`: trailing
+          bytes remain inside the nested object.
+
+          - Extension helpers similarly return `MBEDTLS_ERR_X509_INVALID_EXTENSIONS
+          + MBEDTLS_ERR_ASN1_*`.
+
+
+          ## Ownership and Buffer Constraints
+
+
+          - These helpers do not own the input DER buffer.
+
+          - They store pointers into the parsed certificate buffer, so the surrounding
+          certificate object controls lifetime.
+
+          - Cursor/end arithmetic is the critical safety boundary.
+
+
+          ## Harness Generation Notes
+
+
+          - Prefer public entry points such as `mbedtls_x509_crt_parse_der()` and
+          malformed DER byt'
+        metadata:
+          doc_type: api_constraint
+          layer: api_constraints
+          library: mbedtls
+          source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/x509_asn1_nested_helpers.md
+      - rank: 4
+        score: 0.7451804408753547
+        distance: 0.34195685386657715
+        layer: poc_patterns
+        source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.md
+        text: 'LS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_LENGTH_MISMATCH;
+
+          }
+
+          ```
+
+
+          ## Trigger Condition
+
+
+          The PoC calls `mbedtls_x509_crt_parse_der()` with a regression-test-derived
+
+          malformed DER certificate:
+
+
+          - X.509 Certificate ASN.1
+
+          - malformed TBSCertificate issuer
+
+          - two empty inner AttributeTypeAndValue structures
+
+
+          ## Buggy and Fixed Behavior
+
+
+          Buggy behavior:
+
+
+          ```text
+
+          calling mbedtls_x509_crt_parse_der...
+
+          ret=-9186
+
+          expected_buggy=-9186
+
+          expected_fixed=-9184
+
+          [BUG] buggy behavior: parser crossed inner ASN.1 substructure bounds.
+
+          ```
+
+
+          Fixed behavior:
+
+
+          ```text
+
+          calling mbedtls_x509_crt_parse_der...
+
+          ret=-9184
+
+          expected_buggy=-9186
+
+          expected_fixed=-9184
+
+          [OK] fixed behavior: parser obeyed inner ASN.1 substructure bounds.
+
+          ```
+
+
+          ## Oracle
+
+
+          Bug signal:
+
+
+          - return value is `MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_UNEXPECTED_TAG`,
+
+          - parser crossed inner ASN.1 substructure bounds.
+
+
+          Fixed signal:
+
+
+          - return value is `MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_OUT_OF_DATA`,
+
+          - parser obeyed the inner subs'
+        metadata:
+          layer: poc_patterns
+          source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.md
+          library: mbedtls
+          doc_type: poc_pattern
+      - rank: 5
+        score: 0.7335688561726629
+        distance: 0.36319854855537415
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_x509_crt_parse_der.md
+        text: 'A`, `MBEDTLS_ERR_ASN1_LENGTH_MISMATCH`, and `MBEDTLS_ERR_ASN1_UNEXPECTED_TAG`.
+
+
+          ## Ownership and Buffer Constraints
+
+
+          - `mbedtls_x509_crt_parse_der()` calls the internal parser with `make_copy
+          = 1`, so it makes an internal copy of `buf`.
+
+          - `mbedtls_x509_crt_parse_der_nocopy()` is the stricter lifetime variant.
+
+          - On parse failure, temporary chain nodes are freed or detached.
+
+
+          ## Harness Generation Notes
+
+
+          - Initialize with `mbedtls_x509_crt_init()`, call `psa_crypto_init()` if
+          required by the build, parse DER, observe `ret`, then call `mbedtls_x509_crt_free()`.
+
+          - For `MBEDTLS-POC-0017`, use malformed DER whose nested issuer `AttributeTypeAndValue`
+          substructure is empty or shorter than the parent parser would allow.
+
+
+          ## Vulnerability-Pattern Migration Notes
+
+
+          - Relevant to `MBEDTLS-POC-0017`.
+
+          - The source path is nested ASN.1 parsing where inner substructure bounds
+          must be `*p + len`, not the parent object end.
+
+          - Good target candidates include DER/X.509 APIs exposing different parse
+          error c'
+        metadata:
+          layer: api_constraints
+          library: mbedtls
+          doc_type: api_constraint
+          source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_x509_crt_parse_der.md
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl d2i_X509 asn1_nested_substructure_boundary\
+        \ parent_end_vs_inner_end_pointer differential_parser_error_path asn1_der_parser_entrypoint\
+        \ nested_substructure_length_field parent_end_vs_inner_end_boundary malformed_nested_empty_structure\
+        \ differential_parser_error_or_rejection_path asn1_der_parser_entrypoint nested_substructure_length_field\
+        \ parent_end_vs_inner_end_boundary malformed_nested_empty_structure differential_parser_error_or_rejection_path\
+        \ asn1_der_parser_entrypoint x509_certificate_der nested_substructure_length_field\
+        \ malformed_nested_empty_structure differential_parser_error_or_rejection_path\
+        \ consumed_pointer_or_error_queue_observation exact_mbedtls_error_code exact_internal_mbedtls_parser_function_name\
+        \ \",\n  \"top_k\": 5,\n  \"results\": [\n    {\n      \"rank\": 1,\n    \
+        \  \"score\": 0.7762576575915895,\n      \"distance\": 0.28823205828666687,\n\
+        \      \"layer\": \"poc_patterns\",\n      \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.md\"\
+        ,\n      \"text\": \"ue is `MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_OUT_OF_DATA`,\\\
+        n- parser obeyed the inner substructure boundary.\\n\\n## Mutation Points\\\
+        n\\n- `INNER_END_BOUND`: `end = *p + len;`\\n- `TRAILING_INNER_DATA_CHECK`:\
+        \ `*p != end` rejection block.\\n- `EMPTY_EXTENSION_RETURN`: `if (*p == end)\
+        \ return 0;`\\n- `MALFORMED_DER_STRUCTURE`: crafted DER with empty inner structures.\\\
+        n\\n## Vulnerability Path Features\\n\\nMust preserve:\\n\\n- ASN.1 DER parser\
+        \ entrypoint,\\n- nested substructure length field,\\n- parent-end versus\
+        \ inner-end boundary,\\n- malformed nested empty structure,\\n- differential\
+        \ parser error or rejection path.\\n\\nOptional:\\n\\n- X.509 certificate\
+        \ DER,\\n- issuer name AttributeTypeAndValue,\\n- CRT/CRL extension helper\
+        \ paths.\\n\\nNot required:\\n\\n- exact DER bytes,\\n- exact numeric error\
+        \ values,\\n- exact helper names.\\n\\n## Migration Guidance\\n\\nGood target\
+        \ APIs parse DER/ASN.1 nested structures, maintain explicit parent\\nand child\
+        \ end pointers, expose parse error classes, and allow harnesses to feed\\\
+        nmalformed nested inpu\",\n      \"metadata\": {\n        \"layer\": \"poc_patterns\"\
+        ,\n        \"doc_type\": \"poc_pattern\",\n        \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.md\"\
+        ,\n        \"library\": \"mbedtls\"\n      }\n    },\n    {\n      \"rank\"\
+        : 2,\n      \"score\": 0.7500240344805442,\n      \"distance\": 0.33329060673713684,\n\
+        \      \"layer\": \"poc_patterns\",\n      \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.md\"\
+        ,\n      \"text\": \"# MBEDTLS-POC-0017: X.509 ASN.1 inner substructure boundary\\\
+        n\\n## Source\\n\\nThis pattern comes from Mbed TLS PR #2442 and issues #2430,\
+        \ #2431, and #2437.\\nThe affected public API for the local PoC is `mbedtls_x509_crt_parse_der`.\\\
+        nThe root cause is in lower-level X.509 ASN.1 parsing helpers.\\n\\nThe confirmed\
+        \ fixed merge commit is\\n`7af080a9f9601449601e9c97d21256bdc2205d02`; the\
+        \ local buggy worktree used\\n`7af080a9f9601449601e9c97d21256bdc2205d02^1`.\
+        \ The library fix commit is\\n`12f62fb82c81aa3f52bed49dff0f9e038d115f75`.\\\
+        n\\n## Root Cause\\n\\nSome parser routines used the parent ASN.1 structure's\
+        \ `end` pointer while\\nparsing a nested substructure. This allowed fields\
+        \ inside an inner structure to\\ncross the inner boundary.\\n\\nThe central\
+        \ fixed behavior is to set the parse bound to the inner structure:\\n\\n```c\\\
+        nend = *p + len;\\n```\\n\\nand reject trailing inner data, for example:\\\
+        n\\n```c\\nif (*p != end) {\\n    return MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_LENGTH_MISMATCH;\\\
+        n}\\n```\\n\\n## Trigger Condition\\n\\nThe PoC ca\",\n      \"metadata\"\
+        : {\n        \"layer\": \"poc_patterns\",\n        \"doc_type\": \"poc_pattern\"\
+        ,\n        \"library\": \"mbedtls\",\n        \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 3,\n      \"score\": 0.7471796524628354,\n\
+        \      \"distance\": 0.33836621046066284,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/mbedtls/4.1.0/x509_asn1_nested_helpers.md\"\
+        ,\n      \"text\": \"nt ASN.1 object being parsed.\\n- `cur`: parsed X.509\
+        \ name node storing OID and value buffers.\\n\\n## Return Value Semantics\\\
+        n\\n- `0`: nested object parsed and cursor ends exactly at the nested object\
+        \ end.\\n- `MBEDTLS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_OUT_OF_DATA`:\
+        \ not enough bytes inside the nested structure.\\n- `MBEDTLS_ERR_X509_INVALID_NAME\
+        \ + MBEDTLS_ERR_ASN1_UNEXPECTED_TAG`: unexpected type/value tag.\\n- `MBEDTLS_ERR_X509_INVALID_NAME\
+        \ + MBEDTLS_ERR_ASN1_LENGTH_MISMATCH`: trailing bytes remain inside the nested\
+        \ object.\\n- Extension helpers similarly return `MBEDTLS_ERR_X509_INVALID_EXTENSIONS\
+        \ + MBEDTLS_ERR_ASN1_*`.\\n\\n## Ownership and Buffer Constraints\\n\\n- These\
+        \ helpers do not own the input DER buffer.\\n- They store pointers into the\
+        \ parsed certificate buffer, so the surrounding certificate object controls\
+        \ lifetime.\\n- Cursor/end arithmetic is the critical safety boundary.\\n\\\
+        n## Harness Generation Notes\\n\\n- Prefer public entry points such as `mbedtls_x509_crt_parse_der()`\
+        \ and malformed DER byt\",\n      \"metadata\": {\n        \"doc_type\": \"\
+        api_constraint\",\n        \"layer\": \"api_constraints\",\n        \"library\"\
+        : \"mbedtls\",\n        \"source_file\": \"knowledge_raw/api_constraints/mbedtls/4.1.0/x509_asn1_nested_helpers.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 4,\n      \"score\": 0.7451804408753547,\n\
+        \      \"distance\": 0.34195685386657715,\n      \"layer\": \"poc_patterns\"\
+        ,\n      \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.md\"\
+        ,\n      \"text\": \"LS_ERR_X509_INVALID_NAME + MBEDTLS_ERR_ASN1_LENGTH_MISMATCH;\\\
+        n}\\n```\\n\\n## Trigger Condition\\n\\nThe PoC calls `mbedtls_x509_crt_parse_der()`\
+        \ with a regression-test-derived\\nmalformed DER certificate:\\n\\n- X.509\
+        \ Certificate ASN.1\\n- malformed TBSCertificate issuer\\n- two empty inner\
+        \ AttributeTypeAndValue structures\\n\\n## Buggy and Fixed Behavior\\n\\nBuggy\
+        \ behavior:\\n\\n```text\\ncalling mbedtls_x509_crt_parse_der...\\nret=-9186\\\
+        nexpected_buggy=-9186\\nexpected_fixed=-9184\\n[BUG] buggy behavior: parser\
+        \ crossed inner ASN.1 substructure bounds.\\n```\\n\\nFixed beha"
+      stderr_preview: ''
+      truncated: true
+      kind: vulnerability_path_compatibility
+      use_for_feature_inference: target
+    inferred_features:
+      observed_features_from_target_evidence:
+      - asn1_der_parser_entrypoint
+      - consumed_pointer_or_error_queue_observation
+      - differential_parser_error_or_rejection_path
+      - explicit_tag_input
+      - library_allocated_output
+      - malformed_nested_empty_structure
+      - nested_substructure_length_field
+      - radix_or_textual_base_context
+      - signed_or_negative_encoding
+      - verification_return_code
+      - x509_certificate_der
+      negative_or_weakened_features:
+      - caller_provided_output_buffer
+      - exact_internal_mbedtls_parser_function_name
+      - exact_mbedtls_error_code
+      - library_writes_to_caller_buffer
+      effective_observed_features:
+      - asn1_der_parser_entrypoint
+      - consumed_pointer_or_error_queue_observation
+      - differential_parser_error_or_rejection_path
+      - explicit_tag_input
+      - library_allocated_output
+      - malformed_nested_empty_structure
+      - nested_substructure_length_field
+      - radix_or_textual_base_context
+      - signed_or_negative_encoding
+      - verification_return_code
+      - x509_certificate_der
+      feature_conflicts: []
+      candidate_preserved_features:
+      - asn1_der_parser_entrypoint
+      - consumed_pointer_or_error_queue_observation
+      - differential_parser_error_or_rejection_path
+      - malformed_nested_empty_structure
+      - nested_substructure_length_field
+      - x509_certificate_der
+      candidate_lost_or_weakened_features:
+      - exact_internal_mbedtls_parser_function_name
+      - exact_mbedtls_error_code
+      bug_class_requirements:
+        required: []
+        disallowed: []
+        optional: []
+      required_present: []
+      required_missing: []
+      disallowed_present: []
+      optional_present: []
+      evidence_hits:
+        caller_provided_output_buffer:
+          positive_hits: []
+          negative_hits:
+          - OPENSSL_free
+        library_writes_to_caller_buffer:
+          positive_hits: []
+          negative_hits:
+          - OPENSSL_free
+        library_allocated_output:
+          positive_hits:
+          - OPENSSL_free
+          negative_hits: []
+        signed_or_negative_encoding:
+          positive_hits:
+          - signed
+          negative_hits: []
+        radix_or_textual_base_context:
+          positive_hits:
+          - hex
+          negative_hits: []
+        explicit_tag_input:
+          positive_hits:
+          - tag
+          negative_hits: []
+        verification_return_code:
+          positive_hits:
+          - return 0
+          negative_hits: []
+evidence_collection:
+  method: config_driven_rag_evidence_collector
+  top_k: 5
+  feature_rules: config/evidence_feature_rules.yaml
+  bug_classes:
+  - asn1_nested_substructure_boundary
+  - parent_end_vs_inner_end_pointer
+  - differential_parser_error_path
+  - asn1_der_parser_entrypoint
+  - nested_substructure_length_field
+  - parent_end_vs_inner_end_boundary
+  - malformed_nested_empty_structure
+  - differential_parser_error_or_rejection_path
+  source_pattern:
+    pattern_id: MBEDTLS-POC-0017
+    root_cause_summary: 'X.509 ASN.1 parsing helpers used a parent end pointer while
+      parsing a nested substructure. The fixed parser updates the end pointer to the
+      inner substructure and rejects data that remains after parsing it.
+
+      '
+    must_preserve_features:
+    - asn1_der_parser_entrypoint
+    - nested_substructure_length_field
+    - parent_end_vs_inner_end_boundary
+    - malformed_nested_empty_structure
+    - differential_parser_error_or_rejection_path
+    optional_features:
+    - x509_certificate_der
+    - issuer_name_attribute_type_value
+    - crt_extension_or_crl_extension_helpers
+    not_required_features:
+    - exact_mbedtls_error_code
+    - exact_internal_mbedtls_parser_function_name
+    good_target_api_features:
+    - parses DER or ASN.1 nested structures
+    - has explicit parent and child length or end boundaries
+    - exposes parse failure, error queue, consumed pointer, or equivalent oracle
+    - accepts malformed nested structures as harness input
+    bad_target_api_features:
+    - hides all parser error classes and consumption state
+    - cannot accept caller-provided DER bytes
+    - only parses fully trusted pre-decoded objects
+    rag_query_context: 'MBEDTLS-POC-0017 mbedtls_x509_crt_parse_der X.509 ASN.1 nested
+      substructure boundary parent end pointer inner end pointer malformed DER issuer
+      empty AttributeTypeAndValue differential parse error OpenSSL d2i_X509 ASN1_item_d2i.
+
+      '
+  note: Evidence is retrieved before LLM adapter filling. Source-pattern evidence
+    is kept separate from target-API evidence to avoid feature contamination.

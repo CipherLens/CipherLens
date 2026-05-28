@@ -35,6 +35,10 @@ DER_TRAILING_GARBAGE_BUG_PATTERNS = [
     "[BUG] target decoded first DER object but left trailing garbage unconsumed.",
 ]
 
+X509_ASN1_INNER_BOUNDARY_BUG_PATTERNS = [
+    "[BUG] target accepted malformed X509/ASN1 inner-boundary input.",
+]
+
 SAFE_PATTERNS = [
     "[OK] Canary intact",
     "fixed behavior",
@@ -44,6 +48,10 @@ SAFE_PATTERNS = [
 DER_TRAILING_GARBAGE_SAFE_REJECT_PATTERNS = [
     "[OK] parser rejected trailing garbage.",
     "[INFO] parser rejected trailing garbage with alternate ret=",
+]
+
+X509_ASN1_INNER_BOUNDARY_SAFE_REJECT_PATTERNS = [
+    "[OK] target rejected malformed X509/ASN1 inner-boundary input.",
 ]
 
 HARNESS_ERROR_PATTERNS = [
@@ -81,6 +89,23 @@ def read_text_field(record: Dict[str, Any]) -> str:
 def contains_any(text: str, patterns: List[str]) -> bool:
     lower = text.lower()
     return any(p.lower() in lower for p in patterns)
+
+
+def is_x509_asn1_inner_boundary_record(record: Dict[str, Any], text: str, result: Dict[str, Any]) -> bool:
+    markers = [
+        str(record.get("relative_source", "")),
+        str(record.get("source", "")),
+        str(result.get("template_id", "")),
+        str(result.get("case_name", "")),
+        text,
+    ]
+    joined = "\n".join(markers)
+    return (
+        "X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY" in joined
+        or "MBEDTLS-POC-0017" in joined
+        or "x509_asn1_inner_boundary" in joined
+        or "malformed X509/ASN1 inner-boundary input" in joined
+    )
 
 
 def parse_ret_expected(text: str) -> Dict[str, Any]:
@@ -192,6 +217,11 @@ def classify_record(record: Dict[str, Any]) -> Dict[str, Any]:
         result["reason"] = "DER parser decoded the leading object but left trailing garbage unconsumed."
         return result
 
+    if contains_any(text, X509_ASN1_INNER_BOUNDARY_BUG_PATTERNS):
+        result["verdict"] = "bug_candidate"
+        result["reason"] = "X.509/ASN.1 parser accepted malformed inner-boundary DER input."
+        return result
+
     if contains_any(text, BUG_PATTERNS):
         result["verdict"] = "bug_candidate"
         result["reason"] = "Harness reported explicit BUG/canary corruption pattern."
@@ -202,6 +232,19 @@ def classify_record(record: Dict[str, Any]) -> Dict[str, Any]:
         result["reason"] = "The generated case failed during input construction or harness setup."
         return result
 
+    if (
+        result.get("library") == "mbedtls"
+        and status == "run_ok"
+        and ret_info["ret"] == -96
+        and is_x509_asn1_inner_boundary_record(record, text, result)
+    ):
+        result["verdict"] = "safe_reject_behavior"
+        result["reason"] = (
+            "Current mbedTLS runner returned MBEDTLS_ERR_ASN1_OUT_OF_DATA "
+            "(-96) for MBEDTLS-POC-0017 X.509/ASN.1 inner-boundary input."
+        )
+        return result
+
     if ret_info["ret_matches_expected"]:
         result["verdict"] = "fixed_behavior"
         result["reason"] = "Return code matches expected fixed behavior and no bug/crash pattern was observed."
@@ -210,6 +253,11 @@ def classify_record(record: Dict[str, Any]) -> Dict[str, Any]:
     if contains_any(text, DER_TRAILING_GARBAGE_SAFE_REJECT_PATTERNS):
         result["verdict"] = "safe_reject_behavior"
         result["reason"] = "DER parser rejected the trailing-garbage input."
+        return result
+
+    if contains_any(text, X509_ASN1_INNER_BOUNDARY_SAFE_REJECT_PATTERNS):
+        result["verdict"] = "safe_reject_behavior"
+        result["reason"] = "X.509/ASN.1 parser rejected malformed inner-boundary DER input."
         return result
 
     if contains_any(text, SAFE_PATTERNS):
