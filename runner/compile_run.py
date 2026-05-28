@@ -8,6 +8,8 @@ from typing import Any, Dict, List, Tuple
 
 import yaml
 
+from utils.path_resolver import resolve_path_config
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = PROJECT_ROOT / "config" / "runner_config.yaml"
@@ -48,6 +50,8 @@ def build_compile_command(
 
     compiler = compiler_cfg.get("cxx" if is_cpp_file(source_file) else "cc", "clang")
     flags = compiler_cfg.get("common_flags", [])
+    lib_dirs = lib_cfg.get("lib_dirs", []) or lib_cfg.get("library_dirs", [])
+    rpath_dirs = lib_cfg.get("rpath_dirs", lib_dirs)
 
     cmd = [compiler]
     cmd.extend(flags)
@@ -58,11 +62,11 @@ def build_compile_command(
     cmd.append(str(source_file))
     cmd.extend(["-o", str(output_bin)])
 
-    for lib_dir in lib_cfg.get("lib_dirs", []):
+    for lib_dir in lib_dirs:
         cmd.append(f"-L{lib_dir}")
 
     # rpath lets the executable find locally built shared libraries.
-    for lib_dir in lib_cfg.get("lib_dirs", []):
+    for lib_dir in rpath_dirs:
         cmd.append(f"-Wl,-rpath,{lib_dir}")
 
     for lib in lib_cfg.get("libs", []):
@@ -122,7 +126,7 @@ def main() -> int:
     parser.add_argument("--keep-going", action="store_true", help="Continue after compile/run failures.")
     args = parser.parse_args()
 
-    cfg = load_yaml(CONFIG_PATH)
+    cfg = resolve_path_config(load_yaml(CONFIG_PATH))
 
     input_root = Path(args.input_root)
     build_root = Path(args.build_root)
