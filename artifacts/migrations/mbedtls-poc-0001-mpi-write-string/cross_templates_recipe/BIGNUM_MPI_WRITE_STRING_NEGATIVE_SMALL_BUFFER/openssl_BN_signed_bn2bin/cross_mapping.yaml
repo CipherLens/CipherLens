@@ -1,0 +1,215 @@
+source:
+  library: mbedtls
+  api: mbedtls_mpi_write_string
+  template_id: BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER
+  semantic_operation: bignum_serialize_to_string
+  bug_class:
+  - output_buffer_boundary
+  - negative_integer_serialization
+  - canary_detected_oob_write
+  poc_pattern:
+    pattern_id: MBEDTLS-POC-0001
+    pattern_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0001.yaml
+    source:
+      source_type: github_pr
+      source_label: 'PR #2405'
+      url: https://github.com/Mbed-TLS/mbedtls/pull/2405
+      issue_refs:
+      - '2404'
+      fixed_commit: eff335d575e0949ba25b60a358f31461eab055fe
+      buggy_commit: eff335d575e0949ba25b60a358f31461eab055fe^
+    classification:
+      poc_type: memory_safety
+      bug_category: output_buffer_boundary
+      failure_signal:
+      - canary_corrupted
+      - out_of_bounds_write
+      - one_byte_buffer_overflow
+    root_cause:
+      summary: 'In the buggy version, mbedtls_mpi_write_string() writes the negative
+        sign ''-'' for negative MPI values, but does not decrement buflen afterwards.
+        The remaining conversion logic therefore receives an incorrect remaining buffer
+        length and can write one byte past the caller-provided output buffer.
+
+        '
+      root_cause_location:
+        file: library/bignum.c
+        function: mbedtls_mpi_write_string
+        branch_condition: X->s == -1
+      buggy_logic:
+      - '*p++ = ''-'''
+      - missing buflen-- after writing the sign byte
+      fixed_logic:
+      - '*p++ = ''-'''
+      - buflen--
+      critical_fixed_statement: buflen--;
+    trigger:
+      value: -1
+      radix: 2
+      buflen: 4
+      description: 'A negative MPI value is serialized in radix 2 into a small caller-provided
+        output buffer. The buffer is followed by a canary region to detect a one-byte
+        overwrite.
+
+        '
+    buggy_behavior:
+      ret: 0
+      olen: 3
+      signal: canary_corrupted
+      sample_output: buf/canary prefix=-1\x00B1\xa5...
+    fixed_behavior:
+      ret: 0
+      olen: 3
+      signal: canary_intact
+      sample_output: buf/canary prefix=-1\x001\xa5...
+    mutation_points:
+    - name: VALUE
+      placeholder: '[VALUE]'
+      mask_level: value_level
+      source_expr: mbedtls_mpi_lset(&X, -1)
+      reason: 'Controls whether the MPI is negative. The bug is only reachable for
+        negative numbers because the vulnerable path writes a sign byte.
+
+        '
+      priority: high
+    - name: RADIX
+      placeholder: '[RADIX]'
+      mask_level: api_argument_level
+      source_expr: mbedtls_mpi_write_string(..., 2, ...)
+      reason: 'Controls the serialized representation and the conversion path.
+
+        '
+      priority: medium
+    - name: BUFLEN
+      placeholder: '[BUFLEN]'
+      mask_level: api_argument_level
+      source_expr: mbedtls_mpi_write_string(..., BUFLEN, ...)
+      reason: 'Directly controls the caller-provided output buffer boundary. The bug
+        is triggered when the buffer is just small enough for the remaining conversion
+        logic to overrun by one byte.
+
+        '
+      priority: high
+    - name: CANARY_SIZE
+      placeholder: '[CANARY_SIZE]'
+      mask_level: oracle_level
+      reason: 'Controls the canary detection region used to observe out-of-bounds
+        writes.
+
+        '
+      priority: low
+    occlusion_candidates:
+      identifier_level:
+      - buflen
+      - X->s
+      - p
+      value_level:
+      - -1
+      - 2
+      - 4
+      statement_level:
+      - buflen--;
+      - '*p++ = ''-'''
+      block_level:
+      - if (X->s == -1) { *p++ = '-'; buflen--; }
+    vulnerability_path_features:
+      must_preserve:
+      - negative_integer_path
+      - sign_byte_written_before_digits
+      - caller_provided_output_buffer
+      - explicit_output_buffer_length
+      - library_writes_to_caller_buffer
+      - observable_boundary_oracle
+      optional:
+      - radix_parameter
+      - explicit_output_length_pointer
+      not_required:
+      - exact_return_code_convention
+      - exact_function_name
+    migration_guidance:
+      good_target_api_features:
+      - accepts big integer object
+      - supports negative integer representation or sign handling
+      - writes serialized output to caller-provided buffer
+      - accepts explicit output length
+      - returns observable success/failure or output length
+      bad_target_api_features:
+      - returns only library-allocated string
+      - hides output allocation internally
+      - has no caller-controlled output buffer length
+      - cannot represent or observe negative-number serialization path
+    expected_oracle:
+      memory_safety:
+      - canary_intact
+      - asan_clean
+      bug_candidate:
+      - canary_corrupted
+      - sanitizer_crash
+      fixed_or_safe:
+      - no_canary_corruption
+      - no_sanitizer_crash
+    evidence_files:
+      metadata: data/pocs/core10/MBEDTLS-POC-0001/metadata.json
+      fix_patch: data/pocs/core10/MBEDTLS-POC-0001/fix.patch
+      reproduction: data/pocs/core10/MBEDTLS-POC-0001/reproduction_result.md
+      buggy_log: data/pocs/core10/MBEDTLS-POC-0001/poc/run_min_buggy.log
+      fixed_log: data/pocs/core10/MBEDTLS-POC-0001/poc/run_min_fixed.log
+target:
+  library: openssl
+  candidate_api: BN_signed_bn2bin
+adapter:
+  adapter_recipe: adapter_recipes/openssl/BN_signed_bn2bin.buffer_canary_boundary.yaml
+  slot_bindings:
+    value_variable: X
+    source_value: '-1'
+    source_value_base: '10'
+    magnitude_variable: magnitude
+    signed_value_variable: signed_value
+    output_buffer: buf
+    output_length: BUFLEN
+    canary_size: CANARY_SIZE
+    return_code_variable: ret
+    buffer_observable: buf
+    canary_observable: canary_corrupted
+    encoding_observable: signed_big_endian_twos_complement
+  adapter_mode: recipe_slot_filling
+  include_headers: []
+  type_mapping: {}
+  constant_mapping: {}
+  init_block: ''
+  input_construction_block: ''
+  trigger_block: ''
+  return_value_semantics: ''
+  oracle_strategy: {}
+  cleanup_block: ''
+  llm_status: ok
+candidate:
+  library: openssl
+  api: BN_signed_bn2bin
+  decision: generate
+  scores:
+    operation_family: 80
+    function_behavior: 75
+    parameter_structure: 70
+    vulnerability_path: 85
+    harness_feasibility: 80
+    final: 78
+preserved_vulnerability_features:
+- negative_integer_path
+- caller_provided_output_buffer
+- explicit_output_buffer_length
+- library_writes_to_caller_buffer
+- observable_boundary_oracle
+lost_or_weakened_features:
+- radix_parameter
+- textual radix string representation
+source_expected_behavior:
+  buggy: {}
+  fixed: {}
+  note: The target API is not expected to reproduce exact mbedTLS numeric error codes;
+    cross-library validation uses the oracle semantics defined by the migrated harness
+    family.
+notes:
+- Generated from LLM-filled structured adapter YAML.
+- The C harness skeleton is fixed; the target-specific blocks come from adapter.yaml.
+- This is vulnerability-path migration, not strict full API semantic equivalence.

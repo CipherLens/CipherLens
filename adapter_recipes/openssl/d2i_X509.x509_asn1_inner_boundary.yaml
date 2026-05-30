@@ -1,0 +1,77 @@
+target_library: openssl
+target_api: d2i_X509
+harness_family: x509_asn1_inner_boundary
+oracle_type: inner_asn1_boundary_semantic_oracle
+
+include_headers:
+  - openssl/x509.h
+  - openssl/err.h
+  - stdio.h
+  - stdlib.h
+  - string.h
+
+objects:
+  decoded_object:
+    type: X509 *
+    new: null
+    free: X509_free
+
+fixed_setup_sequence:
+  - select_malformed_der
+  - initialize_ppin_to_der
+  - call_d2i_X509
+  - compute_consumed_len
+
+trigger_call:
+  function: d2i_X509
+  return_code: ret
+  decoded_object: x509
+  input_pointer: p
+  input_length: der_len
+
+allowed_slots:
+  malformed_der_structure:
+    description: malformed X.509 DER structure identifier
+    default: issuer_two_empty_atv
+  input_buffer:
+    description: malformed DER input buffer
+    default: der
+  input_length:
+    description: malformed DER input length
+    default: der_len
+  pointer_variable:
+    description: OpenSSL d2i input pointer
+    default: p
+  consumed_len_variable:
+    description: number of bytes consumed by d2i_X509
+    default: consumed_len
+  return_code_variable:
+    description: decoded object success/failure observable
+    default: ret
+  decoded_object:
+    description: decoded X509 object
+    default: x509
+
+safe_behavior:
+  condition: ret != 0
+  description: target rejects malformed X.509 / ASN.1 inner-boundary input
+
+bug_behavior:
+  condition: ret == 0
+  description: target accepts malformed X.509 / ASN.1 inner-boundary input
+
+lost_or_weakened_features:
+  - Exact historical mbedTLS buggy/fixed return-code pair is not preserved in current-version runner.
+  - The migrated oracle observes target accept/reject behavior through d2i_X509 return value.
+
+forbidden_terms:
+  - BN_usub
+  - BN_ucmp
+  - BN_signed_bn2bin
+  - CANARY_SIZE
+  - BUFLEN
+  - EVP_DecryptFinal_ex
+  - EVP_CIPHER_CTX
+  - d2i_RSAPrivateKey
+  - d2i_PrivateKey
+  - d2i_RSA_PUBKEY

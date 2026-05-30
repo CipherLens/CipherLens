@@ -31,6 +31,14 @@ TRIAGE_VERDICTS = {
     "unknown",
 }
 
+SEMANTIC_PROJECTION_LIMITATION_VERDICTS = {
+    "semantic_projection_limitation",
+}
+
+NORMAL_EXPECTED_VERDICTS = {
+    "normal_expected_behavior",
+}
+
 
 def load_summary(path: Path) -> Dict[str, Any]:
     with path.open("r", encoding="utf-8") as f:
@@ -116,6 +124,24 @@ def classify_pair(source: Dict[str, Any] | None, target: Dict[str, Any] | None) 
         return {
             "migration_verdict": "migrated_safe",
             "reason": "The vulnerability pattern was migrated and both source/target behaved safely.",
+        }
+
+    if target_v in SEMANTIC_PROJECTION_LIMITATION_VERDICTS:
+        return {
+            "migration_verdict": "migration_semantic_projection_limitation",
+            "reason": (
+                "Target behavior reflects an API semantic projection limitation, "
+                "not a valid migrated vulnerability candidate."
+            ),
+        }
+
+    if target_v in NORMAL_EXPECTED_VERDICTS and source_v not in BUG_VERDICTS:
+        return {
+            "migration_verdict": "migration_expected_behavior",
+            "reason": (
+                "Target library showed expected normal behavior for this migrated "
+                "case and no source/target bug evidence was observed."
+            ),
         }
 
     if target_v in TRIAGE_VERDICTS or source_v in TRIAGE_VERDICTS:

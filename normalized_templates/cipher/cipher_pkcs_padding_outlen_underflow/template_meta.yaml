@@ -1,0 +1,135 @@
+pattern_id: MBEDTLS-POC-0004
+template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+template_name: mbedTLS cipher finish invalid PKCS padding output length template
+backend: api_harness
+language: c
+status: normalized
+harness_family: return_code_outlen_semantic
+oracle_type: invalid_padding_output_length_oracle
+
+source_pattern_id: MBEDTLS-POC-0004
+source_library: mbedtls
+source_api:
+  library: mbedtls
+  function: mbedtls_cipher_finish
+source_api_name: mbedtls_cipher_finish
+source_internal_functions:
+  - get_pkcs_padding
+  - mbedtls_get_pkcs_padding
+
+poc_source:
+  file: data/pocs/core10/MBEDTLS-POC-0004/poc/poc_get_pkcs_padding_outlen.c
+  library: mbedtls
+  api: mbedtls_cipher_finish
+
+operation:
+  abstract: cipher_pkcs_padding_invalid_outlen_underflow
+  api_family: CipherFinalization
+  bug_class:
+    - invalid_padding_output_length_underflow
+    - error_path_output_state_pollution
+
+bug_class: invalid_padding_output_length_underflow
+
+mutation_points:
+  - name: PADDING_BYTE
+    placeholder: "[PADDING_BYTE]"
+    type: hex_byte
+    default: "80"
+    values:
+      - "00"
+      - "11"
+      - "80"
+      - "ff"
+    description: final plaintext byte interpreted as PKCS#7 padding length
+    priority: high
+
+  - name: INPUT_LEN
+    placeholder: "[INPUT_LEN]"
+    type: integer
+    default: 16
+    values:
+      - 16
+    description: final decrypted block length
+    priority: high
+
+  - name: PADDING_MODE
+    placeholder: "[PADDING_MODE]"
+    type: enum
+    default: MBEDTLS_PADDING_PKCS7
+    values:
+      - MBEDTLS_PADDING_PKCS7
+    description: padding mode used by mbedtls cipher context
+    priority: high
+
+  - name: EXPECT_RET
+    placeholder: "[EXPECT_RET]"
+    type: enum
+    default: MBEDTLS_ERR_CIPHER_INVALID_PADDING
+    values:
+      - MBEDTLS_ERR_CIPHER_INVALID_PADDING
+    description: expected invalid padding error
+    priority: high
+
+expected_buggy_behavior:
+  signal: unsafe_nonzero_oversized_output_length
+  return_code: -25088
+  finish_olen: 18446744073709551504
+  description: invalid padding is rejected but finish_olen is nonzero or underflowed
+  sample_output:
+    - "[BUG] invalid padding rejected but outlen is unsafe/nonzero."
+
+expected_fixed_behavior:
+  signal: safe_error_return_with_zero_output_length
+  return_code: -25088
+  finish_olen: 0
+  description: invalid padding is rejected and finish_olen remains zero
+  sample_output:
+    - "[OK] fixed behavior: invalid padding rejected and outlen remains zero."
+
+oracle:
+  type: invalid_padding_output_length_oracle
+  bug_signals:
+    - ret == MBEDTLS_ERR_CIPHER_INVALID_PADDING
+    - finish_olen != 0
+    - finish_olen is a huge size_t value
+  fixed_or_safe_signals:
+    - ret == MBEDTLS_ERR_CIPHER_INVALID_PADDING
+    - finish_olen == 0
+  primary_observation:
+    - return_code
+    - output_length
+    - stdout_status_label
+
+verdict:
+  true_positive:
+    condition: ret == MBEDTLS_ERR_CIPHER_INVALID_PADDING && finish_olen != 0
+    exit_code: 0
+  safe_behavior:
+    condition: ret == MBEDTLS_ERR_CIPHER_INVALID_PADDING && finish_olen == 0
+    exit_code: 0
+
+generation_policy:
+  max_cases: 4
+  priority:
+    - PADDING_BYTE
+    - INPUT_LEN
+    - PADDING_MODE
+    - EXPECT_RET
+  compile_with:
+    - asan
+    - ubsan
+
+rag_requirements:
+  retrieve:
+    - knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0004.yaml
+    - knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0004.md
+    - knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_cipher_finish.md
+    - knowledge_raw/api_constraints/mbedtls/4.1.0/get_pkcs_padding.md
+    - knowledge_raw/api_constraints/openssl/3.5.5/EVP_DecryptFinal_ex.md
+    - knowledge_raw/api_constraints/openssl/3.5.5/EVP_CipherFinal_ex.md
+
+notes:
+  - Do not call GLM and do not require API keys for this normalized template.
+  - This pattern is not a crash oracle. It is a return-code plus output-length semantic oracle.
+  - The vulnerability path requires invalid padding finalization with caller-visible output length on error.

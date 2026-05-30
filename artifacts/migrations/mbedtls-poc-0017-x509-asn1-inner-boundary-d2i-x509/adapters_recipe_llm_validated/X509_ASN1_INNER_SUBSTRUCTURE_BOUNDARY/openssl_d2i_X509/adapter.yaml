@@ -1,0 +1,37 @@
+source_pattern_id: MBEDTLS-POC-0017
+template_id: X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY
+harness_family: x509_asn1_inner_boundary
+oracle_type: inner_asn1_boundary_semantic_oracle
+target_library: openssl
+target_api: d2i_X509
+applicability: generate
+adapter_recipe: adapter_recipes/openssl/d2i_X509.x509_asn1_inner_boundary.yaml
+evidence_file: migration_candidates/x509/x509_asn1_inner_boundary/candidates_with_evidence.d2i_X509.yaml
+slot_bindings:
+  malformed_der_structure: issuer_two_empty_atv
+  input_buffer: der
+  input_length: der_len
+  pointer_variable: p
+  consumed_len_variable: consumed_len
+  return_code_variable: ret
+  decoded_object: x509
+preserved_features:
+- asn1_der_parser_entrypoint
+- x509_certificate_der
+- nested_substructure_length_field
+- malformed_nested_empty_structure
+- differential_parser_error_or_rejection_path
+- consumed_pointer_or_error_queue_observation
+lost_or_weakened_features:
+- exact_mbedtls_error_code
+- exact_internal_mbedtls_parser_function_name
+_adapter_mode: recipe_slot_filling
+_ignored_disallowed_fields: []
+_ignored_non_slot_fields: []
+_llm_status: ok
+include_headers: []
+validation:
+  status: ok
+  errors: []
+  warnings: []
+  normalized: true

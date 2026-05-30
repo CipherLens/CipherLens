@@ -1,0 +1,167 @@
+template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+template_name: mbedTLS cipher finish invalid PKCS padding output length template
+source_file: data/pocs/core10/MBEDTLS-POC-0004/poc/poc_get_pkcs_padding_outlen.c
+source_library: mbedtls
+source_api: mbedtls_cipher_finish
+language: c
+
+masking_design:
+  mode: ast_aware_lightweight
+  preserve_compilable_skeleton: true
+  note: >
+    This vulnerability mode is not a crash oracle. It is a return-code plus
+    output-length semantic oracle: invalid padding should return an error and
+    leave caller-visible output length safe.
+
+poc_pattern:
+  pattern_id: MBEDTLS-POC-0004
+  pattern_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0004.yaml
+  root_cause:
+    summary: >
+      get_pkcs_padding computed *data_len = input_len - padding_len before
+      rejecting padding_len > input_len, allowing size_t underflow and unsafe
+      caller-visible finish_olen on the mbedtls_cipher_finish error path.
+  vulnerability_path_features:
+    must_preserve:
+      - block_cipher_decrypt_finalization
+      - pkcs7_padding_validation
+      - padding_length_derived_from_last_plaintext_byte
+      - output_length_pointer_visible_to_caller
+      - invalid_padding_error_path
+      - unsafe_or_safe_output_length_observable_after_error
+    optional:
+      - AES_128_CBC
+      - exact_invalid_padding_byte_0x80
+      - separate_update_and_finish_calls
+    not_required:
+      - exact_error_code_value
+      - exact_encryption_helper_used_to_construct_ciphertext
+      - exact_output_buffer_contents
+  migration_guidance:
+    good_target_api_features:
+      - supports block-cipher decryption with PKCS-style padding
+      - exposes a finalization API that writes output length through a pointer
+      - reports invalid padding with an observable error
+      - leaves output length observable on both success and error paths
+    bad_target_api_features:
+      - does not implement padded block-cipher finalization
+      - never exposes caller-visible output length
+      - always overwrites output length before any error is observable
+
+operation:
+  abstract: cipher_pkcs_padding_invalid_outlen_underflow
+  api_family: CipherFinalization
+  bug_class:
+    - invalid_padding_output_length_underflow
+    - error_path_output_state_pollution
+
+includes:
+  - stdio.h
+  - string.h
+  - stdint.h
+  - mbedtls/cipher.h
+
+mask_units:
+  - unit_id: PADDING_BYTE
+    mask_level: value
+    role: input_construction
+    placeholder: "[PADDING_BYTE]"
+    code: bad_plain[BLOCK_SIZE - 1] = (unsigned char) PADDING_BYTE_VALUE;
+    source: tmpl_mbedtls.c
+    reason: Controls padding_len derived from the final plaintext byte.
+    priority: high
+
+  - unit_id: INPUT_LEN
+    mask_level: value
+    role: input_construction
+    placeholder: "[INPUT_LEN]"
+    code: "#define BLOCK_SIZE [INPUT_LEN]"
+    source: tmpl_mbedtls.c
+    reason: Defines the final block length checked against padding_len.
+    priority: high
+
+  - unit_id: PADDING_MODE
+    mask_level: api_argument
+    role: input_preparation
+    placeholder: "[PADDING_MODE]"
+    code: mbedtls_cipher_set_padding_mode(&ctx, PADDING_MODE_VALUE)
+    source: tmpl_mbedtls.c
+    reason: Selects the PKCS#7 padding finalization path.
+    priority: high
+
+  - unit_id: CIPHER_FINISH_CALL
+    mask_level: function_call
+    role: trigger_call
+    placeholder: ""
+    code: mbedtls_cipher_finish(&ctx, output + update_olen, &finish_olen)
+    source: tmpl_mbedtls.c
+    reason: Exposes the error-path output length returned to the caller.
+    priority: high
+
+  - unit_id: INVALID_PADDING_GUARD
+    mask_level: block
+    role: mutation_point
+    placeholder: ""
+    code: "if (padding_len == 0 || padding_len > input_len) { return MBEDTLS_ERR_CIPHER_INVALID_PADDING; }"
+    source: library/cipher.c:get_pkcs_padding
+    reason: The fixed guard prevents data_len underflow before assignment.
+    priority: high
+
+  - unit_id: FINISH_OLEN_ORACLE
+    mask_level: block
+    role: oracle
+    placeholder: ""
+    code: "ret == MBEDTLS_ERR_CIPHER_INVALID_PADDING && finish_olen == 0"
+    source: tmpl_mbedtls.c
+    reason: Distinguishes safe error return from unsafe output length on error.
+    priority: high
+
+  - unit_id: EXPECT_RET
+    mask_level: value
+    role: oracle
+    placeholder: "[EXPECT_RET]"
+    code: EXPECTED_RET_VALUE
+    source: tmpl_mbedtls.c
+    reason: Expected invalid padding error code.
+    priority: high
+
+roles:
+  input_construction:
+    - order: 10
+      code: memset(bad_plain, 0x41, sizeof(bad_plain)); bad_plain[BLOCK_SIZE - 1] = (unsigned char) PADDING_BYTE_VALUE;
+      placeholders:
+        - "[PADDING_BYTE]"
+        - "[INPUT_LEN]"
+  trigger_call:
+    - order: 20
+      code: ret = mbedtls_cipher_finish(&ctx, output + update_olen, &finish_olen);
+      placeholders: []
+  oracle:
+    - order: 30
+      code: 'if (ret == EXPECTED_RET_VALUE && finish_olen == 0) { printf("[OK] fixed behavior: invalid padding rejected and outlen remains zero.\n"); }'
+      placeholders:
+        - "[EXPECT_RET]"
+    - order: 31
+      code: 'if (ret == EXPECTED_RET_VALUE && finish_olen != 0) { printf("[BUG] invalid padding rejected but outlen is unsafe/nonzero.\n"); }'
+      placeholders:
+        - "[EXPECT_RET]"
+
+oracle:
+  type: invalid_padding_output_length_oracle
+  note: This is not a crash oracle; it observes return_code plus finish_olen.
+  bug_signals:
+    - ret == MBEDTLS_ERR_CIPHER_INVALID_PADDING
+    - finish_olen != 0
+    - finish_olen is huge due to size_t underflow
+  fixed_or_safe_signals:
+    - ret == MBEDTLS_ERR_CIPHER_INVALID_PADDING
+    - finish_olen == 0
+
+rag_query_context: >
+  MBEDTLS-POC-0004 mbedtls_cipher_finish get_pkcs_padding PKCS7 invalid padding
+  padding_len greater than input_len output length underflow finish_olen OpenSSL
+  EVP_DecryptFinal_ex EVP_CipherFinal_ex outl invalid padding.
+
+notes:
+  - This vulnerability mode is return-code plus output-length semantic, not ASAN-only crash detection.
+  - Target APIs should preserve finalization, invalid padding, and caller-visible output length.

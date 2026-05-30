@@ -1,0 +1,97 @@
+target_library: openssl
+target_api: BN_usub
+harness_family: bignum_arithmetic_semantic
+oracle_type: bignum_negative_result_rejection_oracle
+
+include_headers:
+  - openssl/bn.h
+  - stdio.h
+  - string.h
+
+context:
+  type: BN_CTX *
+  new: BN_CTX_new
+  free: BN_CTX_free
+
+objects:
+  lhs:
+    type: BIGNUM *
+    new: BN_new
+    free: BN_free
+  rhs:
+    type: BIGNUM *
+    new: BN_new
+    free: BN_free
+  result:
+    type: BIGNUM *
+    new: BN_new
+    free: BN_free
+
+fixed_setup_sequence:
+  - BN_CTX_new
+  - BN_new(lhs)
+  - BN_new(rhs)
+  - BN_new(result)
+  - BN_bin2bn_for_lhs
+  - BN_bin2bn_for_rhs
+  - BN_ucmp(lhs, rhs)
+
+trigger_call:
+  function: BN_usub
+  return_code: ret
+  result_object: result
+
+allowed_slots:
+  lhs_value:
+    description: left operand value corresponding to mbedTLS A
+    default: '5'
+  rhs_value:
+    description: right operand value corresponding to mbedTLS B
+    default: 123456789abcdef01
+  lhs_base:
+    description: numeric base for lhs_value, such as decimal or hex
+    default: 10
+  rhs_base:
+    description: numeric base for rhs_value, such as decimal or hex
+    default: 16
+  lhs_variable:
+    default: a
+  rhs_variable:
+    default: b
+  result_variable:
+    default: r
+  return_code_variable:
+    default: ret
+  comparison_variable:
+    default: cmp
+  context_variable:
+    default: bn_ctx
+  expected_relation:
+    default: lhs_lt_rhs
+  result_observable:
+    default: result_bignum
+
+safe_behavior:
+  condition: cmp < 0 and BN_usub does not produce a valid unsigned subtraction result
+  description: target rejects or avoids modeling unsigned subtraction when lhs < rhs
+
+semantic_mismatch_behavior:
+  condition: cmp < 0 and BN_usub succeeds with a misleading result
+  description: target behavior does not preserve negative-result rejection semantics
+
+lost_or_weakened_features:
+  - OpenSSL 3.x BIGNUM is opaque, so direct result limb capacity and canary-after-limbs are not observable through public API.
+  - The source memory-boundary oracle is weakened into a public arithmetic semantics oracle.
+  - BN_usub preserves unsigned subtraction semantics better than BN_sub, but does not preserve mbedTLS internal mpi_sub_hlp write-boundary behavior.
+
+forbidden_terms:
+  - d2i_X509
+  - X509_free
+  - ASN1_item_d2i
+  - EVP_DecryptFinal_ex
+  - EVP_CIPHER_CTX
+  - BUFLEN
+  - CANARY_SIZE
+  - consumed_len
+  - openssl/x509.h
+  - openssl/evp.h

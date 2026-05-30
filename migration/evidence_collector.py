@@ -4,7 +4,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import yaml
 
@@ -196,6 +196,22 @@ def get_source_context(mask_report: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def candidate_list_key(candidates_obj: Dict[str, Any]) -> str:
+    if "target_candidates" in candidates_obj:
+        return "target_candidates"
+    if "candidates" in candidates_obj:
+        return "candidates"
+    return "target_candidates"
+
+
+def candidate_api(candidate: Dict[str, Any]) -> str:
+    return str(candidate.get("target_api") or candidate.get("api") or "")
+
+
+def candidate_library(candidate: Dict[str, Any]) -> str:
+    return str(candidate.get("target_library") or candidate.get("library") or "")
+
+
 def get_bug_classes(mask_report: Dict[str, Any], candidates_obj: Dict[str, Any], feature_rules: Dict[str, Any] = None) -> List[str]:
     out: List[str] = []
 
@@ -243,8 +259,8 @@ def make_generic_queries(
     source_ctx: Dict[str, Any],
     bug_classes: List[str],
 ) -> List[Dict[str, str]]:
-    lib = candidate.get("library", "")
-    api = candidate.get("api", "")
+    lib = candidate_library(candidate)
+    api = candidate_api(candidate)
     root = source_ctx.get("root_cause_summary", "")
     must = " ".join(source_ctx.get("must_preserve_features", []))
     mapping = " ".join(str(x) for x in candidate.get("parameter_mapping", {}).values())
@@ -428,14 +444,34 @@ def collect_evidence(
     timeout: int,
     max_chars: int,
     top_k: int,
+    target_api: Optional[str] = None,
+    max_candidates: Optional[int] = None,
+    max_queries: Optional[int] = None,
+    progress: bool = False,
 ) -> Dict[str, Any]:
     source_ctx = get_source_context(mask_report)
     bug_classes = get_bug_classes(mask_report, candidates_obj, feature_rules)
+    key = candidate_list_key(candidates_obj)
+    candidates = list(candidates_obj.get(key, []) or [])
+
+    if target_api:
+        candidates = [
+            cand for cand in candidates
+            if candidate_api(cand) == target_api
+        ]
+        if not candidates:
+            raise ValueError(f"No candidate matched --target-api {target_api!r}")
+
+    if max_candidates is not None:
+        candidates = candidates[:max_candidates]
 
     out = dict(candidates_obj)
     out["evidence_collection"] = {
         "method": "config_driven_rag_evidence_collector",
         "top_k": top_k,
+        "target_api_filter": target_api or "",
+        "max_candidates": max_candidates,
+        "max_queries_per_candidate": max_queries,
         "feature_rules": "config/evidence_feature_rules.yaml",
         "bug_classes": bug_classes,
         "source_pattern": source_ctx,
@@ -447,12 +483,27 @@ def collect_evidence(
 
     updated_candidates = []
 
-    for cand in candidates_obj.get("target_candidates", []):
+    for cand_idx, cand in enumerate(candidates, start=1):
         cand = dict(cand)
         queries = make_generic_queries(cand, source_ctx, bug_classes)
+        if max_queries is not None:
+            queries = queries[:max_queries]
+
+        if progress:
+            print(
+                f"[PROGRESS] candidate {cand_idx}/{len(candidates)} "
+                f"api={candidate_api(cand)} decision={cand.get('decision')}",
+                flush=True,
+            )
 
         rag_results = []
-        for q in queries:
+        for query_idx, q in enumerate(queries, start=1):
+            if progress:
+                print(
+                    f"[PROGRESS] query {query_idx}/{len(queries)} "
+                    f"kind={q['kind']} text={q['query']}",
+                    flush=True,
+                )
             result = run_rag_query(
                 q["query"],
                 top_k=top_k,
@@ -478,7 +529,7 @@ def collect_evidence(
 
         updated_candidates.append(cand)
 
-    out["target_candidates"] = updated_candidates
+    out[key] = updated_candidates
     return out
 
 
@@ -496,32 +547,60 @@ def main() -> int:
     parser.add_argument("--timeout", type=int, default=90)
     parser.add_argument("--max-chars", type=int, default=6000)
     parser.add_argument("--top-k", type=int, default=5)
+    parser.add_argument(
+        "--target-api",
+        help="Only process candidates whose target_api/api exactly matches this value.",
+    )
+    parser.add_argument(
+        "--max-candidates",
+        type=int,
+        help="Process at most N candidates after optional filtering.",
+    )
+    parser.add_argument(
+        "--max-queries",
+        type=int,
+        help="Run at most N generated RAG queries per candidate.",
+    )
+    parser.add_argument(
+        "--progress",
+        action="store_true",
+        help="Print candidate and query progress logs to the terminal.",
+    )
     args = parser.parse_args()
 
     candidates_obj = load_yaml(Path(args.candidates))
     mask_report = load_yaml(Path(args.mask_report))
     feature_rules = load_yaml(Path(args.feature_rules))
 
-    result = collect_evidence(
-        candidates_obj=candidates_obj,
-        mask_report=mask_report,
-        feature_rules=feature_rules,
-        timeout=args.timeout,
-        max_chars=args.max_chars,
-        top_k=args.top_k,
-    )
+    try:
+        result = collect_evidence(
+            candidates_obj=candidates_obj,
+            mask_report=mask_report,
+            feature_rules=feature_rules,
+            timeout=args.timeout,
+            max_chars=args.max_chars,
+            top_k=args.top_k,
+            target_api=args.target_api,
+            max_candidates=args.max_candidates,
+            max_queries=args.max_queries,
+            progress=args.progress,
+        )
+    except ValueError as e:
+        print(f"[ERROR] {e}", file=sys.stderr)
+        return 2
 
     dump_yaml(Path(args.output), result)
+    key = candidate_list_key(result)
 
     print(f"[OK] evidence written to {args.output}")
-    print(f"[INFO] candidates: {len(result.get('target_candidates', []))}")
+    print(f"[INFO] candidates: {len(result.get(key, []))}")
     print(f"[INFO] bug_classes: {result.get('evidence_collection', {}).get('bug_classes', [])}")
 
-    for c in result.get("target_candidates", []):
+    for c in result.get(key, []):
         inf = c.get("evidence", {}).get("inferred_features", {})
         print(
-            c.get("library"),
-            c.get("api"),
+            candidate_library(c),
+            candidate_api(c),
             "decision=",
             c.get("decision"),
             "observed=",

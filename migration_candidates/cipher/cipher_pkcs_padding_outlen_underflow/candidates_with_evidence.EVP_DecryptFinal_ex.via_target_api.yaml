@@ -1,0 +1,310 @@
+template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+source_template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+source:
+  library: mbedtls
+  api: mbedtls_cipher_finish
+  pattern_id: MBEDTLS-POC-0004
+  internal_apis:
+  - get_pkcs_padding
+  - mbedtls_get_pkcs_padding
+  root_cause_summary: 'get_pkcs_padding computed *data_len = input_len - padding_len
+    before rejecting padding_len > input_len, leaving an unsafe caller-visible output
+    length on the invalid-padding error path.
+
+    '
+  vulnerability_path_features:
+    must_preserve:
+    - symmetric cipher finalization API
+    - decrypt final padding check
+    - caller-visible output length
+    - return-code observable
+    - invalid padding behavior
+    - output length should remain zero on error
+scoring_policy:
+  operation_family: 0.15
+  function_behavior: 0.2
+  parameter_structure: 0.2
+  vulnerability_path: 0.3
+  harness_feasibility: 0.15
+  decision_rule:
+    generate: final >= 75 and vulnerability_path >= 70
+    needs_llm_review: final >= 55 and vulnerability_path >= 50
+    skip: otherwise
+required_features:
+- symmetric cipher finalization API
+- decrypt final padding check
+- caller-visible output length
+- return-code observable
+- invalid padding behavior
+- output length should remain zero on error
+target_candidates:
+- target_library: openssl
+  target_api: EVP_DecryptFinal_ex
+  library: openssl
+  api: EVP_DecryptFinal_ex
+  source_template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+  source_api: mbedtls_cipher_finish
+  decision: generate
+  migration_applicability: strong
+  scores:
+    operation_family: 95
+    function_behavior: 95
+    parameter_structure: 92
+    vulnerability_path: 95
+    harness_feasibility: 92
+    final: 94
+  reason: 'Direct decrypt finalization API. It checks final block padding, returns
+    an observable success/failure code, and writes caller-visible output length through
+    int *outl.
+
+    '
+  parameter_mapping:
+    ctx: EVP_CIPHER_CTX *ctx
+    output: unsigned char *outm
+    finish_olen: int *outl
+    invalid_padding_error: return value 0
+  preserved_features:
+  - symmetric cipher finalization API
+  - decrypt final padding check
+  - caller-visible output length
+  - return-code observable
+  - invalid padding behavior
+  - output length should remain zero on error
+  lost_or_weakened_features:
+  - OpenSSL uses int outl while mbedTLS uses size_t finish_olen
+  - exact mbedTLS MBEDTLS_ERR_CIPHER_INVALID_PADDING value is not preserved
+  evidence:
+    top_k: 3
+    queries:
+    - query: "get_pkcs_padding computed *data_len = input_len - padding_len before\
+        \ rejecting padding_len > input_len, allowing size_t underflow and unsafe\
+        \ caller-visible finish_olen on the mbedtls_cipher_finish error path.\n block_cipher_decrypt_finalization\
+        \ pkcs7_padding_validation padding_length_derived_from_last_plaintext_byte\
+        \ output_length_pointer_visible_to_caller invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error"
+      top_k_requested: 3
+      top_k_returned: 3
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"get_pkcs_padding computed *data_len = input_len\
+        \ - padding_len before rejecting padding_len > input_len, allowing size_t\
+        \ underflow and unsafe caller-visible finish_olen on the mbedtls_cipher_finish\
+        \ error path.\\n block_cipher_decrypt_finalization pkcs7_padding_validation\
+        \ padding_length_derived_from_last_plaintext_byte output_length_pointer_visible_to_caller\
+        \ invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error\"\
+        ,\n  \"top_k\": 3,\n  \"results\": [],\n  \"error\": \"Ollama embedding failed\
+        \ after 3 retries: [Errno 1] Operation not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: source_pattern
+      use_for_feature_inference: source_only
+    - query: openssl EVP_DecryptFinal_ex function declaration signature parameters
+        return value
+      top_k_requested: 3
+      top_k_returned: 3
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_DecryptFinal_ex function declaration\
+        \ signature parameters return value\",\n  \"top_k\": 3,\n  \"results\": [],\n\
+        \  \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_signature
+      use_for_feature_inference: target
+    - query: openssl EVP_DecryptFinal_ex implementation source code parameters return
+        error
+      top_k_requested: 3
+      top_k_returned: 3
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_DecryptFinal_ex implementation\
+        \ source code parameters return error\",\n  \"top_k\": 3,\n  \"results\":\
+        \ [],\n  \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_implementation
+      use_for_feature_inference: target
+    - query: openssl EVP_DecryptFinal_ex usage example unit test API call pattern
+      top_k_requested: 3
+      top_k_returned: 3
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_DecryptFinal_ex usage example\
+        \ unit test API call pattern\",\n  \"top_k\": 3,\n  \"results\": [],\n  \"\
+        error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation not\
+        \ permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_usage
+      use_for_feature_inference: target
+    - query: openssl EVP_DecryptFinal_ex invalid_padding_output_length_underflow error_path_output_state_pollution
+        symmetric cipher finalization API decrypt final padding check caller-visible
+        output length return-code observable invalid padding behavior output length
+        should remain zero on error block_cipher_decrypt_finalization pkcs7_padding_validation
+        padding_length_derived_from_last_plaintext_byte output_length_pointer_visible_to_caller
+        invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error  OpenSSL
+        uses int outl while mbedTLS uses size_t finish_olen exact mbedTLS MBEDTLS_ERR_CIPHER_INVALID_PADDING
+        value is not preserved EVP_CIPHER_CTX *ctx unsigned char *outm int *outl return
+        value 0
+      top_k_requested: 3
+      top_k_returned: 3
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_DecryptFinal_ex invalid_padding_output_length_underflow\
+        \ error_path_output_state_pollution symmetric cipher finalization API decrypt\
+        \ final padding check caller-visible output length return-code observable\
+        \ invalid padding behavior output length should remain zero on error block_cipher_decrypt_finalization\
+        \ pkcs7_padding_validation padding_length_derived_from_last_plaintext_byte\
+        \ output_length_pointer_visible_to_caller invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error\
+        \  OpenSSL uses int outl while mbedTLS uses size_t finish_olen exact mbedTLS\
+        \ MBEDTLS_ERR_CIPHER_INVALID_PADDING value is not preserved EVP_CIPHER_CTX\
+        \ *ctx unsigned char *outm int *outl return value 0\",\n  \"top_k\": 3,\n\
+        \  \"results\": [],\n  \"error\": \"Ollama embedding failed after 3 retries:\
+        \ [Errno 1] Operation not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: vulnerability_path_compatibility
+      use_for_feature_inference: target
+    inferred_features:
+      observed_features_from_target_evidence:
+      - caller_provided_output_buffer
+      - library_writes_to_caller_buffer
+      - signed_or_negative_encoding
+      negative_or_weakened_features:
+      - OpenSSL uses int outl while mbedTLS uses size_t finish_olen
+      - exact mbedTLS MBEDTLS_ERR_CIPHER_INVALID_PADDING value is not preserved
+      effective_observed_features:
+      - caller_provided_output_buffer
+      - library_writes_to_caller_buffer
+      - signed_or_negative_encoding
+      feature_conflicts: []
+      candidate_preserved_features: []
+      candidate_lost_or_weakened_features:
+      - OpenSSL uses int outl while mbedTLS uses size_t finish_olen
+      - exact mbedTLS MBEDTLS_ERR_CIPHER_INVALID_PADDING value is not preserved
+      bug_class_requirements:
+        required: []
+        disallowed: []
+        optional: []
+      required_present: []
+      required_missing: []
+      disallowed_present: []
+      optional_present: []
+      evidence_hits:
+        caller_provided_output_buffer:
+          positive_hits:
+          - unsigned char *out
+          negative_hits: []
+        library_writes_to_caller_buffer:
+          positive_hits:
+          - unsigned char *out
+          negative_hits: []
+        signed_or_negative_encoding:
+          positive_hits:
+          - signed
+          negative_hits: []
+evidence_collection:
+  method: config_driven_rag_evidence_collector
+  top_k: 3
+  target_api_filter: EVP_DecryptFinal_ex
+  max_candidates: 1
+  max_queries_per_candidate: 5
+  feature_rules: config/evidence_feature_rules.yaml
+  bug_classes:
+  - invalid_padding_output_length_underflow
+  - error_path_output_state_pollution
+  - symmetric cipher finalization API
+  - decrypt final padding check
+  - caller-visible output length
+  - return-code observable
+  - invalid padding behavior
+  - output length should remain zero on error
+  source_pattern:
+    pattern_id: MBEDTLS-POC-0004
+    root_cause_summary: 'get_pkcs_padding computed *data_len = input_len - padding_len
+      before rejecting padding_len > input_len, allowing size_t underflow and unsafe
+      caller-visible finish_olen on the mbedtls_cipher_finish error path.
+
+      '
+    must_preserve_features:
+    - block_cipher_decrypt_finalization
+    - pkcs7_padding_validation
+    - padding_length_derived_from_last_plaintext_byte
+    - output_length_pointer_visible_to_caller
+    - invalid_padding_error_path
+    - unsafe_or_safe_output_length_observable_after_error
+    optional_features:
+    - AES_128_CBC
+    - exact_invalid_padding_byte_0x80
+    - separate_update_and_finish_calls
+    not_required_features:
+    - exact_error_code_value
+    - exact_encryption_helper_used_to_construct_ciphertext
+    - exact_output_buffer_contents
+    good_target_api_features:
+    - supports block-cipher decryption with PKCS-style padding
+    - exposes a finalization API that writes output length through a pointer
+    - reports invalid padding with an observable error
+    - leaves output length observable on both success and error paths
+    bad_target_api_features:
+    - does not implement padded block-cipher finalization
+    - never exposes caller-visible output length
+    - always overwrites output length before any error is observable
+    rag_query_context: 'MBEDTLS-POC-0004 mbedtls_cipher_finish get_pkcs_padding PKCS7
+      invalid padding padding_len greater than input_len output length underflow finish_olen
+      OpenSSL EVP_DecryptFinal_ex EVP_CipherFinal_ex outl invalid padding.
+
+      '
+  note: Evidence is retrieved before LLM adapter filling. Source-pattern evidence
+    is kept separate from target-API evidence to avoid feature contamination.

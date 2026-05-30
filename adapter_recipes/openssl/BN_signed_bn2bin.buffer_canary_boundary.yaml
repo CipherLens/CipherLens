@@ -1,0 +1,93 @@
+target_library: openssl
+target_api: BN_signed_bn2bin
+harness_family: buffer_canary_boundary
+oracle_type: bignum_serialization_buffer_boundary_oracle
+
+include_headers:
+  - openssl/bn.h
+  - stdio.h
+  - stdlib.h
+  - string.h
+
+objects:
+  value:
+    type: BIGNUM *
+    new: BN_new
+    free: BN_free
+
+fixed_setup_sequence:
+  - BN_new(value)
+  - BN_dec2bn_or_BN_set_word_for_value
+  - set_negative_when_source_VALUE_is_negative
+  - prepare_output_buffer_with_canary
+
+trigger_call:
+  function: BN_signed_bn2bin
+  return_code: ret
+  input_object: value
+  output_buffer: buf
+  output_length: BUFLEN
+
+allowed_slots:
+  value_variable:
+    description: target BIGNUM variable corresponding to source MPI X
+    default: X
+  source_value:
+    description: signed decimal source value corresponding to [VALUE]
+    default: '-1'
+  source_value_base:
+    description: numeric base used to construct the BIGNUM value
+    default: 10
+  magnitude_variable:
+    description: helper variable for absolute value construction when BN_set_word is used
+    default: magnitude
+  signed_value_variable:
+    description: helper variable preserving the signed source value
+    default: signed_value
+  output_buffer:
+    description: caller-provided output buffer followed by canary bytes
+    default: buf
+  output_length:
+    description: explicit output buffer length passed to BN_signed_bn2bin
+    default: BUFLEN
+  canary_size:
+    description: size of canary region after the caller output buffer
+    default: CANARY_SIZE
+  return_code_variable:
+    description: observable return value from BN_signed_bn2bin
+    default: ret
+  buffer_observable:
+    description: observable output bytes written by target API
+    default: buf
+  canary_observable:
+    description: observable boundary guard after output buffer
+    default: canary_corrupted
+  encoding_observable:
+    description: signed big-endian two's-complement output semantics
+    default: signed_big_endian_twos_complement
+
+safe_behavior:
+  condition: canary remains intact and ret is either written byte count or -1 for too-small output buffer
+  description: target preserves caller-buffer boundary and reports insufficient output length without canary corruption
+
+bug_behavior:
+  condition: canary is corrupted or sanitizer reports an out-of-bounds write
+  description: target writes beyond caller-provided output buffer
+
+lost_or_weakened_features:
+  - OpenSSL BN_signed_bn2bin uses signed two's-complement binary encoding, not radix-controlled ASCII string encoding.
+  - The mbedTLS textual sign-byte path is projected to OpenSSL signed binary encoding.
+  - The radix mutation point has no direct target API counterpart.
+
+forbidden_terms:
+  - EVP_DecryptFinal_ex
+  - EVP_CIPHER_CTX
+  - d2i_X509
+  - X509_free
+  - ASN1_item_d2i
+  - openssl/x509.h
+  - openssl/evp.h
+  - consumed_len
+  - BN_usub
+  - BN_ucmp
+  - bignum_negative_result_rejection_oracle

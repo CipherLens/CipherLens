@@ -1,0 +1,40 @@
+buffer_canary_boundary:
+  oracle_types:
+    - canary_boundary_oracle
+
+der_pointer_consumption:
+  oracle_types:
+    - pointer_consumption_semantic_oracle
+
+x509_asn1_inner_boundary:
+  oracle_types:
+    - inner_asn1_boundary_semantic_oracle
+
+return_code_outlen_semantic:
+  oracle_types:
+    - invalid_padding_output_length_oracle
+  required_observables:
+    - return_code
+    - output_length
+    - error_path_state
+  target_api_features:
+    - finalization_api
+    - invalid_padding_path
+    - caller_visible_output_length
+    - output_buffer_or_output_length_pointer
+
+bignum_arithmetic_semantic:
+  oracle_types:
+    - bignum_negative_result_rejection_oracle
+  required_observables:
+    - return_code
+    - result_bignum
+    - operand_relation
+    - arithmetic_result_state
+  target_api_features:
+    - bignum_arithmetic_api
+    - subtraction_operation
+    - caller_visible_return_code
+    - caller_visible_result_object
+  limitations:
+    - OpenSSL 3.x BIGNUM is opaque and cannot expose direct limb-boundary canary behavior.

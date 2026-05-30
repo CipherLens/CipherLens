@@ -1,0 +1,42 @@
+source_pattern_id: MBEDTLS-POC-0020
+template_id: RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE
+harness_family: der_pointer_consumption
+oracle_type: pointer_consumption_semantic_oracle
+target_library: openssl
+target_api: d2i_RSAPrivateKey
+applicability: generate
+adapter_recipe: adapter_recipes/openssl/d2i_RSAPrivateKey.der_pointer_consumption.yaml
+evidence_file: migration_candidates/rsa/rsa_der_trailing_garbage/candidates_with_evidence.yaml
+slot_bindings:
+  der_kind: private
+  trailing_garbage_bytes: '0500'
+  trailing_garbage_len: '2'
+  input_buffer: der
+  input_length: der_len
+  pointer_variable: p
+  consumed_len_variable: consumed_len
+  return_code_variable: ret
+  decoded_object: rsa
+  trailing_len_variable: trailing_len
+preserved_features:
+- DER key parser
+- RSA private key path
+- PKCS#1 RSAPrivateKey top-level ASN.1 SEQUENCE
+- caller-controlled DER buffer and explicit input length
+- valid object followed by appended trailing garbage
+- return pointer success/failure oracle
+- pointer advancement oracle via const unsigned char **ppin
+lost_or_weakened_features:
+- exact mbedTLS MBEDTLS_ERR_RSA_BAD_INPUT_DATA return code is not preserved
+- OpenSSL d2i success may advance only to the consumed object, so harness must explicitly
+  check p == der + der_len to detect accepted trailing bytes
+_adapter_mode: recipe_slot_filling
+_ignored_disallowed_fields: []
+_ignored_non_slot_fields: []
+_llm_status: ok
+include_headers: []
+validation:
+  status: ok
+  errors: []
+  warnings: []
+  normalized: true

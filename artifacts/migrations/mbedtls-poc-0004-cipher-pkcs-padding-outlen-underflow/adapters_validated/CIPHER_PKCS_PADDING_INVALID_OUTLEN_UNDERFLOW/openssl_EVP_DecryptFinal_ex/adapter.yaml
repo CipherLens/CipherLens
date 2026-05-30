@@ -1,0 +1,45 @@
+source_pattern_id: MBEDTLS-POC-0004
+template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+harness_family: return_code_outlen_semantic
+oracle_type: invalid_padding_output_length_oracle
+target_library: openssl
+target_api: EVP_DecryptFinal_ex
+applicability: generate
+adapter_recipe: adapter_recipes/openssl/EVP_DecryptFinal_ex.return_code_outlen_semantic.yaml
+evidence_file: migration_candidates/cipher/cipher_pkcs_padding_outlen_underflow/candidates_with_evidence.EVP_DecryptFinal_ex.via_target_api.yaml
+slot_bindings:
+  cipher: EVP_aes_128_cbc()
+  key_variable: key
+  iv_variable: iv
+  input_variable: input
+  input_len_variable: input_len
+  output_buffer: out
+  update_len_variable: update_len
+  final_len_variable: final_len
+  return_code_variable: ret
+  context_variable: ctx
+include_headers: []
+type_mapping: {}
+constant_mapping: {}
+init_block: ''
+input_construction_block: ''
+trigger_block: ''
+return_value_semantics: ''
+oracle_strategy: {}
+cleanup_block: ''
+preserved_features:
+- symmetric_cipher_finalization
+- invalid_pkcs_padding_path
+- return_code_observable
+- output_length_observable
+- error_path_output_state
+lost_or_weakened_features:
+- OpenSSL EVP_DecryptFinal_ex uses int final_len rather than mbedTLS size_t finish_olen.
+- Exact mbedTLS internal get_pkcs_padding underflow path is not preserved, but the
+  external invalid-padding finalization and output-length oracle are preserved.
+notes: []
+validation:
+  status: ok
+  errors: []
+  warnings: []
+  normalized: true

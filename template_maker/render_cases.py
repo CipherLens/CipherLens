@@ -18,6 +18,7 @@ IGNORED_BRACKET_TAGS = {
     "[DIFF]",
     "[FAIL]",
     "[PASS]",
+    "[TRIAGE]",
 }
 
 
@@ -56,6 +57,11 @@ def render_text(text: str, mapping: Dict[str, str]) -> str:
     rendered = text
 
     for ph in sorted(mapping.keys(), key=len, reverse=True):
+        # Allow hex-byte placeholders in C tokens such as 0x[PADDING_BYTE].
+        # The generic replacement below intentionally avoids array syntax like
+        # buf[LEN], so handle the explicit numeric-token form first.
+        rendered = rendered.replace(f"0x{ph}", f"0x{mapping[ph]}")
+
         escaped = re.escape(ph)
         pattern = rf"(?<![A-Za-z0-9_]){escaped}"
         rendered = re.sub(pattern, mapping[ph], rendered)
@@ -175,7 +181,7 @@ def is_valid_case(template_id: str, raw_values: Dict[str, Any]) -> bool:
     LLM may propose broad values, but final test cases must satisfy basic API
     construction constraints.
     """
-    if template_id == "BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY":
+    if template_id.startswith("BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY"):
         a_base = parse_int_or_none(raw_values.get("A_BASE", 10))
         b_base = parse_int_or_none(raw_values.get("B_BASE", 16))
         a_value = raw_values.get("A_VALUE", "")

@@ -1,0 +1,231 @@
+template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+template_name: mbedTLS cipher finish invalid PKCS padding output length template
+source_api: mbedtls_cipher_finish
+selection_policy:
+  method: ast_lite_high_value_mask_unit_selection
+  rules:
+  - Prefer role=mutation_point units.
+  - Prefer mask_level=value or api_argument units.
+  - Always retain trigger_call function_call/statement units.
+  - Always retain oracle statement/block units.
+  - Retain input_preparation/helper_function/block only when boundary keywords are
+    present.
+  - Limit cleanup units to one or two representative statements.
+  - Deduplicate repeated code snippets.
+  context_keywords:
+  - canary
+  - prepare_output_with_canary
+  - buffer
+  - buf
+  - limb
+  - X->p
+  - X->n
+  - raw
+  - CANARY_SIZE
+  - BUFLEN
+selected_units:
+- unit_id: ASTLITE-0004
+  mask_level: value
+  role: mutation_point
+  placeholder: '[EXPECT_RET]'
+  code: EXPECT_RET
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: EXPECT_RET
+  mutation_type: enum
+  default: MBEDTLS_ERR_CIPHER_INVALID_PADDING
+  values:
+  - MBEDTLS_ERR_CIPHER_INVALID_PADDING
+  selection_reason: Selected because [EXPECT_RET] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 109
+- unit_id: ASTLITE-0002
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[INPUT_LEN]'
+  code: INPUT_LEN
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: INPUT_LEN
+  mutation_type: integer
+  default: 16
+  values:
+  - 16
+  selection_reason: Selected because [INPUT_LEN] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 101
+- unit_id: ASTLITE-0001
+  mask_level: value
+  role: mutation_point
+  placeholder: '[PADDING_BYTE]'
+  code: PADDING_BYTE
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: PADDING_BYTE
+  mutation_type: hex_byte
+  default: '80'
+  values:
+  - '00'
+  - '11'
+  - '80'
+  - ff
+  selection_reason: Selected because [PADDING_BYTE] is a mutation point with value
+    granularity.
+  suggested_use: mutate_value
+  selection_score: 101
+- unit_id: ASTLITE-0003
+  mask_level: value
+  role: mutation_point
+  placeholder: '[PADDING_MODE]'
+  code: PADDING_MODE
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: PADDING_MODE
+  mutation_type: enum
+  default: MBEDTLS_PADDING_PKCS7
+  values:
+  - MBEDTLS_PADDING_PKCS7
+  selection_reason: Selected because [PADDING_MODE] is a mutation point with value
+    granularity.
+  suggested_use: mutate_value
+  selection_score: 101
+- unit_id: ASTLITE-0084
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: 'printf("[OK] fixed behavior: invalid padding rejected and outlen remains
+    zero.\n");'
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 181
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 69
+- unit_id: ASTLITE-0087
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: printf("[BUG] invalid padding rejected but outlen is unsafe/nonzero.\n");
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 183
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 69
+- unit_id: ASTLITE-0008
+  mask_level: value
+  role: oracle
+  placeholder: '[EXPECT_RET]'
+  code: 'if (ret == EXPECTED_RET_VALUE && finish_olen == 0) { printf("[OK] fixed behavior:
+    invalid padding rejected and outlen remains zero.\n"); }'
+  source: mask_report.roles.oracle
+  reason: Role-aware statement recorded by mask_report role 'oracle'.
+  priority: medium
+  order: 30
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 62
+- unit_id: ASTLITE-0009
+  mask_level: value
+  role: oracle
+  placeholder: '[EXPECT_RET]'
+  code: if (ret == EXPECTED_RET_VALUE && finish_olen != 0) { printf("[BUG] invalid
+    padding rejected but outlen is unsafe/nonzero.\n"); }
+  source: mask_report.roles.oracle
+  reason: Role-aware statement recorded by mask_report role 'oracle'.
+  priority: medium
+  order: 31
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 62
+- unit_id: ASTLITE-0042
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: ret = mbedtls_cipher_finish(&ctx, tmp + olen1, &olen2);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_cipher_finish' identified by AST-lite call matching.
+  priority: high
+  function: mbedtls_cipher_finish
+  line: 72
+  selection_reason: Required trigger_call unit for preserving and migrating the source
+    API invocation.
+  suggested_use: migrate_api_call
+  selection_score: 61
+- unit_id: ASTLITE-0075
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: ret = mbedtls_cipher_finish(&ctx, output + update_olen, &finish_olen);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_cipher_finish' identified by AST-lite call matching.
+  priority: high
+  function: mbedtls_cipher_finish
+  line: 168
+  selection_reason: Required trigger_call unit for preserving and migrating the source
+    API invocation.
+  suggested_use: migrate_api_call
+  selection_score: 61
+- unit_id: ASTLITE-0048
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_cipher_free(&ctx);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_cipher_free' identified by AST-lite call matching.
+  priority: medium
+  function: mbedtls_cipher_free
+  line: 88
+  selection_reason: Selected limited cleanup context needed to keep generated harnesses
+    well-scoped.
+  suggested_use: preserve_cleanup
+  selection_score: 17
+- unit_id: ASTLITE-0030
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: goto cleanup;
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as cleanup by AST-lite role rules.
+  priority: medium
+  line: 39
+  selection_reason: Selected limited cleanup context needed to keep generated harnesses
+    well-scoped.
+  suggested_use: preserve_cleanup
+  selection_score: 12
+selection_summary:
+  selected_count: 12
+  source_unit_count: 90
+  by_role:
+    cleanup: 2
+    mutation_point: 4
+    oracle: 4
+    trigger_call: 2
+  by_mask_level:
+    api_argument: 1
+    function_call: 3
+    statement: 3
+    value: 5
+  by_suggested_use:
+    migrate_api_call: 2
+    mutate_api_argument: 1
+    mutate_value: 3
+    preserve_cleanup: 2
+    preserve_oracle: 4
+rejected_summary:
+  count: 11
+  by_reason:
+    cleanup_limit_reached: 2
+    duplicate_code_or_unit: 4
+    noise_header_comment_or_log_label: 5

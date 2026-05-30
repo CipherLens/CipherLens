@@ -1,0 +1,236 @@
+template_id: RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE__OPENSSL_D2I_RSA_PUBKEY
+template_name: mbedtls RSA DER top-level SEQUENCE trailing-garbage template
+backend: api_harness
+language: c
+status: cross_generated_from_llm_adapter
+harness_family: der_pointer_consumption
+source_poc: MBEDTLS-POC-0020
+source_api:
+  library: mbedtls
+  function: mbedtls_pk_parse_key
+source_api_name: mbedtls_pk_parse_key
+internal_apis:
+- mbedtls_rsa_parse_key
+- mbedtls_rsa_parse_pubkey
+poc_source:
+  file: data/pocs/core10/MBEDTLS-POC-0020/poc/poc_rsa_trailing_garbage.c
+  library: mbedtls
+  api: mbedtls_pk_parse_key
+operation:
+  abstract: rsa_der_key_parse_exact_input_consumption
+  api_family: RSAKeyParsing
+  bug_class:
+  - der_trailing_garbage_acceptance
+  - top_level_asn1_sequence_boundary
+  - accept_vs_reject_return_code
+source_api_detail:
+  library: mbedtls
+  function: mbedtls_pk_parse_key
+  role: normalized_public_api
+  notes:
+  - The local minimal PoC isolates the root cause through internal RSA parsers.
+  - The normalized source public API remains mbedtls_pk_parse_key.
+bug_class: der_trailing_garbage_acceptance
+oracle_type: pointer_consumption_semantic_oracle
+mutation_points:
+- name: DER_KIND
+  placeholder: '[DER_KIND]'
+  type: enum
+  default: private
+  values:
+  - private
+  - public
+  strategy: private_public_parser_paths
+  constraint: DER_KIND selects the base PKCS#1 RSA object shape.
+  priority: high
+  normalized: true
+- name: PARSE_API_KIND
+  placeholder: '[PARSE_API_KIND]'
+  type: enum
+  default: rsa_private
+  values:
+  - rsa_private
+  - rsa_public
+  - pk_private
+  strategy: source_public_and_internal_parser_paths
+  constraint: PARSE_API_KIND must be compatible with DER_KIND.
+  priority: high
+  normalized: true
+- name: TRAILING_GARBAGE_BYTES
+  placeholder: '[TRAILING_GARBAGE_BYTES]'
+  type: hex_bytes
+  default: '020100'
+  values:
+  - '020100'
+  - '0500'
+  - '3000'
+  strategy: der_object_after_top_level_sequence
+  constraint: Must be syntactically independent bytes appended after the complete
+    top-level SEQUENCE.
+  priority: high
+  normalized: true
+- name: TRAILING_GARBAGE_LEN
+  placeholder: '[TRAILING_GARBAGE_LEN]'
+  type: size_t
+  default: 3
+  values:
+  - 1
+  - 2
+  - 3
+  strategy: trailing_garbage_length_boundary
+  constraint: Must match the decoded byte length of TRAILING_GARBAGE_BYTES.
+  priority: medium
+  normalized: true
+- name: EXPECT_RET
+  placeholder: '[EXPECT_RET]'
+  type: int
+  default: MBEDTLS_ERR_RSA_BAD_INPUT_DATA
+  values:
+  - MBEDTLS_ERR_RSA_BAD_INPUT_DATA
+  strategy: fixed_safe_reject_code
+  constraint: Expected fixed/safe rejection return code for bytes outside the top-level
+    RSA SEQUENCE.
+  priority: high
+  normalized: true
+- name: TOP_LEVEL_SEQUENCE_END_CHECK
+  placeholder: '[TOP_LEVEL_SEQUENCE_END_CHECK]'
+  type: statement
+  default: if (end != p + len) { return MBEDTLS_ERR_RSA_BAD_INPUT_DATA; }
+  strategy: fixed_guard_statement
+  constraint: Represents the source-level fix that rejects bytes outside the top-level
+    SEQUENCE.
+  priority: high
+  normalized: true
+- name: RSA_PRIVATE_PARSE_CALL
+  placeholder: '[RSA_PRIVATE_PARSE_CALL]'
+  type: function_call
+  default: mbedtls_rsa_parse_key(&rsa, der, der_len)
+  strategy: internal_private_parser_trigger
+  constraint: Exercises PKCS#1 RSA private-key DER parser.
+  priority: high
+  normalized: true
+- name: RSA_PUBLIC_PARSE_CALL
+  placeholder: '[RSA_PUBLIC_PARSE_CALL]'
+  type: function_call
+  default: mbedtls_rsa_parse_pubkey(&rsa, der, der_len)
+  strategy: internal_public_parser_trigger
+  constraint: Exercises PKCS#1 RSA public-key DER parser.
+  priority: high
+  normalized: true
+expected_buggy_behavior:
+  signal: malformed_key_accepted
+  return_code: 0
+  description: parser returns 0 and accepts DER bytes after the top-level RSA SEQUENCE
+  sample_output:
+  - '[BUG] private key parser accepted trailing garbage.'
+  - '[BUG] public key parser accepted trailing garbage.'
+expected_fixed_behavior:
+  signal: trailing_garbage_rejected
+  return_code: MBEDTLS_ERR_RSA_BAD_INPUT_DATA
+  numeric_return_code_from_local_fixed_log: -16512
+  description: parser rejects DER bytes outside the top-level RSA SEQUENCE
+  sample_output:
+  - '[OK] private key parser rejected trailing garbage.'
+  - '[OK] public key parser rejected trailing garbage.'
+oracle:
+  type: return_code_semantic_oracle
+  bug_signals:
+  - ret == 0
+  - parser accepted valid RSA DER followed by trailing garbage
+  fixed_or_safe_signals:
+  - ret == MBEDTLS_ERR_RSA_BAD_INPUT_DATA
+  - ret != 0 and parser rejects trailing garbage
+  primary_observation:
+  - return_code
+  - stdout_status_label
+verdict:
+  true_positive:
+    condition: ret == 0
+    exit_code: 1
+  safe_behavior:
+    condition: ret == MBEDTLS_ERR_RSA_BAD_INPUT_DATA or equivalent reject code
+    exit_code: 0
+placeholders:
+  DER_KIND: '[DER_KIND]'
+  PARSE_API_KIND: '[PARSE_API_KIND]'
+  TRAILING_GARBAGE_BYTES: '[TRAILING_GARBAGE_BYTES]'
+  TRAILING_GARBAGE_LEN: '[TRAILING_GARBAGE_LEN]'
+  EXPECT_RET: '[EXPECT_RET]'
+  TOP_LEVEL_SEQUENCE_END_CHECK: '[TOP_LEVEL_SEQUENCE_END_CHECK]'
+  RSA_PRIVATE_PARSE_CALL: '[RSA_PRIVATE_PARSE_CALL]'
+  RSA_PUBLIC_PARSE_CALL: '[RSA_PUBLIC_PARSE_CALL]'
+default_cases:
+- name: private_rsa_parser_trailing_integer
+  der_kind: private
+  parse_api_kind: rsa_private
+  trailing_garbage_bytes: '020100'
+  trailing_garbage_len: 3
+  expect_ret: MBEDTLS_ERR_RSA_BAD_INPUT_DATA
+- name: public_rsa_parser_trailing_integer
+  der_kind: public
+  parse_api_kind: rsa_public
+  trailing_garbage_bytes: '020100'
+  trailing_garbage_len: 3
+  expect_ret: MBEDTLS_ERR_RSA_BAD_INPUT_DATA
+- name: public_api_private_key_trailing_integer
+  der_kind: private
+  parse_api_kind: pk_private
+  trailing_garbage_bytes: '020100'
+  trailing_garbage_len: 3
+  expect_ret: MBEDTLS_ERR_RSA_BAD_INPUT_DATA
+generation_policy:
+  max_cases: 12
+  priority:
+  - private_public_parser_paths
+  - der_object_after_top_level_sequence
+  - fixed_safe_reject_code
+  compile_with:
+  - asan
+  - ubsan
+rag_requirements:
+  retrieve:
+  - knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0020.yaml
+  - knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_parse_key.md
+  - knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_rsa_parse_key.md
+  - knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_rsa_parse_pubkey.md
+  - knowledge_raw/unit_tests/mbedtls/4.1.0/MBEDTLS-POC-0020_rsa_der_trailing_garbage_evidence.md
+notes:
+- Do not call GLM and do not require API keys for this normalized template.
+- This template intentionally does not generate OpenSSL adapters or cross-library
+  templates.
+- The DER base inputs are small regression-test-derived PKCS#1 objects from the local
+  PoC, with trailing bytes split into a separate placeholder.
+- The source public API is mbedtls_pk_parse_key, while rsa_private and rsa_public
+  modes preserve the direct internal trigger path used by the minimal PoC.
+source_template_id: RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE
+cross_library:
+  openssl:
+    target_api: d2i_RSA_PUBKEY
+    target_template: tmpl_openssl.c
+    adapter_source: recipe_slot_bindings
+    applicability: generate
+    preserved_features:
+    - DER public key parser
+    - RSA public key path
+    - caller-controlled DER buffer and explicit input length
+    - valid object followed by appended trailing garbage
+    - return pointer success/failure oracle
+    - pointer advancement oracle via const unsigned char **pp
+    lost_or_weakened_features:
+    - requested OpenSSL API expects SubjectPublicKeyInfo rather than raw PKCS#1 RSAPublicKey
+    - adapter must wrap the RSA public key in SPKI to match API expectations
+    - exact mbedTLS raw RSAPublicKey top-level SEQUENCE shape is weakened
+    - exact mbedTLS return code is not preserved
+    llm_status: ok
+    adapter_recipe: adapter_recipes/openssl/d2i_RSA_PUBKEY.der_pointer_consumption.yaml
+    slot_bindings:
+      der_kind: public_spki
+      trailing_garbage_bytes: '0500'
+      trailing_garbage_len: '2'
+      input_buffer: der
+      input_length: der_len
+      pointer_variable: p
+      consumed_len_variable: consumed_len
+      return_code_variable: ret
+      decoded_object: rsa
+      trailing_len_variable: trailing_len

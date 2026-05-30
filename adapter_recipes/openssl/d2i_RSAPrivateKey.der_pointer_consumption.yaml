@@ -1,0 +1,86 @@
+target_library: openssl
+target_api: d2i_RSAPrivateKey
+harness_family: der_pointer_consumption
+oracle_type: pointer_consumption_semantic_oracle
+
+include_headers:
+  - openssl/rsa.h
+  - openssl/evp.h
+  - stdio.h
+  - stdlib.h
+  - string.h
+  - ctype.h
+
+objects:
+  decoded_object:
+    type: RSA *
+    new: null
+    free: RSA_free
+
+fixed_setup_sequence:
+  - select_base_der_hex
+  - build_der_with_trailing_garbage
+  - initialize_ppin_to_der
+  - call_d2i_RSAPrivateKey
+  - compute_consumed_len
+
+trigger_call:
+  function: d2i_RSAPrivateKey
+  return_code: ret
+  decoded_object: rsa
+  input_pointer: p
+  input_length: der_len
+
+allowed_slots:
+  der_kind:
+    description: selects private/public DER base object
+    default: private
+  trailing_garbage_bytes:
+    description: hex string appended after a valid top-level DER object
+    default: "0500"
+  trailing_garbage_len:
+    description: expected trailing garbage length in bytes
+    default: 2
+  input_buffer:
+    description: complete DER input buffer
+    default: der
+  input_length:
+    description: total DER length including trailing garbage
+    default: der_len
+  pointer_variable:
+    description: OpenSSL d2i input pointer
+    default: p
+  consumed_len_variable:
+    description: number of bytes consumed by d2i
+    default: consumed_len
+  return_code_variable:
+    description: decoded object success/failure observable
+    default: ret
+  decoded_object:
+    description: decoded RSA object
+    default: rsa
+  trailing_len_variable:
+    description: observed trailing garbage length
+    default: trailing_len
+
+safe_behavior:
+  condition: ret != 0 or consumed_len == der_len
+  description: target either rejects trailing-garbage input or consumes the full input exactly
+
+bug_behavior:
+  condition: ret == 0 and consumed_len < der_len
+  description: target decodes the leading DER object but leaves trailing garbage unconsumed
+
+lost_or_weakened_features:
+  - Exact mbedTLS parser return code is not preserved.
+  - OpenSSL d2i APIs expose pointer advancement through ppin, so callers must check full input consumption explicitly.
+
+forbidden_terms:
+  - BN_usub
+  - BN_ucmp
+  - BN_signed_bn2bin
+  - CANARY_SIZE
+  - BUFLEN
+  - EVP_DecryptFinal_ex
+  - EVP_CIPHER_CTX
+  - d2i_X509

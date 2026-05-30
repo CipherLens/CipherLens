@@ -1,0 +1,71 @@
+target_library: openssl
+target_api: EVP_DecryptFinal_ex
+harness_family: return_code_outlen_semantic
+oracle_type: invalid_padding_output_length_oracle
+
+include_headers:
+  - openssl/evp.h
+  - string.h
+
+context:
+  type: EVP_CIPHER_CTX *
+  new: EVP_CIPHER_CTX_new
+  free: EVP_CIPHER_CTX_free
+
+fixed_setup_sequence:
+  - EVP_DecryptInit_ex
+  - EVP_CIPHER_CTX_set_padding
+  - EVP_DecryptUpdate
+
+trigger_call:
+  function: EVP_DecryptFinal_ex
+  return_code: ret
+  output_length: final_len
+
+allowed_slots:
+  cipher:
+    default: EVP_aes_128_cbc()
+  key_variable:
+    default: key
+  iv_variable:
+    default: iv
+  input_variable:
+    default: input
+  input_len_variable:
+    default: input_len
+  output_buffer:
+    default: out
+  update_len_variable:
+    default: update_len
+  final_len_variable:
+    default: final_len
+  return_code_variable:
+    default: ret
+  context_variable:
+    default: ctx
+
+safe_behavior:
+  condition: ret <= 0 && final_len == 0
+  description: invalid padding rejected and output length remains safe
+
+bug_behavior:
+  condition: ret <= 0 && final_len != 0
+  description: invalid padding rejected but output length is polluted
+
+unexpected_success:
+  condition: ret > 0
+  description: malformed invalid-padding input unexpectedly decrypts successfully
+
+forbidden_terms:
+  - BIGNUM
+  - BN_new
+  - BN_free
+  - BN_set_word
+  - d2i_X509
+  - X509_free
+  - ASN1_item_d2i
+  - BUFLEN
+  - CANARY_SIZE
+  - consumed_len
+  - openssl/bn.h
+  - openssl/x509.h

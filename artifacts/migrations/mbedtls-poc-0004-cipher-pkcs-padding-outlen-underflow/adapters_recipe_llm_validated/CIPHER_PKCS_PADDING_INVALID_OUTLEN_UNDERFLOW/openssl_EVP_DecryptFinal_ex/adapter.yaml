@@ -1,0 +1,39 @@
+source_pattern_id: MBEDTLS-POC-0004
+template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+harness_family: return_code_outlen_semantic
+oracle_type: invalid_padding_output_length_oracle
+target_library: openssl
+target_api: EVP_DecryptFinal_ex
+applicability: generate
+adapter_recipe: adapter_recipes/openssl/EVP_DecryptFinal_ex.return_code_outlen_semantic.yaml
+evidence_file: migration_candidates/cipher/cipher_pkcs_padding_outlen_underflow/candidates_with_evidence.EVP_DecryptFinal_ex.via_target_api.yaml
+slot_bindings:
+  cipher: EVP_aes_128_cbc()
+  key_variable: key
+  iv_variable: iv
+  input_variable: input
+  input_len_variable: input_len
+  output_buffer: out
+  update_len_variable: update_len
+  final_len_variable: final_len
+  return_code_variable: ret
+  context_variable: ctx
+preserved_features:
+- symmetric cipher finalization API
+- decrypt final padding check
+- caller-visible output length
+- return-code observable
+- invalid padding behavior
+- output length should remain zero on error
+lost_or_weakened_features:
+- OpenSSL uses int outl while mbedTLS uses size_t finish_olen
+- exact mbedTLS MBEDTLS_ERR_CIPHER_INVALID_PADDING value is not preserved
+_adapter_mode: recipe_slot_filling
+_ignored_disallowed_fields: []
+_llm_status: ok
+include_headers: []
+validation:
+  status: ok
+  errors: []
+  warnings: []
+  normalized: true

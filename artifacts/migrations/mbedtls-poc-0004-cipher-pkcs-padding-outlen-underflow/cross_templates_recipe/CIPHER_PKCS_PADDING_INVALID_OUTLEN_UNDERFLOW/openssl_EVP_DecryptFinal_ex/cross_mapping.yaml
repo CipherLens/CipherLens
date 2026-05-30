@@ -1,0 +1,113 @@
+source:
+  library: mbedtls
+  api: mbedtls_cipher_finish
+  template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+  semantic_operation: cipher_pkcs_padding_invalid_outlen_underflow
+  bug_class:
+  - invalid_padding_output_length_underflow
+  - error_path_output_state_pollution
+  poc_pattern:
+    pattern_id: MBEDTLS-POC-0004
+    pattern_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0004.yaml
+    root_cause:
+      summary: 'get_pkcs_padding computed *data_len = input_len - padding_len before
+        rejecting padding_len > input_len, allowing size_t underflow and unsafe caller-visible
+        finish_olen on the mbedtls_cipher_finish error path.
+
+        '
+    vulnerability_path_features:
+      must_preserve:
+      - block_cipher_decrypt_finalization
+      - pkcs7_padding_validation
+      - padding_length_derived_from_last_plaintext_byte
+      - output_length_pointer_visible_to_caller
+      - invalid_padding_error_path
+      - unsafe_or_safe_output_length_observable_after_error
+      optional:
+      - AES_128_CBC
+      - exact_invalid_padding_byte_0x80
+      - separate_update_and_finish_calls
+      not_required:
+      - exact_error_code_value
+      - exact_encryption_helper_used_to_construct_ciphertext
+      - exact_output_buffer_contents
+    migration_guidance:
+      good_target_api_features:
+      - supports block-cipher decryption with PKCS-style padding
+      - exposes a finalization API that writes output length through a pointer
+      - reports invalid padding with an observable error
+      - leaves output length observable on both success and error paths
+      bad_target_api_features:
+      - does not implement padded block-cipher finalization
+      - never exposes caller-visible output length
+      - always overwrites output length before any error is observable
+target:
+  library: openssl
+  candidate_api: EVP_DecryptFinal_ex
+adapter:
+  adapter_recipe: adapter_recipes/openssl/EVP_DecryptFinal_ex.return_code_outlen_semantic.yaml
+  slot_bindings:
+    cipher: EVP_aes_128_cbc()
+    key_variable: key
+    iv_variable: iv
+    input_variable: input
+    input_len_variable: input_len
+    output_buffer: out
+    update_len_variable: update_len
+    final_len_variable: final_len
+    return_code_variable: ret
+    context_variable: ctx
+  adapter_mode: recipe_slot_filling
+  include_headers: []
+  type_mapping: {}
+  constant_mapping: {}
+  init_block: ''
+  input_construction_block: ''
+  trigger_block: ''
+  return_value_semantics: ''
+  oracle_strategy: {}
+  cleanup_block: ''
+  llm_status: ok
+candidate:
+  library: openssl
+  api: EVP_DecryptFinal_ex
+  decision: generate
+  scores:
+    operation_family: 95
+    function_behavior: 95
+    parameter_structure: 92
+    vulnerability_path: 95
+    harness_feasibility: 92
+    final: 94
+preserved_vulnerability_features:
+- symmetric cipher finalization API
+- decrypt final padding check
+- caller-visible output length
+- return-code observable
+- invalid padding behavior
+- output length should remain zero on error
+lost_or_weakened_features:
+- OpenSSL uses int outl while mbedTLS uses size_t finish_olen
+- exact mbedTLS MBEDTLS_ERR_CIPHER_INVALID_PADDING value is not preserved
+source_expected_behavior:
+  buggy:
+    signal: unsafe_nonzero_oversized_output_length
+    return_code: -25088
+    finish_olen: 18446744073709551504
+    description: invalid padding is rejected but finish_olen is nonzero or underflowed
+    sample_output:
+    - '[BUG] invalid padding rejected but outlen is unsafe/nonzero.'
+  fixed:
+    signal: safe_error_return_with_zero_output_length
+    return_code: -25088
+    finish_olen: 0
+    description: invalid padding is rejected and finish_olen remains zero
+    sample_output:
+    - '[OK] fixed behavior: invalid padding rejected and outlen remains zero.'
+  note: The target API is not expected to reproduce exact mbedTLS numeric error codes;
+    cross-library validation uses the oracle semantics defined by the migrated harness
+    family.
+notes:
+- Generated from LLM-filled structured adapter YAML.
+- The C harness skeleton is fixed; the target-specific blocks come from adapter.yaml.
+- This is vulnerability-path migration, not strict full API semantic equivalence.

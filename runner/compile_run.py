@@ -21,12 +21,21 @@ def load_yaml(path: Path) -> Dict[str, Any]:
 
 
 def detect_library(path: Path) -> str:
-    s = str(path).lower()
-    if "mbedtls" in s:
-        return "mbedtls"
-    if "openssl" in s:
+    name = path.name.lower()
+    if name.endswith("_openssl.c") or name.endswith("_openssl.cpp") or name == "default_openssl.c":
         return "openssl"
-    if "botan" in s:
+    if name.endswith("_mbedtls.c") or name.endswith("_mbedtls.cpp") or name == "default_mbedtls.c":
+        return "mbedtls"
+    if name.endswith("_botan.c") or name.endswith("_botan.cpp") or name == "default_botan.c":
+        return "botan"
+
+    # Fallback is intentionally limited to the filename. Artifact roots may
+    # contain strings such as "mbedtls-poc" even for OpenSSL target cases.
+    if "openssl" in name:
+        return "openssl"
+    if "mbedtls" in name:
+        return "mbedtls"
+    if "botan" in name:
         return "botan"
     return "unknown"
 

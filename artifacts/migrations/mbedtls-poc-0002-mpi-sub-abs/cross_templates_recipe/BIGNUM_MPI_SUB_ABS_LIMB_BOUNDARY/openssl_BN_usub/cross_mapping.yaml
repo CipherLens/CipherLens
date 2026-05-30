@@ -1,0 +1,260 @@
+source:
+  library: mbedtls
+  api: mbedtls_mpi_sub_abs
+  template_id: BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY
+  semantic_operation: bignum_subtract_absolute
+  bug_class:
+  - limb_boundary_oob_write
+  - insufficient_output_limb_allocation
+  - canary_detected_oob_write
+  poc_pattern:
+    pattern_id: MBEDTLS-POC-0002
+    pattern_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0002.yaml
+    source:
+      source_type: github_pr
+      source_label: 'PR #4096'
+      url: https://github.com/Mbed-TLS/mbedtls/pull/4096
+      issue_refs:
+      - '4042'
+      merge_fixed_commit: bbd2bfb666c134fe534104e66a7f34f66f555781
+      buggy_commit: bbd2bfb666c134fe534104e66a7f34f66f555781^1
+      library_fix_commit: c8a917711097eff2775415d1ef68058696194928
+      regression_test_commit: 43e89e1b1583a5847520573ddb761bd5a842e70f
+    classification:
+      poc_type: memory_safety
+      bug_category: output_limb_boundary
+      failure_signal:
+      - canary_corrupted
+      - out_of_bounds_write
+      - buffer_overflow
+      - incorrect_success_return
+    root_cause:
+      summary: 'In the buggy version, mbedtls_mpi_sub_abs() does not reject the case
+        where the effective limb count of B is greater than A->n. The function then
+        proceeds to mpi_sub_hlp(n, X->p, B->p), where n can exceed the allocated limb
+        count of X, causing an out-of-bounds write into memory after X->p.
+
+        '
+      root_cause_location:
+        file: library/bignum.c
+        function: mbedtls_mpi_sub_abs
+        branch_condition: n > A->n
+      buggy_logic:
+      - missing early rejection when n > A->n
+      - continues to mpi_sub_hlp(n, X->p, B->p) with n larger than X->n
+      fixed_logic:
+      - if( n > A->n ) { ret = MBEDTLS_ERR_MPI_NEGATIVE_VALUE; goto cleanup; }
+      critical_fixed_statement: if( n > A->n ) { ret = MBEDTLS_ERR_MPI_NEGATIVE_VALUE;
+        goto cleanup; }
+    trigger:
+      A_radix: 10
+      A_value: '5'
+      B_radix: 16
+      B_value: 123456789abcdef01
+      output_limbs: 1
+      canary_size: 16
+      description: 'A is a one-limb MPI value and B is a two-limb MPI value. The PoC
+        prepares X with only one output limb followed immediately by a canary region.
+        In the buggy version, mbedtls_mpi_sub_abs(&X, &A, &B) returns success and
+        corrupts the canary. The fixed version returns MBEDTLS_ERR_MPI_NEGATIVE_VALUE.
+
+        '
+    buggy_behavior:
+      ret: 0
+      expected_ret: -10
+      internal_state: A.n=1 B.n=2 X.n=1 sizeof(mbedtls_mpi_uint)=8
+      signal: canary_corrupted
+      sample_output: '[BUG] Canary corrupted: mbedtls_mpi_sub_abs wrote beyond X->p.'
+    fixed_behavior:
+      ret: -10
+      expected_ret: -10
+      internal_state: A.n=1 B.n=2 X.n=1 sizeof(mbedtls_mpi_uint)=8
+      signal: canary_intact
+      sample_output: '[OK] Canary intact.'
+    mutation_points:
+    - name: A_VALUE
+      placeholder: '[A_VALUE]'
+      mask_level: value_level
+      source_expr: mbedtls_mpi_read_string(&A, 10, "5")
+      reason: 'Controls the magnitude and effective limb count of A. The reproduced
+        bug requires A to have fewer effective limbs than B.
+
+        '
+      priority: high
+    - name: B_VALUE
+      placeholder: '[B_VALUE]'
+      mask_level: value_level
+      source_expr: mbedtls_mpi_read_string(&B, 16, "123456789abcdef01")
+      reason: 'Controls the magnitude and effective limb count of B. The trigger uses
+        a B value with two limbs while A and X have one limb.
+
+        '
+      priority: high
+    - name: A_RADIX
+      placeholder: '[A_RADIX]'
+      mask_level: api_argument_level
+      source_expr: mbedtls_mpi_read_string(&A, 10, ...)
+      reason: 'Controls parsing of the A operand. It is part of the regression-test
+        input but is not the core memory-boundary condition.
+
+        '
+      priority: medium
+    - name: B_RADIX
+      placeholder: '[B_RADIX]'
+      mask_level: api_argument_level
+      source_expr: mbedtls_mpi_read_string(&B, 16, ...)
+      reason: 'Controls parsing of the B operand and is needed to reproduce the two-limb
+        B value used by the regression-derived PoC.
+
+        '
+      priority: medium
+    - name: OUTPUT_LIMBS
+      placeholder: '[OUTPUT_LIMBS]'
+      mask_level: memory_layout_level
+      source_expr: prepare_output_with_canary(&X, 1)
+      reason: 'Controls the manually prepared X->n and X->p allocation boundary. The
+        bug is observable when X has fewer limbs than the helper writes.
+
+        '
+      priority: high
+    - name: omitted_from_semantic_projection
+      placeholder: '[omitted_from_semantic_projection]'
+      mask_level: oracle_level
+      source_expr: '#define omitted_from_semantic_projection 16'
+      reason: 'Controls the canary detection region immediately after X->p.
+
+        '
+      priority: low
+    occlusion_candidates:
+      identifier_level:
+      - n
+      - A->n
+      - X->n
+      - X->p
+      - B->p
+      expression_level:
+      - n > A->n
+      statement_level:
+      - ret = MBEDTLS_ERR_MPI_NEGATIVE_VALUE;
+      - goto cleanup;
+      - mpi_sub_hlp( n, X->p, B->p )
+      block_level:
+      - if( n > A->n ) { ret = MBEDTLS_ERR_MPI_NEGATIVE_VALUE; goto cleanup; }
+    vulnerability_path_features:
+      must_preserve:
+      - bignum_absolute_subtraction
+      - lhs_operand_has_fewer_limbs_than_rhs_operand
+      - caller_or_harness_controls_output_limb_storage
+      - explicit_output_limb_boundary
+      - library_writes_to_output_limb_storage
+      - observable_boundary_oracle
+      - negative_result_rejection_or_error_path
+      optional:
+      - radix_based_operand_parsing
+      - exact_mbedtls_limb_size
+      - exact_error_code_value
+      not_required:
+      - exact_function_name
+      - exact internal helper name
+      - exact regression test syntax
+    migration_guidance:
+      good_target_api_features:
+      - accepts big integer operands
+      - performs absolute or unsigned bignum subtraction
+      - exposes or allows harness control over output limb storage
+      - can observe output storage boundary writes with a canary or sanitizer
+      - returns an observable error when subtraction would be negative
+      weak_target_api_features:
+      - performs bignum subtraction but fully owns output allocation and limb growth
+      - exposes only high-level result semantics without caller-controlled limb storage
+      bad_target_api_features:
+      - hides all result storage allocation internally
+      - cannot expose output limb boundary behavior
+      - cannot distinguish negative-result rejection from ordinary subtraction behavior
+      candidate_api_notes:
+      - 'OpenSSL BN_usub and BN_sub are functionally related to bignum subtraction,
+        but they do not naturally preserve the same manual X->p/X->n limb boundary
+        vulnerability path. They are therefore weak candidates for automatic migration
+        unless a specialized harness can control or instrument internal result limb
+        storage.
+
+        '
+    expected_oracle:
+      memory_safety:
+      - canary_intact_after_X_p
+      - asan_clean
+      bug_candidate:
+      - canary_corrupted_after_X_p
+      - out_of_bounds_write
+      - ret_unexpected_success_zero
+      fixed_or_safe:
+      - ret_is_MBEDTLS_ERR_MPI_NEGATIVE_VALUE
+      - no_canary_corruption
+      - no_sanitizer_crash
+    evidence_files:
+      metadata: data/pocs/core10/MBEDTLS-POC-0002/metadata.json
+      notes: data/pocs/core10/MBEDTLS-POC-0002/notes.md
+      reproduction: data/pocs/core10/MBEDTLS-POC-0002/reproduction_result.md
+      poc_source: data/pocs/core10/MBEDTLS-POC-0002/poc/poc_mpi_sub_abs_min.c
+      buggy_log: data/pocs/core10/MBEDTLS-POC-0002/poc/run_min_buggy.log
+      fixed_log: data/pocs/core10/MBEDTLS-POC-0002/poc/run_min_fixed.log
+      library_files: data/pocs/core10/MBEDTLS-POC-0002/library_files.txt
+      test_files: data/pocs/core10/MBEDTLS-POC-0002/test_files.txt
+      commits: data/pocs/core10/MBEDTLS-POC-0002/commits.txt
+      fix_commits: data/pocs/core10/MBEDTLS-POC-0002/fix_commits.txt
+target:
+  library: openssl
+  candidate_api: BN_usub
+adapter:
+  adapter_recipe: adapter_recipes/openssl/BN_usub.bignum_arithmetic_semantic.yaml
+  slot_bindings:
+    lhs_value: '5'
+    rhs_value: 123456789abcdef01
+    lhs_base: '10'
+    rhs_base: '16'
+    lhs_variable: a
+    rhs_variable: b
+    result_variable: r
+    return_code_variable: ret
+    comparison_variable: cmp
+    context_variable: bn_ctx
+    expected_relation: lhs_lt_rhs
+    result_observable: result_bignum
+  adapter_mode: recipe_slot_filling
+  include_headers: []
+  type_mapping: {}
+  constant_mapping: {}
+  init_block: ''
+  input_construction_block: ''
+  trigger_block: ''
+  return_value_semantics: ''
+  oracle_strategy: {}
+  cleanup_block: ''
+  llm_status: ok
+candidate:
+  library: openssl
+  api: BN_usub
+  decision: skip
+  scores:
+    operation_family: 85
+    function_behavior: 70
+    parameter_structure: 60
+    vulnerability_path: 45
+    harness_feasibility: 70
+    final: 63
+preserved_vulnerability_features:
+- bignum_subtraction
+- A_B_operand_relation
+lost_or_weakened_features:
+- manual_output_limb_boundary_control
+- direct_canary_after_output_limbs
+source_expected_behavior:
+  buggy: {}
+  fixed: {}
+  note: The target API is not expected to reproduce exact mbedTLS numeric error codes;
+    cross-library validation uses the oracle semantics defined by the migrated harness
+    family.
+notes:
+- Generated from LLM-filled structured adapter YAML.
+- The C harness skeleton is fixed; the target-specific blocks come from adapter.yaml.
+- This is vulnerability-path migration, not strict full API semantic equivalence.

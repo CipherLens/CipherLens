@@ -1,0 +1,246 @@
+template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+source_template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+source:
+  library: mbedtls
+  api: mbedtls_cipher_finish
+  pattern_id: MBEDTLS-POC-0004
+  internal_apis:
+    - get_pkcs_padding
+    - mbedtls_get_pkcs_padding
+  root_cause_summary: >
+    get_pkcs_padding computed *data_len = input_len - padding_len before
+    rejecting padding_len > input_len, leaving an unsafe caller-visible output
+    length on the invalid-padding error path.
+  vulnerability_path_features:
+    must_preserve:
+      - symmetric cipher finalization API
+      - decrypt final padding check
+      - caller-visible output length
+      - return-code observable
+      - invalid padding behavior
+      - output length should remain zero on error
+
+scoring_policy:
+  operation_family: 0.15
+  function_behavior: 0.20
+  parameter_structure: 0.20
+  vulnerability_path: 0.30
+  harness_feasibility: 0.15
+  decision_rule:
+    generate: final >= 75 and vulnerability_path >= 70
+    needs_llm_review: final >= 55 and vulnerability_path >= 50
+    skip: otherwise
+
+required_features:
+  - symmetric cipher finalization API
+  - decrypt final padding check
+  - caller-visible output length
+  - return-code observable
+  - invalid padding behavior
+  - output length should remain zero on error
+
+target_candidates:
+  - target_library: openssl
+    target_api: EVP_DecryptFinal_ex
+    library: openssl
+    api: EVP_DecryptFinal_ex
+    source_template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+    source_api: mbedtls_cipher_finish
+    decision: generate
+    migration_applicability: strong
+    scores:
+      operation_family: 95
+      function_behavior: 95
+      parameter_structure: 92
+      vulnerability_path: 95
+      harness_feasibility: 92
+      final: 94
+    reason: >
+      Direct decrypt finalization API. It checks final block padding, returns an
+      observable success/failure code, and writes caller-visible output length
+      through int *outl.
+    parameter_mapping:
+      ctx: EVP_CIPHER_CTX *ctx
+      output: unsigned char *outm
+      finish_olen: int *outl
+      invalid_padding_error: return value 0
+    preserved_features:
+      - symmetric cipher finalization API
+      - decrypt final padding check
+      - caller-visible output length
+      - return-code observable
+      - invalid padding behavior
+      - output length should remain zero on error
+    lost_or_weakened_features:
+      - OpenSSL uses int outl while mbedTLS uses size_t finish_olen
+      - exact mbedTLS MBEDTLS_ERR_CIPHER_INVALID_PADDING value is not preserved
+
+  - target_library: openssl
+    target_api: EVP_CipherFinal_ex
+    library: openssl
+    api: EVP_CipherFinal_ex
+    source_template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+    source_api: mbedtls_cipher_finish
+    decision: generate
+    migration_applicability: medium
+    scores:
+      operation_family: 90
+      function_behavior: 85
+      parameter_structure: 92
+      vulnerability_path: 82
+      harness_feasibility: 88
+      final: 87
+    reason: >
+      Generic cipher finalization wrapper. It can dispatch to decrypt
+      finalization and exposes int *outl, but the adapter must ensure the
+      context is configured for decryption with PKCS padding.
+    parameter_mapping:
+      ctx: EVP_CIPHER_CTX *ctx configured for decrypt
+      output: unsigned char *outm
+      finish_olen: int *outl
+      invalid_padding_error: return value 0
+    preserved_features:
+      - symmetric cipher finalization API
+      - caller-visible output length
+      - return-code observable
+      - invalid padding behavior when context is decrypting
+    lost_or_weakened_features:
+      - generic finalization wrapper is less explicit than EVP_DecryptFinal_ex
+      - adapter must guarantee decrypt mode to reach the padding check path
+
+  - target_library: openssl
+    target_api: EVP_DecryptUpdate
+    library: openssl
+    api: EVP_DecryptUpdate
+    source_template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+    source_api: mbedtls_cipher_finish
+    decision: needs_llm_review
+    migration_applicability: weak
+    scores:
+      operation_family: 70
+      function_behavior: 55
+      parameter_structure: 75
+      vulnerability_path: 50
+      harness_feasibility: 70
+      final: 62
+    reason: >
+      Decrypt update exposes output length, but it is not the finalization API
+      that performs the PKCS padding failure check. It is useful only as setup
+      context for a finalization harness.
+    parameter_mapping:
+      ctx: EVP_CIPHER_CTX *ctx
+      output: unsigned char *out
+      update_olen: int *outl
+    preserved_features:
+      - symmetric decrypt path
+      - caller-visible output length
+    lost_or_weakened_features:
+      - does not directly trigger decrypt-final invalid padding
+      - output length is update output, not final error-path output length
+
+  - target_library: openssl
+    target_api: EVP_DecryptInit_ex
+    library: openssl
+    api: EVP_DecryptInit_ex
+    source_template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+    source_api: mbedtls_cipher_finish
+    decision: needs_llm_review
+    migration_applicability: weak
+    scores:
+      operation_family: 60
+      function_behavior: 45
+      parameter_structure: 45
+      vulnerability_path: 35
+      harness_feasibility: 75
+      final: 49
+    reason: >
+      Initialization is necessary for the harness but does not perform padding
+      validation and does not expose finalization output length.
+    parameter_mapping:
+      ctx: EVP_CIPHER_CTX *ctx
+      cipher: EVP_aes_128_cbc()
+      key_iv: caller-provided key and IV
+    preserved_features:
+      - cipher context setup
+      - AES-CBC decrypt configuration
+    lost_or_weakened_features:
+      - no invalid padding check
+      - no finalization output length
+      - not a standalone migration target
+
+  - target_library: openssl
+    target_api: EVP_CIPHER_CTX_ctrl
+    library: openssl
+    api: EVP_CIPHER_CTX_ctrl
+    source_template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+    source_api: mbedtls_cipher_finish
+    decision: skip
+    migration_applicability: not_applicable
+    scores:
+      operation_family: 20
+      function_behavior: 10
+      parameter_structure: 20
+      vulnerability_path: 5
+      harness_feasibility: 20
+      final: 14
+    reason: >
+      Control API, not a decrypt finalization or padding validation API. It does
+      not preserve the output-length error path.
+    parameter_mapping: {}
+    preserved_features: []
+    lost_or_weakened_features:
+      - no padding finalization
+      - no invalid-padding return path
+      - no final output length oracle
+
+  - target_library: openssl
+    target_api: EVP_aes_128_gcm
+    library: openssl
+    api: EVP_aes_128_gcm
+    source_template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+    source_api: mbedtls_cipher_finish
+    decision: skip
+    migration_applicability: not_applicable
+    scores:
+      operation_family: 45
+      function_behavior: 20
+      parameter_structure: 15
+      vulnerability_path: 5
+      harness_feasibility: 40
+      final: 22
+    reason: >
+      AEAD GCM does not use PKCS#7 decrypt final padding and does not preserve
+      the invalid-padding output-length vulnerability path.
+    parameter_mapping: {}
+    preserved_features:
+      - symmetric cipher family
+    lost_or_weakened_features:
+      - no PKCS padding validation
+      - no decrypt-final invalid padding path
+      - authentication failure is a different oracle
+
+  - target_library: openssl
+    target_api: EVP_aes_128_ccm
+    library: openssl
+    api: EVP_aes_128_ccm
+    source_template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+    source_api: mbedtls_cipher_finish
+    decision: skip
+    migration_applicability: not_applicable
+    scores:
+      operation_family: 45
+      function_behavior: 20
+      parameter_structure: 15
+      vulnerability_path: 5
+      harness_feasibility: 40
+      final: 22
+    reason: >
+      AEAD CCM does not use PKCS#7 decrypt final padding and does not preserve
+      the invalid-padding output-length vulnerability path.
+    parameter_mapping: {}
+    preserved_features:
+      - symmetric cipher family
+    lost_or_weakened_features:
+      - no PKCS padding validation
+      - no decrypt-final invalid padding path
+      - authentication failure is a different oracle

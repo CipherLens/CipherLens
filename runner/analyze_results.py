@@ -39,6 +39,12 @@ X509_ASN1_INNER_BOUNDARY_BUG_PATTERNS = [
     "[BUG] target accepted malformed X509/ASN1 inner-boundary input.",
 ]
 
+RETURN_CODE_OUTLEN_BUG_PATTERNS = [
+    "[BUG] target rejected invalid padding but final_len was polluted.",
+    "[BUG] source rejected invalid padding but finish_olen was polluted",
+    "[BUG] invalid padding rejected but outlen is unsafe/nonzero.",
+]
+
 SAFE_PATTERNS = [
     "[OK] Canary intact",
     "fixed behavior",
@@ -52,6 +58,40 @@ DER_TRAILING_GARBAGE_SAFE_REJECT_PATTERNS = [
 
 X509_ASN1_INNER_BOUNDARY_SAFE_REJECT_PATTERNS = [
     "[OK] target rejected malformed X509/ASN1 inner-boundary input.",
+]
+
+RETURN_CODE_OUTLEN_SAFE_REJECT_PATTERNS = [
+    "[OK] target rejected invalid padding and final_len remained zero.",
+    "[OK] source rejected invalid padding and finish_olen remained zero",
+    "[OK] fixed behavior: invalid padding rejected and outlen remains zero.",
+]
+
+RETURN_CODE_OUTLEN_TRIAGE_PATTERNS = [
+    "[TRIAGE] target accepted invalid padding unexpectedly.",
+]
+
+BIGNUM_ARITHMETIC_SAFE_REJECT_PATTERNS = [
+    "[OK] target rejected lhs<rhs unsigned subtraction or avoided producing result.",
+    "[OK] source rejected negative mbedTLS absolute subtraction.",
+]
+
+BIGNUM_ARITHMETIC_TRIAGE_PATTERNS = [
+    "[TRIAGE] target produced result for lhs<rhs unsigned subtraction; semantic projection needs review.",
+    "[INFO] target lhs>=rhs normal unsigned subtraction path.",
+    "[TRIAGE] source produced result for negative mbedTLS absolute subtraction; semantic projection needs review.",
+    "[INFO] source lhs>=rhs normal mbedTLS sub_abs path.",
+]
+
+BIGNUM_BN_USUB_SEMANTIC_PROJECTION_PATTERNS = [
+    "[TRIAGE] target produced result for lhs<rhs unsigned subtraction; semantic projection needs review.",
+]
+
+BIGNUM_SERIALIZATION_BUFFER_SAFE_REJECT_PATTERNS = [
+    "[OK] target rejected small output buffer and canary intact.",
+]
+
+BIGNUM_SERIALIZATION_BUFFER_NORMAL_PATTERNS = [
+    "[INFO] target serialized into provided buffer; canary intact.",
 ]
 
 HARNESS_ERROR_PATTERNS = [
@@ -105,6 +145,115 @@ def is_x509_asn1_inner_boundary_record(record: Dict[str, Any], text: str, result
         or "MBEDTLS-POC-0017" in joined
         or "x509_asn1_inner_boundary" in joined
         or "malformed X509/ASN1 inner-boundary input" in joined
+    )
+
+
+def is_return_code_outlen_record(record: Dict[str, Any], text: str, result: Dict[str, Any]) -> bool:
+    markers = [
+        str(record.get("relative_source", "")),
+        str(record.get("source", "")),
+        str(result.get("template_id", "")),
+        str(result.get("case_name", "")),
+        text,
+    ]
+    joined = "\n".join(markers)
+    return (
+        "CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW" in joined
+        or "MBEDTLS-POC-0004" in joined
+        or "invalid_padding_output_length_oracle" in joined
+        or "final_len remained zero" in joined
+        or "finish_olen" in joined
+    )
+
+
+def is_bignum_arithmetic_semantic_record(record: Dict[str, Any], text: str, result: Dict[str, Any]) -> bool:
+    markers = [
+        str(record.get("relative_source", "")),
+        str(record.get("source", "")),
+        str(result.get("template_id", "")),
+        str(result.get("case_name", "")),
+        text,
+    ]
+    joined = "\n".join(markers)
+    return (
+        "BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY" in joined
+        or "MBEDTLS-POC-0002" in joined
+        or "bignum_negative_result_rejection_oracle" in joined
+        or "lhs<rhs unsigned subtraction" in joined
+        or "negative mbedTLS absolute subtraction" in joined
+    )
+
+
+def is_openssl_bn_usub_semantic_projection(record: Dict[str, Any], text: str, result: Dict[str, Any]) -> bool:
+    markers = [
+        str(record.get("relative_source", "")),
+        str(record.get("source", "")),
+        str(result.get("template_id", "")),
+        str(result.get("case_name", "")),
+        text,
+    ]
+    joined = "\n".join(markers)
+
+    if result.get("library") != "openssl":
+        return False
+
+    if "BN_usub" not in joined and "openssl_BN_usub" not in joined:
+        return False
+
+    if not is_bignum_arithmetic_semantic_record(record, text, result):
+        return False
+
+    has_projection_label = contains_any(text, BIGNUM_BN_USUB_SEMANTIC_PROJECTION_PATTERNS)
+    has_lhs_lt_rhs_success = (
+        re.search(r"\bcmp\s*=\s*-1\b", text) is not None
+        and re.search(r"\bret\s*=\s*1\b", text) is not None
+    )
+
+    return has_projection_label or has_lhs_lt_rhs_success
+
+
+def is_bignum_serialization_buffer_boundary_record(
+    record: Dict[str, Any],
+    text: str,
+    result: Dict[str, Any],
+) -> bool:
+    markers = [
+        str(record.get("relative_source", "")),
+        str(record.get("source", "")),
+        str(result.get("template_id", "")),
+        str(result.get("case_name", "")),
+        text,
+    ]
+    joined = "\n".join(markers)
+    return (
+        "BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER" in joined
+        or "MBEDTLS-POC-0001" in joined
+        or "bignum_serialization_buffer_boundary_oracle" in joined
+        or "BN_signed_bn2bin" in joined
+        or "target rejected small output buffer and canary intact" in joined
+        or "target serialized into provided buffer; canary intact" in joined
+    )
+
+
+def is_openssl_bn_signed_bn2bin_buffer_boundary_record(
+    record: Dict[str, Any],
+    text: str,
+    result: Dict[str, Any],
+) -> bool:
+    markers = [
+        str(record.get("relative_source", "")),
+        str(record.get("source", "")),
+        str(result.get("template_id", "")),
+        str(result.get("case_name", "")),
+        text,
+    ]
+    joined = "\n".join(markers)
+
+    return (
+        result.get("library") == "openssl"
+        and "BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER" in joined
+        and "BN_signed_bn2bin" in joined
+        and is_bignum_serialization_buffer_boundary_record(record, text, result)
     )
 
 
@@ -222,6 +371,14 @@ def classify_record(record: Dict[str, Any]) -> Dict[str, Any]:
         result["reason"] = "X.509/ASN.1 parser accepted malformed inner-boundary DER input."
         return result
 
+    if (
+        contains_any(text, RETURN_CODE_OUTLEN_BUG_PATTERNS)
+        and is_return_code_outlen_record(record, text, result)
+    ):
+        result["verdict"] = "bug_candidate"
+        result["reason"] = "Invalid-padding finalization failed but the caller-visible output length was polluted."
+        return result
+
     if contains_any(text, BUG_PATTERNS):
         result["verdict"] = "bug_candidate"
         result["reason"] = "Harness reported explicit BUG/canary corruption pattern."
@@ -258,6 +415,73 @@ def classify_record(record: Dict[str, Any]) -> Dict[str, Any]:
     if contains_any(text, X509_ASN1_INNER_BOUNDARY_SAFE_REJECT_PATTERNS):
         result["verdict"] = "safe_reject_behavior"
         result["reason"] = "X.509/ASN.1 parser rejected malformed inner-boundary DER input."
+        return result
+
+    if (
+        contains_any(text, RETURN_CODE_OUTLEN_SAFE_REJECT_PATTERNS)
+        and is_return_code_outlen_record(record, text, result)
+    ):
+        result["verdict"] = "safe_reject_behavior"
+        result["reason"] = "Invalid-padding finalization failed and the caller-visible output length remained safe."
+        return result
+
+    if (
+        contains_any(text, RETURN_CODE_OUTLEN_TRIAGE_PATTERNS)
+        and is_return_code_outlen_record(record, text, result)
+    ):
+        result["verdict"] = "normal_behavior_needs_triage"
+        result["reason"] = "Invalid-padding input was accepted unexpectedly and needs manual triage."
+        return result
+
+    if (
+        contains_any(text, BIGNUM_ARITHMETIC_SAFE_REJECT_PATTERNS)
+        and is_bignum_arithmetic_semantic_record(record, text, result)
+    ):
+        result["verdict"] = "safe_reject_behavior"
+        result["reason"] = (
+            "Bignum arithmetic semantic projection rejected or avoided the negative "
+            "unsigned/absolute subtraction path."
+        )
+        return result
+
+    if (
+        contains_any(text, BIGNUM_SERIALIZATION_BUFFER_SAFE_REJECT_PATTERNS)
+        and is_bignum_serialization_buffer_boundary_record(record, text, result)
+    ):
+        result["verdict"] = "safe_reject_behavior"
+        result["reason"] = "Bignum serialization rejected a too-small target buffer and preserved the canary."
+        return result
+
+    if (
+        contains_any(text, BIGNUM_SERIALIZATION_BUFFER_NORMAL_PATTERNS)
+        and is_openssl_bn_signed_bn2bin_buffer_boundary_record(record, text, result)
+    ):
+        result["verdict"] = "normal_expected_behavior"
+        result["reason"] = (
+            "OpenSSL BN_signed_bn2bin serialized into a sufficiently large caller-provided "
+            "buffer and preserved the canary. This is expected normal serialization behavior, "
+            "not a migrated bug candidate."
+        )
+        return result
+
+    if is_openssl_bn_usub_semantic_projection(record, text, result):
+        result["verdict"] = "semantic_projection_limitation"
+        result["reason"] = (
+            "OpenSSL BN_usub returned success for lhs<rhs under its low-level "
+            "unsigned-subtraction precondition. This is expected OpenSSL behavior "
+            "or a semantic projection limitation, not a migrated bug candidate."
+        )
+        return result
+
+    if (
+        contains_any(text, BIGNUM_ARITHMETIC_TRIAGE_PATTERNS)
+        and is_bignum_arithmetic_semantic_record(record, text, result)
+    ):
+        result["verdict"] = "normal_behavior_needs_triage"
+        result["reason"] = (
+            "Bignum arithmetic semantic projection reached a normal or mismatched "
+            "arithmetic path that needs manual review."
+        )
         return result
 
     if contains_any(text, SAFE_PATTERNS):

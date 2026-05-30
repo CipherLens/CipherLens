@@ -1,0 +1,42 @@
+source_pattern_id: MBEDTLS-POC-0001
+template_id: BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER
+harness_family: buffer_canary_boundary
+oracle_type: bignum_serialization_buffer_boundary_oracle
+target_library: openssl
+target_api: BN_signed_bn2bin
+applicability: generate
+adapter_recipe: adapter_recipes/openssl/BN_signed_bn2bin.buffer_canary_boundary.yaml
+evidence_file: migration_candidates/bignum/mpi_write_string/candidates_with_evidence.yaml
+slot_bindings:
+  value_variable: X
+  source_value: '-1'
+  source_value_base: '10'
+  magnitude_variable: magnitude
+  signed_value_variable: signed_value
+  output_buffer: buf
+  output_length: BUFLEN
+  canary_size: CANARY_SIZE
+  return_code_variable: ret
+  buffer_observable: buf
+  canary_observable: canary_corrupted
+  encoding_observable: signed_big_endian_twos_complement
+preserved_features:
+- negative_integer_path
+- caller_provided_output_buffer
+- explicit_output_buffer_length
+- library_writes_to_caller_buffer
+- observable_boundary_oracle
+lost_or_weakened_features:
+- radix_parameter
+- textual radix string representation
+_adapter_mode: recipe_slot_filling
+_ignored_disallowed_fields: []
+_ignored_non_slot_fields: []
+_llm_raw_preview: "{\n  \"slot_bindings\": {\n    \"value_variable\": \"X\",\n   \
+  \ \"source_value\": \"-1\",\n    \"source_value_base\": \"10\",\n    \"magnitude_variable\"\
+  : \"magnitude\",\n    \"signed_value_variable\": \"signed_value\",\n    \"output_buffer\"\
+  : \"buf\",\n    \"output_length\": \"BUFLEN\",\n    \"canary_size\": \"CANARY_SIZE\"\
+  ,\n    \"return_code_variable\": \"ret\",\n    \"buffer_observable\": \"buf\",\n\
+  \    \"canary_observable\": \"canary_corrupted\",\n    \"encoding_observable\":\
+  \ \"signed_big_endian_twos_complement\"\n  }\n}"
+_llm_status: ok

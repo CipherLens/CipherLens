@@ -1,0 +1,1491 @@
+template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+source_template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+source:
+  library: mbedtls
+  api: mbedtls_cipher_finish
+  pattern_id: MBEDTLS-POC-0004
+  internal_apis:
+  - get_pkcs_padding
+  - mbedtls_get_pkcs_padding
+  root_cause_summary: 'get_pkcs_padding computed *data_len = input_len - padding_len
+    before rejecting padding_len > input_len, leaving an unsafe caller-visible output
+    length on the invalid-padding error path.
+
+    '
+  vulnerability_path_features:
+    must_preserve:
+    - symmetric cipher finalization API
+    - decrypt final padding check
+    - caller-visible output length
+    - return-code observable
+    - invalid padding behavior
+    - output length should remain zero on error
+scoring_policy:
+  operation_family: 0.15
+  function_behavior: 0.2
+  parameter_structure: 0.2
+  vulnerability_path: 0.3
+  harness_feasibility: 0.15
+  decision_rule:
+    generate: final >= 75 and vulnerability_path >= 70
+    needs_llm_review: final >= 55 and vulnerability_path >= 50
+    skip: otherwise
+required_features:
+- symmetric cipher finalization API
+- decrypt final padding check
+- caller-visible output length
+- return-code observable
+- invalid padding behavior
+- output length should remain zero on error
+target_candidates:
+- target_library: openssl
+  target_api: EVP_DecryptFinal_ex
+  library: openssl
+  api: EVP_DecryptFinal_ex
+  source_template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+  source_api: mbedtls_cipher_finish
+  decision: generate
+  migration_applicability: strong
+  scores:
+    operation_family: 95
+    function_behavior: 95
+    parameter_structure: 92
+    vulnerability_path: 95
+    harness_feasibility: 92
+    final: 94
+  reason: 'Direct decrypt finalization API. It checks final block padding, returns
+    an observable success/failure code, and writes caller-visible output length through
+    int *outl.
+
+    '
+  parameter_mapping:
+    ctx: EVP_CIPHER_CTX *ctx
+    output: unsigned char *outm
+    finish_olen: int *outl
+    invalid_padding_error: return value 0
+  preserved_features:
+  - symmetric cipher finalization API
+  - decrypt final padding check
+  - caller-visible output length
+  - return-code observable
+  - invalid padding behavior
+  - output length should remain zero on error
+  lost_or_weakened_features:
+  - OpenSSL uses int outl while mbedTLS uses size_t finish_olen
+  - exact mbedTLS MBEDTLS_ERR_CIPHER_INVALID_PADDING value is not preserved
+  evidence:
+    top_k: 5
+    queries:
+    - query: "get_pkcs_padding computed *data_len = input_len - padding_len before\
+        \ rejecting padding_len > input_len, allowing size_t underflow and unsafe\
+        \ caller-visible finish_olen on the mbedtls_cipher_finish error path.\n block_cipher_decrypt_finalization\
+        \ pkcs7_padding_validation padding_length_derived_from_last_plaintext_byte\
+        \ output_length_pointer_visible_to_caller invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error"
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"get_pkcs_padding computed *data_len = input_len\
+        \ - padding_len before rejecting padding_len > input_len, allowing size_t\
+        \ underflow and unsafe caller-visible finish_olen on the mbedtls_cipher_finish\
+        \ error path.\\n block_cipher_decrypt_finalization pkcs7_padding_validation\
+        \ padding_length_derived_from_last_plaintext_byte output_length_pointer_visible_to_caller\
+        \ invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error\"\
+        ,\n  \"top_k\": 5,\n  \"results\": [],\n  \"error\": \"Ollama embedding failed\
+        \ after 3 retries: [Errno 1] Operation not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: source_pattern
+      use_for_feature_inference: source_only
+    - query: openssl EVP_DecryptFinal_ex function declaration signature parameters
+        return value
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_DecryptFinal_ex function declaration\
+        \ signature parameters return value\",\n  \"top_k\": 5,\n  \"results\": [],\n\
+        \  \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_signature
+      use_for_feature_inference: target
+    - query: openssl EVP_DecryptFinal_ex implementation source code parameters return
+        error
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_DecryptFinal_ex implementation\
+        \ source code parameters return error\",\n  \"top_k\": 5,\n  \"results\":\
+        \ [],\n  \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_implementation
+      use_for_feature_inference: target
+    - query: openssl EVP_DecryptFinal_ex usage example unit test API call pattern
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_DecryptFinal_ex usage example\
+        \ unit test API call pattern\",\n  \"top_k\": 5,\n  \"results\": [],\n  \"\
+        error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation not\
+        \ permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_usage
+      use_for_feature_inference: target
+    - query: openssl EVP_DecryptFinal_ex invalid_padding_output_length_underflow error_path_output_state_pollution
+        symmetric cipher finalization API decrypt final padding check caller-visible
+        output length return-code observable invalid padding behavior output length
+        should remain zero on error block_cipher_decrypt_finalization pkcs7_padding_validation
+        padding_length_derived_from_last_plaintext_byte output_length_pointer_visible_to_caller
+        invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error  OpenSSL
+        uses int outl while mbedTLS uses size_t finish_olen exact mbedTLS MBEDTLS_ERR_CIPHER_INVALID_PADDING
+        value is not preserved EVP_CIPHER_CTX *ctx unsigned char *outm int *outl return
+        value 0
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_DecryptFinal_ex invalid_padding_output_length_underflow\
+        \ error_path_output_state_pollution symmetric cipher finalization API decrypt\
+        \ final padding check caller-visible output length return-code observable\
+        \ invalid padding behavior output length should remain zero on error block_cipher_decrypt_finalization\
+        \ pkcs7_padding_validation padding_length_derived_from_last_plaintext_byte\
+        \ output_length_pointer_visible_to_caller invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error\
+        \  OpenSSL uses int outl while mbedTLS uses size_t finish_olen exact mbedTLS\
+        \ MBEDTLS_ERR_CIPHER_INVALID_PADDING value is not preserved EVP_CIPHER_CTX\
+        \ *ctx unsigned char *outm int *outl return value 0\",\n  \"top_k\": 5,\n\
+        \  \"results\": [],\n  \"error\": \"Ollama embedding failed after 3 retries:\
+        \ [Errno 1] Operation not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: vulnerability_path_compatibility
+      use_for_feature_inference: target
+    inferred_features:
+      observed_features_from_target_evidence:
+      - caller_provided_output_buffer
+      - library_writes_to_caller_buffer
+      - signed_or_negative_encoding
+      negative_or_weakened_features:
+      - OpenSSL uses int outl while mbedTLS uses size_t finish_olen
+      - exact mbedTLS MBEDTLS_ERR_CIPHER_INVALID_PADDING value is not preserved
+      effective_observed_features:
+      - caller_provided_output_buffer
+      - library_writes_to_caller_buffer
+      - signed_or_negative_encoding
+      feature_conflicts: []
+      candidate_preserved_features: []
+      candidate_lost_or_weakened_features:
+      - OpenSSL uses int outl while mbedTLS uses size_t finish_olen
+      - exact mbedTLS MBEDTLS_ERR_CIPHER_INVALID_PADDING value is not preserved
+      bug_class_requirements:
+        required: []
+        disallowed: []
+        optional: []
+      required_present: []
+      required_missing: []
+      disallowed_present: []
+      optional_present: []
+      evidence_hits:
+        caller_provided_output_buffer:
+          positive_hits:
+          - unsigned char *out
+          negative_hits: []
+        library_writes_to_caller_buffer:
+          positive_hits:
+          - unsigned char *out
+          negative_hits: []
+        signed_or_negative_encoding:
+          positive_hits:
+          - signed
+          negative_hits: []
+- target_library: openssl
+  target_api: EVP_CipherFinal_ex
+  library: openssl
+  api: EVP_CipherFinal_ex
+  source_template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+  source_api: mbedtls_cipher_finish
+  decision: generate
+  migration_applicability: medium
+  scores:
+    operation_family: 90
+    function_behavior: 85
+    parameter_structure: 92
+    vulnerability_path: 82
+    harness_feasibility: 88
+    final: 87
+  reason: 'Generic cipher finalization wrapper. It can dispatch to decrypt finalization
+    and exposes int *outl, but the adapter must ensure the context is configured for
+    decryption with PKCS padding.
+
+    '
+  parameter_mapping:
+    ctx: EVP_CIPHER_CTX *ctx configured for decrypt
+    output: unsigned char *outm
+    finish_olen: int *outl
+    invalid_padding_error: return value 0
+  preserved_features:
+  - symmetric cipher finalization API
+  - caller-visible output length
+  - return-code observable
+  - invalid padding behavior when context is decrypting
+  lost_or_weakened_features:
+  - generic finalization wrapper is less explicit than EVP_DecryptFinal_ex
+  - adapter must guarantee decrypt mode to reach the padding check path
+  evidence:
+    top_k: 5
+    queries:
+    - query: "get_pkcs_padding computed *data_len = input_len - padding_len before\
+        \ rejecting padding_len > input_len, allowing size_t underflow and unsafe\
+        \ caller-visible finish_olen on the mbedtls_cipher_finish error path.\n block_cipher_decrypt_finalization\
+        \ pkcs7_padding_validation padding_length_derived_from_last_plaintext_byte\
+        \ output_length_pointer_visible_to_caller invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error"
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"get_pkcs_padding computed *data_len = input_len\
+        \ - padding_len before rejecting padding_len > input_len, allowing size_t\
+        \ underflow and unsafe caller-visible finish_olen on the mbedtls_cipher_finish\
+        \ error path.\\n block_cipher_decrypt_finalization pkcs7_padding_validation\
+        \ padding_length_derived_from_last_plaintext_byte output_length_pointer_visible_to_caller\
+        \ invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error\"\
+        ,\n  \"top_k\": 5,\n  \"results\": [],\n  \"error\": \"Ollama embedding failed\
+        \ after 3 retries: [Errno 1] Operation not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: source_pattern
+      use_for_feature_inference: source_only
+    - query: openssl EVP_CipherFinal_ex function declaration signature parameters
+        return value
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_CipherFinal_ex function declaration\
+        \ signature parameters return value\",\n  \"top_k\": 5,\n  \"results\": [],\n\
+        \  \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_signature
+      use_for_feature_inference: target
+    - query: openssl EVP_CipherFinal_ex implementation source code parameters return
+        error
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_CipherFinal_ex implementation\
+        \ source code parameters return error\",\n  \"top_k\": 5,\n  \"results\":\
+        \ [],\n  \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_implementation
+      use_for_feature_inference: target
+    - query: openssl EVP_CipherFinal_ex usage example unit test API call pattern
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_CipherFinal_ex usage example\
+        \ unit test API call pattern\",\n  \"top_k\": 5,\n  \"results\": [],\n  \"\
+        error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation not\
+        \ permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_usage
+      use_for_feature_inference: target
+    - query: openssl EVP_CipherFinal_ex invalid_padding_output_length_underflow error_path_output_state_pollution
+        symmetric cipher finalization API decrypt final padding check caller-visible
+        output length return-code observable invalid padding behavior output length
+        should remain zero on error block_cipher_decrypt_finalization pkcs7_padding_validation
+        padding_length_derived_from_last_plaintext_byte output_length_pointer_visible_to_caller
+        invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error  generic
+        finalization wrapper is less explicit than EVP_DecryptFinal_ex adapter must
+        guarantee decrypt mode to reach the padding check path EVP_CIPHER_CTX *ctx
+        configured for decrypt unsigned char *outm int *outl return value 0
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_CipherFinal_ex invalid_padding_output_length_underflow\
+        \ error_path_output_state_pollution symmetric cipher finalization API decrypt\
+        \ final padding check caller-visible output length return-code observable\
+        \ invalid padding behavior output length should remain zero on error block_cipher_decrypt_finalization\
+        \ pkcs7_padding_validation padding_length_derived_from_last_plaintext_byte\
+        \ output_length_pointer_visible_to_caller invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error\
+        \  generic finalization wrapper is less explicit than EVP_DecryptFinal_ex\
+        \ adapter must guarantee decrypt mode to reach the padding check path EVP_CIPHER_CTX\
+        \ *ctx configured for decrypt unsigned char *outm int *outl return value 0\"\
+        ,\n  \"top_k\": 5,\n  \"results\": [],\n  \"error\": \"Ollama embedding failed\
+        \ after 3 retries: [Errno 1] Operation not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: vulnerability_path_compatibility
+      use_for_feature_inference: target
+    inferred_features:
+      observed_features_from_target_evidence:
+      - caller_provided_output_buffer
+      - library_writes_to_caller_buffer
+      - signed_or_negative_encoding
+      negative_or_weakened_features:
+      - adapter must guarantee decrypt mode to reach the padding check path
+      - generic finalization wrapper is less explicit than EVP_DecryptFinal_ex
+      effective_observed_features:
+      - caller_provided_output_buffer
+      - library_writes_to_caller_buffer
+      - signed_or_negative_encoding
+      feature_conflicts: []
+      candidate_preserved_features: []
+      candidate_lost_or_weakened_features:
+      - adapter must guarantee decrypt mode to reach the padding check path
+      - generic finalization wrapper is less explicit than EVP_DecryptFinal_ex
+      bug_class_requirements:
+        required: []
+        disallowed: []
+        optional: []
+      required_present: []
+      required_missing: []
+      disallowed_present: []
+      optional_present: []
+      evidence_hits:
+        caller_provided_output_buffer:
+          positive_hits:
+          - unsigned char *out
+          negative_hits: []
+        library_writes_to_caller_buffer:
+          positive_hits:
+          - unsigned char *out
+          negative_hits: []
+        signed_or_negative_encoding:
+          positive_hits:
+          - signed
+          negative_hits: []
+- target_library: openssl
+  target_api: EVP_DecryptUpdate
+  library: openssl
+  api: EVP_DecryptUpdate
+  source_template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+  source_api: mbedtls_cipher_finish
+  decision: needs_llm_review
+  migration_applicability: weak
+  scores:
+    operation_family: 70
+    function_behavior: 55
+    parameter_structure: 75
+    vulnerability_path: 50
+    harness_feasibility: 70
+    final: 62
+  reason: 'Decrypt update exposes output length, but it is not the finalization API
+    that performs the PKCS padding failure check. It is useful only as setup context
+    for a finalization harness.
+
+    '
+  parameter_mapping:
+    ctx: EVP_CIPHER_CTX *ctx
+    output: unsigned char *out
+    update_olen: int *outl
+  preserved_features:
+  - symmetric decrypt path
+  - caller-visible output length
+  lost_or_weakened_features:
+  - does not directly trigger decrypt-final invalid padding
+  - output length is update output, not final error-path output length
+  evidence:
+    top_k: 5
+    queries:
+    - query: "get_pkcs_padding computed *data_len = input_len - padding_len before\
+        \ rejecting padding_len > input_len, allowing size_t underflow and unsafe\
+        \ caller-visible finish_olen on the mbedtls_cipher_finish error path.\n block_cipher_decrypt_finalization\
+        \ pkcs7_padding_validation padding_length_derived_from_last_plaintext_byte\
+        \ output_length_pointer_visible_to_caller invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error"
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"get_pkcs_padding computed *data_len = input_len\
+        \ - padding_len before rejecting padding_len > input_len, allowing size_t\
+        \ underflow and unsafe caller-visible finish_olen on the mbedtls_cipher_finish\
+        \ error path.\\n block_cipher_decrypt_finalization pkcs7_padding_validation\
+        \ padding_length_derived_from_last_plaintext_byte output_length_pointer_visible_to_caller\
+        \ invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error\"\
+        ,\n  \"top_k\": 5,\n  \"results\": [],\n  \"error\": \"Ollama embedding failed\
+        \ after 3 retries: [Errno 1] Operation not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: source_pattern
+      use_for_feature_inference: source_only
+    - query: openssl EVP_DecryptUpdate function declaration signature parameters return
+        value
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_DecryptUpdate function declaration\
+        \ signature parameters return value\",\n  \"top_k\": 5,\n  \"results\": [],\n\
+        \  \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_signature
+      use_for_feature_inference: target
+    - query: openssl EVP_DecryptUpdate implementation source code parameters return
+        error
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_DecryptUpdate implementation\
+        \ source code parameters return error\",\n  \"top_k\": 5,\n  \"results\":\
+        \ [],\n  \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_implementation
+      use_for_feature_inference: target
+    - query: openssl EVP_DecryptUpdate usage example unit test API call pattern
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_DecryptUpdate usage example unit\
+        \ test API call pattern\",\n  \"top_k\": 5,\n  \"results\": [],\n  \"error\"\
+        : \"Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted\"\
+        \n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_usage
+      use_for_feature_inference: target
+    - query: openssl EVP_DecryptUpdate invalid_padding_output_length_underflow error_path_output_state_pollution
+        symmetric cipher finalization API decrypt final padding check caller-visible
+        output length return-code observable invalid padding behavior output length
+        should remain zero on error block_cipher_decrypt_finalization pkcs7_padding_validation
+        padding_length_derived_from_last_plaintext_byte output_length_pointer_visible_to_caller
+        invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error  does
+        not directly trigger decrypt-final invalid padding output length is update
+        output, not final error-path output length EVP_CIPHER_CTX *ctx unsigned char
+        *out int *outl
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_DecryptUpdate invalid_padding_output_length_underflow\
+        \ error_path_output_state_pollution symmetric cipher finalization API decrypt\
+        \ final padding check caller-visible output length return-code observable\
+        \ invalid padding behavior output length should remain zero on error block_cipher_decrypt_finalization\
+        \ pkcs7_padding_validation padding_length_derived_from_last_plaintext_byte\
+        \ output_length_pointer_visible_to_caller invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error\
+        \  does not directly trigger decrypt-final invalid padding output length is\
+        \ update output, not final error-path output length EVP_CIPHER_CTX *ctx unsigned\
+        \ char *out int *outl\",\n  \"top_k\": 5,\n  \"results\": [],\n  \"error\"\
+        : \"Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted\"\
+        \n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: vulnerability_path_compatibility
+      use_for_feature_inference: target
+    inferred_features:
+      observed_features_from_target_evidence:
+      - caller_provided_output_buffer
+      - library_writes_to_caller_buffer
+      - signed_or_negative_encoding
+      negative_or_weakened_features:
+      - does not directly trigger decrypt-final invalid padding
+      - output length is update output, not final error-path output length
+      effective_observed_features:
+      - caller_provided_output_buffer
+      - library_writes_to_caller_buffer
+      - signed_or_negative_encoding
+      feature_conflicts: []
+      candidate_preserved_features: []
+      candidate_lost_or_weakened_features:
+      - does not directly trigger decrypt-final invalid padding
+      - output length is update output, not final error-path output length
+      bug_class_requirements:
+        required: []
+        disallowed: []
+        optional: []
+      required_present: []
+      required_missing: []
+      disallowed_present: []
+      optional_present: []
+      evidence_hits:
+        caller_provided_output_buffer:
+          positive_hits:
+          - unsigned char *out
+          negative_hits: []
+        library_writes_to_caller_buffer:
+          positive_hits:
+          - unsigned char *out
+          negative_hits: []
+        signed_or_negative_encoding:
+          positive_hits:
+          - signed
+          negative_hits: []
+- target_library: openssl
+  target_api: EVP_DecryptInit_ex
+  library: openssl
+  api: EVP_DecryptInit_ex
+  source_template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+  source_api: mbedtls_cipher_finish
+  decision: needs_llm_review
+  migration_applicability: weak
+  scores:
+    operation_family: 60
+    function_behavior: 45
+    parameter_structure: 45
+    vulnerability_path: 35
+    harness_feasibility: 75
+    final: 49
+  reason: 'Initialization is necessary for the harness but does not perform padding
+    validation and does not expose finalization output length.
+
+    '
+  parameter_mapping:
+    ctx: EVP_CIPHER_CTX *ctx
+    cipher: EVP_aes_128_cbc()
+    key_iv: caller-provided key and IV
+  preserved_features:
+  - cipher context setup
+  - AES-CBC decrypt configuration
+  lost_or_weakened_features:
+  - no invalid padding check
+  - no finalization output length
+  - not a standalone migration target
+  evidence:
+    top_k: 5
+    queries:
+    - query: "get_pkcs_padding computed *data_len = input_len - padding_len before\
+        \ rejecting padding_len > input_len, allowing size_t underflow and unsafe\
+        \ caller-visible finish_olen on the mbedtls_cipher_finish error path.\n block_cipher_decrypt_finalization\
+        \ pkcs7_padding_validation padding_length_derived_from_last_plaintext_byte\
+        \ output_length_pointer_visible_to_caller invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error"
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"get_pkcs_padding computed *data_len = input_len\
+        \ - padding_len before rejecting padding_len > input_len, allowing size_t\
+        \ underflow and unsafe caller-visible finish_olen on the mbedtls_cipher_finish\
+        \ error path.\\n block_cipher_decrypt_finalization pkcs7_padding_validation\
+        \ padding_length_derived_from_last_plaintext_byte output_length_pointer_visible_to_caller\
+        \ invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error\"\
+        ,\n  \"top_k\": 5,\n  \"results\": [],\n  \"error\": \"Ollama embedding failed\
+        \ after 3 retries: [Errno 1] Operation not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: source_pattern
+      use_for_feature_inference: source_only
+    - query: openssl EVP_DecryptInit_ex function declaration signature parameters
+        return value
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_DecryptInit_ex function declaration\
+        \ signature parameters return value\",\n  \"top_k\": 5,\n  \"results\": [],\n\
+        \  \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_signature
+      use_for_feature_inference: target
+    - query: openssl EVP_DecryptInit_ex implementation source code parameters return
+        error
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_DecryptInit_ex implementation\
+        \ source code parameters return error\",\n  \"top_k\": 5,\n  \"results\":\
+        \ [],\n  \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_implementation
+      use_for_feature_inference: target
+    - query: openssl EVP_DecryptInit_ex usage example unit test API call pattern
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_DecryptInit_ex usage example\
+        \ unit test API call pattern\",\n  \"top_k\": 5,\n  \"results\": [],\n  \"\
+        error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation not\
+        \ permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_usage
+      use_for_feature_inference: target
+    - query: openssl EVP_DecryptInit_ex invalid_padding_output_length_underflow error_path_output_state_pollution
+        symmetric cipher finalization API decrypt final padding check caller-visible
+        output length return-code observable invalid padding behavior output length
+        should remain zero on error block_cipher_decrypt_finalization pkcs7_padding_validation
+        padding_length_derived_from_last_plaintext_byte output_length_pointer_visible_to_caller
+        invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error  no
+        invalid padding check no finalization output length not a standalone migration
+        target EVP_CIPHER_CTX *ctx EVP_aes_128_cbc() caller-provided key and IV
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_DecryptInit_ex invalid_padding_output_length_underflow\
+        \ error_path_output_state_pollution symmetric cipher finalization API decrypt\
+        \ final padding check caller-visible output length return-code observable\
+        \ invalid padding behavior output length should remain zero on error block_cipher_decrypt_finalization\
+        \ pkcs7_padding_validation padding_length_derived_from_last_plaintext_byte\
+        \ output_length_pointer_visible_to_caller invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error\
+        \  no invalid padding check no finalization output length not a standalone\
+        \ migration target EVP_CIPHER_CTX *ctx EVP_aes_128_cbc() caller-provided key\
+        \ and IV\",\n  \"top_k\": 5,\n  \"results\": [],\n  \"error\": \"Ollama embedding\
+        \ failed after 3 retries: [Errno 1] Operation not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: vulnerability_path_compatibility
+      use_for_feature_inference: target
+    inferred_features:
+      observed_features_from_target_evidence: []
+      negative_or_weakened_features:
+      - no finalization output length
+      - no invalid padding check
+      - not a standalone migration target
+      effective_observed_features: []
+      feature_conflicts: []
+      candidate_preserved_features: []
+      candidate_lost_or_weakened_features:
+      - no finalization output length
+      - no invalid padding check
+      - not a standalone migration target
+      bug_class_requirements:
+        required: []
+        disallowed: []
+        optional: []
+      required_present: []
+      required_missing: []
+      disallowed_present: []
+      optional_present: []
+      evidence_hits: {}
+- target_library: openssl
+  target_api: EVP_CIPHER_CTX_ctrl
+  library: openssl
+  api: EVP_CIPHER_CTX_ctrl
+  source_template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+  source_api: mbedtls_cipher_finish
+  decision: skip
+  migration_applicability: not_applicable
+  scores:
+    operation_family: 20
+    function_behavior: 10
+    parameter_structure: 20
+    vulnerability_path: 5
+    harness_feasibility: 20
+    final: 14
+  reason: 'Control API, not a decrypt finalization or padding validation API. It does
+    not preserve the output-length error path.
+
+    '
+  parameter_mapping: {}
+  preserved_features: []
+  lost_or_weakened_features:
+  - no padding finalization
+  - no invalid-padding return path
+  - no final output length oracle
+  evidence:
+    top_k: 5
+    queries:
+    - query: "get_pkcs_padding computed *data_len = input_len - padding_len before\
+        \ rejecting padding_len > input_len, allowing size_t underflow and unsafe\
+        \ caller-visible finish_olen on the mbedtls_cipher_finish error path.\n block_cipher_decrypt_finalization\
+        \ pkcs7_padding_validation padding_length_derived_from_last_plaintext_byte\
+        \ output_length_pointer_visible_to_caller invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error"
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"get_pkcs_padding computed *data_len = input_len\
+        \ - padding_len before rejecting padding_len > input_len, allowing size_t\
+        \ underflow and unsafe caller-visible finish_olen on the mbedtls_cipher_finish\
+        \ error path.\\n block_cipher_decrypt_finalization pkcs7_padding_validation\
+        \ padding_length_derived_from_last_plaintext_byte output_length_pointer_visible_to_caller\
+        \ invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error\"\
+        ,\n  \"top_k\": 5,\n  \"results\": [],\n  \"error\": \"Ollama embedding failed\
+        \ after 3 retries: [Errno 1] Operation not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: source_pattern
+      use_for_feature_inference: source_only
+    - query: openssl EVP_CIPHER_CTX_ctrl function declaration signature parameters
+        return value
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_CIPHER_CTX_ctrl function declaration\
+        \ signature parameters return value\",\n  \"top_k\": 5,\n  \"results\": [],\n\
+        \  \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_signature
+      use_for_feature_inference: target
+    - query: openssl EVP_CIPHER_CTX_ctrl implementation source code parameters return
+        error
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_CIPHER_CTX_ctrl implementation\
+        \ source code parameters return error\",\n  \"top_k\": 5,\n  \"results\":\
+        \ [],\n  \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_implementation
+      use_for_feature_inference: target
+    - query: openssl EVP_CIPHER_CTX_ctrl usage example unit test API call pattern
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_CIPHER_CTX_ctrl usage example\
+        \ unit test API call pattern\",\n  \"top_k\": 5,\n  \"results\": [],\n  \"\
+        error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation not\
+        \ permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_usage
+      use_for_feature_inference: target
+    - query: 'openssl EVP_CIPHER_CTX_ctrl invalid_padding_output_length_underflow
+        error_path_output_state_pollution symmetric cipher finalization API decrypt
+        final padding check caller-visible output length return-code observable invalid
+        padding behavior output length should remain zero on error block_cipher_decrypt_finalization
+        pkcs7_padding_validation padding_length_derived_from_last_plaintext_byte output_length_pointer_visible_to_caller
+        invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error  no
+        padding finalization no invalid-padding return path no final output length
+        oracle '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_CIPHER_CTX_ctrl invalid_padding_output_length_underflow\
+        \ error_path_output_state_pollution symmetric cipher finalization API decrypt\
+        \ final padding check caller-visible output length return-code observable\
+        \ invalid padding behavior output length should remain zero on error block_cipher_decrypt_finalization\
+        \ pkcs7_padding_validation padding_length_derived_from_last_plaintext_byte\
+        \ output_length_pointer_visible_to_caller invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error\
+        \  no padding finalization no invalid-padding return path no final output\
+        \ length oracle \",\n  \"top_k\": 5,\n  \"results\": [],\n  \"error\": \"\
+        Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted\"\
+        \n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: vulnerability_path_compatibility
+      use_for_feature_inference: target
+    inferred_features:
+      observed_features_from_target_evidence: []
+      negative_or_weakened_features:
+      - no final output length oracle
+      - no invalid-padding return path
+      - no padding finalization
+      effective_observed_features: []
+      feature_conflicts: []
+      candidate_preserved_features: []
+      candidate_lost_or_weakened_features:
+      - no final output length oracle
+      - no invalid-padding return path
+      - no padding finalization
+      bug_class_requirements:
+        required: []
+        disallowed: []
+        optional: []
+      required_present: []
+      required_missing: []
+      disallowed_present: []
+      optional_present: []
+      evidence_hits: {}
+- target_library: openssl
+  target_api: EVP_aes_128_gcm
+  library: openssl
+  api: EVP_aes_128_gcm
+  source_template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+  source_api: mbedtls_cipher_finish
+  decision: skip
+  migration_applicability: not_applicable
+  scores:
+    operation_family: 45
+    function_behavior: 20
+    parameter_structure: 15
+    vulnerability_path: 5
+    harness_feasibility: 40
+    final: 22
+  reason: 'AEAD GCM does not use PKCS#7 decrypt final padding and does not preserve
+    the invalid-padding output-length vulnerability path.
+
+    '
+  parameter_mapping: {}
+  preserved_features:
+  - symmetric cipher family
+  lost_or_weakened_features:
+  - no PKCS padding validation
+  - no decrypt-final invalid padding path
+  - authentication failure is a different oracle
+  evidence:
+    top_k: 5
+    queries:
+    - query: "get_pkcs_padding computed *data_len = input_len - padding_len before\
+        \ rejecting padding_len > input_len, allowing size_t underflow and unsafe\
+        \ caller-visible finish_olen on the mbedtls_cipher_finish error path.\n block_cipher_decrypt_finalization\
+        \ pkcs7_padding_validation padding_length_derived_from_last_plaintext_byte\
+        \ output_length_pointer_visible_to_caller invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error"
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"get_pkcs_padding computed *data_len = input_len\
+        \ - padding_len before rejecting padding_len > input_len, allowing size_t\
+        \ underflow and unsafe caller-visible finish_olen on the mbedtls_cipher_finish\
+        \ error path.\\n block_cipher_decrypt_finalization pkcs7_padding_validation\
+        \ padding_length_derived_from_last_plaintext_byte output_length_pointer_visible_to_caller\
+        \ invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error\"\
+        ,\n  \"top_k\": 5,\n  \"results\": [],\n  \"error\": \"Ollama embedding failed\
+        \ after 3 retries: [Errno 1] Operation not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: source_pattern
+      use_for_feature_inference: source_only
+    - query: openssl EVP_aes_128_gcm function declaration signature parameters return
+        value
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_aes_128_gcm function declaration\
+        \ signature parameters return value\",\n  \"top_k\": 5,\n  \"results\": [],\n\
+        \  \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_signature
+      use_for_feature_inference: target
+    - query: openssl EVP_aes_128_gcm implementation source code parameters return
+        error
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_aes_128_gcm implementation source\
+        \ code parameters return error\",\n  \"top_k\": 5,\n  \"results\": [],\n \
+        \ \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_implementation
+      use_for_feature_inference: target
+    - query: openssl EVP_aes_128_gcm usage example unit test API call pattern
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_aes_128_gcm usage example unit\
+        \ test API call pattern\",\n  \"top_k\": 5,\n  \"results\": [],\n  \"error\"\
+        : \"Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted\"\
+        \n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_usage
+      use_for_feature_inference: target
+    - query: 'openssl EVP_aes_128_gcm invalid_padding_output_length_underflow error_path_output_state_pollution
+        symmetric cipher finalization API decrypt final padding check caller-visible
+        output length return-code observable invalid padding behavior output length
+        should remain zero on error block_cipher_decrypt_finalization pkcs7_padding_validation
+        padding_length_derived_from_last_plaintext_byte output_length_pointer_visible_to_caller
+        invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error  no
+        PKCS padding validation no decrypt-final invalid padding path authentication
+        failure is a different oracle '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_aes_128_gcm invalid_padding_output_length_underflow\
+        \ error_path_output_state_pollution symmetric cipher finalization API decrypt\
+        \ final padding check caller-visible output length return-code observable\
+        \ invalid padding behavior output length should remain zero on error block_cipher_decrypt_finalization\
+        \ pkcs7_padding_validation padding_length_derived_from_last_plaintext_byte\
+        \ output_length_pointer_visible_to_caller invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error\
+        \  no PKCS padding validation no decrypt-final invalid padding path authentication\
+        \ failure is a different oracle \",\n  \"top_k\": 5,\n  \"results\": [],\n\
+        \  \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: vulnerability_path_compatibility
+      use_for_feature_inference: target
+    inferred_features:
+      observed_features_from_target_evidence: []
+      negative_or_weakened_features:
+      - authentication failure is a different oracle
+      - no PKCS padding validation
+      - no decrypt-final invalid padding path
+      effective_observed_features: []
+      feature_conflicts: []
+      candidate_preserved_features: []
+      candidate_lost_or_weakened_features:
+      - authentication failure is a different oracle
+      - no PKCS padding validation
+      - no decrypt-final invalid padding path
+      bug_class_requirements:
+        required: []
+        disallowed: []
+        optional: []
+      required_present: []
+      required_missing: []
+      disallowed_present: []
+      optional_present: []
+      evidence_hits: {}
+- target_library: openssl
+  target_api: EVP_aes_128_ccm
+  library: openssl
+  api: EVP_aes_128_ccm
+  source_template_id: CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW
+  source_api: mbedtls_cipher_finish
+  decision: skip
+  migration_applicability: not_applicable
+  scores:
+    operation_family: 45
+    function_behavior: 20
+    parameter_structure: 15
+    vulnerability_path: 5
+    harness_feasibility: 40
+    final: 22
+  reason: 'AEAD CCM does not use PKCS#7 decrypt final padding and does not preserve
+    the invalid-padding output-length vulnerability path.
+
+    '
+  parameter_mapping: {}
+  preserved_features:
+  - symmetric cipher family
+  lost_or_weakened_features:
+  - no PKCS padding validation
+  - no decrypt-final invalid padding path
+  - authentication failure is a different oracle
+  evidence:
+    top_k: 5
+    queries:
+    - query: "get_pkcs_padding computed *data_len = input_len - padding_len before\
+        \ rejecting padding_len > input_len, allowing size_t underflow and unsafe\
+        \ caller-visible finish_olen on the mbedtls_cipher_finish error path.\n block_cipher_decrypt_finalization\
+        \ pkcs7_padding_validation padding_length_derived_from_last_plaintext_byte\
+        \ output_length_pointer_visible_to_caller invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error"
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"get_pkcs_padding computed *data_len = input_len\
+        \ - padding_len before rejecting padding_len > input_len, allowing size_t\
+        \ underflow and unsafe caller-visible finish_olen on the mbedtls_cipher_finish\
+        \ error path.\\n block_cipher_decrypt_finalization pkcs7_padding_validation\
+        \ padding_length_derived_from_last_plaintext_byte output_length_pointer_visible_to_caller\
+        \ invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error\"\
+        ,\n  \"top_k\": 5,\n  \"results\": [],\n  \"error\": \"Ollama embedding failed\
+        \ after 3 retries: [Errno 1] Operation not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: source_pattern
+      use_for_feature_inference: source_only
+    - query: openssl EVP_aes_128_ccm function declaration signature parameters return
+        value
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_aes_128_ccm function declaration\
+        \ signature parameters return value\",\n  \"top_k\": 5,\n  \"results\": [],\n\
+        \  \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_signature
+      use_for_feature_inference: target
+    - query: openssl EVP_aes_128_ccm implementation source code parameters return
+        error
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_aes_128_ccm implementation source\
+        \ code parameters return error\",\n  \"top_k\": 5,\n  \"results\": [],\n \
+        \ \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_implementation
+      use_for_feature_inference: target
+    - query: openssl EVP_aes_128_ccm usage example unit test API call pattern
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_aes_128_ccm usage example unit\
+        \ test API call pattern\",\n  \"top_k\": 5,\n  \"results\": [],\n  \"error\"\
+        : \"Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted\"\
+        \n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: target_api_usage
+      use_for_feature_inference: target
+    - query: 'openssl EVP_aes_128_ccm invalid_padding_output_length_underflow error_path_output_state_pollution
+        symmetric cipher finalization API decrypt final padding check caller-visible
+        output length return-code observable invalid padding behavior output length
+        should remain zero on error block_cipher_decrypt_finalization pkcs7_padding_validation
+        padding_length_derived_from_last_plaintext_byte output_length_pointer_visible_to_caller
+        invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error  no
+        PKCS padding validation no decrypt-final invalid padding path authentication
+        failure is a different oracle '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_aes_128_ccm invalid_padding_output_length_underflow\
+        \ error_path_output_state_pollution symmetric cipher finalization API decrypt\
+        \ final padding check caller-visible output length return-code observable\
+        \ invalid padding behavior output length should remain zero on error block_cipher_decrypt_finalization\
+        \ pkcs7_padding_validation padding_length_derived_from_last_plaintext_byte\
+        \ output_length_pointer_visible_to_caller invalid_padding_error_path unsafe_or_safe_output_length_observable_after_error\
+        \  no PKCS padding validation no decrypt-final invalid padding path authentication\
+        \ failure is a different oracle \",\n  \"top_k\": 5,\n  \"results\": [],\n\
+        \  \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      kind: vulnerability_path_compatibility
+      use_for_feature_inference: target
+    inferred_features:
+      observed_features_from_target_evidence: []
+      negative_or_weakened_features:
+      - authentication failure is a different oracle
+      - no PKCS padding validation
+      - no decrypt-final invalid padding path
+      effective_observed_features: []
+      feature_conflicts: []
+      candidate_preserved_features: []
+      candidate_lost_or_weakened_features:
+      - authentication failure is a different oracle
+      - no PKCS padding validation
+      - no decrypt-final invalid padding path
+      bug_class_requirements:
+        required: []
+        disallowed: []
+        optional: []
+      required_present: []
+      required_missing: []
+      disallowed_present: []
+      optional_present: []
+      evidence_hits: {}
+evidence_collection:
+  method: config_driven_rag_evidence_collector
+  top_k: 5
+  feature_rules: config/evidence_feature_rules.yaml
+  bug_classes:
+  - invalid_padding_output_length_underflow
+  - error_path_output_state_pollution
+  - symmetric cipher finalization API
+  - decrypt final padding check
+  - caller-visible output length
+  - return-code observable
+  - invalid padding behavior
+  - output length should remain zero on error
+  source_pattern:
+    pattern_id: MBEDTLS-POC-0004
+    root_cause_summary: 'get_pkcs_padding computed *data_len = input_len - padding_len
+      before rejecting padding_len > input_len, allowing size_t underflow and unsafe
+      caller-visible finish_olen on the mbedtls_cipher_finish error path.
+
+      '
+    must_preserve_features:
+    - block_cipher_decrypt_finalization
+    - pkcs7_padding_validation
+    - padding_length_derived_from_last_plaintext_byte
+    - output_length_pointer_visible_to_caller
+    - invalid_padding_error_path
+    - unsafe_or_safe_output_length_observable_after_error
+    optional_features:
+    - AES_128_CBC
+    - exact_invalid_padding_byte_0x80
+    - separate_update_and_finish_calls
+    not_required_features:
+    - exact_error_code_value
+    - exact_encryption_helper_used_to_construct_ciphertext
+    - exact_output_buffer_contents
+    good_target_api_features:
+    - supports block-cipher decryption with PKCS-style padding
+    - exposes a finalization API that writes output length through a pointer
+    - reports invalid padding with an observable error
+    - leaves output length observable on both success and error paths
+    bad_target_api_features:
+    - does not implement padded block-cipher finalization
+    - never exposes caller-visible output length
+    - always overwrites output length before any error is observable
+    rag_query_context: 'MBEDTLS-POC-0004 mbedtls_cipher_finish get_pkcs_padding PKCS7
+      invalid padding padding_len greater than input_len output length underflow finish_olen
+      OpenSSL EVP_DecryptFinal_ex EVP_CipherFinal_ex outl invalid padding.
+
+      '
+  note: Evidence is retrieved before LLM adapter filling. Source-pattern evidence
+    is kept separate from target-API evidence to avoid feature contamination.
