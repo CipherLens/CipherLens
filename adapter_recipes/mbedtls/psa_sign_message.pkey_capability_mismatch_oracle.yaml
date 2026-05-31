@@ -1,0 +1,98 @@
+target_library: mbedtls
+target_api: psa_sign_message
+harness_family: pkey_capability_mismatch_oracle
+oracle_type: public_key_sign_rejection_oracle
+
+include_headers:
+  - psa/crypto.h
+  - stdio.h
+  - string.h
+  - stdlib.h
+
+objects:
+  - name: psa_initialized
+    type: int
+    init: "psa_crypto_init() == PSA_SUCCESS"
+    cleanup: "mbedtls_psa_crypto_free()"
+  - name: key_id
+    type: psa_key_id_t
+    init: "0"
+    cleanup: "psa_destroy_key(key_id)"
+  - name: sig
+    type: "unsigned char[64]"
+    init: "zero"
+    cleanup: "none"
+  - name: sig_len
+    type: size_t
+    init: "0"
+    cleanup: "none"
+
+fixed_setup_sequence:
+  - psa_crypto_init
+  - psa_key_attributes_set_type_to_public_only
+  - psa_import_key
+
+trigger_call:
+  function: psa_sign_message
+  key_id: key_id
+  algorithm: PSA_ALG_PURE_EDDSA
+  message: message
+  message_length: message_len
+  signature: sig
+  signature_size: sizeof(sig)
+  signature_length: "&sig_len"
+  return_code: status
+
+allowed_slots:
+  key_type:
+    description: >
+      PSA key type for Ed25519 public key.
+      PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_TWISTED_EDWARDS)
+    default: "PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_TWISTED_EDWARDS)"
+  key_bits:
+    description: Key size in bits (255 for Ed25519, 448 for Ed448)
+    default: 255
+  key_algorithm:
+    description: PSA signing algorithm
+    default: PSA_ALG_PURE_EDDSA
+  key_usage_flags:
+    description: >
+      Key usage flags. MUST NOT include PSA_KEY_USAGE_SIGN_MESSAGE
+      to represent a public-only key without signing capability.
+    default: "PSA_KEY_USAGE_VERIFY_MESSAGE"
+  key_bytes:
+    description: Raw Ed25519 public key bytes (32 bytes)
+    default: "standard_ed25519_public_key_32bytes"
+  message_bytes:
+    description: Message to attempt to sign
+    default: '"Test"'
+  message_len:
+    description: Message length
+    default: 4
+
+safe_behavior:
+  condition: >
+    psa_sign_message returns PSA_ERROR_NOT_PERMITTED or PSA_ERROR_INVALID_ARGUMENT
+    AND no crash or ASAN signal
+  description: >
+    PSA correctly rejects signing attempt on a public-only key without
+    PSA_KEY_USAGE_SIGN_MESSAGE flag.
+
+bug_behavior:
+  condition: ASAN/UBSAN crash or SEGV during psa_sign_message
+  description: >
+    PSA implementation dereferences NULL private key material during
+    psa_sign_message, causing crash or undefined behavior.
+
+forbidden_terms:
+  - EVP_CIPHER_CTX_copy
+  - EVP_CIPHER_CTX_dup
+  - EVP_aes_128_gcm
+  - BIO_s_secmem
+  - CRYPTO_secure_malloc_init
+  - d2i_X509
+  - PEM_read_bio_X509
+  - EVP_DigestSignInit
+  - EVP_DigestSign
+  - BN_new
+  - RSA_new

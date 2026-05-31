@@ -1,0 +1,114 @@
+pattern_id: OPENSSL-ISSUE-19524
+template_id: PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF
+source_issue: 19524
+source_library: openssl
+source_component: PKEY/ED25519_ED448
+source_url: https://github.com/openssl/openssl/issues/19524
+affected_version: "openssl 3.0.2, openssl 1.1.1r"
+state: open
+
+source_api:
+  - EVP_PKEY_new_raw_public_key
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit
+  - EVP_DigestSign
+
+vulnerability_class: pkey_capability_mismatch
+trigger_behavior: NULL_DEREFERENCE_CRASH
+poc_type: C_API
+artifact_class: C_rag_seed_to_c_candidate
+quality: HQ
+strict_reproduction: false
+
+root_cause: >
+  EVP_DigestUpdate() allows NULL to be passed to it, and digests (including the
+  Ed25519/Ed448 sign path) do not check for NULL private key material.
+  When a public-only EVP_PKEY (created via EVP_PKEY_new_raw_public_key) is used
+  with EVP_DigestSignInit / EVP_DigestSign, the signing path dereferences a NULL
+  private key pointer, causing a segfault.
+  Root cause note: in the affected versions the ED25519/ED448 provider or
+  implementation does not reject the signing attempt early enough when private
+  key material is absent.
+root_cause_confidence: high
+root_cause_source: issue_report_and_maintainer_confirmation
+
+trigger:
+  sequence:
+    - EVP_PKEY_new_raw_public_key(EVP_PKEY_ED25519, NULL, pubkey_bytes, 32)
+    - EVP_MD_CTX_new()
+    - EVP_DigestSignInit(ctx, NULL, NULL, NULL, pkey)
+    - EVP_DigestSign(ctx, sig_buf, &sig_len, message, msg_len)
+  trigger_condition: >
+    A public-only ED25519 key (created from raw public key bytes only, with no
+    private key component) enters the EVP sign path. In the buggy version, the
+    sign implementation does not validate that private key material exists before
+    dereferencing the private key pointer.
+  observed_on_affected: NULL_DEREFERENCE_CRASH / SEGV
+  observed_on_current: controlled error return (EVP_DigestSignInit or EVP_DigestSign returns != 1)
+
+buggy_behavior:
+  signal: SEGV / NULL_DEREFERENCE_CRASH
+  affected_version: "OpenSSL 3.0.2, OpenSSL 1.1.1r"
+  observable: crash or undefined behavior during EVP_DigestSign or EVP_DigestSignInit
+  oracle: ASAN/UBSAN/SEGV/exit139
+
+safe_behavior:
+  signal: safe error return
+  current_version_note: >
+    On OpenSSL 3.0.13 (local test), EVP_DigestSignInit returns 1 but EVP_DigestSign
+    returns != 1 with error message, or EVP_DigestSignInit itself returns failure.
+    Either path is safe rejection.
+  oracle: EVP_DigestSign returns != 1 AND no crash signal
+
+mutation_points:
+  - name: KEY_TYPE
+    description: ED25519 (32-byte key) vs ED448 (57-byte key)
+    priority: high
+  - name: KEY_MATERIAL_KIND
+    description: public_only (no private component)
+    priority: high
+  - name: SIGN_CALL_SEQUENCE
+    description: >
+      DigestSignInit then DigestSign (one-shot) vs
+      DigestSignInit then size-query then sign
+    priority: medium
+  - name: MESSAGE_LEN
+    description: 0, 1, 4, 16, 64 bytes
+    priority: medium
+  - name: SIG_BUF_STATE
+    description: caller-allocated fixed buffer vs NULL size query first
+    priority: low
+
+oracle:
+  oracle_type: crash_sanitizer_or_safe_error_oracle
+  bug_signals:
+    - ASAN/UBSAN crash during EVP_DigestSignInit or EVP_DigestSign
+    - SEGV / exit code 139
+    - EVP_DigestSign succeeds (returns 1) with public-only key = semantic bug
+  safe_signals:
+    - EVP_DigestSignInit returns != 1 (immediate rejection)
+    - EVP_DigestSign returns != 1 (error path, no crash)
+
+original_reproduction:
+  type: standalone_c_api
+  requires_external_input: false
+  requires_server_client: false
+  requires_tls_handshake: false
+  independent_c_poc: true
+
+migration_applicability:
+  status: applicable
+  reason: >
+    The core vulnerability path (public-only key + sign operation = capability mismatch)
+    maps well to PSA Crypto API: import a public-only ED25519 key (without
+    PSA_KEY_USAGE_SIGN_MESSAGE), then attempt psa_sign_message.
+    PSA is expected to return PSA_ERROR_NOT_PERMITTED or PSA_ERROR_INVALID_ARGUMENT
+    safely without crash. This is a strong semantic projection with preserved
+    vulnerability path (capability mismatch oracle).
+
+references:
+  issue_url: https://github.com/openssl/openssl/issues/19524
+  artifact_files:
+    - datasets/openssl/poc_artifacts/issue_19524/metadata.json
+    - datasets/openssl/poc_artifacts/issue_19524/poc.c
+    - datasets/openssl/poc_artifacts/issue_19524/README.md

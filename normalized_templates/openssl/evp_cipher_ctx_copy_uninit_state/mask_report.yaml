@@ -1,0 +1,63 @@
+template_id: EVP_CIPHER_CTX_COPY_UNINIT_STATE
+pattern_id: OPENSSL-ISSUE-8980
+source_library: openssl
+harness_family: crash_sanitizer_oracle
+
+mask_units:
+  - slot: CIPHER_ALGORITHM
+    type: cipher_algorithm_selector
+    location: EVP_EncryptInit_ex second argument
+    mutation_reason: >
+      Controls which cipher algorithm's internal state is allocated. GCM vs CCM
+      vs other AEAD modes may have different copy behavior for uninitialized state.
+    default_value: "EVP_aes_128_gcm()"
+    variants:
+      - value: "EVP_aes_128_gcm()"
+        label: aes128_gcm
+        notes: primary trigger algorithm
+      - value: "EVP_aes_256_gcm()"
+        label: aes256_gcm
+        notes: larger key variant
+      - value: "EVP_aes_128_ccm()"
+        label: aes128_ccm
+        notes: CCM mode comparison
+
+  - slot: SRC_KEY_BYTES
+    type: key_or_null
+    location: EVP_EncryptInit_ex fourth argument
+    mutation_reason: >
+      NULL key = partially-initialized context (trigger condition).
+      Setting a key may change internal state initialization level.
+    default_value: "NULL"
+    variants:
+      - value: "NULL"
+        label: no_key
+        notes: primary trigger condition
+
+  - slot: SRC_IV_BYTES
+    type: iv_or_null
+    location: EVP_EncryptInit_ex fifth argument
+    mutation_reason: >
+      NULL IV = partially-initialized context (trigger condition).
+      Setting an IV may change internal state initialization level.
+    default_value: "NULL"
+    variants:
+      - value: "NULL"
+        label: no_iv
+        notes: primary trigger condition
+
+key_vulnerability_fragments:
+  - fragment: "EVP_EncryptInit_ex(ctx, cipher, NULL, NULL, NULL)"
+    reason: partial initialization with NULL key and IV
+  - fragment: "EVP_CIPHER_CTX_copy(ctx2, ctx)"
+    reason: copy trigger on partially-initialized context
+
+immutable_structure:
+  - EVP_CIPHER_CTX_new allocation for src and dst
+  - EVP_CIPHER_CTX_free cleanup for src and dst
+  - copy_ret capture and print for oracle observability
+
+notes:
+  - Core vulnerability requires NULL key AND NULL IV in EVP_EncryptInit_ex
+  - EVP_CIPHER_CTX_copy is the definitive trigger call; must not be removed
+  - No mbedTLS migration path: mbedTLS lacks cipher context copy API

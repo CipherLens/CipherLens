@@ -1,0 +1,57 @@
+template_id: PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF
+pattern_id: OPENSSL-ISSUE-19524
+source_library: openssl
+generated_by: manual_ast_analysis
+
+ast_units:
+  - unit_id: key_type_arg
+    kind: function_call_argument
+    call_site: EVP_PKEY_new_raw_public_key
+    argument_index: 0
+    source_text: EVP_PKEY_ED25519
+    slot: KEY_TYPE
+    mutable: true
+
+  - unit_id: key_bytes_arr
+    kind: array_initializer
+    call_site: public_key_bytes declaration
+    source_text: "{0x7d,0x4d,...}"
+    slot: KEY_BYTES
+    mutable: true
+
+  - unit_id: key_len_decl
+    kind: array_size_constant
+    call_site: public_key_bytes declaration
+    source_text: "32"
+    slot: KEY_LEN
+    mutable: true
+
+  - unit_id: message_bytes_arr
+    kind: array_initializer
+    call_site: message declaration
+    source_text: '"Test\0"'
+    slot: MESSAGE_BYTES
+    mutable: true
+
+  - unit_id: message_len_decl
+    kind: array_size_constant
+    call_site: message declaration
+    source_text: "5"
+    slot: MESSAGE_LEN
+    mutable: true
+
+  - unit_id: digest_sign_init_call
+    kind: function_call
+    call_site: EVP_DigestSignInit
+    source_text: "EVP_DigestSignInit(mdctx, NULL, NULL, NULL, pkey)"
+    slot: INIT_CALL
+    mutable: false
+    reason: core signing-init trigger; must not be removed
+
+  - unit_id: digest_sign_call
+    kind: function_call
+    call_site: EVP_DigestSign
+    source_text: "EVP_DigestSign(mdctx, sig, &siglen, message, sizeof(message) - 1)"
+    slot: SIGN_CALL
+    mutable: false
+    reason: core trigger; removing destroys vulnerability path

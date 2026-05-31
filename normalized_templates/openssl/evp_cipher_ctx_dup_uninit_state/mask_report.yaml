@@ -1,0 +1,54 @@
+template_id: EVP_CIPHER_CTX_DUP_UNINIT_STATE
+pattern_id: OPENSSL-ISSUE-8980
+source_library: openssl
+harness_family: crash_sanitizer_oracle
+variant_of: EVP_CIPHER_CTX_COPY_UNINIT_STATE
+
+mask_units:
+  - slot: CIPHER_ALGORITHM
+    type: cipher_algorithm_selector
+    location: EVP_EncryptInit_ex second argument
+    mutation_reason: >
+      Controls which cipher internal state is allocated. GCM vs CCM may have
+      different behavior for partial-context dup.
+    default_value: "EVP_aes_128_gcm()"
+    variants:
+      - value: "EVP_aes_128_gcm()"
+        label: aes128_gcm
+        notes: primary trigger algorithm
+
+  - slot: SRC_KEY_BYTES
+    type: key_or_null
+    location: EVP_EncryptInit_ex fourth argument
+    mutation_reason: NULL = partial init; primary trigger condition
+    default_value: "NULL"
+    variants:
+      - value: "NULL"
+        label: no_key
+
+  - slot: SRC_IV_BYTES
+    type: iv_or_null
+    location: EVP_EncryptInit_ex fifth argument
+    mutation_reason: NULL = partial init; contributes to trigger
+    default_value: "NULL"
+    variants:
+      - value: "NULL"
+        label: no_iv
+
+key_vulnerability_fragments:
+  - fragment: "EVP_EncryptInit_ex(src, cipher, NULL, NULL, NULL)"
+    reason: partial initialization — same as original PoC
+  - fragment: "EVP_CIPHER_CTX_dup(src)"
+    reason: dup trigger; internally calls EVP_CIPHER_CTX_copy
+
+immutable_structure:
+  - EVP_CIPHER_CTX_new for src
+  - EVP_EncryptInit_ex with NULL key, NULL IV
+  - EVP_CIPHER_CTX_dup call (core equivalent trigger)
+  - NULL-return check and printf for oracle observability
+  - EVP_CIPHER_CTX_free for both src and dst
+
+difference_from_copy_variant:
+  - EVP_CIPHER_CTX_dup allocates and returns new ctx; EVP_CIPHER_CTX_copy copies into pre-allocated dst
+  - oracle: check dst pointer == NULL vs copy return code
+  - same internal code path: EVP_CTRL_COPY handler for AES-GCM

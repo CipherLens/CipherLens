@@ -1,0 +1,133 @@
+pattern_id: OPENSSL-ISSUE-8980
+template_id: EVP_CIPHER_CTX_COPY_UNINIT_STATE
+source_issue: 8980
+source_library: openssl
+source_component: EVP/AES_GCM
+source_url: https://github.com/openssl/openssl/issues/8980
+affected_version: "1.0.2"
+state: closed
+
+source_api:
+  - EVP_CIPHER_CTX_new
+  - EVP_aes_128_gcm
+  - EVP_EncryptInit_ex
+  - EVP_CIPHER_CTX_copy
+
+vulnerability_class: evp_context_state_lifecycle
+trigger_behavior: NULL_DEREFERENCE_CRASH
+poc_type: C_API
+artifact_class: A_ast_ready
+quality: HIGH_CANDIDATE
+strict_reproduction: false
+
+root_cause: >
+  Uninitialized memory access in EVP_CIPHER_CTX_copy when copying an AES-GCM
+  EVP_CIPHER_CTX that has been initialized with EVP_EncryptInit_ex but has not
+  yet had a key or IV set. In OpenSSL 1.0.2, the GCM internal state structure
+  (gcm128_context / EVP_AES_GCM_CTX) contains pointers to cipher-specific
+  cipher_data that may not be fully initialized at the point EVP_CIPHER_CTX_copy
+  is called, leading to uninitialized memory access in the copy path.
+  The maintainer confirmed this is a bug but stated it would not be fixed in 1.0.2
+  (security-fix only mode).
+root_cause_confidence: partial
+root_cause_source: issue_comments_and_maintainer_statement
+fix_diff_reviewed: false
+
+trigger:
+  sequence:
+    - EVP_CIPHER_CTX_new() to allocate source context
+    - EVP_aes_128_gcm() to get cipher descriptor
+    - EVP_EncryptInit_ex(ctx, cipher, NULL, NULL, NULL) with NULL key and NULL IV
+    - EVP_CIPHER_CTX_new() to allocate destination context
+    - EVP_CIPHER_CTX_copy(dst, src) on partially-initialized GCM context
+  trigger_condition: >
+    EVP_CIPHER_CTX_copy called on a GCM context that has been associated with the
+    cipher algorithm (via EVP_EncryptInit_ex) but has not received a key or IV.
+    The internal cipher_data / GCM state may not be fully initialized.
+
+buggy_behavior:
+  signal: NULL_DEREFERENCE_CRASH or uninitialized memory access
+  affected_version: OpenSSL 1.0.2
+  observable: >
+    Crash or Valgrind uninitialized-memory-read error during EVP_CIPHER_CTX_copy
+    when copying a GCM context with no key/IV set.
+  reproduction_method: direct C API call sequence
+
+safe_behavior:
+  signal: safe return or early rejection
+  current_version_note: >
+    Under OpenSSL 3.x (tested: 3.0.13), the same harness executes with 0 Valgrind
+    errors. The bug is specific to OpenSSL 1.0.2 internal GCM state management.
+    Safe/fixed result on current versions is expected and valid.
+
+mutation_points:
+  - name: CIPHER_ALGORITHM
+    description: The cipher algorithm passed to EVP_EncryptInit_ex
+    values: [EVP_aes_128_gcm, EVP_aes_256_gcm, EVP_aes_128_ccm]
+    priority: high
+  - name: SRC_CTX_INIT_STATE
+    description: Whether key and IV are set before EVP_CIPHER_CTX_copy
+    values: [no_key_no_iv, key_only, iv_only, key_and_iv]
+    priority: high
+  - name: COPY_CALL_ORDER
+    description: When EVP_CIPHER_CTX_copy is called relative to key/IV setup
+    values: [before_key_iv, after_key_only, after_full_init]
+    priority: high
+  - name: DST_CTX_INIT_STATE
+    description: Whether destination context is freshly allocated or previously used
+    values: [fresh_ctx2, reused_ctx2]
+    priority: medium
+
+oracle:
+  oracle_type: crash_sanitizer_oracle
+  primary_signals:
+    - ASAN heap-use-after-free or invalid read
+    - UBSAN undefined behavior signal
+    - Valgrind uninitialized memory read
+    - SEGV / exit code 139
+    - NULL pointer dereference in EVP_CIPHER_CTX_copy internals
+  secondary_signals:
+    - return value 0 from EVP_CIPHER_CTX_copy (failure)
+    - safe normal return with no crash signal
+  bug_signal: ASAN/Valgrind/SEGV during or after EVP_CIPHER_CTX_copy
+  safe_signal: normal return code from EVP_CIPHER_CTX_copy without sanitizer signal
+
+original_reproduction:
+  type: standalone_c_api
+  requires_external_input: false
+  requires_server_client: false
+  requires_tls_handshake: false
+  command:
+    - "gcc poc.c -o poc -lssl -lcrypto"
+    - "./poc"
+  independent_c_poc: true
+
+migration_applicability:
+  status: migration_not_applicable
+  reason: >
+    The core vulnerability path is EVP_CIPHER_CTX_copy on a partially-initialized
+    GCM context. Neither mbedTLS 3.6.4 nor mbedTLS 4.1.0 exposes a public cipher
+    context copy API. The mbedtls_cipher_context_t lifecycle APIs are:
+    init, setup, setkey, set_iv, update, finish, free — no clone/copy.
+    The GCM-specific mbedtls_gcm_context has init, setkey, starts, update, finish,
+    free — also no copy. PSA AEAD operation APIs (psa_aead_encrypt_setup,
+    psa_aead_update, psa_aead_finish, psa_aead_abort) likewise have no operation
+    copy. Without a context copy API, the core vulnerability_path
+    (copy of partially-initialized cipher context) cannot be expressed in any
+    mbedTLS harness. Any migration to mbedtls_cipher_update or psa_aead_update
+    would lose the defining "copy" operation entirely.
+  candidate_apis_considered:
+    - mbedtls_cipher_init_setup_setkey: no copy API; score 22
+    - psa_aead_encrypt_setup: no copy API; AEAD operation copy not exposed; score 18
+    - no_equivalent_public_api: confirmed
+
+references:
+  issue_url: https://github.com/openssl/openssl/issues/8980
+  maintainer_comment: >
+    "Hmm. Probably this is just a bug. Since 1.0.2 is in security-fix only mode
+    I think we'll probably not fix this." — mattcaswell
+  artifact_files:
+    - datasets/openssl/poc_artifacts/issue_8980/metadata.json
+    - datasets/openssl/poc_artifacts/issue_8980/poc.c
+    - datasets/openssl/poc_artifacts/issue_8980/README.md
+    - datasets/openssl/poc_artifacts/issue_8980/run.sh

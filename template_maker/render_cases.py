@@ -19,6 +19,9 @@ IGNORED_BRACKET_TAGS = {
     "[FAIL]",
     "[PASS]",
     "[TRIAGE]",
+    "[SAFE]",
+    "[VERDICT]",
+    "[WARNING]",
 }
 
 

@@ -129,3 +129,35 @@ null_deref_dispatch:
   triage_behavior:
     condition: return_code > 0 unexpectedly
     description: incompatible key type accepted without crash; needs oracle tightening
+
+pkey_capability_mismatch_oracle:
+  oracle_types:
+    - public_key_sign_rejection_oracle
+    - capability_mismatch_safe_error_oracle
+  required_observables:
+    - sign_return_code
+    - crash_signal_or_asan_output
+    - key_capability_flags
+  target_api_features:
+    - asymmetric_signing_api
+    - public_only_key_constructable
+    - key_usage_or_capability_check
+    - return_code_observable
+    - no_private_key_component
+  safe_behavior:
+    condition: sign returns error code AND no crash AND signing does not succeed
+    description: >
+      Target library safely rejects signing attempt with a public-only key.
+      Correct behavior: return error code (e.g. PSA_ERROR_NOT_PERMITTED,
+      MBEDTLS_ERR_PK_TYPE_MISMATCH, or equivalent) without crash.
+  bug_behavior:
+    condition: ASAN/UBSAN crash or SEGV or exit 139 during signing with public-only key
+    description: >
+      Target library attempts to sign with public-only key and dereferences NULL
+      private key material, causing crash or undefined behavior.
+  triage_behavior:
+    condition: sign returns success (0 or PSA_SUCCESS) with public-only key
+    description: >
+      Signing succeeded with public-only key — capability mismatch not detected.
+      This is a semantic violation requiring manual review.
+      May indicate incorrect key policy setup in harness.

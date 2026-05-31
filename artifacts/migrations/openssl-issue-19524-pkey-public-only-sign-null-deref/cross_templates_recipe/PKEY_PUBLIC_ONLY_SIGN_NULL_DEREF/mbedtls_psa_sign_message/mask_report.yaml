@@ -1,0 +1,64 @@
+template_id: PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF
+pattern_id: OPENSSL-ISSUE-19524
+source_library: openssl
+harness_family: null_deref_dispatch
+oracle_type: crash_sanitizer_or_safe_error_oracle
+
+must_preserve_features:
+  - public_only_key_no_private_component
+  - sign_operation_on_public_only_key
+  - capability_mismatch_detection
+  - crash_or_safe_error_oracle
+
+mask_units:
+  - slot: KEY_TYPE
+    type: pkey_type_selector
+    location: EVP_PKEY_new_raw_public_key first argument
+    mutation_reason: ED25519 vs ED448 may have different NULL check behavior
+    default_value: EVP_PKEY_ED25519
+    variants:
+      - value: EVP_PKEY_ED25519
+        label: ed25519
+        key_len: 32
+      - value: EVP_PKEY_ED448
+        label: ed448
+        key_len: 57
+
+  - slot: KEY_BYTES
+    type: raw_public_key_bytes
+    location: EVP_PKEY_new_raw_public_key third argument
+    mutation_reason: Different public keys to test key parsing robustness
+    default_value: "standard_ed25519_public_key_32bytes"
+
+  - slot: KEY_LEN
+    type: integer
+    location: EVP_PKEY_new_raw_public_key fourth argument and array declaration
+    mutation_reason: Must match KEY_TYPE (32 for ED25519, 57 for ED448)
+    default_value: 32
+
+  - slot: MESSAGE_BYTES
+    type: byte_array
+    location: EVP_DigestSign message argument
+    mutation_reason: Message content for signing attempt
+    default_value: '"Test\0"'
+
+  - slot: MESSAGE_LEN
+    type: integer
+    location: EVP_DigestSign message length argument
+    mutation_reason: 0-length vs normal message
+    default_value: 4
+
+key_vulnerability_fragments:
+  - fragment: "EVP_PKEY_new_raw_public_key([KEY_TYPE], NULL, public_key_bytes, sizeof(public_key_bytes))"
+    reason: creates public-only key without private component
+  - fragment: "EVP_DigestSignInit(mdctx, NULL, NULL, NULL, pkey)"
+    reason: initializes signing with public-only key
+  - fragment: "EVP_DigestSign(mdctx, sig, &siglen, message, sizeof(message) - 1)"
+    reason: core trigger — attempts to sign with public-only key
+
+immutable_structure:
+  - EVP_PKEY_new_raw_public_key call (public-only)
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit
+  - EVP_DigestSign
+  - EVP_MD_CTX_free and EVP_PKEY_free cleanup

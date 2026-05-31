@@ -1,0 +1,250 @@
+source_pattern_id: OPENSSL-ISSUE-8980
+source_library: openssl
+source_version: "1.0.2"
+same_library: true
+template_id: EVP_CIPHER_CTX_COPY_UNINIT_STATE
+source_api: EVP_CIPHER_CTX_copy
+vulnerability_class: evp_context_state_lifecycle
+oracle_type: crash_sanitizer_oracle
+
+# Scoring formula (migration/candidate_mapper.py):
+# final_score = 0.15 * operation_family
+#             + 0.20 * function_behavior
+#             + 0.20 * parameter_structure
+#             + 0.30 * vulnerability_path
+#             + 0.15 * harness_feasibility
+#
+# generate:          final_score >= 75 AND vulnerability_path >= 70
+# needs_llm_review:  final_score >= 55 AND vulnerability_path >= 50
+# skip:              otherwise
+
+# Core vulnerability path (must be preserved):
+#   EVP_CIPHER_CTX initialized with cipher algorithm but NO key/IV
+#   → copy / dup partially-initialized AES-GCM context
+#   → buggy version accesses uninitialized GCM internal state
+
+same_library_analysis:
+  confirmed: true
+  note: >
+    Both EVP_CIPHER_CTX_copy and EVP_CIPHER_CTX_dup are declared in
+    include/openssl/evp.h (line 654-655) in OpenSSL 3.5.5.
+    EVP_CIPHER_CTX_dup(in) = EVP_CIPHER_CTX_new() + EVP_CIPHER_CTX_copy(out, in).
+    OSSL_FUNC_CIPHER_DUPCTX (core_dispatch.h:358) is a provider dispatch macro,
+    not a user-side public API — excluded from user-facing candidates.
+
+candidates:
+
+  - target_library: openssl
+    target_version: "3.5.5"
+    target_api: EVP_CIPHER_CTX_copy
+    api_type: same_api_regression
+    decision: generate
+    migration_applicability: same_api_regression
+
+    scores:
+      operation_family: 100
+      function_behavior: 100
+      parameter_structure: 100
+      vulnerability_path: 100
+      harness_feasibility: 100
+
+    # Weighted: 0.15*100 + 0.20*100 + 0.20*100 + 0.30*100 + 0.15*100 = 100
+    final_score: 100
+
+    preserved_features:
+      - identical public API signature: int EVP_CIPHER_CTX_copy(EVP_CIPHER_CTX *out, const EVP_CIPHER_CTX *in)
+      - identical trigger sequence: EVP_EncryptInit_ex(NULL key, NULL IV) then copy
+      - identical oracle: crash_sanitizer_oracle (Valgrind / ASAN / exit code)
+      - harness requires no modification between 1.0.2 and 3.5.5 builds
+      - vulnerability_path preservation: 100%
+
+    lost_or_weakened_features:
+      - not a new API replacement; same API means behavior difference is version-specific
+      - OpenSSL 1.0.2 build required for buggy side (not available in clean_sources)
+
+    reason: >
+      EVP_CIPHER_CTX_copy is the same public API on both 1.0.2 (buggy) and 3.5.5 (fixed).
+      The identical poc.c harness can be compiled against both versions without any
+      modification. This is the highest-confidence regression path: 100% vulnerability
+      path preservation, identical oracle, no harness changes needed.
+      Status: deferred until OpenSSL 1.0.2 build is available (affects_version_missing).
+
+  - target_library: openssl
+    target_version: "3.5.5"
+    target_api: EVP_CIPHER_CTX_dup
+    api_type: same_library_equivalent_api
+    decision: generate
+    migration_applicability: same_library_equivalent_api
+
+    scores:
+      operation_family: 100
+      function_behavior: 95
+      parameter_structure: 90
+      vulnerability_path: 95
+      harness_feasibility: 100
+
+    # Weighted: 0.15*100 + 0.20*95 + 0.20*90 + 0.30*95 + 0.15*100
+    #         = 15.0 + 19.0 + 18.0 + 28.5 + 15.0 = 95.5
+    final_score: 96
+
+    preserved_features:
+      - "declared in include/openssl/evp.h:654: EVP_CIPHER_CTX *EVP_CIPHER_CTX_dup(const EVP_CIPHER_CTX *in)"
+      - implementation: EVP_CIPHER_CTX_new() + EVP_CIPHER_CTX_copy(out, in) — same copy path internally
+      - triggers the same EVP_CTRL_COPY handler for AES-GCM partial context
+      - same oracle applies: if 1.0.2 implementation had EVP_CIPHER_CTX_dup, it would crash the same way
+      - difference: allocates and returns new ctx vs copying into caller-provided dst
+      - same partial-initialization trigger: EVP_EncryptInit_ex(src, cipher, NULL, NULL, NULL)
+      - same internal code path through EVP_CIPHER_CTX_copy
+      - harness variant trivial: replace CTX_new+CTX_copy with CTX_dup
+
+    lost_or_weakened_features:
+      - EVP_CIPHER_CTX_dup did not exist in OpenSSL 1.0.2 (added in 3.x era)
+      - cannot directly demonstrate the 1.0.2 bug via CTX_dup (API unavailable in buggy version)
+      - same_library_equivalent_api within OpenSSL 3.x only; not a cross-version buggy/fixed pair
+      - minor: parameter_structure differs (returns ptr vs out-param); oracle slightly different (NULL return vs return 0)
+
+    reason: >
+      EVP_CIPHER_CTX_dup is a public API in OpenSSL 3.5.5 (evp.h:654) that internally
+      calls EVP_CIPHER_CTX_copy, traversing the same GCM EVP_CTRL_COPY code path.
+      It is the canonical "allocate + copy" wrapper. Using it as a same-library
+      equivalent target:
+        1. Preserves the full copy/dup vulnerability path on modern OpenSSL
+        2. Tests the same GCM partial-context copy behavior under 3.5.5 (safe/fixed)
+        3. Demonstrates that CTX_dup safely handles NULL-key partial contexts in 3.x
+        4. Cannot demonstrate 1.0.2 bug directly (API did not exist in 1.0.2)
+      Verdict: same_library_equivalent_api candidate for OpenSSL 3.5.5 validation.
+      Can run now (no 1.0.2 required). Expected result: safe/fixed behavior on 3.5.5.
+
+  - target_library: openssl
+    target_version: "3.5.5"
+    target_api: "OSSL_FUNC_CIPHER_DUPCTX (provider dispatch)"
+    api_type: internal_api
+    decision: skip
+    migration_applicability: not_public_api
+
+    scores:
+      operation_family: 100
+      function_behavior: 90
+      parameter_structure: 30
+      vulnerability_path: 40
+      harness_feasibility: 10
+
+    # Weighted: 0.15*100 + 0.20*90 + 0.20*30 + 0.30*40 + 0.15*10
+    #         = 15.0 + 18.0 + 6.0 + 12.0 + 1.5 = 52.5
+    final_score: 53
+
+    preserved_features:
+      - conceptually implements the cipher context clone operation
+      - OSSL_FUNC_CIPHER_DUPCTX defined in core_dispatch.h:358/404
+
+    lost_or_weakened_features:
+      - defined in include/openssl/core_dispatch.h as a provider dispatch macro
+      - "face-value public but designed for PROVIDER IMPLEMENTERS, not end users"
+      - calling cipher_dupctx directly requires obtaining the function pointer from the provider dispatch table
+      - no single callable user-side C function; requires OSSL_DISPATCH, OSSL_FUNC_CIPHER_DUPCTX(fn) indirection
+      - not usable in a normal user-side C harness without provider internals access
+      - harness_feasibility=10 because writing a user-side harness calling this directly is impractical
+
+    reason: >
+      OSSL_FUNC_CIPHER_DUPCTX (core_dispatch.h:358) is a provider dispatch slot macro,
+      not a user-callable function. It is used by provider authors to register a dupctx
+      implementation. End users call EVP_CIPHER_CTX_copy or EVP_CIPHER_CTX_dup, which
+      internally invoke this via the provider dispatch table. No user-side harness should
+      call provider dispatch slots directly. Classified: not_public_api / skip.
+
+  - target_library: openssl
+    target_version: "3.5.5"
+    target_api: "EVP_CIPHER_CTX_reset + EVP_EncryptInit_ex"
+    api_type: weak_projection
+    decision: skip
+    migration_applicability: weak_semantic_projection
+
+    scores:
+      operation_family: 70
+      function_behavior: 20
+      parameter_structure: 50
+      vulnerability_path: 5
+      harness_feasibility: 80
+
+    # Weighted: 0.15*70 + 0.20*20 + 0.20*50 + 0.30*5 + 0.15*80
+    #         = 10.5 + 4.0 + 10.0 + 1.5 + 12.0 = 38.0
+    final_score: 38
+
+    preserved_features:
+      - EVP_CIPHER_CTX_reset clears cipher state (related lifecycle)
+      - EVP_EncryptInit_ex re-initializes context on same object
+      - single-process harness feasible
+
+    lost_or_weakened_features:
+      - reset + reinit is CLEAR then RE-INIT, not COPY of partial state
+      - does not copy internal GCM state from src to dst
+      - cannot express "partially initialized context copied into destination"
+      - no src/dst relationship; operates on a single context only
+      - vulnerability_path score = 5: the copy operation is entirely absent
+
+    reason: >
+      EVP_CIPHER_CTX_reset destroys existing state; EVP_EncryptInit_ex starts fresh.
+      This sequence is reinitialize-from-scratch, not copy-partially-initialized-state.
+      The defining vulnerability path (copying an uninitialized GCM key pointer) cannot
+      be expressed without a copy/dup call. Classified: weak_semantic_projection / skip.
+
+  - target_library: openssl
+    target_version: "3.5.5"
+    target_api: "EVP_CIPHER_fetch + EVP_CIPHER_CTX_get_params + EVP_EncryptInit_ex2"
+    api_type: weak_projection
+    decision: skip
+    migration_applicability: weak_semantic_projection
+
+    scores:
+      operation_family: 65
+      function_behavior: 15
+      parameter_structure: 40
+      vulnerability_path: 5
+      harness_feasibility: 70
+
+    # Weighted: 0.15*65 + 0.20*15 + 0.20*40 + 0.30*5 + 0.15*70
+    #         = 9.75 + 3.0 + 8.0 + 1.5 + 10.5 = 32.75
+    final_score: 33
+
+    preserved_features:
+      - EVP_CIPHER_fetch retrieves cipher descriptor (same algorithm family)
+      - EVP_CIPHER_CTX_get/set_params can exchange OSSL_PARAMs
+      - EVP_EncryptInit_ex2 is the modern provider-aware init
+
+    lost_or_weakened_features:
+      - EVP_CIPHER_CTX_get_params / set_params exchange algorithm parameters (key, IV, tag etc.)
+      - they do NOT copy the internal opaque algorithmic state (gcm128_context / algctx blob)
+      - rebuilding a context via params is NOT equivalent to copying internal GCM state
+      - EVP_EncryptInit_ex2 starts a fresh context, not a copy of a partial one
+      - vulnerability_path score = 5: no copy of partially-initialized state
+
+    reason: >
+      The params API allows reading/writing cipher parameters (key bytes, IV bytes, tag)
+      but does not transfer the internal opaque algorithmic state (the gcm128_context blob
+      that holds the GCM key schedule, hash tables, etc.). Reconstructing a context via
+      params is semantically different from copying an uninitialized internal state.
+      The copy-of-uninitialized-GCM-state vulnerability path is completely absent.
+      Classified: weak_semantic_projection / skip.
+
+same_library_summary:
+  overall_verdict: same_library_equivalent_api_found
+  generate_candidates:
+    - api: EVP_CIPHER_CTX_copy
+      type: same_api_regression
+      score: 100
+      note: >
+        Identical API, 100% vulnerability path. Requires OpenSSL 1.0.2 (buggy side).
+        Cannot run until 1.0.2 available in clean_sources.
+    - api: EVP_CIPHER_CTX_dup
+      type: same_library_equivalent_api
+      score: 96
+      note: >
+        Public API in OpenSSL 3.5.5 (evp.h:654), internally calls EVP_CIPHER_CTX_copy.
+        Can run now on 3.5.5. Expected: safe/fixed behavior. New harness template created.
+  skip_candidates:
+    - api: OSSL_FUNC_CIPHER_DUPCTX
+      reason: provider dispatch slot, not user-facing
+    - api: EVP_CIPHER_CTX_reset + EVP_EncryptInit_ex
+      reason: reinit not copy, vulnerability_path=5
+    - api: EVP_CIPHER_fetch + params + EVP_EncryptInit_ex2
+      reason: parameter reconstruction not state copy, vulnerability_path=5

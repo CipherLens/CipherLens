@@ -760,6 +760,117 @@ int main(void)
 '''
 
 
+def is_pkey_capability_mismatch_oracle_recipe(
+    adapter: Dict[str, Any],
+    recipe: Optional[Dict[str, Any]] = None,
+) -> bool:
+    if recipe is None:
+        recipe = load_adapter_recipe(adapter)
+    return (
+        adapter.get("target_api") in {"psa_sign_message", "psa_sign_hash"}
+        and recipe.get("harness_family") == "pkey_capability_mismatch_oracle"
+    )
+
+
+def render_pkey_capability_mismatch_oracle_from_recipe(
+    adapter: Dict[str, Any],
+    source_template_dir: Path,
+    source_meta: Dict[str, Any],
+    mask_report: Dict[str, Any],
+) -> str:
+    recipe = load_adapter_recipe(adapter)
+    target_api = adapter.get("target_api", "psa_sign_message")
+
+    if recipe.get("harness_family") != "pkey_capability_mismatch_oracle":
+        raise ValueError("recipe harness_family must be pkey_capability_mismatch_oracle")
+
+    key_type = slot(adapter, recipe, "key_type")
+    key_bits = slot(adapter, recipe, "key_bits")
+    key_algorithm = slot(adapter, recipe, "key_algorithm")
+    key_usage_flags = slot(adapter, recipe, "key_usage_flags")
+    message_bytes = slot(adapter, recipe, "message_bytes")
+    message_len = slot(adapter, recipe, "message_len")
+
+    # Standard Ed25519 public key (32 bytes) for default case
+    ed25519_pub_key_hex = (
+        "0x7d,0x4d,0x0e,0x7f,0x61,0x53,0xa6,0x9b,"
+        "0x62,0x42,0xb5,0x22,0xab,0xbe,0xe6,0x85,"
+        "0xfd,0xa4,0x42,0x0f,0x88,0x34,0xb1,0x08,"
+        "0xc3,0xbd,0xae,0x36,0x9e,0xf5,0x49,0xfa"
+    )
+
+    return f"""\
+#include <psa/crypto.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+/*
+ * Harness: pkey_capability_mismatch_oracle
+ * Pattern: OPENSSL-ISSUE-19524 (public-only key signing capability mismatch)
+ * Target API: {target_api}
+ * Oracle: PSA must reject signing with public-only key (no SIGN_MESSAGE usage)
+ */
+
+int main(void)
+{{
+    static const unsigned char pub_key_bytes[] = {{
+        {ed25519_pub_key_hex}
+    }};
+    static const unsigned char message[] = {message_bytes};
+    unsigned char sig[128];
+    size_t sig_len = 0;
+
+    psa_status_t status;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key_id = 0;
+    int ret = 1;
+
+    status = psa_crypto_init();
+    if (status != PSA_SUCCESS) {{
+        fprintf(stderr, "[ERROR] psa_crypto_init failed: %d\\n", (int)status);
+        goto end;
+    }}
+
+    /* Set key attributes: public-only key without PSA_KEY_USAGE_SIGN_MESSAGE */
+    psa_set_key_type(&attributes, {key_type});
+    psa_set_key_bits(&attributes, {key_bits});
+    psa_set_key_usage_flags(&attributes, {key_usage_flags});
+    psa_set_key_algorithm(&attributes, {key_algorithm});
+
+    status = psa_import_key(&attributes, pub_key_bytes, sizeof(pub_key_bytes), &key_id);
+    printf("psa_import_key returned %d\\n", (int)status);
+    if (status != PSA_SUCCESS) {{
+        fprintf(stderr, "[INFO] psa_import_key failed: %d\\n", (int)status);
+        ret = 0;
+        goto end;
+    }}
+
+    /* Core trigger: attempt to sign with public-only key */
+    status = {target_api}(key_id, {key_algorithm},
+                          message, {message_len},
+                          sig, sizeof(sig), &sig_len);
+    printf("{target_api} returned %d sig_len=%zu\\n", (int)status, sig_len);
+
+    if (status == PSA_SUCCESS) {{
+        /* Signing succeeded with public-only key = semantic violation */
+        fprintf(stderr, "[WARNING] public-only key signing succeeded! capability mismatch!\\n");
+        printf("[TRIAGE] signing with public-only key succeeded — capability mismatch\\n");
+    }} else {{
+        printf("[SAFE] public-only key signing rejected safely: %d\\n", (int)status);
+        printf("[VERDICT] safe_fixed_behavior\\n");
+    }}
+    ret = 0;
+
+end:
+    if (key_id != 0)
+        psa_destroy_key(key_id);
+    mbedtls_psa_crypto_free();
+    return ret;
+}}
+"""
+
+
 def is_null_deref_dispatch_recipe(
     adapter: Dict[str, Any],
     recipe: Optional[Dict[str, Any]] = None,
@@ -2369,6 +2480,16 @@ def render_target_c_from_adapter(
             and is_object_state_lifecycle_recipe(adapter, recipe)
         ):
             return render_object_state_lifecycle_from_recipe(
+                adapter,
+                source_template_dir,
+                source_meta,
+                mask_report,
+            )
+        if (
+            harness_family == "pkey_capability_mismatch_oracle"
+            and is_pkey_capability_mismatch_oracle_recipe(adapter, recipe)
+        ):
+            return render_pkey_capability_mismatch_oracle_from_recipe(
                 adapter,
                 source_template_dir,
                 source_meta,

@@ -119,6 +119,21 @@ INVALID_PARAM_SETUP_BUG_PATTERNS = [
     "[BUG] invalid AEAD tag length accepted",
 ]
 
+PKEY_CAPABILITY_MISMATCH_SAFE_REJECT_PATTERNS = [
+    "[SAFE] public-only key signing rejected:",
+    "[VERDICT] safe_fixed_behavior",
+    "[SAFE] EVP_DigestSignInit rejected public-only key",
+    "[SAFE] EVP_DigestSign rejected public-only key",
+    # psa_import_key failure is also a safe rejection path:
+    # key type / curve not supported → import fails safely with no crash
+    "[INFO] psa_import_key failed:",
+]
+
+PKEY_CAPABILITY_MISMATCH_TRIAGE_PATTERNS = [
+    "[TRIAGE] signing with public-only key succeeded",
+    "[WARNING] public-only key signing succeeded!",
+]
+
 INVALID_PARAM_SETUP_SAFE_REJECT_PATTERNS = [
     "[OK] source rejected invalid CCM",
     "[OK] target rejected invalid CCM",
@@ -623,6 +638,22 @@ def classify_record(record: Dict[str, Any]) -> Dict[str, Any]:
     ):
         result["verdict"] = "normal_behavior_needs_triage"
         result["reason"] = "AEAD setup parameter behavior needs manual review."
+        return result
+
+    if contains_any(text, PKEY_CAPABILITY_MISMATCH_SAFE_REJECT_PATTERNS):
+        result["verdict"] = "safe_reject_behavior"
+        result["reason"] = (
+            "Public-only key signing was safely rejected by the target library "
+            "(capability mismatch oracle: PSA_ERROR_NOT_PERMITTED or equivalent error return)."
+        )
+        return result
+
+    if contains_any(text, PKEY_CAPABILITY_MISMATCH_TRIAGE_PATTERNS):
+        result["verdict"] = "normal_behavior_needs_triage"
+        result["reason"] = (
+            "Signing with public-only key succeeded — capability mismatch not detected. "
+            "Manual review required to verify oracle correctness."
+        )
         return result
 
     if contains_any(text, SAFE_PATTERNS):

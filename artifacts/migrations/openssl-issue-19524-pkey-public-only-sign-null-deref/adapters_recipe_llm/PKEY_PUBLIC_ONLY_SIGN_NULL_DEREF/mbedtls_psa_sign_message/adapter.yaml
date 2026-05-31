@@ -1,0 +1,43 @@
+source_pattern_id: null
+template_id: PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF
+harness_family: pkey_capability_mismatch_oracle
+oracle_type: public_key_sign_rejection_oracle
+target_library: mbedtls
+target_api: psa_sign_message
+applicability: generate
+adapter_recipe: adapter_recipes/mbedtls/psa_sign_message.pkey_capability_mismatch_oracle.yaml
+evidence_file: migration_candidates/openssl/pkey_public_only_sign_null_deref/candidates_with_evidence.yaml
+slot_bindings:
+  key_type: PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_TWISTED_EDWARDS)
+  key_bits: '255'
+  key_algorithm: PSA_ALG_PURE_EDDSA
+  key_usage_flags: PSA_KEY_USAGE_VERIFY_MESSAGE
+  key_bytes: standard_ed25519_public_key_32bytes
+  message_bytes: '"Test"'
+  message_len: '4'
+preserved_features:
+- same operation family: EdDSA / Ed25519 signing
+- same capability mismatch oracle: public-only key must not sign
+- PSA key type: PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_TWISTED_EDWARDS) covers
+    Ed25519
+- PSA algorithm: PSA_ALG_PURE_EDDSA for Ed25519
+- psa_sign_message directly tests signing capability
+- key without PSA_KEY_USAGE_SIGN_MESSAGE usage flag = public-only equivalent
+- oracle: psa_sign_message must return PSA_ERROR_NOT_PERMITTED (safe rejection)
+- self-contained single-process harness feasible
+- crash oracle also applicable: ASAN/UBSAN if PSA implementation is buggy
+lost_or_weakened_features:
+- PSA uses key handle (psa_key_id_t) instead of EVP_PKEY pointer directly
+- PSA capability check is explicit via key usage flags (PSA_KEY_USAGE_SIGN_MESSAGE)
+- PSA is more likely to catch this at import/policy level rather than in sign path
+- 'slightly different failure mode: policy rejection vs NULL deref at sign time'
+- psa_sign_message signature differs from EVP_DigestSign (key_id, alg, msg → sig)
+_adapter_mode: recipe_slot_filling
+_ignored_disallowed_fields: []
+_ignored_non_slot_fields: []
+_llm_raw_preview: "{\n  \"slot_bindings\": {\n    \"key_type\": \"PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_TWISTED_EDWARDS)\"\
+  ,\n    \"key_bits\": \"255\",\n    \"key_algorithm\": \"PSA_ALG_PURE_EDDSA\",\n\
+  \    \"key_usage_flags\": \"PSA_KEY_USAGE_VERIFY_MESSAGE\",\n    \"key_bytes\":\
+  \ \"standard_ed25519_public_key_32bytes\",\n    \"message_bytes\": \"\\\"Test\\\"\
+  \",\n    \"message_len\": \"4\"\n  }\n}"
+_llm_status: ok

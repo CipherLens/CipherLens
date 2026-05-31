@@ -1,0 +1,130 @@
+template_id: PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF__MBEDTLS_PSA_SIGN_MESSAGE
+pattern_id: OPENSSL-ISSUE-19524
+source_library: openssl
+source_component: PKEY/ED25519_ED448
+harness_family: pkey_capability_mismatch_oracle
+oracle_type: public_key_sign_rejection_oracle
+status: cross_generated_from_llm_adapter
+source_template_id: PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF
+
+source_api:
+  - EVP_PKEY_new_raw_public_key
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit
+  - EVP_DigestSign
+
+vulnerability_class: pkey_capability_mismatch
+
+description: >
+  Template for testing public-only key signing capability mismatch.
+  Source: OpenSSL ED25519 public-only key + EVP_DigestSign (safe reject on 3.5.5).
+  Target: mbedTLS PSA SECP_R1 public-only key + psa_sign_hash (PSA_ERROR_NOT_PERMITTED).
+  Core oracle: signing with a public-only key must be safely rejected.
+
+# mutation_points format required by render_cases.py:
+# - placeholder: [PLACEHOLDER_NAME] in square brackets
+# - name: human-readable name
+# - values: list of concrete values to substitute
+# - priority: low / medium / high
+# Note: render_cases generates one case per combination of values.
+# KEY_BITS x HASH_ALG x MSG_LEN → 3 x 3 x 4 = 36 combinations (capped at 32)
+
+mutation_points:
+  - name: KEY_BITS
+    placeholder: "[KEY_BITS]"
+    type: int
+    default: 256
+    values:
+      - 256
+      - 384
+      - 521
+    priority: high
+    description: >
+      ECDSA key size in bits. Drives which public key material is selected
+      in the harness. 256 → SECP256R1, 384 → SECP384R1, 521 → SECP521R1.
+
+  - name: HASH_ALG
+    placeholder: "[HASH_ALG]"
+    type: enum
+    default: PSA_ALG_SHA_256
+    values:
+      - PSA_ALG_SHA_256
+      - PSA_ALG_SHA_384
+      - PSA_ALG_SHA_512
+    priority: high
+    description: >
+      PSA hash algorithm for ECDSA. Controls hash size expectation.
+      SHA_256 → 32 bytes, SHA_384 → 48 bytes, SHA_512 → 64 bytes.
+
+  - name: MSG_LEN
+    placeholder: "[MSG_LEN]"
+    type: int
+    default: 32
+    values:
+      - 32
+      - 48
+      - 64
+    priority: medium
+    description: >
+      Hash buffer size in bytes. Should match HASH_ALG:
+      SHA_256→32, SHA_384→48, SHA_512→64. Mismatches are still valid
+      test cases for parameter validation behavior.
+
+  - name: MESSAGE_LEN
+    placeholder: "[MESSAGE_LEN]"
+    type: int
+    default: 4
+    values:
+      - 4
+      - 0
+      - 16
+      - 64
+    priority: low
+    description: >
+      Message length for OpenSSL source-side EVP_DigestSign call.
+      Tests that capability mismatch is detected regardless of message size.
+
+generation_policy:
+  max_cases: 32
+  priority:
+    - KEY_BITS
+    - HASH_ALG
+    - MSG_LEN
+    - MESSAGE_LEN
+
+required_observables:
+  - sign_return_code
+  - asan_or_ubsan_signal
+  - process_exit_code
+
+safe_behavior:
+  condition: sign returns error AND no crash
+  description: Public-only key signing safely rejected
+
+bug_behavior:
+  condition: ASAN/UBSAN/SEGV crash during signing with public-only key
+  description: NULL deref in private key access path
+
+triage_behavior:
+  condition: sign returns success (0 / PSA_SUCCESS) with public-only key
+  description: Capability mismatch not detected — semantic violation
+
+cross_library:
+  mbedtls:
+    target_api: psa_sign_hash
+    target_template: tmpl_mbedtls.c
+    adapter_source: recipe_slot_bindings
+    applicability: generate
+    llm_status: ok
+    adapter_recipe: adapter_recipes/mbedtls/psa_sign_message.pkey_capability_mismatch_oracle.yaml
+  openssl:
+    source_template: tmpl_openssl.c
+    source_api: EVP_DigestSign
+    source_version: "3.5.5"
+
+notes:
+  - strict_reproduction requires OpenSSL 3.0.2 or 1.1.1r for crash behavior
+  - current OpenSSL 3.5.5 shows safe error (not a private key)
+  - Ed25519 PSA (PSA_WANT_ALG_PURE_EDDSA) not enabled in current mbedTLS 4.1.0 build
+  - target uses ECDSA/SECP_R1 to express equivalent capability_mismatch oracle
+  - KEY_BITS x HASH_ALG x MSG_LEN x MESSAGE_LEN = up to 36 combinations

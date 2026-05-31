@@ -143,6 +143,28 @@ NULL_DEREF_DISPATCH_APIS = {
     "EVP_DigestVerify",
 }
 
+PKEY_CAPABILITY_MISMATCH_APIS = {
+    "psa_sign_message",
+    "psa_sign_hash",
+}
+
+PKEY_CAPABILITY_MISMATCH_REQUIRED_SLOTS = {
+    "key_type",
+    "key_algorithm",
+    "key_usage_flags",
+}
+
+PKEY_CAPABILITY_MISMATCH_FORBIDDEN_RESIDUE = [
+    "EVP_CIPHER_CTX_copy",
+    "EVP_CIPHER_CTX_dup",
+    "EVP_aes_128_gcm",
+    "BIO_s_secmem",
+    "CRYPTO_secure_malloc_init",
+    "d2i_X509",
+    "BN_new",
+    "RSA_new",
+]
+
 CRASH_SANITIZER_ORACLE_APIS = {
     "PEM_read_bio_PrivateKey",
 }
@@ -650,6 +672,18 @@ def validate_recipe_adapter(adapter: Dict[str, Any], errors: List[str]) -> bool:
             errors.append("d2i_X509 recipe must use harness_family=x509_asn1_inner_boundary")
         if recipe.get("oracle_type") != "inner_asn1_boundary_semantic_oracle":
             errors.append("d2i_X509 recipe must use oracle_type=inner_asn1_boundary_semantic_oracle")
+    elif adapter.get("target_api") in PKEY_CAPABILITY_MISMATCH_APIS:
+        if recipe.get("harness_family") != "pkey_capability_mismatch_oracle":
+            errors.append(
+                f"{adapter.get('target_api')} recipe must use harness_family=pkey_capability_mismatch_oracle"
+            )
+        if recipe.get("oracle_type") not in {
+            "public_key_sign_rejection_oracle",
+            "capability_mismatch_safe_error_oracle",
+        }:
+            errors.append(
+                f"{adapter.get('target_api')} recipe must use a pkey_capability_mismatch oracle_type"
+            )
 
     if not isinstance(recipe.get("forbidden_terms"), list) or not recipe.get("forbidden_terms"):
         errors.append("adapter_recipe must define non-empty forbidden_terms")
@@ -670,10 +704,13 @@ def validate_recipe_adapter(adapter: Dict[str, Any], errors: List[str]) -> bool:
     for slot in unknown_slots:
         errors.append(f"recipe adapter slot_binding is not allowed by recipe: {slot}")
 
-    adapter_text = "\n".join(iter_string_values(adapter))
+    # For recipe-slot adapters, forbidden_terms should only apply to slot_bindings content,
+    # not to metadata fields like preserved_features / lost_or_weakened_features which may
+    # legitimately mention source-library API names for documentation purposes.
+    slot_bindings_text = "\n".join(iter_string_values(slot_bindings))
     for token in recipe.get("forbidden_terms", []) or []:
-        if str(token) and str(token) in adapter_text:
-            errors.append(f"recipe adapter contains forbidden term: {token}")
+        if str(token) and str(token) in slot_bindings_text:
+            errors.append(f"recipe adapter slot_bindings contains forbidden term: {token}")
 
     return True
 

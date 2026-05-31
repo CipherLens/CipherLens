@@ -1,0 +1,72 @@
+template_id: PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF
+pattern_id: OPENSSL-ISSUE-19524
+source_library: openssl
+source_component: PKEY/ED25519_ED448
+harness_family: null_deref_dispatch
+oracle_type: crash_sanitizer_or_safe_error_oracle
+
+source_api:
+  - EVP_PKEY_new_raw_public_key
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit
+  - EVP_DigestSign
+
+vulnerability_class: pkey_capability_mismatch
+
+description: >
+  Template for testing public-only ED25519/ED448 key signing capability mismatch.
+  A key created with EVP_PKEY_new_raw_public_key (public bytes only, no private
+  component) is passed to EVP_DigestSignInit + EVP_DigestSign.
+  On affected OpenSSL versions, this triggers NULL dereference.
+  On fixed/current versions, this returns a safe error.
+
+mask_slots:
+  - name: KEY_TYPE
+    type: pkey_type_selector
+    default: EVP_PKEY_ED25519
+    variants:
+      - EVP_PKEY_ED25519
+      - EVP_PKEY_ED448
+
+  - name: KEY_BYTES
+    type: raw_public_key_bytes
+    default: >
+      {0x7d,0x4d,0x0e,0x7f,0x61,0x53,0xa6,0x9b,
+       0x62,0x42,0xb5,0x22,0xab,0xbe,0xe6,0x85,
+       0xfd,0xa4,0x42,0x0f,0x88,0x34,0xb1,0x08,
+       0xc3,0xbd,0xae,0x36,0x9e,0xf5,0x49,0xfa}
+
+  - name: KEY_LEN
+    type: integer
+    default: 32
+
+  - name: MESSAGE_BYTES
+    type: byte_array
+    default: '"Test\0"'
+
+  - name: MESSAGE_LEN
+    type: integer
+    default: 5
+
+required_observables:
+  - init_return_code
+  - sign_return_code
+  - asan_or_ubsan_signal
+  - process_exit_code
+
+safe_behavior:
+  condition: EVP_DigestSignInit != 1 OR EVP_DigestSign != 1 with no crash
+  description: Public-only key signing is rejected safely without crash
+
+bug_behavior:
+  condition: ASAN/UBSAN crash or SEGV during EVP_DigestSign
+  description: Public-only key enters signing path and dereferences NULL private key
+
+triage_behavior:
+  condition: EVP_DigestSign returns 1 (signing succeeds) with public-only key
+  description: Capability mismatch not detected — semantic violation requiring manual triage
+
+notes:
+  - strict_reproduction requires OpenSSL 3.0.2 or 1.1.1r
+  - current OpenSSL 3.x shows safe error behavior
+  - migration target: PSA psa_sign_message with public-only key (no SIGN_MESSAGE usage flag)

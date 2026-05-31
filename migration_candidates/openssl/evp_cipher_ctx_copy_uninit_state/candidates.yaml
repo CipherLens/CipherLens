@@ -1,0 +1,195 @@
+source_pattern_id: OPENSSL-ISSUE-8980
+template_id: EVP_CIPHER_CTX_COPY_UNINIT_STATE
+source_library: openssl
+source_api: EVP_CIPHER_CTX_copy
+source_component: EVP/AES_GCM
+vulnerability_class: evp_context_state_lifecycle
+oracle_type: crash_sanitizer_oracle
+
+# Scoring formula (from migration/candidate_mapper.py):
+# final_score = 0.15 * operation_family
+#             + 0.20 * function_behavior
+#             + 0.20 * parameter_structure
+#             + 0.30 * vulnerability_path
+#             + 0.15 * harness_feasibility
+#
+# generate:          final_score >= 75 AND vulnerability_path >= 70
+# needs_llm_review:  final_score >= 55 AND vulnerability_path >= 50
+# skip:              otherwise
+
+core_vulnerability_requirement: >
+  The defining vulnerability path is EVP_CIPHER_CTX_copy — a cipher context
+  COPY operation on a partially-initialized GCM context. Any migration target
+  must expose a public context copy or clone API to preserve this path.
+  Without a copy API, vulnerability_path cannot exceed ~20/100 regardless of
+  how similar the cipher operation family is.
+
+candidates:
+
+  - target_library: mbedtls
+    target_api: mbedtls_cipher_init / mbedtls_cipher_setup / mbedtls_cipher_setkey
+    target_version: "3.6.4"
+    target_api_note: >
+      mbedTLS 3.6.4 legacy cipher abstraction layer. Provides init, setup,
+      setkey, set_iv, update, finish, free. No clone or copy function exists.
+
+    scores:
+      operation_family: 55
+      function_behavior: 35
+      parameter_structure: 30
+      vulnerability_path: 5
+      harness_feasibility: 60
+
+    # Weighted: 0.15*55 + 0.20*35 + 0.20*30 + 0.30*5 + 0.15*60
+    #         = 8.25 + 7.0 + 6.0 + 1.5 + 9.0 = 31.75
+    final_score: 32
+
+    decision: skip
+    migration_applicability: migration_not_applicable
+
+    preserved_features:
+      - both are symmetric cipher operation APIs (AES-GCM family)
+      - mbedtls_cipher_setup accepts AES-128-GCM descriptor
+      - lifecycle pattern (init → setup → setkey → free) structurally similar to EVP init
+      - crash_sanitizer_oracle can observe mbedTLS errors without copy
+
+    lost_or_weakened_features:
+      - NO public cipher context copy/clone API in mbedTLS 3.6.4
+      - EVP_CIPHER_CTX_copy is the defining trigger; cannot be expressed at all
+      - mbedtls_cipher_context_t fields are MBEDTLS_PRIVATE; cannot inspect internal state
+      - mbedTLS GCM partial-initialization state semantics differ from OpenSSL 1.0.2
+      - vulnerability_path score = 5 (practically zero; copy path entirely absent)
+
+    reason: >
+      mbedTLS 3.6.4 cipher API covers AES-GCM operations but has NO context copy
+      function. The core vulnerability path (EVP_CIPHER_CTX_copy on partially
+      initialized GCM state) cannot be expressed in any mbedTLS harness.
+      Final score 32 is far below the needs_llm_review threshold (55).
+      Classified as migration_not_applicable.
+
+  - target_library: mbedtls
+    target_api: psa_aead_encrypt_setup / psa_aead_update / psa_aead_abort
+    target_version: "4.1.0 (PSA)"
+    target_api_note: >
+      mbedTLS 4.1.0 exposes symmetric AEAD via PSA Crypto API. Operations:
+      psa_aead_encrypt_setup, psa_aead_set_nonce, psa_aead_update_ad,
+      psa_aead_update, psa_aead_finish, psa_aead_abort. No operation copy.
+
+    scores:
+      operation_family: 50
+      function_behavior: 25
+      parameter_structure: 20
+      vulnerability_path: 5
+      harness_feasibility: 55
+
+    # Weighted: 0.15*50 + 0.20*25 + 0.20*20 + 0.30*5 + 0.15*55
+    #         = 7.5 + 5.0 + 4.0 + 1.5 + 8.25 = 26.25
+    final_score: 26
+
+    decision: skip
+    migration_applicability: migration_not_applicable
+
+    preserved_features:
+      - PSA AEAD covers AES-GCM algorithm family
+      - key-based API avoids direct context manipulation
+      - crash_sanitizer_oracle can observe PSA error codes
+      - psa_aead_abort provides cleanup path
+
+    lost_or_weakened_features:
+      - NO psa_aead_operation_t copy function in PSA API
+      - PSA operations are opaque; internal state not observable
+      - Key management via psa_import_key is fundamentally different from EVP context passing
+      - "PSA AEAD has different lifecycle: key → operation → setup → update → finish/abort"
+      - No analogue for "copy a partially-initialized operation handle"
+      - vulnerability_path score = 5 (copy path entirely absent)
+
+    reason: >
+      PSA AEAD API covers AES-GCM but has no operation copy/clone. The key-based
+      abstraction is architecturally different from EVP stateful context passing.
+      Cannot express EVP_CIPHER_CTX_copy semantics at all. Final score 26 is far
+      below threshold. Classified as migration_not_applicable.
+
+  - target_library: mbedtls
+    target_api: mbedtls_gcm_init / mbedtls_gcm_setkey / mbedtls_gcm_starts
+    target_version: "3.6.4 (GCM direct)"
+    target_api_note: >
+      mbedTLS 3.6.4 GCM direct API. Lower-level than cipher abstraction layer.
+      Functions: mbedtls_gcm_init, mbedtls_gcm_setkey, mbedtls_gcm_starts,
+      mbedtls_gcm_update_ad, mbedtls_gcm_update, mbedtls_gcm_finish,
+      mbedtls_gcm_free. No clone or copy.
+
+    scores:
+      operation_family: 55
+      function_behavior: 30
+      parameter_structure: 25
+      vulnerability_path: 5
+      harness_feasibility: 55
+
+    # Weighted: 0.15*55 + 0.20*30 + 0.20*25 + 0.30*5 + 0.15*55
+    #         = 8.25 + 6.0 + 5.0 + 1.5 + 8.25 = 29.0
+    final_score: 29
+
+    decision: skip
+    migration_applicability: migration_not_applicable
+
+    preserved_features:
+      - directly covers AES-GCM operation family
+      - mbedtls_gcm_context is a concrete struct (less opaque than PSA)
+      - uninitialized state can be constructed by calling gcm_init without setkey
+
+    lost_or_weakened_features:
+      - NO mbedtls_gcm_copy or equivalent function
+      - cannot express "copy GCM context" at all
+      - mbedtls_gcm_context fields use MBEDTLS_PRIVATE; cannot directly inspect
+      - GCM internal state layout differs from OpenSSL 1.0.2 gcm128_context
+      - vulnerability_path score = 5
+
+    reason: >
+      mbedTLS direct GCM API covers the algorithm but lacks any context copy.
+      Even lower-level than the cipher abstraction, still no copy/clone exists.
+      Final score 29, far below threshold. Classified as migration_not_applicable.
+
+  - target_library: mbedtls
+    target_api: no_equivalent_public_api
+    target_version: "N/A"
+
+    scores:
+      operation_family: 0
+      function_behavior: 0
+      parameter_structure: 0
+      vulnerability_path: 0
+      harness_feasibility: 0
+
+    final_score: 0
+
+    decision: skip
+    migration_applicability: no_equivalent_public_api
+
+    preserved_features: []
+
+    lost_or_weakened_features:
+      - EVP_CIPHER_CTX_copy has no equivalent in any mbedTLS public API
+
+    reason: >
+      Confirmed: neither mbedTLS 3.6.4 nor mbedTLS 4.1.0 exposes a cipher context
+      copy or clone API in any of: legacy cipher layer, GCM direct layer, or PSA
+      AEAD operation layer. The "copy" operation is the defining element of the
+      vulnerability path and cannot be expressed at all.
+
+migration_summary:
+  overall_decision: migration_not_applicable
+  highest_score: 32
+  highest_candidate: mbedtls_cipher_init_setup_setkey
+  reason: >
+    No mbedTLS candidate scores above 35. All fail on vulnerability_path (score <= 5)
+    because EVP_CIPHER_CTX_copy has no mbedTLS equivalent. The vulnerability is
+    specific to OpenSSL's EVP stateful context copy mechanism. Migration to any
+    mbedTLS cipher API would lose the defining "context copy" vulnerability path
+    entirely. Classification: migration_not_applicable / no_equivalent_public_api.
+  recommended_future_work: >
+    If mbedTLS were to add a cipher context clone API (unlikely given the PSA
+    migration direction), this pattern could be revisited. Alternative: study
+    this pattern as an OpenSSL-internal regression test only, or investigate
+    whether mbedTLS GCM context memcpy patterns (as internal behavior, not
+    public API) exhibit similar issues — but that would require a different
+    research approach outside the current recipe-slot harness framework.

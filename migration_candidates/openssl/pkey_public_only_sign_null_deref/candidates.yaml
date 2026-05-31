@@ -1,0 +1,102 @@
+source_pattern_id: OPENSSL-ISSUE-19524
+template_id: PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF
+source_library: openssl
+source_api: EVP_DigestSign
+source_component: PKEY/ED25519_ED448
+vulnerability_class: pkey_capability_mismatch
+oracle_type: crash_sanitizer_or_safe_error_oracle
+migration_summary:
+  overall_decision: generate
+  primary_candidate: psa_sign_message
+  primary_score: 84
+  primary_harness_family: null_deref_dispatch
+  primary_oracle: public_key_sign_rejection_oracle
+target_candidates:
+- target_library: mbedtls
+  target_api: psa_sign_message
+  target_version: 4.1.0 (PSA Crypto)
+  decision: generate
+  migration_applicability: applicable
+  scores:
+    operation_family: 90
+    function_behavior: 85
+    parameter_structure: 75
+    vulnerability_path: 85
+    harness_feasibility: 85
+  final_score: 84
+  preserved_features:
+  - same operation family: EdDSA / Ed25519 signing
+  - same capability mismatch oracle: public-only key must not sign
+  - PSA key type: PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_TWISTED_EDWARDS) covers
+      Ed25519
+  - PSA algorithm: PSA_ALG_PURE_EDDSA for Ed25519
+  - psa_sign_message directly tests signing capability
+  - key without PSA_KEY_USAGE_SIGN_MESSAGE usage flag = public-only equivalent
+  - oracle: psa_sign_message must return PSA_ERROR_NOT_PERMITTED (safe rejection)
+  - self-contained single-process harness feasible
+  - crash oracle also applicable: ASAN/UBSAN if PSA implementation is buggy
+  lost_or_weakened_features:
+  - PSA uses key handle (psa_key_id_t) instead of EVP_PKEY pointer directly
+  - PSA capability check is explicit via key usage flags (PSA_KEY_USAGE_SIGN_MESSAGE)
+  - PSA is more likely to catch this at import/policy level rather than in sign path
+  - 'slightly different failure mode: policy rejection vs NULL deref at sign time'
+  - psa_sign_message signature differs from EVP_DigestSign (key_id, alg, msg → sig)
+  reason: 'PSA Crypto psa_sign_message is the strongest mbedTLS migration target.
+    Ed25519 is supported via PSA_ECC_FAMILY_TWISTED_EDWARDS + PSA_ALG_PURE_EDDSA.
+    Importing a key with PSA_KEY_TYPE_ECC_PUBLIC_KEY (no SIGN_MESSAGE usage) and calling
+    psa_sign_message tests the same capability-mismatch oracle. PSA must return PSA_ERROR_NOT_PERMITTED
+    safely without crash. Final score 84 >= 75 threshold; vulnerability_path=85 >=
+    70. Decision: generate.
+
+    '
+- target_library: mbedtls
+  target_api: mbedtls_pk_sign
+  target_version: 3.6.4 (legacy pk layer)
+  decision: needs_llm_review
+  migration_applicability: applicable
+  scores:
+    operation_family: 80
+    function_behavior: 65
+    parameter_structure: 55
+    vulnerability_path: 65
+    harness_feasibility: 70
+  final_score: 66
+  preserved_features:
+  - mbedtls_pk_sign exists and is public API
+  - pk layer supports ECDSA and RSA signing
+  - can construct a pk context for EC public key
+  - return code observable
+  lost_or_weakened_features:
+  - mbedTLS pk layer does not natively support ED25519 in 3.6.4 as pk_type
+  - mbedtls_pk_context for EC public-only key uses MBEDTLS_PK_ECKEY not ED25519
+  - ED25519 in mbedTLS 3.6.4 is via USE_PSA_CRYPTO bridge, not direct pk_sign
+  - 'parameter_structure: mbedtls_pk_sign(ctx, md_alg, hash, hlen, sig, slen, ...)
+    differs from EVP_DigestSign'
+  - constructing a genuine public-only pk context for ED25519 requires PSA bridge
+  - 'vulnerability_path: 65 (partial; key capability check may differ from ED25519)'
+  reason: 'mbedtls_pk_sign is a valid candidate but ED25519 is not natively a pk_type
+    in mbedTLS 3.6.4 without PSA bridge. The capability mismatch can still be expressed
+    (sign with public-only EC key → MBEDTLS_ERR_PK_TYPE_MISMATCH or similar) but the
+    ED25519-specific path is weaker. Score 66 >= 55; decision: needs_llm_review. PSA
+    psa_sign_message is preferred.
+
+    '
+- target_library: mbedtls
+  target_api: no_direct_ed25519_pk_api
+  target_version: N/A
+  decision: skip
+  migration_applicability: migration_not_applicable
+  scores:
+    operation_family: 0
+    function_behavior: 0
+    parameter_structure: 0
+    vulnerability_path: 0
+    harness_feasibility: 0
+  final_score: 0
+  preserved_features: []
+  lost_or_weakened_features:
+  - no mbedTLS 3.6.4 equivalent of EVP_PKEY_new_raw_public_key for ED25519
+  reason: 'Without PSA, there is no mbedTLS public API for constructing an Ed25519
+    public-only context. PSA psa_sign_message is the correct path.
+
+    '

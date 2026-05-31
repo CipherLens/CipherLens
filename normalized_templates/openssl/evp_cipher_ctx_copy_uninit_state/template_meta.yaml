@@ -1,0 +1,62 @@
+template_id: EVP_CIPHER_CTX_COPY_UNINIT_STATE
+pattern_id: OPENSSL-ISSUE-8980
+source_library: openssl
+source_component: EVP/AES_GCM
+harness_family: crash_sanitizer_oracle
+oracle_type: crash_sanitizer_oracle
+
+source_api:
+  - EVP_CIPHER_CTX_new
+  - EVP_aes_128_gcm
+  - EVP_EncryptInit_ex
+  - EVP_CIPHER_CTX_copy
+
+vulnerability_class: evp_context_state_lifecycle
+
+description: >
+  Template for testing EVP_CIPHER_CTX_copy on a partially-initialized AES-GCM
+  context. The core vulnerability path is copying a context that has been
+  associated with a GCM cipher algorithm but has not received a key or IV.
+  In OpenSSL 1.0.2 this triggers uninitialized memory access / NULL dereference.
+
+mask_slots:
+  - name: CIPHER_ALGORITHM
+    type: cipher_algorithm_selector
+    default: EVP_aes_128_gcm()
+    variants:
+      - EVP_aes_128_gcm()
+      - EVP_aes_256_gcm()
+      - EVP_aes_128_ccm()
+  - name: SRC_KEY_BYTES
+    type: key_or_null
+    default: "NULL"
+    variants:
+      - "NULL"
+  - name: SRC_IV_BYTES
+    type: iv_or_null
+    default: "NULL"
+    variants:
+      - "NULL"
+
+required_observables:
+  - copy_return_code
+  - asan_or_ubsan_signal
+  - process_exit_code
+
+safe_behavior:
+  condition: EVP_CIPHER_CTX_copy returns 1 and no sanitizer signal
+  description: Context copy succeeds without crash or uninitialized memory access
+
+bug_behavior:
+  condition: ASAN/Valgrind/SEGV during or after EVP_CIPHER_CTX_copy
+  description: Copying partially-initialized GCM context triggers uninitialized memory read
+
+triage_behavior:
+  condition: EVP_CIPHER_CTX_copy returns 0 (failure) without crash
+  description: Library defensively rejects the copy; oracle not triggered at crash level
+
+notes:
+  - strict_reproduction requires OpenSSL 1.0.2 binary
+  - OpenSSL 3.x shows safe behavior (0 Valgrind errors)
+  - Template is useful for cross-version comparison
+  - No mbedTLS migration possible (no context copy API exists in mbedTLS)

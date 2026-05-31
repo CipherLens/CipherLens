@@ -1,0 +1,45 @@
+template_id: EVP_CIPHER_CTX_COPY_UNINIT_STATE
+pattern_id: OPENSSL-ISSUE-8980
+source_library: openssl
+generated_by: manual_ast_analysis
+
+ast_units:
+  - unit_id: cipher_algo_arg
+    kind: function_call_argument
+    call_site: EVP_EncryptInit_ex
+    argument_index: 1
+    source_text: "EVP_aes_128_gcm()"
+    slot: CIPHER_ALGORITHM
+    mutable: true
+
+  - unit_id: key_arg
+    kind: function_call_argument
+    call_site: EVP_EncryptInit_ex
+    argument_index: 3
+    source_text: "NULL"
+    slot: SRC_KEY_BYTES
+    mutable: true
+
+  - unit_id: iv_arg
+    kind: function_call_argument
+    call_site: EVP_EncryptInit_ex
+    argument_index: 4
+    source_text: "NULL"
+    slot: SRC_IV_BYTES
+    mutable: true
+
+  - unit_id: copy_call
+    kind: function_call
+    call_site: EVP_CIPHER_CTX_copy
+    source_text: "EVP_CIPHER_CTX_copy(ctx2, ctx)"
+    slot: COPY_TRIGGER
+    mutable: false
+    reason: core trigger; removal would destroy vulnerability path
+
+  - unit_id: init_call
+    kind: function_call
+    call_site: EVP_EncryptInit_ex
+    source_text: "EVP_EncryptInit_ex(ctx, cipher, NULL, NULL, NULL)"
+    slot: INIT_CALL
+    mutable: false
+    reason: sets up partial initialization state; structure must be preserved

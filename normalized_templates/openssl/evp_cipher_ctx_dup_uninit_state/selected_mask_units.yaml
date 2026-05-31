@@ -1,0 +1,28 @@
+template_id: EVP_CIPHER_CTX_DUP_UNINIT_STATE
+pattern_id: OPENSSL-ISSUE-8980
+source_library: openssl
+
+selected_units:
+  - unit_id: cipher_algo_arg
+    slot: CIPHER_ALGORITHM
+    selected: true
+    priority: high
+    reason: Algorithm-specific internal state affects dup behavior
+
+  - unit_id: key_arg
+    slot: SRC_KEY_BYTES
+    selected: true
+    priority: high
+    reason: NULL key = partial init = trigger condition
+
+  - unit_id: iv_arg
+    slot: SRC_IV_BYTES
+    selected: true
+    priority: high
+    reason: NULL IV contributes to partial init
+
+  - unit_id: dup_call
+    slot: DUP_TRIGGER
+    selected: false
+    priority: critical
+    reason: Non-mutable; EVP_CIPHER_CTX_dup is the defining equivalent-API trigger

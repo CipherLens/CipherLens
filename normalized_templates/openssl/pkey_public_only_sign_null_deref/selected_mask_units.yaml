@@ -1,0 +1,46 @@
+template_id: PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF
+pattern_id: OPENSSL-ISSUE-19524
+source_library: openssl
+
+selected_units:
+  - unit_id: key_type_arg
+    slot: KEY_TYPE
+    selected: true
+    priority: high
+    reason: ED25519 vs ED448 key type determines private key check path
+
+  - unit_id: key_bytes_arr
+    slot: KEY_BYTES
+    selected: true
+    priority: medium
+    reason: Different public key bytes for robustness testing
+
+  - unit_id: key_len_decl
+    slot: KEY_LEN
+    selected: true
+    priority: high
+    reason: Must match KEY_TYPE (32 for ED25519, 57 for ED448)
+
+  - unit_id: message_bytes_arr
+    slot: MESSAGE_BYTES
+    selected: true
+    priority: low
+    reason: Message content variation
+
+  - unit_id: message_len_decl
+    slot: MESSAGE_LEN
+    selected: true
+    priority: medium
+    reason: Zero-length vs non-empty message
+
+  - unit_id: digest_sign_init_call
+    slot: INIT_CALL
+    selected: false
+    priority: critical
+    reason: Non-mutable; core trigger
+
+  - unit_id: digest_sign_call
+    slot: SIGN_CALL
+    selected: false
+    priority: critical
+    reason: Non-mutable; core trigger

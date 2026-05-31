@@ -1,0 +1,72 @@
+template_id: EVP_CIPHER_CTX_DUP_UNINIT_STATE
+pattern_id: OPENSSL-ISSUE-8980
+source_library: openssl
+source_version: "3.5.5"
+variant_of: EVP_CIPHER_CTX_COPY_UNINIT_STATE
+variant_type: same_library_equivalent_api
+harness_family: crash_sanitizer_oracle
+oracle_type: crash_sanitizer_oracle
+
+source_api: EVP_CIPHER_CTX_dup
+internal_path: EVP_CIPHER_CTX_dup → EVP_CIPHER_CTX_copy → EVP_CTRL_COPY (AES-GCM)
+
+description: >
+  Same-library equivalent API variant of OPENSSL-ISSUE-8980.
+  EVP_CIPHER_CTX_dup is declared in include/openssl/evp.h:654 (OpenSSL 3.5.5).
+  Internally it calls EVP_CIPHER_CTX_new() + EVP_CIPHER_CTX_copy(), traversing
+  the same AES-GCM EVP_CTRL_COPY code path as the original PoC.
+  On OpenSSL 3.5.5 the NULL guard in EVP_CTRL_COPY makes this safe.
+  On a hypothetical 1.0.2-era EVP_CIPHER_CTX_dup, it would have triggered the
+  same uninitialized GCM state access.
+
+mask_slots:
+  - name: CIPHER_ALGORITHM
+    type: cipher_algorithm_selector
+    default: EVP_aes_128_gcm()
+    variants:
+      - EVP_aes_128_gcm()
+      - EVP_aes_256_gcm()
+      - EVP_aes_128_ccm()
+
+  - name: SRC_KEY_BYTES
+    type: key_or_null
+    default: "NULL"
+    variants:
+      - "NULL"
+
+  - name: SRC_IV_BYTES
+    type: iv_or_null
+    default: "NULL"
+    variants:
+      - "NULL"
+
+required_observables:
+  - dup_return_pointer
+  - asan_or_ubsan_signal
+  - process_exit_code
+
+safe_behavior:
+  condition: >
+    EVP_CIPHER_CTX_dup returns NULL (rejected) or non-NULL (safe copy) with no
+    sanitizer signal. Both outcomes are safe on OpenSSL 3.5.5.
+  description: Partial context dup handled without crash or uninitialized memory access.
+
+bug_behavior:
+  condition: >
+    On a version with the 1.0.2-era EVP_CTRL_COPY bug, EVP_CIPHER_CTX_dup would
+    trigger uninitialized memory read via EVP_CIPHER_CTX_copy inside.
+  description: >
+    Cannot be demonstrated directly with EVP_CIPHER_CTX_dup because this API did
+    not exist in OpenSSL 1.0.2. Applies hypothetically or to any backport that
+    introduced the bug.
+
+triage_behavior:
+  condition: EVP_CIPHER_CTX_dup returns NULL with no crash
+  description: Safely rejected; library declined to dup partial context
+
+notes:
+  - EVP_CIPHER_CTX_dup added in OpenSSL 3.x era; not present in 1.0.2
+  - This template is for same-library 3.5.5 validation only
+  - Expected result on 3.5.5: safe (NULL return or successful safe dup)
+  - For full regression comparison see EVP_CIPHER_CTX_COPY variant with 1.0.2 build
+  - Harness can be run now without OpenSSL 1.0.2

@@ -1,0 +1,43 @@
+=== OPENSSL-ISSUE-8980: EVP_CIPHER_CTX_dup Same-Library Equivalent API Run ===
+
+case: case_dup_0000_openssl_3_5_5
+api_tested: EVP_CIPHER_CTX_dup
+cipher_algorithm: EVP_aes_128_gcm()
+key_state: NULL (partial init)
+iv_state: NULL (partial init)
+
+--- Compilation ---
+compiler: gcc
+flags: -g -O0 -Wall -Wextra
+link: libssl.a + libcrypto.a (OpenSSL 3.5.5 static)
+compile_exit: 0
+
+--- Normal Run ---
+run_exit: 0
+stdout: [RESULT] EVP_CIPHER_CTX_dup returned non-NULL (safe copy of partial context succeeded).
+        [VERDICT] safe_fixed_behavior
+
+--- ASan/UBSan Run ---
+flags: -fsanitize=address,undefined -fno-omit-frame-pointer
+ASAN_OPTIONS: detect_leaks=0:halt_on_error=1
+UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+asan_run_exit: 0
+asan_output: [RESULT] EVP_CIPHER_CTX_dup returned non-NULL (safe copy of partial context succeeded).
+             [VERDICT] safe_fixed_behavior
+asan_signal: NONE
+ubsan_signal: NONE
+crash: NONE
+
+--- Oracle Assessment ---
+oracle_type: crash_sanitizer_oracle
+expected_signal_on_buggy (1.0.2): uninitialized memory read / SEGV / Valgrind error
+observed_signal_on_fixed (3.5.5): NONE
+verdict: fixed_version_safe
+
+--- Interpretation ---
+EVP_CIPHER_CTX_dup on a partially-initialized AES-GCM context (no key, no IV)
+returns a valid non-NULL ctx on OpenSSL 3.5.5. No crash, no ASan/UBSan signal.
+This confirms safe/fixed behavior for the same-library equivalent API candidate.
+
+This does NOT prove regression_fixed.
+Full regression_fixed requires the 1.0.2 buggy-side run (affected_version_missing).
