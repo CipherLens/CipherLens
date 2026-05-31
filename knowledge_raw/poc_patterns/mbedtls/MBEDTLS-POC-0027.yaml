@@ -1,0 +1,164 @@
+pattern_id: MBEDTLS-POC-0027
+template_id: TLS13_VERIFY_RESULT_KEY_USAGE_PROPAGATION
+status: framework_limitation
+
+source:
+  library: mbedtls
+  component: tls/ssl
+  api: mbedtls_ssl_get_verify_result
+  internal_function: ssl_tls13_validate_certificate
+  source_type: cve_advisory
+  source_label: CVE-2024-45159
+  url: https://mbed-tls.readthedocs.io/en/latest/security-advisories/mbedtls-security-advisory-2024-08-3/
+  fixed_commit: ef41d8ccbe91c5c59e32f47ceda3365525c47124
+  buggy_commit: ef41d8ccbe91c5c59e32f47ceda3365525c47124^
+  direct_mutation_file: library/ssl_tls13_generic.c
+  direct_mutation_function: ssl_tls13_validate_certificate
+  regression_test: tests/ssl-opt.sh
+
+library:
+  name: mbedtls
+  primary_module: ssl/tls
+  affected_api:
+    - mbedtls_ssl_get_verify_result
+  affected_file:
+    - library/ssl_tls13_generic.c
+    - library/ssl_tls.c
+
+classification:
+  poc_type: semantic_correctness
+  bug_category: certificate_verification_flag_propagation
+  vulnerability_class: tls_verify_result_semantic
+  failure_signal:
+    - missing_keyUsage_flag_in_verify_result
+    - missing_extKeyUsage_flag_in_verify_result
+    - wrong_behavior_after_tls13_handshake
+
+root_cause:
+  summary: >
+    In TLS 1.3 certificate validation, ssl_tls13_validate_certificate() detects
+    keyUsage and extKeyUsage extension failures but does not propagate the corresponding
+    verification flags (MBEDTLS_X509_BADCERT_KEY_USAGE and MBEDTLS_X509_BADCERT_EXT_KEY_USAGE)
+    into ssl->session_negotiate->verify_result. As a result, the caller-visible
+    mbedtls_ssl_get_verify_result() returns 0 (no failures) when it should return
+    the expected failure bits.
+  root_cause_location:
+    file: library/ssl_tls13_generic.c
+    function: ssl_tls13_validate_certificate
+    internal_context: TLS 1.3 client certificate validation during handshake
+  buggy_logic:
+    - keyUsage extension mismatch detected in ssl_tls13_validate_certificate
+    - MBEDTLS_X509_BADCERT_KEY_USAGE NOT written to ssl->session_negotiate->verify_result
+    - extKeyUsage extension mismatch detected
+    - MBEDTLS_X509_BADCERT_EXT_KEY_USAGE NOT written to ssl->session_negotiate->verify_result
+    - mbedtls_ssl_get_verify_result() returns incomplete or zero flags
+  fixed_logic:
+    - ssl_tls13_validate_certificate propagates keyUsage/extKeyUsage failure flags into verify_result
+    - mbedtls_ssl_get_verify_result() correctly returns MBEDTLS_X509_BADCERT_KEY_USAGE when keyUsage fails
+
+trigger:
+  tls_version: TLS_1_3
+  scenario: client_certificate_authentication
+  certificate_property: incompatible_keyUsage_RSA_KeyEncipherment
+  authentication_mode: optional_soft_fail
+  description: >
+    TLS 1.3 optional client-authentication where the client certificate has an
+    incompatible keyUsage extension (e.g., RSA KeyEncipherment). The server detects
+    the mismatch during ssl_tls13_validate_certificate but fails to propagate the
+    flag into verify_result. mbedtls_ssl_get_verify_result() should return the
+    MBEDTLS_X509_BADCERT_KEY_USAGE bit but does not in the buggy version.
+
+buggy_behavior:
+  signal: missing_verify_result_flag
+  ssl_get_verify_result: 0
+  expected_flag: MBEDTLS_X509_BADCERT_KEY_USAGE
+  observable_pattern: "'! Usage does not match the keyUsage extension' is absent from ssl-opt.sh output"
+  reproduction_method: ssl_opt_sh_integration_test
+
+fixed_behavior:
+  signal: verify_result_flag_correctly_set
+  ssl_get_verify_result: MBEDTLS_X509_BADCERT_KEY_USAGE
+  observable_pattern: "'! Usage does not match the keyUsage extension' is present in ssl-opt.sh output"
+
+mutation_points:
+  - name: CERTIFICATE_KEY_USAGE
+    description: The keyUsage extension value in the client certificate
+    reason: Controls whether keyUsage failure is triggered during TLS 1.3 validation
+    priority: high
+  - name: CERTIFICATE_EXTENDED_KEY_USAGE
+    description: The extKeyUsage extension value in the client certificate
+    reason: Controls whether extKeyUsage failure is triggered
+    priority: high
+  - name: TLS_AUTH_MODE
+    description: Whether client certificate authentication is required or optional
+    reason: Controls whether the handshake fails hard or soft on usage mismatch
+    priority: medium
+  - name: EXPECTED_VERIFY_RESULT_FLAGS
+    description: The bitmask expected in mbedtls_ssl_get_verify_result()
+    reason: The oracle observable; bug = expected flags absent
+    priority: high
+
+oracle:
+  oracle_type: verify_result_flag_semantic_oracle
+  bug_signals:
+    - mbedtls_ssl_get_verify_result_returns_zero_or_misses_flag
+    - keyUsage_failure_not_reported_in_verify_result
+    - ssl_opt_sh_expected_pattern_absent
+  fixed_or_safe_signals:
+    - MBEDTLS_X509_BADCERT_KEY_USAGE_set_in_verify_result
+    - MBEDTLS_X509_BADCERT_EXT_KEY_USAGE_set_in_verify_result
+    - ssl_opt_sh_expected_pattern_present
+
+original_reproduction:
+  type: ssl_opt_sh_integration_test
+  requires_server_client: true
+  requires_tls_handshake: true
+  requires_certificates: true
+  command: >
+    ssl-opt.sh regression test "keyUsage cli-auth 1.3: RSA, KeyEncipherment: fail (soft)"
+  independent_c_poc: false
+
+migration_applicability:
+  status: framework_limitation
+  reason: >
+    The bug is specifically in TLS 1.3 handshake-level flag propagation within
+    ssl_tls13_validate_certificate. There is no standalone single-process C API harness
+    that can directly observe this behavior without a full TLS 1.3 handshake.
+    The current recipe-slot framework supports single-process C harnesses; a TLS handshake
+    harness would require TLS-specific multi-step setup not currently supported.
+  candidate_apis_considered:
+    - openssl_SSL_get_verify_result_via_memory_BIO:
+        score: 72
+        decision: needs_tls_handshake_harness
+        reason: >
+          Technically sound migration path but requires new tls_verify_result_semantic
+          family, memory BIO TLS handshake infrastructure, embedded test certificates,
+          and significant framework extension.
+    - openssl_X509_verify_cert:
+        score: 53
+        vulnerability_path_score: 30
+        decision: migration_not_applicable
+        reason: >
+          Standalone X.509 verify does not cover TLS 1.3 ssl_tls13_validate_certificate
+          code path. X.509 verify correctly reports keyUsage failures through its own path;
+          the TLS 1.3 flag propagation bug is in a different code path. Cannot distinguish
+          buggy from fixed mbedTLS using standalone X.509 verify.
+    - openssl_d2i_X509:
+        score: 30
+        decision: reject
+        reason: Only parses certificates; does not perform keyUsage verification or
+          expose verify_result flags.
+  recommended_future_work: >
+    Define tls_verify_result_semantic harness family with memory BIO TLS handshake
+    infrastructure, embedded test certificates (RSA cert with RSA KeyEncipherment
+    keyUsage mismatch), and TLS 1.3 handshake loop in a single-process harness.
+
+references:
+  cve: CVE-2024-45159
+  advisory: https://mbed-tls.readthedocs.io/en/latest/security-advisories/mbedtls-security-advisory-2024-08-3/
+  fix_commit: ef41d8ccbe91c5c59e32f47ceda3365525c47124
+
+evidence_files:
+  notes: data/pocs/core10/MBEDTLS-POC-0027/notes.md
+  reproduction: data/pocs/core10/MBEDTLS-POC-0027/reproduction_result.md
+  fix_commits: data/pocs/core10/MBEDTLS-POC-0027/fix_commits.txt

@@ -1,0 +1,35 @@
+source_pattern_id: null
+template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+harness_family: null_deref_dispatch
+oracle_type: crash_sanitizer_or_safe_error_oracle
+target_library: openssl
+target_api: EVP_DigestVerify
+applicability: generate
+adapter_recipe: adapter_recipes/openssl/EVP_DigestVerify.null_deref_dispatch.yaml
+evidence_file: migration_candidates/pk/pk_verify_ext_null_deref/candidates_with_evidence.yaml
+slot_bindings:
+  md_algorithm: EVP_sha256()
+  ec_curve_nid: NID_X9_62_prime256v1
+  signing_key_variable: sign_key
+  incompatible_key_variable: target_key
+  verify_ctx_variable: verify_ctx
+  sign_ctx_variable: sign_ctx
+  return_code_variable: ret
+preserved_features:
+- generic_polymorphic_key_context_dispatch
+- rsa_pss_specific_verification_path_or_rsa_dispatch_code
+- incompatible_or_mismatched_key_type_entry
+- observable_crash_vs_safe_error_return
+lost_or_weakened_features:
+- psa_opaque_key_mechanism
+- exact_mbedtls_error_code_value
+- exact_mbedtls_internal_type_guard_location
+_adapter_mode: recipe_slot_filling
+_ignored_disallowed_fields: []
+_ignored_non_slot_fields: []
+_llm_raw_preview: "{\n  \"slot_bindings\": {\n    \"md_algorithm\": \"EVP_sha256()\"\
+  ,\n    \"ec_curve_nid\": \"NID_X9_62_prime256v1\",\n    \"signing_key_variable\"\
+  : \"sign_key\",\n    \"incompatible_key_variable\": \"target_key\",\n    \"verify_ctx_variable\"\
+  : \"verify_ctx\",\n    \"sign_ctx_variable\": \"sign_ctx\",\n    \"return_code_variable\"\
+  : \"ret\"\n  }\n}"
+_llm_status: ok

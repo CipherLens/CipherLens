@@ -1,0 +1,1306 @@
+template_id: PSA_AEAD_INVALID_SHORTENED_TAG_SETUP
+source_template_id: PSA_AEAD_INVALID_SHORTENED_TAG_SETUP
+source:
+  library: mbedtls
+  api: psa_aead_decrypt_setup
+  pattern_id: MBEDTLS-POC-0028
+  root_cause_summary: 'psa_aead_setup() did not call psa_validate_tag_length() before
+    accepting the operation. For CCM, tag length 3 is invalid (only even lengths 4-16
+    are valid), but the buggy version returned PSA_SUCCESS. Fixed by validating tag
+    length during setup and returning PSA_ERROR_INVALID_ARGUMENT for invalid values.
+
+    '
+  vulnerability_path_features:
+    must_preserve:
+    - aead_setup_api_entrypoint
+    - shortened_tag_length_parameter
+    - algorithm_specific_tag_length_validation
+    - invalid_parameter_return_code_observable
+    - setup_time_validation_not_deferred_to_operation_use
+    optional:
+    - CCM_algorithm_specifically
+    - AES_key_type
+    not_required:
+    - exact_PSA_error_code
+    - exact_mbedTLS_internal_function_name
+scoring_policy:
+  operation_family: 0.15
+  function_behavior: 0.2
+  parameter_structure: 0.2
+  vulnerability_path: 0.3
+  harness_feasibility: 0.15
+  decision_rule:
+    generate: final >= 75 and vulnerability_path >= 70
+    needs_llm_review: final >= 55 and vulnerability_path >= 50
+    skip: otherwise
+  score_notes:
+  - Key criterion is whether the target API validates AEAD tag length at setup/control
+    time.
+  - The oracle must be observable through the return code of the setup or ctrl call.
+  - PSA-specific algorithm encoding is projected to OpenSSL EVP ctrl semantics.
+required_features:
+- target has a setup or ctrl API for AEAD tag length specification
+- target validates the tag length at setup/control time (not deferred)
+- target returns an observable error code for invalid tag length
+- harness is a standalone compilable C program
+- OpenSSL CCM mode supports EVP_CTRL_CCM_SET_TAG ctrl command
+target_candidates:
+- target_library: openssl
+  target_api: EVP_CIPHER_CTX_ctrl
+  library: openssl
+  api: EVP_CIPHER_CTX_ctrl
+  source_template_id: PSA_AEAD_INVALID_SHORTENED_TAG_SETUP
+  source_api: psa_aead_decrypt_setup
+  decision: generate
+  migration_applicability: applicable
+  applicability: strong_candidate
+  scores:
+    operation_family: 85
+    function_behavior: 80
+    parameter_structure: 82
+    vulnerability_path: 80
+    harness_feasibility: 88
+    final: 83
+  preserved_features:
+  - EVP_CIPHER_CTX_ctrl with EVP_CTRL_CCM_SET_TAG sets CCM tag length at setup time
+  - ctrl return code is observable (1=accepted, 0=rejected)
+  - invalid CCM tag length 3 is rejected by OpenSSL 3.5.5 (ctrl returns 0)
+  - valid CCM tag lengths (4, 6, 8, 10, 12, 14, 16) are accepted (ctrl returns 1)
+  - harness does not require full AEAD operation; tag length validation observable
+    at ctrl step
+  preserved_vulnerability_features:
+  - aead_setup_api_entrypoint
+  - shortened_tag_length_parameter
+  - algorithm_specific_tag_length_validation
+  - invalid_parameter_return_code_observable
+  weakened_features:
+  - OpenSSL uses EVP ctrl interface rather than PSA algorithm encoding
+  - PSA_ALG_AEAD_WITH_SHORTENED_TAG encoding has no direct OpenSSL equivalent
+  - validation happens at EVP ctrl not at a separate setup API
+  lost_or_weakened_features:
+  - exact_PSA_error_code
+  - PSA_algorithm_encoding
+  migration_reason: 'Strongest candidate. EVP_CIPHER_CTX_ctrl with EVP_CTRL_CCM_SET_TAG
+    directly controls the CCM tag length at context setup time and returns an observable
+    code. OpenSSL 3.5.5 rejects tag_len=3 (returns 0) and accepts valid lengths (returns
+    1). The vulnerability-path projection is: PSA invalid shortened tag rejection
+    → EVP CCM ctrl invalid tag rejection. Expected migration verdict: migrated_safe.
+
+    '
+  required_features:
+  - EVP_CIPHER_CTX_new() and initialize with EVP_aes_128_ccm()
+  - EVP_DecryptInit_ex(ctx, EVP_aes_128_ccm(), NULL, NULL, NULL) to set cipher
+  - EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_TAG, TAG_LENGTH, NULL) to probe validation
+  - observe ctrl return code (0 = rejected, 1 = accepted)
+  - EVP_CIPHER_CTX_free(ctx)
+  notes:
+  - Both libraries safely reject tag_len=3 in current versions → migrated_safe expected.
+  - Oracle: tag_len=3 accepted → bug_candidate; rejected → safe_reject_behavior.
+  - Valid tag lengths (4, 8, 12, 16) accepted by both → normal_expected_behavior.
+  evidence:
+    top_k: 5
+    queries:
+    - query: ' '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.5070700252966565
+        distance: 0.9721142053604126
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+        text: "FF\",\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000FFFFFFFF00\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"000000000000000000000000000000000000000000000000000000"
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+          library: openssl
+      - rank: 2
+        score: 0.5064631252680277
+        distance: 0.9744774103164673
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md
+        text: "E0EC65228B3937E498\",\n        \"63E4C6D3B23B0C849CF84241484BFE48F61D59A5B16BA06E6E12D1DA27C5249A\"\
+          ,\n        \"421DEBD61B62EAB6746434EBC3CC315E32220B3BADD50BDC4C4E6C147FEDD43D\"\
+          ,\n        \"0680512BCBB42C07D47349D2153B70C4E5D7FDFCBFA36EA1A85841B9E46E09A2\"\
+          ,\n        \"8542D69E4C044F18E8B92435BF6FF7DD297720630485628D5AE74EE7C32E79B7\"\
+          ,\n        \"1\");\n\n    if (!TEST_ptr(test_group))\n        goto done;\n\
+          \n    if (!TEST_true(test_sm2_sign(\n            test_group,\n         \
+          \   \"ALICE123@YAHOO.COM\",\n            \"128B2FA8BD433C6C068C8D803DFF79792A519A55171B1B650C23661D15897263\"\
+          ,\n            \"message digest\",\n            \"006CB28D99385C175C94F94E934817663FC176D925DD72B727260DBAAE1FB2F96F\"\
+          \n            \"007c47811054c6f99613a578eb8453706ccb96384fe7df5c171671e760bfa8be3a\"\
+          ,\n```"
+        metadata:
+          doc_type: unit_test_call_pattern
+          library: openssl
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md
+      - rank: 3
+        score: 0.4993900358310789
+        distance: 1.0024428367614746
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+        text: "8787878787878787878787878787878\"\n              \"7878787878787878787878787878787878787878787878787878787878787878\"\
+          \n              \"7878787878787878787878787878787878787878787878787878787878787878\"\
+          \n              \"7878787878787878787878787878787878787878787878787878787878787878\"\
+          ))\n            && TEST_true(BN_hex2bn(&b,\n                \"095D72C08C097BA488C5E439C655A192EAFB6380073D8C2664668EDDB4060744\"\
+          \n                \"E16E57FB4EDB9AE10A0CEFCDC28A894F689A128379DB279D48A2E20849D68593\"\
+          \n                \"9B7803BCF46CEBF5C533FB0DD35B080593DE5472E3FE5DB951B8BFF9B4CB8F03\"\
+          \n                \"9CC638A5EE8CDD703719F8000E6A9F63BEED5F2FCD52FF293EA05A251BB4AB81\"\
+          ))\n            && TEST_true(BN_hex2bn(&n,\n```\n\n## Call pattern 62\n\n\
+          ```c\ngoto err;\n\n    if (!(TEST_true(BN_MONT_CTX_set(mont, n, ctx))\n\
+          \            && TEST_true(BN_mod_mul_montgomery(c, a, b, mont, ctx))\n \
+          \           && TEST_true(BN_mod_mul_montgomery(d, b, a, mont, ctx))\n  \
+          \          && TEST_BN_eq(c, d)))\n        goto err;\n\n    /* Regression\
+          \ test for ca"
+        metadata:
+          library: openssl
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+      - rank: 4
+        score: 0.49467344660620705
+        distance: 1.0215356349945068
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md
+        text: "D_BOTTOM_ODD);\n    BN_rand(a2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY);\n\
+          \    BN_rand(b2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY);\n  \
+          \  BN_rand(m2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ODD);\n\n  \
+          \  if (!TEST_true(BN_mod(a1, a1, m1, ctx))\n        || !TEST_true(BN_mod(b1,\
+          \ b1, m1, ctx))\n        || !TEST_true(BN_mod(a2, a2, m2, ctx))\n      \
+          \  || !TEST_true(BN_mod(b2, b2, m2, ctx))\n        || !TEST_true(BN_mod_exp_simple(r_simple1,\
+          \ a1, b1, m1, ctx))\n        || !TEST_true(BN_mod_exp_simple(r_simple2,\
+          \ a2, b2, m2, ctx))\n        || !TEST_true(BN_mod_exp_mont_consttime_x2(r_mont_const_x2_1,\
+          \ a1, b1, m1, NULL,\n            r_mont_const_x2_2, a2, b2, m2, NULL,\n\
+          \            ctx)))\n        goto err;\n\n    if (!TEST_BN_eq(r_simple1,\
+          \ r_mont_const_x2_1)\n        || !TEST_BN_eq(r_simple2, r_mont_const_x2_2))\
+          \ {\n        if (BN_cmp(r_simple1, r_mont_const_x2_1) != 0)\n          \
+          \  TEST_info(\"simple and mont const time x2 (#1) results differ\");\n```\n\
+          \n## Call pattern 29\n\n```c\nfactor_size = 2048"
+        metadata:
+          library: openssl
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md
+      - rank: 5
+        score: 0.4944104082232621
+        distance: 1.022611141204834
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+        text: "FFFFFFFFFFFFFFFFFFFFFF\",\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000FFFFFFFF00\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"00000000000000000000000000000000000000000000000000FFFFFFFFFFFFFF\"\
+          ,\n    NULL\n};\n\nstatic const char *bn2stri"
+        metadata:
+          library: openssl
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+      error: ''
+      stdout_preview: "{\n  \"query\": \" \",\n  \"top_k\": 5,\n  \"results\": [\n\
+        \    {\n      \"rank\": 1,\n      \"score\": 0.5070700252966565,\n      \"\
+        distance\": 0.9721142053604126,\n      \"layer\": \"unit_tests\",\n      \"\
+        source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n      \"text\": \"FF\\\",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000FFFFFFFF00\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"000000000000000000000000000000000000000000000000000000\",\n\
+        \      \"metadata\": {\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n        \"doc_type\": \"unit_test_call_pattern\",\n        \"layer\": \"\
+        unit_tests\",\n        \"library\": \"openssl\"\n      }\n    },\n    {\n\
+        \      \"rank\": 2,\n      \"score\": 0.5064631252680277,\n      \"distance\"\
+        : 0.9744774103164673,\n      \"layer\": \"unit_tests\",\n      \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md\"\
+        ,\n      \"text\": \"E0EC65228B3937E498\\\",\\n        \\\"63E4C6D3B23B0C849CF84241484BFE48F61D59A5B16BA06E6E12D1DA27C5249A\\\
+        \",\\n        \\\"421DEBD61B62EAB6746434EBC3CC315E32220B3BADD50BDC4C4E6C147FEDD43D\\\
+        \",\\n        \\\"0680512BCBB42C07D47349D2153B70C4E5D7FDFCBFA36EA1A85841B9E46E09A2\\\
+        \",\\n        \\\"8542D69E4C044F18E8B92435BF6FF7DD297720630485628D5AE74EE7C32E79B7\\\
+        \",\\n        \\\"1\\\");\\n\\n    if (!TEST_ptr(test_group))\\n        goto\
+        \ done;\\n\\n    if (!TEST_true(test_sm2_sign(\\n            test_group,\\\
+        n            \\\"ALICE123@YAHOO.COM\\\",\\n            \\\"128B2FA8BD433C6C068C8D803DFF79792A519A55171B1B650C23661D15897263\\\
+        \",\\n            \\\"message digest\\\",\\n            \\\"006CB28D99385C175C94F94E934817663FC176D925DD72B727260DBAAE1FB2F96F\\\
+        \"\\n            \\\"007c47811054c6f99613a578eb8453706ccb96384fe7df5c171671e760bfa8be3a\\\
+        \",\\n```\",\n      \"metadata\": {\n        \"doc_type\": \"unit_test_call_pattern\"\
+        ,\n        \"library\": \"openssl\",\n        \"layer\": \"unit_tests\",\n\
+        \        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 3,\n      \"score\": 0.4993900358310789,\n\
+        \      \"distance\": 1.0024428367614746,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n      \"text\": \"8787878787878787878787878787878\\\"\\n              \\\
+        \"7878787878787878787878787878787878787878787878787878787878787878\\\"\\n\
+        \              \\\"7878787878787878787878787878787878787878787878787878787878787878\\\
+        \"\\n              \\\"7878787878787878787878787878787878787878787878787878787878787878\\\
+        \"))\\n            && TEST_true(BN_hex2bn(&b,\\n                \\\"095D72C08C097BA488C5E439C655A192EAFB6380073D8C2664668EDDB4060744\\\
+        \"\\n                \\\"E16E57FB4EDB9AE10A0CEFCDC28A894F689A128379DB279D48A2E20849D68593\\\
+        \"\\n                \\\"9B7803BCF46CEBF5C533FB0DD35B080593DE5472E3FE5DB951B8BFF9B4CB8F03\\\
+        \"\\n                \\\"9CC638A5EE8CDD703719F8000E6A9F63BEED5F2FCD52FF293EA05A251BB4AB81\\\
+        \"))\\n            && TEST_true(BN_hex2bn(&n,\\n```\\n\\n## Call pattern 62\\\
+        n\\n```c\\ngoto err;\\n\\n    if (!(TEST_true(BN_MONT_CTX_set(mont, n, ctx))\\\
+        n            && TEST_true(BN_mod_mul_montgomery(c, a, b, mont, ctx))\\n  \
+        \          && TEST_true(BN_mod_mul_montgomery(d, b, a, mont, ctx))\\n    \
+        \        && TEST_BN_eq(c, d)))\\n        goto err;\\n\\n    /* Regression\
+        \ test for ca\",\n      \"metadata\": {\n        \"library\": \"openssl\"\
+        ,\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n        \"layer\": \"unit_tests\",\n        \"doc_type\": \"unit_test_call_pattern\"\
+        \n      }\n    },\n    {\n      \"rank\": 4,\n      \"score\": 0.49467344660620705,\n\
+        \      \"distance\": 1.0215356349945068,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md\"\
+        ,\n      \"text\": \"D_BOTTOM_ODD);\\n    BN_rand(a2, factor_size, BN_RAND_TOP_ONE,\
+        \ BN_RAND_BOTTOM_ANY);\\n    BN_rand(b2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY);\\\
+        n    BN_rand(m2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ODD);\\n\\n\
+        \    if (!TEST_true(BN_mod(a1, a1, m1, ctx))\\n        || !TEST_true(BN_mod(b1,\
+        \ b1, m1, ctx))\\n        || !TEST_true(BN_mod(a2, a2, m2, ctx))\\n      \
+        \  || !TEST_true(BN_mod(b2, b2, m2, ctx))\\n        || !TEST_true(BN_mod_exp_simple(r_simple1,\
+        \ a1, b1, m1, ctx))\\n        || !TEST_true(BN_mod_exp_simple(r_simple2, a2,\
+        \ b2, m2, ctx))\\n        || !TEST_true(BN_mod_exp_mont_consttime_x2(r_mont_const_x2_1,\
+        \ a1, b1, m1, NULL,\\n            r_mont_const_x2_2, a2, b2, m2, NULL,\\n\
+        \            ctx)))\\n        goto err;\\n\\n    if (!TEST_BN_eq(r_simple1,\
+        \ r_mont_const_x2_1)\\n        || !TEST_BN_eq(r_simple2, r_mont_const_x2_2))\
+        \ {\\n        if (BN_cmp(r_simple1, r_mont_const_x2_1) != 0)\\n          \
+        \  TEST_info(\\\"simple and mont const time x2 (#1) results differ\\\");\\\
+        n```\\n\\n## Call pattern 29\\n\\n```c\\nfactor_size = 2048\",\n      \"metadata\"\
+        : {\n        \"library\": \"openssl\",\n        \"doc_type\": \"unit_test_call_pattern\"\
+        ,\n        \"layer\": \"unit_tests\",\n        \"source_file\": \"knowl"
+      stderr_preview: ''
+      truncated: true
+      kind: source_pattern
+      use_for_feature_inference: source_only
+    - query: openssl EVP_CIPHER_CTX_ctrl function declaration signature parameters
+        return value
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7009499196802871
+        distance: 0.4266354441642761
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_CIPHER_CTX_ctrl.md
+        text: "# API Constraints: EVP_CIPHER_CTX_ctrl (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `EVP_CIPHER_CTX_ctrl`\n- Header declaration: `include/openssl/evp.h`\n\
+          - Implementation file: `crypto/evp/evp_enc.c`\n- Signature:\n\n```c\nint\
+          \ EVP_CIPHER_CTX_ctrl(EVP_CIPHER_CTX *ctx,\n                        int\
+          \ type,\n                        int arg,\n                        void\
+          \ *ptr);\n```\n\n## Semantics\n\n- Generic control interface for cipher\
+          \ context options.\n- AEAD controls include `EVP_CTRL_AEAD_SET_TAG`, `EVP_CTRL_AEAD_GET_TAG`,\
+          \ and GCM IV length controls.\n- Provider-backed ciphers translate controls\
+          \ to `OSSL_PARAM` where possible.\n\n## Return Value Semantics\n\n- Returns\
+          \ positive/success value for supported controls.\n- Returns `0` or unsupported\
+          \ code on invalid context, unsupported control, or invalid parameter.\n\n\
+          ## Ownership and Buffer Constraints\n\n- `ctx` is caller-owned.\n- `ptr`\
+          \ semantics depend on control type; for AEAD set tag it points to c"
+        metadata:
+          doc_type: api_constraint
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_CIPHER_CTX_ctrl.md
+          layer: api_constraints
+          library: openssl
+      - rank: 2
+        score: 0.6981561686205418
+        distance: 0.4323442876338959
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__acvp_test.c.md
+        text: "t ret = 0;\n    EVP_MD_CTX *md_ctx = NULL;\n    unsigned char *sig\
+          \ = NULL;\n    size_t sig_len;\n    size_t sz = EVP_PKEY_get_size(pkey);\n\
+          \    OSSL_PARAM *p = pass_sig_gen_params ? params : NULL;\n\n    sig_len\
+          \ = sz;\n    if (!TEST_ptr(sig = OPENSSL_malloc(sz))\n        || !TEST_ptr(md_ctx\
+          \ = EVP_MD_CTX_new())\n        || !TEST_int_eq(EVP_DigestSignInit_ex(md_ctx,\
+          \ NULL, digest_name, libctx,\n                            NULL, pkey, p),\n\
+          \            1)\n        || !TEST_int_gt(EVP_DigestSign(md_ctx, sig, &sig_len,\
+          \ msg, msg_len), 0))\n        goto err;\n    *sig_out = sig;\n```\n\n##\
+          \ Call pattern 3\n\n```c\nbuf = OPENSSL_zalloc(sz);\n    if (buf == NULL)\n\
+          \        goto err;\n    if (BN_bn2binpad(bn, buf, sz) <= 0)\n        goto\
+          \ err;\n\n    *out_len = sz;\n    *out = buf;\n    BN_free(bn);\n    return\
+          \ 1;\nerr:\n    OPENSSL_free(buf);\n    BN_free(bn);\n    return 0;\n}\n\
+          \nstatic int sig_gen(EVP_PKEY *pkey, OSSL_PARAM *params, const char *digest_name,\n\
+          \    const unsigned char *msg, size_t msg_len,\n    unsigned char **sig_out,\
+          \ siz"
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__acvp_test.c.md
+          library: openssl
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+      - rank: 3
+        score: 0.6963007140341779
+        distance: 0.4361611008644104
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+        text: "params[0] = OSSL_PARAM_construct_int(OSSL_SIGNATURE_PARAM_PAD_MODE,\
+          \ &padding);\n        params[1] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST,\n\
+          \            OSSL_DIGEST_NAME_SHA2_256, 0);\n        params[2] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_MGF1_DIGEST,\n\
+          \            OSSL_DIGEST_NAME_SHA1, 0);\n```\n\n## Call pattern 37\n\n```c\n\
+          if (!TEST_ptr(pkey))\n        goto err;\n\n    ret = test_EVP_PKEY_CTX_get_set_params(pkey);\n\
+          \nerr:\n    EVP_PKEY_free(pkey);\n    EVP_PKEY_CTX_free(pctx);\n    OSSL_PARAM_free(params);\n\
+          \    OSSL_PARAM_BLD_free(bld);\n    BN_free(n);\n    BN_free(e);\n    BN_free(d);\n\
+          \n    return ret;\n}\n\nstatic int test_RSA_OAEP_set_get_params(void)\n\
+          {\n    int ret = 0;\n    EVP_PKEY *key = NULL;\n    EVP_PKEY_CTX *key_ctx\
+          \ = NULL;\n\n    if (nullprov != NULL)\n        return TEST_skip(\"Test\
+          \ does not support a non-default library context\");\n\n    if (!TEST_ptr(key\
+          \ = load_example_rsa_key())\n        || !TEST_ptr(key_ctx = EVP_PKEY_CTX_new_from_pkey(0,\
+          \ key, 0)))"
+        metadata:
+          library: openssl
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+          doc_type: unit_test_call_pattern
+      - rank: 4
+        score: 0.6940814914488561
+        distance: 0.4407530128955841
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+        text: "/* OPENSSL_NO_DEPRECATED_3_0 */\n#endif /* OPENSSL_NO_EC */\n\nstatic\
+          \ int test_EVP_PKEY_sign(int tst)\n{\n    int ret = 0;\n    EVP_PKEY *pkey\
+          \ = NULL;\n    unsigned char *sig = NULL;\n    size_t sig_len = 0, shortsig_len\
+          \ = 1;\n    EVP_PKEY_CTX *ctx = NULL;\n    unsigned char tbs[] = {\n   \
+          \     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a,\
+          \ 0x0b,\n        0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13\n    };\n\
+          \n    if (tst == 0) {\n        if (!TEST_ptr(pkey = load_example_rsa_key()))\n\
+          \            goto out;\n    } else if (tst == 1) {\n#ifndef OPENSSL_NO_DSA\n\
+          \        if (!TEST_ptr(pkey = load_example_dsa_key()))\n            goto\
+          \ out;\n#else\n        ret = 1;\n```\n\n## Call pattern 22\n\n```c\nOSSL_PARAM\
+          \ *params = NULL;\n    BIGNUM *p = NULL, *q = NULL, *g = NULL, *pub = NULL,\
+          \ *priv = NULL;\n    EVP_PKEY_CTX *pctx = NULL;\n    EVP_PKEY *pkey = NULL;\n\
+          \    int ret = 0;\n\n    /*\n     * Setup the parameters for our DSA object.\
+          \ For our purposes they don't\n     * have to actually be *valid* parameters.\
+          \ W"
+        metadata:
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+          library: openssl
+          layer: unit_tests
+      - rank: 5
+        score: 0.6924113934689653
+        distance: 0.4442281126976013
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_pkey_provided_test.c.md
+        text: "true(EVP_PKEY_get_bn_param(pk, OSSL_PKEY_PARAM_RSA_N, &n_out))\n  \
+          \      || !TEST_BN_eq(n, n_out))\n        goto err;\n    ret = 1;\nerr:\n\
+          \    BN_free(n_out);\n    BN_free(n);\n    BN_free(e);\n    BN_free(d);\n\
+          \    EVP_PKEY_free(pk);\n    EVP_PKEY_CTX_free(key_ctx);\n    EVP_PKEY_CTX_free(ctx);\n\
+          \    OSSL_PARAM_free(fromdata_params);\n    OSSL_PARAM_BLD_free(bld);\n\
+          \    return ret;\n}\n\n#ifndef OPENSSL_NO_DH\nstatic int test_fromdata_dh_named_group(void)\n\
+          {\n    int ret = 0;\n    int gindex = 0, pcounter = 0, hindex = 0;\n   \
+          \ EVP_PKEY_CTX *ctx = NULL, *key_ctx = NULL;\n    EVP_PKEY *pk = NULL, *copy_pk\
+          \ = NULL, *dup_pk = NULL;\n    size_t len;\n    BIGNUM *pub = NULL, *priv\
+          \ = NULL;\n    BIGNUM *pub_out = NULL, *priv_out = NULL;\n    BIGNUM *p\
+          \ = NULL, *q = NULL, *g = NULL, *j = NULL;\n    OSSL_PARAM *fromdata_params\
+          \ = NULL;\n    OSSL_PARAM_BLD *bld = NULL;\n    char name_out[80];\n   \
+          \ unsigned char seed_out[32];\n```\n\n## Call pattern 28\n\n```c\n|| !TEST_ptr(ctx\
+          \ = EVP_PKEY_CTX_new_from_name(NULL, \"RSA\", NULL))\n        || !T"
+        metadata:
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_pkey_provided_test.c.md
+          library: openssl
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl EVP_CIPHER_CTX_ctrl function declaration\
+        \ signature parameters return value\",\n  \"top_k\": 5,\n  \"results\": [\n\
+        \    {\n      \"rank\": 1,\n      \"score\": 0.7009499196802871,\n      \"\
+        distance\": 0.4266354441642761,\n      \"layer\": \"api_constraints\",\n \
+        \     \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_CIPHER_CTX_ctrl.md\"\
+        ,\n      \"text\": \"# API Constraints: EVP_CIPHER_CTX_ctrl (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `EVP_CIPHER_CTX_ctrl`\\n- Header declaration: `include/openssl/evp.h`\\\
+        n- Implementation file: `crypto/evp/evp_enc.c`\\n- Signature:\\n\\n```c\\\
+        nint EVP_CIPHER_CTX_ctrl(EVP_CIPHER_CTX *ctx,\\n                        int\
+        \ type,\\n                        int arg,\\n                        void\
+        \ *ptr);\\n```\\n\\n## Semantics\\n\\n- Generic control interface for cipher\
+        \ context options.\\n- AEAD controls include `EVP_CTRL_AEAD_SET_TAG`, `EVP_CTRL_AEAD_GET_TAG`,\
+        \ and GCM IV length controls.\\n- Provider-backed ciphers translate controls\
+        \ to `OSSL_PARAM` where possible.\\n\\n## Return Value Semantics\\n\\n- Returns\
+        \ positive/success value for supported controls.\\n- Returns `0` or unsupported\
+        \ code on invalid context, unsupported control, or invalid parameter.\\n\\\
+        n## Ownership and Buffer Constraints\\n\\n- `ctx` is caller-owned.\\n- `ptr`\
+        \ semantics depend on control type; for AEAD set tag it points to c\",\n \
+        \     \"metadata\": {\n        \"doc_type\": \"api_constraint\",\n       \
+        \ \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_CIPHER_CTX_ctrl.md\"\
+        ,\n        \"layer\": \"api_constraints\",\n        \"library\": \"openssl\"\
+        \n      }\n    },\n    {\n      \"rank\": 2,\n      \"score\": 0.6981561686205418,\n\
+        \      \"distance\": 0.4323442876338959,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__acvp_test.c.md\"\
+        ,\n      \"text\": \"t ret = 0;\\n    EVP_MD_CTX *md_ctx = NULL;\\n    unsigned\
+        \ char *sig = NULL;\\n    size_t sig_len;\\n    size_t sz = EVP_PKEY_get_size(pkey);\\\
+        n    OSSL_PARAM *p = pass_sig_gen_params ? params : NULL;\\n\\n    sig_len\
+        \ = sz;\\n    if (!TEST_ptr(sig = OPENSSL_malloc(sz))\\n        || !TEST_ptr(md_ctx\
+        \ = EVP_MD_CTX_new())\\n        || !TEST_int_eq(EVP_DigestSignInit_ex(md_ctx,\
+        \ NULL, digest_name, libctx,\\n                            NULL, pkey, p),\\\
+        n            1)\\n        || !TEST_int_gt(EVP_DigestSign(md_ctx, sig, &sig_len,\
+        \ msg, msg_len), 0))\\n        goto err;\\n    *sig_out = sig;\\n```\\n\\\
+        n## Call pattern 3\\n\\n```c\\nbuf = OPENSSL_zalloc(sz);\\n    if (buf ==\
+        \ NULL)\\n        goto err;\\n    if (BN_bn2binpad(bn, buf, sz) <= 0)\\n \
+        \       goto err;\\n\\n    *out_len = sz;\\n    *out = buf;\\n    BN_free(bn);\\\
+        n    return 1;\\nerr:\\n    OPENSSL_free(buf);\\n    BN_free(bn);\\n    return\
+        \ 0;\\n}\\n\\nstatic int sig_gen(EVP_PKEY *pkey, OSSL_PARAM *params, const\
+        \ char *digest_name,\\n    const unsigned char *msg, size_t msg_len,\\n  \
+        \  unsigned char **sig_out, siz\",\n      \"metadata\": {\n        \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__acvp_test.c.md\"\
+        ,\n        \"library\": \"openssl\",\n        \"layer\": \"unit_tests\",\n\
+        \        \"doc_type\": \"unit_test_call_pattern\"\n      }\n    },\n    {\n\
+        \      \"rank\": 3,\n      \"score\": 0.6963007140341779,\n      \"distance\"\
+        : 0.4361611008644104,\n      \"layer\": \"unit_tests\",\n      \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n      \"text\": \"params[0] = OSSL_PARAM_construct_int(OSSL_SIGNATURE_PARAM_PAD_MODE,\
+        \ &padding);\\n        params[1] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST,\\\
+        n            OSSL_DIGEST_NAME_SHA2_256, 0);\\n        params[2] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_MGF1_DIGEST,\\\
+        n            OSSL_DIGEST_NAME_SHA1, 0);\\n```\\n\\n## Call pattern 37\\n\\\
+        n```c\\nif (!TEST_ptr(pkey))\\n        goto err;\\n\\n    ret = test_EVP_PKEY_CTX_get_set_params(pkey);\\\
+        n\\nerr:\\n    EVP_PKEY_free(pkey);\\n    EVP_PKEY_CTX_free(pctx);\\n    OSSL_PARAM_free(params);\\\
+        n    OSSL_PARAM_BLD_free(bld);\\n    BN_free(n);\\n    BN_free(e);\\n    BN_free(d);\\\
+        n\\n    return ret;\\n}\\n\\nstatic int test_RSA_OAEP_set_get_params(void)\\\
+        n{\\n    int ret = 0;\\n    EVP_PKEY *key = NULL;\\n    EVP_PKEY_CTX *key_ctx\
+        \ = NULL;\\n\\n    if (nullprov != NULL)\\n        return TEST_skip(\\\"Test\
+        \ does not support a non-default library context\\\");\\n\\n    if (!TEST_ptr(key\
+        \ = load_example_rsa_key())\\n        || !TEST_ptr(key_ctx = EVP_PKEY_CTX_new_from_pkey(0,\
+        \ key, 0)))\",\n      \"metadata\": {\n        \"library\": \"openssl\",\n\
+        \        \"layer\": \"unit_tests\",\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n        \"doc_type\": \"unit_test_call_pattern\"\n      }\n    },\n   \
+        \ {\n      \"rank\": 4,\n      \"score\": 0.6940814914488561,\n      \"distance\"\
+        : 0.4407530128955841,\n      \"layer\": \"unit_tests\",\n      \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n      \"text\": \"/* OPENSSL_NO_DEPRECATED_3_0 */\\n#endif /* OPENSSL_NO_EC\
+        \ */\\n\\nstatic int test_EVP_PKEY_sign(int tst)\\n{\\n    int ret = 0;\\\
+        n    EVP_PKEY *pkey = NULL;\\n    unsigned char *sig = NULL;\\n    size_t\
+        \ sig_len = 0, shortsig_len = 1;\\n    EVP_PKEY_CTX *ctx = NULL;\\n    unsigned\
+        \ char tbs[] = {\\n        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,\
+        \ 0x08, 0x09, 0x0a, 0x0b,\\n        0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12,\
+        \ 0x13\\n    };\\n\\n    if (tst == 0) {\\n        if (!TEST_ptr(pkey = load_example_rsa_key()))\\\
+        n            goto out;\\n    } else if (tst == 1) {\\n#ifndef OPENSSL_NO_DSA\\\
+        n        if (!TEST_ptr(pkey = load_example_dsa_key()))\\n            goto\
+        \ out;\\n#else\\n        ret = 1;\\n```\\n\\n## Call pattern 22\\n\\n```c\\\
+        nOSSL_PARAM *params = NULL;\\n    BIGNUM *p = NULL, *q = NULL, *g = NULL,\
+        \ *pub = NULL, *priv = NULL;\\n    EVP_PKEY_CTX *pctx = NULL;\\n    EVP_PKEY\
+        \ *pkey = NULL;\\n    int ret = 0;\\n\\n    /*\\n     * Setup the para"
+      stderr_preview: ''
+      truncated: true
+      kind: target_api_signature
+      use_for_feature_inference: target
+    - query: openssl EVP_CIPHER_CTX_ctrl implementation source code parameters return
+        error
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7290762123185829
+        distance: 0.3715987205505371
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_CIPHER_CTX_ctrl.md
+        text: "# API Constraints: EVP_CIPHER_CTX_ctrl (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `EVP_CIPHER_CTX_ctrl`\n- Header declaration: `include/openssl/evp.h`\n\
+          - Implementation file: `crypto/evp/evp_enc.c`\n- Signature:\n\n```c\nint\
+          \ EVP_CIPHER_CTX_ctrl(EVP_CIPHER_CTX *ctx,\n                        int\
+          \ type,\n                        int arg,\n                        void\
+          \ *ptr);\n```\n\n## Semantics\n\n- Generic control interface for cipher\
+          \ context options.\n- AEAD controls include `EVP_CTRL_AEAD_SET_TAG`, `EVP_CTRL_AEAD_GET_TAG`,\
+          \ and GCM IV length controls.\n- Provider-backed ciphers translate controls\
+          \ to `OSSL_PARAM` where possible.\n\n## Return Value Semantics\n\n- Returns\
+          \ positive/success value for supported controls.\n- Returns `0` or unsupported\
+          \ code on invalid context, unsupported control, or invalid parameter.\n\n\
+          ## Ownership and Buffer Constraints\n\n- `ctx` is caller-owned.\n- `ptr`\
+          \ semantics depend on control type; for AEAD set tag it points to c"
+        metadata:
+          layer: api_constraints
+          doc_type: api_constraint
+          library: openssl
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_CIPHER_CTX_ctrl.md
+      - rank: 2
+        score: 0.7040412779328201
+        distance: 0.42037126421928406
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+        text: "/* OPENSSL_NO_DEPRECATED_3_0 */\n#endif /* OPENSSL_NO_EC */\n\nstatic\
+          \ int test_EVP_PKEY_sign(int tst)\n{\n    int ret = 0;\n    EVP_PKEY *pkey\
+          \ = NULL;\n    unsigned char *sig = NULL;\n    size_t sig_len = 0, shortsig_len\
+          \ = 1;\n    EVP_PKEY_CTX *ctx = NULL;\n    unsigned char tbs[] = {\n   \
+          \     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a,\
+          \ 0x0b,\n        0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13\n    };\n\
+          \n    if (tst == 0) {\n        if (!TEST_ptr(pkey = load_example_rsa_key()))\n\
+          \            goto out;\n    } else if (tst == 1) {\n#ifndef OPENSSL_NO_DSA\n\
+          \        if (!TEST_ptr(pkey = load_example_dsa_key()))\n            goto\
+          \ out;\n#else\n        ret = 1;\n```\n\n## Call pattern 22\n\n```c\nOSSL_PARAM\
+          \ *params = NULL;\n    BIGNUM *p = NULL, *q = NULL, *g = NULL, *pub = NULL,\
+          \ *priv = NULL;\n    EVP_PKEY_CTX *pctx = NULL;\n    EVP_PKEY *pkey = NULL;\n\
+          \    int ret = 0;\n\n    /*\n     * Setup the parameters for our DSA object.\
+          \ For our purposes they don't\n     * have to actually be *valid* parameters.\
+          \ W"
+        metadata:
+          doc_type: unit_test_call_pattern
+          library: openssl
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+      - rank: 3
+        score: 0.6991201125978513
+        distance: 0.43036937713623047
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+        text: "params[0] = OSSL_PARAM_construct_int(OSSL_SIGNATURE_PARAM_PAD_MODE,\
+          \ &padding);\n        params[1] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST,\n\
+          \            OSSL_DIGEST_NAME_SHA2_256, 0);\n        params[2] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_MGF1_DIGEST,\n\
+          \            OSSL_DIGEST_NAME_SHA1, 0);\n```\n\n## Call pattern 37\n\n```c\n\
+          if (!TEST_ptr(pkey))\n        goto err;\n\n    ret = test_EVP_PKEY_CTX_get_set_params(pkey);\n\
+          \nerr:\n    EVP_PKEY_free(pkey);\n    EVP_PKEY_CTX_free(pctx);\n    OSSL_PARAM_free(params);\n\
+          \    OSSL_PARAM_BLD_free(bld);\n    BN_free(n);\n    BN_free(e);\n    BN_free(d);\n\
+          \n    return ret;\n}\n\nstatic int test_RSA_OAEP_set_get_params(void)\n\
+          {\n    int ret = 0;\n    EVP_PKEY *key = NULL;\n    EVP_PKEY_CTX *key_ctx\
+          \ = NULL;\n\n    if (nullprov != NULL)\n        return TEST_skip(\"Test\
+          \ does not support a non-default library context\");\n\n    if (!TEST_ptr(key\
+          \ = load_example_rsa_key())\n        || !TEST_ptr(key_ctx = EVP_PKEY_CTX_new_from_pkey(0,\
+          \ key, 0)))"
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+          library: openssl
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+      - rank: 4
+        score: 0.6936329453918788
+        distance: 0.44168469309806824
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+        text: "_ptr(pkey))\n        goto err;\n\n    ret = test_EVP_PKEY_CTX_get_set_params(pkey);\n\
+          \nerr:\n    EVP_PKEY_free(pkey);\n    EVP_PKEY_CTX_free(pctx);\n    OSSL_PARAM_free(params);\n\
+          \    OSSL_PARAM_BLD_free(bld);\n    BN_free(n);\n    BN_free(e);\n    BN_free(d);\n\
+          \n    return ret;\n}\n\nstatic int test_RSA_OAEP_set_get_params(void)\n\
+          {\n    int ret = 0;\n    EVP_PKEY *key = NULL;\n    EVP_PKEY_CTX *key_ctx\
+          \ = NULL;\n\n    if (nullprov != NULL)\n        return TEST_skip(\"Test\
+          \ does not support a non-default library context\");\n\n    if (!TEST_ptr(key\
+          \ = load_example_rsa_key())\n        || !TEST_ptr(key_ctx = EVP_PKEY_CTX_new_from_pkey(0,\
+          \ key, 0)))\n        goto err;\n\n    {\n        int padding = RSA_PKCS1_OAEP_PADDING;\n\
+          \        OSSL_PARAM params[4];\n\n        params[0] = OSSL_PARAM_construct_int(OSSL_SIGNATURE_PARAM_PAD_MODE,\
+          \ &padding);\n        params[1] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST,\n\
+          \            OSSL_DIGEST_NAME_SHA2_256, 0);\n        params[2] = OSSL_PARAM_construct_utf8_string(OSSL_"
+        metadata:
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+          library: openssl
+          doc_type: unit_test_call_pattern
+      - rank: 5
+        score: 0.6933466625656823
+        distance: 0.44227996468544006
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+        text: "OSSL_DIGEST_NAME_SHA2_256, 0);\n        params[2] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_MGF1_DIGEST,\n\
+          ```\n\n## Call pattern 36\n\n```c\nif (!TEST_ptr(pkey))\n        goto err;\n\
+          \n    ret = test_EVP_PKEY_CTX_get_set_params(pkey);\n\nerr:\n    EVP_PKEY_free(pkey);\n\
+          \    EVP_PKEY_CTX_free(pctx);\n    OSSL_PARAM_free(params);\n    OSSL_PARAM_BLD_free(bld);\n\
+          \    BN_free(n);\n    BN_free(e);\n    BN_free(d);\n\n    return ret;\n\
+          }\n\nstatic int test_RSA_OAEP_set_get_params(void)\n{\n    int ret = 0;\n\
+          \    EVP_PKEY *key = NULL;\n    EVP_PKEY_CTX *key_ctx = NULL;\n\n    if\
+          \ (nullprov != NULL)\n        return TEST_skip(\"Test does not support a\
+          \ non-default library context\");\n\n    if (!TEST_ptr(key = load_example_rsa_key())\n\
+          \        || !TEST_ptr(key_ctx = EVP_PKEY_CTX_new_from_pkey(0, key, 0)))\n\
+          \        goto err;\n\n    {\n        int padding = RSA_PKCS1_OAEP_PADDING;\n\
+          \        OSSL_PARAM params[4];\n\n        params[0] = OSSL_PARAM_construct_int(OSSL_SIGNATURE_PARAM_PAD_MODE,\
+          \ &padding);\n        params[1] ="
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+          doc_type: unit_test_call_pattern
+          library: openssl
+          layer: unit_tests
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl EVP_CIPHER_CTX_ctrl implementation\
+        \ source code parameters return error\",\n  \"top_k\": 5,\n  \"results\":\
+        \ [\n    {\n      \"rank\": 1,\n      \"score\": 0.7290762123185829,\n   \
+        \   \"distance\": 0.3715987205505371,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_CIPHER_CTX_ctrl.md\"\
+        ,\n      \"text\": \"# API Constraints: EVP_CIPHER_CTX_ctrl (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `EVP_CIPHER_CTX_ctrl`\\n- Header declaration: `include/openssl/evp.h`\\\
+        n- Implementation file: `crypto/evp/evp_enc.c`\\n- Signature:\\n\\n```c\\\
+        nint EVP_CIPHER_CTX_ctrl(EVP_CIPHER_CTX *ctx,\\n                        int\
+        \ type,\\n                        int arg,\\n                        void\
+        \ *ptr);\\n```\\n\\n## Semantics\\n\\n- Generic control interface for cipher\
+        \ context options.\\n- AEAD controls include `EVP_CTRL_AEAD_SET_TAG`, `EVP_CTRL_AEAD_GET_TAG`,\
+        \ and GCM IV length controls.\\n- Provider-backed ciphers translate controls\
+        \ to `OSSL_PARAM` where possible.\\n\\n## Return Value Semantics\\n\\n- Returns\
+        \ positive/success value for supported controls.\\n- Returns `0` or unsupported\
+        \ code on invalid context, unsupported control, or invalid parameter.\\n\\\
+        n## Ownership and Buffer Constraints\\n\\n- `ctx` is caller-owned.\\n- `ptr`\
+        \ semantics depend on control type; for AEAD set tag it points to c\",\n \
+        \     \"metadata\": {\n        \"layer\": \"api_constraints\",\n        \"\
+        doc_type\": \"api_constraint\",\n        \"library\": \"openssl\",\n     \
+        \   \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_CIPHER_CTX_ctrl.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 2,\n      \"score\": 0.7040412779328201,\n\
+        \      \"distance\": 0.42037126421928406,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n      \"text\": \"/* OPENSSL_NO_DEPRECATED_3_0 */\\n#endif /* OPENSSL_NO_EC\
+        \ */\\n\\nstatic int test_EVP_PKEY_sign(int tst)\\n{\\n    int ret = 0;\\\
+        n    EVP_PKEY *pkey = NULL;\\n    unsigned char *sig = NULL;\\n    size_t\
+        \ sig_len = 0, shortsig_len = 1;\\n    EVP_PKEY_CTX *ctx = NULL;\\n    unsigned\
+        \ char tbs[] = {\\n        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,\
+        \ 0x08, 0x09, 0x0a, 0x0b,\\n        0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12,\
+        \ 0x13\\n    };\\n\\n    if (tst == 0) {\\n        if (!TEST_ptr(pkey = load_example_rsa_key()))\\\
+        n            goto out;\\n    } else if (tst == 1) {\\n#ifndef OPENSSL_NO_DSA\\\
+        n        if (!TEST_ptr(pkey = load_example_dsa_key()))\\n            goto\
+        \ out;\\n#else\\n        ret = 1;\\n```\\n\\n## Call pattern 22\\n\\n```c\\\
+        nOSSL_PARAM *params = NULL;\\n    BIGNUM *p = NULL, *q = NULL, *g = NULL,\
+        \ *pub = NULL, *priv = NULL;\\n    EVP_PKEY_CTX *pctx = NULL;\\n    EVP_PKEY\
+        \ *pkey = NULL;\\n    int ret = 0;\\n\\n    /*\\n     * Setup the parameters\
+        \ for our DSA object. For our purposes they don't\\n     * have to actually\
+        \ be *valid* parameters. W\",\n      \"metadata\": {\n        \"doc_type\"\
+        : \"unit_test_call_pattern\",\n        \"library\": \"openssl\",\n       \
+        \ \"layer\": \"unit_tests\",\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 3,\n      \"score\": 0.6991201125978513,\n\
+        \      \"distance\": 0.43036937713623047,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n      \"text\": \"params[0] = OSSL_PARAM_construct_int(OSSL_SIGNATURE_PARAM_PAD_MODE,\
+        \ &padding);\\n        params[1] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST,\\\
+        n            OSSL_DIGEST_NAME_SHA2_256, 0);\\n        params[2] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_MGF1_DIGEST,\\\
+        n            OSSL_DIGEST_NAME_SHA1, 0);\\n```\\n\\n## Call pattern 37\\n\\\
+        n```c\\nif (!TEST_ptr(pkey))\\n        goto err;\\n\\n    ret = test_EVP_PKEY_CTX_get_set_params(pkey);\\\
+        n\\nerr:\\n    EVP_PKEY_free(pkey);\\n    EVP_PKEY_CTX_free(pctx);\\n    OSSL_PARAM_free(params);\\\
+        n    OSSL_PARAM_BLD_free(bld);\\n    BN_free(n);\\n    BN_free(e);\\n    BN_free(d);\\\
+        n\\n    return ret;\\n}\\n\\nstatic int test_RSA_OAEP_set_get_params(void)\\\
+        n{\\n    int ret = 0;\\n    EVP_PKEY *key = NULL;\\n    EVP_PKEY_CTX *key_ctx\
+        \ = NULL;\\n\\n    if (nullprov != NULL)\\n        return TEST_skip(\\\"Test\
+        \ does not support a non-default library context\\\");\\n\\n    if (!TEST_ptr(key\
+        \ = load_example_rsa_key())\\n        || !TEST_ptr(key_ctx = EVP_PKEY_CTX_new_from_pkey(0,\
+        \ key, 0)))\",\n      \"metadata\": {\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n        \"library\": \"openssl\",\n        \"layer\": \"unit_tests\",\n\
+        \        \"doc_type\": \"unit_test_call_pattern\"\n      }\n    },\n    {\n\
+        \      \"rank\": 4,\n      \"score\": 0.6936329453918788,\n      \"distance\"\
+        : 0.44168469309806824,\n      \"layer\": \"unit_tests\",\n      \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n      \"text\": \"_ptr(pkey))\\n        goto err;\\n\\n    ret = test_EVP_PKEY_CTX_get_set_params(pkey);\\\
+        n\\nerr:\\n    EVP_PKEY_free(pkey);\\n    EVP_PKEY_CTX_free(pctx);\\n    OSSL_PARAM_free(params);\\\
+        n    OSSL_PARAM_BLD_free(bld);\\n    BN_free(n);\\n    BN_free(e);\\n    BN_free(d);\\\
+        n\\n    return ret;\\n}\\n\\nstatic int test_RSA_OAEP_set_get_params(void)\\\
+        n{\\n    int ret = 0;\\n    EVP_PKEY *key = NULL;\\n    EVP_PKEY_CTX *key_ctx\
+        \ = NULL;\\n\\n    if (nullprov != NULL)\\n        return TEST_skip(\\\"Test\
+        \ does not support a non-default library context\\\");\\n\\n    if (!TEST_ptr(key\
+        \ = load_example_rsa_key())\\n        || !TEST_ptr(key_ctx = EVP_PKEY_CTX_new_from_pkey(0,\
+        \ key, 0)))\\n        goto err;\\n\\n    {\\n        int padding = RSA_PKCS1_OAEP_PADDING;\\\
+        n        OSSL_PARAM params[4];\\n\\n        params[0] = OSSL_PARAM_construct_int(OSSL_SIGNATURE_PARAM_PAD_MODE,\
+        \ &padding);\\n        params[1] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_OAE"
+      stderr_preview: ''
+      truncated: true
+      kind: target_api_implementation
+      use_for_feature_inference: target
+    - query: openssl EVP_CIPHER_CTX_ctrl usage example unit test API call pattern
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7309442622202312
+        distance: 0.3680933713912964
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/3.5.5/evp_aead_target_api_evidence.md
+        text: "# Unit Test / Example Evidence: OpenSSL EVP AEAD Target APIs\n\nSource\
+          \ version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\nstatus: found_in_local_tests\n\
+          \n## APIs Covered\n\n- `EVP_DecryptInit_ex`\n- `EVP_CIPHER_CTX_ctrl`\n-\
+          \ `EVP_DecryptUpdate`\n- `EVP_DecryptFinal_ex`\n- `EVP_aes_128_ccm`\n- `EVP_aes_128_gcm`\n\
+          \n## Evidence\n\n- `test/evp_extra_test.c`\n  - Stepwise EVP cipher initialization\
+          \ tests use `EVP_CipherInit_ex`, `EVP_CIPHER_CTX_ctrl`, AEAD set/get tag\
+          \ controls, and select `EVP_aes_128_ccm()` / `EVP_aes_128_gcm()`.\n  - GCM\
+          \ decrypt tests use `EVP_DecryptUpdate()` and `EVP_DecryptFinal_ex()`.\n\
+          - `demos/cipher/aesccm.c`\n  - Full AES-CCM decrypt setup flow:\n    - `EVP_DecryptInit_ex2()`\n\
+          \    - `EVP_DecryptInit_ex()`\n    - `EVP_DecryptUpdate()` for length, AAD,\
+          \ and ciphertext/tag verification.\n- `demos/cipher/aesgcm.c`\n  - Full\
+          \ AES-GCM decrypt flow:\n    - init with cipher/key/IV\n    - process AAD\
+          \ and ciphertext\n    - set expected tag\n    - `EVP_DecryptFinal_ex()`\
+          \ for authentication result.\n- Exi"
+        metadata:
+          library: openssl
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/3.5.5/evp_aead_target_api_evidence.md
+          layer: unit_tests
+      - rank: 2
+        score: 0.7232842606132472
+        distance: 0.38258227705955505
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_libctx_test.c.md
+        text: "# Official test/example call patterns: openssl\n\nLibrary: openssl\n\
+          Version: 3.5.5\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/test/evp_libctx_test.c\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\nif\
+          \ (!TEST_ptr(dup_pk = EVP_PKEY_dup(pkey))\n            || !TEST_int_eq(EVP_PKEY_eq(pkey,\
+          \ dup_pk), 1))\n            goto err;\n    }\n\n    ret = 1;\nerr:\n   \
+          \ EVP_PKEY_free(pkey);\n    EVP_PKEY_free(dup_pk);\n    EVP_PKEY_CTX_free(gen_ctx);\n\
+          \    EVP_PKEY_free(pkey_parm);\n    DSA_free(dsa);\n    BN_free(g);\n  \
+          \  BN_free(q);\n    BN_free(p);\n    return ret;\n}\n#endif /* OPENSSL_NO_DSA\
+          \ */\n\n#ifndef OPENSSL_NO_DH\nstatic int do_dh_param_keygen(int tstid,\
+          \ const BIGNUM **bn)\n{\n    int ret = 0;\n    int expected;\n    EVP_PKEY_CTX\
+          \ *gen_ctx = NULL;\n    EVP_PKEY *pkey_parm = NULL;\n    EVP_PKEY *pkey\
+          \ = NULL, *dup_pk = NULL;\n    DH *dh = NULL;\n    int pind, qind, gind;\n\
+          \    BIGNUM *p = NULL, *q = NULL, *g = NULL;\n\n    /*\n     * These tests\
+          \ are using bad values for p, q, g by reusing the values."
+        metadata:
+          doc_type: unit_test_call_pattern
+          library: openssl
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_libctx_test.c.md
+          layer: unit_tests
+      - rank: 3
+        score: 0.7152586969618332
+        distance: 0.3980955481529236
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test2.c.md
+        text: "# Official test/example call patterns: openssl\n\nLibrary: openssl\n\
+          Version: 3.5.5\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/test/evp_extra_test2.c\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\n{\n\
+          \    int ret = 0;\n\n    if (use_octstring) {\n        unsigned char buf[64];\n\
+          \n        ret = EVP_PKEY_get_octet_string_param(key, privtag, buf, sizeof(buf),\n\
+          \            NULL);\n    } else {\n        BIGNUM *bn = NULL;\n\n      \
+          \  ret = EVP_PKEY_get_bn_param(key, privtag, &bn);\n        BN_free(bn);\n\
+          \    }\n    return ret;\n}\n\nstatic int do_pkey_tofrom_data_select(EVP_PKEY\
+          \ *key, const char *keytype)\n{\n    int ret = 0;\n    OSSL_PARAM *pub_params\
+          \ = NULL, *keypair_params = NULL;\n    EVP_PKEY *fromkey = NULL, *fromkeypair\
+          \ = NULL;\n    EVP_PKEY_CTX *fromctx = NULL;\n    const char *privtag =\
+          \ strcmp(keytype, \"RSA\") == 0 ? \"d\" : \"priv\";\n    const int use_octstring\
+          \ = strcmp(keytype, \"X25519\") == 0;\n\n    /*\n     * Select only the\
+          \ public key component when using EVP_PKEY_todata() and\n     *"
+        metadata:
+          library: openssl
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test2.c.md
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+      - rank: 4
+        score: 0.7095547376136142
+        distance: 0.40933454036712646
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__genrsa.c.md
+        text: "# Official test/example call patterns: openssl\n\nLibrary: openssl\n\
+          Version: 3.5.5\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/apps/genrsa.c\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\nOPT_R_OPTIONS,\n\
+          \    OPT_PROV_OPTIONS,\n\n    OPT_PARAMETERS(),\n    { \"numbits\", 0, 0,\
+          \ \"Size of key in bits\" },\n    { NULL }\n};\n\nint genrsa_main(int argc,\
+          \ char **argv)\n{\n    BN_GENCB *cb = BN_GENCB_new();\n    ENGINE *eng =\
+          \ NULL;\n    BIGNUM *bn = BN_new();\n    BIO *out = NULL;\n    EVP_PKEY\
+          \ *pkey = NULL;\n    EVP_PKEY_CTX *ctx = NULL;\n    EVP_CIPHER *enc = NULL;\n\
+          \    int ret = 1, num = DEFBITS, private = 0, primes = DEFPRIMES;\n    unsigned\
+          \ long f4 = RSA_F4;\n    char *outfile = NULL, *passoutarg = NULL, *passout\
+          \ = NULL;\n    char *prog, *hexe, *dece, *ciphername = NULL;\n    OPTION_CHOICE\
+          \ o;\n    int traditional = 0;\n\n    if (bn == NULL || cb == NULL)\n  \
+          \      goto end;\n\n    opt_set_unknown_name(\"cipher\");\n    prog = opt_init(argc,\
+          \ argv, genrsa_options);\n    while ((o = opt_next()) != OPT"
+        metadata:
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__genrsa.c.md
+          layer: unit_tests
+          library: openssl
+      - rank: 5
+        score: 0.7053524767267055
+        distance: 0.4177308976650238
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__dhparam.c.md
+        text: "# Official test/example call patterns: openssl\n\nLibrary: openssl\n\
+          Version: 3.5.5\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/apps/dhparam.c\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\nctx\
+          \ = EVP_PKEY_CTX_new_from_name(app_get0_libctx(), \"DHX\", app_get0_propq());\n\
+          \    if (ctx == NULL\n        || EVP_PKEY_fromdata_init(ctx) <= 0\n    \
+          \    || EVP_PKEY_fromdata(ctx, &pkey, EVP_PKEY_KEY_PARAMETERS, params) <=\
+          \ 0) {\n        BIO_printf(bio_err, \"Error, failed to set DH parameters\\\
+          n\");\n        goto err;\n    }\n\nerr:\n    EVP_PKEY_CTX_free(ctx);\n \
+          \   OSSL_PARAM_free(params);\n    OSSL_PARAM_BLD_free(tmpl);\n    BN_free(bn_p);\n\
+          \    BN_free(bn_q);\n    BN_free(bn_g);\n    return pkey;\n}\n```\n\n##\
+          \ Call pattern 2\n\n```c\nif (ctx == NULL\n        || EVP_PKEY_fromdata_init(ctx)\
+          \ <= 0\n        || EVP_PKEY_fromdata(ctx, &pkey, EVP_PKEY_KEY_PARAMETERS,\
+          \ params) <= 0) {\n        BIO_printf(bio_err, \"Error, failed to set DH\
+          \ parameters\\n\");\n        goto err;\n    }\n\nerr:\n    EVP_PKEY_CTX_free(ctx);"
+        metadata:
+          library: openssl
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__dhparam.c.md
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl EVP_CIPHER_CTX_ctrl usage example\
+        \ unit test API call pattern\",\n  \"top_k\": 5,\n  \"results\": [\n    {\n\
+        \      \"rank\": 1,\n      \"score\": 0.7309442622202312,\n      \"distance\"\
+        : 0.3680933713912964,\n      \"layer\": \"unit_tests\",\n      \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/3.5.5/evp_aead_target_api_evidence.md\"\
+        ,\n      \"text\": \"# Unit Test / Example Evidence: OpenSSL EVP AEAD Target\
+        \ APIs\\n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\\
+        n\\nstatus: found_in_local_tests\\n\\n## APIs Covered\\n\\n- `EVP_DecryptInit_ex`\\\
+        n- `EVP_CIPHER_CTX_ctrl`\\n- `EVP_DecryptUpdate`\\n- `EVP_DecryptFinal_ex`\\\
+        n- `EVP_aes_128_ccm`\\n- `EVP_aes_128_gcm`\\n\\n## Evidence\\n\\n- `test/evp_extra_test.c`\\\
+        n  - Stepwise EVP cipher initialization tests use `EVP_CipherInit_ex`, `EVP_CIPHER_CTX_ctrl`,\
+        \ AEAD set/get tag controls, and select `EVP_aes_128_ccm()` / `EVP_aes_128_gcm()`.\\\
+        n  - GCM decrypt tests use `EVP_DecryptUpdate()` and `EVP_DecryptFinal_ex()`.\\\
+        n- `demos/cipher/aesccm.c`\\n  - Full AES-CCM decrypt setup flow:\\n    -\
+        \ `EVP_DecryptInit_ex2()`\\n    - `EVP_DecryptInit_ex()`\\n    - `EVP_DecryptUpdate()`\
+        \ for length, AAD, and ciphertext/tag verification.\\n- `demos/cipher/aesgcm.c`\\\
+        n  - Full AES-GCM decrypt flow:\\n    - init with cipher/key/IV\\n    - process\
+        \ AAD and ciphertext\\n    - set expected tag\\n    - `EVP_DecryptFinal_ex()`\
+        \ for authentication result.\\n- Exi\",\n      \"metadata\": {\n        \"\
+        library\": \"openssl\",\n        \"doc_type\": \"unit_test_call_pattern\"\
+        ,\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/3.5.5/evp_aead_target_api_evidence.md\"\
+        ,\n        \"layer\": \"unit_tests\"\n      }\n    },\n    {\n      \"rank\"\
+        : 2,\n      \"score\": 0.7232842606132472,\n      \"distance\": 0.38258227705955505,\n\
+        \      \"layer\": \"unit_tests\",\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_libctx_test.c.md\"\
+        ,\n      \"text\": \"# Official test/example call patterns: openssl\\n\\nLibrary:\
+        \ openssl\\nVersion: 3.5.5\\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/test/evp_libctx_test.c\\\
+        nKnowledge type: unit_tests_or_examples\\n\\n## Call pattern 1\\n\\n```c\\\
+        nif (!TEST_ptr(dup_pk = EVP_PKEY_dup(pkey))\\n            || !TEST_int_eq(EVP_PKEY_eq(pkey,\
+        \ dup_pk), 1))\\n            goto err;\\n    }\\n\\n    ret = 1;\\nerr:\\\
+        n    EVP_PKEY_free(pkey);\\n    EVP_PKEY_free(dup_pk);\\n    EVP_PKEY_CTX_free(gen_ctx);\\\
+        n    EVP_PKEY_free(pkey_parm);\\n    DSA_free(dsa);\\n    BN_free(g);\\n \
+        \   BN_free(q);\\n    BN_free(p);\\n    return ret;\\n}\\n#endif /* OPENSSL_NO_DSA\
+        \ */\\n\\n#ifndef OPENSSL_NO_DH\\nstatic int do_dh_param_keygen(int tstid,\
+        \ const BIGNUM **bn)\\n{\\n    int ret = 0;\\n    int expected;\\n    EVP_PKEY_CTX\
+        \ *gen_ctx = NULL;\\n    EVP_PKEY *pkey_parm = NULL;\\n    EVP_PKEY *pkey\
+        \ = NULL, *dup_pk = NULL;\\n    DH *dh = NULL;\\n    int pind, qind, gind;\\\
+        n    BIGNUM *p = NULL, *q = NULL, *g = NULL;\\n\\n    /*\\n     * These tests\
+        \ are using bad values for p, q, g by reusing the values.\",\n      \"metadata\"\
+        : {\n        \"doc_type\": \"unit_test_call_pattern\",\n        \"library\"\
+        : \"openssl\",\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_libctx_test.c.md\"\
+        ,\n        \"layer\": \"unit_tests\"\n      }\n    },\n    {\n      \"rank\"\
+        : 3,\n      \"score\": 0.7152586969618332,\n      \"distance\": 0.3980955481529236,\n\
+        \      \"layer\": \"unit_tests\",\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test2.c.md\"\
+        ,\n      \"text\": \"# Official test/example call patterns: openssl\\n\\nLibrary:\
+        \ openssl\\nVersion: 3.5.5\\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/test/evp_extra_test2.c\\\
+        nKnowledge type: unit_tests_or_examples\\n\\n## Call pattern 1\\n\\n```c\\\
+        n{\\n    int ret = 0;\\n\\n    if (use_octstring) {\\n        unsigned char\
+        \ buf[64];\\n\\n        ret = EVP_PKEY_get_octet_string_param(key, privtag,\
+        \ buf, sizeof(buf),\\n            NULL);\\n    } else {\\n        BIGNUM *bn\
+        \ = NULL;\\n\\n        ret = EVP_PKEY_get_bn_param(key, privtag, &bn);\\n\
+        \        BN_free(bn);\\n    }\\n    return ret;\\n}\\n\\nstatic int do_pkey_tofrom_data_select(EVP_PKEY\
+        \ *key, const char *keytype)\\n{\\n    int ret = 0;\\n    OSSL_PARAM *pub_params\
+        \ = NULL, *keypair_params = NULL;\\n    EVP_PKEY *fromkey = NULL, *fromkeypair\
+        \ = NULL;\\n    EVP_PKEY_CTX *fromctx = NULL;\\n    const char *privtag =\
+        \ strcmp(keytype, \\\"RSA\\\") == 0 ? \\\"d\\\" : \\\"priv\\\";\\n    const\
+        \ int use_octstring = strcmp(keytype, \\\"X25519\\\") == 0;\\n\\n    /*\\\
+        n     * Select only the public key component when using EVP_PKEY_todata()\
+        \ and\\n     *\",\n      \"metadata\": {\n        \"library\": \"openssl\"\
+        ,\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test2.c.md\"\
+        ,\n        \"layer\": \"unit_tests\",\n        \"doc_type\": \"unit_test_call_pattern\"\
+        \n      }\n    },\n    {\n      \"rank\": 4,\n      \"score\": 0.7095547376136142,\n\
+        \      \"distance\": 0.40933454036712646,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__genrsa.c.md\"\
+        ,\n      \"text\": \"# Official test/example call patterns: openssl\\n\\nLibrary:\
+        \ openssl\\nVersion: 3.5.5\\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/apps/genrsa.c\\\
+        nKnowledge type: unit_tests_or_examples\\n\\n## Call pattern 1\\n\\n```c\\\
+        nOPT_R_OPTIONS,\\n    OPT_PROV_OPTIONS,\\n\\n    OPT_PARAMETERS(),\\n    {\
+        \ \\\"numbits\\\", 0, 0, \\\"Size of key in bits\\\" },\\n    { NULL }\\n};\\\
+        n\\nint genrsa_main(int argc, char **argv)\\n{\\n    BN_GENCB *cb = BN_GENCB_new();\\\
+        n    ENGINE *eng = NULL;\\n    BIGNUM *bn = BN_new();\\n    BIO *out = NULL;\\\
+        n    EVP_PKEY *pkey = NULL;\\n    EVP_PKEY_CTX *ctx = NULL;\\n    EVP_CIPHER\
+        \ *enc = NULL;\\n    int ret = 1, num = DEFBITS, private = 0, primes = DEFPRIMES;\\\
+        n    unsigned long f4 = RSA_F4;\\n    char *outfile = NULL, *passoutarg =\
+        \ NULL, *passout = NULL;\\n    char *prog, *hexe, *dece, *ciphername = NULL;\\\
+        n    OPTION_CHOICE o;\\n    int traditional = 0;\\n\\n    if (bn == NULL ||\
+        \ cb == NULL)\\n        goto end;\\n\\n"
+      stderr_preview: ''
+      truncated: true
+      kind: target_api_usage
+      use_for_feature_inference: target
+    - query: 'openssl EVP_CIPHER_CTX_ctrl aead_setup_api_entrypoint shortened_tag_length_parameter
+        algorithm_specific_tag_length_validation invalid_parameter_return_code_observable
+        setup_time_validation_not_deferred_to_operation_use  aead_setup_api_entrypoint
+        shortened_tag_length_parameter algorithm_specific_tag_length_validation invalid_parameter_return_code_observable
+        exact_PSA_error_code PSA_algorithm_encoding '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7526457555533883
+        distance: 0.32864630222320557
+        layer: poc_patterns
+        source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0028.md
+        text: 'xpression.
+
+          - `TAG_LENGTH`: invalid tag length `3`.
+
+          - `AEAD_SETUP_CALL`: `psa_aead_decrypt_setup(...)`.
+
+          - `TAG_LENGTH_VALIDATION_CALL`: `psa_validate_tag_length(...)`.
+
+
+          ## Vulnerability Path Features
+
+
+          Must preserve:
+
+
+          - PSA-style AEAD setup entrypoint,
+
+          - AEAD algorithm with shortened tag,
+
+          - algorithm-specific tag length rules,
+
+          - invalid parameter accepted versus rejected,
+
+          - observable status return.
+
+
+          Optional:
+
+
+          - AES key type,
+
+          - CCM algorithm,
+
+          - decrypt setup path.
+
+
+          Not required:
+
+
+          - exact key bytes,
+
+          - exact key identifier,
+
+          - exact driver wrapper path.
+
+
+          ## Migration Guidance
+
+
+          Good target APIs expose AEAD setup with tag-length-bearing algorithms or
+
+          parameters, enforce algorithm-specific tag length constraints, and return
+          an
+
+          observable invalid-argument status during setup. Preserve setup-time validation;
+
+          this is not an authentication-failure pattern.
+
+
+          ## References
+
+
+          - PR: `https://github.com/Mbed-TLS/mbedtls/pull/5350`
+
+          - Evidence: `data/pocs/core10/MBEDTLS-POC-0028/reproduction_result.md`
+
+          -'
+        metadata:
+          doc_type: poc_pattern
+          layer: poc_patterns
+          source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0028.md
+          library: mbedtls
+      - rank: 2
+        score: 0.7449419130840655
+        distance: 0.34238654375076294
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_CIPHER_CTX_ctrl.md
+        text: "# API Constraints: EVP_CIPHER_CTX_ctrl (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `EVP_CIPHER_CTX_ctrl`\n- Header declaration: `include/openssl/evp.h`\n\
+          - Implementation file: `crypto/evp/evp_enc.c`\n- Signature:\n\n```c\nint\
+          \ EVP_CIPHER_CTX_ctrl(EVP_CIPHER_CTX *ctx,\n                        int\
+          \ type,\n                        int arg,\n                        void\
+          \ *ptr);\n```\n\n## Semantics\n\n- Generic control interface for cipher\
+          \ context options.\n- AEAD controls include `EVP_CTRL_AEAD_SET_TAG`, `EVP_CTRL_AEAD_GET_TAG`,\
+          \ and GCM IV length controls.\n- Provider-backed ciphers translate controls\
+          \ to `OSSL_PARAM` where possible.\n\n## Return Value Semantics\n\n- Returns\
+          \ positive/success value for supported controls.\n- Returns `0` or unsupported\
+          \ code on invalid context, unsupported control, or invalid parameter.\n\n\
+          ## Ownership and Buffer Constraints\n\n- `ctx` is caller-owned.\n- `ptr`\
+          \ semantics depend on control type; for AEAD set tag it points to c"
+        metadata:
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_CIPHER_CTX_ctrl.md
+          library: openssl
+          layer: api_constraints
+          doc_type: api_constraint
+      - rank: 3
+        score: 0.7371130176274594
+        distance: 0.35664406418800354
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/3.5.5/evp_aead_target_api_evidence.md
+        text: "and ciphertext\n    - set expected tag\n    - `EVP_DecryptFinal_ex()`\
+          \ for authentication result.\n- Existing local RAG file `knowledge_raw/api_constraints/openssl/3.5.5/EVP_DecryptFinal_ex.md`\
+          \ also records direct tests and demos.\n\n## Harness Relevance\n\n- OpenSSL\
+          \ AEAD mapping for `MBEDTLS-POC-0028` needs multiple APIs: cipher selection,\
+          \ decrypt setup, tag ctrl/params, update, and final/update authentication.\n\
+          - CCM invalid tag length may become observable during ctrl/setup/update\
+          \ rather than being encoded in a single algorithm macro as in PSA."
+        metadata:
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/3.5.5/evp_aead_target_api_evidence.md
+          layer: unit_tests
+          library: openssl
+      - rank: 4
+        score: 0.7311870376942396
+        distance: 0.36763912439346313
+        layer: poc_patterns
+        source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0028.md
+        text: "ition\n\nThe PoC initializes PSA crypto, imports a 128-bit AES key,\
+          \ and calls:\n\n```c\npsa_aead_decrypt_setup(&operation, key_id,\n    PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM,\
+          \ 3));\n```\n\nCCM only allows tag lengths `4, 6, 8, 10, 12, 14, 16`, so\
+          \ tag length `3` must\nbe rejected.\n\n## Buggy and Fixed Behavior\n\nBuggy\
+          \ behavior:\n\n```text\nsetup status=0\nexpected_buggy=0\nexpected_fixed=-135\n\
+          [BUG] invalid AEAD tag length accepted during setup.\n```\n\nFixed behavior:\n\
+          \n```text\nsetup status=-135\nexpected_buggy=0\nexpected_fixed=-135\n[OK]\
+          \ invalid AEAD tag length rejected during setup.\n```\n\n## Oracle\n\nBug\
+          \ signal:\n\n- `psa_aead_decrypt_setup()` returns `PSA_SUCCESS`,\n- invalid\
+          \ CCM tag length `3` is accepted.\n\nSafe signal:\n\n- `psa_aead_decrypt_setup()`\
+          \ returns `PSA_ERROR_INVALID_ARGUMENT`,\n- invalid AEAD tag length is rejected\
+          \ during setup.\n\n## Mutation Points\n\n- `AEAD_ALGORITHM`: shortened-tag\
+          \ CCM algorithm expression.\n- `TAG_LENGTH`: invalid tag length `3`.\n-\
+          \ `AEAD_SETUP_CALL`: `psa_aead_decrypt_setup(...)"
+        metadata:
+          source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0028.md
+          layer: poc_patterns
+          library: mbedtls
+          doc_type: poc_pattern
+      - rank: 5
+        score: 0.7288688428764165
+        distance: 0.3719889521598816
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/psa_aead_decrypt_setup.md
+        text: '- Relevant to `MBEDTLS-POC-0028`.
+
+          - The migration feature is setup-time rejection of algorithm-specific invalid
+          shortened AEAD tag lengths.
+
+          - Target APIs should support configuring AEAD tag length before decrypt
+          and expose invalid-parameter status before full authentication.
+
+
+          ## Related Tests or Examples Found Locally
+
+
+          - `tf-psa-crypto/tests/suites/test_suite_psa_crypto.function`: many `psa_aead_decrypt_setup()`
+          direct calls.
+
+          - `tf-psa-crypto/tests/suites/test_suite_psa_crypto_op_fail.generated.data`:
+          generated invalid-parameter cases for `PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM,63)`.
+
+          - `tf-psa-crypto/tests/suites/test_suite_psa_crypto_driver_wrappers.function`:
+          driver wrapper setup status propagation.'
+        metadata:
+          library: mbedtls
+          doc_type: api_constraint
+          layer: api_constraints
+          source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/psa_aead_decrypt_setup.md
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl EVP_CIPHER_CTX_ctrl aead_setup_api_entrypoint\
+        \ shortened_tag_length_parameter algorithm_specific_tag_length_validation\
+        \ invalid_parameter_return_code_observable setup_time_validation_not_deferred_to_operation_use\
+        \  aead_setup_api_entrypoint shortened_tag_length_parameter algorithm_specific_tag_length_validation\
+        \ invalid_parameter_return_code_observable exact_PSA_error_code PSA_algorithm_encoding\
+        \ \",\n  \"top_k\": 5,\n  \"results\": [\n    {\n      \"rank\": 1,\n    \
+        \  \"score\": 0.7526457555533883,\n      \"distance\": 0.32864630222320557,\n\
+        \      \"layer\": \"poc_patterns\",\n      \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0028.md\"\
+        ,\n      \"text\": \"xpression.\\n- `TAG_LENGTH`: invalid tag length `3`.\\\
+        n- `AEAD_SETUP_CALL`: `psa_aead_decrypt_setup(...)`.\\n- `TAG_LENGTH_VALIDATION_CALL`:\
+        \ `psa_validate_tag_length(...)`.\\n\\n## Vulnerability Path Features\\n\\\
+        nMust preserve:\\n\\n- PSA-style AEAD setup entrypoint,\\n- AEAD algorithm\
+        \ with shortened tag,\\n- algorithm-specific tag length rules,\\n- invalid\
+        \ parameter accepted versus rejected,\\n- observable status return.\\n\\nOptional:\\\
+        n\\n- AES key type,\\n- CCM algorithm,\\n- decrypt setup path.\\n\\nNot required:\\\
+        n\\n- exact key bytes,\\n- exact key identifier,\\n- exact driver wrapper\
+        \ path.\\n\\n## Migration Guidance\\n\\nGood target APIs expose AEAD setup\
+        \ with tag-length-bearing algorithms or\\nparameters, enforce algorithm-specific\
+        \ tag length constraints, and return an\\nobservable invalid-argument status\
+        \ during setup. Preserve setup-time validation;\\nthis is not an authentication-failure\
+        \ pattern.\\n\\n## References\\n\\n- PR: `https://github.com/Mbed-TLS/mbedtls/pull/5350`\\\
+        n- Evidence: `data/pocs/core10/MBEDTLS-POC-0028/reproduction_result.md`\\\
+        n-\",\n      \"metadata\": {\n        \"doc_type\": \"poc_pattern\",\n   \
+        \     \"layer\": \"poc_patterns\",\n        \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0028.md\"\
+        ,\n        \"library\": \"mbedtls\"\n      }\n    },\n    {\n      \"rank\"\
+        : 2,\n      \"score\": 0.7449419130840655,\n      \"distance\": 0.34238654375076294,\n\
+        \      \"layer\": \"api_constraints\",\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_CIPHER_CTX_ctrl.md\"\
+        ,\n      \"text\": \"# API Constraints: EVP_CIPHER_CTX_ctrl (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `EVP_CIPHER_CTX_ctrl`\\n- Header declaration: `include/openssl/evp.h`\\\
+        n- Implementation file: `crypto/evp/evp_enc.c`\\n- Signature:\\n\\n```c\\\
+        nint EVP_CIPHER_CTX_ctrl(EVP_CIPHER_CTX *ctx,\\n                        int\
+        \ type,\\n                        int arg,\\n                        void\
+        \ *ptr);\\n```\\n\\n## Semantics\\n\\n- Generic control interface for cipher\
+        \ context options.\\n- AEAD controls include `EVP_CTRL_AEAD_SET_TAG`, `EVP_CTRL_AEAD_GET_TAG`,\
+        \ and GCM IV length controls.\\n- Provider-backed ciphers translate controls\
+        \ to `OSSL_PARAM` where possible.\\n\\n## Return Value Semantics\\n\\n- Returns\
+        \ positive/success value for supported controls.\\n- Returns `0` or unsupported\
+        \ code on invalid context, unsupported control, or invalid parameter.\\n\\\
+        n## Ownership and Buffer Constraints\\n\\n- `ctx` is caller-owned.\\n- `ptr`\
+        \ semantics depend on control type; for AEAD set tag it points to c\",\n \
+        \     \"metadata\": {\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_CIPHER_CTX_ctrl.md\"\
+        ,\n        \"library\": \"openssl\",\n        \"layer\": \"api_constraints\"\
+        ,\n        \"doc_type\": \"api_constraint\"\n      }\n    },\n    {\n    \
+        \  \"rank\": 3,\n      \"score\": 0.7371130176274594,\n      \"distance\"\
+        : 0.35664406418800354,\n      \"layer\": \"unit_tests\",\n      \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/3.5.5/evp_aead_target_api_evidence.md\"\
+        ,\n      \"text\": \"and ciphertext\\n    - set expected tag\\n    - `EVP_DecryptFinal_ex()`\
+        \ for authentication result.\\n- Existing local RAG file `knowledge_raw/api_constraints/openssl/3.5.5/EVP_DecryptFinal_ex.md`\
+        \ also records direct tests and demos.\\n\\n## Harness Relevance\\n\\n- OpenSSL\
+        \ AEAD mapping for `MBEDTLS-POC-0028` needs multiple APIs: cipher selection,\
+        \ decrypt setup, tag ctrl/params, update, and final/update authentication.\\\
+        n- CCM invalid tag length may become observable during ctrl/setup/update rather\
+        \ than being encoded in a single algorithm macro as in PSA.\",\n      \"metadata\"\
+        : {\n        \"doc_type\": \"unit_test_call_pattern\",\n        \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/3.5.5/evp_aead_target_api_evidence.md\"\
+        ,\n        \"layer\": \"unit_tests\",\n        \"library\": \"openssl\"\n\
+        \      }\n    },\n    {\n      \"rank\": 4,\n      \"score\": 0.7311870376942396,\n\
+        \      \"distance\": 0.36763912439346313,\n      \"layer\": \"poc_patterns\"\
+        ,\n      \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0028.md\"\
+        ,\n      \"text\": \"ition\\n\\nThe PoC initializes PSA crypto, imports a\
+        \ 128-bit AES key, and calls:\\n\\n```c\\npsa_aead_decrypt_setup(&operation,\
+        \ key_id,\\n    PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 3));\\n```\\\
+        n\\nCCM only allows tag lengths `4, 6, 8, 10, 12, 14, 16`, so tag length `3`\
+        \ must\\nbe rejected.\\n\\n## Buggy and Fixed Behavior\\n\\nBuggy behavior:\\\
+        n\\n```text\\nsetup status=0\\nexpected_buggy=0\\nexpected_fixed=-135\\n[BUG]\
+        \ invalid AEAD tag length accepted during setup.\\n```\\n\\nFixed behavior:\\\
+        n\\n```text\\nsetup status=-135\\nexpected_buggy=0\\nexpected_fixed=-135\\\
+        n[OK] invalid AEAD tag length rejected during setup.\\n```\\n\\n## Oracle\\\
+        n\\nBug signal:\\n\\n- `psa_aead_decrypt_setup()` returns `PSA_SUCCESS`,\\\
+        n- invalid CCM tag length `3` is accepted.\\n\\nSafe signal:\\n\\n- `psa_aead_decrypt_setup()`\
+        \ returns `PSA_ERROR_INVALID_ARGUMENT`,\\n- invalid AEAD tag length is rejected\
+        \ during setup.\\n\\n## Mutation Points\\n\\n- `AEAD_ALGORITHM`: shortened-tag\
+        \ CCM algorithm expression.\\n- `TAG_LENGTH`: invalid tag length `3`.\\n-\
+        \ `AEAD_SETUP_CALL`: `psa_aead_decrypt_setup(...)\",\n      \"metadata\":\
+        \ {\n        \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0028.md\"\
+        ,\n        \"layer\": \"poc_patterns\",\n        \"library\": \"mbedtls\"\
+        ,\n        \"doc_type\": \"poc_pattern\"\n      }\n    },\n    {\n      \"\
+        rank\": 5,\n      \"score\": 0.7288688428764165,"
+      stderr_preview: ''
+      truncated: true
+      kind: vulnerability_path_compatibility
+      use_for_feature_inference: target
+    inferred_features:
+      observed_features_from_target_evidence:
+      - aead_setup_api_entrypoint
+      - algorithm_specific_tag_length_validation
+      - explicit_tag_input
+      - invalid_parameter_return_code_observable
+      - library_allocated_output
+      - library_writes_to_caller_buffer
+      - radix_or_textual_base_context
+      - shortened_tag_length_parameter
+      - signed_or_negative_encoding
+      - tag_length_parameter
+      - verification_return_code
+      negative_or_weakened_features:
+      - PSA_algorithm_encoding
+      - caller_provided_output_buffer
+      - exact_PSA_error_code
+      - library_writes_to_caller_buffer
+      effective_observed_features:
+      - aead_setup_api_entrypoint
+      - algorithm_specific_tag_length_validation
+      - explicit_tag_input
+      - invalid_parameter_return_code_observable
+      - library_allocated_output
+      - radix_or_textual_base_context
+      - shortened_tag_length_parameter
+      - signed_or_negative_encoding
+      - tag_length_parameter
+      - verification_return_code
+      feature_conflicts:
+      - feature: library_writes_to_caller_buffer
+        resolution: removed_from_effective_observed_due_to_negative_or_lost_feature
+      candidate_preserved_features:
+      - aead_setup_api_entrypoint
+      - algorithm_specific_tag_length_validation
+      - invalid_parameter_return_code_observable
+      - shortened_tag_length_parameter
+      candidate_lost_or_weakened_features:
+      - PSA_algorithm_encoding
+      - exact_PSA_error_code
+      bug_class_requirements:
+        required: []
+        disallowed: []
+        optional: []
+      required_present: []
+      required_missing: []
+      disallowed_present: []
+      optional_present: []
+      evidence_hits:
+        caller_provided_output_buffer:
+          positive_hits: []
+          negative_hits:
+          - OPENSSL_free
+        library_writes_to_caller_buffer:
+          positive_hits:
+          - BN_bn2binpad
+          negative_hits:
+          - OPENSSL_free
+        library_allocated_output:
+          positive_hits:
+          - OPENSSL_free
+          negative_hits: []
+        signed_or_negative_encoding:
+          positive_hits:
+          - signed
+          negative_hits: []
+        radix_or_textual_base_context:
+          positive_hits:
+          - hex
+          negative_hits: []
+        explicit_tag_input:
+          positive_hits:
+          - tag
+          negative_hits: []
+        tag_length_parameter:
+          positive_hits:
+          - tag_len
+          - tag length
+          negative_hits: []
+        verification_return_code:
+          positive_hits:
+          - return 0
+          negative_hits: []
+evidence_collection:
+  method: config_driven_rag_evidence_collector
+  top_k: 5
+  target_api_filter: ''
+  max_candidates: null
+  max_queries_per_candidate: null
+  feature_rules: config/evidence_feature_rules.yaml
+  bug_classes:
+  - aead_setup_api_entrypoint
+  - shortened_tag_length_parameter
+  - algorithm_specific_tag_length_validation
+  - invalid_parameter_return_code_observable
+  - setup_time_validation_not_deferred_to_operation_use
+  source_pattern:
+    pattern_id: MBEDTLS-POC-0028
+    root_cause_summary: ''
+    must_preserve_features: []
+    optional_features: []
+    not_required_features: []
+    good_target_api_features: []
+    bad_target_api_features: []
+    rag_query_context: 'template_id: PSA_AEAD_INVALID_SHORTENED_TAG_SETUP api: psa_aead_decrypt_setup
+      operation: psa_aead_setup_tag_length_validation bug_class: invalid_aead_tag_length_accepted
+      trigger_call: status = psa_aead_decrypt_setup(&operation, key_id, PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM,
+      TAG_LENGTH)) oracle: if TAG_LENGTH invalid and status == PSA_SUCCESS -> [BUG];
+      if rejected -> [OK]
+
+      '
+  note: Evidence is retrieved before LLM adapter filling. Source-pattern evidence
+    is kept separate from target-API evidence to avoid feature contamination.

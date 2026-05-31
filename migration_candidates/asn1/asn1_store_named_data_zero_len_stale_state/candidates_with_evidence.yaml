@@ -1,0 +1,1420 @@
+template_id: ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE
+source_template_id: ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE
+source:
+  library: mbedtls
+  api: mbedtls_asn1_store_named_data
+  pattern_id: MBEDTLS-POC-0005
+  root_cause_summary: 'mbedtls_asn1_store_named_data() freed cur->val.p on zero-length
+    update but did NOT clear cur->val.len. A subsequent call with val_len == stale
+    val.len skipped reallocation (cur->val.len == val_len) and called memcpy(NULL,
+    ..., val_len), causing a NULL pointer dereference. Fixed by adding cur->val.len
+    = 0 after the free.
+
+    '
+  vulnerability_path_features:
+    must_preserve:
+    - mutable_named_object_with_pointer_length_pair
+    - repeated_update_of_same_object
+    - zero_length_update_modifies_pointer_state
+    - later_nonzero_reuse_with_same_length
+    - observable_null_dereference_or_safe_reallocation
+    optional:
+    - OID_based_object_lookup
+    - linked_list_storage
+    not_required:
+    - exact_OID_value
+    - exact_heap_address
+    - exact_mbedtls_internal_function_name
+candidate_evaluation_notes: "mbedtls_asn1_store_named_data is an OID-keyed linked-list\
+  \ named-data API unique to mbedTLS. No OpenSSL public API has exact equivalent semantics.\
+  \ The following candidates were evaluated:\nRejected candidates:\n  X509_NAME_add_entry_by_txt:\n\
+  \    reason: Only ADDS new entries, never UPDATES existing ones. Cannot reproduce\n\
+  \            the repeated-update lifecycle.\n  X509_NAME_ENTRY_set_data:\n    reason:\
+  \ Updates an entry's value, but X509_NAME_ENTRY does not manage the\n          \
+  \  same OID-lookup-then-update pattern. Requires complex setup.\n  X509_EXTENSION_create_by_NID:\n\
+  \    reason: Creates a new extension each call; does not support in-place update\n\
+  \            of existing extension values.\n  ASN1_OCTET_STRING_set:\n    reason:\
+  \ Wrapper around ASN1_STRING_set with identical behavior. Use\n            ASN1_STRING_set\
+  \ directly as it's more general.\n\nSelected target:\n  ASN1_STRING_set (semantic\
+  \ projection):\n    - Manages an internal 'data pointer + length' pair (analogous\
+  \ to val.p + val.len)\n    - Supports repeated updates to the same ASN1_STRING object\n\
+  \    - Supports zero-length updates: ASN1_STRING_set(s, NULL, 0) sets length=0\n\
+  \    - Observable return code (1=success, 0=failure)\n    - ASAN would detect any\
+  \ memory safety violation\n    - PUBLIC API: openssl/asn1.h\n    - LIMITATION: OpenSSL\
+  \ keeps the buffer allocated on zero-length update\n      (does not free val.p),\
+  \ so the exact stale-pointer bug path is not\n      reproducible. This is a semantic\
+  \ projection; the test shows OpenSSL\n      handles the lifecycle safely. Expected\
+  \ result: migrated_safe.\n"
+scoring_policy:
+  operation_family: 0.15
+  function_behavior: 0.2
+  parameter_structure: 0.2
+  vulnerability_path: 0.3
+  harness_feasibility: 0.15
+  decision_rule:
+    generate: final >= 75 and vulnerability_path >= 70
+    needs_llm_review: final >= 55 and vulnerability_path >= 50
+    skip: otherwise
+required_features:
+- target manages an internal buffer with pointer + length state
+- target supports repeated updates (nonempty → zero → nonempty)
+- target has zero-length update semantics
+- target returns observable success/failure code
+- harness can observe safe/unsafe behavior through ASAN + return code
+- public API accessible without private headers
+target_candidates:
+- target_library: openssl
+  target_api: ASN1_STRING_set
+  library: openssl
+  api: ASN1_STRING_set
+  source_template_id: ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE
+  source_api: mbedtls_asn1_store_named_data
+  decision: generate
+  migration_applicability: applicable_semantic_projection
+  applicability: weak_candidate_semantic_projection
+  scores:
+    operation_family: 70
+    function_behavior: 60
+    parameter_structure: 65
+    vulnerability_path: 50
+    harness_feasibility: 85
+    final: 62
+  preserved_features:
+  - mutable_named_object_with_pointer_length_pair (ASN1_STRING has data+length)
+  - repeated_update_of_same_object (same ASN1_STRING called multiple times)
+  - zero_length_update_modifies_pointer_state (sets length=0)
+  - later_nonzero_reuse_with_same_length (step3 reuse)
+  - observable_null_dereference_or_safe_reallocation (ASAN + return code)
+  preserved_vulnerability_features:
+  - mutable_named_object_with_pointer_length_pair
+  - repeated_update_of_same_object
+  - zero_length_update_modifies_pointer_state
+  weakened_features:
+  - OpenSSL ASN1_STRING_set does NOT free the buffer on zero-length update (keeps
+    data allocated, sets length=0). No stale NULL + nonzero len.
+  - OID-keyed linked-list lookup has no OpenSSL equivalent; replaced by direct ASN1_STRING
+    object reference.
+  - The exact NULL dereference path is not reproducible through OpenSSL's public API
+    with normal usage sequences.
+  lost_or_weakened_features:
+  - OID_based_object_lookup
+  - linked_list_storage
+  - exact_stale_null_pointer_path
+  migration_reason: 'Best available candidate for semantic projection. ASN1_STRING_set
+    manages the same pointer+length internal state and supports the nonempty→zero→nonempty
+    lifecycle. OpenSSL''s implementation handles zero-length updates safely (no stale
+    NULL pointer). The test demonstrates that OpenSSL does not have the equivalent
+    of the mbedTLS stale-pointer bug. Expected: migrated_safe. This is a valid negative
+    result showing OpenSSL''s safer implementation.
+
+    '
+  required_features:
+  - create ASN1_STRING with ASN1_STRING_new
+  - step1: ASN1_STRING_set(s, data, FIRST_VALUE_LEN) - nonzero update
+  - step2: ASN1_STRING_set(s, NULL, 0) - zero-length update
+  - step3: ASN1_STRING_set(s, data2, FIRST_VALUE_LEN) - reuse
+  - observe return code and ASN1_STRING_get0_data / ASN1_STRING_length
+  - ASN1_STRING_free at cleanup
+  notes:
+  - This migration uses object_state_lifecycle with semantic_projection flag.
+  - Decision is 'generate' for the negative-result contribution showing OpenSSL safety.
+  - score < 75 but >= 55 normally means needs_llm_review; we override to generate
+    because this is the only viable public API and the research value is the migrated_safe
+    result.
+  evidence:
+    top_k: 5
+    queries:
+    - query: ' '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.5070700252966565
+        distance: 0.9721142053604126
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+        text: "FF\",\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000FFFFFFFF00\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"000000000000000000000000000000000000000000000000000000"
+        metadata:
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+          doc_type: unit_test_call_pattern
+          library: openssl
+      - rank: 2
+        score: 0.5064631252680277
+        distance: 0.9744774103164673
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md
+        text: "E0EC65228B3937E498\",\n        \"63E4C6D3B23B0C849CF84241484BFE48F61D59A5B16BA06E6E12D1DA27C5249A\"\
+          ,\n        \"421DEBD61B62EAB6746434EBC3CC315E32220B3BADD50BDC4C4E6C147FEDD43D\"\
+          ,\n        \"0680512BCBB42C07D47349D2153B70C4E5D7FDFCBFA36EA1A85841B9E46E09A2\"\
+          ,\n        \"8542D69E4C044F18E8B92435BF6FF7DD297720630485628D5AE74EE7C32E79B7\"\
+          ,\n        \"1\");\n\n    if (!TEST_ptr(test_group))\n        goto done;\n\
+          \n    if (!TEST_true(test_sm2_sign(\n            test_group,\n         \
+          \   \"ALICE123@YAHOO.COM\",\n            \"128B2FA8BD433C6C068C8D803DFF79792A519A55171B1B650C23661D15897263\"\
+          ,\n            \"message digest\",\n            \"006CB28D99385C175C94F94E934817663FC176D925DD72B727260DBAAE1FB2F96F\"\
+          \n            \"007c47811054c6f99613a578eb8453706ccb96384fe7df5c171671e760bfa8be3a\"\
+          ,\n```"
+        metadata:
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md
+          doc_type: unit_test_call_pattern
+          library: openssl
+      - rank: 3
+        score: 0.4993900358310789
+        distance: 1.0024428367614746
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+        text: "8787878787878787878787878787878\"\n              \"7878787878787878787878787878787878787878787878787878787878787878\"\
+          \n              \"7878787878787878787878787878787878787878787878787878787878787878\"\
+          \n              \"7878787878787878787878787878787878787878787878787878787878787878\"\
+          ))\n            && TEST_true(BN_hex2bn(&b,\n                \"095D72C08C097BA488C5E439C655A192EAFB6380073D8C2664668EDDB4060744\"\
+          \n                \"E16E57FB4EDB9AE10A0CEFCDC28A894F689A128379DB279D48A2E20849D68593\"\
+          \n                \"9B7803BCF46CEBF5C533FB0DD35B080593DE5472E3FE5DB951B8BFF9B4CB8F03\"\
+          \n                \"9CC638A5EE8CDD703719F8000E6A9F63BEED5F2FCD52FF293EA05A251BB4AB81\"\
+          ))\n            && TEST_true(BN_hex2bn(&n,\n```\n\n## Call pattern 62\n\n\
+          ```c\ngoto err;\n\n    if (!(TEST_true(BN_MONT_CTX_set(mont, n, ctx))\n\
+          \            && TEST_true(BN_mod_mul_montgomery(c, a, b, mont, ctx))\n \
+          \           && TEST_true(BN_mod_mul_montgomery(d, b, a, mont, ctx))\n  \
+          \          && TEST_BN_eq(c, d)))\n        goto err;\n\n    /* Regression\
+          \ test for ca"
+        metadata:
+          library: openssl
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+      - rank: 4
+        score: 0.49467344660620705
+        distance: 1.0215356349945068
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md
+        text: "D_BOTTOM_ODD);\n    BN_rand(a2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY);\n\
+          \    BN_rand(b2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY);\n  \
+          \  BN_rand(m2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ODD);\n\n  \
+          \  if (!TEST_true(BN_mod(a1, a1, m1, ctx))\n        || !TEST_true(BN_mod(b1,\
+          \ b1, m1, ctx))\n        || !TEST_true(BN_mod(a2, a2, m2, ctx))\n      \
+          \  || !TEST_true(BN_mod(b2, b2, m2, ctx))\n        || !TEST_true(BN_mod_exp_simple(r_simple1,\
+          \ a1, b1, m1, ctx))\n        || !TEST_true(BN_mod_exp_simple(r_simple2,\
+          \ a2, b2, m2, ctx))\n        || !TEST_true(BN_mod_exp_mont_consttime_x2(r_mont_const_x2_1,\
+          \ a1, b1, m1, NULL,\n            r_mont_const_x2_2, a2, b2, m2, NULL,\n\
+          \            ctx)))\n        goto err;\n\n    if (!TEST_BN_eq(r_simple1,\
+          \ r_mont_const_x2_1)\n        || !TEST_BN_eq(r_simple2, r_mont_const_x2_2))\
+          \ {\n        if (BN_cmp(r_simple1, r_mont_const_x2_1) != 0)\n          \
+          \  TEST_info(\"simple and mont const time x2 (#1) results differ\");\n```\n\
+          \n## Call pattern 29\n\n```c\nfactor_size = 2048"
+        metadata:
+          doc_type: unit_test_call_pattern
+          library: openssl
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md
+          layer: unit_tests
+      - rank: 5
+        score: 0.4944104082232621
+        distance: 1.022611141204834
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+        text: "FFFFFFFFFFFFFFFFFFFFFF\",\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000FFFFFFFF00\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"00000000000000000000000000000000000000000000000000FFFFFFFFFFFFFF\"\
+          ,\n    NULL\n};\n\nstatic const char *bn2stri"
+        metadata:
+          library: openssl
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+      error: ''
+      stdout_preview: "{\n  \"query\": \" \",\n  \"top_k\": 5,\n  \"results\": [\n\
+        \    {\n      \"rank\": 1,\n      \"score\": 0.5070700252966565,\n      \"\
+        distance\": 0.9721142053604126,\n      \"layer\": \"unit_tests\",\n      \"\
+        source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n      \"text\": \"FF\\\",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000FFFFFFFF00\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"000000000000000000000000000000000000000000000000000000\",\n\
+        \      \"metadata\": {\n        \"layer\": \"unit_tests\",\n        \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n        \"doc_type\": \"unit_test_call_pattern\",\n        \"library\"\
+        : \"openssl\"\n      }\n    },\n    {\n      \"rank\": 2,\n      \"score\"\
+        : 0.5064631252680277,\n      \"distance\": 0.9744774103164673,\n      \"layer\"\
+        : \"unit_tests\",\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md\"\
+        ,\n      \"text\": \"E0EC65228B3937E498\\\",\\n        \\\"63E4C6D3B23B0C849CF84241484BFE48F61D59A5B16BA06E6E12D1DA27C5249A\\\
+        \",\\n        \\\"421DEBD61B62EAB6746434EBC3CC315E32220B3BADD50BDC4C4E6C147FEDD43D\\\
+        \",\\n        \\\"0680512BCBB42C07D47349D2153B70C4E5D7FDFCBFA36EA1A85841B9E46E09A2\\\
+        \",\\n        \\\"8542D69E4C044F18E8B92435BF6FF7DD297720630485628D5AE74EE7C32E79B7\\\
+        \",\\n        \\\"1\\\");\\n\\n    if (!TEST_ptr(test_group))\\n        goto\
+        \ done;\\n\\n    if (!TEST_true(test_sm2_sign(\\n            test_group,\\\
+        n            \\\"ALICE123@YAHOO.COM\\\",\\n            \\\"128B2FA8BD433C6C068C8D803DFF79792A519A55171B1B650C23661D15897263\\\
+        \",\\n            \\\"message digest\\\",\\n            \\\"006CB28D99385C175C94F94E934817663FC176D925DD72B727260DBAAE1FB2F96F\\\
+        \"\\n            \\\"007c47811054c6f99613a578eb8453706ccb96384fe7df5c171671e760bfa8be3a\\\
+        \",\\n```\",\n      \"metadata\": {\n        \"layer\": \"unit_tests\",\n\
+        \        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md\"\
+        ,\n        \"doc_type\": \"unit_test_call_pattern\",\n        \"library\"\
+        : \"openssl\"\n      }\n    },\n    {\n      \"rank\": 3,\n      \"score\"\
+        : 0.4993900358310789,\n      \"distance\": 1.0024428367614746,\n      \"layer\"\
+        : \"unit_tests\",\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n      \"text\": \"8787878787878787878787878787878\\\"\\n              \\\
+        \"7878787878787878787878787878787878787878787878787878787878787878\\\"\\n\
+        \              \\\"7878787878787878787878787878787878787878787878787878787878787878\\\
+        \"\\n              \\\"7878787878787878787878787878787878787878787878787878787878787878\\\
+        \"))\\n            && TEST_true(BN_hex2bn(&b,\\n                \\\"095D72C08C097BA488C5E439C655A192EAFB6380073D8C2664668EDDB4060744\\\
+        \"\\n                \\\"E16E57FB4EDB9AE10A0CEFCDC28A894F689A128379DB279D48A2E20849D68593\\\
+        \"\\n                \\\"9B7803BCF46CEBF5C533FB0DD35B080593DE5472E3FE5DB951B8BFF9B4CB8F03\\\
+        \"\\n                \\\"9CC638A5EE8CDD703719F8000E6A9F63BEED5F2FCD52FF293EA05A251BB4AB81\\\
+        \"))\\n            && TEST_true(BN_hex2bn(&n,\\n```\\n\\n## Call pattern 62\\\
+        n\\n```c\\ngoto err;\\n\\n    if (!(TEST_true(BN_MONT_CTX_set(mont, n, ctx))\\\
+        n            && TEST_true(BN_mod_mul_montgomery(c, a, b, mont, ctx))\\n  \
+        \          && TEST_true(BN_mod_mul_montgomery(d, b, a, mont, ctx))\\n    \
+        \        && TEST_BN_eq(c, d)))\\n        goto err;\\n\\n    /* Regression\
+        \ test for ca\",\n      \"metadata\": {\n        \"library\": \"openssl\"\
+        ,\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n        \"layer\": \"unit_tests\",\n        \"doc_type\": \"unit_test_call_pattern\"\
+        \n      }\n    },\n    {\n      \"rank\": 4,\n      \"score\": 0.49467344660620705,\n\
+        \      \"distance\": 1.0215356349945068,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md\"\
+        ,\n      \"text\": \"D_BOTTOM_ODD);\\n    BN_rand(a2, factor_size, BN_RAND_TOP_ONE,\
+        \ BN_RAND_BOTTOM_ANY);\\n    BN_rand(b2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY);\\\
+        n    BN_rand(m2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ODD);\\n\\n\
+        \    if (!TEST_true(BN_mod(a1, a1, m1, ctx))\\n        || !TEST_true(BN_mod(b1,\
+        \ b1, m1, ctx))\\n        || !TEST_true(BN_mod(a2, a2, m2, ctx))\\n      \
+        \  || !TEST_true(BN_mod(b2, b2, m2, ctx))\\n        || !TEST_true(BN_mod_exp_simple(r_simple1,\
+        \ a1, b1, m1, ctx))\\n        || !TEST_true(BN_mod_exp_simple(r_simple2, a2,\
+        \ b2, m2, ctx))\\n        || !TEST_true(BN_mod_exp_mont_consttime_x2(r_mont_const_x2_1,\
+        \ a1, b1, m1, NULL,\\n            r_mont_const_x2_2, a2, b2, m2, NULL,\\n\
+        \            ctx)))\\n        goto err;\\n\\n    if (!TEST_BN_eq(r_simple1,\
+        \ r_mont_const_x2_1)\\n        || !TEST_BN_eq(r_simple2, r_mont_const_x2_2))\
+        \ {\\n        if (BN_cmp(r_simple1, r_mont_const_x2_1) != 0)\\n          \
+        \  TEST_info(\\\"simple and mont const time x2 (#1) results differ\\\");\\\
+        n```\\n\\n## Call pattern 29\\n\\n```c\\nfactor_size = 2048\",\n      \"metadata\"\
+        : {\n        \"doc_type\": \"unit_test_call_pattern\",\n        \"library\"\
+        : \"openssl\",\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__h"
+      stderr_preview: ''
+      truncated: true
+      kind: source_pattern
+      use_for_feature_inference: source_only
+    - query: openssl ASN1_STRING_set function declaration signature parameters return
+        value
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.655750120090976
+        distance: 0.5249711275100708
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+        text: "params[0] = OSSL_PARAM_construct_int(OSSL_SIGNATURE_PARAM_PAD_MODE,\
+          \ &padding);\n        params[1] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST,\n\
+          \            OSSL_DIGEST_NAME_SHA2_256, 0);\n        params[2] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_MGF1_DIGEST,\n\
+          \            OSSL_DIGEST_NAME_SHA1, 0);\n```\n\n## Call pattern 37\n\n```c\n\
+          if (!TEST_ptr(pkey))\n        goto err;\n\n    ret = test_EVP_PKEY_CTX_get_set_params(pkey);\n\
+          \nerr:\n    EVP_PKEY_free(pkey);\n    EVP_PKEY_CTX_free(pctx);\n    OSSL_PARAM_free(params);\n\
+          \    OSSL_PARAM_BLD_free(bld);\n    BN_free(n);\n    BN_free(e);\n    BN_free(d);\n\
+          \n    return ret;\n}\n\nstatic int test_RSA_OAEP_set_get_params(void)\n\
+          {\n    int ret = 0;\n    EVP_PKEY *key = NULL;\n    EVP_PKEY_CTX *key_ctx\
+          \ = NULL;\n\n    if (nullprov != NULL)\n        return TEST_skip(\"Test\
+          \ does not support a non-default library context\");\n\n    if (!TEST_ptr(key\
+          \ = load_example_rsa_key())\n        || !TEST_ptr(key_ctx = EVP_PKEY_CTX_new_from_pkey(0,\
+          \ key, 0)))"
+        metadata:
+          doc_type: unit_test_call_pattern
+          library: openssl
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+          layer: unit_tests
+      - rank: 2
+        score: 0.6488491284893079
+        distance: 0.5411903262138367
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__param_build_test.c.md
+        text: "OPENSSL_secure_free(data1);\n    OPENSSL_secure_free(data2);\n    BN_free(zbn);\n\
+          \    BN_free(zbn_res);\n    BN_free(pbn);\n    BN_free(pbn_res);\n    BN_free(nbn);\n\
+          \    BN_free(nbn_res);\n    return res;\n}\n\nstatic int builder_limit_test(void)\n\
+          {\n    const int n = 100;\n    char names[100][3];\n    OSSL_PARAM_BLD *bld\
+          \ = OSSL_PARAM_BLD_new();\n    OSSL_PARAM *params = NULL;\n    int i, res\
+          \ = 0;\n\n    if (!TEST_ptr(bld))\n        goto err;\n\n    for (i = 0;\
+          \ i < n; i++) {\n        names[i][0] = 'A' + (i / 26) - 1;\n        names[i][1]\
+          \ = 'a' + (i % 26) - 1;\n        names[i][2] = '\\0';\n        if (!TEST_true(OSSL_PARAM_BLD_push_int(bld,\
+          \ names[i], 3 * i + 1)))\n            goto err;\n    }\n    if (!TEST_ptr(params\
+          \ = OSSL_PARAM_BLD_to_param(bld)))\n        goto err;\n```\n\n## Call pattern\
+          \ 22\n\n```c\ngoto err;\n    res = 1;\nerr:\n    OSSL_PARAM_free(p1);\n\
+          \    if (params != params_blt)\n        OSSL_PARAM_free(params);\n    OSSL_PARAM_free(params_blt);\n\
+          \    OSSL_PARAM_BLD_free(bld);\n    OPENSSL_secure_free(data1);\n    OPENSSL"
+        metadata:
+          doc_type: unit_test_call_pattern
+          library: openssl
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__param_build_test.c.md
+          layer: unit_tests
+      - rank: 3
+        score: 0.6446882190422316
+        distance: 0.551137387752533
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+        text: "OSSL_DIGEST_NAME_SHA2_256, 0);\n        params[2] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_MGF1_DIGEST,\n\
+          ```\n\n## Call pattern 36\n\n```c\nif (!TEST_ptr(pkey))\n        goto err;\n\
+          \n    ret = test_EVP_PKEY_CTX_get_set_params(pkey);\n\nerr:\n    EVP_PKEY_free(pkey);\n\
+          \    EVP_PKEY_CTX_free(pctx);\n    OSSL_PARAM_free(params);\n    OSSL_PARAM_BLD_free(bld);\n\
+          \    BN_free(n);\n    BN_free(e);\n    BN_free(d);\n\n    return ret;\n\
+          }\n\nstatic int test_RSA_OAEP_set_get_params(void)\n{\n    int ret = 0;\n\
+          \    EVP_PKEY *key = NULL;\n    EVP_PKEY_CTX *key_ctx = NULL;\n\n    if\
+          \ (nullprov != NULL)\n        return TEST_skip(\"Test does not support a\
+          \ non-default library context\");\n\n    if (!TEST_ptr(key = load_example_rsa_key())\n\
+          \        || !TEST_ptr(key_ctx = EVP_PKEY_CTX_new_from_pkey(0, key, 0)))\n\
+          \        goto err;\n\n    {\n        int padding = RSA_PKCS1_OAEP_PADDING;\n\
+          \        OSSL_PARAM params[4];\n\n        params[0] = OSSL_PARAM_construct_int(OSSL_SIGNATURE_PARAM_PAD_MODE,\
+          \ &padding);\n        params[1] ="
+        metadata:
+          library: openssl
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+      - rank: 4
+        score: 0.6433802842395028
+        distance: 0.5542907118797302
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+        text: "/* OPENSSL_NO_DEPRECATED_3_0 */\n#endif /* OPENSSL_NO_EC */\n\nstatic\
+          \ int test_EVP_PKEY_sign(int tst)\n{\n    int ret = 0;\n    EVP_PKEY *pkey\
+          \ = NULL;\n    unsigned char *sig = NULL;\n    size_t sig_len = 0, shortsig_len\
+          \ = 1;\n    EVP_PKEY_CTX *ctx = NULL;\n    unsigned char tbs[] = {\n   \
+          \     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a,\
+          \ 0x0b,\n        0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13\n    };\n\
+          \n    if (tst == 0) {\n        if (!TEST_ptr(pkey = load_example_rsa_key()))\n\
+          \            goto out;\n    } else if (tst == 1) {\n#ifndef OPENSSL_NO_DSA\n\
+          \        if (!TEST_ptr(pkey = load_example_dsa_key()))\n            goto\
+          \ out;\n#else\n        ret = 1;\n```\n\n## Call pattern 22\n\n```c\nOSSL_PARAM\
+          \ *params = NULL;\n    BIGNUM *p = NULL, *q = NULL, *g = NULL, *pub = NULL,\
+          \ *priv = NULL;\n    EVP_PKEY_CTX *pctx = NULL;\n    EVP_PKEY *pkey = NULL;\n\
+          \    int ret = 0;\n\n    /*\n     * Setup the parameters for our DSA object.\
+          \ For our purposes they don't\n     * have to actually be *valid* parameters.\
+          \ W"
+        metadata:
+          library: openssl
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+      - rank: 5
+        score: 0.6422788127936985
+        distance: 0.5569562315940857
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__param_build_test.c.md
+        text: "res = 1;\nerr:\n    OSSL_PARAM_free(p1);\n    if (params != params_blt)\n\
+          \        OSSL_PARAM_free(params);\n    OSSL_PARAM_free(params_blt);\n  \
+          \  OSSL_PARAM_BLD_free(bld);\n    OPENSSL_secure_free(data1);\n    OPENSSL_secure_free(data2);\n\
+          \    BN_free(zbn);\n    BN_free(zbn_res);\n    BN_free(pbn);\n    BN_free(pbn_res);\n\
+          \    BN_free(nbn);\n    BN_free(nbn_res);\n    return res;\n}\n\nstatic\
+          \ int builder_limit_test(void)\n{\n    const int n = 100;\n    char names[100][3];\n\
+          \    OSSL_PARAM_BLD *bld = OSSL_PARAM_BLD_new();\n    OSSL_PARAM *params\
+          \ = NULL;\n    int i, res = 0;\n\n    if (!TEST_ptr(bld))\n        goto\
+          \ err;\n\n    for (i = 0; i < n; i++) {\n        names[i][0] = 'A' + (i\
+          \ / 26) - 1;\n        names[i][1] = 'a' + (i % 26) - 1;\n        names[i][2]\
+          \ = '\\0';\n        if (!TEST_true(OSSL_PARAM_BLD_push_int(bld, names[i],\
+          \ 3 * i + 1)))\n            goto err;\n    }\n    if (!TEST_ptr(params =\
+          \ OSSL_PARAM_BLD_to_param(bld)))\n        goto err;\n    /* Count the elements\
+          \ in the params array, expecting n */\n    for (i = 0; para"
+        metadata:
+          library: openssl
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__param_build_test.c.md
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl ASN1_STRING_set function declaration\
+        \ signature parameters return value\",\n  \"top_k\": 5,\n  \"results\": [\n\
+        \    {\n      \"rank\": 1,\n      \"score\": 0.655750120090976,\n      \"\
+        distance\": 0.5249711275100708,\n      \"layer\": \"unit_tests\",\n      \"\
+        source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n      \"text\": \"params[0] = OSSL_PARAM_construct_int(OSSL_SIGNATURE_PARAM_PAD_MODE,\
+        \ &padding);\\n        params[1] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST,\\\
+        n            OSSL_DIGEST_NAME_SHA2_256, 0);\\n        params[2] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_MGF1_DIGEST,\\\
+        n            OSSL_DIGEST_NAME_SHA1, 0);\\n```\\n\\n## Call pattern 37\\n\\\
+        n```c\\nif (!TEST_ptr(pkey))\\n        goto err;\\n\\n    ret = test_EVP_PKEY_CTX_get_set_params(pkey);\\\
+        n\\nerr:\\n    EVP_PKEY_free(pkey);\\n    EVP_PKEY_CTX_free(pctx);\\n    OSSL_PARAM_free(params);\\\
+        n    OSSL_PARAM_BLD_free(bld);\\n    BN_free(n);\\n    BN_free(e);\\n    BN_free(d);\\\
+        n\\n    return ret;\\n}\\n\\nstatic int test_RSA_OAEP_set_get_params(void)\\\
+        n{\\n    int ret = 0;\\n    EVP_PKEY *key = NULL;\\n    EVP_PKEY_CTX *key_ctx\
+        \ = NULL;\\n\\n    if (nullprov != NULL)\\n        return TEST_skip(\\\"Test\
+        \ does not support a non-default library context\\\");\\n\\n    if (!TEST_ptr(key\
+        \ = load_example_rsa_key())\\n        || !TEST_ptr(key_ctx = EVP_PKEY_CTX_new_from_pkey(0,\
+        \ key, 0)))\",\n      \"metadata\": {\n        \"doc_type\": \"unit_test_call_pattern\"\
+        ,\n        \"library\": \"openssl\",\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n        \"layer\": \"unit_tests\"\n      }\n    },\n    {\n      \"rank\"\
+        : 2,\n      \"score\": 0.6488491284893079,\n      \"distance\": 0.5411903262138367,\n\
+        \      \"layer\": \"unit_tests\",\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__param_build_test.c.md\"\
+        ,\n      \"text\": \"OPENSSL_secure_free(data1);\\n    OPENSSL_secure_free(data2);\\\
+        n    BN_free(zbn);\\n    BN_free(zbn_res);\\n    BN_free(pbn);\\n    BN_free(pbn_res);\\\
+        n    BN_free(nbn);\\n    BN_free(nbn_res);\\n    return res;\\n}\\n\\nstatic\
+        \ int builder_limit_test(void)\\n{\\n    const int n = 100;\\n    char names[100][3];\\\
+        n    OSSL_PARAM_BLD *bld = OSSL_PARAM_BLD_new();\\n    OSSL_PARAM *params\
+        \ = NULL;\\n    int i, res = 0;\\n\\n    if (!TEST_ptr(bld))\\n        goto\
+        \ err;\\n\\n    for (i = 0; i < n; i++) {\\n        names[i][0] = 'A' + (i\
+        \ / 26) - 1;\\n        names[i][1] = 'a' + (i % 26) - 1;\\n        names[i][2]\
+        \ = '\\\\0';\\n        if (!TEST_true(OSSL_PARAM_BLD_push_int(bld, names[i],\
+        \ 3 * i + 1)))\\n            goto err;\\n    }\\n    if (!TEST_ptr(params\
+        \ = OSSL_PARAM_BLD_to_param(bld)))\\n        goto err;\\n```\\n\\n## Call\
+        \ pattern 22\\n\\n```c\\ngoto err;\\n    res = 1;\\nerr:\\n    OSSL_PARAM_free(p1);\\\
+        n    if (params != params_blt)\\n        OSSL_PARAM_free(params);\\n    OSSL_PARAM_free(params_blt);\\\
+        n    OSSL_PARAM_BLD_free(bld);\\n    OPENSSL_secure_free(data1);\\n    OPENSSL\"\
+        ,\n      \"metadata\": {\n        \"doc_type\": \"unit_test_call_pattern\"\
+        ,\n        \"library\": \"openssl\",\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__param_build_test.c.md\"\
+        ,\n        \"layer\": \"unit_tests\"\n      }\n    },\n    {\n      \"rank\"\
+        : 3,\n      \"score\": 0.6446882190422316,\n      \"distance\": 0.551137387752533,\n\
+        \      \"layer\": \"unit_tests\",\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n      \"text\": \"OSSL_DIGEST_NAME_SHA2_256, 0);\\n        params[2] =\
+        \ OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_MGF1_DIGEST,\\n```\\\
+        n\\n## Call pattern 36\\n\\n```c\\nif (!TEST_ptr(pkey))\\n        goto err;\\\
+        n\\n    ret = test_EVP_PKEY_CTX_get_set_params(pkey);\\n\\nerr:\\n    EVP_PKEY_free(pkey);\\\
+        n    EVP_PKEY_CTX_free(pctx);\\n    OSSL_PARAM_free(params);\\n    OSSL_PARAM_BLD_free(bld);\\\
+        n    BN_free(n);\\n    BN_free(e);\\n    BN_free(d);\\n\\n    return ret;\\\
+        n}\\n\\nstatic int test_RSA_OAEP_set_get_params(void)\\n{\\n    int ret =\
+        \ 0;\\n    EVP_PKEY *key = NULL;\\n    EVP_PKEY_CTX *key_ctx = NULL;\\n\\\
+        n    if (nullprov != NULL)\\n        return TEST_skip(\\\"Test does not support\
+        \ a non-default library context\\\");\\n\\n    if (!TEST_ptr(key = load_example_rsa_key())\\\
+        n        || !TEST_ptr(key_ctx = EVP_PKEY_CTX_new_from_pkey(0, key, 0)))\\\
+        n        goto err;\\n\\n    {\\n        int padding = RSA_PKCS1_OAEP_PADDING;\\\
+        n        OSSL_PARAM params[4];\\n\\n        params[0] = OSSL_PARAM_construct_int(OSSL_SIGNATURE_PARAM_PAD_MODE,\
+        \ &padding);\\n        params[1] =\",\n      \"metadata\": {\n        \"library\"\
+        : \"openssl\",\n        \"layer\": \"unit_tests\",\n        \"doc_type\":\
+        \ \"unit_test_call_pattern\",\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 4,\n      \"score\": 0.6433802842395028,\n\
+        \      \"distance\": 0.5542907118797302,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n      \"text\": \"/* OPENSSL_NO_DEPRECATED_3_0 */\\n#endif /* OPENSSL_NO_EC\
+        \ */\\n\\nstatic int test_EVP_PKEY_sign(int tst)\\n{\\n    int ret = 0;\\\
+        n    EVP_PKEY *pkey = NULL;\\n    unsigned char *sig = NULL;\\n    size_t\
+        \ sig_len = 0, shortsig_len = 1;\\n    EVP_PKEY_CTX *ctx = NULL;\\n    unsigned\
+        \ char tbs[] = {\\n        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,\
+        \ 0x08, 0x09, 0x0a, 0x0b,\\n        0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12,\
+        \ 0x13\\n    };\\n\\n    if (tst == 0) {\\n        if (!TEST_ptr(pkey = load_example_rsa_key()))\\\
+        n            goto out;\\n    } else if (tst == 1) {\\n#ifndef OPENSSL_NO_DSA\\\
+        n        if (!TEST_ptr(pkey = load_example_dsa_key()))\\n            goto\
+        \ out;\\n#else\\n        ret = 1;\\n```\\n\\n## Call pattern 22\\n\\n```c\\\
+        nOSSL_PARAM *params = NULL;\\n    BIGNUM *p = NULL, *q = NULL, *g = NULL,\
+        \ *pub = NULL, *priv = NULL;\\n    EVP_PKEY_C"
+      stderr_preview: ''
+      truncated: true
+      kind: target_api_signature
+      use_for_feature_inference: target
+    - query: openssl ASN1_STRING_set implementation source code parameters return
+        error
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.6597116746740432
+        distance: 0.5158137083053589
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+        text: "params[0] = OSSL_PARAM_construct_int(OSSL_SIGNATURE_PARAM_PAD_MODE,\
+          \ &padding);\n        params[1] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST,\n\
+          \            OSSL_DIGEST_NAME_SHA2_256, 0);\n        params[2] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_MGF1_DIGEST,\n\
+          \            OSSL_DIGEST_NAME_SHA1, 0);\n```\n\n## Call pattern 37\n\n```c\n\
+          if (!TEST_ptr(pkey))\n        goto err;\n\n    ret = test_EVP_PKEY_CTX_get_set_params(pkey);\n\
+          \nerr:\n    EVP_PKEY_free(pkey);\n    EVP_PKEY_CTX_free(pctx);\n    OSSL_PARAM_free(params);\n\
+          \    OSSL_PARAM_BLD_free(bld);\n    BN_free(n);\n    BN_free(e);\n    BN_free(d);\n\
+          \n    return ret;\n}\n\nstatic int test_RSA_OAEP_set_get_params(void)\n\
+          {\n    int ret = 0;\n    EVP_PKEY *key = NULL;\n    EVP_PKEY_CTX *key_ctx\
+          \ = NULL;\n\n    if (nullprov != NULL)\n        return TEST_skip(\"Test\
+          \ does not support a non-default library context\");\n\n    if (!TEST_ptr(key\
+          \ = load_example_rsa_key())\n        || !TEST_ptr(key_ctx = EVP_PKEY_CTX_new_from_pkey(0,\
+          \ key, 0)))"
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+          layer: unit_tests
+          library: openssl
+          doc_type: unit_test_call_pattern
+      - rank: 2
+        score: 0.6579539061711062
+        distance: 0.5198633074760437
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+        text: "/* OPENSSL_NO_DEPRECATED_3_0 */\n#endif /* OPENSSL_NO_EC */\n\nstatic\
+          \ int test_EVP_PKEY_sign(int tst)\n{\n    int ret = 0;\n    EVP_PKEY *pkey\
+          \ = NULL;\n    unsigned char *sig = NULL;\n    size_t sig_len = 0, shortsig_len\
+          \ = 1;\n    EVP_PKEY_CTX *ctx = NULL;\n    unsigned char tbs[] = {\n   \
+          \     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a,\
+          \ 0x0b,\n        0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13\n    };\n\
+          \n    if (tst == 0) {\n        if (!TEST_ptr(pkey = load_example_rsa_key()))\n\
+          \            goto out;\n    } else if (tst == 1) {\n#ifndef OPENSSL_NO_DSA\n\
+          \        if (!TEST_ptr(pkey = load_example_dsa_key()))\n            goto\
+          \ out;\n#else\n        ret = 1;\n```\n\n## Call pattern 22\n\n```c\nOSSL_PARAM\
+          \ *params = NULL;\n    BIGNUM *p = NULL, *q = NULL, *g = NULL, *pub = NULL,\
+          \ *priv = NULL;\n    EVP_PKEY_CTX *pctx = NULL;\n    EVP_PKEY *pkey = NULL;\n\
+          \    int ret = 0;\n\n    /*\n     * Setup the parameters for our DSA object.\
+          \ For our purposes they don't\n     * have to actually be *valid* parameters.\
+          \ W"
+        metadata:
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          library: openssl
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+      - rank: 3
+        score: 0.6569713762779881
+        distance: 0.5221363306045532
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/ASN1_item_d2i.md
+        text: "# API Constraints: ASN1_item_d2i (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `ASN1_item_d2i`\n- Header declaration: `include/openssl/asn1.h`\n\
+          - Implementation file: `crypto/asn1/tasn_dec.c`\n- Signature:\n\n```c\n\
+          ASN1_VALUE *ASN1_item_d2i(ASN1_VALUE **val,\n                          const\
+          \ unsigned char **in,\n                          long len,\n           \
+          \               const ASN1_ITEM *it);\n```\n\n## Semantics\n\n- Generic\
+          \ DER decoder for a supplied ASN.1 item descriptor.\n- `ASN1_item_d2i()`\
+          \ calls `ASN1_item_d2i_ex(..., NULL, NULL)`.\n- Recursive decoder enforces\
+          \ constructed nesting limits and ASN.1 template boundaries.\n\n## Return\
+          \ Value Semantics\n\n- Returns decoded `ASN1_VALUE *` on success.\n- Returns\
+          \ `NULL` on parse failure.\n\n## Ownership and Buffer Constraints\n\n- Returned\
+          \ value ownership depends on the ASN.1 item type and must be freed with\
+          \ the matching item free routine.\n- Input bytes remain caller-owned.\n\
+          - `*in` is advanced on suc"
+        metadata:
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/ASN1_item_d2i.md
+          library: openssl
+          layer: api_constraints
+          doc_type: api_constraint
+      - rank: 4
+        score: 0.6537243866917191
+        distance: 0.5296966433525085
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__ocsp.c.md
+        text: "rn http_server_get_asn1_req(ASN1_ITEM_rptr(OCSP_REQUEST),\n       \
+          \ (ASN1_VALUE **)preq, NULL, pcbio, acbio,\n        NULL /* found_keep_alive\
+          \ */,\n        prog, 1 /* accept_get */, timeout);\n#else\n    BIO_printf(bio_err,\n\
+          \        \"Error getting OCSP request - sockets not supported\\n\");\n \
+          \   *preq = NULL;\n    return 0;\n#endif\n}\n\nstatic int send_ocsp_response(BIO\
+          \ *cbio, const OCSP_RESPONSE *resp)\n{\n#ifndef OPENSSL_NO_SOCK\n```\n\n\
+          ## Call pattern 2\n\n```c\nfor (i = 0; i < DB_NUMBER; i++)\n        row[i]\
+          \ = NULL;\n    bn = ASN1_INTEGER_to_BN(ser, NULL);\n    OPENSSL_assert(bn);\
+          \ /* FIXME: should report an error at this\n                         * point\
+          \ and abort */\n    if (BN_is_zero(bn)) {\n        itmp = OPENSSL_strdup(\"\
+          00\");\n        OPENSSL_assert(itmp);\n    } else {\n        itmp = BN_bn2hex(bn);\n\
+          \    }\n    row[DB_serial] = itmp;\n    BN_free(bn);\n    rrow = TXT_DB_get_by_index(db->db,\
+          \ DB_serial, row);\n    OPENSSL_free(itmp);\n    return rrow;\n}\n\nstatic\
+          \ int do_responder(OCSP_REQUEST **preq, BIO **pcbio, BI"
+        metadata:
+          doc_type: unit_test_call_pattern
+          library: openssl
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__ocsp.c.md
+      - rank: 5
+        score: 0.6495963296905376
+        distance: 0.539417564868927
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__asn1_dsa_internal_test.c.md
+        text: "# Official test/example call patterns: openssl\n\nLibrary: openssl\n\
+          Version: 3.5.5\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/test/asn1_dsa_internal_test.c\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\n0x30,\
+          \ 0x07, /* SEQUENCE tag + length */\n    0x02, 0x02, 0x00, 0x81, /* INTEGER\
+          \ tag + length */\n    0x02, 0x02, 0x00, 0x82 /* INTEGER tag + length */\n\
+          };\n\nstatic int test_decode(void)\n{\n    int rv = 0;\n    BIGNUM *r;\n\
+          \    BIGNUM *s;\n    const unsigned char *pder;\n\n    r = BN_new();\n \
+          \   s = BN_new();\n\n    /* Positive tests */\n    pder = t_dsa_sig;\n \
+          \   if (ossl_decode_der_dsa_sig(r, s, &pder, sizeof(t_dsa_sig)) == 0\n \
+          \       || !TEST_ptr_eq(pder, (t_dsa_sig + sizeof(t_dsa_sig)))\n       \
+          \ || !TEST_BN_eq_word(r, 1) || !TEST_BN_eq_word(s, 2)) {\n        TEST_info(\"\
+          asn1_dsa test_decode: t_dsa_sig failed\");\n        goto fail;\n    }\n\n\
+          \    BN_clear(r);\n    BN_clear(s);\n    pder = t_dsa_sig_extra;\n    if\
+          \ (ossl_decode_der_dsa_sig(r, s, &pder, sizeof(t_dsa_sig_extra)) == 0"
+        metadata:
+          library: openssl
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__asn1_dsa_internal_test.c.md
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl ASN1_STRING_set implementation source\
+        \ code parameters return error\",\n  \"top_k\": 5,\n  \"results\": [\n   \
+        \ {\n      \"rank\": 1,\n      \"score\": 0.6597116746740432,\n      \"distance\"\
+        : 0.5158137083053589,\n      \"layer\": \"unit_tests\",\n      \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n      \"text\": \"params[0] = OSSL_PARAM_construct_int(OSSL_SIGNATURE_PARAM_PAD_MODE,\
+        \ &padding);\\n        params[1] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST,\\\
+        n            OSSL_DIGEST_NAME_SHA2_256, 0);\\n        params[2] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_MGF1_DIGEST,\\\
+        n            OSSL_DIGEST_NAME_SHA1, 0);\\n```\\n\\n## Call pattern 37\\n\\\
+        n```c\\nif (!TEST_ptr(pkey))\\n        goto err;\\n\\n    ret = test_EVP_PKEY_CTX_get_set_params(pkey);\\\
+        n\\nerr:\\n    EVP_PKEY_free(pkey);\\n    EVP_PKEY_CTX_free(pctx);\\n    OSSL_PARAM_free(params);\\\
+        n    OSSL_PARAM_BLD_free(bld);\\n    BN_free(n);\\n    BN_free(e);\\n    BN_free(d);\\\
+        n\\n    return ret;\\n}\\n\\nstatic int test_RSA_OAEP_set_get_params(void)\\\
+        n{\\n    int ret = 0;\\n    EVP_PKEY *key = NULL;\\n    EVP_PKEY_CTX *key_ctx\
+        \ = NULL;\\n\\n    if (nullprov != NULL)\\n        return TEST_skip(\\\"Test\
+        \ does not support a non-default library context\\\");\\n\\n    if (!TEST_ptr(key\
+        \ = load_example_rsa_key())\\n        || !TEST_ptr(key_ctx = EVP_PKEY_CTX_new_from_pkey(0,\
+        \ key, 0)))\",\n      \"metadata\": {\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n        \"layer\": \"unit_tests\",\n        \"library\": \"openssl\",\n\
+        \        \"doc_type\": \"unit_test_call_pattern\"\n      }\n    },\n    {\n\
+        \      \"rank\": 2,\n      \"score\": 0.6579539061711062,\n      \"distance\"\
+        : 0.5198633074760437,\n      \"layer\": \"unit_tests\",\n      \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n      \"text\": \"/* OPENSSL_NO_DEPRECATED_3_0 */\\n#endif /* OPENSSL_NO_EC\
+        \ */\\n\\nstatic int test_EVP_PKEY_sign(int tst)\\n{\\n    int ret = 0;\\\
+        n    EVP_PKEY *pkey = NULL;\\n    unsigned char *sig = NULL;\\n    size_t\
+        \ sig_len = 0, shortsig_len = 1;\\n    EVP_PKEY_CTX *ctx = NULL;\\n    unsigned\
+        \ char tbs[] = {\\n        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,\
+        \ 0x08, 0x09, 0x0a, 0x0b,\\n        0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12,\
+        \ 0x13\\n    };\\n\\n    if (tst == 0) {\\n        if (!TEST_ptr(pkey = load_example_rsa_key()))\\\
+        n            goto out;\\n    } else if (tst == 1) {\\n#ifndef OPENSSL_NO_DSA\\\
+        n        if (!TEST_ptr(pkey = load_example_dsa_key()))\\n            goto\
+        \ out;\\n#else\\n        ret = 1;\\n```\\n\\n## Call pattern 22\\n\\n```c\\\
+        nOSSL_PARAM *params = NULL;\\n    BIGNUM *p = NULL, *q = NULL, *g = NULL,\
+        \ *pub = NULL, *priv = NULL;\\n    EVP_PKEY_CTX *pctx = NULL;\\n    EVP_PKEY\
+        \ *pkey = NULL;\\n    int ret = 0;\\n\\n    /*\\n     * Setup the parameters\
+        \ for our DSA object. For our purposes they don't\\n     * have to actually\
+        \ be *valid* parameters. W\",\n      \"metadata\": {\n        \"layer\": \"\
+        unit_tests\",\n        \"doc_type\": \"unit_test_call_pattern\",\n       \
+        \ \"library\": \"openssl\",\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 3,\n      \"score\": 0.6569713762779881,\n\
+        \      \"distance\": 0.5221363306045532,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/ASN1_item_d2i.md\"\
+        ,\n      \"text\": \"# API Constraints: ASN1_item_d2i (OpenSSL 3.5.5)\\n\\\
+        nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `ASN1_item_d2i`\\n- Header declaration: `include/openssl/asn1.h`\\\
+        n- Implementation file: `crypto/asn1/tasn_dec.c`\\n- Signature:\\n\\n```c\\\
+        nASN1_VALUE *ASN1_item_d2i(ASN1_VALUE **val,\\n                          const\
+        \ unsigned char **in,\\n                          long len,\\n           \
+        \               const ASN1_ITEM *it);\\n```\\n\\n## Semantics\\n\\n- Generic\
+        \ DER decoder for a supplied ASN.1 item descriptor.\\n- `ASN1_item_d2i()`\
+        \ calls `ASN1_item_d2i_ex(..., NULL, NULL)`.\\n- Recursive decoder enforces\
+        \ constructed nesting limits and ASN.1 template boundaries.\\n\\n## Return\
+        \ Value Semantics\\n\\n- Returns decoded `ASN1_VALUE *` on success.\\n- Returns\
+        \ `NULL` on parse failure.\\n\\n## Ownership and Buffer Constraints\\n\\n-\
+        \ Returned value ownership depends on the ASN.1 item type and must be freed\
+        \ with the matching item free routine.\\n- Input bytes remain caller-owned.\\\
+        n- `*in` is advanced on suc\",\n      \"metadata\": {\n        \"source_file\"\
+        : \"knowledge_raw/api_constraints/openssl/3.5.5/ASN1_item_d2i.md\",\n    \
+        \    \"library\": \"openssl\",\n        \"layer\": \"api_constraints\",\n\
+        \        \"doc_type\": \"api_constraint\"\n      }\n    },\n    {\n      \"\
+        rank\": 4,\n      \"score\": 0.6537243866917191,\n      \"distance\": 0.5296966433525085,\n\
+        \      \"layer\": \"unit_tests\",\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__ocsp.c.md\"\
+        ,\n      \"text\": \"rn http_server_get_asn1_req(ASN1_ITEM_rptr(OCSP_REQUEST),\\\
+        n        (ASN1_VALUE **)preq, NULL, pcbio, acbio,\\n        NULL /* found_keep_alive\
+        \ */,\\n        prog, 1 /* accept_get */, timeout);\\n#else\\n    BIO_printf(bio_err,\\\
+        n        \\\"Error getting OCSP request - sockets not supported\\\\n\\\");\\\
+        n    *preq = NULL;\\n    return 0;\\n#endif\\n}\\n\\nstatic int send_ocsp_response(BIO\
+        \ *cbio, const OCSP_RESPONSE *resp)\\n{\\n#ifndef OPENSSL_NO_SOCK\\n```\\\
+        n\\n## Call pattern 2\\n\\n```c\\nfor (i = 0; i < DB_NUMBER; i++)\\n     \
+        \   row[i] = NULL;\\n    bn = ASN1_INTEGER_to_BN(ser, NULL);\\n    OPENSSL_assert(bn);\
+        \ /* FIXME: should report an error at this\\n                         * point\
+        \ and abort */\\n    if (BN_is_zero(bn)) {\\n        itmp = OPENSSL_strdup(\\\
+        \"00\\\");\\n        OPENSSL_assert(itmp);\\n    } else {\\n        itmp =\
+        \ BN_bn2hex(bn);\\n    }\\n    row[DB_serial] = itmp;\\n    BN_free(bn);\\\
+        n    rrow = TXT_DB_get_by_index(db->db, DB_serial, row);\\n    OPENSSL_free(it"
+      stderr_preview: ''
+      truncated: true
+      kind: target_api_implementation
+      use_for_feature_inference: target
+    - query: openssl ASN1_STRING_set usage example unit test API call pattern
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7170582398769771
+        distance: 0.39458686113357544
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__ocsp.c.md
+        text: "# Official test/example call patterns: openssl\n\nLibrary: openssl\n\
+          Version: 3.5.5\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/apps/ocsp.c\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\nint\
+          \ i;\n    BIGNUM *bn = NULL;\n    char *itmp, *row[DB_NUMBER], **rrow;\n\
+          \    for (i = 0; i < DB_NUMBER; i++)\n        row[i] = NULL;\n    bn = ASN1_INTEGER_to_BN(ser,\
+          \ NULL);\n    OPENSSL_assert(bn); /* FIXME: should report an error at this\n\
+          \                         * point and abort */\n    if (BN_is_zero(bn))\
+          \ {\n        itmp = OPENSSL_strdup(\"00\");\n        OPENSSL_assert(itmp);\n\
+          \    } else {\n        itmp = BN_bn2hex(bn);\n    }\n    row[DB_serial]\
+          \ = itmp;\n    BN_free(bn);\n    rrow = TXT_DB_get_by_index(db->db, DB_serial,\
+          \ row);\n    OPENSSL_free(itmp);\n    return rrow;\n}\n\nstatic int do_responder(OCSP_REQUEST\
+          \ **preq, BIO **pcbio, BIO *acbio,\n    int timeout)\n{\n#ifndef OPENSSL_NO_SOCK\n\
+          \    return http_server_get_asn1_req(ASN1_ITEM_rptr(OCSP_REQUEST),\n   \
+          \     (ASN1_VALUE **)preq, NULL, pcbio,"
+        metadata:
+          doc_type: unit_test_call_pattern
+          library: openssl
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__ocsp.c.md
+      - rank: 2
+        score: 0.7164633684793871
+        distance: 0.39574477076530457
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__asn1_dsa_internal_test.c.md
+        text: "# Official test/example call patterns: openssl\n\nLibrary: openssl\n\
+          Version: 3.5.5\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/test/asn1_dsa_internal_test.c\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\n0x30,\
+          \ 0x07, /* SEQUENCE tag + length */\n    0x02, 0x02, 0x00, 0x81, /* INTEGER\
+          \ tag + length */\n    0x02, 0x02, 0x00, 0x82 /* INTEGER tag + length */\n\
+          };\n\nstatic int test_decode(void)\n{\n    int rv = 0;\n    BIGNUM *r;\n\
+          \    BIGNUM *s;\n    const unsigned char *pder;\n\n    r = BN_new();\n \
+          \   s = BN_new();\n\n    /* Positive tests */\n    pder = t_dsa_sig;\n \
+          \   if (ossl_decode_der_dsa_sig(r, s, &pder, sizeof(t_dsa_sig)) == 0\n \
+          \       || !TEST_ptr_eq(pder, (t_dsa_sig + sizeof(t_dsa_sig)))\n       \
+          \ || !TEST_BN_eq_word(r, 1) || !TEST_BN_eq_word(s, 2)) {\n        TEST_info(\"\
+          asn1_dsa test_decode: t_dsa_sig failed\");\n        goto fail;\n    }\n\n\
+          \    BN_clear(r);\n    BN_clear(s);\n    pder = t_dsa_sig_extra;\n    if\
+          \ (ossl_decode_der_dsa_sig(r, s, &pder, sizeof(t_dsa_sig_extra)) == 0"
+        metadata:
+          layer: unit_tests
+          library: openssl
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__asn1_dsa_internal_test.c.md
+      - rank: 3
+        score: 0.7136450802478818
+        distance: 0.4012567698955536
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__params_test.c.md
+        text: "# Official test/example call patterns: openssl\n\nLibrary: openssl\n\
+          Version: 3.5.5\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/test/params_test.c\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\n\"\
+          4142434445464748494a4b4c4d4e4f50\" \\\n    \"5152535455565758595a616263646566\"\
+          \ \\\n    \"6768696a6b6c6d6e6f70717273747576\" \\\n    \"7778797a30313233343536373839\"\
+          \n#define p4_init \"BLAKE2s256\" /* Random string */\n#define p5_init \"\
+          Hellow World\" /* Random string */ /* codespell:ignore */\n#define p6_init\
+          \ OPENSSL_FULL_VERSION_STR /* Static string */\n\nstatic void cleanup_object(void\
+          \ *vobj)\n{\n    struct object_st *obj = vobj;\n\n    BN_free(obj->p3);\n\
+          \    obj->p3 = NULL;\n    OPENSSL_free(obj->p4);\n    obj->p4 = NULL;\n\
+          \    OPENSSL_free(obj);\n}\n\nstatic void *init_object(void)\n{\n    struct\
+          \ object_st *obj;\n\n    if (!TEST_ptr(obj = OPENSSL_zalloc(sizeof(*obj))))\n\
+          \        return NULL;\n\n    obj->p1 = p1_init;\n    obj->p2 = p2_init;\n\
+          \    if (!TEST_true(BN_hex2bn(&obj->p3, p3_init)))\n        goto fail"
+        metadata:
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+          library: openssl
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__params_test.c.md
+      - rank: 4
+        score: 0.7085715656514335
+        distance: 0.4112900495529175
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__params_api_test.c.md
+        text: "# Official test/example call patterns: openssl\n\nLibrary: openssl\n\
+          Version: 3.5.5\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/test/params_api_test.c\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\nif\
+          \ (!TEST_true(OSSL_PARAM_set_BN(&param, b)))\n        goto err;\n    le_copy(buf,\
+          \ len, bnbuf, sizeof(bnbuf));\n    if (!TEST_mem_eq(raw_values[n].value,\
+          \ len, buf, len))\n        goto err;\n    param.data_size = param.return_size;\n\
+          \    if (!TEST_true(OSSL_PARAM_get_BN(&param, &c))\n        || !TEST_BN_eq(b,\
+          \ c))\n        goto err;\n\n    ret = 1;\nerr:\n    BN_free(b);\n    BN_free(c);\n\
+          \    return ret;\n}\n\nstatic int test_param_signed_bignum(int n)\n{\n \
+          \   unsigned char buf[MAX_LEN], bnbuf[MAX_LEN];\n    const size_t len =\
+          \ raw_values[n].len;\n    BIGNUM *b = NULL, *c = NULL;\n    OSSL_PARAM param\
+          \ = OSSL_PARAM_DEFN(\"bn\", OSSL_PARAM_INTEGER, NULL, 0);\n    int ret =\
+          \ 0;\n\n    if (!TEST_int_eq(test_param_type_null(&param), 1))\n       \
+          \ return 0;\n\n    param.data = bnbuf;\n    param.data_size = si"
+        metadata:
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__params_api_test.c.md
+          doc_type: unit_test_call_pattern
+          library: openssl
+      - rank: 5
+        score: 0.7069931603917249
+        distance: 0.4144408404827118
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__test_test.c.md
+        text: "# Official test/example call patterns: openssl\n\nLibrary: openssl\n\
+          Version: 3.5.5\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/test/test_test.c\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\n||\
+          \ !TEST(1, TEST_BN_le(c, b))\n        || !TEST(0, TEST_BN_le(b, c))\n  \
+          \      || !TEST(1, TEST_BN_gt(a, c))\n        || !TEST(0, TEST_BN_gt(c,\
+          \ b))\n        || !TEST(1, TEST_BN_gt(b, c))\n        || !TEST(1, TEST_BN_ge(a,\
+          \ c))\n        || !TEST(0, TEST_BN_ge(c, b))\n        || !TEST(1, TEST_BN_ge(b,\
+          \ c)))\n        goto err;\n\n    r = 1;\nerr:\n    BN_free(a);\n    BN_free(b);\n\
+          \    BN_free(c);\n    return r;\n}\n\nstatic int test_long_output(void)\n\
+          {\n    const char *p = \"1234567890123456789012345678901234567890123456789012\"\
+          ;\n    const char *q = \"1234567890klmnopqrs01234567890EFGHIJKLM0123456789XYZ\"\
+          ;\n    const char *r = \"1234567890123456789012345678901234567890123456789012\"\
+          \n                    \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY+\"\
+          \n                    \"12345678901234567890123ABC7"
+        metadata:
+          library: openssl
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__test_test.c.md
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl ASN1_STRING_set usage example unit\
+        \ test API call pattern\",\n  \"top_k\": 5,\n  \"results\": [\n    {\n   \
+        \   \"rank\": 1,\n      \"score\": 0.7170582398769771,\n      \"distance\"\
+        : 0.39458686113357544,\n      \"layer\": \"unit_tests\",\n      \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__ocsp.c.md\"\
+        ,\n      \"text\": \"# Official test/example call patterns: openssl\\n\\nLibrary:\
+        \ openssl\\nVersion: 3.5.5\\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/apps/ocsp.c\\\
+        nKnowledge type: unit_tests_or_examples\\n\\n## Call pattern 1\\n\\n```c\\\
+        nint i;\\n    BIGNUM *bn = NULL;\\n    char *itmp, *row[DB_NUMBER], **rrow;\\\
+        n    for (i = 0; i < DB_NUMBER; i++)\\n        row[i] = NULL;\\n    bn = ASN1_INTEGER_to_BN(ser,\
+        \ NULL);\\n    OPENSSL_assert(bn); /* FIXME: should report an error at this\\\
+        n                         * point and abort */\\n    if (BN_is_zero(bn)) {\\\
+        n        itmp = OPENSSL_strdup(\\\"00\\\");\\n        OPENSSL_assert(itmp);\\\
+        n    } else {\\n        itmp = BN_bn2hex(bn);\\n    }\\n    row[DB_serial]\
+        \ = itmp;\\n    BN_free(bn);\\n    rrow = TXT_DB_get_by_index(db->db, DB_serial,\
+        \ row);\\n    OPENSSL_free(itmp);\\n    return rrow;\\n}\\n\\nstatic int do_responder(OCSP_REQUEST\
+        \ **preq, BIO **pcbio, BIO *acbio,\\n    int timeout)\\n{\\n#ifndef OPENSSL_NO_SOCK\\\
+        n    return http_server_get_asn1_req(ASN1_ITEM_rptr(OCSP_REQUEST),\\n    \
+        \    (ASN1_VALUE **)preq, NULL, pcbio,\",\n      \"metadata\": {\n       \
+        \ \"doc_type\": \"unit_test_call_pattern\",\n        \"library\": \"openssl\"\
+        ,\n        \"layer\": \"unit_tests\",\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__ocsp.c.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 2,\n      \"score\": 0.7164633684793871,\n\
+        \      \"distance\": 0.39574477076530457,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__asn1_dsa_internal_test.c.md\"\
+        ,\n      \"text\": \"# Official test/example call patterns: openssl\\n\\nLibrary:\
+        \ openssl\\nVersion: 3.5.5\\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/test/asn1_dsa_internal_test.c\\\
+        nKnowledge type: unit_tests_or_examples\\n\\n## Call pattern 1\\n\\n```c\\\
+        n0x30, 0x07, /* SEQUENCE tag + length */\\n    0x02, 0x02, 0x00, 0x81, /*\
+        \ INTEGER tag + length */\\n    0x02, 0x02, 0x00, 0x82 /* INTEGER tag + length\
+        \ */\\n};\\n\\nstatic int test_decode(void)\\n{\\n    int rv = 0;\\n    BIGNUM\
+        \ *r;\\n    BIGNUM *s;\\n    const unsigned char *pder;\\n\\n    r = BN_new();\\\
+        n    s = BN_new();\\n\\n    /* Positive tests */\\n    pder = t_dsa_sig;\\\
+        n    if (ossl_decode_der_dsa_sig(r, s, &pder, sizeof(t_dsa_sig)) == 0\\n \
+        \       || !TEST_ptr_eq(pder, (t_dsa_sig + sizeof(t_dsa_sig)))\\n        ||\
+        \ !TEST_BN_eq_word(r, 1) || !TEST_BN_eq_word(s, 2)) {\\n        TEST_info(\\\
+        \"asn1_dsa test_decode: t_dsa_sig failed\\\");\\n        goto fail;\\n   \
+        \ }\\n\\n    BN_clear(r);\\n    BN_clear(s);\\n    pder = t_dsa_sig_extra;\\\
+        n    if (ossl_decode_der_dsa_sig(r, s, &pder, sizeof(t_dsa_sig_extra)) ==\
+        \ 0\",\n      \"metadata\": {\n        \"layer\": \"unit_tests\",\n      \
+        \  \"library\": \"openssl\",\n        \"doc_type\": \"unit_test_call_pattern\"\
+        ,\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__asn1_dsa_internal_test.c.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 3,\n      \"score\": 0.7136450802478818,\n\
+        \      \"distance\": 0.4012567698955536,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__params_test.c.md\"\
+        ,\n      \"text\": \"# Official test/example call patterns: openssl\\n\\nLibrary:\
+        \ openssl\\nVersion: 3.5.5\\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/test/params_test.c\\\
+        nKnowledge type: unit_tests_or_examples\\n\\n## Call pattern 1\\n\\n```c\\\
+        n\\\"4142434445464748494a4b4c4d4e4f50\\\" \\\\\\n    \\\"5152535455565758595a616263646566\\\
+        \" \\\\\\n    \\\"6768696a6b6c6d6e6f70717273747576\\\" \\\\\\n    \\\"7778797a30313233343536373839\\\
+        \"\\n#define p4_init \\\"BLAKE2s256\\\" /* Random string */\\n#define p5_init\
+        \ \\\"Hellow World\\\" /* Random string */ /* codespell:ignore */\\n#define\
+        \ p6_init OPENSSL_FULL_VERSION_STR /* Static string */\\n\\nstatic void cleanup_object(void\
+        \ *vobj)\\n{\\n    struct object_st *obj = vobj;\\n\\n    BN_free(obj->p3);\\\
+        n    obj->p3 = NULL;\\n    OPENSSL_free(obj->p4);\\n    obj->p4 = NULL;\\\
+        n    OPENSSL_free(obj);\\n}\\n\\nstatic void *init_object(void)\\n{\\n   \
+        \ struct object_st *obj;\\n\\n    if (!TEST_ptr(obj = OPENSSL_zalloc(sizeof(*obj))))\\\
+        n        return NULL;\\n\\n    obj->p1 = p1_init;\\n    obj->p2 = p2_init;\\\
+        n    if (!TEST_true(BN_hex2bn(&obj->p3, p3_init)))\\n        goto fail\",\n\
+        \      \"metadata\": {\n        \"doc_type\": \"unit_test_call_pattern\",\n\
+        \        \"layer\": \"unit_tests\",\n        \"library\": \"openssl\",\n \
+        \       \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__params_test.c.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 4,\n      \"score\": 0.7085715656514335,\n\
+        \      \"distance\": 0.4112900495529175,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__params_api_test.c.md\"\
+        ,\n      \"text\": \"# Official test/example call patterns: openssl\\n\\nLibrary:\
+        \ openssl\\nVersion: 3.5.5\\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/test/params_api_test.c\\\
+        nKnowledge type: unit_tests_or_examples\\n\\n## Call pattern 1\\n\\n```c\\\
+        nif (!TEST_true(OSSL_PARAM_set_BN(&param, b)))\\n        goto err;\\n    le_copy(buf,\
+        \ len, bnbuf, sizeof(bnbuf));\\n    if (!TEST_mem_eq(raw_values[n].value,\
+        \ len, buf, len))\\n        goto err;\\n    param.data_size = param.return_size;\\\
+        n    if (!TEST_true(OSSL_PARAM_get_BN(&param, &c))\\n        || !TEST_BN_eq(b,\
+        \ c))\\n        goto err;\\n\\n    ret = 1;\\nerr:\\n    BN_free(b);\\n  \
+        \  BN_free(c);\\n    return ret;\\n}\\n\\nstatic int test_param_signed_bignum(int\
+        \ n)\\n{\\n    unsigned char buf[MAX_LEN], bnbuf[MAX_LEN];\\n    const size_t\
+        \ len = raw_values[n].len;\\n    BIGNUM *b = NULL, *c = NULL;\\n    OSSL_PARAM\
+        \ param = OSSL_PARAM_"
+      stderr_preview: ''
+      truncated: true
+      kind: target_api_usage
+      use_for_feature_inference: target
+    - query: 'openssl ASN1_STRING_set mutable_named_object_with_pointer_length_pair
+        repeated_update_of_same_object zero_length_update_modifies_pointer_state later_nonzero_reuse_with_same_length
+        observable_null_dereference_or_safe_reallocation  mutable_named_object_with_pointer_length_pair
+        repeated_update_of_same_object zero_length_update_modifies_pointer_state OID_based_object_lookup
+        linked_list_storage exact_stale_null_pointer_path '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7482440663386066
+        distance: 0.3364623188972473
+        layer: poc_patterns
+        source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0005.md
+        text: '# MBEDTLS-POC-0005: mbedtls_asn1_store_named_data zero-length stale
+          state
+
+
+          ## Source
+
+
+          This pattern comes from CVE-2025-48965 and the Mbed TLS security advisory.
+          The
+
+          affected API is `mbedtls_asn1_store_named_data` in `library/asn1write.c`.
+
+
+          The confirmed library fix commit is
+
+          `2df7ab7c0c3d5bb8a31481073c494521d10d4eba`. The local buggy worktree used
+
+          `2df7ab7c0c3d5bb8a31481073c494521d10d4eba^`. The related unit-test commit
+          is
+
+          `12df5f3a16a2bc53881b9d88556192dcbc2f6774`.
+
+
+          ## Root Cause
+
+
+          In the buggy version, `mbedtls_asn1_store_named_data()` frees `cur->val.p`
+          when
+
+          `val_len == 0` and sets the pointer to `NULL`, but it does not reset
+
+          `cur->val.len`.
+
+
+          This leaves the internal named-data object in an inconsistent state:
+
+
+          - `cur->val.p == NULL`
+
+          - `cur->val.len != 0`
+
+
+          A later call with the same OID and a value length equal to the stale
+
+          `cur->val.len` can skip reallocation and copy into `cur->val.p == NULL`,
+
+          causing a NULL pointer dereference.
+
+
+          The fixed statement is:
+
+
+          ```c
+
+          cur->val.len = 0;
+
+          ```'
+        metadata:
+          layer: poc_patterns
+          source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0005.md
+          library: mbedtls
+          doc_type: poc_pattern
+      - rank: 2
+        score: 0.7204568196541629
+        distance: 0.3880082368850708
+        layer: poc_patterns
+        source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0005.md
+        text: 'ency across repeated updates, not
+
+          only ASN.1 encoding.
+
+
+          Good target API features:
+
+
+          - stores mutable named attributes or ASN.1-like OID/value pairs,
+
+          - supports repeated updates of the same key or OID,
+
+          - treats zero-length values as a special state transition,
+
+          - maintains separate pointer and length fields for stored values,
+
+          - can observe stale pointer-length inconsistency through crash or state
+          checks.
+
+
+          Weak target API features:
+
+
+          - supports repeated metadata updates but hides all storage state,
+
+          - always reallocates on every update, weakening the stale-length path.
+
+
+          Bad target API features:
+
+
+          - immutable attribute storage,
+
+          - no zero-length update path,
+
+          - no separate pointer/length consistency invariant.
+
+
+          ## Expected Oracle
+
+
+          Bug candidate signals:
+
+
+          - after zero-length update, `val.p == NULL` and `val.len != 0`,
+
+          - segmentation fault on later same-length update,
+
+          - exit code `139`.
+
+
+          Safe or fixed behavior:
+
+
+          - after zero-length update, `val.p == NULL` and `val.len == 0`,
+
+          - later nonzero update'
+        metadata:
+          layer: poc_patterns
+          source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0005.md
+          library: mbedtls
+          doc_type: poc_pattern
+      - rank: 3
+        score: 0.7153770005737611
+        distance: 0.39786434173583984
+        layer: poc_patterns
+        source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0005.md
+        text: '== 0`
+
+          - `cur->val.len == val_len`
+
+
+          ### Statement-level Candidates
+
+
+          - `cur->val.len = 0;`
+
+          - `memcpy(cur->val.p, val, val_len)`
+
+
+          ### Block-level Candidates
+
+
+          - The `val_len == 0` branch in `mbedtls_asn1_store_named_data()`.
+
+
+          ## Vulnerability Path Features
+
+
+          The migrated target API should preserve these features:
+
+
+          - mutable named-data entry,
+
+          - repeated update for the same identifier,
+
+          - zero-length update frees or clears value pointer,
+
+          - stale length field after pointer clear,
+
+          - later same-length nonzero update can skip allocation,
+
+          - observable NULL dereference or safe reallocation.
+
+
+          Optional features:
+
+
+          - ASN.1 `commonName` OID,
+
+          - exact value length `4`,
+
+          - linked-list named-data storage.
+
+
+          Not required features:
+
+
+          - exact CVE advisory source,
+
+          - exact pointer addresses,
+
+          - exact allocator behavior beyond observable reallocation.
+
+
+          ## Migration Guidance
+
+
+          This pattern is about pointer-length consistency across repeated updates,
+          not
+
+          only ASN.1 encoding.
+
+
+          Good target API features:
+
+
+          - stores mutable'
+        metadata:
+          library: mbedtls
+          layer: poc_patterns
+          doc_type: poc_pattern
+          source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0005.md
+      - rank: 4
+        score: 0.7139487087416355
+        distance: 0.40066084265708923
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_asn1_store_named_data.md
+        text: 'ration Notes
+
+
+          - Relevant to `MBEDTLS-POC-0005`.
+
+          - Pattern is pointer-length consistency across repeated mutable metadata
+          updates, not ASN.1 encoding alone.
+
+          - Cross-library targets should preserve mutable named entry, zero-length
+          update, separate pointer/length state, and later reallocation or copy behavior.
+
+
+          ## Related Tests or Examples Found Locally
+
+
+          - `tf-psa-crypto/tests/suites/test_suite_asn1write.function`: direct calls
+          around lines 508, 563, and 601.
+
+          - `library/x509_create.c`: callers around lines 531 and 573.'
+        metadata:
+          library: mbedtls
+          source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_asn1_store_named_data.md
+          layer: api_constraints
+          doc_type: api_constraint
+      - rank: 5
+        score: 0.6730181021366536
+        distance: 0.48584413528442383
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__param_build_test.c.md
+        text: "gned long int l;\n    uint32_t i32;\n    uint64_t i64;\n    size_t\
+          \ st;\n    BIGNUM *zbn = NULL, *zbn_res = NULL;\n    BIGNUM *pbn = NULL,\
+          \ *pbn_res = NULL;\n    BIGNUM *nbn = NULL, *nbn_res = NULL;\n    int res\
+          \ = 0;\n\n    if (!TEST_ptr(data1 = OPENSSL_secure_malloc(data1_size))\n\
+          \        || !TEST_ptr(data2 = OPENSSL_secure_malloc(data2_size))\n```\n\n\
+          ## Call pattern 14\n\n```c\ngoto err;\n    res = 1;\nerr:\n    OPENSSL_free(p1);\n\
+          \    if (params != params_blt)\n        OPENSSL_free(params);\n    OSSL_PARAM_free(params_blt);\n\
+          \    OSSL_PARAM_BLD_free(bld);\n    OPENSSL_free(utf);\n    BN_free(zbn);\n\
+          \    BN_free(zbn_res);\n    BN_free(pbn);\n    BN_free(pbn_res);\n    BN_free(nbn);\n\
+          \    BN_free(nbn_res);\n    return res;\n}\n\nstatic int template_private_test(int\
+          \ tstid)\n{\n    int *data1 = NULL, *data2 = NULL, j;\n    const int data1_num\
+          \ = 12;\n    const int data1_size = data1_num * sizeof(int);\n    const\
+          \ int data2_num = 5;\n    const int data2_size = data2_num * sizeof(int);\n\
+          \    OSSL_PARAM_BLD *bld = NULL;\n    OSSL_PARAM *par"
+        metadata:
+          doc_type: unit_test_call_pattern
+          library: openssl
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__param_build_test.c.md
+          layer: unit_tests
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl ASN1_STRING_set mutable_named_object_with_pointer_length_pair\
+        \ repeated_update_of_same_object zero_length_update_modifies_pointer_state\
+        \ later_nonzero_reuse_with_same_length observable_null_dereference_or_safe_reallocation\
+        \  mutable_named_object_with_pointer_length_pair repeated_update_of_same_object\
+        \ zero_length_update_modifies_pointer_state OID_based_object_lookup linked_list_storage\
+        \ exact_stale_null_pointer_path \",\n  \"top_k\": 5,\n  \"results\": [\n \
+        \   {\n      \"rank\": 1,\n      \"score\": 0.7482440663386066,\n      \"\
+        distance\": 0.3364623188972473,\n      \"layer\": \"poc_patterns\",\n    \
+        \  \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0005.md\"\
+        ,\n      \"text\": \"# MBEDTLS-POC-0005: mbedtls_asn1_store_named_data zero-length\
+        \ stale state\\n\\n## Source\\n\\nThis pattern comes from CVE-2025-48965 and\
+        \ the Mbed TLS security advisory. The\\naffected API is `mbedtls_asn1_store_named_data`\
+        \ in `library/asn1write.c`.\\n\\nThe confirmed library fix commit is\\n`2df7ab7c0c3d5bb8a31481073c494521d10d4eba`.\
+        \ The local buggy worktree used\\n`2df7ab7c0c3d5bb8a31481073c494521d10d4eba^`.\
+        \ The related unit-test commit is\\n`12df5f3a16a2bc53881b9d88556192dcbc2f6774`.\\\
+        n\\n## Root Cause\\n\\nIn the buggy version, `mbedtls_asn1_store_named_data()`\
+        \ frees `cur->val.p` when\\n`val_len == 0` and sets the pointer to `NULL`,\
+        \ but it does not reset\\n`cur->val.len`.\\n\\nThis leaves the internal named-data\
+        \ object in an inconsistent state:\\n\\n- `cur->val.p == NULL`\\n- `cur->val.len\
+        \ != 0`\\n\\nA later call with the same OID and a value length equal to the\
+        \ stale\\n`cur->val.len` can skip reallocation and copy into `cur->val.p ==\
+        \ NULL`,\\ncausing a NULL pointer dereference.\\n\\nThe fixed statement is:\\\
+        n\\n```c\\ncur->val.len = 0;\\n```\",\n      \"metadata\": {\n        \"layer\"\
+        : \"poc_patterns\",\n        \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0005.md\"\
+        ,\n        \"library\": \"mbedtls\",\n        \"doc_type\": \"poc_pattern\"\
+        \n      }\n    },\n    {\n      \"rank\": 2,\n      \"score\": 0.7204568196541629,\n\
+        \      \"distance\": 0.3880082368850708,\n      \"layer\": \"poc_patterns\"\
+        ,\n      \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0005.md\"\
+        ,\n      \"text\": \"ency across repeated updates, not\\nonly ASN.1 encoding.\\\
+        n\\nGood target API features:\\n\\n- stores mutable named attributes or ASN.1-like\
+        \ OID/value pairs,\\n- supports repeated updates of the same key or OID,\\\
+        n- treats zero-length values as a special state transition,\\n- maintains\
+        \ separate pointer and length fields for stored values,\\n- can observe stale\
+        \ pointer-length inconsistency through crash or state checks.\\n\\nWeak target\
+        \ API features:\\n\\n- supports repeated metadata updates but hides all storage\
+        \ state,\\n- always reallocates on every update, weakening the stale-length\
+        \ path.\\n\\nBad target API features:\\n\\n- immutable attribute storage,\\\
+        n- no zero-length update path,\\n- no separate pointer/length consistency\
+        \ invariant.\\n\\n## Expected Oracle\\n\\nBug candidate signals:\\n\\n- after\
+        \ zero-length update, `val.p == NULL` and `val.len != 0`,\\n- segmentation\
+        \ fault on later same-length update,\\n- exit code `139`.\\n\\nSafe or fixed\
+        \ behavior:\\n\\n- after zero-length update, `val.p == NULL` and `val.len\
+        \ == 0`,\\n- later nonzero update\",\n      \"metadata\": {\n        \"layer\"\
+        : \"poc_patterns\",\n        \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0005.md\"\
+        ,\n        \"library\": \"mbedtls\",\n        \"doc_type\": \"poc_pattern\"\
+        \n      }\n    },\n    {\n      \"rank\": 3,\n      \"score\": 0.7153770005737611,\n\
+        \      \"distance\": 0.39786434173583984,\n      \"layer\": \"poc_patterns\"\
+        ,\n      \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0005.md\"\
+        ,\n      \"text\": \"== 0`\\n- `cur->val.len == val_len`\\n\\n### Statement-level\
+        \ Candidates\\n\\n- `cur->val.len = 0;`\\n- `memcpy(cur->val.p, val, val_len)`\\\
+        n\\n### Block-level Candidates\\n\\n- The `val_len == 0` branch in `mbedtls_asn1_store_named_data()`.\\\
+        n\\n## Vulnerability Path Features\\n\\nThe migrated target API should preserve\
+        \ these features:\\n\\n- mutable named-data entry,\\n- repeated update for\
+        \ the same identifier,\\n- zero-length update frees or clears value pointer,\\\
+        n- stale length field after pointer clear,\\n- later same-length nonzero update\
+        \ can skip allocation,\\n- observable NULL dereference or safe reallocation.\\\
+        n\\nOptional features:\\n\\n- ASN.1 `commonName` OID,\\n- exact value length\
+        \ `4`,\\n- linked-list named-data storage.\\n\\nNot required features:\\n\\\
+        n- exact CVE advisory source,\\n- exact pointer addresses,\\n- exact allocator\
+        \ behavior beyond observable reallocation.\\n\\n## Migration Guidance\\n\\\
+        nThis pattern is about pointer-length consistency across repeated updates,\
+        \ not\\nonly ASN.1 encoding.\\n\\nGood target API features:\\n\\n- stores\
+        \ mutable\",\n      \"metadata\": {\n        \"library\": \"mbedtls\",\n \
+        \       \"layer\": \"poc_patterns\",\n        \"doc_type\": \"poc_pattern\"\
+        ,\n        \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0005.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 4,\n      \"score\": 0.7139487087416355,\n\
+        \      \"distance\": 0.40066084265708923,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_asn1_store_named_data.md\"\
+        ,\n      \"text\": \"ration Notes\\n\\n- Relevant to `MBEDTLS-POC-0005`.\\\
+        n- Pattern is pointer-length consistency across repeated mutable metadata\
+        \ updates, not ASN.1 encoding alone.\\n- Cross-library targets should preserve\
+        \ mutable named entry, zero-length update, separate pointer/length state,\
+        \ and later reallocation or copy behavior.\\n\\n## Related Tests or Examples\
+        \ Found Locally\\n\\n- `tf-psa-crypto/tests/suites/test_suite_asn1write.function`:\
+        \ direct calls around lines 508, 563, and 601.\\n- `library/x509_create.c`:\
+        \ callers around lines 531 and 573.\",\n      \"metadata\": {\n        \"\
+        library\": \"mbedtls\",\n        \"source_file\": \"knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_asn1_store_named_data.md\"\
+        ,\n        \"layer\": \"api_constraints\",\n        \"doc_type\": \"api_constraint\"\
+        \n      }\n    },\n    {\n      \"rank\": 5,\n      \"score\": 0.6730181021366536,\n\
+        \      \"distance\": 0.48584413528442383"
+      stderr_preview: ''
+      truncated: true
+      kind: vulnerability_path_compatibility
+      use_for_feature_inference: target
+    inferred_features:
+      observed_features_from_target_evidence:
+      - explicit_tag_input
+      - library_allocated_output
+      - library_writes_to_caller_buffer
+      - mutable_named_object_with_pointer_length_pair
+      - radix_or_textual_base_context
+      - repeated_update_of_same_object
+      - signed_or_negative_encoding
+      - verification_return_code
+      - zero_length_update_modifies_pointer_state
+      negative_or_weakened_features:
+      - OID_based_object_lookup
+      - caller_provided_output_buffer
+      - exact_stale_null_pointer_path
+      - library_writes_to_caller_buffer
+      - linked_list_storage
+      effective_observed_features:
+      - explicit_tag_input
+      - library_allocated_output
+      - mutable_named_object_with_pointer_length_pair
+      - radix_or_textual_base_context
+      - repeated_update_of_same_object
+      - signed_or_negative_encoding
+      - verification_return_code
+      - zero_length_update_modifies_pointer_state
+      feature_conflicts:
+      - feature: library_writes_to_caller_buffer
+        resolution: removed_from_effective_observed_due_to_negative_or_lost_feature
+      candidate_preserved_features:
+      - mutable_named_object_with_pointer_length_pair
+      - repeated_update_of_same_object
+      - zero_length_update_modifies_pointer_state
+      candidate_lost_or_weakened_features:
+      - OID_based_object_lookup
+      - exact_stale_null_pointer_path
+      - linked_list_storage
+      bug_class_requirements:
+        required: []
+        disallowed: []
+        optional: []
+      required_present: []
+      required_missing: []
+      disallowed_present: []
+      optional_present: []
+      evidence_hits:
+        caller_provided_output_buffer:
+          positive_hits: []
+          negative_hits:
+          - OPENSSL_free
+        library_writes_to_caller_buffer:
+          positive_hits:
+          - memcpy
+          negative_hits:
+          - OPENSSL_free
+        library_allocated_output:
+          positive_hits:
+          - OPENSSL_free
+          - must be freed
+          negative_hits: []
+        signed_or_negative_encoding:
+          positive_hits:
+          - signed
+          negative_hits: []
+        radix_or_textual_base_context:
+          positive_hits:
+          - hex
+          negative_hits: []
+        explicit_tag_input:
+          positive_hits:
+          - tag
+          negative_hits: []
+        verification_return_code:
+          positive_hits:
+          - return 0
+          negative_hits: []
+evidence_collection:
+  method: config_driven_rag_evidence_collector
+  top_k: 5
+  target_api_filter: ''
+  max_candidates: null
+  max_queries_per_candidate: null
+  feature_rules: config/evidence_feature_rules.yaml
+  bug_classes:
+  - mutable_named_object_with_pointer_length_pair
+  - repeated_update_of_same_object
+  - zero_length_update_modifies_pointer_state
+  - later_nonzero_reuse_with_same_length
+  - observable_null_dereference_or_safe_reallocation
+  source_pattern:
+    pattern_id: MBEDTLS-POC-0005
+    root_cause_summary: ''
+    must_preserve_features: []
+    optional_features: []
+    not_required_features: []
+    good_target_api_features: []
+    bad_target_api_features: []
+    rag_query_context: 'template_id: ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE api:
+      mbedtls_asn1_store_named_data operation: asn1_named_data_zero_len_stale_state_lifecycle
+      bug_class: stale_pointer_length_state null_pointer_dereference trigger_call:
+      mbedtls_asn1_store_named_data(&head, oid, oid_len, val, FIRST_VALUE_LEN) zero_update:
+      mbedtls_asn1_store_named_data(&head, oid, oid_len, NULL, 0) reuse: mbedtls_asn1_store_named_data(&head,
+      oid, oid_len, val2, FIRST_VALUE_LEN) oracle: if val.p != NULL and val.len correct
+      after step3 -> [OK] fixed behavior
+
+      '
+  note: Evidence is retrieved before LLM adapter filling. Source-pattern evidence
+    is kept separate from target-API evidence to avoid feature contamination.

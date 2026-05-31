@@ -1,0 +1,138 @@
+template_id: PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW
+source_template_id: PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW
+source:
+  library: mbedtls
+  api: mbedtls_pem_read_buffer
+  pattern_id: MBEDTLS-POC-0011
+  root_cause_summary: >
+    Malformed encrypted PEM input with fewer than four base64 characters
+    decodes to an empty buffer. pem_check_pkcs_padding() is called with
+    input_len == 0 and reads input[input_len - 1] (one byte before the heap
+    region) without first checking input_len >= 1. Fixed by adding
+    'if (input_len < 1) { return MBEDTLS_ERR_PEM_INVALID_DATA; }'.
+  vulnerability_path_features:
+    must_preserve:
+      - pem_parser_entrypoint
+      - encrypted_pem_path_with_password
+      - malformed_or_short_base64_body
+      - decoded_buffer_length_can_be_zero_or_tiny
+      - padding_check_reads_last_byte
+      - observable_asan_heap_underflow_or_safe_error
+    optional:
+      - AES_128_CBC_dek_info
+      - EC_PRIVATE_KEY_label
+      - password_based_decryption_path
+    not_required:
+      - exact_pem_line_wrapping
+      - exact_heap_address
+      - exact_ASan_wording
+
+scoring_policy:
+  operation_family: 0.15
+  function_behavior: 0.20
+  parameter_structure: 0.20
+  vulnerability_path: 0.30
+  harness_feasibility: 0.15
+  decision_rule:
+    generate: final >= 75 and vulnerability_path >= 70
+    needs_llm_review: final >= 55 and vulnerability_path >= 50
+    skip: otherwise
+  score_notes:
+    - Key criterion is whether the target API has an encrypted PEM path with
+      base64 decoding and padding check that can receive an empty/short buffer.
+    - ASAN or safe-error oracle must be observable.
+
+required_features:
+  - target parses encrypted PEM or similar armored cryptographic text
+  - target decodes base64 body and verifies padding
+  - target can receive attacker-controlled short base64 body
+  - target exposes observable return code, NULL pointer, or sanitizer crash signal
+  - harness is a standalone compilable C program with no TLS handshake
+
+target_candidates:
+  - target_library: openssl
+    target_api: PEM_read_bio_PrivateKey
+    library: openssl
+    api: PEM_read_bio_PrivateKey
+    source_template_id: PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW
+    source_api: mbedtls_pem_read_buffer
+    decision: generate
+    migration_applicability: applicable
+    applicability: strong_candidate
+    scores:
+      operation_family: 90
+      function_behavior: 85
+      parameter_structure: 80
+      vulnerability_path: 78
+      harness_feasibility: 88
+      final: 83
+    preserved_features:
+      - PEM_read_bio_PrivateKey parses encrypted PEM private keys
+      - accepts calller-supplied password via callback
+      - reads PEM from BIO (memory BIO wraps caller-provided bytes)
+      - internally decodes base64 body and applies padding validation
+      - returns NULL on parse failure (safe rejection observable)
+      - ASAN can observe heap-buffer issues if they exist in OpenSSL path
+    preserved_vulnerability_features:
+      - pem_parser_entrypoint
+      - encrypted_pem_path_with_password
+      - malformed_or_short_base64_body
+      - observable_asan_heap_underflow_or_safe_error
+    weakened_features:
+      - OpenSSL PEM parser architecture differs from mbedTLS; padding check path is internal
+      - OpenSSL 3.x PEM reader likely validates base64 length before reaching padding check
+      - historical NULL deref specific to mbedTLS pem_check_pkcs_padding is not directly replicated
+    lost_or_weakened_features:
+      - exact_pem_check_pkcs_padding_internal_function
+      - exact_mbedtls_error_code
+    migration_reason: >
+      Strongest candidate. PEM_read_bio_PrivateKey is the direct OpenSSL equivalent
+      for encrypted PEM private key parsing. It accepts a memory BIO with the
+      malformed encrypted PEM, decodes base64, and checks padding. On current
+      OpenSSL 3.x, the expected result is safe rejection (NULL return), making
+      this a migrated_safe comparison. ASAN would detect any heap issues.
+    required_features:
+      - create BIO_new_mem_buf with malformed encrypted PEM
+      - provide password callback returning "pwd"
+      - call PEM_read_bio_PrivateKey
+      - observe returned EVP_PKEY pointer (NULL = safe rejection)
+      - free BIO
+    notes:
+      - Expected migration verdict is migrated_safe; OpenSSL safely rejects
+        malformed encrypted PEM with short base64 body.
+
+  - target_library: openssl
+    target_api: PEM_read_bio_ECPrivateKey
+    library: openssl
+    api: PEM_read_bio_ECPrivateKey
+    source_template_id: PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW
+    source_api: mbedtls_pem_read_buffer
+    decision: needs_llm_review
+    migration_applicability: applicable_with_limitations
+    applicability: weak_candidate
+    scores:
+      operation_family: 88
+      function_behavior: 82
+      parameter_structure: 78
+      vulnerability_path: 72
+      harness_feasibility: 82
+      final: 80
+    preserved_features:
+      - PEM_read_bio_ECPrivateKey parses EC-specific encrypted PEM keys
+      - reaches the same base64 decode and padding path as PEM_read_bio_PrivateKey
+      - returns NULL on failure
+    preserved_vulnerability_features:
+      - pem_parser_entrypoint
+      - encrypted_pem_path_with_password
+      - malformed_or_short_base64_body
+    weakened_features:
+      - EC-specific; less generic than PEM_read_bio_PrivateKey
+      - same OpenSSL PEM path; no additional vulnerability coverage
+    lost_or_weakened_features:
+      - exact_mbedtls_error_code
+    migration_reason: >
+      EC-specific variant with the same internal path as PEM_read_bio_PrivateKey.
+      Use PEM_read_bio_PrivateKey as the primary target. This candidate provides
+      no additional vulnerability path coverage.
+    notes:
+      - Keep as secondary context evidence; prefer PEM_read_bio_PrivateKey.

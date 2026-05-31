@@ -1,0 +1,2688 @@
+template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+source_template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+source:
+  library: mbedtls
+  api: mbedtls_pk_verify_ext
+  pattern_id: MBEDTLS-POC-0003
+  root_cause_summary: 'mbedtls_pk_verify_ext() enters the RSASSA-PSS verification
+    path without first checking that the supplied PK context is an RSA context. For
+    opaque PSA-wrapped keys, mbedtls_pk_rsa(*ctx) returns NULL. The RSA-PSS path dereferences
+    the NULL RSA context, causing a segmentation fault. The fix adds a type guard:
+    if (mbedtls_pk_get_type(ctx) != MBEDTLS_PK_RSA) return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE.
+
+    '
+  vulnerability_path_features:
+    must_preserve:
+    - generic_polymorphic_key_context_dispatch
+    - rsa_pss_specific_verification_path_or_rsa_dispatch_code
+    - incompatible_or_mismatched_key_type_entry
+    - missing_type_check_before_rsa_context_access
+    - observable_crash_vs_safe_error_return
+    optional:
+    - psa_opaque_key_mechanism
+    - exact_mbedtls_error_code_value
+    - exact_rsa_key_size
+    not_required:
+    - exact_psa_opaque_key_import_sequence
+    - exact_mbedtls_internal_function_name
+scoring_policy:
+  operation_family: 0.15
+  function_behavior: 0.2
+  parameter_structure: 0.2
+  vulnerability_path: 0.3
+  harness_feasibility: 0.15
+  decision_rule:
+    generate: final >= 75 and vulnerability_path >= 70
+    needs_llm_review: final >= 55 and vulnerability_path >= 50
+    skip: otherwise
+  score_notes:
+  - The key criterion is whether the target API has a polymorphic key dispatch layer
+    where an incompatible key type can reach RSA-specific code.
+  - Exact mbedTLS error codes and PSA mechanisms are not required.
+  - Oracle must be: crash (ASAN/SEGV/exit 139) or safe error return.
+required_features:
+- target has a generic or polymorphic public-key context or dispatch layer
+- target has an RSA-PSS signature verification path or RSA-specific dispatch code
+- target can receive a key object of incompatible type relative to the operation
+- target exposes observable return code or crash signal for incompatible key type
+- harness can construct incompatible key type without full TLS handshake
+- harness is a standalone compilable C program
+target_candidates:
+- target_library: openssl
+  target_api: EVP_DigestVerify
+  library: openssl
+  api: EVP_DigestVerify
+  source_template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+  source_api: mbedtls_pk_verify_ext
+  decision: generate
+  migration_applicability: applicable
+  applicability: strong_candidate
+  scores:
+    operation_family: 85
+    function_behavior: 80
+    parameter_structure: 75
+    vulnerability_path: 72
+    harness_feasibility: 85
+    final: 78
+  preserved_features:
+  - EVP_PKEY is a polymorphic key dispatch layer analogous to mbedTLS PK context
+  - EVP_DigestVerifyInit dispatches internally to RSA-specific or ECDSA-specific methods
+  - passing an EC key to a verify operation that requests RSA-PSS padding replicates
+    the incompatible key type scenario
+  - EVP_PKEY_CTX_set_rsa_padding reachable from EVP_DigestVerifyInit dispatch path
+  - return code oracle observable through all EVP_Digest* return values
+  - ASAN or UBSAN crash oracle available through sanitizer-linked compilation
+  - standalone harness constructable without TLS handshake
+  preserved_vulnerability_features:
+  - generic_polymorphic_key_context_dispatch
+  - rsa_pss_specific_verification_path_or_rsa_dispatch_code
+  - incompatible_or_mismatched_key_type_entry
+  - observable_crash_vs_safe_error_return
+  weakened_features:
+  - OpenSSL EVP dispatch uses explicit pmeth type table; type check is more robust
+    than the historical mbedTLS missing guard
+  - PSA opaque key concept has no direct OpenSSL equivalent; replaced by EC key type
+    mismatch scenario
+  - modern OpenSSL (3.x) performs type validation at EVP_DigestVerifyInit or EVP_PKEY_CTX_set_rsa_padding
+    so crash is unlikely on current version
+  lost_or_weakened_features:
+  - psa_opaque_key_mechanism
+  - exact_mbedtls_error_code_value
+  - exact_mbedtls_internal_type_guard_location
+  migration_reason: 'Strongest target candidate. EVP_DigestVerify uses EVP_PKEY which
+    is a generic key dispatch layer analogous to the mbedTLS PK context. By passing
+    an EC key (incompatible type for RSA-PSS) and requesting RSA-PSS padding via EVP_PKEY_CTX_set_rsa_padding,
+    the harness probes whether the OpenSSL dispatch safely rejects the incompatible
+    type combination or crashes. The expected result on current OpenSSL 3.x is safe
+    rejection, making this a migrated_safe result. This is a valid research outcome
+    showing that OpenSSL has stronger type checking.
+
+    '
+  required_features:
+  - generate RSA signing key and produce RSA-PSS signature with EVP_DigestSignInit
+  - generate EC key (incompatible type for RSA-PSS)
+  - call EVP_DigestVerifyInit with EC key and SHA-256 hash
+  - call EVP_PKEY_CTX_set_rsa_padding with RSA_PKCS1_PSS_PADDING (probes dispatch)
+  - observe return code at each step; process crash would be caught by ASAN
+  - cleanup EVP_MD_CTX and EVP_PKEY objects
+  notes:
+  - The harness uses RSA_KEY_BITS parameterized by [KEY_BITS] to match source mutation.
+  - Expected migration verdict is migrated_safe; both mbedTLS (fixed) and OpenSSL
+    safely reject the incompatible key type.
+  evidence:
+    top_k: 5
+    queries:
+    - query: ' '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.5070700252966565
+        distance: 0.9721142053604126
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+        text: "FF\",\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000FFFFFFFF00\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"000000000000000000000000000000000000000000000000000000"
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+          library: openssl
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+      - rank: 2
+        score: 0.5064631252680277
+        distance: 0.9744774103164673
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md
+        text: "E0EC65228B3937E498\",\n        \"63E4C6D3B23B0C849CF84241484BFE48F61D59A5B16BA06E6E12D1DA27C5249A\"\
+          ,\n        \"421DEBD61B62EAB6746434EBC3CC315E32220B3BADD50BDC4C4E6C147FEDD43D\"\
+          ,\n        \"0680512BCBB42C07D47349D2153B70C4E5D7FDFCBFA36EA1A85841B9E46E09A2\"\
+          ,\n        \"8542D69E4C044F18E8B92435BF6FF7DD297720630485628D5AE74EE7C32E79B7\"\
+          ,\n        \"1\");\n\n    if (!TEST_ptr(test_group))\n        goto done;\n\
+          \n    if (!TEST_true(test_sm2_sign(\n            test_group,\n         \
+          \   \"ALICE123@YAHOO.COM\",\n            \"128B2FA8BD433C6C068C8D803DFF79792A519A55171B1B650C23661D15897263\"\
+          ,\n            \"message digest\",\n            \"006CB28D99385C175C94F94E934817663FC176D925DD72B727260DBAAE1FB2F96F\"\
+          \n            \"007c47811054c6f99613a578eb8453706ccb96384fe7df5c171671e760bfa8be3a\"\
+          ,\n```"
+        metadata:
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md
+          library: openssl
+          layer: unit_tests
+      - rank: 3
+        score: 0.4993900358310789
+        distance: 1.0024428367614746
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+        text: "8787878787878787878787878787878\"\n              \"7878787878787878787878787878787878787878787878787878787878787878\"\
+          \n              \"7878787878787878787878787878787878787878787878787878787878787878\"\
+          \n              \"7878787878787878787878787878787878787878787878787878787878787878\"\
+          ))\n            && TEST_true(BN_hex2bn(&b,\n                \"095D72C08C097BA488C5E439C655A192EAFB6380073D8C2664668EDDB4060744\"\
+          \n                \"E16E57FB4EDB9AE10A0CEFCDC28A894F689A128379DB279D48A2E20849D68593\"\
+          \n                \"9B7803BCF46CEBF5C533FB0DD35B080593DE5472E3FE5DB951B8BFF9B4CB8F03\"\
+          \n                \"9CC638A5EE8CDD703719F8000E6A9F63BEED5F2FCD52FF293EA05A251BB4AB81\"\
+          ))\n            && TEST_true(BN_hex2bn(&n,\n```\n\n## Call pattern 62\n\n\
+          ```c\ngoto err;\n\n    if (!(TEST_true(BN_MONT_CTX_set(mont, n, ctx))\n\
+          \            && TEST_true(BN_mod_mul_montgomery(c, a, b, mont, ctx))\n \
+          \           && TEST_true(BN_mod_mul_montgomery(d, b, a, mont, ctx))\n  \
+          \          && TEST_BN_eq(c, d)))\n        goto err;\n\n    /* Regression\
+          \ test for ca"
+        metadata:
+          library: openssl
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+          doc_type: unit_test_call_pattern
+      - rank: 4
+        score: 0.49467344660620705
+        distance: 1.0215356349945068
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md
+        text: "D_BOTTOM_ODD);\n    BN_rand(a2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY);\n\
+          \    BN_rand(b2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY);\n  \
+          \  BN_rand(m2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ODD);\n\n  \
+          \  if (!TEST_true(BN_mod(a1, a1, m1, ctx))\n        || !TEST_true(BN_mod(b1,\
+          \ b1, m1, ctx))\n        || !TEST_true(BN_mod(a2, a2, m2, ctx))\n      \
+          \  || !TEST_true(BN_mod(b2, b2, m2, ctx))\n        || !TEST_true(BN_mod_exp_simple(r_simple1,\
+          \ a1, b1, m1, ctx))\n        || !TEST_true(BN_mod_exp_simple(r_simple2,\
+          \ a2, b2, m2, ctx))\n        || !TEST_true(BN_mod_exp_mont_consttime_x2(r_mont_const_x2_1,\
+          \ a1, b1, m1, NULL,\n            r_mont_const_x2_2, a2, b2, m2, NULL,\n\
+          \            ctx)))\n        goto err;\n\n    if (!TEST_BN_eq(r_simple1,\
+          \ r_mont_const_x2_1)\n        || !TEST_BN_eq(r_simple2, r_mont_const_x2_2))\
+          \ {\n        if (BN_cmp(r_simple1, r_mont_const_x2_1) != 0)\n          \
+          \  TEST_info(\"simple and mont const time x2 (#1) results differ\");\n```\n\
+          \n## Call pattern 29\n\n```c\nfactor_size = 2048"
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md
+          doc_type: unit_test_call_pattern
+          library: openssl
+          layer: unit_tests
+      - rank: 5
+        score: 0.4944104082232621
+        distance: 1.022611141204834
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+        text: "FFFFFFFFFFFFFFFFFFFFFF\",\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000FFFFFFFF00\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"00000000000000000000000000000000000000000000000000FFFFFFFFFFFFFF\"\
+          ,\n    NULL\n};\n\nstatic const char *bn2stri"
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          library: openssl
+      error: ''
+      stdout_preview: "{\n  \"query\": \" \",\n  \"top_k\": 5,\n  \"results\": [\n\
+        \    {\n      \"rank\": 1,\n      \"score\": 0.5070700252966565,\n      \"\
+        distance\": 0.9721142053604126,\n      \"layer\": \"unit_tests\",\n      \"\
+        source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n      \"text\": \"FF\\\",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000FFFFFFFF00\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"000000000000000000000000000000000000000000000000000000\",\n\
+        \      \"metadata\": {\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n        \"library\": \"openssl\",\n        \"doc_type\": \"unit_test_call_pattern\"\
+        ,\n        \"layer\": \"unit_tests\"\n      }\n    },\n    {\n      \"rank\"\
+        : 2,\n      \"score\": 0.5064631252680277,\n      \"distance\": 0.9744774103164673,\n\
+        \      \"layer\": \"unit_tests\",\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md\"\
+        ,\n      \"text\": \"E0EC65228B3937E498\\\",\\n        \\\"63E4C6D3B23B0C849CF84241484BFE48F61D59A5B16BA06E6E12D1DA27C5249A\\\
+        \",\\n        \\\"421DEBD61B62EAB6746434EBC3CC315E32220B3BADD50BDC4C4E6C147FEDD43D\\\
+        \",\\n        \\\"0680512BCBB42C07D47349D2153B70C4E5D7FDFCBFA36EA1A85841B9E46E09A2\\\
+        \",\\n        \\\"8542D69E4C044F18E8B92435BF6FF7DD297720630485628D5AE74EE7C32E79B7\\\
+        \",\\n        \\\"1\\\");\\n\\n    if (!TEST_ptr(test_group))\\n        goto\
+        \ done;\\n\\n    if (!TEST_true(test_sm2_sign(\\n            test_group,\\\
+        n            \\\"ALICE123@YAHOO.COM\\\",\\n            \\\"128B2FA8BD433C6C068C8D803DFF79792A519A55171B1B650C23661D15897263\\\
+        \",\\n            \\\"message digest\\\",\\n            \\\"006CB28D99385C175C94F94E934817663FC176D925DD72B727260DBAAE1FB2F96F\\\
+        \"\\n            \\\"007c47811054c6f99613a578eb8453706ccb96384fe7df5c171671e760bfa8be3a\\\
+        \",\\n```\",\n      \"metadata\": {\n        \"doc_type\": \"unit_test_call_pattern\"\
+        ,\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md\"\
+        ,\n        \"library\": \"openssl\",\n        \"layer\": \"unit_tests\"\n\
+        \      }\n    },\n    {\n      \"rank\": 3,\n      \"score\": 0.4993900358310789,\n\
+        \      \"distance\": 1.0024428367614746,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n      \"text\": \"8787878787878787878787878787878\\\"\\n              \\\
+        \"7878787878787878787878787878787878787878787878787878787878787878\\\"\\n\
+        \              \\\"7878787878787878787878787878787878787878787878787878787878787878\\\
+        \"\\n              \\\"7878787878787878787878787878787878787878787878787878787878787878\\\
+        \"))\\n            && TEST_true(BN_hex2bn(&b,\\n                \\\"095D72C08C097BA488C5E439C655A192EAFB6380073D8C2664668EDDB4060744\\\
+        \"\\n                \\\"E16E57FB4EDB9AE10A0CEFCDC28A894F689A128379DB279D48A2E20849D68593\\\
+        \"\\n                \\\"9B7803BCF46CEBF5C533FB0DD35B080593DE5472E3FE5DB951B8BFF9B4CB8F03\\\
+        \"\\n                \\\"9CC638A5EE8CDD703719F8000E6A9F63BEED5F2FCD52FF293EA05A251BB4AB81\\\
+        \"))\\n            && TEST_true(BN_hex2bn(&n,\\n```\\n\\n## Call pattern 62\\\
+        n\\n```c\\ngoto err;\\n\\n    if (!(TEST_true(BN_MONT_CTX_set(mont, n, ctx))\\\
+        n            && TEST_true(BN_mod_mul_montgomery(c, a, b, mont, ctx))\\n  \
+        \          && TEST_true(BN_mod_mul_montgomery(d, b, a, mont, ctx))\\n    \
+        \        && TEST_BN_eq(c, d)))\\n        goto err;\\n\\n    /* Regression\
+        \ test for ca\",\n      \"metadata\": {\n        \"library\": \"openssl\"\
+        ,\n        \"layer\": \"unit_tests\",\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n        \"doc_type\": \"unit_test_call_pattern\"\n      }\n    },\n   \
+        \ {\n      \"rank\": 4,\n      \"score\": 0.49467344660620705,\n      \"distance\"\
+        : 1.0215356349945068,\n      \"layer\": \"unit_tests\",\n      \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md\"\
+        ,\n      \"text\": \"D_BOTTOM_ODD);\\n    BN_rand(a2, factor_size, BN_RAND_TOP_ONE,\
+        \ BN_RAND_BOTTOM_ANY);\\n    BN_rand(b2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY);\\\
+        n    BN_rand(m2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ODD);\\n\\n\
+        \    if (!TEST_true(BN_mod(a1, a1, m1, ctx))\\n        || !TEST_true(BN_mod(b1,\
+        \ b1, m1, ctx))\\n        || !TEST_true(BN_mod(a2, a2, m2, ctx))\\n      \
+        \  || !TEST_true(BN_mod(b2, b2, m2, ctx))\\n        || !TEST_true(BN_mod_exp_simple(r_simple1,\
+        \ a1, b1, m1, ctx))\\n        || !TEST_true(BN_mod_exp_simple(r_simple2, a2,\
+        \ b2, m2, ctx))\\n        || !TEST_true(BN_mod_exp_mont_consttime_x2(r_mont_const_x2_1,\
+        \ a1, b1, m1, NULL,\\n            r_mont_const_x2_2, a2, b2, m2, NULL,\\n\
+        \            ctx)))\\n        goto err;\\n\\n    if (!TEST_BN_eq(r_simple1,\
+        \ r_mont_const_x2_1)\\n        || !TEST_BN_eq(r_simple2, r_mont_const_x2_2))\
+        \ {\\n        if (BN_cmp(r_simple1, r_mont_const_x2_1) != 0)\\n          \
+        \  TEST_info(\\\"simple and mont const time x2 (#1) results differ\\\");\\\
+        n```\\n\\n## Call pattern 29\\n\\n```c\\nfactor_size = 2048\",\n      \"metadata\"\
+        : {\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md\"\
+        ,\n        \""
+      stderr_preview: ''
+      truncated: true
+      kind: source_pattern
+      use_for_feature_inference: source_only
+    - query: openssl EVP_DigestVerify function declaration signature parameters return
+        value
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7398161225407588
+        distance: 0.3516872227191925
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerify.md
+        text: "# API Constraints: EVP_DigestVerify (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `EVP_DigestVerify`\n- Header declaration: `include/openssl/evp.h`\n\
+          - Implementation file: `crypto/evp/m_sigver.c`\n- Manpage: `doc/man3/EVP_DigestVerifyInit.pod`\n\
+          - Signature:\n\n```c\nint EVP_DigestVerify(EVP_MD_CTX *ctx, const unsigned\
+          \ char *sigret,\n    size_t siglen, const unsigned char *tbs,\n    size_t\
+          \ tbslen);\n```\n\n## Semantics\n\n- One-shot verification of `tbs` against\
+          \ signature `sigret`.\n- Requires a context initialized by `EVP_DigestVerifyInit`\
+          \ or `EVP_DigestVerifyInit_ex`.\n- Can be called only once before reinitializing\
+          \ the `EVP_MD_CTX`.\n\n## Return Value Semantics\n\n- Returns `1` on valid\
+          \ signature.\n- Returns `0` for verification failure or invalid signature\
+          \ form.\n- Negative or other non-1 values indicate more serious errors depending\
+          \ on provider/path.\n\n## Object and Buffer Constraints\n\n- `EVP_MD_CTX`,\
+          \ `EVP_PKEY_CTX`, and `EVP_PKEY` are opaque."
+        metadata:
+          layer: api_constraints
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerify.md
+          library: openssl
+          doc_type: api_constraint
+      - rank: 2
+        score: 0.7302108635714951
+        distance: 0.36946743726730347
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerifyInit.md
+        text: "# API Constraints: EVP_DigestVerifyInit / EVP_DigestVerifyInit_ex (OpenSSL\
+          \ 3.5.5)\n\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\
+          \n## API\n\n- API/function names: `EVP_DigestVerifyInit`, `EVP_DigestVerifyInit_ex`\n\
+          - Header declaration: `include/openssl/evp.h`\n- Implementation file: `crypto/evp/m_sigver.c`\n\
+          - Manpage: `doc/man3/EVP_DigestVerifyInit.pod`\n- Signatures:\n\n```c\n\
+          int EVP_DigestVerifyInit_ex(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,\n    const\
+          \ char *mdname, OSSL_LIB_CTX *libctx,\n    const char *props, EVP_PKEY *pkey,\n\
+          \    const OSSL_PARAM params[]);\n\nint EVP_DigestVerifyInit(EVP_MD_CTX\
+          \ *ctx, EVP_PKEY_CTX **pctx,\n    const EVP_MD *type, ENGINE *e,\n    EVP_PKEY\
+          \ *pkey);\n```\n\n## Semantics\n\n- Initializes an `EVP_MD_CTX` for signature\
+          \ verification.\n- May create or reuse an `EVP_PKEY_CTX`; if created by\
+          \ the init call, it is freed with the `EVP_MD_CTX`.\n- `_ex` variant supports\
+          \ provider/libctx/properties and parameter array.\n\n## Return Value Semantics\n\
+          \n- Returns `1` on success.\n- R"
+        metadata:
+          doc_type: api_constraint
+          library: openssl
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerifyInit.md
+          layer: api_constraints
+      - rank: 3
+        score: 0.701133456634334
+        distance: 0.4262619912624359
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__ecdsatest.c.md
+        text: "P_DigestVerify\n *\n * Tests the library can successfully:\n * - create\
+          \ a key\n * - create a signature\n * - accept that signature\n * - reject\
+          \ that signature with a different public key\n * - reject that signature\
+          \ if its length is not correct\n * - reject that signature after modifying\
+          \ the message\n * - accept that signature after un-modifying the message\n\
+          \ * - reject that signature after modifying the signature\n * - accept that\
+          \ signature after un-modifying the signature\n */\nstatic int set_sm2_id(EVP_MD_CTX\
+          \ *mctx, EVP_PKEY *pkey)\n{\n    /* With the SM2 key type, the SM2 ID is\
+          \ mandatory */\n    static const char sm2_id[] = { 1, 2, 3, 4, 'l', 'e',\
+          \ 't', 't', 'e', 'r' };\n```\n\n## Call pattern 7\n\n```c\n|| !TEST_BN_eq(sig_s,\
+          \ s))\n        goto err;\n\n    ret = 1;\n\nerr:\n    OPENSSL_free(message);\n\
+          \    OPENSSL_free(pbuf);\n    OPENSSL_free(qbuf);\n    EC_KEY_free(key);\n\
+          \    ECDSA_SIG_free(signature);\n    BN_free(r);\n    BN_free(s);\n    EVP_MD_CTX_free(mctx);\n\
+          \    BN_clear_free(kinv);\n    BN_clear_free(rp);\n    ret"
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__ecdsatest.c.md
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+          library: openssl
+      - rank: 4
+        score: 0.7009795140256875
+        distance: 0.4265752136707306
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_PKEY_verify.md
+        text: "# API Constraints: EVP_PKEY_verify (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `EVP_PKEY_verify`\n- Header declaration: `include/openssl/evp.h`\n\
+          - Implementation file: `crypto/evp/signature.c`\n- Manpage: `doc/man3/EVP_PKEY_verify.pod`\n\
+          - Signature:\n\n```c\nint EVP_PKEY_verify(EVP_PKEY_CTX *ctx,\n    const\
+          \ unsigned char *sig, size_t siglen,\n    const unsigned char *tbs, size_t\
+          \ tbslen);\n```\n\n## Semantics\n\n- Verifies a signature over data that\
+          \ is already in the form expected by the key/signature algorithm.\n- Requires\
+          \ an initialized `EVP_PKEY_CTX`, normally via `EVP_PKEY_verify_init`.\n\
+          - For digest-based verification, `EVP_DigestVerify*` is often preferred.\n\
+          \n## Return Value Semantics\n\n- Returns `1` on successful verification.\n\
+          - Returns `0` when the signature does not verify.\n- Returns a negative\
+          \ value for errors; `-2` can indicate operation not supported.\n\n## Object\
+          \ and Buffer Constraints\n\n- `EVP_PKEY_CTX` and `EVP_PKEY` are opaque."
+        metadata:
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_PKEY_verify.md
+          doc_type: api_constraint
+          library: openssl
+          layer: api_constraints
+      - rank: 5
+        score: 0.6817179037491077
+        distance: 0.4668824076652527
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__acvp_test.c.md
+        text: "st char *digest_name,\n    const unsigned char *msg, size_t msg_len,\n\
+          \    unsigned char **sig_out, size_t *sig_out_len)\n{\n    int ret = 0;\n\
+          \    EVP_MD_CTX *md_ctx = NULL;\n    unsigned char *sig = NULL;\n    size_t\
+          \ sig_len;\n    size_t sz = EVP_PKEY_get_size(pkey);\n    OSSL_PARAM *p\
+          \ = pass_sig_gen_params ? params : NULL;\n\n    sig_len = sz;\n    if (!TEST_ptr(sig\
+          \ = OPENSSL_malloc(sz))\n        || !TEST_ptr(md_ctx = EVP_MD_CTX_new())\n\
+          \        || !TEST_int_eq(EVP_DigestSignInit_ex(md_ctx, NULL, digest_name,\
+          \ libctx,\n                            NULL, pkey, p),\n            1)\n\
+          \        || !TEST_int_gt(EVP_DigestSign(md_ctx, sig, &sig_len, msg, msg_len),\
+          \ 0))\n        goto err;\n    *sig_out = sig;\n    *sig_out_len = sig_len;\n\
+          \    sig = NULL;\n    ret = 1;\nerr:\n```\n\n## Call pattern 4\n\n```c\n\
+          return 0;\n    r1 = ECDSA_SIG_get0_r(sign);\n    s1 = ECDSA_SIG_get0_s(sign);\n\
+          \    if (r1 == NULL || s1 == NULL)\n        goto err;\n\n    r1_len = BN_num_bytes(r1);\n\
+          \    s1_len = BN_num_bytes(s1);\n    rbuf = OPENSSL_zalloc(r1_le"
+        metadata:
+          layer: unit_tests
+          library: openssl
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__acvp_test.c.md
+          doc_type: unit_test_call_pattern
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl EVP_DigestVerify function declaration\
+        \ signature parameters return value\",\n  \"top_k\": 5,\n  \"results\": [\n\
+        \    {\n      \"rank\": 1,\n      \"score\": 0.7398161225407588,\n      \"\
+        distance\": 0.3516872227191925,\n      \"layer\": \"api_constraints\",\n \
+        \     \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerify.md\"\
+        ,\n      \"text\": \"# API Constraints: EVP_DigestVerify (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `EVP_DigestVerify`\\n- Header declaration: `include/openssl/evp.h`\\\
+        n- Implementation file: `crypto/evp/m_sigver.c`\\n- Manpage: `doc/man3/EVP_DigestVerifyInit.pod`\\\
+        n- Signature:\\n\\n```c\\nint EVP_DigestVerify(EVP_MD_CTX *ctx, const unsigned\
+        \ char *sigret,\\n    size_t siglen, const unsigned char *tbs,\\n    size_t\
+        \ tbslen);\\n```\\n\\n## Semantics\\n\\n- One-shot verification of `tbs` against\
+        \ signature `sigret`.\\n- Requires a context initialized by `EVP_DigestVerifyInit`\
+        \ or `EVP_DigestVerifyInit_ex`.\\n- Can be called only once before reinitializing\
+        \ the `EVP_MD_CTX`.\\n\\n## Return Value Semantics\\n\\n- Returns `1` on valid\
+        \ signature.\\n- Returns `0` for verification failure or invalid signature\
+        \ form.\\n- Negative or other non-1 values indicate more serious errors depending\
+        \ on provider/path.\\n\\n## Object and Buffer Constraints\\n\\n- `EVP_MD_CTX`,\
+        \ `EVP_PKEY_CTX`, and `EVP_PKEY` are opaque.\",\n      \"metadata\": {\n \
+        \       \"layer\": \"api_constraints\",\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerify.md\"\
+        ,\n        \"library\": \"openssl\",\n        \"doc_type\": \"api_constraint\"\
+        \n      }\n    },\n    {\n      \"rank\": 2,\n      \"score\": 0.7302108635714951,\n\
+        \      \"distance\": 0.36946743726730347,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerifyInit.md\"\
+        ,\n      \"text\": \"# API Constraints: EVP_DigestVerifyInit / EVP_DigestVerifyInit_ex\
+        \ (OpenSSL 3.5.5)\\n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\\
+        n\\n## API\\n\\n- API/function names: `EVP_DigestVerifyInit`, `EVP_DigestVerifyInit_ex`\\\
+        n- Header declaration: `include/openssl/evp.h`\\n- Implementation file: `crypto/evp/m_sigver.c`\\\
+        n- Manpage: `doc/man3/EVP_DigestVerifyInit.pod`\\n- Signatures:\\n\\n```c\\\
+        nint EVP_DigestVerifyInit_ex(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,\\n    const\
+        \ char *mdname, OSSL_LIB_CTX *libctx,\\n    const char *props, EVP_PKEY *pkey,\\\
+        n    const OSSL_PARAM params[]);\\n\\nint EVP_DigestVerifyInit(EVP_MD_CTX\
+        \ *ctx, EVP_PKEY_CTX **pctx,\\n    const EVP_MD *type, ENGINE *e,\\n    EVP_PKEY\
+        \ *pkey);\\n```\\n\\n## Semantics\\n\\n- Initializes an `EVP_MD_CTX` for signature\
+        \ verification.\\n- May create or reuse an `EVP_PKEY_CTX`; if created by the\
+        \ init call, it is freed with the `EVP_MD_CTX`.\\n- `_ex` variant supports\
+        \ provider/libctx/properties and parameter array.\\n\\n## Return Value Semantics\\\
+        n\\n- Returns `1` on success.\\n- R\",\n      \"metadata\": {\n        \"\
+        doc_type\": \"api_constraint\",\n        \"library\": \"openssl\",\n     \
+        \   \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerifyInit.md\"\
+        ,\n        \"layer\": \"api_constraints\"\n      }\n    },\n    {\n      \"\
+        rank\": 3,\n      \"score\": 0.701133456634334,\n      \"distance\": 0.4262619912624359,\n\
+        \      \"layer\": \"unit_tests\",\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__ecdsatest.c.md\"\
+        ,\n      \"text\": \"P_DigestVerify\\n *\\n * Tests the library can successfully:\\\
+        n * - create a key\\n * - create a signature\\n * - accept that signature\\\
+        n * - reject that signature with a different public key\\n * - reject that\
+        \ signature if its length is not correct\\n * - reject that signature after\
+        \ modifying the message\\n * - accept that signature after un-modifying the\
+        \ message\\n * - reject that signature after modifying the signature\\n *\
+        \ - accept that signature after un-modifying the signature\\n */\\nstatic\
+        \ int set_sm2_id(EVP_MD_CTX *mctx, EVP_PKEY *pkey)\\n{\\n    /* With the SM2\
+        \ key type, the SM2 ID is mandatory */\\n    static const char sm2_id[] =\
+        \ { 1, 2, 3, 4, 'l', 'e', 't', 't', 'e', 'r' };\\n```\\n\\n## Call pattern\
+        \ 7\\n\\n```c\\n|| !TEST_BN_eq(sig_s, s))\\n        goto err;\\n\\n    ret\
+        \ = 1;\\n\\nerr:\\n    OPENSSL_free(message);\\n    OPENSSL_free(pbuf);\\\
+        n    OPENSSL_free(qbuf);\\n    EC_KEY_free(key);\\n    ECDSA_SIG_free(signature);\\\
+        n    BN_free(r);\\n    BN_free(s);\\n    EVP_MD_CTX_free(mctx);\\n    BN_clear_free(kinv);\\\
+        n    BN_clear_free(rp);\\n    ret\",\n      \"metadata\": {\n        \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__ecdsatest.c.md\"\
+        ,\n        \"doc_type\": \"unit_test_call_pattern\",\n        \"layer\": \"\
+        unit_tests\",\n        \"library\": \"openssl\"\n      }\n    },\n    {\n\
+        \      \"rank\": 4,\n      \"score\": 0.7009795140256875,\n      \"distance\"\
+        : 0.4265752136707306,\n      \"layer\": \"api_constraints\",\n      \"source_file\"\
+        : \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_PKEY_verify.md\",\n  \
+        \    \"text\": \"# API Constraints: EVP_PKEY_verify (OpenSSL 3.5.5)\\n\\nSource\
+        \ version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\n\\n-\
+        \ API/function name: `EVP_PKEY_verify`\\n- Header declaration: `include/openssl/evp.h`\\\
+        n- Implementation file: `crypto/evp/signature.c`\\n- Manpage: `doc/man3/EVP_PKEY_verify.pod`\\\
+        n- Signature:\\n\\n```c\\nint EVP_PKEY_verify(EVP_PKEY_CTX *ctx,\\n    const\
+        \ unsigned char *sig, size_t siglen,\\n    const unsigned char *tbs, size_t\
+        \ tbslen);\\n```\\n\\n## Semantics\\n\\n- Verifies a signature over data that\
+        \ is already in the form expected by the key/signature algorithm.\\n- Requires\
+        \ an initialized `EVP_PKEY_CTX`, normally via `EVP_PKEY_verify_init`.\\n-\
+        \ For digest-based verification, `EVP_DigestVerify*` is often preferred.\\\
+        n\\n## Return Value Semantics\\n\\n- Returns `1` on successful verification.\\\
+        n- Returns `0` when the signature does not verify.\\n- Returns a negative\
+        \ value for errors; `-2` can indicate operation not supported.\\n\\n## Object\
+        \ and Buffer Constraints\\n\\n- `EVP_PKEY_CTX` and `EVP_PKEY` are opaque.\"\
+        ,\n      \"metadata\": {\n        \"so"
+      stderr_preview: ''
+      truncated: true
+      kind: target_api_signature
+      use_for_feature_inference: target
+    - query: openssl EVP_DigestVerify implementation source code parameters return
+        error
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7531761147256919
+        distance: 0.32771071791648865
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerify.md
+        text: "# API Constraints: EVP_DigestVerify (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `EVP_DigestVerify`\n- Header declaration: `include/openssl/evp.h`\n\
+          - Implementation file: `crypto/evp/m_sigver.c`\n- Manpage: `doc/man3/EVP_DigestVerifyInit.pod`\n\
+          - Signature:\n\n```c\nint EVP_DigestVerify(EVP_MD_CTX *ctx, const unsigned\
+          \ char *sigret,\n    size_t siglen, const unsigned char *tbs,\n    size_t\
+          \ tbslen);\n```\n\n## Semantics\n\n- One-shot verification of `tbs` against\
+          \ signature `sigret`.\n- Requires a context initialized by `EVP_DigestVerifyInit`\
+          \ or `EVP_DigestVerifyInit_ex`.\n- Can be called only once before reinitializing\
+          \ the `EVP_MD_CTX`.\n\n## Return Value Semantics\n\n- Returns `1` on valid\
+          \ signature.\n- Returns `0` for verification failure or invalid signature\
+          \ form.\n- Negative or other non-1 values indicate more serious errors depending\
+          \ on provider/path.\n\n## Object and Buffer Constraints\n\n- `EVP_MD_CTX`,\
+          \ `EVP_PKEY_CTX`, and `EVP_PKEY` are opaque."
+        metadata:
+          library: openssl
+          doc_type: api_constraint
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerify.md
+          layer: api_constraints
+      - rank: 2
+        score: 0.7432501587144494
+        distance: 0.3454420268535614
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerifyInit.md
+        text: "# API Constraints: EVP_DigestVerifyInit / EVP_DigestVerifyInit_ex (OpenSSL\
+          \ 3.5.5)\n\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\
+          \n## API\n\n- API/function names: `EVP_DigestVerifyInit`, `EVP_DigestVerifyInit_ex`\n\
+          - Header declaration: `include/openssl/evp.h`\n- Implementation file: `crypto/evp/m_sigver.c`\n\
+          - Manpage: `doc/man3/EVP_DigestVerifyInit.pod`\n- Signatures:\n\n```c\n\
+          int EVP_DigestVerifyInit_ex(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,\n    const\
+          \ char *mdname, OSSL_LIB_CTX *libctx,\n    const char *props, EVP_PKEY *pkey,\n\
+          \    const OSSL_PARAM params[]);\n\nint EVP_DigestVerifyInit(EVP_MD_CTX\
+          \ *ctx, EVP_PKEY_CTX **pctx,\n    const EVP_MD *type, ENGINE *e,\n    EVP_PKEY\
+          \ *pkey);\n```\n\n## Semantics\n\n- Initializes an `EVP_MD_CTX` for signature\
+          \ verification.\n- May create or reuse an `EVP_PKEY_CTX`; if created by\
+          \ the init call, it is freed with the `EVP_MD_CTX`.\n- `_ex` variant supports\
+          \ provider/libctx/properties and parameter array.\n\n## Return Value Semantics\n\
+          \n- Returns `1` on success.\n- R"
+        metadata:
+          layer: api_constraints
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerifyInit.md
+          doc_type: api_constraint
+          library: openssl
+      - rank: 3
+        score: 0.7008637866814827
+        distance: 0.42681077122688293
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_PKEY_verify.md
+        text: "# API Constraints: EVP_PKEY_verify (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `EVP_PKEY_verify`\n- Header declaration: `include/openssl/evp.h`\n\
+          - Implementation file: `crypto/evp/signature.c`\n- Manpage: `doc/man3/EVP_PKEY_verify.pod`\n\
+          - Signature:\n\n```c\nint EVP_PKEY_verify(EVP_PKEY_CTX *ctx,\n    const\
+          \ unsigned char *sig, size_t siglen,\n    const unsigned char *tbs, size_t\
+          \ tbslen);\n```\n\n## Semantics\n\n- Verifies a signature over data that\
+          \ is already in the form expected by the key/signature algorithm.\n- Requires\
+          \ an initialized `EVP_PKEY_CTX`, normally via `EVP_PKEY_verify_init`.\n\
+          - For digest-based verification, `EVP_DigestVerify*` is often preferred.\n\
+          \n## Return Value Semantics\n\n- Returns `1` on successful verification.\n\
+          - Returns `0` when the signature does not verify.\n- Returns a negative\
+          \ value for errors; `-2` can indicate operation not supported.\n\n## Object\
+          \ and Buffer Constraints\n\n- `EVP_PKEY_CTX` and `EVP_PKEY` are opaque."
+        metadata:
+          layer: api_constraints
+          doc_type: api_constraint
+          library: openssl
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_PKEY_verify.md
+      - rank: 4
+        score: 0.6955424519721932
+        distance: 0.437726765871048
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/3.5.5/openssl_core_api_test_evidence.md
+        text: 'erifyInit / EVP_DigestVerifyInit_ex
+
+
+          Status: found in local tests, demos, and manpage.
+
+
+          Searched paths:
+
+
+          - `/home/wen/work/clean_sources/openssl-3.5.5/test`
+
+          - `/home/wen/work/clean_sources/openssl-3.5.5/demos`
+
+          - `/home/wen/work/clean_sources/openssl-3.5.5/doc/man3`
+
+
+          Evidence:
+
+
+          - `test/evp_extra_test.c`: direct calls around lines 1949, 1996, 2009, 2017,
+          2530, 2639, and 2657.
+
+          - `test/algorithmid_test.c`: `EVP_DigestVerifyInit_ex` around line 154.
+
+          - Demos include `demos/signature/rsa_pss_hash.c`, `demos/signature/EVP_EC_Signature_demo.c`,
+          `EVP_DSA_Signature_demo.c`, and `EVP_ED_Signature_demo.c`.
+
+          - Manpage: `doc/man3/EVP_DigestVerifyInit.pod`.
+
+
+          ## EVP_DigestVerify
+
+
+          Status: found in local tests, demos, and manpage.
+
+
+          Searched paths:
+
+
+          - `/home/wen/work/clean_sources/openssl-3.5.5/test`
+
+          - `/home/wen/work/clean_sources/openssl-3.5.5/demos`
+
+          - `/home/wen/work/clean_sources/openssl-3.5.5/doc/man3`
+
+
+          Evidence:
+
+
+          - `test/ecdsatest.c`: direct return-value checks around lines 255, 257,
+          260, 262, 265, 2'
+        metadata:
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/3.5.5/openssl_core_api_test_evidence.md
+          library: openssl
+      - rank: 5
+        score: 0.6886387641783897
+        distance: 0.4521401524543762
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__ecdsatest.c.md
+        text: "P_DigestVerify\n *\n * Tests the library can successfully:\n * - create\
+          \ a key\n * - create a signature\n * - accept that signature\n * - reject\
+          \ that signature with a different public key\n * - reject that signature\
+          \ if its length is not correct\n * - reject that signature after modifying\
+          \ the message\n * - accept that signature after un-modifying the message\n\
+          \ * - reject that signature after modifying the signature\n * - accept that\
+          \ signature after un-modifying the signature\n */\nstatic int set_sm2_id(EVP_MD_CTX\
+          \ *mctx, EVP_PKEY *pkey)\n{\n    /* With the SM2 key type, the SM2 ID is\
+          \ mandatory */\n    static const char sm2_id[] = { 1, 2, 3, 4, 'l', 'e',\
+          \ 't', 't', 'e', 'r' };\n```\n\n## Call pattern 7\n\n```c\n|| !TEST_BN_eq(sig_s,\
+          \ s))\n        goto err;\n\n    ret = 1;\n\nerr:\n    OPENSSL_free(message);\n\
+          \    OPENSSL_free(pbuf);\n    OPENSSL_free(qbuf);\n    EC_KEY_free(key);\n\
+          \    ECDSA_SIG_free(signature);\n    BN_free(r);\n    BN_free(s);\n    EVP_MD_CTX_free(mctx);\n\
+          \    BN_clear_free(kinv);\n    BN_clear_free(rp);\n    ret"
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__ecdsatest.c.md
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          library: openssl
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl EVP_DigestVerify implementation source\
+        \ code parameters return error\",\n  \"top_k\": 5,\n  \"results\": [\n   \
+        \ {\n      \"rank\": 1,\n      \"score\": 0.7531761147256919,\n      \"distance\"\
+        : 0.32771071791648865,\n      \"layer\": \"api_constraints\",\n      \"source_file\"\
+        : \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerify.md\",\n \
+        \     \"text\": \"# API Constraints: EVP_DigestVerify (OpenSSL 3.5.5)\\n\\\
+        nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `EVP_DigestVerify`\\n- Header declaration: `include/openssl/evp.h`\\\
+        n- Implementation file: `crypto/evp/m_sigver.c`\\n- Manpage: `doc/man3/EVP_DigestVerifyInit.pod`\\\
+        n- Signature:\\n\\n```c\\nint EVP_DigestVerify(EVP_MD_CTX *ctx, const unsigned\
+        \ char *sigret,\\n    size_t siglen, const unsigned char *tbs,\\n    size_t\
+        \ tbslen);\\n```\\n\\n## Semantics\\n\\n- One-shot verification of `tbs` against\
+        \ signature `sigret`.\\n- Requires a context initialized by `EVP_DigestVerifyInit`\
+        \ or `EVP_DigestVerifyInit_ex`.\\n- Can be called only once before reinitializing\
+        \ the `EVP_MD_CTX`.\\n\\n## Return Value Semantics\\n\\n- Returns `1` on valid\
+        \ signature.\\n- Returns `0` for verification failure or invalid signature\
+        \ form.\\n- Negative or other non-1 values indicate more serious errors depending\
+        \ on provider/path.\\n\\n## Object and Buffer Constraints\\n\\n- `EVP_MD_CTX`,\
+        \ `EVP_PKEY_CTX`, and `EVP_PKEY` are opaque.\",\n      \"metadata\": {\n \
+        \       \"library\": \"openssl\",\n        \"doc_type\": \"api_constraint\"\
+        ,\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerify.md\"\
+        ,\n        \"layer\": \"api_constraints\"\n      }\n    },\n    {\n      \"\
+        rank\": 2,\n      \"score\": 0.7432501587144494,\n      \"distance\": 0.3454420268535614,\n\
+        \      \"layer\": \"api_constraints\",\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerifyInit.md\"\
+        ,\n      \"text\": \"# API Constraints: EVP_DigestVerifyInit / EVP_DigestVerifyInit_ex\
+        \ (OpenSSL 3.5.5)\\n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\\
+        n\\n## API\\n\\n- API/function names: `EVP_DigestVerifyInit`, `EVP_DigestVerifyInit_ex`\\\
+        n- Header declaration: `include/openssl/evp.h`\\n- Implementation file: `crypto/evp/m_sigver.c`\\\
+        n- Manpage: `doc/man3/EVP_DigestVerifyInit.pod`\\n- Signatures:\\n\\n```c\\\
+        nint EVP_DigestVerifyInit_ex(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,\\n    const\
+        \ char *mdname, OSSL_LIB_CTX *libctx,\\n    const char *props, EVP_PKEY *pkey,\\\
+        n    const OSSL_PARAM params[]);\\n\\nint EVP_DigestVerifyInit(EVP_MD_CTX\
+        \ *ctx, EVP_PKEY_CTX **pctx,\\n    const EVP_MD *type, ENGINE *e,\\n    EVP_PKEY\
+        \ *pkey);\\n```\\n\\n## Semantics\\n\\n- Initializes an `EVP_MD_CTX` for signature\
+        \ verification.\\n- May create or reuse an `EVP_PKEY_CTX`; if created by the\
+        \ init call, it is freed with the `EVP_MD_CTX`.\\n- `_ex` variant supports\
+        \ provider/libctx/properties and parameter array.\\n\\n## Return Value Semantics\\\
+        n\\n- Returns `1` on success.\\n- R\",\n      \"metadata\": {\n        \"\
+        layer\": \"api_constraints\",\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerifyInit.md\"\
+        ,\n        \"doc_type\": \"api_constraint\",\n        \"library\": \"openssl\"\
+        \n      }\n    },\n    {\n      \"rank\": 3,\n      \"score\": 0.7008637866814827,\n\
+        \      \"distance\": 0.42681077122688293,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_PKEY_verify.md\"\
+        ,\n      \"text\": \"# API Constraints: EVP_PKEY_verify (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `EVP_PKEY_verify`\\n- Header declaration: `include/openssl/evp.h`\\\
+        n- Implementation file: `crypto/evp/signature.c`\\n- Manpage: `doc/man3/EVP_PKEY_verify.pod`\\\
+        n- Signature:\\n\\n```c\\nint EVP_PKEY_verify(EVP_PKEY_CTX *ctx,\\n    const\
+        \ unsigned char *sig, size_t siglen,\\n    const unsigned char *tbs, size_t\
+        \ tbslen);\\n```\\n\\n## Semantics\\n\\n- Verifies a signature over data that\
+        \ is already in the form expected by the key/signature algorithm.\\n- Requires\
+        \ an initialized `EVP_PKEY_CTX`, normally via `EVP_PKEY_verify_init`.\\n-\
+        \ For digest-based verification, `EVP_DigestVerify*` is often preferred.\\\
+        n\\n## Return Value Semantics\\n\\n- Returns `1` on successful verification.\\\
+        n- Returns `0` when the signature does not verify.\\n- Returns a negative\
+        \ value for errors; `-2` can indicate operation not supported.\\n\\n## Object\
+        \ and Buffer Constraints\\n\\n- `EVP_PKEY_CTX` and `EVP_PKEY` are opaque.\"\
+        ,\n      \"metadata\": {\n        \"layer\": \"api_constraints\",\n      \
+        \  \"doc_type\": \"api_constraint\",\n        \"library\": \"openssl\",\n\
+        \        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_PKEY_verify.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 4,\n      \"score\": 0.6955424519721932,\n\
+        \      \"distance\": 0.437726765871048,\n      \"layer\": \"unit_tests\",\n\
+        \      \"source_file\": \"knowledge_raw/unit_tests/openssl/3.5.5/openssl_core_api_test_evidence.md\"\
+        ,\n      \"text\": \"erifyInit / EVP_DigestVerifyInit_ex\\n\\nStatus: found\
+        \ in local tests, demos, and manpage.\\n\\nSearched paths:\\n\\n- `/home/wen/work/clean_sources/openssl-3.5.5/test`\\\
+        n- `/home/wen/work/clean_sources/openssl-3.5.5/demos`\\n- `/home/wen/work/clean_sources/openssl-3.5.5/doc/man3`\\\
+        n\\nEvidence:\\n\\n- `test/evp_extra_test.c`: direct calls around lines 1949,\
+        \ 1996, 2009, 2017, 2530, 2639, and 2657.\\n- `test/algorithmid_test.c`: `EVP_DigestVerifyInit_ex`\
+        \ around line 154.\\n- Demos include `demos/signature/rsa_pss_hash.c`, `demos/signature/EVP_EC_Signature_demo.c`,\
+        \ `EVP_DSA_Signature_demo.c`, and `EVP_ED_Signature_demo.c`.\\n- Manpage:\
+        \ `doc/man3/EVP_DigestVerifyInit.pod`.\\n\\n## EVP_DigestVerify\\n\\nStatus:\
+        \ found in local tests, demos, and manpage.\\n\\nSearched paths:\\n\\n- `/home/wen/work/clean_sources/openssl-3.5.5/test`\\\
+        n- `/home/wen/work/clean_sources/openssl-3.5.5/demos`\\n- `/home/wen/work/clean_sources/openssl-3.5.5/doc/man3`\\\
+        n\\nEvidence:\\n\\n- `test/ecdsatest.c`: direct return-value checks around\
+        \ lines 255, 257, 260, 262, 265, 2\",\n      \"metadata\": {\n        \"doc_type\"\
+        : \"unit_test_call_pattern\",\n        \"layer\": \"unit_tests\",\n      \
+        \  \"source_fil"
+      stderr_preview: ''
+      truncated: true
+      kind: target_api_implementation
+      use_for_feature_inference: target
+    - query: openssl EVP_DigestVerify usage example unit test API call pattern
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7287990599972832
+        distance: 0.37212032079696655
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerifyInit.md
+        text: "# API Constraints: EVP_DigestVerifyInit / EVP_DigestVerifyInit_ex (OpenSSL\
+          \ 3.5.5)\n\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\
+          \n## API\n\n- API/function names: `EVP_DigestVerifyInit`, `EVP_DigestVerifyInit_ex`\n\
+          - Header declaration: `include/openssl/evp.h`\n- Implementation file: `crypto/evp/m_sigver.c`\n\
+          - Manpage: `doc/man3/EVP_DigestVerifyInit.pod`\n- Signatures:\n\n```c\n\
+          int EVP_DigestVerifyInit_ex(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,\n    const\
+          \ char *mdname, OSSL_LIB_CTX *libctx,\n    const char *props, EVP_PKEY *pkey,\n\
+          \    const OSSL_PARAM params[]);\n\nint EVP_DigestVerifyInit(EVP_MD_CTX\
+          \ *ctx, EVP_PKEY_CTX **pctx,\n    const EVP_MD *type, ENGINE *e,\n    EVP_PKEY\
+          \ *pkey);\n```\n\n## Semantics\n\n- Initializes an `EVP_MD_CTX` for signature\
+          \ verification.\n- May create or reuse an `EVP_PKEY_CTX`; if created by\
+          \ the init call, it is freed with the `EVP_MD_CTX`.\n- `_ex` variant supports\
+          \ provider/libctx/properties and parameter array.\n\n## Return Value Semantics\n\
+          \n- Returns `1` on success.\n- R"
+        metadata:
+          doc_type: api_constraint
+          layer: api_constraints
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerifyInit.md
+          library: openssl
+      - rank: 2
+        score: 0.7261361658958918
+        distance: 0.3771521747112274
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerify.md
+        text: "# API Constraints: EVP_DigestVerify (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `EVP_DigestVerify`\n- Header declaration: `include/openssl/evp.h`\n\
+          - Implementation file: `crypto/evp/m_sigver.c`\n- Manpage: `doc/man3/EVP_DigestVerifyInit.pod`\n\
+          - Signature:\n\n```c\nint EVP_DigestVerify(EVP_MD_CTX *ctx, const unsigned\
+          \ char *sigret,\n    size_t siglen, const unsigned char *tbs,\n    size_t\
+          \ tbslen);\n```\n\n## Semantics\n\n- One-shot verification of `tbs` against\
+          \ signature `sigret`.\n- Requires a context initialized by `EVP_DigestVerifyInit`\
+          \ or `EVP_DigestVerifyInit_ex`.\n- Can be called only once before reinitializing\
+          \ the `EVP_MD_CTX`.\n\n## Return Value Semantics\n\n- Returns `1` on valid\
+          \ signature.\n- Returns `0` for verification failure or invalid signature\
+          \ form.\n- Negative or other non-1 values indicate more serious errors depending\
+          \ on provider/path.\n\n## Object and Buffer Constraints\n\n- `EVP_MD_CTX`,\
+          \ `EVP_PKEY_CTX`, and `EVP_PKEY` are opaque."
+        metadata:
+          doc_type: api_constraint
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerify.md
+          layer: api_constraints
+          library: openssl
+      - rank: 3
+        score: 0.700990467935092
+        distance: 0.4265529215335846
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/3.5.5/openssl_core_api_test_evidence.md
+        text: 'erifyInit / EVP_DigestVerifyInit_ex
+
+
+          Status: found in local tests, demos, and manpage.
+
+
+          Searched paths:
+
+
+          - `/home/wen/work/clean_sources/openssl-3.5.5/test`
+
+          - `/home/wen/work/clean_sources/openssl-3.5.5/demos`
+
+          - `/home/wen/work/clean_sources/openssl-3.5.5/doc/man3`
+
+
+          Evidence:
+
+
+          - `test/evp_extra_test.c`: direct calls around lines 1949, 1996, 2009, 2017,
+          2530, 2639, and 2657.
+
+          - `test/algorithmid_test.c`: `EVP_DigestVerifyInit_ex` around line 154.
+
+          - Demos include `demos/signature/rsa_pss_hash.c`, `demos/signature/EVP_EC_Signature_demo.c`,
+          `EVP_DSA_Signature_demo.c`, and `EVP_ED_Signature_demo.c`.
+
+          - Manpage: `doc/man3/EVP_DigestVerifyInit.pod`.
+
+
+          ## EVP_DigestVerify
+
+
+          Status: found in local tests, demos, and manpage.
+
+
+          Searched paths:
+
+
+          - `/home/wen/work/clean_sources/openssl-3.5.5/test`
+
+          - `/home/wen/work/clean_sources/openssl-3.5.5/demos`
+
+          - `/home/wen/work/clean_sources/openssl-3.5.5/doc/man3`
+
+
+          Evidence:
+
+
+          - `test/ecdsatest.c`: direct return-value checks around lines 255, 257,
+          260, 262, 265, 2'
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/3.5.5/openssl_core_api_test_evidence.md
+          layer: unit_tests
+          library: openssl
+          doc_type: unit_test_call_pattern
+      - rank: 4
+        score: 0.6901211886072771
+        distance: 0.4490208625793457
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__ecdsatest.c.md
+        text: "P_DigestVerify\n *\n * Tests the library can successfully:\n * - create\
+          \ a key\n * - create a signature\n * - accept that signature\n * - reject\
+          \ that signature with a different public key\n * - reject that signature\
+          \ if its length is not correct\n * - reject that signature after modifying\
+          \ the message\n * - accept that signature after un-modifying the message\n\
+          \ * - reject that signature after modifying the signature\n * - accept that\
+          \ signature after un-modifying the signature\n */\nstatic int set_sm2_id(EVP_MD_CTX\
+          \ *mctx, EVP_PKEY *pkey)\n{\n    /* With the SM2 key type, the SM2 ID is\
+          \ mandatory */\n    static const char sm2_id[] = { 1, 2, 3, 4, 'l', 'e',\
+          \ 't', 't', 'e', 'r' };\n```\n\n## Call pattern 7\n\n```c\n|| !TEST_BN_eq(sig_s,\
+          \ s))\n        goto err;\n\n    ret = 1;\n\nerr:\n    OPENSSL_free(message);\n\
+          \    OPENSSL_free(pbuf);\n    OPENSSL_free(qbuf);\n    EC_KEY_free(key);\n\
+          \    ECDSA_SIG_free(signature);\n    BN_free(r);\n    BN_free(s);\n    EVP_MD_CTX_free(mctx);\n\
+          \    BN_clear_free(kinv);\n    BN_clear_free(rp);\n    ret"
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__ecdsatest.c.md
+          library: openssl
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+      - rank: 5
+        score: 0.689459679251065
+        distance: 0.4504111409187317
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_libctx_test.c.md
+        text: "# Official test/example call patterns: openssl\n\nLibrary: openssl\n\
+          Version: 3.5.5\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/test/evp_libctx_test.c\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\nif\
+          \ (!TEST_ptr(dup_pk = EVP_PKEY_dup(pkey))\n            || !TEST_int_eq(EVP_PKEY_eq(pkey,\
+          \ dup_pk), 1))\n            goto err;\n    }\n\n    ret = 1;\nerr:\n   \
+          \ EVP_PKEY_free(pkey);\n    EVP_PKEY_free(dup_pk);\n    EVP_PKEY_CTX_free(gen_ctx);\n\
+          \    EVP_PKEY_free(pkey_parm);\n    DSA_free(dsa);\n    BN_free(g);\n  \
+          \  BN_free(q);\n    BN_free(p);\n    return ret;\n}\n#endif /* OPENSSL_NO_DSA\
+          \ */\n\n#ifndef OPENSSL_NO_DH\nstatic int do_dh_param_keygen(int tstid,\
+          \ const BIGNUM **bn)\n{\n    int ret = 0;\n    int expected;\n    EVP_PKEY_CTX\
+          \ *gen_ctx = NULL;\n    EVP_PKEY *pkey_parm = NULL;\n    EVP_PKEY *pkey\
+          \ = NULL, *dup_pk = NULL;\n    DH *dh = NULL;\n    int pind, qind, gind;\n\
+          \    BIGNUM *p = NULL, *q = NULL, *g = NULL;\n\n    /*\n     * These tests\
+          \ are using bad values for p, q, g by reusing the values."
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_libctx_test.c.md
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          library: openssl
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl EVP_DigestVerify usage example unit\
+        \ test API call pattern\",\n  \"top_k\": 5,\n  \"results\": [\n    {\n   \
+        \   \"rank\": 1,\n      \"score\": 0.7287990599972832,\n      \"distance\"\
+        : 0.37212032079696655,\n      \"layer\": \"api_constraints\",\n      \"source_file\"\
+        : \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerifyInit.md\"\
+        ,\n      \"text\": \"# API Constraints: EVP_DigestVerifyInit / EVP_DigestVerifyInit_ex\
+        \ (OpenSSL 3.5.5)\\n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\\
+        n\\n## API\\n\\n- API/function names: `EVP_DigestVerifyInit`, `EVP_DigestVerifyInit_ex`\\\
+        n- Header declaration: `include/openssl/evp.h`\\n- Implementation file: `crypto/evp/m_sigver.c`\\\
+        n- Manpage: `doc/man3/EVP_DigestVerifyInit.pod`\\n- Signatures:\\n\\n```c\\\
+        nint EVP_DigestVerifyInit_ex(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,\\n    const\
+        \ char *mdname, OSSL_LIB_CTX *libctx,\\n    const char *props, EVP_PKEY *pkey,\\\
+        n    const OSSL_PARAM params[]);\\n\\nint EVP_DigestVerifyInit(EVP_MD_CTX\
+        \ *ctx, EVP_PKEY_CTX **pctx,\\n    const EVP_MD *type, ENGINE *e,\\n    EVP_PKEY\
+        \ *pkey);\\n```\\n\\n## Semantics\\n\\n- Initializes an `EVP_MD_CTX` for signature\
+        \ verification.\\n- May create or reuse an `EVP_PKEY_CTX`; if created by the\
+        \ init call, it is freed with the `EVP_MD_CTX`.\\n- `_ex` variant supports\
+        \ provider/libctx/properties and parameter array.\\n\\n## Return Value Semantics\\\
+        n\\n- Returns `1` on success.\\n- R\",\n      \"metadata\": {\n        \"\
+        doc_type\": \"api_constraint\",\n        \"layer\": \"api_constraints\",\n\
+        \        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerifyInit.md\"\
+        ,\n        \"library\": \"openssl\"\n      }\n    },\n    {\n      \"rank\"\
+        : 2,\n      \"score\": 0.7261361658958918,\n      \"distance\": 0.3771521747112274,\n\
+        \      \"layer\": \"api_constraints\",\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerify.md\"\
+        ,\n      \"text\": \"# API Constraints: EVP_DigestVerify (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `EVP_DigestVerify`\\n- Header declaration: `include/openssl/evp.h`\\\
+        n- Implementation file: `crypto/evp/m_sigver.c`\\n- Manpage: `doc/man3/EVP_DigestVerifyInit.pod`\\\
+        n- Signature:\\n\\n```c\\nint EVP_DigestVerify(EVP_MD_CTX *ctx, const unsigned\
+        \ char *sigret,\\n    size_t siglen, const unsigned char *tbs,\\n    size_t\
+        \ tbslen);\\n```\\n\\n## Semantics\\n\\n- One-shot verification of `tbs` against\
+        \ signature `sigret`.\\n- Requires a context initialized by `EVP_DigestVerifyInit`\
+        \ or `EVP_DigestVerifyInit_ex`.\\n- Can be called only once before reinitializing\
+        \ the `EVP_MD_CTX`.\\n\\n## Return Value Semantics\\n\\n- Returns `1` on valid\
+        \ signature.\\n- Returns `0` for verification failure or invalid signature\
+        \ form.\\n- Negative or other non-1 values indicate more serious errors depending\
+        \ on provider/path.\\n\\n## Object and Buffer Constraints\\n\\n- `EVP_MD_CTX`,\
+        \ `EVP_PKEY_CTX`, and `EVP_PKEY` are opaque.\",\n      \"metadata\": {\n \
+        \       \"doc_type\": \"api_constraint\",\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerify.md\"\
+        ,\n        \"layer\": \"api_constraints\",\n        \"library\": \"openssl\"\
+        \n      }\n    },\n    {\n      \"rank\": 3,\n      \"score\": 0.700990467935092,\n\
+        \      \"distance\": 0.4265529215335846,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/3.5.5/openssl_core_api_test_evidence.md\"\
+        ,\n      \"text\": \"erifyInit / EVP_DigestVerifyInit_ex\\n\\nStatus: found\
+        \ in local tests, demos, and manpage.\\n\\nSearched paths:\\n\\n- `/home/wen/work/clean_sources/openssl-3.5.5/test`\\\
+        n- `/home/wen/work/clean_sources/openssl-3.5.5/demos`\\n- `/home/wen/work/clean_sources/openssl-3.5.5/doc/man3`\\\
+        n\\nEvidence:\\n\\n- `test/evp_extra_test.c`: direct calls around lines 1949,\
+        \ 1996, 2009, 2017, 2530, 2639, and 2657.\\n- `test/algorithmid_test.c`: `EVP_DigestVerifyInit_ex`\
+        \ around line 154.\\n- Demos include `demos/signature/rsa_pss_hash.c`, `demos/signature/EVP_EC_Signature_demo.c`,\
+        \ `EVP_DSA_Signature_demo.c`, and `EVP_ED_Signature_demo.c`.\\n- Manpage:\
+        \ `doc/man3/EVP_DigestVerifyInit.pod`.\\n\\n## EVP_DigestVerify\\n\\nStatus:\
+        \ found in local tests, demos, and manpage.\\n\\nSearched paths:\\n\\n- `/home/wen/work/clean_sources/openssl-3.5.5/test`\\\
+        n- `/home/wen/work/clean_sources/openssl-3.5.5/demos`\\n- `/home/wen/work/clean_sources/openssl-3.5.5/doc/man3`\\\
+        n\\nEvidence:\\n\\n- `test/ecdsatest.c`: direct return-value checks around\
+        \ lines 255, 257, 260, 262, 265, 2\",\n      \"metadata\": {\n        \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/3.5.5/openssl_core_api_test_evidence.md\"\
+        ,\n        \"layer\": \"unit_tests\",\n        \"library\": \"openssl\",\n\
+        \        \"doc_type\": \"unit_test_call_pattern\"\n      }\n    },\n    {\n\
+        \      \"rank\": 4,\n      \"score\": 0.6901211886072771,\n      \"distance\"\
+        : 0.4490208625793457,\n      \"layer\": \"unit_tests\",\n      \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__ecdsatest.c.md\"\
+        ,\n      \"text\": \"P_DigestVerify\\n *\\n * Tests the library can successfully:\\\
+        n * - create a key\\n * - create a signature\\n * - accept that signature\\\
+        n * - reject that signature with a different public key\\n * - reject that\
+        \ signature if its length is not correct\\n * - reject that signature after\
+        \ modifying the message\\n * - accept that signature after un-modifying the\
+        \ message\\n * - reject that signature after modifying the signature\\n *\
+        \ - accept that signature after un-modifying the signature\\n */\\nstatic\
+        \ int set_sm2_id(EVP_MD_CTX *mctx, EVP_PKEY *pkey)\\n{\\n    /* With the SM2\
+        \ key type, the SM2 ID is mandatory */\\n    static const char sm2_id[] =\
+        \ { 1, 2, 3, 4, 'l', 'e', 't', 't', 'e', 'r' };\\n```\\n\\n## Call pattern\
+        \ 7\\n\\n```c\\n|| !TEST_BN_eq(sig_s, s))\\n        goto err;\\n\\n    ret\
+        \ = 1;\\n\\nerr:\\n    OPENSSL_free(message);\\n    OPENSSL_free(pbuf);\\\
+        n    OPENSSL_free(qbuf);\\n    EC_KEY_free(key);\\n    ECDSA_SIG_free(signature);\\\
+        n    BN_free(r);\\n    BN_free(s);\\n    EVP_MD_CTX_free(mctx);\\n    BN_clear_free(kinv);\\\
+        n    BN_clear_free(rp);\\n    ret\",\n      \"metadata\": {\n        \"source_file\"\
+        : \"knowledge_raw/unit_tests/ope"
+      stderr_preview: ''
+      truncated: true
+      kind: target_api_usage
+      use_for_feature_inference: target
+    - query: 'openssl EVP_DigestVerify generic_polymorphic_key_context_dispatch rsa_pss_specific_verification_path_or_rsa_dispatch_code
+        incompatible_or_mismatched_key_type_entry missing_type_check_before_rsa_context_access
+        observable_crash_vs_safe_error_return  generic_polymorphic_key_context_dispatch
+        rsa_pss_specific_verification_path_or_rsa_dispatch_code incompatible_or_mismatched_key_type_entry
+        observable_crash_vs_safe_error_return psa_opaque_key_mechanism exact_mbedtls_error_code_value
+        exact_mbedtls_internal_type_guard_location '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7678941708350985
+        distance: 0.3022627830505371
+        layer: poc_patterns
+        source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md
+        text: 'polymorphic public-key context,
+
+          - has an RSA-PSS verification mode or type argument,
+
+          - internally dispatches from a generic key context to RSA-specific state,
+
+          - can represent opaque, provider-backed, or otherwise incompatible key handles,
+
+          - returns observable error codes for unsupported key/type combinations.
+
+
+          Weak target API features:
+
+
+          - performs RSA-PSS verification but only accepts a concrete RSA key type,
+
+          - rejects incompatible keys before reaching an internal dispatch path.
+
+
+          Bad target API features:
+
+
+          - has no generic key dispatch layer,
+
+          - cannot represent opaque or incompatible key contexts,
+
+          - does not expose a safe error-vs-crash oracle.
+
+
+          ## Expected Oracle
+
+
+          Bug candidate signals:
+
+
+          - segmentation fault,
+
+          - exit code `139`,
+
+          - sanitizer NULL dereference.
+
+
+          Safe or fixed behavior:
+
+
+          - return value is `MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE`,
+
+          - unsupported key type is rejected safely,
+
+          - no crash.
+
+
+          ## Evidence Files
+
+
+          - Metadata: `data/pocs/core10/MBEDTLS-POC-0003/metadata.json`
+
+          - Notes: `dat'
+        metadata:
+          source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md
+          doc_type: poc_pattern
+          library: mbedtls
+          layer: poc_patterns
+      - rank: 2
+        score: 0.7237185844631522
+        distance: 0.38175255060195923
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerify.md
+        text: "# API Constraints: EVP_DigestVerify (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `EVP_DigestVerify`\n- Header declaration: `include/openssl/evp.h`\n\
+          - Implementation file: `crypto/evp/m_sigver.c`\n- Manpage: `doc/man3/EVP_DigestVerifyInit.pod`\n\
+          - Signature:\n\n```c\nint EVP_DigestVerify(EVP_MD_CTX *ctx, const unsigned\
+          \ char *sigret,\n    size_t siglen, const unsigned char *tbs,\n    size_t\
+          \ tbslen);\n```\n\n## Semantics\n\n- One-shot verification of `tbs` against\
+          \ signature `sigret`.\n- Requires a context initialized by `EVP_DigestVerifyInit`\
+          \ or `EVP_DigestVerifyInit_ex`.\n- Can be called only once before reinitializing\
+          \ the `EVP_MD_CTX`.\n\n## Return Value Semantics\n\n- Returns `1` on valid\
+          \ signature.\n- Returns `0` for verification failure or invalid signature\
+          \ form.\n- Negative or other non-1 values indicate more serious errors depending\
+          \ on provider/path.\n\n## Object and Buffer Constraints\n\n- `EVP_MD_CTX`,\
+          \ `EVP_PKEY_CTX`, and `EVP_PKEY` are opaque."
+        metadata:
+          doc_type: api_constraint
+          layer: api_constraints
+          library: openssl
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerify.md
+      - rank: 3
+        score: 0.7204408403924168
+        distance: 0.3880390226840973
+        layer: poc_patterns
+        source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md
+        text: 'nsupported opaque verify_ext rejected safely.
+
+          ```
+
+
+          The oracle is crash versus safe `MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE` return.
+
+
+          ## Mutation Points
+
+
+          - `VERIFY_TYPE`: controls entry into the RSA-PSS verification path.
+
+          - `PK_CONTEXT_KIND`: controls whether the key context is opaque or direct
+          RSA.
+
+          - `TYPE_GUARD`: the fixed statement that rejects non-RSA contexts.
+
+          - `HASH_LENGTH`: keeps the verification call realistic.
+
+          - `SIGNATURE_LENGTH`: keeps the signature input plausible for the trigger
+          call.
+
+
+          ## Multi-granularity Masking Guidance
+
+
+          ### Identifier-level Candidates
+
+
+          - `ctx`: generic PK context pointer.
+
+          - `type`: verification type argument.
+
+          - `pk_info`: key-dispatch metadata.
+
+          - `mbedtls_pk_rsa`: RSA context extraction helper.
+
+
+          ### Expression-level Candidates
+
+
+          - `mbedtls_pk_get_type(ctx) != MBEDTLS_PK_RSA`
+
+
+          ### Statement-level Candidates
+
+
+          - `return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;`
+
+          - `mbedtls_pk_verify_ext(MBEDTLS_PK_RSASSA_PSS, ...)`
+
+
+          ### Block-level Candidates
+
+
+          ```c
+
+          if (mbedtls_pk_ge'
+        metadata:
+          doc_type: poc_pattern
+          library: mbedtls
+          layer: poc_patterns
+          source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md
+      - rank: 4
+        score: 0.7163899297291887
+        distance: 0.3958878517150879
+        layer: poc_patterns
+        source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md
+        text: "# MBEDTLS-POC-0003: mbedtls_pk_verify_ext opaque RSA-PSS null dereference\n\
+          \n## Source\n\nThis pattern comes from Mbed TLS PR #8942 and issue #8937.\
+          \ The affected API is\n`mbedtls_pk_verify_ext` in `library/pk.c`.\n\nThe\
+          \ confirmed merge commit is `b2b90682646629698ddc0287b4e3967591e1cebc`.\n\
+          The local buggy worktree used `b2b90682646629698ddc0287b4e3967591e1cebc^1`,\n\
+          and the library fix commit is `07500fd874fd8688d008e28d349a948a5dd00835`.\n\
+          \n## Root Cause\n\nIn the buggy version, `mbedtls_pk_verify_ext()` can enter\
+          \ the RSA-PSS-specific\nverification path without first checking that the\
+          \ supplied PK context is an RSA\ncontext. For opaque keys, `mbedtls_pk_rsa(*ctx)`\
+          \ can return `NULL`. The\nRSA-PSS path then dereferences the missing RSA\
+          \ context and crashes.\n\nThe fixed behavior adds a type guard before RSA-specific\
+          \ access:\n\n```c\nif (mbedtls_pk_get_type(ctx) != MBEDTLS_PK_RSA) {\n \
+          \   return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;\n}\n```\n\n## Trigger Condition\n\
+          \nThe v2 minimal PoC creates a legacy RSA key, imports i"
+        metadata:
+          library: mbedtls
+          source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md
+          doc_type: poc_pattern
+          layer: poc_patterns
+      - rank: 5
+        score: 0.7140569452763073
+        distance: 0.4004485309123993
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerifyInit.md
+        text: "# API Constraints: EVP_DigestVerifyInit / EVP_DigestVerifyInit_ex (OpenSSL\
+          \ 3.5.5)\n\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\
+          \n## API\n\n- API/function names: `EVP_DigestVerifyInit`, `EVP_DigestVerifyInit_ex`\n\
+          - Header declaration: `include/openssl/evp.h`\n- Implementation file: `crypto/evp/m_sigver.c`\n\
+          - Manpage: `doc/man3/EVP_DigestVerifyInit.pod`\n- Signatures:\n\n```c\n\
+          int EVP_DigestVerifyInit_ex(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,\n    const\
+          \ char *mdname, OSSL_LIB_CTX *libctx,\n    const char *props, EVP_PKEY *pkey,\n\
+          \    const OSSL_PARAM params[]);\n\nint EVP_DigestVerifyInit(EVP_MD_CTX\
+          \ *ctx, EVP_PKEY_CTX **pctx,\n    const EVP_MD *type, ENGINE *e,\n    EVP_PKEY\
+          \ *pkey);\n```\n\n## Semantics\n\n- Initializes an `EVP_MD_CTX` for signature\
+          \ verification.\n- May create or reuse an `EVP_PKEY_CTX`; if created by\
+          \ the init call, it is freed with the `EVP_MD_CTX`.\n- `_ex` variant supports\
+          \ provider/libctx/properties and parameter array.\n\n## Return Value Semantics\n\
+          \n- Returns `1` on success.\n- R"
+        metadata:
+          library: openssl
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerifyInit.md
+          layer: api_constraints
+          doc_type: api_constraint
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl EVP_DigestVerify generic_polymorphic_key_context_dispatch\
+        \ rsa_pss_specific_verification_path_or_rsa_dispatch_code incompatible_or_mismatched_key_type_entry\
+        \ missing_type_check_before_rsa_context_access observable_crash_vs_safe_error_return\
+        \  generic_polymorphic_key_context_dispatch rsa_pss_specific_verification_path_or_rsa_dispatch_code\
+        \ incompatible_or_mismatched_key_type_entry observable_crash_vs_safe_error_return\
+        \ psa_opaque_key_mechanism exact_mbedtls_error_code_value exact_mbedtls_internal_type_guard_location\
+        \ \",\n  \"top_k\": 5,\n  \"results\": [\n    {\n      \"rank\": 1,\n    \
+        \  \"score\": 0.7678941708350985,\n      \"distance\": 0.3022627830505371,\n\
+        \      \"layer\": \"poc_patterns\",\n      \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md\"\
+        ,\n      \"text\": \"polymorphic public-key context,\\n- has an RSA-PSS verification\
+        \ mode or type argument,\\n- internally dispatches from a generic key context\
+        \ to RSA-specific state,\\n- can represent opaque, provider-backed, or otherwise\
+        \ incompatible key handles,\\n- returns observable error codes for unsupported\
+        \ key/type combinations.\\n\\nWeak target API features:\\n\\n- performs RSA-PSS\
+        \ verification but only accepts a concrete RSA key type,\\n- rejects incompatible\
+        \ keys before reaching an internal dispatch path.\\n\\nBad target API features:\\\
+        n\\n- has no generic key dispatch layer,\\n- cannot represent opaque or incompatible\
+        \ key contexts,\\n- does not expose a safe error-vs-crash oracle.\\n\\n##\
+        \ Expected Oracle\\n\\nBug candidate signals:\\n\\n- segmentation fault,\\\
+        n- exit code `139`,\\n- sanitizer NULL dereference.\\n\\nSafe or fixed behavior:\\\
+        n\\n- return value is `MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE`,\\n- unsupported\
+        \ key type is rejected safely,\\n- no crash.\\n\\n## Evidence Files\\n\\n-\
+        \ Metadata: `data/pocs/core10/MBEDTLS-POC-0003/metadata.json`\\n- Notes: `dat\"\
+        ,\n      \"metadata\": {\n        \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md\"\
+        ,\n        \"doc_type\": \"poc_pattern\",\n        \"library\": \"mbedtls\"\
+        ,\n        \"layer\": \"poc_patterns\"\n      }\n    },\n    {\n      \"rank\"\
+        : 2,\n      \"score\": 0.7237185844631522,\n      \"distance\": 0.38175255060195923,\n\
+        \      \"layer\": \"api_constraints\",\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerify.md\"\
+        ,\n      \"text\": \"# API Constraints: EVP_DigestVerify (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `EVP_DigestVerify`\\n- Header declaration: `include/openssl/evp.h`\\\
+        n- Implementation file: `crypto/evp/m_sigver.c`\\n- Manpage: `doc/man3/EVP_DigestVerifyInit.pod`\\\
+        n- Signature:\\n\\n```c\\nint EVP_DigestVerify(EVP_MD_CTX *ctx, const unsigned\
+        \ char *sigret,\\n    size_t siglen, const unsigned char *tbs,\\n    size_t\
+        \ tbslen);\\n```\\n\\n## Semantics\\n\\n- One-shot verification of `tbs` against\
+        \ signature `sigret`.\\n- Requires a context initialized by `EVP_DigestVerifyInit`\
+        \ or `EVP_DigestVerifyInit_ex`.\\n- Can be called only once before reinitializing\
+        \ the `EVP_MD_CTX`.\\n\\n## Return Value Semantics\\n\\n- Returns `1` on valid\
+        \ signature.\\n- Returns `0` for verification failure or invalid signature\
+        \ form.\\n- Negative or other non-1 values indicate more serious errors depending\
+        \ on provider/path.\\n\\n## Object and Buffer Constraints\\n\\n- `EVP_MD_CTX`,\
+        \ `EVP_PKEY_CTX`, and `EVP_PKEY` are opaque.\",\n      \"metadata\": {\n \
+        \       \"doc_type\": \"api_constraint\",\n        \"layer\": \"api_constraints\"\
+        ,\n        \"library\": \"openssl\",\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerify.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 3,\n      \"score\": 0.7204408403924168,\n\
+        \      \"distance\": 0.3880390226840973,\n      \"layer\": \"poc_patterns\"\
+        ,\n      \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md\"\
+        ,\n      \"text\": \"nsupported opaque verify_ext rejected safely.\\n```\\\
+        n\\nThe oracle is crash versus safe `MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE` return.\\\
+        n\\n## Mutation Points\\n\\n- `VERIFY_TYPE`: controls entry into the RSA-PSS\
+        \ verification path.\\n- `PK_CONTEXT_KIND`: controls whether the key context\
+        \ is opaque or direct RSA.\\n- `TYPE_GUARD`: the fixed statement that rejects\
+        \ non-RSA contexts.\\n- `HASH_LENGTH`: keeps the verification call realistic.\\\
+        n- `SIGNATURE_LENGTH`: keeps the signature input plausible for the trigger\
+        \ call.\\n\\n## Multi-granularity Masking Guidance\\n\\n### Identifier-level\
+        \ Candidates\\n\\n- `ctx`: generic PK context pointer.\\n- `type`: verification\
+        \ type argument.\\n- `pk_info`: key-dispatch metadata.\\n- `mbedtls_pk_rsa`:\
+        \ RSA context extraction helper.\\n\\n### Expression-level Candidates\\n\\\
+        n- `mbedtls_pk_get_type(ctx) != MBEDTLS_PK_RSA`\\n\\n### Statement-level Candidates\\\
+        n\\n- `return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;`\\n- `mbedtls_pk_verify_ext(MBEDTLS_PK_RSASSA_PSS,\
+        \ ...)`\\n\\n### Block-level Candidates\\n\\n```c\\nif (mbedtls_pk_ge\",\n\
+        \      \"metadata\": {\n        \"doc_type\": \"poc_pattern\",\n        \"\
+        library\": \"mbedtls\",\n        \"layer\": \"poc_patterns\",\n        \"\
+        source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md\"\n\
+        \      }\n    },\n    {\n      \"rank\": 4,\n      \"score\": 0.7163899297291887,\n\
+        \      \"distance\": 0.3958878517150879,\n      \"layer\": \"poc_patterns\"\
+        ,\n      \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md\"\
+        ,\n      \"text\": \"# MBEDTLS-POC-0003: mbedtls_pk_verify_ext opaque RSA-PSS\
+        \ null dereference\\n\\n## Source\\n\\nThis pattern comes from Mbed TLS PR\
+        \ #8942 and issue #8937. The affected API is\\n`mbedtls_pk_verify_ext` in\
+        \ `library/pk.c`.\\n\\nThe confirmed merge commit is `b2b90682646629698ddc0287b4e3967591e1cebc`.\\\
+        nThe local buggy worktree used `b2b90682646629698ddc0287b4e3967591e1cebc^1`,\\\
+        nand the library fix commit is `07500fd874fd8688d008e28d349a948a5dd00835`.\\\
+        n\\n## Root Cause\\n\\nIn the buggy version, `mbedtls_pk_verify_ext()` can\
+        \ enter the RSA-PSS-specific\\nverification path without first checking that\
+        \ the supplied PK context is an RSA\\ncontext. For opaque keys, `mbedtls_pk_rsa(*ctx)`\
+        \ can return `NULL`. The\\nRSA-PSS path then dereferences the missing RSA\
+        \ context and crashes.\\n\\nThe"
+      stderr_preview: ''
+      truncated: true
+      kind: vulnerability_path_compatibility
+      use_for_feature_inference: target
+    inferred_features:
+      observed_features_from_target_evidence:
+      - generic_polymorphic_key_context_dispatch
+      - incompatible_or_mismatched_key_type_entry
+      - library_allocated_output
+      - observable_crash_vs_safe_error_return
+      - radix_or_textual_base_context
+      - rsa_pss_specific_verification_path_or_rsa_dispatch_code
+      - signed_or_negative_encoding
+      - verification_return_code
+      negative_or_weakened_features:
+      - caller_provided_output_buffer
+      - direct_canary_after_output_limbs
+      - exact_mbedtls_error_code_value
+      - exact_mbedtls_internal_type_guard_location
+      - library_writes_to_caller_buffer
+      - psa_opaque_key_mechanism
+      effective_observed_features:
+      - generic_polymorphic_key_context_dispatch
+      - incompatible_or_mismatched_key_type_entry
+      - library_allocated_output
+      - observable_crash_vs_safe_error_return
+      - radix_or_textual_base_context
+      - rsa_pss_specific_verification_path_or_rsa_dispatch_code
+      - signed_or_negative_encoding
+      - verification_return_code
+      feature_conflicts: []
+      candidate_preserved_features:
+      - generic_polymorphic_key_context_dispatch
+      - incompatible_or_mismatched_key_type_entry
+      - observable_crash_vs_safe_error_return
+      - rsa_pss_specific_verification_path_or_rsa_dispatch_code
+      candidate_lost_or_weakened_features:
+      - exact_mbedtls_error_code_value
+      - exact_mbedtls_internal_type_guard_location
+      - psa_opaque_key_mechanism
+      bug_class_requirements:
+        required: []
+        disallowed: []
+        optional: []
+      required_present: []
+      required_missing: []
+      disallowed_present: []
+      optional_present: []
+      evidence_hits:
+        caller_provided_output_buffer:
+          positive_hits: []
+          negative_hits:
+          - OPENSSL_free
+        library_writes_to_caller_buffer:
+          positive_hits: []
+          negative_hits:
+          - OPENSSL_free
+        library_allocated_output:
+          positive_hits:
+          - OPENSSL_free
+          negative_hits: []
+        signed_or_negative_encoding:
+          positive_hits:
+          - signed
+          - negative
+          negative_hits: []
+        radix_or_textual_base_context:
+          positive_hits:
+          - base
+          negative_hits: []
+        direct_canary_after_output_limbs:
+          positive_hits: []
+          negative_hits:
+          - opaque
+        verification_return_code:
+          positive_hits:
+          - return 0
+          negative_hits: []
+- target_library: openssl
+  target_api: EVP_PKEY_verify
+  library: openssl
+  api: EVP_PKEY_verify
+  source_template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+  source_api: mbedtls_pk_verify_ext
+  decision: needs_llm_review
+  migration_applicability: applicable_with_limitations
+  applicability: weak_candidate
+  scores:
+    operation_family: 80
+    function_behavior: 78
+    parameter_structure: 70
+    vulnerability_path: 63
+    harness_feasibility: 78
+    final: 72
+  preserved_features:
+  - EVP_PKEY_verify dispatches based on key type via EVP_PKEY_CTX
+  - return code observable
+  - incompatible key type scenario constructable
+  preserved_vulnerability_features:
+  - generic_polymorphic_key_context_dispatch
+  - observable_crash_vs_safe_error_return
+  weakened_features:
+  - EVP_PKEY_verify requires pre-digested input not raw data
+  - RSA-PSS padding must be set through separate EVP_PKEY_CTX calls
+  - more complex harness setup than EVP_DigestVerify
+  lost_or_weakened_features:
+  - psa_opaque_key_mechanism
+  - exact_mbedtls_error_code_value
+  - rsa_pss_specific_verification_path_or_rsa_dispatch_code
+  migration_reason: 'Weaker candidate than EVP_DigestVerify because it requires pre-digested
+    input and more complex EVP_PKEY_CTX management. Use EVP_DigestVerify as the primary
+    target. Consider this as a secondary candidate if the primary harness does not
+    expose a useful oracle.
+
+    '
+  required_features:
+  - construct EC key (incompatible type)
+  - call EVP_PKEY_verify_init and set RSA-PSS padding
+  - call EVP_PKEY_verify with pre-digested data
+  - observe return code
+  notes:
+  - Prefer EVP_DigestVerify for automatic adapter generation.
+  - This candidate is kept as context evidence only.
+  evidence:
+    top_k: 5
+    queries:
+    - query: ' '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.5070700252966565
+        distance: 0.9721142053604126
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+        text: "FF\",\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000FFFFFFFF00\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"000000000000000000000000000000000000000000000000000000"
+        metadata:
+          doc_type: unit_test_call_pattern
+          library: openssl
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+          layer: unit_tests
+      - rank: 2
+        score: 0.5064631252680277
+        distance: 0.9744774103164673
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md
+        text: "E0EC65228B3937E498\",\n        \"63E4C6D3B23B0C849CF84241484BFE48F61D59A5B16BA06E6E12D1DA27C5249A\"\
+          ,\n        \"421DEBD61B62EAB6746434EBC3CC315E32220B3BADD50BDC4C4E6C147FEDD43D\"\
+          ,\n        \"0680512BCBB42C07D47349D2153B70C4E5D7FDFCBFA36EA1A85841B9E46E09A2\"\
+          ,\n        \"8542D69E4C044F18E8B92435BF6FF7DD297720630485628D5AE74EE7C32E79B7\"\
+          ,\n        \"1\");\n\n    if (!TEST_ptr(test_group))\n        goto done;\n\
+          \n    if (!TEST_true(test_sm2_sign(\n            test_group,\n         \
+          \   \"ALICE123@YAHOO.COM\",\n            \"128B2FA8BD433C6C068C8D803DFF79792A519A55171B1B650C23661D15897263\"\
+          ,\n            \"message digest\",\n            \"006CB28D99385C175C94F94E934817663FC176D925DD72B727260DBAAE1FB2F96F\"\
+          \n            \"007c47811054c6f99613a578eb8453706ccb96384fe7df5c171671e760bfa8be3a\"\
+          ,\n```"
+        metadata:
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          library: openssl
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md
+      - rank: 3
+        score: 0.4993900358310789
+        distance: 1.0024428367614746
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+        text: "8787878787878787878787878787878\"\n              \"7878787878787878787878787878787878787878787878787878787878787878\"\
+          \n              \"7878787878787878787878787878787878787878787878787878787878787878\"\
+          \n              \"7878787878787878787878787878787878787878787878787878787878787878\"\
+          ))\n            && TEST_true(BN_hex2bn(&b,\n                \"095D72C08C097BA488C5E439C655A192EAFB6380073D8C2664668EDDB4060744\"\
+          \n                \"E16E57FB4EDB9AE10A0CEFCDC28A894F689A128379DB279D48A2E20849D68593\"\
+          \n                \"9B7803BCF46CEBF5C533FB0DD35B080593DE5472E3FE5DB951B8BFF9B4CB8F03\"\
+          \n                \"9CC638A5EE8CDD703719F8000E6A9F63BEED5F2FCD52FF293EA05A251BB4AB81\"\
+          ))\n            && TEST_true(BN_hex2bn(&n,\n```\n\n## Call pattern 62\n\n\
+          ```c\ngoto err;\n\n    if (!(TEST_true(BN_MONT_CTX_set(mont, n, ctx))\n\
+          \            && TEST_true(BN_mod_mul_montgomery(c, a, b, mont, ctx))\n \
+          \           && TEST_true(BN_mod_mul_montgomery(d, b, a, mont, ctx))\n  \
+          \          && TEST_BN_eq(c, d)))\n        goto err;\n\n    /* Regression\
+          \ test for ca"
+        metadata:
+          library: openssl
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+      - rank: 4
+        score: 0.49467344660620705
+        distance: 1.0215356349945068
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md
+        text: "D_BOTTOM_ODD);\n    BN_rand(a2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY);\n\
+          \    BN_rand(b2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY);\n  \
+          \  BN_rand(m2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ODD);\n\n  \
+          \  if (!TEST_true(BN_mod(a1, a1, m1, ctx))\n        || !TEST_true(BN_mod(b1,\
+          \ b1, m1, ctx))\n        || !TEST_true(BN_mod(a2, a2, m2, ctx))\n      \
+          \  || !TEST_true(BN_mod(b2, b2, m2, ctx))\n        || !TEST_true(BN_mod_exp_simple(r_simple1,\
+          \ a1, b1, m1, ctx))\n        || !TEST_true(BN_mod_exp_simple(r_simple2,\
+          \ a2, b2, m2, ctx))\n        || !TEST_true(BN_mod_exp_mont_consttime_x2(r_mont_const_x2_1,\
+          \ a1, b1, m1, NULL,\n            r_mont_const_x2_2, a2, b2, m2, NULL,\n\
+          \            ctx)))\n        goto err;\n\n    if (!TEST_BN_eq(r_simple1,\
+          \ r_mont_const_x2_1)\n        || !TEST_BN_eq(r_simple2, r_mont_const_x2_2))\
+          \ {\n        if (BN_cmp(r_simple1, r_mont_const_x2_1) != 0)\n          \
+          \  TEST_info(\"simple and mont const time x2 (#1) results differ\");\n```\n\
+          \n## Call pattern 29\n\n```c\nfactor_size = 2048"
+        metadata:
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+          library: openssl
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md
+      - rank: 5
+        score: 0.4944104082232621
+        distance: 1.022611141204834
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+        text: "FFFFFFFFFFFFFFFFFFFFFF\",\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000FFFFFFFF00\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"00000000000000000000000000000000000000000000000000FFFFFFFFFFFFFF\"\
+          ,\n    NULL\n};\n\nstatic const char *bn2stri"
+        metadata:
+          library: openssl
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+      error: ''
+      stdout_preview: "{\n  \"query\": \" \",\n  \"top_k\": 5,\n  \"results\": [\n\
+        \    {\n      \"rank\": 1,\n      \"score\": 0.5070700252966565,\n      \"\
+        distance\": 0.9721142053604126,\n      \"layer\": \"unit_tests\",\n      \"\
+        source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n      \"text\": \"FF\\\",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000FFFFFFFF00\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"000000000000000000000000000000000000000000000000000000\",\n\
+        \      \"metadata\": {\n        \"doc_type\": \"unit_test_call_pattern\",\n\
+        \        \"library\": \"openssl\",\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n        \"layer\": \"unit_tests\"\n      }\n    },\n    {\n      \"rank\"\
+        : 2,\n      \"score\": 0.5064631252680277,\n      \"distance\": 0.9744774103164673,\n\
+        \      \"layer\": \"unit_tests\",\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md\"\
+        ,\n      \"text\": \"E0EC65228B3937E498\\\",\\n        \\\"63E4C6D3B23B0C849CF84241484BFE48F61D59A5B16BA06E6E12D1DA27C5249A\\\
+        \",\\n        \\\"421DEBD61B62EAB6746434EBC3CC315E32220B3BADD50BDC4C4E6C147FEDD43D\\\
+        \",\\n        \\\"0680512BCBB42C07D47349D2153B70C4E5D7FDFCBFA36EA1A85841B9E46E09A2\\\
+        \",\\n        \\\"8542D69E4C044F18E8B92435BF6FF7DD297720630485628D5AE74EE7C32E79B7\\\
+        \",\\n        \\\"1\\\");\\n\\n    if (!TEST_ptr(test_group))\\n        goto\
+        \ done;\\n\\n    if (!TEST_true(test_sm2_sign(\\n            test_group,\\\
+        n            \\\"ALICE123@YAHOO.COM\\\",\\n            \\\"128B2FA8BD433C6C068C8D803DFF79792A519A55171B1B650C23661D15897263\\\
+        \",\\n            \\\"message digest\\\",\\n            \\\"006CB28D99385C175C94F94E934817663FC176D925DD72B727260DBAAE1FB2F96F\\\
+        \"\\n            \\\"007c47811054c6f99613a578eb8453706ccb96384fe7df5c171671e760bfa8be3a\\\
+        \",\\n```\",\n      \"metadata\": {\n        \"layer\": \"unit_tests\",\n\
+        \        \"doc_type\": \"unit_test_call_pattern\",\n        \"library\": \"\
+        openssl\",\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 3,\n      \"score\": 0.4993900358310789,\n\
+        \      \"distance\": 1.0024428367614746,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n      \"text\": \"8787878787878787878787878787878\\\"\\n              \\\
+        \"7878787878787878787878787878787878787878787878787878787878787878\\\"\\n\
+        \              \\\"7878787878787878787878787878787878787878787878787878787878787878\\\
+        \"\\n              \\\"7878787878787878787878787878787878787878787878787878787878787878\\\
+        \"))\\n            && TEST_true(BN_hex2bn(&b,\\n                \\\"095D72C08C097BA488C5E439C655A192EAFB6380073D8C2664668EDDB4060744\\\
+        \"\\n                \\\"E16E57FB4EDB9AE10A0CEFCDC28A894F689A128379DB279D48A2E20849D68593\\\
+        \"\\n                \\\"9B7803BCF46CEBF5C533FB0DD35B080593DE5472E3FE5DB951B8BFF9B4CB8F03\\\
+        \"\\n                \\\"9CC638A5EE8CDD703719F8000E6A9F63BEED5F2FCD52FF293EA05A251BB4AB81\\\
+        \"))\\n            && TEST_true(BN_hex2bn(&n,\\n```\\n\\n## Call pattern 62\\\
+        n\\n```c\\ngoto err;\\n\\n    if (!(TEST_true(BN_MONT_CTX_set(mont, n, ctx))\\\
+        n            && TEST_true(BN_mod_mul_montgomery(c, a, b, mont, ctx))\\n  \
+        \          && TEST_true(BN_mod_mul_montgomery(d, b, a, mont, ctx))\\n    \
+        \        && TEST_BN_eq(c, d)))\\n        goto err;\\n\\n    /* Regression\
+        \ test for ca\",\n      \"metadata\": {\n        \"library\": \"openssl\"\
+        ,\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n        \"doc_type\": \"unit_test_call_pattern\",\n        \"layer\": \"\
+        unit_tests\"\n      }\n    },\n    {\n      \"rank\": 4,\n      \"score\"\
+        : 0.49467344660620705,\n      \"distance\": 1.0215356349945068,\n      \"\
+        layer\": \"unit_tests\",\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md\"\
+        ,\n      \"text\": \"D_BOTTOM_ODD);\\n    BN_rand(a2, factor_size, BN_RAND_TOP_ONE,\
+        \ BN_RAND_BOTTOM_ANY);\\n    BN_rand(b2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY);\\\
+        n    BN_rand(m2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ODD);\\n\\n\
+        \    if (!TEST_true(BN_mod(a1, a1, m1, ctx))\\n        || !TEST_true(BN_mod(b1,\
+        \ b1, m1, ctx))\\n        || !TEST_true(BN_mod(a2, a2, m2, ctx))\\n      \
+        \  || !TEST_true(BN_mod(b2, b2, m2, ctx))\\n        || !TEST_true(BN_mod_exp_simple(r_simple1,\
+        \ a1, b1, m1, ctx))\\n        || !TEST_true(BN_mod_exp_simple(r_simple2, a2,\
+        \ b2, m2, ctx))\\n        || !TEST_true(BN_mod_exp_mont_consttime_x2(r_mont_const_x2_1,\
+        \ a1, b1, m1, NULL,\\n            r_mont_const_x2_2, a2, b2, m2, NULL,\\n\
+        \            ctx)))\\n        goto err;\\n\\n    if (!TEST_BN_eq(r_simple1,\
+        \ r_mont_const_x2_1)\\n        || !TEST_BN_eq(r_simple2, r_mont_const_x2_2))\
+        \ {\\n        if (BN_cmp(r_simple1, r_mont_const_x2_1) != 0)\\n          \
+        \  TEST_info(\\\"simple and mont const time x2 (#1) results differ\\\");\\\
+        n```\\n\\n## Call pattern 29\\n\\n```c\\nfactor_size = 2048\",\n      \"metadata\"\
+        : {\n        \"doc_type\": \"unit_test_call_pattern\",\n        \"layer\"\
+        : \"unit_tests\",\n        \"library\": \"openssl\",\n        \"source_file\"\
+        : \"knowl"
+      stderr_preview: ''
+      truncated: true
+      kind: source_pattern
+      use_for_feature_inference: source_only
+    - query: openssl EVP_PKEY_verify function declaration signature parameters return
+        value
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7333738941532205
+        distance: 0.3635609447956085
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_PKEY_verify.md
+        text: "# API Constraints: EVP_PKEY_verify (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `EVP_PKEY_verify`\n- Header declaration: `include/openssl/evp.h`\n\
+          - Implementation file: `crypto/evp/signature.c`\n- Manpage: `doc/man3/EVP_PKEY_verify.pod`\n\
+          - Signature:\n\n```c\nint EVP_PKEY_verify(EVP_PKEY_CTX *ctx,\n    const\
+          \ unsigned char *sig, size_t siglen,\n    const unsigned char *tbs, size_t\
+          \ tbslen);\n```\n\n## Semantics\n\n- Verifies a signature over data that\
+          \ is already in the form expected by the key/signature algorithm.\n- Requires\
+          \ an initialized `EVP_PKEY_CTX`, normally via `EVP_PKEY_verify_init`.\n\
+          - For digest-based verification, `EVP_DigestVerify*` is often preferred.\n\
+          \n## Return Value Semantics\n\n- Returns `1` on successful verification.\n\
+          - Returns `0` when the signature does not verify.\n- Returns a negative\
+          \ value for errors; `-2` can indicate operation not supported.\n\n## Object\
+          \ and Buffer Constraints\n\n- `EVP_PKEY_CTX` and `EVP_PKEY` are opaque."
+        metadata:
+          library: openssl
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_PKEY_verify.md
+          doc_type: api_constraint
+          layer: api_constraints
+      - rank: 2
+        score: 0.7083154325240817
+        distance: 0.4118003845214844
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+        text: "/* OPENSSL_NO_DEPRECATED_3_0 */\n#endif /* OPENSSL_NO_EC */\n\nstatic\
+          \ int test_EVP_PKEY_sign(int tst)\n{\n    int ret = 0;\n    EVP_PKEY *pkey\
+          \ = NULL;\n    unsigned char *sig = NULL;\n    size_t sig_len = 0, shortsig_len\
+          \ = 1;\n    EVP_PKEY_CTX *ctx = NULL;\n    unsigned char tbs[] = {\n   \
+          \     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a,\
+          \ 0x0b,\n        0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13\n    };\n\
+          \n    if (tst == 0) {\n        if (!TEST_ptr(pkey = load_example_rsa_key()))\n\
+          \            goto out;\n    } else if (tst == 1) {\n#ifndef OPENSSL_NO_DSA\n\
+          \        if (!TEST_ptr(pkey = load_example_dsa_key()))\n            goto\
+          \ out;\n#else\n        ret = 1;\n```\n\n## Call pattern 22\n\n```c\nOSSL_PARAM\
+          \ *params = NULL;\n    BIGNUM *p = NULL, *q = NULL, *g = NULL, *pub = NULL,\
+          \ *priv = NULL;\n    EVP_PKEY_CTX *pctx = NULL;\n    EVP_PKEY *pkey = NULL;\n\
+          \    int ret = 0;\n\n    /*\n     * Setup the parameters for our DSA object.\
+          \ For our purposes they don't\n     * have to actually be *valid* parameters.\
+          \ W"
+        metadata:
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+          library: openssl
+          doc_type: unit_test_call_pattern
+      - rank: 3
+        score: 0.696444874640395
+        distance: 0.43586382269859314
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+        text: "{\n    int ret = 0;\n    EVP_PKEY *pkey = NULL;\n    unsigned char\
+          \ *sig = NULL;\n    size_t sig_len = 0, shortsig_len = 1;\n    EVP_PKEY_CTX\
+          \ *ctx = NULL;\n    unsigned char tbs[] = {\n        0x00, 0x01, 0x02, 0x03,\
+          \ 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,\n        0x0c, 0x0d, 0x0e,\
+          \ 0x0f, 0x10, 0x11, 0x12, 0x13\n    };\n\n    if (tst == 0) {\n        if\
+          \ (!TEST_ptr(pkey = load_example_rsa_key()))\n            goto out;\n  \
+          \  } else if (tst == 1) {\n#ifndef OPENSSL_NO_DSA\n        if (!TEST_ptr(pkey\
+          \ = load_example_dsa_key()))\n            goto out;\n```\n\n## Call pattern\
+          \ 20\n\n```c\nif (!TEST_true(memcmp(ec_pub, pad, sizeof(ec_pub)) == 0))\n\
+          \        goto err;\n\n    ret = 1;\n\nerr:\n    OSSL_LIB_CTX_free(libctx);\n\
+          \    EVP_PKEY_free(pkey);\n    EC_KEY_free(eckey);\n    OPENSSL_free(pad);\n\
+          \    BN_free(priv);\n    BN_free(x);\n    BN_free(y);\n\n    return ret;\n\
+          }\n#endif /* OPENSSL_NO_DEPRECATED_3_0 */\n#endif /* OPENSSL_NO_EC */\n\n\
+          static int test_EVP_PKEY_sign(int tst)\n{\n    int ret = 0;\n    EVP_PKEY\
+          \ *pkey = NULL;\n    uns"
+        metadata:
+          layer: unit_tests
+          library: openssl
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+      - rank: 4
+        score: 0.6938010929676739
+        distance: 0.4413352906703949
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_pkey_provided_test.c.md
+        text: "true(EVP_PKEY_get_bn_param(pk, OSSL_PKEY_PARAM_RSA_N, &n_out))\n  \
+          \      || !TEST_BN_eq(n, n_out))\n        goto err;\n    ret = 1;\nerr:\n\
+          \    BN_free(n_out);\n    BN_free(n);\n    BN_free(e);\n    BN_free(d);\n\
+          \    EVP_PKEY_free(pk);\n    EVP_PKEY_CTX_free(key_ctx);\n    EVP_PKEY_CTX_free(ctx);\n\
+          \    OSSL_PARAM_free(fromdata_params);\n    OSSL_PARAM_BLD_free(bld);\n\
+          \    return ret;\n}\n\n#ifndef OPENSSL_NO_DH\nstatic int test_fromdata_dh_named_group(void)\n\
+          {\n    int ret = 0;\n    int gindex = 0, pcounter = 0, hindex = 0;\n   \
+          \ EVP_PKEY_CTX *ctx = NULL, *key_ctx = NULL;\n    EVP_PKEY *pk = NULL, *copy_pk\
+          \ = NULL, *dup_pk = NULL;\n    size_t len;\n    BIGNUM *pub = NULL, *priv\
+          \ = NULL;\n    BIGNUM *pub_out = NULL, *priv_out = NULL;\n    BIGNUM *p\
+          \ = NULL, *q = NULL, *g = NULL, *j = NULL;\n    OSSL_PARAM *fromdata_params\
+          \ = NULL;\n    OSSL_PARAM_BLD *bld = NULL;\n    char name_out[80];\n   \
+          \ unsigned char seed_out[32];\n```\n\n## Call pattern 28\n\n```c\n|| !TEST_ptr(ctx\
+          \ = EVP_PKEY_CTX_new_from_name(NULL, \"RSA\", NULL))\n        || !T"
+        metadata:
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_pkey_provided_test.c.md
+          doc_type: unit_test_call_pattern
+          library: openssl
+      - rank: 5
+        score: 0.6861431139429504
+        distance: 0.4574218988418579
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+        text: "params[0] = OSSL_PARAM_construct_int(OSSL_SIGNATURE_PARAM_PAD_MODE,\
+          \ &padding);\n        params[1] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST,\n\
+          \            OSSL_DIGEST_NAME_SHA2_256, 0);\n        params[2] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_MGF1_DIGEST,\n\
+          \            OSSL_DIGEST_NAME_SHA1, 0);\n```\n\n## Call pattern 37\n\n```c\n\
+          if (!TEST_ptr(pkey))\n        goto err;\n\n    ret = test_EVP_PKEY_CTX_get_set_params(pkey);\n\
+          \nerr:\n    EVP_PKEY_free(pkey);\n    EVP_PKEY_CTX_free(pctx);\n    OSSL_PARAM_free(params);\n\
+          \    OSSL_PARAM_BLD_free(bld);\n    BN_free(n);\n    BN_free(e);\n    BN_free(d);\n\
+          \n    return ret;\n}\n\nstatic int test_RSA_OAEP_set_get_params(void)\n\
+          {\n    int ret = 0;\n    EVP_PKEY *key = NULL;\n    EVP_PKEY_CTX *key_ctx\
+          \ = NULL;\n\n    if (nullprov != NULL)\n        return TEST_skip(\"Test\
+          \ does not support a non-default library context\");\n\n    if (!TEST_ptr(key\
+          \ = load_example_rsa_key())\n        || !TEST_ptr(key_ctx = EVP_PKEY_CTX_new_from_pkey(0,\
+          \ key, 0)))"
+        metadata:
+          doc_type: unit_test_call_pattern
+          library: openssl
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl EVP_PKEY_verify function declaration\
+        \ signature parameters return value\",\n  \"top_k\": 5,\n  \"results\": [\n\
+        \    {\n      \"rank\": 1,\n      \"score\": 0.7333738941532205,\n      \"\
+        distance\": 0.3635609447956085,\n      \"layer\": \"api_constraints\",\n \
+        \     \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_PKEY_verify.md\"\
+        ,\n      \"text\": \"# API Constraints: EVP_PKEY_verify (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `EVP_PKEY_verify`\\n- Header declaration: `include/openssl/evp.h`\\\
+        n- Implementation file: `crypto/evp/signature.c`\\n- Manpage: `doc/man3/EVP_PKEY_verify.pod`\\\
+        n- Signature:\\n\\n```c\\nint EVP_PKEY_verify(EVP_PKEY_CTX *ctx,\\n    const\
+        \ unsigned char *sig, size_t siglen,\\n    const unsigned char *tbs, size_t\
+        \ tbslen);\\n```\\n\\n## Semantics\\n\\n- Verifies a signature over data that\
+        \ is already in the form expected by the key/signature algorithm.\\n- Requires\
+        \ an initialized `EVP_PKEY_CTX`, normally via `EVP_PKEY_verify_init`.\\n-\
+        \ For digest-based verification, `EVP_DigestVerify*` is often preferred.\\\
+        n\\n## Return Value Semantics\\n\\n- Returns `1` on successful verification.\\\
+        n- Returns `0` when the signature does not verify.\\n- Returns a negative\
+        \ value for errors; `-2` can indicate operation not supported.\\n\\n## Object\
+        \ and Buffer Constraints\\n\\n- `EVP_PKEY_CTX` and `EVP_PKEY` are opaque.\"\
+        ,\n      \"metadata\": {\n        \"library\": \"openssl\",\n        \"source_file\"\
+        : \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_PKEY_verify.md\",\n  \
+        \      \"doc_type\": \"api_constraint\",\n        \"layer\": \"api_constraints\"\
+        \n      }\n    },\n    {\n      \"rank\": 2,\n      \"score\": 0.7083154325240817,\n\
+        \      \"distance\": 0.4118003845214844,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n      \"text\": \"/* OPENSSL_NO_DEPRECATED_3_0 */\\n#endif /* OPENSSL_NO_EC\
+        \ */\\n\\nstatic int test_EVP_PKEY_sign(int tst)\\n{\\n    int ret = 0;\\\
+        n    EVP_PKEY *pkey = NULL;\\n    unsigned char *sig = NULL;\\n    size_t\
+        \ sig_len = 0, shortsig_len = 1;\\n    EVP_PKEY_CTX *ctx = NULL;\\n    unsigned\
+        \ char tbs[] = {\\n        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,\
+        \ 0x08, 0x09, 0x0a, 0x0b,\\n        0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12,\
+        \ 0x13\\n    };\\n\\n    if (tst == 0) {\\n        if (!TEST_ptr(pkey = load_example_rsa_key()))\\\
+        n            goto out;\\n    } else if (tst == 1) {\\n#ifndef OPENSSL_NO_DSA\\\
+        n        if (!TEST_ptr(pkey = load_example_dsa_key()))\\n            goto\
+        \ out;\\n#else\\n        ret = 1;\\n```\\n\\n## Call pattern 22\\n\\n```c\\\
+        nOSSL_PARAM *params = NULL;\\n    BIGNUM *p = NULL, *q = NULL, *g = NULL,\
+        \ *pub = NULL, *priv = NULL;\\n    EVP_PKEY_CTX *pctx = NULL;\\n    EVP_PKEY\
+        \ *pkey = NULL;\\n    int ret = 0;\\n\\n    /*\\n     * Setup the parameters\
+        \ for our DSA object. For our purposes they don't\\n     * have to actually\
+        \ be *valid* parameters. W\",\n      \"metadata\": {\n        \"layer\": \"\
+        unit_tests\",\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n        \"library\": \"openssl\",\n        \"doc_type\": \"unit_test_call_pattern\"\
+        \n      }\n    },\n    {\n      \"rank\": 3,\n      \"score\": 0.696444874640395,\n\
+        \      \"distance\": 0.43586382269859314,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n      \"text\": \"{\\n    int ret = 0;\\n    EVP_PKEY *pkey = NULL;\\n\
+        \    unsigned char *sig = NULL;\\n    size_t sig_len = 0, shortsig_len = 1;\\\
+        n    EVP_PKEY_CTX *ctx = NULL;\\n    unsigned char tbs[] = {\\n        0x00,\
+        \ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,\\n   \
+        \     0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13\\n    };\\n\\n    if\
+        \ (tst == 0) {\\n        if (!TEST_ptr(pkey = load_example_rsa_key()))\\n\
+        \            goto out;\\n    } else if (tst == 1) {\\n#ifndef OPENSSL_NO_DSA\\\
+        n        if (!TEST_ptr(pkey = load_example_dsa_key()))\\n            goto\
+        \ out;\\n```\\n\\n## Call pattern 20\\n\\n```c\\nif (!TEST_true(memcmp(ec_pub,\
+        \ pad, sizeof(ec_pub)) == 0))\\n        goto err;\\n\\n    ret = 1;\\n\\nerr:\\\
+        n    OSSL_LIB_CTX_free(libctx);\\n    EVP_PKEY_free(pkey);\\n    EC_KEY_free(eckey);\\\
+        n    OPENSSL_free(pad);\\n    BN_free(priv);\\n    BN_free(x);\\n    BN_free(y);\\\
+        n\\n    return ret;\\n}\\n#endif /* OPENSSL_NO_DEPRECATED_3_0 */\\n#endif\
+        \ /* OPENSSL_NO_EC */\\n\\nstatic int test_EVP_PKEY_sign(int tst)\\n{\\n \
+        \   int ret = 0;\\n    EVP_PKEY *pkey = NULL;\\n    uns\",\n      \"metadata\"\
+        : {\n        \"layer\": \"unit_tests\",\n        \"library\": \"openssl\"\
+        ,\n        \"doc_type\": \"unit_test_call_pattern\",\n        \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 4,\n      \"score\": 0.6938010929676739,\n\
+        \      \"distance\": 0.4413352906703949,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_pkey_provided_test.c.md\"\
+        ,\n      \"text\": \"true(EVP_PKEY_get_bn_param(pk, OSSL_PKEY_PARAM_RSA_N,\
+        \ &n_out))\\n        || !TEST_BN_eq(n, n_out))\\n        goto err;\\n    ret\
+        \ = 1;\\nerr:\\n    BN_free(n_out);\\n    BN_free(n);\\n    BN_free(e);\\\
+        n    BN_free(d);\\n    EVP_PKEY_free(pk);\\n    EVP_PKEY_CTX_free(key_ctx);\\\
+        n    EVP_PKEY_CTX_free(ctx);\\n    OSSL_PARAM_free(fromdata_params);\\n  \
+        \  OSSL_PARAM_BLD_free(bld);\\n    return ret;\\n}\\n\\n#ifndef OPENSSL_NO_DH\\\
+        nstatic int test_fromdata_dh_named_group(void)\\n{\\n    int ret = 0;\\n \
+        \   int gindex = 0, pcounter = 0, hindex = 0;\\n    EVP_PKEY_CTX *ctx = NULL,\
+        \ *key_ctx = NULL;\\n    EVP_PKEY *pk = NULL, *copy_pk = NULL, *dup_pk = NULL;\\\
+        n    size_t len;\\n    BIGNUM *pub = NULL, *priv = NULL;\\n    BIGNUM *pub_out\
+        \ = NULL, *priv_out = NULL;\\n    BIGNUM *p = NULL, *q = NULL, *g = NULL,\
+        \ *j = NULL;\\n    OSSL_PARAM *fromdata_params = NULL;\\n    OSSL_PARAM_BLD\
+        \ *bld = NULL;\\n    char name_out[80];\\n    unsigned char seed_out[32];"
+      stderr_preview: ''
+      truncated: true
+      kind: target_api_signature
+      use_for_feature_inference: target
+    - query: openssl EVP_PKEY_verify implementation source code parameters return
+        error
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7312382032588083
+        distance: 0.36754342913627625
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_PKEY_verify.md
+        text: "# API Constraints: EVP_PKEY_verify (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `EVP_PKEY_verify`\n- Header declaration: `include/openssl/evp.h`\n\
+          - Implementation file: `crypto/evp/signature.c`\n- Manpage: `doc/man3/EVP_PKEY_verify.pod`\n\
+          - Signature:\n\n```c\nint EVP_PKEY_verify(EVP_PKEY_CTX *ctx,\n    const\
+          \ unsigned char *sig, size_t siglen,\n    const unsigned char *tbs, size_t\
+          \ tbslen);\n```\n\n## Semantics\n\n- Verifies a signature over data that\
+          \ is already in the form expected by the key/signature algorithm.\n- Requires\
+          \ an initialized `EVP_PKEY_CTX`, normally via `EVP_PKEY_verify_init`.\n\
+          - For digest-based verification, `EVP_DigestVerify*` is often preferred.\n\
+          \n## Return Value Semantics\n\n- Returns `1` on successful verification.\n\
+          - Returns `0` when the signature does not verify.\n- Returns a negative\
+          \ value for errors; `-2` can indicate operation not supported.\n\n## Object\
+          \ and Buffer Constraints\n\n- `EVP_PKEY_CTX` and `EVP_PKEY` are opaque."
+        metadata:
+          layer: api_constraints
+          library: openssl
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_PKEY_verify.md
+          doc_type: api_constraint
+      - rank: 2
+        score: 0.7248440926960703
+        distance: 0.37960702180862427
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+        text: "/* OPENSSL_NO_DEPRECATED_3_0 */\n#endif /* OPENSSL_NO_EC */\n\nstatic\
+          \ int test_EVP_PKEY_sign(int tst)\n{\n    int ret = 0;\n    EVP_PKEY *pkey\
+          \ = NULL;\n    unsigned char *sig = NULL;\n    size_t sig_len = 0, shortsig_len\
+          \ = 1;\n    EVP_PKEY_CTX *ctx = NULL;\n    unsigned char tbs[] = {\n   \
+          \     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a,\
+          \ 0x0b,\n        0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13\n    };\n\
+          \n    if (tst == 0) {\n        if (!TEST_ptr(pkey = load_example_rsa_key()))\n\
+          \            goto out;\n    } else if (tst == 1) {\n#ifndef OPENSSL_NO_DSA\n\
+          \        if (!TEST_ptr(pkey = load_example_dsa_key()))\n            goto\
+          \ out;\n#else\n        ret = 1;\n```\n\n## Call pattern 22\n\n```c\nOSSL_PARAM\
+          \ *params = NULL;\n    BIGNUM *p = NULL, *q = NULL, *g = NULL, *pub = NULL,\
+          \ *priv = NULL;\n    EVP_PKEY_CTX *pctx = NULL;\n    EVP_PKEY *pkey = NULL;\n\
+          \    int ret = 0;\n\n    /*\n     * Setup the parameters for our DSA object.\
+          \ For our purposes they don't\n     * have to actually be *valid* parameters.\
+          \ W"
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+          library: openssl
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+      - rank: 3
+        score: 0.6923758318838865
+        distance: 0.4443022906780243
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+        text: "params[0] = OSSL_PARAM_construct_int(OSSL_SIGNATURE_PARAM_PAD_MODE,\
+          \ &padding);\n        params[1] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST,\n\
+          \            OSSL_DIGEST_NAME_SHA2_256, 0);\n        params[2] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_MGF1_DIGEST,\n\
+          \            OSSL_DIGEST_NAME_SHA1, 0);\n```\n\n## Call pattern 37\n\n```c\n\
+          if (!TEST_ptr(pkey))\n        goto err;\n\n    ret = test_EVP_PKEY_CTX_get_set_params(pkey);\n\
+          \nerr:\n    EVP_PKEY_free(pkey);\n    EVP_PKEY_CTX_free(pctx);\n    OSSL_PARAM_free(params);\n\
+          \    OSSL_PARAM_BLD_free(bld);\n    BN_free(n);\n    BN_free(e);\n    BN_free(d);\n\
+          \n    return ret;\n}\n\nstatic int test_RSA_OAEP_set_get_params(void)\n\
+          {\n    int ret = 0;\n    EVP_PKEY *key = NULL;\n    EVP_PKEY_CTX *key_ctx\
+          \ = NULL;\n\n    if (nullprov != NULL)\n        return TEST_skip(\"Test\
+          \ does not support a non-default library context\");\n\n    if (!TEST_ptr(key\
+          \ = load_example_rsa_key())\n        || !TEST_ptr(key_ctx = EVP_PKEY_CTX_new_from_pkey(0,\
+          \ key, 0)))"
+        metadata:
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+          library: openssl
+      - rank: 4
+        score: 0.6899988023778721
+        distance: 0.4492778778076172
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+        text: "return test_EVP_PKEY_ffc_priv_pub(\"DSA\");\n}\n\n#endif /* !OPENSSL_NO_DSA\
+          \ */\n\nstatic int test_RSA_get_set_params(void)\n{\n    OSSL_PARAM_BLD\
+          \ *bld = NULL;\n    OSSL_PARAM *params = NULL;\n    BIGNUM *n = NULL, *e\
+          \ = NULL, *d = NULL;\n    EVP_PKEY_CTX *pctx = NULL;\n    EVP_PKEY *pkey\
+          \ = NULL;\n    int ret = 0;\n\n    /*\n     * Setup the parameters for our\
+          \ RSA object. For our purposes they don't\n     * have to actually be *valid*\
+          \ parameters. We just need to set something.\n```\n\n## Call pattern 32\n\
+          \n```c\nOSSL_PARAM *params = NULL;\n    BIGNUM *n = NULL, *e = NULL, *d\
+          \ = NULL;\n    EVP_PKEY_CTX *pctx = NULL;\n    EVP_PKEY *pkey = NULL;\n\
+          \    int ret = 0;\n\n    /*\n     * Setup the parameters for our RSA object.\
+          \ For our purposes they don't\n     * have to actually be *valid* parameters.\
+          \ We just need to set something.\n     */\n    if (!TEST_ptr(pctx = EVP_PKEY_CTX_new_from_name(testctx,\
+          \ \"RSA\", NULL))\n        || !TEST_ptr(bld = OSSL_PARAM_BLD_new())\n  \
+          \      || !TEST_ptr(n = BN_new())\n        || !TEST_ptr(e = BN_n"
+        metadata:
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+          library: openssl
+      - rank: 5
+        score: 0.6894103827557002
+        distance: 0.45051485300064087
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_pkey_provided_test.c.md
+        text: "true(EVP_PKEY_get_bn_param(pk, OSSL_PKEY_PARAM_RSA_N, &n_out))\n  \
+          \      || !TEST_BN_eq(n, n_out))\n        goto err;\n    ret = 1;\nerr:\n\
+          \    BN_free(n_out);\n    BN_free(n);\n    BN_free(e);\n    BN_free(d);\n\
+          \    EVP_PKEY_free(pk);\n    EVP_PKEY_CTX_free(key_ctx);\n    EVP_PKEY_CTX_free(ctx);\n\
+          \    OSSL_PARAM_free(fromdata_params);\n    OSSL_PARAM_BLD_free(bld);\n\
+          \    return ret;\n}\n\n#ifndef OPENSSL_NO_DH\nstatic int test_fromdata_dh_named_group(void)\n\
+          {\n    int ret = 0;\n    int gindex = 0, pcounter = 0, hindex = 0;\n   \
+          \ EVP_PKEY_CTX *ctx = NULL, *key_ctx = NULL;\n    EVP_PKEY *pk = NULL, *copy_pk\
+          \ = NULL, *dup_pk = NULL;\n    size_t len;\n    BIGNUM *pub = NULL, *priv\
+          \ = NULL;\n    BIGNUM *pub_out = NULL, *priv_out = NULL;\n    BIGNUM *p\
+          \ = NULL, *q = NULL, *g = NULL, *j = NULL;\n    OSSL_PARAM *fromdata_params\
+          \ = NULL;\n    OSSL_PARAM_BLD *bld = NULL;\n    char name_out[80];\n   \
+          \ unsigned char seed_out[32];\n```\n\n## Call pattern 28\n\n```c\n|| !TEST_ptr(ctx\
+          \ = EVP_PKEY_CTX_new_from_name(NULL, \"RSA\", NULL))\n        || !T"
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_pkey_provided_test.c.md
+          library: openssl
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl EVP_PKEY_verify implementation source\
+        \ code parameters return error\",\n  \"top_k\": 5,\n  \"results\": [\n   \
+        \ {\n      \"rank\": 1,\n      \"score\": 0.7312382032588083,\n      \"distance\"\
+        : 0.36754342913627625,\n      \"layer\": \"api_constraints\",\n      \"source_file\"\
+        : \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_PKEY_verify.md\",\n  \
+        \    \"text\": \"# API Constraints: EVP_PKEY_verify (OpenSSL 3.5.5)\\n\\nSource\
+        \ version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\n\\n-\
+        \ API/function name: `EVP_PKEY_verify`\\n- Header declaration: `include/openssl/evp.h`\\\
+        n- Implementation file: `crypto/evp/signature.c`\\n- Manpage: `doc/man3/EVP_PKEY_verify.pod`\\\
+        n- Signature:\\n\\n```c\\nint EVP_PKEY_verify(EVP_PKEY_CTX *ctx,\\n    const\
+        \ unsigned char *sig, size_t siglen,\\n    const unsigned char *tbs, size_t\
+        \ tbslen);\\n```\\n\\n## Semantics\\n\\n- Verifies a signature over data that\
+        \ is already in the form expected by the key/signature algorithm.\\n- Requires\
+        \ an initialized `EVP_PKEY_CTX`, normally via `EVP_PKEY_verify_init`.\\n-\
+        \ For digest-based verification, `EVP_DigestVerify*` is often preferred.\\\
+        n\\n## Return Value Semantics\\n\\n- Returns `1` on successful verification.\\\
+        n- Returns `0` when the signature does not verify.\\n- Returns a negative\
+        \ value for errors; `-2` can indicate operation not supported.\\n\\n## Object\
+        \ and Buffer Constraints\\n\\n- `EVP_PKEY_CTX` and `EVP_PKEY` are opaque.\"\
+        ,\n      \"metadata\": {\n        \"layer\": \"api_constraints\",\n      \
+        \  \"library\": \"openssl\",\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/EVP_PKEY_verify.md\"\
+        ,\n        \"doc_type\": \"api_constraint\"\n      }\n    },\n    {\n    \
+        \  \"rank\": 2,\n      \"score\": 0.7248440926960703,\n      \"distance\"\
+        : 0.37960702180862427,\n      \"layer\": \"unit_tests\",\n      \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n      \"text\": \"/* OPENSSL_NO_DEPRECATED_3_0 */\\n#endif /* OPENSSL_NO_EC\
+        \ */\\n\\nstatic int test_EVP_PKEY_sign(int tst)\\n{\\n    int ret = 0;\\\
+        n    EVP_PKEY *pkey = NULL;\\n    unsigned char *sig = NULL;\\n    size_t\
+        \ sig_len = 0, shortsig_len = 1;\\n    EVP_PKEY_CTX *ctx = NULL;\\n    unsigned\
+        \ char tbs[] = {\\n        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,\
+        \ 0x08, 0x09, 0x0a, 0x0b,\\n        0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12,\
+        \ 0x13\\n    };\\n\\n    if (tst == 0) {\\n        if (!TEST_ptr(pkey = load_example_rsa_key()))\\\
+        n            goto out;\\n    } else if (tst == 1) {\\n#ifndef OPENSSL_NO_DSA\\\
+        n        if (!TEST_ptr(pkey = load_example_dsa_key()))\\n            goto\
+        \ out;\\n#else\\n        ret = 1;\\n```\\n\\n## Call pattern 22\\n\\n```c\\\
+        nOSSL_PARAM *params = NULL;\\n    BIGNUM *p = NULL, *q = NULL, *g = NULL,\
+        \ *pub = NULL, *priv = NULL;\\n    EVP_PKEY_CTX *pctx = NULL;\\n    EVP_PKEY\
+        \ *pkey = NULL;\\n    int ret = 0;\\n\\n    /*\\n     * Setup the parameters\
+        \ for our DSA object. For our purposes they don't\\n     * have to actually\
+        \ be *valid* parameters. W\",\n      \"metadata\": {\n        \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n        \"library\": \"openssl\",\n        \"doc_type\": \"unit_test_call_pattern\"\
+        ,\n        \"layer\": \"unit_tests\"\n      }\n    },\n    {\n      \"rank\"\
+        : 3,\n      \"score\": 0.6923758318838865,\n      \"distance\": 0.4443022906780243,\n\
+        \      \"layer\": \"unit_tests\",\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n      \"text\": \"params[0] = OSSL_PARAM_construct_int(OSSL_SIGNATURE_PARAM_PAD_MODE,\
+        \ &padding);\\n        params[1] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST,\\\
+        n            OSSL_DIGEST_NAME_SHA2_256, 0);\\n        params[2] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_MGF1_DIGEST,\\\
+        n            OSSL_DIGEST_NAME_SHA1, 0);\\n```\\n\\n## Call pattern 37\\n\\\
+        n```c\\nif (!TEST_ptr(pkey))\\n        goto err;\\n\\n    ret = test_EVP_PKEY_CTX_get_set_params(pkey);\\\
+        n\\nerr:\\n    EVP_PKEY_free(pkey);\\n    EVP_PKEY_CTX_free(pctx);\\n    OSSL_PARAM_free(params);\\\
+        n    OSSL_PARAM_BLD_free(bld);\\n    BN_free(n);\\n    BN_free(e);\\n    BN_free(d);\\\
+        n\\n    return ret;\\n}\\n\\nstatic int test_RSA_OAEP_set_get_params(void)\\\
+        n{\\n    int ret = 0;\\n    EVP_PKEY *key = NULL;\\n    EVP_PKEY_CTX *key_ctx\
+        \ = NULL;\\n\\n    if (nullprov != NULL)\\n        return TEST_skip(\\\"Test\
+        \ does not support a non-default library context\\\");\\n\\n    if (!TEST_ptr(key\
+        \ = load_example_rsa_key())\\n        || !TEST_ptr(key_ctx = EVP_PKEY_CTX_new_from_pkey(0,\
+        \ key, 0)))\",\n      \"metadata\": {\n        \"doc_type\": \"unit_test_call_pattern\"\
+        ,\n        \"layer\": \"unit_tests\",\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n        \"library\": \"openssl\"\n      }\n    },\n    {\n      \"rank\"\
+        : 4,\n      \"score\": 0.6899988023778721,\n      \"distance\": 0.4492778778076172,\n\
+        \      \"layer\": \"unit_tests\",\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n      \"text\": \"return test_EVP_PKEY_ffc_priv_pub(\\\"DSA\\\");\\n}\\\
+        n\\n#endif /* !OPENSSL_NO_DSA */\\n\\nstatic int test_RSA_get_set_params(void)\\\
+        n{\\n    OSSL_PARAM_BLD *bld = NULL;\\n    OSSL_PARAM *params = NULL;\\n \
+        \   BIGNUM *n = NULL, *e = NULL, *d = NULL;\\n    EVP_PKEY_CTX *pctx = NULL;\\\
+        n    EVP_PKEY *pkey = NULL;\\n    int ret = 0;\\n\\n    /*\\n     * Setup\
+        \ the parameters for our RSA object. For our purposes they don't\\n     *\
+        \ have to actually be *valid* parameters. We just need to set something.\\\
+        n```\\n\\n## Call pattern 32\\n\\n```c\\nOSSL_PARAM *params = NULL;\\n   \
+        \ BIGNUM *n = NULL, *e = NULL, *d = NULL;\\n    EVP_PKEY_CTX *pctx = NULL;\\\
+        n    EVP_PKEY *pkey = NULL;\\n    int ret = 0;\\n\\n    /*\\n     * Setup\
+        \ the parameters for our RSA object. For our purposes they don't\\n     *\
+        \ have to actually be *valid* parameters. We just need to set something.\\\
+        n     */\\n    if (!TEST_ptr(pctx = EVP_PKEY_CTX_new_from_name(testctx, \\\
+        \"RSA\\\", NULL))\\n        || !TEST_ptr"
+      stderr_preview: ''
+      truncated: true
+      kind: target_api_implementation
+      use_for_feature_inference: target
+    - query: openssl EVP_PKEY_verify usage example unit test API call pattern
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.736902848228781
+        distance: 0.357030987739563
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_libctx_test.c.md
+        text: "# Official test/example call patterns: openssl\n\nLibrary: openssl\n\
+          Version: 3.5.5\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/test/evp_libctx_test.c\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\nif\
+          \ (!TEST_ptr(dup_pk = EVP_PKEY_dup(pkey))\n            || !TEST_int_eq(EVP_PKEY_eq(pkey,\
+          \ dup_pk), 1))\n            goto err;\n    }\n\n    ret = 1;\nerr:\n   \
+          \ EVP_PKEY_free(pkey);\n    EVP_PKEY_free(dup_pk);\n    EVP_PKEY_CTX_free(gen_ctx);\n\
+          \    EVP_PKEY_free(pkey_parm);\n    DSA_free(dsa);\n    BN_free(g);\n  \
+          \  BN_free(q);\n    BN_free(p);\n    return ret;\n}\n#endif /* OPENSSL_NO_DSA\
+          \ */\n\n#ifndef OPENSSL_NO_DH\nstatic int do_dh_param_keygen(int tstid,\
+          \ const BIGNUM **bn)\n{\n    int ret = 0;\n    int expected;\n    EVP_PKEY_CTX\
+          \ *gen_ctx = NULL;\n    EVP_PKEY *pkey_parm = NULL;\n    EVP_PKEY *pkey\
+          \ = NULL, *dup_pk = NULL;\n    DH *dh = NULL;\n    int pind, qind, gind;\n\
+          \    BIGNUM *p = NULL, *q = NULL, *g = NULL;\n\n    /*\n     * These tests\
+          \ are using bad values for p, q, g by reusing the values."
+        metadata:
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_libctx_test.c.md
+          library: openssl
+          layer: unit_tests
+      - rank: 2
+        score: 0.7367771244297648
+        distance: 0.3572625517845154
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+        text: "# Official test/example call patterns: openssl\n\nLibrary: openssl\n\
+          Version: 3.5.5\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/test/evp_extra_test.c\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\nOSSL_PARAM\
+          \ *params = NULL;\n    EVP_PKEY *just_params = NULL;\n    EVP_PKEY *params_and_priv\
+          \ = NULL;\n    EVP_PKEY *params_and_pub = NULL;\n    EVP_PKEY *params_and_keypair\
+          \ = NULL;\n    BIGNUM *p = NULL, *q = NULL, *g = NULL, *pub = NULL, *priv\
+          \ = NULL;\n    int ret = 0;\n\n    /*\n     * Setup the parameters for our\
+          \ pkey object. For our purposes they don't\n     * have to actually be *valid*\
+          \ parameters. We just need to set something.\n     */\n    if (!TEST_ptr(p\
+          \ = BN_new())\n        || !TEST_ptr(q = BN_new())\n        || !TEST_ptr(g\
+          \ = BN_new())\n        || !TEST_ptr(pub = BN_new())\n        || !TEST_ptr(priv\
+          \ = BN_new()))\n        goto err;\n\n    /* Test !priv and !pub */\n   \
+          \ if (!TEST_ptr(bld = OSSL_PARAM_BLD_new())\n        || !TEST_true(OSSL_PARAM_BLD_push_BN(bld,\
+          \ OSSL_PKEY_PARAM_FFC"
+        metadata:
+          layer: unit_tests
+          library: openssl
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md
+      - rank: 3
+        score: 0.7347387653464574
+        distance: 0.36102795600891113
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test2.c.md
+        text: "# Official test/example call patterns: openssl\n\nLibrary: openssl\n\
+          Version: 3.5.5\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/test/evp_extra_test2.c\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\n{\n\
+          \    int ret = 0;\n\n    if (use_octstring) {\n        unsigned char buf[64];\n\
+          \n        ret = EVP_PKEY_get_octet_string_param(key, privtag, buf, sizeof(buf),\n\
+          \            NULL);\n    } else {\n        BIGNUM *bn = NULL;\n\n      \
+          \  ret = EVP_PKEY_get_bn_param(key, privtag, &bn);\n        BN_free(bn);\n\
+          \    }\n    return ret;\n}\n\nstatic int do_pkey_tofrom_data_select(EVP_PKEY\
+          \ *key, const char *keytype)\n{\n    int ret = 0;\n    OSSL_PARAM *pub_params\
+          \ = NULL, *keypair_params = NULL;\n    EVP_PKEY *fromkey = NULL, *fromkeypair\
+          \ = NULL;\n    EVP_PKEY_CTX *fromctx = NULL;\n    const char *privtag =\
+          \ strcmp(keytype, \"RSA\") == 0 ? \"d\" : \"priv\";\n    const int use_octstring\
+          \ = strcmp(keytype, \"X25519\") == 0;\n\n    /*\n     * Select only the\
+          \ public key component when using EVP_PKEY_todata() and\n     *"
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test2.c.md
+          library: openssl
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+      - rank: 4
+        score: 0.7333143039184342
+        distance: 0.36367174983024597
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__demos__pkey__EVP_PKEY_EC_keygen.c.md
+        text: "# Official test/example call patterns: openssl\n\nLibrary: openssl\n\
+          Version: 3.5.5\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/demos/pkey/EVP_PKEY_EC_keygen.c\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\nif\
+          \ (!EVP_PKEY_get_octet_string_param(pkey, OSSL_PKEY_PARAM_PUB_KEY,\n   \
+          \         out_pubkey, sizeof(out_pubkey),\n            &out_pubkey_len))\
+          \ {\n        fprintf(stderr, \"Failed to get public key\\n\");\n       \
+          \ goto cleanup;\n    }\n\n    if (!EVP_PKEY_get_bn_param(pkey, OSSL_PKEY_PARAM_PRIV_KEY,\
+          \ &out_priv)) {\n        fprintf(stderr, \"Failed to get private key\\n\"\
+          );\n        goto cleanup;\n    }\n\n    out_privkey_len = BN_bn2bin(out_priv,\
+          \ out_privkey);\n    if (out_privkey_len <= 0 || out_privkey_len > sizeof(out_privkey))\
+          \ {\n        fprintf(stderr, \"BN_bn2bin failed\\n\");\n        goto cleanup;\n\
+          \    }\n\n    fprintf(stdout, \"Curve name: %s\\n\", out_curvename);\n \
+          \   fprintf(stdout, \"Public key:\\n\");\n    BIO_dump_indent_fp(stdout,\
+          \ out_pubkey, out_pubkey_len, 2);\n    fprintf(stdo"
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__demos__pkey__EVP_PKEY_EC_keygen.c.md
+          library: openssl
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+      - rank: 5
+        score: 0.7313397429319629
+        distance: 0.36735355854034424
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__dhparam.c.md
+        text: "# Official test/example call patterns: openssl\n\nLibrary: openssl\n\
+          Version: 3.5.5\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/apps/dhparam.c\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\nctx\
+          \ = EVP_PKEY_CTX_new_from_name(app_get0_libctx(), \"DHX\", app_get0_propq());\n\
+          \    if (ctx == NULL\n        || EVP_PKEY_fromdata_init(ctx) <= 0\n    \
+          \    || EVP_PKEY_fromdata(ctx, &pkey, EVP_PKEY_KEY_PARAMETERS, params) <=\
+          \ 0) {\n        BIO_printf(bio_err, \"Error, failed to set DH parameters\\\
+          n\");\n        goto err;\n    }\n\nerr:\n    EVP_PKEY_CTX_free(ctx);\n \
+          \   OSSL_PARAM_free(params);\n    OSSL_PARAM_BLD_free(tmpl);\n    BN_free(bn_p);\n\
+          \    BN_free(bn_q);\n    BN_free(bn_g);\n    return pkey;\n}\n```\n\n##\
+          \ Call pattern 2\n\n```c\nif (ctx == NULL\n        || EVP_PKEY_fromdata_init(ctx)\
+          \ <= 0\n        || EVP_PKEY_fromdata(ctx, &pkey, EVP_PKEY_KEY_PARAMETERS,\
+          \ params) <= 0) {\n        BIO_printf(bio_err, \"Error, failed to set DH\
+          \ parameters\\n\");\n        goto err;\n    }\n\nerr:\n    EVP_PKEY_CTX_free(ctx);"
+        metadata:
+          library: openssl
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__dhparam.c.md
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl EVP_PKEY_verify usage example unit\
+        \ test API call pattern\",\n  \"top_k\": 5,\n  \"results\": [\n    {\n   \
+        \   \"rank\": 1,\n      \"score\": 0.736902848228781,\n      \"distance\"\
+        : 0.357030987739563,\n      \"layer\": \"unit_tests\",\n      \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_libctx_test.c.md\"\
+        ,\n      \"text\": \"# Official test/example call patterns: openssl\\n\\nLibrary:\
+        \ openssl\\nVersion: 3.5.5\\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/test/evp_libctx_test.c\\\
+        nKnowledge type: unit_tests_or_examples\\n\\n## Call pattern 1\\n\\n```c\\\
+        nif (!TEST_ptr(dup_pk = EVP_PKEY_dup(pkey))\\n            || !TEST_int_eq(EVP_PKEY_eq(pkey,\
+        \ dup_pk), 1))\\n            goto err;\\n    }\\n\\n    ret = 1;\\nerr:\\\
+        n    EVP_PKEY_free(pkey);\\n    EVP_PKEY_free(dup_pk);\\n    EVP_PKEY_CTX_free(gen_ctx);\\\
+        n    EVP_PKEY_free(pkey_parm);\\n    DSA_free(dsa);\\n    BN_free(g);\\n \
+        \   BN_free(q);\\n    BN_free(p);\\n    return ret;\\n}\\n#endif /* OPENSSL_NO_DSA\
+        \ */\\n\\n#ifndef OPENSSL_NO_DH\\nstatic int do_dh_param_keygen(int tstid,\
+        \ const BIGNUM **bn)\\n{\\n    int ret = 0;\\n    int expected;\\n    EVP_PKEY_CTX\
+        \ *gen_ctx = NULL;\\n    EVP_PKEY *pkey_parm = NULL;\\n    EVP_PKEY *pkey\
+        \ = NULL, *dup_pk = NULL;\\n    DH *dh = NULL;\\n    int pind, qind, gind;\\\
+        n    BIGNUM *p = NULL, *q = NULL, *g = NULL;\\n\\n    /*\\n     * These tests\
+        \ are using bad values for p, q, g by reusing the values.\",\n      \"metadata\"\
+        : {\n        \"doc_type\": \"unit_test_call_pattern\",\n        \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_libctx_test.c.md\"\
+        ,\n        \"library\": \"openssl\",\n        \"layer\": \"unit_tests\"\n\
+        \      }\n    },\n    {\n      \"rank\": 2,\n      \"score\": 0.7367771244297648,\n\
+        \      \"distance\": 0.3572625517845154,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        ,\n      \"text\": \"# Official test/example call patterns: openssl\\n\\nLibrary:\
+        \ openssl\\nVersion: 3.5.5\\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/test/evp_extra_test.c\\\
+        nKnowledge type: unit_tests_or_examples\\n\\n## Call pattern 1\\n\\n```c\\\
+        nOSSL_PARAM *params = NULL;\\n    EVP_PKEY *just_params = NULL;\\n    EVP_PKEY\
+        \ *params_and_priv = NULL;\\n    EVP_PKEY *params_and_pub = NULL;\\n    EVP_PKEY\
+        \ *params_and_keypair = NULL;\\n    BIGNUM *p = NULL, *q = NULL, *g = NULL,\
+        \ *pub = NULL, *priv = NULL;\\n    int ret = 0;\\n\\n    /*\\n     * Setup\
+        \ the parameters for our pkey object. For our purposes they don't\\n     *\
+        \ have to actually be *valid* parameters. We just need to set something.\\\
+        n     */\\n    if (!TEST_ptr(p = BN_new())\\n        || !TEST_ptr(q = BN_new())\\\
+        n        || !TEST_ptr(g = BN_new())\\n        || !TEST_ptr(pub = BN_new())\\\
+        n        || !TEST_ptr(priv = BN_new()))\\n        goto err;\\n\\n    /* Test\
+        \ !priv and !pub */\\n    if (!TEST_ptr(bld = OSSL_PARAM_BLD_new())\\n   \
+        \     || !TEST_true(OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_FFC\",\n \
+        \     \"metadata\": {\n        \"layer\": \"unit_tests\",\n        \"library\"\
+        : \"openssl\",\n        \"doc_type\": \"unit_test_call_pattern\",\n      \
+        \  \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 3,\n      \"score\": 0.7347387653464574,\n\
+        \      \"distance\": 0.36102795600891113,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test2.c.md\"\
+        ,\n      \"text\": \"# Official test/example call patterns: openssl\\n\\nLibrary:\
+        \ openssl\\nVersion: 3.5.5\\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/test/evp_extra_test2.c\\\
+        nKnowledge type: unit_tests_or_examples\\n\\n## Call pattern 1\\n\\n```c\\\
+        n{\\n    int ret = 0;\\n\\n    if (use_octstring) {\\n        unsigned char\
+        \ buf[64];\\n\\n        ret = EVP_PKEY_get_octet_string_param(key, privtag,\
+        \ buf, sizeof(buf),\\n            NULL);\\n    } else {\\n        BIGNUM *bn\
+        \ = NULL;\\n\\n        ret = EVP_PKEY_get_bn_param(key, privtag, &bn);\\n\
+        \        BN_free(bn);\\n    }\\n    return ret;\\n}\\n\\nstatic int do_pkey_tofrom_data_select(EVP_PKEY\
+        \ *key, const char *keytype)\\n{\\n    int ret = 0;\\n    OSSL_PARAM *pub_params\
+        \ = NULL, *keypair_params = NULL;\\n    EVP_PKEY *fromkey = NULL, *fromkeypair\
+        \ = NULL;\\n    EVP_PKEY_CTX *fromctx = NULL;\\n    const char *privtag =\
+        \ strcmp(keytype, \\\"RSA\\\") == 0 ? \\\"d\\\" : \\\"priv\\\";\\n    const\
+        \ int use_octstring = strcmp(keytype, \\\"X25519\\\") == 0;\\n\\n    /*\\\
+        n     * Select only the public key component when using EVP_PKEY_todata()\
+        \ and\\n     *\",\n      \"metadata\": {\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test2.c.md\"\
+        ,\n        \"library\": \"openssl\",\n        \"layer\": \"unit_tests\",\n\
+        \        \"doc_type\": \"unit_test_call_pattern\"\n      }\n    },\n    {\n\
+        \      \"rank\": 4,\n      \"score\": 0.7333143039184342,\n      \"distance\"\
+        : 0.36367174983024597,\n      \"layer\": \"unit_tests\",\n      \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__demos__pkey__EVP_PKEY_EC_keygen.c.md\"\
+        ,\n      \"text\": \"# Official test/example call patterns: openssl\\n\\nLibrary:\
+        \ openssl\\nVersion: 3.5.5\\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/demos/pkey/EVP_PKEY_EC_keygen.c\\\
+        nKnowledge type: unit_tests_or_examples\\n\\n## Call pattern 1\\n\\n```c\\\
+        nif (!EVP_PKEY_get_octet_string_param(pkey, OSSL_PKEY_PARAM_PUB_KEY,\\n  \
+        \          out_pubkey, sizeof(out_pubkey),\\n            &out_pubkey_len))\
+        \ {\\n        fprintf(stderr, \\\"Failed to get public key\\\\n\\\");\\n \
+        \       goto cleanup;\\n    }\\n\\n    if (!EVP_PKEY_get_bn_param(pkey, OSSL_PKEY_PARAM_PRIV_KEY,\
+        \ &out_priv)) {\\n        fprintf(stderr, \\\"Failed to get private key\\\\\
+        n\\\");\\n        goto cleanup;\\n    }\\n\\n    out_privkey_len = BN_bn2bin(out_priv,\
+        \ out_privkey);\\n    if (out_privkey_len <= 0 || out_privkey_len > sizeof(out_privkey))\
+        \ {\\n        fprintf(stderr, \\\"BN_bn2bin failed\\\\n\\\");\\n   "
+      stderr_preview: ''
+      truncated: true
+      kind: target_api_usage
+      use_for_feature_inference: target
+    - query: 'openssl EVP_PKEY_verify generic_polymorphic_key_context_dispatch rsa_pss_specific_verification_path_or_rsa_dispatch_code
+        incompatible_or_mismatched_key_type_entry missing_type_check_before_rsa_context_access
+        observable_crash_vs_safe_error_return  generic_polymorphic_key_context_dispatch
+        observable_crash_vs_safe_error_return psa_opaque_key_mechanism exact_mbedtls_error_code_value
+        rsa_pss_specific_verification_path_or_rsa_dispatch_code '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7755498719714329
+        distance: 0.28940773010253906
+        layer: poc_patterns
+        source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md
+        text: 'polymorphic public-key context,
+
+          - has an RSA-PSS verification mode or type argument,
+
+          - internally dispatches from a generic key context to RSA-specific state,
+
+          - can represent opaque, provider-backed, or otherwise incompatible key handles,
+
+          - returns observable error codes for unsupported key/type combinations.
+
+
+          Weak target API features:
+
+
+          - performs RSA-PSS verification but only accepts a concrete RSA key type,
+
+          - rejects incompatible keys before reaching an internal dispatch path.
+
+
+          Bad target API features:
+
+
+          - has no generic key dispatch layer,
+
+          - cannot represent opaque or incompatible key contexts,
+
+          - does not expose a safe error-vs-crash oracle.
+
+
+          ## Expected Oracle
+
+
+          Bug candidate signals:
+
+
+          - segmentation fault,
+
+          - exit code `139`,
+
+          - sanitizer NULL dereference.
+
+
+          Safe or fixed behavior:
+
+
+          - return value is `MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE`,
+
+          - unsupported key type is rejected safely,
+
+          - no crash.
+
+
+          ## Evidence Files
+
+
+          - Metadata: `data/pocs/core10/MBEDTLS-POC-0003/metadata.json`
+
+          - Notes: `dat'
+        metadata:
+          doc_type: poc_pattern
+          layer: poc_patterns
+          source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md
+          library: mbedtls
+      - rank: 2
+        score: 0.7276959634582224
+        distance: 0.3742002844810486
+        layer: poc_patterns
+        source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md
+        text: 'nsupported opaque verify_ext rejected safely.
+
+          ```
+
+
+          The oracle is crash versus safe `MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE` return.
+
+
+          ## Mutation Points
+
+
+          - `VERIFY_TYPE`: controls entry into the RSA-PSS verification path.
+
+          - `PK_CONTEXT_KIND`: controls whether the key context is opaque or direct
+          RSA.
+
+          - `TYPE_GUARD`: the fixed statement that rejects non-RSA contexts.
+
+          - `HASH_LENGTH`: keeps the verification call realistic.
+
+          - `SIGNATURE_LENGTH`: keeps the signature input plausible for the trigger
+          call.
+
+
+          ## Multi-granularity Masking Guidance
+
+
+          ### Identifier-level Candidates
+
+
+          - `ctx`: generic PK context pointer.
+
+          - `type`: verification type argument.
+
+          - `pk_info`: key-dispatch metadata.
+
+          - `mbedtls_pk_rsa`: RSA context extraction helper.
+
+
+          ### Expression-level Candidates
+
+
+          - `mbedtls_pk_get_type(ctx) != MBEDTLS_PK_RSA`
+
+
+          ### Statement-level Candidates
+
+
+          - `return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;`
+
+          - `mbedtls_pk_verify_ext(MBEDTLS_PK_RSASSA_PSS, ...)`
+
+
+          ### Block-level Candidates
+
+
+          ```c
+
+          if (mbedtls_pk_ge'
+        metadata:
+          layer: poc_patterns
+          doc_type: poc_pattern
+          library: mbedtls
+          source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md
+      - rank: 3
+        score: 0.7208024111275646
+        distance: 0.38734275102615356
+        layer: poc_patterns
+        source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md
+        text: "URE_UNAVAILABLE;\n}\n```\n\n## Trigger Condition\n\nThe v2 minimal\
+          \ PoC creates a legacy RSA key, imports it into PSA, replaces the\nPK context\
+          \ with an opaque key via `mbedtls_pk_setup_opaque()`, and calls:\n\n```c\n\
+          mbedtls_pk_verify_ext(MBEDTLS_PK_RSASSA_PSS,\n                      &pss_opts,\n\
+          \                      &pk,\n                      MBEDTLS_MD_SHA256,\n\
+          \                      hash,\n                      sizeof(hash),\n    \
+          \                  sig,\n                      sizeof(sig));\n```\n\nThe\
+          \ important mismatch is that the call requests RSA-PSS verification while\
+          \ the\nPK context is opaque rather than a direct `MBEDTLS_PK_RSA` context.\n\
+          \n## Buggy and Fixed Behavior\n\nBuggy output:\n\n```text\nopaque pk type\
+          \ = 7\ncalling mbedtls_pk_verify_ext...\nexit_code=139\n```\n\nFixed output:\n\
+          \n```text\nopaque pk type = 7\ncalling mbedtls_pk_verify_ext...\nverify_ext\
+          \ ret=-14720\nexpected fixed ret=-14720\n[OK] fixed behavior: unsupported\
+          \ opaque verify_ext rejected safely.\n```\n\nThe oracle is crash versus\
+          \ safe `MBEDTLS_ERR_PK_F"
+        metadata:
+          source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md
+          library: mbedtls
+          doc_type: poc_pattern
+          layer: poc_patterns
+      - rank: 4
+        score: 0.7193368962854062
+        distance: 0.3901692032814026
+        layer: poc_patterns
+        source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md
+        text: "# MBEDTLS-POC-0003: mbedtls_pk_verify_ext opaque RSA-PSS null dereference\n\
+          \n## Source\n\nThis pattern comes from Mbed TLS PR #8942 and issue #8937.\
+          \ The affected API is\n`mbedtls_pk_verify_ext` in `library/pk.c`.\n\nThe\
+          \ confirmed merge commit is `b2b90682646629698ddc0287b4e3967591e1cebc`.\n\
+          The local buggy worktree used `b2b90682646629698ddc0287b4e3967591e1cebc^1`,\n\
+          and the library fix commit is `07500fd874fd8688d008e28d349a948a5dd00835`.\n\
+          \n## Root Cause\n\nIn the buggy version, `mbedtls_pk_verify_ext()` can enter\
+          \ the RSA-PSS-specific\nverification path without first checking that the\
+          \ supplied PK context is an RSA\ncontext. For opaque keys, `mbedtls_pk_rsa(*ctx)`\
+          \ can return `NULL`. The\nRSA-PSS path then dereferences the missing RSA\
+          \ context and crashes.\n\nThe fixed behavior adds a type guard before RSA-specific\
+          \ access:\n\n```c\nif (mbedtls_pk_get_type(ctx) != MBEDTLS_PK_RSA) {\n \
+          \   return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;\n}\n```\n\n## Trigger Condition\n\
+          \nThe v2 minimal PoC creates a legacy RSA key, imports i"
+        metadata:
+          layer: poc_patterns
+          doc_type: poc_pattern
+          library: mbedtls
+          source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md
+      - rank: 5
+        score: 0.7073950396042518
+        distance: 0.41363728046417236
+        layer: poc_patterns
+        source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md
+        text: "edtls_pk_verify_ext(MBEDTLS_PK_RSASSA_PSS, ...)`\n\n### Block-level\
+          \ Candidates\n\n```c\nif (mbedtls_pk_get_type(ctx) != MBEDTLS_PK_RSA) {\n\
+          \    return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;\n}\n```\n\n## Vulnerability\
+          \ Path Features\n\nThe migrated target API should preserve these features:\n\
+          \n- signature verification API,\n- RSA-PSS-specific verification path,\n\
+          - opaque or incompatible key context,\n- missing type or NULL validation\
+          \ before RSA access,\n- internal RSA context lookup can return NULL,\n-\
+          \ observable crash or safe error return.\n\nOptional features:\n\n- PSA\
+          \ opaque key import,\n- exact hash algorithm,\n- exact signature length.\n\
+          \nNot required features:\n\n- exact Mbed TLS error-code value,\n- exact\
+          \ key size,\n- exact random generation sequence.\n\n## Migration Guidance\n\
+          \nThis pattern is about generic-key dispatch safety, not just RSA-PSS signature\n\
+          verification.\n\nGood target API features:\n\n- accepts a generic or polymorphic\
+          \ public-key context,\n- has an RSA-PSS verification mode or type argument,\n\
+          - internally di"
+        metadata:
+          doc_type: poc_pattern
+          layer: poc_patterns
+          library: mbedtls
+          source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl EVP_PKEY_verify generic_polymorphic_key_context_dispatch\
+        \ rsa_pss_specific_verification_path_or_rsa_dispatch_code incompatible_or_mismatched_key_type_entry\
+        \ missing_type_check_before_rsa_context_access observable_crash_vs_safe_error_return\
+        \  generic_polymorphic_key_context_dispatch observable_crash_vs_safe_error_return\
+        \ psa_opaque_key_mechanism exact_mbedtls_error_code_value rsa_pss_specific_verification_path_or_rsa_dispatch_code\
+        \ \",\n  \"top_k\": 5,\n  \"results\": [\n    {\n      \"rank\": 1,\n    \
+        \  \"score\": 0.7755498719714329,\n      \"distance\": 0.28940773010253906,\n\
+        \      \"layer\": \"poc_patterns\",\n      \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md\"\
+        ,\n      \"text\": \"polymorphic public-key context,\\n- has an RSA-PSS verification\
+        \ mode or type argument,\\n- internally dispatches from a generic key context\
+        \ to RSA-specific state,\\n- can represent opaque, provider-backed, or otherwise\
+        \ incompatible key handles,\\n- returns observable error codes for unsupported\
+        \ key/type combinations.\\n\\nWeak target API features:\\n\\n- performs RSA-PSS\
+        \ verification but only accepts a concrete RSA key type,\\n- rejects incompatible\
+        \ keys before reaching an internal dispatch path.\\n\\nBad target API features:\\\
+        n\\n- has no generic key dispatch layer,\\n- cannot represent opaque or incompatible\
+        \ key contexts,\\n- does not expose a safe error-vs-crash oracle.\\n\\n##\
+        \ Expected Oracle\\n\\nBug candidate signals:\\n\\n- segmentation fault,\\\
+        n- exit code `139`,\\n- sanitizer NULL dereference.\\n\\nSafe or fixed behavior:\\\
+        n\\n- return value is `MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE`,\\n- unsupported\
+        \ key type is rejected safely,\\n- no crash.\\n\\n## Evidence Files\\n\\n-\
+        \ Metadata: `data/pocs/core10/MBEDTLS-POC-0003/metadata.json`\\n- Notes: `dat\"\
+        ,\n      \"metadata\": {\n        \"doc_type\": \"poc_pattern\",\n       \
+        \ \"layer\": \"poc_patterns\",\n        \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md\"\
+        ,\n        \"library\": \"mbedtls\"\n      }\n    },\n    {\n      \"rank\"\
+        : 2,\n      \"score\": 0.7276959634582224,\n      \"distance\": 0.3742002844810486,\n\
+        \      \"layer\": \"poc_patterns\",\n      \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md\"\
+        ,\n      \"text\": \"nsupported opaque verify_ext rejected safely.\\n```\\\
+        n\\nThe oracle is crash versus safe `MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE` return.\\\
+        n\\n## Mutation Points\\n\\n- `VERIFY_TYPE`: controls entry into the RSA-PSS\
+        \ verification path.\\n- `PK_CONTEXT_KIND`: controls whether the key context\
+        \ is opaque or direct RSA.\\n- `TYPE_GUARD`: the fixed statement that rejects\
+        \ non-RSA contexts.\\n- `HASH_LENGTH`: keeps the verification call realistic.\\\
+        n- `SIGNATURE_LENGTH`: keeps the signature input plausible for the trigger\
+        \ call.\\n\\n## Multi-granularity Masking Guidance\\n\\n### Identifier-level\
+        \ Candidates\\n\\n- `ctx`: generic PK context pointer.\\n- `type`: verification\
+        \ type argument.\\n- `pk_info`: key-dispatch metadata.\\n- `mbedtls_pk_rsa`:\
+        \ RSA context extraction helper.\\n\\n### Expression-level Candidates\\n\\\
+        n- `mbedtls_pk_get_type(ctx) != MBEDTLS_PK_RSA`\\n\\n### Statement-level Candidates\\\
+        n\\n- `return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;`\\n- `mbedtls_pk_verify_ext(MBEDTLS_PK_RSASSA_PSS,\
+        \ ...)`\\n\\n### Block-level Candidates\\n\\n```c\\nif (mbedtls_pk_ge\",\n\
+        \      \"metadata\": {\n        \"layer\": \"poc_patterns\",\n        \"doc_type\"\
+        : \"poc_pattern\",\n        \"library\": \"mbedtls\",\n        \"source_file\"\
+        : \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md\"\n      }\n  \
+        \  },\n    {\n      \"rank\": 3,\n      \"score\": 0.7208024111275646,\n \
+        \     \"distance\": 0.38734275102615356,\n      \"layer\": \"poc_patterns\"\
+        ,\n      \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md\"\
+        ,\n      \"text\": \"URE_UNAVAILABLE;\\n}\\n```\\n\\n## Trigger Condition\\\
+        n\\nThe v2 minimal PoC creates a legacy RSA key, imports it into PSA, replaces\
+        \ the\\nPK context with an opaque key via `mbedtls_pk_setup_opaque()`, and\
+        \ calls:\\n\\n```c\\nmbedtls_pk_verify_ext(MBEDTLS_PK_RSASSA_PSS,\\n     \
+        \                 &pss_opts,\\n                      &pk,\\n             \
+        \         MBEDTLS_MD_SHA256,\\n                      hash,\\n            \
+        \          sizeof(hash),\\n                      sig,\\n                 \
+        \     sizeof(sig));\\n```\\n\\nThe important mismatch is that the call requests\
+        \ RSA-PSS verification while the\\nPK context is opaque rather than a direct\
+        \ `MBEDTLS_PK_RSA` context.\\n\\n## Buggy and Fixed Behavior\\n\\nBuggy output:\\\
+        n\\n```text\\nopaque pk type = 7\\ncalling mbedtls_pk_verify_ext...\\nexit_code=139\\\
+        n```\\n\\nFixed output:\\n\\n```text\\nopaque pk type = 7\\ncalling mbedtls_pk_verify_ext...\\\
+        nverify_ext ret=-14720\\nexpected fixed ret=-14720\\n[OK] fixed behavior:\
+        \ unsupported opaque verify_ext rejected safely.\\n```\\n\\nThe oracle is\
+        \ crash versus safe `MBEDTLS_ERR_PK_F\",\n      \"metadata\": {\n        \"\
+        source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md\"\
+        ,\n        \"library\": \"mbedtls\",\n        \"doc_type\": \"poc_pattern\"\
+        ,\n        \"layer\": \"poc_patterns\"\n      }\n    },\n    {\n      \"rank\"\
+        : 4,\n      \"score\": 0.7193368962854062,\n      \"distance\": 0.3901692032814026,\n\
+        \      \"layer\": \"poc_patterns\",\n      \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md\"\
+        ,\n      \"text\": \"# MBEDTLS-POC-0003: mbedtls_pk_verify_ext opaque RSA-PSS\
+        \ null dereference\\n\\n## Source\\n\\nThis pattern comes from Mbed TLS PR\
+        \ #8942 and issue #8937. The affected API is\\n`mbedtls_pk_verify_ext` in\
+        \ `library/pk.c`.\\n\\nThe confirmed merge commit is `b2b90682646629698ddc0287b4e3967591e1cebc`.\\\
+        nThe local buggy worktree used `b2b90682646629698ddc0287b4e3967591e1cebc^1`,\\\
+        nand the library fix commit is `07500fd874fd8688d008e28d349a948a5dd00835`.\\\
+        n\\n## Root Cause\\n\\nIn the buggy version, `mbedtls_pk_verify_ext()` can\
+        \ enter the RSA-PSS-specific\\nverification path without first checking that\
+        \ the supplied PK context is an RSA\\ncontext. For opaque keys, `mbedtls_pk_rsa(*ctx)`\
+        \ can return `NULL`. The\\nRSA-PSS path then dereferences the missing RSA\
+        \ context and crashes.\\n\\nThe fixed behavior adds a type guard before RSA-specific\
+        \ access:\\n\\n```c\\nif (mbedtls_pk_get_type(ctx) !"
+      stderr_preview: ''
+      truncated: true
+      kind: vulnerability_path_compatibility
+      use_for_feature_inference: target
+    inferred_features:
+      observed_features_from_target_evidence:
+      - explicit_tag_input
+      - generic_polymorphic_key_context_dispatch
+      - library_allocated_output
+      - observable_crash_vs_safe_error_return
+      - radix_or_textual_base_context
+      - signed_or_negative_encoding
+      negative_or_weakened_features:
+      - caller_provided_output_buffer
+      - direct_canary_after_output_limbs
+      - exact_mbedtls_error_code_value
+      - library_writes_to_caller_buffer
+      - psa_opaque_key_mechanism
+      - rsa_pss_specific_verification_path_or_rsa_dispatch_code
+      effective_observed_features:
+      - explicit_tag_input
+      - generic_polymorphic_key_context_dispatch
+      - library_allocated_output
+      - observable_crash_vs_safe_error_return
+      - radix_or_textual_base_context
+      - signed_or_negative_encoding
+      feature_conflicts: []
+      candidate_preserved_features:
+      - generic_polymorphic_key_context_dispatch
+      - observable_crash_vs_safe_error_return
+      candidate_lost_or_weakened_features:
+      - exact_mbedtls_error_code_value
+      - psa_opaque_key_mechanism
+      - rsa_pss_specific_verification_path_or_rsa_dispatch_code
+      bug_class_requirements:
+        required: []
+        disallowed: []
+        optional: []
+      required_present: []
+      required_missing: []
+      disallowed_present: []
+      optional_present: []
+      evidence_hits:
+        caller_provided_output_buffer:
+          positive_hits: []
+          negative_hits:
+          - OPENSSL_free
+        library_writes_to_caller_buffer:
+          positive_hits: []
+          negative_hits:
+          - OPENSSL_free
+        library_allocated_output:
+          positive_hits:
+          - OPENSSL_free
+          negative_hits: []
+        signed_or_negative_encoding:
+          positive_hits:
+          - signed
+          - negative
+          negative_hits: []
+        radix_or_textual_base_context:
+          positive_hits:
+          - base
+          negative_hits: []
+        direct_canary_after_output_limbs:
+          positive_hits: []
+          negative_hits:
+          - opaque
+        explicit_tag_input:
+          positive_hits:
+          - tag
+          negative_hits: []
+evidence_collection:
+  method: config_driven_rag_evidence_collector
+  top_k: 5
+  target_api_filter: ''
+  max_candidates: null
+  max_queries_per_candidate: null
+  feature_rules: config/evidence_feature_rules.yaml
+  bug_classes:
+  - generic_polymorphic_key_context_dispatch
+  - rsa_pss_specific_verification_path_or_rsa_dispatch_code
+  - incompatible_or_mismatched_key_type_entry
+  - missing_type_check_before_rsa_context_access
+  - observable_crash_vs_safe_error_return
+  source_pattern:
+    pattern_id: null
+    root_cause_summary: ''
+    must_preserve_features: []
+    optional_features: []
+    not_required_features: []
+    good_target_api_features: []
+    bad_target_api_features: []
+    rag_query_context: 'template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+
+      api: mbedtls_pk_verify_ext
+
+      operation: pk_verify_ext_opaque_key
+
+      bug_class: null_pointer_dereference opaque_key_type_confusion missing_context_type_check
+
+      trigger_call: ret = mbedtls_pk_verify_ext([PK_VERIFY_TYPE], &pss_opts, &pk,
+      [MD_ALG], hash, sizeof(hash), sig, sizeof(sig));
+
+      oracle: pss_opts.expected_salt_len = [EXPECTED_SALT_LEN];
+
+      oracle: if (ret == MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE) { printf("[OK] fixed
+      behavior: unsupported opaque verify_ext rejected safely.\n");'
+  note: Evidence is retrieved before LLM adapter filling. Source-pattern evidence
+    is kept separate from target-API evidence to avoid feature contamination.

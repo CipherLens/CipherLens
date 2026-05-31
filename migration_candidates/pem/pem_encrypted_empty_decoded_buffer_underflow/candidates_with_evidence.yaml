@@ -1,0 +1,2420 @@
+template_id: PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW
+source_template_id: PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW
+source:
+  library: mbedtls
+  api: mbedtls_pem_read_buffer
+  pattern_id: MBEDTLS-POC-0011
+  root_cause_summary: 'Malformed encrypted PEM input with fewer than four base64 characters
+    decodes to an empty buffer. pem_check_pkcs_padding() is called with input_len
+    == 0 and reads input[input_len - 1] (one byte before the heap region) without
+    first checking input_len >= 1. Fixed by adding ''if (input_len < 1) { return MBEDTLS_ERR_PEM_INVALID_DATA;
+    }''.
+
+    '
+  vulnerability_path_features:
+    must_preserve:
+    - pem_parser_entrypoint
+    - encrypted_pem_path_with_password
+    - malformed_or_short_base64_body
+    - decoded_buffer_length_can_be_zero_or_tiny
+    - padding_check_reads_last_byte
+    - observable_asan_heap_underflow_or_safe_error
+    optional:
+    - AES_128_CBC_dek_info
+    - EC_PRIVATE_KEY_label
+    - password_based_decryption_path
+    not_required:
+    - exact_pem_line_wrapping
+    - exact_heap_address
+    - exact_ASan_wording
+scoring_policy:
+  operation_family: 0.15
+  function_behavior: 0.2
+  parameter_structure: 0.2
+  vulnerability_path: 0.3
+  harness_feasibility: 0.15
+  decision_rule:
+    generate: final >= 75 and vulnerability_path >= 70
+    needs_llm_review: final >= 55 and vulnerability_path >= 50
+    skip: otherwise
+  score_notes:
+  - Key criterion is whether the target API has an encrypted PEM path with base64
+    decoding and padding check that can receive an empty/short buffer.
+  - ASAN or safe-error oracle must be observable.
+required_features:
+- target parses encrypted PEM or similar armored cryptographic text
+- target decodes base64 body and verifies padding
+- target can receive attacker-controlled short base64 body
+- target exposes observable return code, NULL pointer, or sanitizer crash signal
+- harness is a standalone compilable C program with no TLS handshake
+target_candidates:
+- target_library: openssl
+  target_api: PEM_read_bio_PrivateKey
+  library: openssl
+  api: PEM_read_bio_PrivateKey
+  source_template_id: PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW
+  source_api: mbedtls_pem_read_buffer
+  decision: generate
+  migration_applicability: applicable
+  applicability: strong_candidate
+  scores:
+    operation_family: 90
+    function_behavior: 85
+    parameter_structure: 80
+    vulnerability_path: 78
+    harness_feasibility: 88
+    final: 83
+  preserved_features:
+  - PEM_read_bio_PrivateKey parses encrypted PEM private keys
+  - accepts calller-supplied password via callback
+  - reads PEM from BIO (memory BIO wraps caller-provided bytes)
+  - internally decodes base64 body and applies padding validation
+  - returns NULL on parse failure (safe rejection observable)
+  - ASAN can observe heap-buffer issues if they exist in OpenSSL path
+  preserved_vulnerability_features:
+  - pem_parser_entrypoint
+  - encrypted_pem_path_with_password
+  - malformed_or_short_base64_body
+  - observable_asan_heap_underflow_or_safe_error
+  weakened_features:
+  - OpenSSL PEM parser architecture differs from mbedTLS; padding check path is internal
+  - OpenSSL 3.x PEM reader likely validates base64 length before reaching padding
+    check
+  - historical NULL deref specific to mbedTLS pem_check_pkcs_padding is not directly
+    replicated
+  lost_or_weakened_features:
+  - exact_pem_check_pkcs_padding_internal_function
+  - exact_mbedtls_error_code
+  migration_reason: 'Strongest candidate. PEM_read_bio_PrivateKey is the direct OpenSSL
+    equivalent for encrypted PEM private key parsing. It accepts a memory BIO with
+    the malformed encrypted PEM, decodes base64, and checks padding. On current OpenSSL
+    3.x, the expected result is safe rejection (NULL return), making this a migrated_safe
+    comparison. ASAN would detect any heap issues.
+
+    '
+  required_features:
+  - create BIO_new_mem_buf with malformed encrypted PEM
+  - provide password callback returning "pwd"
+  - call PEM_read_bio_PrivateKey
+  - observe returned EVP_PKEY pointer (NULL = safe rejection)
+  - free BIO
+  notes:
+  - Expected migration verdict is migrated_safe; OpenSSL safely rejects malformed
+    encrypted PEM with short base64 body.
+  evidence:
+    top_k: 5
+    queries:
+    - query: ' '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.5070700252966565
+        distance: 0.9721142053604126
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+        text: "FF\",\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000FFFFFFFF00\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"000000000000000000000000000000000000000000000000000000"
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+          library: openssl
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+      - rank: 2
+        score: 0.5064631252680277
+        distance: 0.9744774103164673
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md
+        text: "E0EC65228B3937E498\",\n        \"63E4C6D3B23B0C849CF84241484BFE48F61D59A5B16BA06E6E12D1DA27C5249A\"\
+          ,\n        \"421DEBD61B62EAB6746434EBC3CC315E32220B3BADD50BDC4C4E6C147FEDD43D\"\
+          ,\n        \"0680512BCBB42C07D47349D2153B70C4E5D7FDFCBFA36EA1A85841B9E46E09A2\"\
+          ,\n        \"8542D69E4C044F18E8B92435BF6FF7DD297720630485628D5AE74EE7C32E79B7\"\
+          ,\n        \"1\");\n\n    if (!TEST_ptr(test_group))\n        goto done;\n\
+          \n    if (!TEST_true(test_sm2_sign(\n            test_group,\n         \
+          \   \"ALICE123@YAHOO.COM\",\n            \"128B2FA8BD433C6C068C8D803DFF79792A519A55171B1B650C23661D15897263\"\
+          ,\n            \"message digest\",\n            \"006CB28D99385C175C94F94E934817663FC176D925DD72B727260DBAAE1FB2F96F\"\
+          \n            \"007c47811054c6f99613a578eb8453706ccb96384fe7df5c171671e760bfa8be3a\"\
+          ,\n```"
+        metadata:
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md
+          layer: unit_tests
+          library: openssl
+      - rank: 3
+        score: 0.4993900358310789
+        distance: 1.0024428367614746
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+        text: "8787878787878787878787878787878\"\n              \"7878787878787878787878787878787878787878787878787878787878787878\"\
+          \n              \"7878787878787878787878787878787878787878787878787878787878787878\"\
+          \n              \"7878787878787878787878787878787878787878787878787878787878787878\"\
+          ))\n            && TEST_true(BN_hex2bn(&b,\n                \"095D72C08C097BA488C5E439C655A192EAFB6380073D8C2664668EDDB4060744\"\
+          \n                \"E16E57FB4EDB9AE10A0CEFCDC28A894F689A128379DB279D48A2E20849D68593\"\
+          \n                \"9B7803BCF46CEBF5C533FB0DD35B080593DE5472E3FE5DB951B8BFF9B4CB8F03\"\
+          \n                \"9CC638A5EE8CDD703719F8000E6A9F63BEED5F2FCD52FF293EA05A251BB4AB81\"\
+          ))\n            && TEST_true(BN_hex2bn(&n,\n```\n\n## Call pattern 62\n\n\
+          ```c\ngoto err;\n\n    if (!(TEST_true(BN_MONT_CTX_set(mont, n, ctx))\n\
+          \            && TEST_true(BN_mod_mul_montgomery(c, a, b, mont, ctx))\n \
+          \           && TEST_true(BN_mod_mul_montgomery(d, b, a, mont, ctx))\n  \
+          \          && TEST_BN_eq(c, d)))\n        goto err;\n\n    /* Regression\
+          \ test for ca"
+        metadata:
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+          library: openssl
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+      - rank: 4
+        score: 0.49467344660620705
+        distance: 1.0215356349945068
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md
+        text: "D_BOTTOM_ODD);\n    BN_rand(a2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY);\n\
+          \    BN_rand(b2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY);\n  \
+          \  BN_rand(m2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ODD);\n\n  \
+          \  if (!TEST_true(BN_mod(a1, a1, m1, ctx))\n        || !TEST_true(BN_mod(b1,\
+          \ b1, m1, ctx))\n        || !TEST_true(BN_mod(a2, a2, m2, ctx))\n      \
+          \  || !TEST_true(BN_mod(b2, b2, m2, ctx))\n        || !TEST_true(BN_mod_exp_simple(r_simple1,\
+          \ a1, b1, m1, ctx))\n        || !TEST_true(BN_mod_exp_simple(r_simple2,\
+          \ a2, b2, m2, ctx))\n        || !TEST_true(BN_mod_exp_mont_consttime_x2(r_mont_const_x2_1,\
+          \ a1, b1, m1, NULL,\n            r_mont_const_x2_2, a2, b2, m2, NULL,\n\
+          \            ctx)))\n        goto err;\n\n    if (!TEST_BN_eq(r_simple1,\
+          \ r_mont_const_x2_1)\n        || !TEST_BN_eq(r_simple2, r_mont_const_x2_2))\
+          \ {\n        if (BN_cmp(r_simple1, r_mont_const_x2_1) != 0)\n          \
+          \  TEST_info(\"simple and mont const time x2 (#1) results differ\");\n```\n\
+          \n## Call pattern 29\n\n```c\nfactor_size = 2048"
+        metadata:
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md
+          library: openssl
+      - rank: 5
+        score: 0.4944104082232621
+        distance: 1.022611141204834
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+        text: "FFFFFFFFFFFFFFFFFFFFFF\",\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000FFFFFFFF00\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"00000000000000000000000000000000000000000000000000FFFFFFFFFFFFFF\"\
+          ,\n    NULL\n};\n\nstatic const char *bn2stri"
+        metadata:
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+          layer: unit_tests
+          library: openssl
+      error: ''
+      stdout_preview: "{\n  \"query\": \" \",\n  \"top_k\": 5,\n  \"results\": [\n\
+        \    {\n      \"rank\": 1,\n      \"score\": 0.5070700252966565,\n      \"\
+        distance\": 0.9721142053604126,\n      \"layer\": \"unit_tests\",\n      \"\
+        source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n      \"text\": \"FF\\\",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000FFFFFFFF00\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"000000000000000000000000000000000000000000000000000000\",\n\
+        \      \"metadata\": {\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n        \"library\": \"openssl\",\n        \"doc_type\": \"unit_test_call_pattern\"\
+        ,\n        \"layer\": \"unit_tests\"\n      }\n    },\n    {\n      \"rank\"\
+        : 2,\n      \"score\": 0.5064631252680277,\n      \"distance\": 0.9744774103164673,\n\
+        \      \"layer\": \"unit_tests\",\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md\"\
+        ,\n      \"text\": \"E0EC65228B3937E498\\\",\\n        \\\"63E4C6D3B23B0C849CF84241484BFE48F61D59A5B16BA06E6E12D1DA27C5249A\\\
+        \",\\n        \\\"421DEBD61B62EAB6746434EBC3CC315E32220B3BADD50BDC4C4E6C147FEDD43D\\\
+        \",\\n        \\\"0680512BCBB42C07D47349D2153B70C4E5D7FDFCBFA36EA1A85841B9E46E09A2\\\
+        \",\\n        \\\"8542D69E4C044F18E8B92435BF6FF7DD297720630485628D5AE74EE7C32E79B7\\\
+        \",\\n        \\\"1\\\");\\n\\n    if (!TEST_ptr(test_group))\\n        goto\
+        \ done;\\n\\n    if (!TEST_true(test_sm2_sign(\\n            test_group,\\\
+        n            \\\"ALICE123@YAHOO.COM\\\",\\n            \\\"128B2FA8BD433C6C068C8D803DFF79792A519A55171B1B650C23661D15897263\\\
+        \",\\n            \\\"message digest\\\",\\n            \\\"006CB28D99385C175C94F94E934817663FC176D925DD72B727260DBAAE1FB2F96F\\\
+        \"\\n            \\\"007c47811054c6f99613a578eb8453706ccb96384fe7df5c171671e760bfa8be3a\\\
+        \",\\n```\",\n      \"metadata\": {\n        \"doc_type\": \"unit_test_call_pattern\"\
+        ,\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md\"\
+        ,\n        \"layer\": \"unit_tests\",\n        \"library\": \"openssl\"\n\
+        \      }\n    },\n    {\n      \"rank\": 3,\n      \"score\": 0.4993900358310789,\n\
+        \      \"distance\": 1.0024428367614746,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n      \"text\": \"8787878787878787878787878787878\\\"\\n              \\\
+        \"7878787878787878787878787878787878787878787878787878787878787878\\\"\\n\
+        \              \\\"7878787878787878787878787878787878787878787878787878787878787878\\\
+        \"\\n              \\\"7878787878787878787878787878787878787878787878787878787878787878\\\
+        \"))\\n            && TEST_true(BN_hex2bn(&b,\\n                \\\"095D72C08C097BA488C5E439C655A192EAFB6380073D8C2664668EDDB4060744\\\
+        \"\\n                \\\"E16E57FB4EDB9AE10A0CEFCDC28A894F689A128379DB279D48A2E20849D68593\\\
+        \"\\n                \\\"9B7803BCF46CEBF5C533FB0DD35B080593DE5472E3FE5DB951B8BFF9B4CB8F03\\\
+        \"\\n                \\\"9CC638A5EE8CDD703719F8000E6A9F63BEED5F2FCD52FF293EA05A251BB4AB81\\\
+        \"))\\n            && TEST_true(BN_hex2bn(&n,\\n```\\n\\n## Call pattern 62\\\
+        n\\n```c\\ngoto err;\\n\\n    if (!(TEST_true(BN_MONT_CTX_set(mont, n, ctx))\\\
+        n            && TEST_true(BN_mod_mul_montgomery(c, a, b, mont, ctx))\\n  \
+        \          && TEST_true(BN_mod_mul_montgomery(d, b, a, mont, ctx))\\n    \
+        \        && TEST_BN_eq(c, d)))\\n        goto err;\\n\\n    /* Regression\
+        \ test for ca\",\n      \"metadata\": {\n        \"doc_type\": \"unit_test_call_pattern\"\
+        ,\n        \"layer\": \"unit_tests\",\n        \"library\": \"openssl\",\n\
+        \        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 4,\n      \"score\": 0.49467344660620705,\n\
+        \      \"distance\": 1.0215356349945068,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md\"\
+        ,\n      \"text\": \"D_BOTTOM_ODD);\\n    BN_rand(a2, factor_size, BN_RAND_TOP_ONE,\
+        \ BN_RAND_BOTTOM_ANY);\\n    BN_rand(b2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY);\\\
+        n    BN_rand(m2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ODD);\\n\\n\
+        \    if (!TEST_true(BN_mod(a1, a1, m1, ctx))\\n        || !TEST_true(BN_mod(b1,\
+        \ b1, m1, ctx))\\n        || !TEST_true(BN_mod(a2, a2, m2, ctx))\\n      \
+        \  || !TEST_true(BN_mod(b2, b2, m2, ctx))\\n        || !TEST_true(BN_mod_exp_simple(r_simple1,\
+        \ a1, b1, m1, ctx))\\n        || !TEST_true(BN_mod_exp_simple(r_simple2, a2,\
+        \ b2, m2, ctx))\\n        || !TEST_true(BN_mod_exp_mont_consttime_x2(r_mont_const_x2_1,\
+        \ a1, b1, m1, NULL,\\n            r_mont_const_x2_2, a2, b2, m2, NULL,\\n\
+        \            ctx)))\\n        goto err;\\n\\n    if (!TEST_BN_eq(r_simple1,\
+        \ r_mont_const_x2_1)\\n        || !TEST_BN_eq(r_simple2, r_mont_const_x2_2))\
+        \ {\\n        if (BN_cmp(r_simple1, r_mont_const_x2_1) != 0)\\n          \
+        \  TEST_info(\\\"simple and mont const time x2 (#1) results differ\\\");\\\
+        n```\\n\\n## Call pattern 29\\n\\n```c\\nfactor_size = 2048\",\n      \"metadata\"\
+        : {\n        \"doc_type\": \"unit_test_call_pattern\",\n        \"layer\"\
+        : \"unit_tests\",\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__"
+      stderr_preview: ''
+      truncated: true
+      kind: source_pattern
+      use_for_feature_inference: source_only
+    - query: openssl PEM_read_bio_PrivateKey function declaration signature parameters
+        return value
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7306160502917963
+        distance: 0.36870795488357544
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md
+        text: "# API Constraints: PEM_read_bio_PrivateKey (OpenSSL 3.5.5)\n\nSource\
+          \ version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_read_bio_PrivateKey`\n- Header/manpage: `include/openssl/pem.h`,\
+          \ `doc/man3/PEM_read_bio_PrivateKey.pod`\n- Implementation file: `crypto/pem/pem_pkey.c`\n\
+          - Signature:\n\n```c\nEVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY\
+          \ **x,\n                                  pem_password_cb *cb, void *u);\n\
+          ```\n\n## Semantics\n\n- Reads a PEM private key from `BIO`.\n- Uses decoder\
+          \ path first, then legacy PEM byte extraction / DER decode fallback.\n-\
+          \ Supports encrypted PEM through password callback.\n\n## Return Value Semantics\n\
+          \n- Returns `EVP_PKEY *` on success.\n- Returns `NULL` on parse, decode,\
+          \ password, or unsupported-key failure; callers inspect OpenSSL error queue.\n\
+          \n## Ownership and Buffer Constraints\n\n- Returned key is caller-owned\
+          \ and must be freed with `EVP_PKEY_free()`.\n- If `x != NULL`, any previous\
+          \ `*x` can be replaced/freed by the read routine."
+        metadata:
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md
+          layer: api_constraints
+          library: openssl
+          doc_type: api_constraint
+      - rank: 2
+        score: 0.7140038256612956
+        distance: 0.4005527198314667
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md
+        text: "# API Constraints: PEM_read_bio_PUBKEY (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_read_bio_PUBKEY`\n- Header/manpage: `include/openssl/pem.h`,\
+          \ `doc/man3/PEM_read_bio_PrivateKey.pod`\n- Implementation file: `crypto/pem/pem_pkey.c`\n\
+          - Signature:\n\n```c\nEVP_PKEY *PEM_read_bio_PUBKEY(BIO *bp, EVP_PKEY **x,\n\
+          \                              pem_password_cb *cb, void *u);\n```\n\n##\
+          \ Semantics\n\n- Reads a PEM SubjectPublicKeyInfo public key into an `EVP_PKEY`.\n\
+          - Decoder path can skip unsupported PEM blocks while looking for a usable\
+          \ public key.\n\n## Return Value Semantics\n\n- Returns `EVP_PKEY *` on\
+          \ success.\n- Returns `NULL` on parse/decode/unsupported-key failure.\n\n\
+          ## Ownership and Buffer Constraints\n\n- Returned `EVP_PKEY` is caller-owned.\n\
+          - Input memory belongs to the BIO.\n- The API hides decoded DER buffers\
+          \ from the caller.\n\n## Harness Generation Notes\n\n- Use `BIO_new_mem_buf(public_pem,\
+          \ len)` and call `PEM_read_bio_PUBKEY()`.\n- For `"
+        metadata:
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md
+          doc_type: api_constraint
+          library: openssl
+          layer: api_constraints
+      - rank: 3
+        score: 0.7021348819022827
+        distance: 0.424227774143219
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_bytes_read_bio.md
+        text: "# API Constraints: PEM_bytes_read_bio (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_bytes_read_bio`\n- Header declaration: `include/openssl/pem.h`\n\
+          - Implementation file: `crypto/pem/pem_lib.c`\n- Signature:\n\n```c\nint\
+          \ PEM_bytes_read_bio(unsigned char **pdata, long *plen, char **pnm,\n  \
+          \                     const char *name, BIO *bp,\n                     \
+          \  pem_password_cb *cb, void *u);\n```\n\n## Semantics\n\n- Reads a named\
+          \ PEM block from a BIO and returns decoded bytes.\n- Uses EAY-compatible\
+          \ PEM parsing flags.\n- Encrypted PEM headers are processed through `PEM_do_header()`,\
+          \ which derives a key and calls `EVP_DecryptInit_ex()`, `EVP_DecryptUpdate()`,\
+          \ and `EVP_DecryptFinal_ex()`.\n\n## Return Value Semantics\n\n- Returns\
+          \ `1` on success.\n- Returns `0` on PEM, decrypt, password, allocation,\
+          \ or decode failure.\n\n## Ownership and Buffer Constraints\n\n- On success,\
+          \ `*pdata` points to an OpenSSL-allocated decoded buffer; caller frees with\
+          \ `"
+        metadata:
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_bytes_read_bio.md
+          layer: api_constraints
+          library: openssl
+          doc_type: api_constraint
+      - rank: 4
+        score: 0.700898468662885
+        distance: 0.4267401695251465
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md
+        text: "# API Constraints: PEM_read_bio_X509 (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_read_bio_X509`\n- Header/manpage: `include/openssl/pem.h`,\
+          \ `doc/man3/PEM_read_bio_PrivateKey.pod`\n- Implementation family: PEM ASN.1\
+          \ read macros and X.509 DER decode\n- Signature:\n\n```c\nX509 *PEM_read_bio_X509(BIO\
+          \ *bp, X509 **x,\n                        pem_password_cb *cb, void *u);\n\
+          ```\n\n## Semantics\n\n- Reads PEM certificate armor from a BIO and decodes\
+          \ the DER certificate into `X509`.\n- For X.509 certificates, password callback\
+          \ is normally unused unless encrypted PEM wrapper features are involved.\n\
+          \n## Return Value Semantics\n\n- Returns `X509 *` on success.\n- Returns\
+          \ `NULL` on PEM or DER parse failure.\n\n## Ownership and Buffer Constraints\n\
+          \n- Returned certificate is caller-owned and freed with `X509_free()`.\n\
+          - If `x != NULL`, the pointed object may be reused/replaced according to\
+          \ OpenSSL d2i conventions.\n\n## Harness Generation Notes\n\n- Use `B"
+        metadata:
+          doc_type: api_constraint
+          layer: api_constraints
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md
+          library: openssl
+      - rank: 5
+        score: 0.681814897421036
+        distance: 0.46667373180389404
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__x509.c.md
+        text: "PEM_write_bio_PUBKEY(out, pkey);\n        } else if (i == text) {\n\
+          \            X509_print_ex(out, x, get_nameopt(), certflag);\n        }\
+          \ else if (i == startdate) {\n            BIO_puts(out, \"notBefore=\");\n\
+          \            ASN1_TIME_print_ex(out, X509_get0_notBefore(x), dateopt);\n\
+          \            BIO_puts(out, \"\\n\");\n        } else if (i == enddate) {\n\
+          \            BIO_puts(out, \"notAfter=\");\n            ASN1_TIME_print_ex(out,\
+          \ X509_get0_notAfter(x), dateopt);\n            BIO_puts(out, \"\\n\");\n\
+          \        } else if (i == fingerprint) {\n            unsigned int n;\n \
+          \           unsigned char md[EVP_MAX_MD_SIZE];\n            const char *fdigname\
+          \ = digest;\n```\n\n## Call pattern 4\n\n```c\nBIGNUM *n = NULL;\n\n   \
+          \             /* Every RSA key has an 'n' */\n                EVP_PKEY_get_bn_param(pkey,\
+          \ \"n\", &n);\n                BN_print(out, n);\n                BN_free(n);\n\
+          \            } else if (EVP_PKEY_is_a(pkey, \"DSA\")) {\n              \
+          \  BIGNUM *dsapub = NULL;\n\n                /* Every DSA key has a 'pub'\
+          \ */"
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__x509.c.md
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          library: openssl
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl PEM_read_bio_PrivateKey function\
+        \ declaration signature parameters return value\",\n  \"top_k\": 5,\n  \"\
+        results\": [\n    {\n      \"rank\": 1,\n      \"score\": 0.7306160502917963,\n\
+        \      \"distance\": 0.36870795488357544,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md\"\
+        ,\n      \"text\": \"# API Constraints: PEM_read_bio_PrivateKey (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_read_bio_PrivateKey`\\n- Header/manpage: `include/openssl/pem.h`,\
+        \ `doc/man3/PEM_read_bio_PrivateKey.pod`\\n- Implementation file: `crypto/pem/pem_pkey.c`\\\
+        n- Signature:\\n\\n```c\\nEVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY\
+        \ **x,\\n                                  pem_password_cb *cb, void *u);\\\
+        n```\\n\\n## Semantics\\n\\n- Reads a PEM private key from `BIO`.\\n- Uses\
+        \ decoder path first, then legacy PEM byte extraction / DER decode fallback.\\\
+        n- Supports encrypted PEM through password callback.\\n\\n## Return Value\
+        \ Semantics\\n\\n- Returns `EVP_PKEY *` on success.\\n- Returns `NULL` on\
+        \ parse, decode, password, or unsupported-key failure; callers inspect OpenSSL\
+        \ error queue.\\n\\n## Ownership and Buffer Constraints\\n\\n- Returned key\
+        \ is caller-owned and must be freed with `EVP_PKEY_free()`.\\n- If `x != NULL`,\
+        \ any previous `*x` can be replaced/freed by the read routine.\",\n      \"\
+        metadata\": {\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md\"\
+        ,\n        \"layer\": \"api_constraints\",\n        \"library\": \"openssl\"\
+        ,\n        \"doc_type\": \"api_constraint\"\n      }\n    },\n    {\n    \
+        \  \"rank\": 2,\n      \"score\": 0.7140038256612956,\n      \"distance\"\
+        : 0.4005527198314667,\n      \"layer\": \"api_constraints\",\n      \"source_file\"\
+        : \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md\",\n\
+        \      \"text\": \"# API Constraints: PEM_read_bio_PUBKEY (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_read_bio_PUBKEY`\\n- Header/manpage: `include/openssl/pem.h`,\
+        \ `doc/man3/PEM_read_bio_PrivateKey.pod`\\n- Implementation file: `crypto/pem/pem_pkey.c`\\\
+        n- Signature:\\n\\n```c\\nEVP_PKEY *PEM_read_bio_PUBKEY(BIO *bp, EVP_PKEY\
+        \ **x,\\n                              pem_password_cb *cb, void *u);\\n```\\\
+        n\\n## Semantics\\n\\n- Reads a PEM SubjectPublicKeyInfo public key into an\
+        \ `EVP_PKEY`.\\n- Decoder path can skip unsupported PEM blocks while looking\
+        \ for a usable public key.\\n\\n## Return Value Semantics\\n\\n- Returns `EVP_PKEY\
+        \ *` on success.\\n- Returns `NULL` on parse/decode/unsupported-key failure.\\\
+        n\\n## Ownership and Buffer Constraints\\n\\n- Returned `EVP_PKEY` is caller-owned.\\\
+        n- Input memory belongs to the BIO.\\n- The API hides decoded DER buffers\
+        \ from the caller.\\n\\n## Harness Generation Notes\\n\\n- Use `BIO_new_mem_buf(public_pem,\
+        \ len)` and call `PEM_read_bio_PUBKEY()`.\\n- For `\",\n      \"metadata\"\
+        : {\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md\"\
+        ,\n        \"doc_type\": \"api_constraint\",\n        \"library\": \"openssl\"\
+        ,\n        \"layer\": \"api_constraints\"\n      }\n    },\n    {\n      \"\
+        rank\": 3,\n      \"score\": 0.7021348819022827,\n      \"distance\": 0.424227774143219,\n\
+        \      \"layer\": \"api_constraints\",\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_bytes_read_bio.md\"\
+        ,\n      \"text\": \"# API Constraints: PEM_bytes_read_bio (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_bytes_read_bio`\\n- Header declaration: `include/openssl/pem.h`\\\
+        n- Implementation file: `crypto/pem/pem_lib.c`\\n- Signature:\\n\\n```c\\\
+        nint PEM_bytes_read_bio(unsigned char **pdata, long *plen, char **pnm,\\n\
+        \                       const char *name, BIO *bp,\\n                    \
+        \   pem_password_cb *cb, void *u);\\n```\\n\\n## Semantics\\n\\n- Reads a\
+        \ named PEM block from a BIO and returns decoded bytes.\\n- Uses EAY-compatible\
+        \ PEM parsing flags.\\n- Encrypted PEM headers are processed through `PEM_do_header()`,\
+        \ which derives a key and calls `EVP_DecryptInit_ex()`, `EVP_DecryptUpdate()`,\
+        \ and `EVP_DecryptFinal_ex()`.\\n\\n## Return Value Semantics\\n\\n- Returns\
+        \ `1` on success.\\n- Returns `0` on PEM, decrypt, password, allocation, or\
+        \ decode failure.\\n\\n## Ownership and Buffer Constraints\\n\\n- On success,\
+        \ `*pdata` points to an OpenSSL-allocated decoded buffer; caller frees with\
+        \ `\",\n      \"metadata\": {\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_bytes_read_bio.md\"\
+        ,\n        \"layer\": \"api_constraints\",\n        \"library\": \"openssl\"\
+        ,\n        \"doc_type\": \"api_constraint\"\n      }\n    },\n    {\n    \
+        \  \"rank\": 4,\n      \"score\": 0.700898468662885,\n      \"distance\":\
+        \ 0.4267401695251465,\n      \"layer\": \"api_constraints\",\n      \"source_file\"\
+        : \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md\",\n\
+        \      \"text\": \"# API Constraints: PEM_read_bio_X509 (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_read_bio_X509`\\n- Header/manpage: `include/openssl/pem.h`,\
+        \ `doc/man3/PEM_read_bio_PrivateKey.pod`\\n- Implementation family: PEM ASN.1\
+        \ read macros and X.509 DER decode\\n- Signature:\\n\\n```c\\nX509 *PEM_read_bio_X509(BIO\
+        \ *bp, X509 **x,\\n                        pem_password_cb *cb, void *u);\\\
+        n```\\n\\n## Semantics\\n\\n- Reads PEM certificate armor from a BIO and decodes\
+        \ the DER certificate into `X509`.\\n- For X.509 certificates, password callback\
+        \ is normally unused unless encrypted PEM wrapper features are involved.\\\
+        n\\n## Return Value Semantics\\n\\n- Returns `X509 *` on success.\\n- Returns\
+        \ `NULL` on PEM or DER parse failure.\\n\\n## Ownership and Buffer Constraints\\\
+        n\\n- Returned certificate is caller-owned and freed with `X509_free()`.\\\
+        n- If `x != NULL`, the pointed object may be reused/replaced according to\
+        \ OpenSSL d2i conventions.\\n\\n## Harness Generation Notes\\n\\n- Use `B\"\
+        ,\n      \"metadata\": {\n        \"doc_type\": \"api_constraint\",\n    \
+        \    \"layer\": \"api_constrai"
+      stderr_preview: ''
+      truncated: true
+      kind: target_api_signature
+      use_for_feature_inference: target
+    - query: openssl PEM_read_bio_PrivateKey implementation source code parameters
+        return error
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.748156394825368
+        distance: 0.33661893010139465
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md
+        text: "# API Constraints: PEM_read_bio_PrivateKey (OpenSSL 3.5.5)\n\nSource\
+          \ version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_read_bio_PrivateKey`\n- Header/manpage: `include/openssl/pem.h`,\
+          \ `doc/man3/PEM_read_bio_PrivateKey.pod`\n- Implementation file: `crypto/pem/pem_pkey.c`\n\
+          - Signature:\n\n```c\nEVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY\
+          \ **x,\n                                  pem_password_cb *cb, void *u);\n\
+          ```\n\n## Semantics\n\n- Reads a PEM private key from `BIO`.\n- Uses decoder\
+          \ path first, then legacy PEM byte extraction / DER decode fallback.\n-\
+          \ Supports encrypted PEM through password callback.\n\n## Return Value Semantics\n\
+          \n- Returns `EVP_PKEY *` on success.\n- Returns `NULL` on parse, decode,\
+          \ password, or unsupported-key failure; callers inspect OpenSSL error queue.\n\
+          \n## Ownership and Buffer Constraints\n\n- Returned key is caller-owned\
+          \ and must be freed with `EVP_PKEY_free()`.\n- If `x != NULL`, any previous\
+          \ `*x` can be replaced/freed by the read routine."
+        metadata:
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md
+          library: openssl
+          doc_type: api_constraint
+          layer: api_constraints
+      - rank: 2
+        score: 0.7473646791545092
+        distance: 0.33803486824035645
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md
+        text: "# API Constraints: PEM_read_bio_PUBKEY (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_read_bio_PUBKEY`\n- Header/manpage: `include/openssl/pem.h`,\
+          \ `doc/man3/PEM_read_bio_PrivateKey.pod`\n- Implementation file: `crypto/pem/pem_pkey.c`\n\
+          - Signature:\n\n```c\nEVP_PKEY *PEM_read_bio_PUBKEY(BIO *bp, EVP_PKEY **x,\n\
+          \                              pem_password_cb *cb, void *u);\n```\n\n##\
+          \ Semantics\n\n- Reads a PEM SubjectPublicKeyInfo public key into an `EVP_PKEY`.\n\
+          - Decoder path can skip unsupported PEM blocks while looking for a usable\
+          \ public key.\n\n## Return Value Semantics\n\n- Returns `EVP_PKEY *` on\
+          \ success.\n- Returns `NULL` on parse/decode/unsupported-key failure.\n\n\
+          ## Ownership and Buffer Constraints\n\n- Returned `EVP_PKEY` is caller-owned.\n\
+          - Input memory belongs to the BIO.\n- The API hides decoded DER buffers\
+          \ from the caller.\n\n## Harness Generation Notes\n\n- Use `BIO_new_mem_buf(public_pem,\
+          \ len)` and call `PEM_read_bio_PUBKEY()`.\n- For `"
+        metadata:
+          doc_type: api_constraint
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md
+          library: openssl
+          layer: api_constraints
+      - rank: 3
+        score: 0.7147704189060115
+        distance: 0.39905062317848206
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md
+        text: "# API Constraints: PEM_read_bio_X509 (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_read_bio_X509`\n- Header/manpage: `include/openssl/pem.h`,\
+          \ `doc/man3/PEM_read_bio_PrivateKey.pod`\n- Implementation family: PEM ASN.1\
+          \ read macros and X.509 DER decode\n- Signature:\n\n```c\nX509 *PEM_read_bio_X509(BIO\
+          \ *bp, X509 **x,\n                        pem_password_cb *cb, void *u);\n\
+          ```\n\n## Semantics\n\n- Reads PEM certificate armor from a BIO and decodes\
+          \ the DER certificate into `X509`.\n- For X.509 certificates, password callback\
+          \ is normally unused unless encrypted PEM wrapper features are involved.\n\
+          \n## Return Value Semantics\n\n- Returns `X509 *` on success.\n- Returns\
+          \ `NULL` on PEM or DER parse failure.\n\n## Ownership and Buffer Constraints\n\
+          \n- Returned certificate is caller-owned and freed with `X509_free()`.\n\
+          - If `x != NULL`, the pointed object may be reused/replaced according to\
+          \ OpenSSL d2i conventions.\n\n## Harness Generation Notes\n\n- Use `B"
+        metadata:
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md
+          layer: api_constraints
+          doc_type: api_constraint
+          library: openssl
+      - rank: 4
+        score: 0.7133102436996452
+        distance: 0.4019145369529724
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_bytes_read_bio.md
+        text: "# API Constraints: PEM_bytes_read_bio (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_bytes_read_bio`\n- Header declaration: `include/openssl/pem.h`\n\
+          - Implementation file: `crypto/pem/pem_lib.c`\n- Signature:\n\n```c\nint\
+          \ PEM_bytes_read_bio(unsigned char **pdata, long *plen, char **pnm,\n  \
+          \                     const char *name, BIO *bp,\n                     \
+          \  pem_password_cb *cb, void *u);\n```\n\n## Semantics\n\n- Reads a named\
+          \ PEM block from a BIO and returns decoded bytes.\n- Uses EAY-compatible\
+          \ PEM parsing flags.\n- Encrypted PEM headers are processed through `PEM_do_header()`,\
+          \ which derives a key and calls `EVP_DecryptInit_ex()`, `EVP_DecryptUpdate()`,\
+          \ and `EVP_DecryptFinal_ex()`.\n\n## Return Value Semantics\n\n- Returns\
+          \ `1` on success.\n- Returns `0` on PEM, decrypt, password, allocation,\
+          \ or decode failure.\n\n## Ownership and Buffer Constraints\n\n- On success,\
+          \ `*pdata` points to an OpenSSL-allocated decoded buffer; caller frees with\
+          \ `"
+        metadata:
+          doc_type: api_constraint
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_bytes_read_bio.md
+          library: openssl
+          layer: api_constraints
+      - rank: 5
+        score: 0.6708302093701423
+        distance: 0.4906901717185974
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md
+        text: 'Generation Notes
+
+
+          - Use `BIO_new_mem_buf(public_pem, len)` and call `PEM_read_bio_PUBKEY()`.
+
+          - For `MBEDTLS-POC-0020`, this API is useful as a high-level public-key
+          parser, but direct DER APIs such as `d2i_PUBKEY()` or `d2i_RSA_PUBKEY()`
+          better expose top-level trailing-garbage behavior.
+
+
+          ## Vulnerability-Pattern Migration Notes
+
+
+          - Relevant to public-key parsing target discovery.
+
+          - Stronger for PEM wrapper migration than exact DER boundary migration.
+
+
+          ## Related Tests or Examples Found Locally
+
+
+          - `test/algorithmid_test.c`: `PEM_read_bio_X509_PUBKEY`.
+
+          - `test/evp_extra_test.c`: `PEM_read_bio_PUBKEY_ex`.
+
+          - `engines/e_ossltest.c`: direct `PEM_read_bio_PUBKEY()` usage.'
+        metadata:
+          layer: api_constraints
+          doc_type: api_constraint
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md
+          library: openssl
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl PEM_read_bio_PrivateKey implementation\
+        \ source code parameters return error\",\n  \"top_k\": 5,\n  \"results\":\
+        \ [\n    {\n      \"rank\": 1,\n      \"score\": 0.748156394825368,\n    \
+        \  \"distance\": 0.33661893010139465,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md\"\
+        ,\n      \"text\": \"# API Constraints: PEM_read_bio_PrivateKey (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_read_bio_PrivateKey`\\n- Header/manpage: `include/openssl/pem.h`,\
+        \ `doc/man3/PEM_read_bio_PrivateKey.pod`\\n- Implementation file: `crypto/pem/pem_pkey.c`\\\
+        n- Signature:\\n\\n```c\\nEVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY\
+        \ **x,\\n                                  pem_password_cb *cb, void *u);\\\
+        n```\\n\\n## Semantics\\n\\n- Reads a PEM private key from `BIO`.\\n- Uses\
+        \ decoder path first, then legacy PEM byte extraction / DER decode fallback.\\\
+        n- Supports encrypted PEM through password callback.\\n\\n## Return Value\
+        \ Semantics\\n\\n- Returns `EVP_PKEY *` on success.\\n- Returns `NULL` on\
+        \ parse, decode, password, or unsupported-key failure; callers inspect OpenSSL\
+        \ error queue.\\n\\n## Ownership and Buffer Constraints\\n\\n- Returned key\
+        \ is caller-owned and must be freed with `EVP_PKEY_free()`.\\n- If `x != NULL`,\
+        \ any previous `*x` can be replaced/freed by the read routine.\",\n      \"\
+        metadata\": {\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md\"\
+        ,\n        \"library\": \"openssl\",\n        \"doc_type\": \"api_constraint\"\
+        ,\n        \"layer\": \"api_constraints\"\n      }\n    },\n    {\n      \"\
+        rank\": 2,\n      \"score\": 0.7473646791545092,\n      \"distance\": 0.33803486824035645,\n\
+        \      \"layer\": \"api_constraints\",\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md\"\
+        ,\n      \"text\": \"# API Constraints: PEM_read_bio_PUBKEY (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_read_bio_PUBKEY`\\n- Header/manpage: `include/openssl/pem.h`,\
+        \ `doc/man3/PEM_read_bio_PrivateKey.pod`\\n- Implementation file: `crypto/pem/pem_pkey.c`\\\
+        n- Signature:\\n\\n```c\\nEVP_PKEY *PEM_read_bio_PUBKEY(BIO *bp, EVP_PKEY\
+        \ **x,\\n                              pem_password_cb *cb, void *u);\\n```\\\
+        n\\n## Semantics\\n\\n- Reads a PEM SubjectPublicKeyInfo public key into an\
+        \ `EVP_PKEY`.\\n- Decoder path can skip unsupported PEM blocks while looking\
+        \ for a usable public key.\\n\\n## Return Value Semantics\\n\\n- Returns `EVP_PKEY\
+        \ *` on success.\\n- Returns `NULL` on parse/decode/unsupported-key failure.\\\
+        n\\n## Ownership and Buffer Constraints\\n\\n- Returned `EVP_PKEY` is caller-owned.\\\
+        n- Input memory belongs to the BIO.\\n- The API hides decoded DER buffers\
+        \ from the caller.\\n\\n## Harness Generation Notes\\n\\n- Use `BIO_new_mem_buf(public_pem,\
+        \ len)` and call `PEM_read_bio_PUBKEY()`.\\n- For `\",\n      \"metadata\"\
+        : {\n        \"doc_type\": \"api_constraint\",\n        \"source_file\": \"\
+        knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md\",\n  \
+        \      \"library\": \"openssl\",\n        \"layer\": \"api_constraints\"\n\
+        \      }\n    },\n    {\n      \"rank\": 3,\n      \"score\": 0.7147704189060115,\n\
+        \      \"distance\": 0.39905062317848206,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md\"\
+        ,\n      \"text\": \"# API Constraints: PEM_read_bio_X509 (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_read_bio_X509`\\n- Header/manpage: `include/openssl/pem.h`,\
+        \ `doc/man3/PEM_read_bio_PrivateKey.pod`\\n- Implementation family: PEM ASN.1\
+        \ read macros and X.509 DER decode\\n- Signature:\\n\\n```c\\nX509 *PEM_read_bio_X509(BIO\
+        \ *bp, X509 **x,\\n                        pem_password_cb *cb, void *u);\\\
+        n```\\n\\n## Semantics\\n\\n- Reads PEM certificate armor from a BIO and decodes\
+        \ the DER certificate into `X509`.\\n- For X.509 certificates, password callback\
+        \ is normally unused unless encrypted PEM wrapper features are involved.\\\
+        n\\n## Return Value Semantics\\n\\n- Returns `X509 *` on success.\\n- Returns\
+        \ `NULL` on PEM or DER parse failure.\\n\\n## Ownership and Buffer Constraints\\\
+        n\\n- Returned certificate is caller-owned and freed with `X509_free()`.\\\
+        n- If `x != NULL`, the pointed object may be reused/replaced according to\
+        \ OpenSSL d2i conventions.\\n\\n## Harness Generation Notes\\n\\n- Use `B\"\
+        ,\n      \"metadata\": {\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md\"\
+        ,\n        \"layer\": \"api_constraints\",\n        \"doc_type\": \"api_constraint\"\
+        ,\n        \"library\": \"openssl\"\n      }\n    },\n    {\n      \"rank\"\
+        : 4,\n      \"score\": 0.7133102436996452,\n      \"distance\": 0.4019145369529724,\n\
+        \      \"layer\": \"api_constraints\",\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_bytes_read_bio.md\"\
+        ,\n      \"text\": \"# API Constraints: PEM_bytes_read_bio (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_bytes_read_bio`\\n- Header declaration: `include/openssl/pem.h`\\\
+        n- Implementation file: `crypto/pem/pem_lib.c`\\n- Signature:\\n\\n```c\\\
+        nint PEM_bytes_read_bio(unsigned char **pdata, long *plen, char **pnm,\\n\
+        \                       const char *name, BIO *bp,\\n                    \
+        \   pem_password_cb *cb, void *u);\\n```\\n\\n## Semantics\\n\\n- Reads a\
+        \ named PEM block from a BIO and returns decoded bytes.\\n- Uses EAY-compatible\
+        \ PEM parsing flags.\\n- Encrypted PEM headers are processed through `PEM_do_header()`,\
+        \ which derives a key and calls `EVP_DecryptInit_ex()`, `EVP_DecryptUpdate()`,\
+        \ and `EVP_DecryptFinal_ex()`.\\n\\n## Return Value Semantics\\n\\n- Returns\
+        \ `1` on success.\\n- Returns `0` on PEM, decrypt, password, allocation, or\
+        \ decode failure.\\n\\n## Ownership and Buffer Constraints\\n\\n- On success,\
+        \ `*pdata` points to an OpenSSL-allocated decoded buffer; caller frees with\
+        \ `\",\n      \"metadata\": {\n        \"doc_type\": \"api_constraint\",\n\
+        \        \"source_file\": \"knowledg"
+      stderr_preview: ''
+      truncated: true
+      kind: target_api_implementation
+      use_for_feature_inference: target
+    - query: openssl PEM_read_bio_PrivateKey usage example unit test API call pattern
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.728013311228952
+        distance: 0.3736012578010559
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/3.5.5/pem_target_api_evidence.md
+        text: "# Unit Test / Example Evidence: OpenSSL PEM Target APIs\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## APIs Covered\n\n- `PEM_read_bio_PrivateKey`\n\
+          - `PEM_read_bio_PUBKEY`\n- `PEM_read_bio_X509`\n- `PEM_bytes_read_bio`\n\
+          \n## Found Evidence\n\nstatus: partially_found_in_local_tests\n\n- `test/bio_pw_callback_test.c`\n\
+          \  - Direct encrypted/private-key callback coverage for `PEM_read_bio_PrivateKey()`.\n\
+          - `test/threadstest.c`, `test/ocspapitest.c`, `test/x509_check_cert_pkey_test.c`\n\
+          \  - Direct `PEM_read_bio_PrivateKey()` usage.\n- `test/x509_test.c`, `test/crltest.c`,\
+          \ `test/algorithmid_test.c`, `test/v3ext.c`\n  - Direct `PEM_read_bio_X509()`\
+          \ usage.\n- `engines/e_ossltest.c`\n  - Direct `PEM_read_bio_PUBKEY()` and\
+          \ `PEM_read_bio_PrivateKey()` usage.\n- `crypto/pem/pem_pkey.c`\n  - Internal\
+          \ high-level key readers call `PEM_bytes_read_bio()` / `PEM_bytes_read_bio_secmem()`.\n\
+          \n## Missing Local Evidence\n\nstatus: not_found_in_local_tests\n\napi:\
+          \ `PEM_bytes_read_bio`\n\nsearched_paths:\n- `/home/wen/wo"
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/3.5.5/pem_target_api_evidence.md
+          layer: unit_tests
+          library: openssl
+          doc_type: unit_test_call_pattern
+      - rank: 2
+        score: 0.7216309501151124
+        distance: 0.385749876499176
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md
+        text: "# API Constraints: PEM_read_bio_PrivateKey (OpenSSL 3.5.5)\n\nSource\
+          \ version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_read_bio_PrivateKey`\n- Header/manpage: `include/openssl/pem.h`,\
+          \ `doc/man3/PEM_read_bio_PrivateKey.pod`\n- Implementation file: `crypto/pem/pem_pkey.c`\n\
+          - Signature:\n\n```c\nEVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY\
+          \ **x,\n                                  pem_password_cb *cb, void *u);\n\
+          ```\n\n## Semantics\n\n- Reads a PEM private key from `BIO`.\n- Uses decoder\
+          \ path first, then legacy PEM byte extraction / DER decode fallback.\n-\
+          \ Supports encrypted PEM through password callback.\n\n## Return Value Semantics\n\
+          \n- Returns `EVP_PKEY *` on success.\n- Returns `NULL` on parse, decode,\
+          \ password, or unsupported-key failure; callers inspect OpenSSL error queue.\n\
+          \n## Ownership and Buffer Constraints\n\n- Returned key is caller-owned\
+          \ and must be freed with `EVP_PKEY_free()`.\n- If `x != NULL`, any previous\
+          \ `*x` can be replaced/freed by the read routine."
+        metadata:
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md
+          library: openssl
+          layer: api_constraints
+          doc_type: api_constraint
+      - rank: 3
+        score: 0.7179395669301532
+        distance: 0.39287489652633667
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md
+        text: "# API Constraints: PEM_read_bio_PUBKEY (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_read_bio_PUBKEY`\n- Header/manpage: `include/openssl/pem.h`,\
+          \ `doc/man3/PEM_read_bio_PrivateKey.pod`\n- Implementation file: `crypto/pem/pem_pkey.c`\n\
+          - Signature:\n\n```c\nEVP_PKEY *PEM_read_bio_PUBKEY(BIO *bp, EVP_PKEY **x,\n\
+          \                              pem_password_cb *cb, void *u);\n```\n\n##\
+          \ Semantics\n\n- Reads a PEM SubjectPublicKeyInfo public key into an `EVP_PKEY`.\n\
+          - Decoder path can skip unsupported PEM blocks while looking for a usable\
+          \ public key.\n\n## Return Value Semantics\n\n- Returns `EVP_PKEY *` on\
+          \ success.\n- Returns `NULL` on parse/decode/unsupported-key failure.\n\n\
+          ## Ownership and Buffer Constraints\n\n- Returned `EVP_PKEY` is caller-owned.\n\
+          - Input memory belongs to the BIO.\n- The API hides decoded DER buffers\
+          \ from the caller.\n\n## Harness Generation Notes\n\n- Use `BIO_new_mem_buf(public_pem,\
+          \ len)` and call `PEM_read_bio_PUBKEY()`.\n- For `"
+        metadata:
+          layer: api_constraints
+          library: openssl
+          doc_type: api_constraint
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md
+      - rank: 4
+        score: 0.7115180188017393
+        distance: 0.40544578433036804
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__req.c.md
+        text: "# Official test/example call patterns: openssl\n\nLibrary: openssl\n\
+          Version: 3.5.5\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/apps/req.c\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\ntpubkey\
+          \ = X509_REQ_get0_pubkey(req);\n        if (tpubkey == NULL) {\n       \
+          \     BIO_puts(bio_err, \"Modulus is unavailable\\n\");\n            goto\
+          \ end;\n        }\n        BIO_puts(out, \"Modulus=\");\n        if (EVP_PKEY_is_a(tpubkey,\
+          \ \"RSA\") || EVP_PKEY_is_a(tpubkey, \"RSA-PSS\")) {\n            BIGNUM\
+          \ *n = NULL;\n\n            if (!EVP_PKEY_get_bn_param(tpubkey, \"n\", &n))\n\
+          \                goto end;\n            BN_print(out, n);\n            BN_free(n);\n\
+          \        } else {\n            BIO_puts(out, \"Wrong Algorithm type\");\n\
+          \        }\n        BIO_puts(out, \"\\n\");\n    }\n\n    if (!noout &&\
+          \ !gen_x509) {\n        if (outformat == FORMAT_ASN1)\n            i = i2d_X509_REQ_bio(out,\
+          \ req);\n        else if (newhdr)\n            i = PEM_write_bio_X509_REQ_NEW(out,\
+          \ req);\n        else\n            i = PEM_write"
+        metadata:
+          library: openssl
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__req.c.md
+          layer: unit_tests
+      - rank: 5
+        score: 0.708649591122011
+        distance: 0.41113466024398804
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md
+        text: "# API Constraints: PEM_read_bio_X509 (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_read_bio_X509`\n- Header/manpage: `include/openssl/pem.h`,\
+          \ `doc/man3/PEM_read_bio_PrivateKey.pod`\n- Implementation family: PEM ASN.1\
+          \ read macros and X.509 DER decode\n- Signature:\n\n```c\nX509 *PEM_read_bio_X509(BIO\
+          \ *bp, X509 **x,\n                        pem_password_cb *cb, void *u);\n\
+          ```\n\n## Semantics\n\n- Reads PEM certificate armor from a BIO and decodes\
+          \ the DER certificate into `X509`.\n- For X.509 certificates, password callback\
+          \ is normally unused unless encrypted PEM wrapper features are involved.\n\
+          \n## Return Value Semantics\n\n- Returns `X509 *` on success.\n- Returns\
+          \ `NULL` on PEM or DER parse failure.\n\n## Ownership and Buffer Constraints\n\
+          \n- Returned certificate is caller-owned and freed with `X509_free()`.\n\
+          - If `x != NULL`, the pointed object may be reused/replaced according to\
+          \ OpenSSL d2i conventions.\n\n## Harness Generation Notes\n\n- Use `B"
+        metadata:
+          library: openssl
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md
+          layer: api_constraints
+          doc_type: api_constraint
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl PEM_read_bio_PrivateKey usage example\
+        \ unit test API call pattern\",\n  \"top_k\": 5,\n  \"results\": [\n    {\n\
+        \      \"rank\": 1,\n      \"score\": 0.728013311228952,\n      \"distance\"\
+        : 0.3736012578010559,\n      \"layer\": \"unit_tests\",\n      \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/3.5.5/pem_target_api_evidence.md\",\n\
+        \      \"text\": \"# Unit Test / Example Evidence: OpenSSL PEM Target APIs\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## APIs\
+        \ Covered\\n\\n- `PEM_read_bio_PrivateKey`\\n- `PEM_read_bio_PUBKEY`\\n- `PEM_read_bio_X509`\\\
+        n- `PEM_bytes_read_bio`\\n\\n## Found Evidence\\n\\nstatus: partially_found_in_local_tests\\\
+        n\\n- `test/bio_pw_callback_test.c`\\n  - Direct encrypted/private-key callback\
+        \ coverage for `PEM_read_bio_PrivateKey()`.\\n- `test/threadstest.c`, `test/ocspapitest.c`,\
+        \ `test/x509_check_cert_pkey_test.c`\\n  - Direct `PEM_read_bio_PrivateKey()`\
+        \ usage.\\n- `test/x509_test.c`, `test/crltest.c`, `test/algorithmid_test.c`,\
+        \ `test/v3ext.c`\\n  - Direct `PEM_read_bio_X509()` usage.\\n- `engines/e_ossltest.c`\\\
+        n  - Direct `PEM_read_bio_PUBKEY()` and `PEM_read_bio_PrivateKey()` usage.\\\
+        n- `crypto/pem/pem_pkey.c`\\n  - Internal high-level key readers call `PEM_bytes_read_bio()`\
+        \ / `PEM_bytes_read_bio_secmem()`.\\n\\n## Missing Local Evidence\\n\\nstatus:\
+        \ not_found_in_local_tests\\n\\napi: `PEM_bytes_read_bio`\\n\\nsearched_paths:\\\
+        n- `/home/wen/wo\",\n      \"metadata\": {\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/3.5.5/pem_target_api_evidence.md\"\
+        ,\n        \"layer\": \"unit_tests\",\n        \"library\": \"openssl\",\n\
+        \        \"doc_type\": \"unit_test_call_pattern\"\n      }\n    },\n    {\n\
+        \      \"rank\": 2,\n      \"score\": 0.7216309501151124,\n      \"distance\"\
+        : 0.385749876499176,\n      \"layer\": \"api_constraints\",\n      \"source_file\"\
+        : \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md\"\
+        ,\n      \"text\": \"# API Constraints: PEM_read_bio_PrivateKey (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_read_bio_PrivateKey`\\n- Header/manpage: `include/openssl/pem.h`,\
+        \ `doc/man3/PEM_read_bio_PrivateKey.pod`\\n- Implementation file: `crypto/pem/pem_pkey.c`\\\
+        n- Signature:\\n\\n```c\\nEVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY\
+        \ **x,\\n                                  pem_password_cb *cb, void *u);\\\
+        n```\\n\\n## Semantics\\n\\n- Reads a PEM private key from `BIO`.\\n- Uses\
+        \ decoder path first, then legacy PEM byte extraction / DER decode fallback.\\\
+        n- Supports encrypted PEM through password callback.\\n\\n## Return Value\
+        \ Semantics\\n\\n- Returns `EVP_PKEY *` on success.\\n- Returns `NULL` on\
+        \ parse, decode, password, or unsupported-key failure; callers inspect OpenSSL\
+        \ error queue.\\n\\n## Ownership and Buffer Constraints\\n\\n- Returned key\
+        \ is caller-owned and must be freed with `EVP_PKEY_free()`.\\n- If `x != NULL`,\
+        \ any previous `*x` can be replaced/freed by the read routine.\",\n      \"\
+        metadata\": {\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md\"\
+        ,\n        \"library\": \"openssl\",\n        \"layer\": \"api_constraints\"\
+        ,\n        \"doc_type\": \"api_constraint\"\n      }\n    },\n    {\n    \
+        \  \"rank\": 3,\n      \"score\": 0.7179395669301532,\n      \"distance\"\
+        : 0.39287489652633667,\n      \"layer\": \"api_constraints\",\n      \"source_file\"\
+        : \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md\",\n\
+        \      \"text\": \"# API Constraints: PEM_read_bio_PUBKEY (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_read_bio_PUBKEY`\\n- Header/manpage: `include/openssl/pem.h`,\
+        \ `doc/man3/PEM_read_bio_PrivateKey.pod`\\n- Implementation file: `crypto/pem/pem_pkey.c`\\\
+        n- Signature:\\n\\n```c\\nEVP_PKEY *PEM_read_bio_PUBKEY(BIO *bp, EVP_PKEY\
+        \ **x,\\n                              pem_password_cb *cb, void *u);\\n```\\\
+        n\\n## Semantics\\n\\n- Reads a PEM SubjectPublicKeyInfo public key into an\
+        \ `EVP_PKEY`.\\n- Decoder path can skip unsupported PEM blocks while looking\
+        \ for a usable public key.\\n\\n## Return Value Semantics\\n\\n- Returns `EVP_PKEY\
+        \ *` on success.\\n- Returns `NULL` on parse/decode/unsupported-key failure.\\\
+        n\\n## Ownership and Buffer Constraints\\n\\n- Returned `EVP_PKEY` is caller-owned.\\\
+        n- Input memory belongs to the BIO.\\n- The API hides decoded DER buffers\
+        \ from the caller.\\n\\n## Harness Generation Notes\\n\\n- Use `BIO_new_mem_buf(public_pem,\
+        \ len)` and call `PEM_read_bio_PUBKEY()`.\\n- For `\",\n      \"metadata\"\
+        : {\n        \"layer\": \"api_constraints\",\n        \"library\": \"openssl\"\
+        ,\n        \"doc_type\": \"api_constraint\",\n        \"source_file\": \"\
+        knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md\"\n   \
+        \   }\n    },\n    {\n      \"rank\": 4,\n      \"score\": 0.7115180188017393,\n\
+        \      \"distance\": 0.40544578433036804,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__req.c.md\"\
+        ,\n      \"text\": \"# Official test/example call patterns: openssl\\n\\nLibrary:\
+        \ openssl\\nVersion: 3.5.5\\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/apps/req.c\\\
+        nKnowledge type: unit_tests_or_examples\\n\\n## Call pattern 1\\n\\n```c\\\
+        ntpubkey = X509_REQ_get0_pubkey(req);\\n        if (tpubkey == NULL) {\\n\
+        \            BIO_puts(bio_err, \\\"Modulus is unavailable\\\\n\\\");\\n  \
+        \          goto end;\\n        }\\n        BIO_puts(out, \\\"Modulus=\\\"\
+        );\\n        if (EVP_PKEY_is_a(tpubkey, \\\"RSA\\\") || EVP_PKEY_is_a(tpubkey,\
+        \ \\\"RSA-PSS\\\")) {\\n            BIGNUM *n = NULL;\\n\\n            if\
+        \ (!EVP_PKEY_get_bn_param(tpubkey, \\\"n\\\", &n))\\n                goto\
+        \ end;\\n            BN_print(out, n);\\n            BN_free(n);\\n      \
+        \  } else {\\n            BIO_puts(out, \\\"Wrong Algorithm type\\\");\\n\
+        \        }\\n        BIO_puts(out, \\\"\\\\n\\\");\\n    }\\n\\n    if (!noout\
+        \ && !gen_x509) {\\n        if (outformat == FORMAT_ASN1)\\n            i\
+        \ = i2d_X509_REQ_bio(out, req);\\n        else if (newhdr)\\n            i\
+        \ = PEM_write_bio_X509_REQ_NEW(out, req);\\n        else\\n            i =\
+        \ PEM_write\",\n      \"metadata\": {\n        \"library\": \"openssl\",\n\
+        \     "
+      stderr_preview: ''
+      truncated: true
+      kind: target_api_usage
+      use_for_feature_inference: target
+    - query: 'openssl PEM_read_bio_PrivateKey pem_parser_entrypoint encrypted_pem_path_with_password
+        malformed_or_short_base64_body decoded_buffer_length_can_be_zero_or_tiny padding_check_reads_last_byte
+        observable_asan_heap_underflow_or_safe_error  pem_parser_entrypoint encrypted_pem_path_with_password
+        malformed_or_short_base64_body observable_asan_heap_underflow_or_safe_error
+        exact_pem_check_pkcs_padding_internal_function exact_mbedtls_error_code '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.746931679381267
+        distance: 0.338810533285141
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md
+        text: "# API Constraints: PEM_read_bio_PrivateKey (OpenSSL 3.5.5)\n\nSource\
+          \ version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_read_bio_PrivateKey`\n- Header/manpage: `include/openssl/pem.h`,\
+          \ `doc/man3/PEM_read_bio_PrivateKey.pod`\n- Implementation file: `crypto/pem/pem_pkey.c`\n\
+          - Signature:\n\n```c\nEVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY\
+          \ **x,\n                                  pem_password_cb *cb, void *u);\n\
+          ```\n\n## Semantics\n\n- Reads a PEM private key from `BIO`.\n- Uses decoder\
+          \ path first, then legacy PEM byte extraction / DER decode fallback.\n-\
+          \ Supports encrypted PEM through password callback.\n\n## Return Value Semantics\n\
+          \n- Returns `EVP_PKEY *` on success.\n- Returns `NULL` on parse, decode,\
+          \ password, or unsupported-key failure; callers inspect OpenSSL error queue.\n\
+          \n## Ownership and Buffer Constraints\n\n- Returned key is caller-owned\
+          \ and must be freed with `EVP_PKEY_free()`.\n- If `x != NULL`, any previous\
+          \ `*x` can be replaced/freed by the read routine."
+        metadata:
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md
+          layer: api_constraints
+          library: openssl
+          doc_type: api_constraint
+      - rank: 2
+        score: 0.744947817359192
+        distance: 0.34237590432167053
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md
+        text: "# API Constraints: PEM_read_bio_PUBKEY (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_read_bio_PUBKEY`\n- Header/manpage: `include/openssl/pem.h`,\
+          \ `doc/man3/PEM_read_bio_PrivateKey.pod`\n- Implementation file: `crypto/pem/pem_pkey.c`\n\
+          - Signature:\n\n```c\nEVP_PKEY *PEM_read_bio_PUBKEY(BIO *bp, EVP_PKEY **x,\n\
+          \                              pem_password_cb *cb, void *u);\n```\n\n##\
+          \ Semantics\n\n- Reads a PEM SubjectPublicKeyInfo public key into an `EVP_PKEY`.\n\
+          - Decoder path can skip unsupported PEM blocks while looking for a usable\
+          \ public key.\n\n## Return Value Semantics\n\n- Returns `EVP_PKEY *` on\
+          \ success.\n- Returns `NULL` on parse/decode/unsupported-key failure.\n\n\
+          ## Ownership and Buffer Constraints\n\n- Returned `EVP_PKEY` is caller-owned.\n\
+          - Input memory belongs to the BIO.\n- The API hides decoded DER buffers\
+          \ from the caller.\n\n## Harness Generation Notes\n\n- Use `BIO_new_mem_buf(public_pem,\
+          \ len)` and call `PEM_read_bio_PUBKEY()`.\n- For `"
+        metadata:
+          doc_type: api_constraint
+          library: openssl
+          layer: api_constraints
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md
+      - rank: 3
+        score: 0.7300721470574483
+        distance: 0.36972764134407043
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_bytes_read_bio.md
+        text: "# API Constraints: PEM_bytes_read_bio (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_bytes_read_bio`\n- Header declaration: `include/openssl/pem.h`\n\
+          - Implementation file: `crypto/pem/pem_lib.c`\n- Signature:\n\n```c\nint\
+          \ PEM_bytes_read_bio(unsigned char **pdata, long *plen, char **pnm,\n  \
+          \                     const char *name, BIO *bp,\n                     \
+          \  pem_password_cb *cb, void *u);\n```\n\n## Semantics\n\n- Reads a named\
+          \ PEM block from a BIO and returns decoded bytes.\n- Uses EAY-compatible\
+          \ PEM parsing flags.\n- Encrypted PEM headers are processed through `PEM_do_header()`,\
+          \ which derives a key and calls `EVP_DecryptInit_ex()`, `EVP_DecryptUpdate()`,\
+          \ and `EVP_DecryptFinal_ex()`.\n\n## Return Value Semantics\n\n- Returns\
+          \ `1` on success.\n- Returns `0` on PEM, decrypt, password, allocation,\
+          \ or decode failure.\n\n## Ownership and Buffer Constraints\n\n- On success,\
+          \ `*pdata` points to an OpenSSL-allocated decoded buffer; caller frees with\
+          \ `"
+        metadata:
+          library: openssl
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_bytes_read_bio.md
+          doc_type: api_constraint
+          layer: api_constraints
+      - rank: 4
+        score: 0.7295111144872664
+        distance: 0.3707810342311859
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md
+        text: "# API Constraints: PEM_read_bio_X509 (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_read_bio_X509`\n- Header/manpage: `include/openssl/pem.h`,\
+          \ `doc/man3/PEM_read_bio_PrivateKey.pod`\n- Implementation family: PEM ASN.1\
+          \ read macros and X.509 DER decode\n- Signature:\n\n```c\nX509 *PEM_read_bio_X509(BIO\
+          \ *bp, X509 **x,\n                        pem_password_cb *cb, void *u);\n\
+          ```\n\n## Semantics\n\n- Reads PEM certificate armor from a BIO and decodes\
+          \ the DER certificate into `X509`.\n- For X.509 certificates, password callback\
+          \ is normally unused unless encrypted PEM wrapper features are involved.\n\
+          \n## Return Value Semantics\n\n- Returns `X509 *` on success.\n- Returns\
+          \ `NULL` on PEM or DER parse failure.\n\n## Ownership and Buffer Constraints\n\
+          \n- Returned certificate is caller-owned and freed with `X509_free()`.\n\
+          - If `x != NULL`, the pointed object may be reused/replaced according to\
+          \ OpenSSL d2i conventions.\n\n## Harness Generation Notes\n\n- Use `B"
+        metadata:
+          library: openssl
+          doc_type: api_constraint
+          layer: api_constraints
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md
+      - rank: 5
+        score: 0.7212465328583924
+        distance: 0.3864884674549103
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/pem_check_pkcs_padding.md
+        text: "# API Constraints: pem_check_pkcs_padding (mbedTLS 4.1.0 internal)\n\
+          \nSource version: `/home/wen/work/clean_sources/mbedtls-4.1.0`\n\n## API\n\
+          \n- API/function name: `pem_check_pkcs_padding`\n- Visibility: `static`\
+          \ internal helper\n- Implementation file: `tf-psa-crypto/utilities/pem.c`\n\
+          - Signature:\n\n```c\nstatic int pem_check_pkcs_padding(unsigned char *input,\n\
+          \                                  size_t input_len,\n                 \
+          \                 size_t *data_len);\n```\n\n## Parameter Semantics\n\n\
+          - `input`: decrypted PEM payload buffer, writable because the caller owns\
+          \ the decoded/decrypted temporary buffer.\n- `input_len`: number of bytes\
+          \ in `input`.\n- `data_len`: output pointer receiving the unpadded payload\
+          \ length.\n\n## Return Value Semantics\n\n- `0`: valid PKCS padding; `*data_len`\
+          \ is updated.\n- `MBEDTLS_ERR_PEM_INVALID_DATA`: `input_len < 1`.\n- `MBEDTLS_ERR_PEM_PASSWORD_MISMATCH`:\
+          \ padding byte is larger than input length or padding bytes mismatch.\n\n\
+          ## Ownership and Buffer Constraints\n\n- Does not al"
+        metadata:
+          library: mbedtls
+          layer: api_constraints
+          source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/pem_check_pkcs_padding.md
+          doc_type: api_constraint
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl PEM_read_bio_PrivateKey pem_parser_entrypoint\
+        \ encrypted_pem_path_with_password malformed_or_short_base64_body decoded_buffer_length_can_be_zero_or_tiny\
+        \ padding_check_reads_last_byte observable_asan_heap_underflow_or_safe_error\
+        \  pem_parser_entrypoint encrypted_pem_path_with_password malformed_or_short_base64_body\
+        \ observable_asan_heap_underflow_or_safe_error exact_pem_check_pkcs_padding_internal_function\
+        \ exact_mbedtls_error_code \",\n  \"top_k\": 5,\n  \"results\": [\n    {\n\
+        \      \"rank\": 1,\n      \"score\": 0.746931679381267,\n      \"distance\"\
+        : 0.338810533285141,\n      \"layer\": \"api_constraints\",\n      \"source_file\"\
+        : \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md\"\
+        ,\n      \"text\": \"# API Constraints: PEM_read_bio_PrivateKey (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_read_bio_PrivateKey`\\n- Header/manpage: `include/openssl/pem.h`,\
+        \ `doc/man3/PEM_read_bio_PrivateKey.pod`\\n- Implementation file: `crypto/pem/pem_pkey.c`\\\
+        n- Signature:\\n\\n```c\\nEVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY\
+        \ **x,\\n                                  pem_password_cb *cb, void *u);\\\
+        n```\\n\\n## Semantics\\n\\n- Reads a PEM private key from `BIO`.\\n- Uses\
+        \ decoder path first, then legacy PEM byte extraction / DER decode fallback.\\\
+        n- Supports encrypted PEM through password callback.\\n\\n## Return Value\
+        \ Semantics\\n\\n- Returns `EVP_PKEY *` on success.\\n- Returns `NULL` on\
+        \ parse, decode, password, or unsupported-key failure; callers inspect OpenSSL\
+        \ error queue.\\n\\n## Ownership and Buffer Constraints\\n\\n- Returned key\
+        \ is caller-owned and must be freed with `EVP_PKEY_free()`.\\n- If `x != NULL`,\
+        \ any previous `*x` can be replaced/freed by the read routine.\",\n      \"\
+        metadata\": {\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md\"\
+        ,\n        \"layer\": \"api_constraints\",\n        \"library\": \"openssl\"\
+        ,\n        \"doc_type\": \"api_constraint\"\n      }\n    },\n    {\n    \
+        \  \"rank\": 2,\n      \"score\": 0.744947817359192,\n      \"distance\":\
+        \ 0.34237590432167053,\n      \"layer\": \"api_constraints\",\n      \"source_file\"\
+        : \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md\",\n\
+        \      \"text\": \"# API Constraints: PEM_read_bio_PUBKEY (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_read_bio_PUBKEY`\\n- Header/manpage: `include/openssl/pem.h`,\
+        \ `doc/man3/PEM_read_bio_PrivateKey.pod`\\n- Implementation file: `crypto/pem/pem_pkey.c`\\\
+        n- Signature:\\n\\n```c\\nEVP_PKEY *PEM_read_bio_PUBKEY(BIO *bp, EVP_PKEY\
+        \ **x,\\n                              pem_password_cb *cb, void *u);\\n```\\\
+        n\\n## Semantics\\n\\n- Reads a PEM SubjectPublicKeyInfo public key into an\
+        \ `EVP_PKEY`.\\n- Decoder path can skip unsupported PEM blocks while looking\
+        \ for a usable public key.\\n\\n## Return Value Semantics\\n\\n- Returns `EVP_PKEY\
+        \ *` on success.\\n- Returns `NULL` on parse/decode/unsupported-key failure.\\\
+        n\\n## Ownership and Buffer Constraints\\n\\n- Returned `EVP_PKEY` is caller-owned.\\\
+        n- Input memory belongs to the BIO.\\n- The API hides decoded DER buffers\
+        \ from the caller.\\n\\n## Harness Generation Notes\\n\\n- Use `BIO_new_mem_buf(public_pem,\
+        \ len)` and call `PEM_read_bio_PUBKEY()`.\\n- For `\",\n      \"metadata\"\
+        : {\n        \"doc_type\": \"api_constraint\",\n        \"library\": \"openssl\"\
+        ,\n        \"layer\": \"api_constraints\",\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 3,\n      \"score\": 0.7300721470574483,\n\
+        \      \"distance\": 0.36972764134407043,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_bytes_read_bio.md\"\
+        ,\n      \"text\": \"# API Constraints: PEM_bytes_read_bio (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_bytes_read_bio`\\n- Header declaration: `include/openssl/pem.h`\\\
+        n- Implementation file: `crypto/pem/pem_lib.c`\\n- Signature:\\n\\n```c\\\
+        nint PEM_bytes_read_bio(unsigned char **pdata, long *plen, char **pnm,\\n\
+        \                       const char *name, BIO *bp,\\n                    \
+        \   pem_password_cb *cb, void *u);\\n```\\n\\n## Semantics\\n\\n- Reads a\
+        \ named PEM block from a BIO and returns decoded bytes.\\n- Uses EAY-compatible\
+        \ PEM parsing flags.\\n- Encrypted PEM headers are processed through `PEM_do_header()`,\
+        \ which derives a key and calls `EVP_DecryptInit_ex()`, `EVP_DecryptUpdate()`,\
+        \ and `EVP_DecryptFinal_ex()`.\\n\\n## Return Value Semantics\\n\\n- Returns\
+        \ `1` on success.\\n- Returns `0` on PEM, decrypt, password, allocation, or\
+        \ decode failure.\\n\\n## Ownership and Buffer Constraints\\n\\n- On success,\
+        \ `*pdata` points to an OpenSSL-allocated decoded buffer; caller frees with\
+        \ `\",\n      \"metadata\": {\n        \"library\": \"openssl\",\n       \
+        \ \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_bytes_read_bio.md\"\
+        ,\n        \"doc_type\": \"api_constraint\",\n        \"layer\": \"api_constraints\"\
+        \n      }\n    },\n    {\n      \"rank\": 4,\n      \"score\": 0.7295111144872664,\n\
+        \      \"distance\": 0.3707810342311859,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md\"\
+        ,\n      \"text\": \"# API Constraints: PEM_read_bio_X509 (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_read_bio_X509`\\n- Header/manpage: `include/openssl/pem.h`,\
+        \ `doc/man3/PEM_read_bio_PrivateKey.pod`\\n- Implementation family: PEM ASN.1\
+        \ read macros and X.509 DER decode\\n- Signature:\\n\\n```c\\nX509 *PEM_read_bio_X509(BIO\
+        \ *bp, X509 **x,\\n                        pem_password_cb *cb, void *u);\\\
+        n```\\n\\n## Semantics\\n\\n- Reads PEM certificate armor from a BIO and decodes\
+        \ the DER certificate into `X509`.\\n- For X.509 certificates, password callback\
+        \ is normally unused unless encrypted PEM wrapper features are involved.\\\
+        n\\n## Return Value Semantics\\n\\n- Returns `X509 *` on success.\\n- Returns\
+        \ `NULL` on PEM or DER parse"
+      stderr_preview: ''
+      truncated: true
+      kind: vulnerability_path_compatibility
+      use_for_feature_inference: target
+    inferred_features:
+      observed_features_from_target_evidence:
+      - encrypted_pem_path_with_password
+      - library_allocated_output
+      - malformed_or_short_base64_body
+      - observable_asan_heap_underflow_or_safe_error
+      - pem_parser_entrypoint
+      - signed_or_negative_encoding
+      negative_or_weakened_features:
+      - exact_mbedtls_error_code
+      - exact_pem_check_pkcs_padding_internal_function
+      effective_observed_features:
+      - encrypted_pem_path_with_password
+      - library_allocated_output
+      - malformed_or_short_base64_body
+      - observable_asan_heap_underflow_or_safe_error
+      - pem_parser_entrypoint
+      - signed_or_negative_encoding
+      feature_conflicts: []
+      candidate_preserved_features:
+      - encrypted_pem_path_with_password
+      - malformed_or_short_base64_body
+      - observable_asan_heap_underflow_or_safe_error
+      - pem_parser_entrypoint
+      candidate_lost_or_weakened_features:
+      - exact_mbedtls_error_code
+      - exact_pem_check_pkcs_padding_internal_function
+      bug_class_requirements:
+        required: []
+        disallowed: []
+        optional: []
+      required_present: []
+      required_missing: []
+      disallowed_present: []
+      optional_present: []
+      evidence_hits:
+        library_allocated_output:
+          positive_hits:
+          - must be freed
+          negative_hits: []
+        signed_or_negative_encoding:
+          positive_hits:
+          - signed
+          negative_hits: []
+- target_library: openssl
+  target_api: PEM_read_bio_ECPrivateKey
+  library: openssl
+  api: PEM_read_bio_ECPrivateKey
+  source_template_id: PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW
+  source_api: mbedtls_pem_read_buffer
+  decision: needs_llm_review
+  migration_applicability: applicable_with_limitations
+  applicability: weak_candidate
+  scores:
+    operation_family: 88
+    function_behavior: 82
+    parameter_structure: 78
+    vulnerability_path: 72
+    harness_feasibility: 82
+    final: 80
+  preserved_features:
+  - PEM_read_bio_ECPrivateKey parses EC-specific encrypted PEM keys
+  - reaches the same base64 decode and padding path as PEM_read_bio_PrivateKey
+  - returns NULL on failure
+  preserved_vulnerability_features:
+  - pem_parser_entrypoint
+  - encrypted_pem_path_with_password
+  - malformed_or_short_base64_body
+  weakened_features:
+  - EC-specific; less generic than PEM_read_bio_PrivateKey
+  - same OpenSSL PEM path; no additional vulnerability coverage
+  lost_or_weakened_features:
+  - exact_mbedtls_error_code
+  migration_reason: 'EC-specific variant with the same internal path as PEM_read_bio_PrivateKey.
+    Use PEM_read_bio_PrivateKey as the primary target. This candidate provides no
+    additional vulnerability path coverage.
+
+    '
+  notes:
+  - Keep as secondary context evidence; prefer PEM_read_bio_PrivateKey.
+  evidence:
+    top_k: 5
+    queries:
+    - query: ' '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.5070700252966565
+        distance: 0.9721142053604126
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+        text: "FF\",\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000FFFFFFFF00\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"000000000000000000000000000000000000000000000000000000"
+        metadata:
+          library: openssl
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+          doc_type: unit_test_call_pattern
+      - rank: 2
+        score: 0.5064631252680277
+        distance: 0.9744774103164673
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md
+        text: "E0EC65228B3937E498\",\n        \"63E4C6D3B23B0C849CF84241484BFE48F61D59A5B16BA06E6E12D1DA27C5249A\"\
+          ,\n        \"421DEBD61B62EAB6746434EBC3CC315E32220B3BADD50BDC4C4E6C147FEDD43D\"\
+          ,\n        \"0680512BCBB42C07D47349D2153B70C4E5D7FDFCBFA36EA1A85841B9E46E09A2\"\
+          ,\n        \"8542D69E4C044F18E8B92435BF6FF7DD297720630485628D5AE74EE7C32E79B7\"\
+          ,\n        \"1\");\n\n    if (!TEST_ptr(test_group))\n        goto done;\n\
+          \n    if (!TEST_true(test_sm2_sign(\n            test_group,\n         \
+          \   \"ALICE123@YAHOO.COM\",\n            \"128B2FA8BD433C6C068C8D803DFF79792A519A55171B1B650C23661D15897263\"\
+          ,\n            \"message digest\",\n            \"006CB28D99385C175C94F94E934817663FC176D925DD72B727260DBAAE1FB2F96F\"\
+          \n            \"007c47811054c6f99613a578eb8453706ccb96384fe7df5c171671e760bfa8be3a\"\
+          ,\n```"
+        metadata:
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md
+          library: openssl
+          layer: unit_tests
+      - rank: 3
+        score: 0.4993900358310789
+        distance: 1.0024428367614746
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+        text: "8787878787878787878787878787878\"\n              \"7878787878787878787878787878787878787878787878787878787878787878\"\
+          \n              \"7878787878787878787878787878787878787878787878787878787878787878\"\
+          \n              \"7878787878787878787878787878787878787878787878787878787878787878\"\
+          ))\n            && TEST_true(BN_hex2bn(&b,\n                \"095D72C08C097BA488C5E439C655A192EAFB6380073D8C2664668EDDB4060744\"\
+          \n                \"E16E57FB4EDB9AE10A0CEFCDC28A894F689A128379DB279D48A2E20849D68593\"\
+          \n                \"9B7803BCF46CEBF5C533FB0DD35B080593DE5472E3FE5DB951B8BFF9B4CB8F03\"\
+          \n                \"9CC638A5EE8CDD703719F8000E6A9F63BEED5F2FCD52FF293EA05A251BB4AB81\"\
+          ))\n            && TEST_true(BN_hex2bn(&n,\n```\n\n## Call pattern 62\n\n\
+          ```c\ngoto err;\n\n    if (!(TEST_true(BN_MONT_CTX_set(mont, n, ctx))\n\
+          \            && TEST_true(BN_mod_mul_montgomery(c, a, b, mont, ctx))\n \
+          \           && TEST_true(BN_mod_mul_montgomery(d, b, a, mont, ctx))\n  \
+          \          && TEST_BN_eq(c, d)))\n        goto err;\n\n    /* Regression\
+          \ test for ca"
+        metadata:
+          library: openssl
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+      - rank: 4
+        score: 0.49467344660620705
+        distance: 1.0215356349945068
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md
+        text: "D_BOTTOM_ODD);\n    BN_rand(a2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY);\n\
+          \    BN_rand(b2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY);\n  \
+          \  BN_rand(m2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ODD);\n\n  \
+          \  if (!TEST_true(BN_mod(a1, a1, m1, ctx))\n        || !TEST_true(BN_mod(b1,\
+          \ b1, m1, ctx))\n        || !TEST_true(BN_mod(a2, a2, m2, ctx))\n      \
+          \  || !TEST_true(BN_mod(b2, b2, m2, ctx))\n        || !TEST_true(BN_mod_exp_simple(r_simple1,\
+          \ a1, b1, m1, ctx))\n        || !TEST_true(BN_mod_exp_simple(r_simple2,\
+          \ a2, b2, m2, ctx))\n        || !TEST_true(BN_mod_exp_mont_consttime_x2(r_mont_const_x2_1,\
+          \ a1, b1, m1, NULL,\n            r_mont_const_x2_2, a2, b2, m2, NULL,\n\
+          \            ctx)))\n        goto err;\n\n    if (!TEST_BN_eq(r_simple1,\
+          \ r_mont_const_x2_1)\n        || !TEST_BN_eq(r_simple2, r_mont_const_x2_2))\
+          \ {\n        if (BN_cmp(r_simple1, r_mont_const_x2_1) != 0)\n          \
+          \  TEST_info(\"simple and mont const time x2 (#1) results differ\");\n```\n\
+          \n## Call pattern 29\n\n```c\nfactor_size = 2048"
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md
+          doc_type: unit_test_call_pattern
+          library: openssl
+          layer: unit_tests
+      - rank: 5
+        score: 0.4944104082232621
+        distance: 1.022611141204834
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+        text: "FFFFFFFFFFFFFFFFFFFFFF\",\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000FFFFFFFF00\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"00000000000000000000000000000000000000000000000000FFFFFFFFFFFFFF\"\
+          ,\n    NULL\n};\n\nstatic const char *bn2stri"
+        metadata:
+          library: openssl
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+      error: ''
+      stdout_preview: "{\n  \"query\": \" \",\n  \"top_k\": 5,\n  \"results\": [\n\
+        \    {\n      \"rank\": 1,\n      \"score\": 0.5070700252966565,\n      \"\
+        distance\": 0.9721142053604126,\n      \"layer\": \"unit_tests\",\n      \"\
+        source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n      \"text\": \"FF\\\",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000FFFFFFFF00\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"000000000000000000000000000000000000000000000000000000\",\n\
+        \      \"metadata\": {\n        \"library\": \"openssl\",\n        \"layer\"\
+        : \"unit_tests\",\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n        \"doc_type\": \"unit_test_call_pattern\"\n      }\n    },\n   \
+        \ {\n      \"rank\": 2,\n      \"score\": 0.5064631252680277,\n      \"distance\"\
+        : 0.9744774103164673,\n      \"layer\": \"unit_tests\",\n      \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md\"\
+        ,\n      \"text\": \"E0EC65228B3937E498\\\",\\n        \\\"63E4C6D3B23B0C849CF84241484BFE48F61D59A5B16BA06E6E12D1DA27C5249A\\\
+        \",\\n        \\\"421DEBD61B62EAB6746434EBC3CC315E32220B3BADD50BDC4C4E6C147FEDD43D\\\
+        \",\\n        \\\"0680512BCBB42C07D47349D2153B70C4E5D7FDFCBFA36EA1A85841B9E46E09A2\\\
+        \",\\n        \\\"8542D69E4C044F18E8B92435BF6FF7DD297720630485628D5AE74EE7C32E79B7\\\
+        \",\\n        \\\"1\\\");\\n\\n    if (!TEST_ptr(test_group))\\n        goto\
+        \ done;\\n\\n    if (!TEST_true(test_sm2_sign(\\n            test_group,\\\
+        n            \\\"ALICE123@YAHOO.COM\\\",\\n            \\\"128B2FA8BD433C6C068C8D803DFF79792A519A55171B1B650C23661D15897263\\\
+        \",\\n            \\\"message digest\\\",\\n            \\\"006CB28D99385C175C94F94E934817663FC176D925DD72B727260DBAAE1FB2F96F\\\
+        \"\\n            \\\"007c47811054c6f99613a578eb8453706ccb96384fe7df5c171671e760bfa8be3a\\\
+        \",\\n```\",\n      \"metadata\": {\n        \"doc_type\": \"unit_test_call_pattern\"\
+        ,\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md\"\
+        ,\n        \"library\": \"openssl\",\n        \"layer\": \"unit_tests\"\n\
+        \      }\n    },\n    {\n      \"rank\": 3,\n      \"score\": 0.4993900358310789,\n\
+        \      \"distance\": 1.0024428367614746,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n      \"text\": \"8787878787878787878787878787878\\\"\\n              \\\
+        \"7878787878787878787878787878787878787878787878787878787878787878\\\"\\n\
+        \              \\\"7878787878787878787878787878787878787878787878787878787878787878\\\
+        \"\\n              \\\"7878787878787878787878787878787878787878787878787878787878787878\\\
+        \"))\\n            && TEST_true(BN_hex2bn(&b,\\n                \\\"095D72C08C097BA488C5E439C655A192EAFB6380073D8C2664668EDDB4060744\\\
+        \"\\n                \\\"E16E57FB4EDB9AE10A0CEFCDC28A894F689A128379DB279D48A2E20849D68593\\\
+        \"\\n                \\\"9B7803BCF46CEBF5C533FB0DD35B080593DE5472E3FE5DB951B8BFF9B4CB8F03\\\
+        \"\\n                \\\"9CC638A5EE8CDD703719F8000E6A9F63BEED5F2FCD52FF293EA05A251BB4AB81\\\
+        \"))\\n            && TEST_true(BN_hex2bn(&n,\\n```\\n\\n## Call pattern 62\\\
+        n\\n```c\\ngoto err;\\n\\n    if (!(TEST_true(BN_MONT_CTX_set(mont, n, ctx))\\\
+        n            && TEST_true(BN_mod_mul_montgomery(c, a, b, mont, ctx))\\n  \
+        \          && TEST_true(BN_mod_mul_montgomery(d, b, a, mont, ctx))\\n    \
+        \        && TEST_BN_eq(c, d)))\\n        goto err;\\n\\n    /* Regression\
+        \ test for ca\",\n      \"metadata\": {\n        \"library\": \"openssl\"\
+        ,\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n        \"layer\": \"unit_tests\",\n        \"doc_type\": \"unit_test_call_pattern\"\
+        \n      }\n    },\n    {\n      \"rank\": 4,\n      \"score\": 0.49467344660620705,\n\
+        \      \"distance\": 1.0215356349945068,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md\"\
+        ,\n      \"text\": \"D_BOTTOM_ODD);\\n    BN_rand(a2, factor_size, BN_RAND_TOP_ONE,\
+        \ BN_RAND_BOTTOM_ANY);\\n    BN_rand(b2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY);\\\
+        n    BN_rand(m2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ODD);\\n\\n\
+        \    if (!TEST_true(BN_mod(a1, a1, m1, ctx))\\n        || !TEST_true(BN_mod(b1,\
+        \ b1, m1, ctx))\\n        || !TEST_true(BN_mod(a2, a2, m2, ctx))\\n      \
+        \  || !TEST_true(BN_mod(b2, b2, m2, ctx))\\n        || !TEST_true(BN_mod_exp_simple(r_simple1,\
+        \ a1, b1, m1, ctx))\\n        || !TEST_true(BN_mod_exp_simple(r_simple2, a2,\
+        \ b2, m2, ctx))\\n        || !TEST_true(BN_mod_exp_mont_consttime_x2(r_mont_const_x2_1,\
+        \ a1, b1, m1, NULL,\\n            r_mont_const_x2_2, a2, b2, m2, NULL,\\n\
+        \            ctx)))\\n        goto err;\\n\\n    if (!TEST_BN_eq(r_simple1,\
+        \ r_mont_const_x2_1)\\n        || !TEST_BN_eq(r_simple2, r_mont_const_x2_2))\
+        \ {\\n        if (BN_cmp(r_simple1, r_mont_const_x2_1) != 0)\\n          \
+        \  TEST_info(\\\"simple and mont const time x2 (#1) results differ\\\");\\\
+        n```\\n\\n## Call pattern 29\\n\\n```c\\nfactor_size = 2048\",\n      \"metadata\"\
+        : {\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md\"\
+        ,\n        \""
+      stderr_preview: ''
+      truncated: true
+      kind: source_pattern
+      use_for_feature_inference: source_only
+    - query: openssl PEM_read_bio_ECPrivateKey function declaration signature parameters
+        return value
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7134552387552299
+        distance: 0.40162962675094604
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md
+        text: "# API Constraints: PEM_read_bio_PrivateKey (OpenSSL 3.5.5)\n\nSource\
+          \ version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_read_bio_PrivateKey`\n- Header/manpage: `include/openssl/pem.h`,\
+          \ `doc/man3/PEM_read_bio_PrivateKey.pod`\n- Implementation file: `crypto/pem/pem_pkey.c`\n\
+          - Signature:\n\n```c\nEVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY\
+          \ **x,\n                                  pem_password_cb *cb, void *u);\n\
+          ```\n\n## Semantics\n\n- Reads a PEM private key from `BIO`.\n- Uses decoder\
+          \ path first, then legacy PEM byte extraction / DER decode fallback.\n-\
+          \ Supports encrypted PEM through password callback.\n\n## Return Value Semantics\n\
+          \n- Returns `EVP_PKEY *` on success.\n- Returns `NULL` on parse, decode,\
+          \ password, or unsupported-key failure; callers inspect OpenSSL error queue.\n\
+          \n## Ownership and Buffer Constraints\n\n- Returned key is caller-owned\
+          \ and must be freed with `EVP_PKEY_free()`.\n- If `x != NULL`, any previous\
+          \ `*x` can be replaced/freed by the read routine."
+        metadata:
+          layer: api_constraints
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md
+          doc_type: api_constraint
+          library: openssl
+      - rank: 2
+        score: 0.7060365601198677
+        distance: 0.41635724902153015
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md
+        text: "# API Constraints: PEM_read_bio_PUBKEY (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_read_bio_PUBKEY`\n- Header/manpage: `include/openssl/pem.h`,\
+          \ `doc/man3/PEM_read_bio_PrivateKey.pod`\n- Implementation file: `crypto/pem/pem_pkey.c`\n\
+          - Signature:\n\n```c\nEVP_PKEY *PEM_read_bio_PUBKEY(BIO *bp, EVP_PKEY **x,\n\
+          \                              pem_password_cb *cb, void *u);\n```\n\n##\
+          \ Semantics\n\n- Reads a PEM SubjectPublicKeyInfo public key into an `EVP_PKEY`.\n\
+          - Decoder path can skip unsupported PEM blocks while looking for a usable\
+          \ public key.\n\n## Return Value Semantics\n\n- Returns `EVP_PKEY *` on\
+          \ success.\n- Returns `NULL` on parse/decode/unsupported-key failure.\n\n\
+          ## Ownership and Buffer Constraints\n\n- Returned `EVP_PKEY` is caller-owned.\n\
+          - Input memory belongs to the BIO.\n- The API hides decoded DER buffers\
+          \ from the caller.\n\n## Harness Generation Notes\n\n- Use `BIO_new_mem_buf(public_pem,\
+          \ len)` and call `PEM_read_bio_PUBKEY()`.\n- For `"
+        metadata:
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md
+          library: openssl
+          doc_type: api_constraint
+          layer: api_constraints
+      - rank: 3
+        score: 0.6938245488895807
+        distance: 0.441286563873291
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_bytes_read_bio.md
+        text: "# API Constraints: PEM_bytes_read_bio (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_bytes_read_bio`\n- Header declaration: `include/openssl/pem.h`\n\
+          - Implementation file: `crypto/pem/pem_lib.c`\n- Signature:\n\n```c\nint\
+          \ PEM_bytes_read_bio(unsigned char **pdata, long *plen, char **pnm,\n  \
+          \                     const char *name, BIO *bp,\n                     \
+          \  pem_password_cb *cb, void *u);\n```\n\n## Semantics\n\n- Reads a named\
+          \ PEM block from a BIO and returns decoded bytes.\n- Uses EAY-compatible\
+          \ PEM parsing flags.\n- Encrypted PEM headers are processed through `PEM_do_header()`,\
+          \ which derives a key and calls `EVP_DecryptInit_ex()`, `EVP_DecryptUpdate()`,\
+          \ and `EVP_DecryptFinal_ex()`.\n\n## Return Value Semantics\n\n- Returns\
+          \ `1` on success.\n- Returns `0` on PEM, decrypt, password, allocation,\
+          \ or decode failure.\n\n## Ownership and Buffer Constraints\n\n- On success,\
+          \ `*pdata` points to an OpenSSL-allocated decoded buffer; caller frees with\
+          \ `"
+        metadata:
+          layer: api_constraints
+          library: openssl
+          doc_type: api_constraint
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_bytes_read_bio.md
+      - rank: 4
+        score: 0.6918366980437257
+        distance: 0.445427805185318
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md
+        text: "# API Constraints: PEM_read_bio_X509 (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_read_bio_X509`\n- Header/manpage: `include/openssl/pem.h`,\
+          \ `doc/man3/PEM_read_bio_PrivateKey.pod`\n- Implementation family: PEM ASN.1\
+          \ read macros and X.509 DER decode\n- Signature:\n\n```c\nX509 *PEM_read_bio_X509(BIO\
+          \ *bp, X509 **x,\n                        pem_password_cb *cb, void *u);\n\
+          ```\n\n## Semantics\n\n- Reads PEM certificate armor from a BIO and decodes\
+          \ the DER certificate into `X509`.\n- For X.509 certificates, password callback\
+          \ is normally unused unless encrypted PEM wrapper features are involved.\n\
+          \n## Return Value Semantics\n\n- Returns `X509 *` on success.\n- Returns\
+          \ `NULL` on PEM or DER parse failure.\n\n## Ownership and Buffer Constraints\n\
+          \n- Returned certificate is caller-owned and freed with `X509_free()`.\n\
+          - If `x != NULL`, the pointed object may be reused/replaced according to\
+          \ OpenSSL d2i conventions.\n\n## Harness Generation Notes\n\n- Use `B"
+        metadata:
+          layer: api_constraints
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md
+          doc_type: api_constraint
+          library: openssl
+      - rank: 5
+        score: 0.6900844000567296
+        distance: 0.4490981101989746
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__genrsa.c.md
+        text: "PKEY_get_bn_param(pkey, \"e\", &e);\n        if (e == NULL) {\n   \
+          \         BIO_printf(bio_err, \"Error cannot access RSA e\\n\");\n     \
+          \       goto end;\n        }\n        hexe = BN_bn2hex(e);\n        dece\
+          \ = BN_bn2dec(e);\n        if (hexe && dece) {\n            BIO_printf(bio_err,\
+          \ \"e is %s (0x%s)\\n\", dece, hexe);\n        }\n        OPENSSL_free(hexe);\n\
+          \        OPENSSL_free(dece);\n        BN_free(e);\n    }\n    if (traditional)\
+          \ {\n        if (!PEM_write_bio_PrivateKey_traditional(out, pkey, enc, NULL,\
+          \ 0,\n                NULL, passout))\n            goto end;\n    } else\
+          \ {\n        if (!PEM_write_bio_PrivateKey(out, pkey, enc, NULL, 0, NULL,\
+          \ passout))\n            goto end;\n    }\n\n    ret = 0;\nend:\n    BN_free(bn);\n\
+          \    BN_GENCB_free(cb);\n    EVP_PKEY_CTX_free(ctx);\n    EVP_PKEY_free(pkey);\n\
+          \    EVP_CIPHER_free(enc);\n    BIO_free_all(out);\n    release_engine(eng);\n\
+          \    OPENSSL_free(passout);\n```\n\n## Call pattern 4\n\n```c\ngoto end;\n\
+          \n    if (verbose) {\n        BIGNUM *e = NULL;\n\n        /* Every RSA\
+          \ key has an"
+        metadata:
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__genrsa.c.md
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+          library: openssl
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl PEM_read_bio_ECPrivateKey function\
+        \ declaration signature parameters return value\",\n  \"top_k\": 5,\n  \"\
+        results\": [\n    {\n      \"rank\": 1,\n      \"score\": 0.7134552387552299,\n\
+        \      \"distance\": 0.40162962675094604,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md\"\
+        ,\n      \"text\": \"# API Constraints: PEM_read_bio_PrivateKey (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_read_bio_PrivateKey`\\n- Header/manpage: `include/openssl/pem.h`,\
+        \ `doc/man3/PEM_read_bio_PrivateKey.pod`\\n- Implementation file: `crypto/pem/pem_pkey.c`\\\
+        n- Signature:\\n\\n```c\\nEVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY\
+        \ **x,\\n                                  pem_password_cb *cb, void *u);\\\
+        n```\\n\\n## Semantics\\n\\n- Reads a PEM private key from `BIO`.\\n- Uses\
+        \ decoder path first, then legacy PEM byte extraction / DER decode fallback.\\\
+        n- Supports encrypted PEM through password callback.\\n\\n## Return Value\
+        \ Semantics\\n\\n- Returns `EVP_PKEY *` on success.\\n- Returns `NULL` on\
+        \ parse, decode, password, or unsupported-key failure; callers inspect OpenSSL\
+        \ error queue.\\n\\n## Ownership and Buffer Constraints\\n\\n- Returned key\
+        \ is caller-owned and must be freed with `EVP_PKEY_free()`.\\n- If `x != NULL`,\
+        \ any previous `*x` can be replaced/freed by the read routine.\",\n      \"\
+        metadata\": {\n        \"layer\": \"api_constraints\",\n        \"source_file\"\
+        : \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md\"\
+        ,\n        \"doc_type\": \"api_constraint\",\n        \"library\": \"openssl\"\
+        \n      }\n    },\n    {\n      \"rank\": 2,\n      \"score\": 0.7060365601198677,\n\
+        \      \"distance\": 0.41635724902153015,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md\"\
+        ,\n      \"text\": \"# API Constraints: PEM_read_bio_PUBKEY (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_read_bio_PUBKEY`\\n- Header/manpage: `include/openssl/pem.h`,\
+        \ `doc/man3/PEM_read_bio_PrivateKey.pod`\\n- Implementation file: `crypto/pem/pem_pkey.c`\\\
+        n- Signature:\\n\\n```c\\nEVP_PKEY *PEM_read_bio_PUBKEY(BIO *bp, EVP_PKEY\
+        \ **x,\\n                              pem_password_cb *cb, void *u);\\n```\\\
+        n\\n## Semantics\\n\\n- Reads a PEM SubjectPublicKeyInfo public key into an\
+        \ `EVP_PKEY`.\\n- Decoder path can skip unsupported PEM blocks while looking\
+        \ for a usable public key.\\n\\n## Return Value Semantics\\n\\n- Returns `EVP_PKEY\
+        \ *` on success.\\n- Returns `NULL` on parse/decode/unsupported-key failure.\\\
+        n\\n## Ownership and Buffer Constraints\\n\\n- Returned `EVP_PKEY` is caller-owned.\\\
+        n- Input memory belongs to the BIO.\\n- The API hides decoded DER buffers\
+        \ from the caller.\\n\\n## Harness Generation Notes\\n\\n- Use `BIO_new_mem_buf(public_pem,\
+        \ len)` and call `PEM_read_bio_PUBKEY()`.\\n- For `\",\n      \"metadata\"\
+        : {\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md\"\
+        ,\n        \"library\": \"openssl\",\n        \"doc_type\": \"api_constraint\"\
+        ,\n        \"layer\": \"api_constraints\"\n      }\n    },\n    {\n      \"\
+        rank\": 3,\n      \"score\": 0.6938245488895807,\n      \"distance\": 0.441286563873291,\n\
+        \      \"layer\": \"api_constraints\",\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_bytes_read_bio.md\"\
+        ,\n      \"text\": \"# API Constraints: PEM_bytes_read_bio (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_bytes_read_bio`\\n- Header declaration: `include/openssl/pem.h`\\\
+        n- Implementation file: `crypto/pem/pem_lib.c`\\n- Signature:\\n\\n```c\\\
+        nint PEM_bytes_read_bio(unsigned char **pdata, long *plen, char **pnm,\\n\
+        \                       const char *name, BIO *bp,\\n                    \
+        \   pem_password_cb *cb, void *u);\\n```\\n\\n## Semantics\\n\\n- Reads a\
+        \ named PEM block from a BIO and returns decoded bytes.\\n- Uses EAY-compatible\
+        \ PEM parsing flags.\\n- Encrypted PEM headers are processed through `PEM_do_header()`,\
+        \ which derives a key and calls `EVP_DecryptInit_ex()`, `EVP_DecryptUpdate()`,\
+        \ and `EVP_DecryptFinal_ex()`.\\n\\n## Return Value Semantics\\n\\n- Returns\
+        \ `1` on success.\\n- Returns `0` on PEM, decrypt, password, allocation, or\
+        \ decode failure.\\n\\n## Ownership and Buffer Constraints\\n\\n- On success,\
+        \ `*pdata` points to an OpenSSL-allocated decoded buffer; caller frees with\
+        \ `\",\n      \"metadata\": {\n        \"layer\": \"api_constraints\",\n \
+        \       \"library\": \"openssl\",\n        \"doc_type\": \"api_constraint\"\
+        ,\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_bytes_read_bio.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 4,\n      \"score\": 0.6918366980437257,\n\
+        \      \"distance\": 0.445427805185318,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md\"\
+        ,\n      \"text\": \"# API Constraints: PEM_read_bio_X509 (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_read_bio_X509`\\n- Header/manpage: `include/openssl/pem.h`,\
+        \ `doc/man3/PEM_read_bio_PrivateKey.pod`\\n- Implementation family: PEM ASN.1\
+        \ read macros and X.509 DER decode\\n- Signature:\\n\\n```c\\nX509 *PEM_read_bio_X509(BIO\
+        \ *bp, X509 **x,\\n                        pem_password_cb *cb, void *u);\\\
+        n```\\n\\n## Semantics\\n\\n- Reads PEM certificate armor from a BIO and decodes\
+        \ the DER certificate into `X509`.\\n- For X.509 certificates, password callback\
+        \ is normally unused unless encrypted PEM wrapper features are involved.\\\
+        n\\n## Return Value Semantics\\n\\n- Returns `X509 *` on success.\\n- Returns\
+        \ `NULL` on PEM or DER parse failure.\\n\\n## Ownership and Buffer Constraints\\\
+        n\\n- Returned certificate is caller-owned and freed with `X509_free()`.\\\
+        n- If `x != NULL`, the pointed object may be reused/replaced according to\
+        \ OpenSSL d2i conventions.\\n\\n## Harness Generation Notes\\n\\n- Use `B\"\
+        ,\n      \"metadata\": {\n        \"layer\": \"api_constraints\",\n      \
+        \  \"source_file\": \"knowl"
+      stderr_preview: ''
+      truncated: true
+      kind: target_api_signature
+      use_for_feature_inference: target
+    - query: openssl PEM_read_bio_ECPrivateKey implementation source code parameters
+        return error
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7405102626903936
+        distance: 0.35042017698287964
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md
+        text: "# API Constraints: PEM_read_bio_PUBKEY (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_read_bio_PUBKEY`\n- Header/manpage: `include/openssl/pem.h`,\
+          \ `doc/man3/PEM_read_bio_PrivateKey.pod`\n- Implementation file: `crypto/pem/pem_pkey.c`\n\
+          - Signature:\n\n```c\nEVP_PKEY *PEM_read_bio_PUBKEY(BIO *bp, EVP_PKEY **x,\n\
+          \                              pem_password_cb *cb, void *u);\n```\n\n##\
+          \ Semantics\n\n- Reads a PEM SubjectPublicKeyInfo public key into an `EVP_PKEY`.\n\
+          - Decoder path can skip unsupported PEM blocks while looking for a usable\
+          \ public key.\n\n## Return Value Semantics\n\n- Returns `EVP_PKEY *` on\
+          \ success.\n- Returns `NULL` on parse/decode/unsupported-key failure.\n\n\
+          ## Ownership and Buffer Constraints\n\n- Returned `EVP_PKEY` is caller-owned.\n\
+          - Input memory belongs to the BIO.\n- The API hides decoded DER buffers\
+          \ from the caller.\n\n## Harness Generation Notes\n\n- Use `BIO_new_mem_buf(public_pem,\
+          \ len)` and call `PEM_read_bio_PUBKEY()`.\n- For `"
+        metadata:
+          library: openssl
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md
+          layer: api_constraints
+          doc_type: api_constraint
+      - rank: 2
+        score: 0.7315271976082329
+        distance: 0.3670031726360321
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md
+        text: "# API Constraints: PEM_read_bio_PrivateKey (OpenSSL 3.5.5)\n\nSource\
+          \ version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_read_bio_PrivateKey`\n- Header/manpage: `include/openssl/pem.h`,\
+          \ `doc/man3/PEM_read_bio_PrivateKey.pod`\n- Implementation file: `crypto/pem/pem_pkey.c`\n\
+          - Signature:\n\n```c\nEVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY\
+          \ **x,\n                                  pem_password_cb *cb, void *u);\n\
+          ```\n\n## Semantics\n\n- Reads a PEM private key from `BIO`.\n- Uses decoder\
+          \ path first, then legacy PEM byte extraction / DER decode fallback.\n-\
+          \ Supports encrypted PEM through password callback.\n\n## Return Value Semantics\n\
+          \n- Returns `EVP_PKEY *` on success.\n- Returns `NULL` on parse, decode,\
+          \ password, or unsupported-key failure; callers inspect OpenSSL error queue.\n\
+          \n## Ownership and Buffer Constraints\n\n- Returned key is caller-owned\
+          \ and must be freed with `EVP_PKEY_free()`.\n- If `x != NULL`, any previous\
+          \ `*x` can be replaced/freed by the read routine."
+        metadata:
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md
+          doc_type: api_constraint
+          layer: api_constraints
+          library: openssl
+      - rank: 3
+        score: 0.7077351967996961
+        distance: 0.4129578471183777
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md
+        text: "# API Constraints: PEM_read_bio_X509 (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_read_bio_X509`\n- Header/manpage: `include/openssl/pem.h`,\
+          \ `doc/man3/PEM_read_bio_PrivateKey.pod`\n- Implementation family: PEM ASN.1\
+          \ read macros and X.509 DER decode\n- Signature:\n\n```c\nX509 *PEM_read_bio_X509(BIO\
+          \ *bp, X509 **x,\n                        pem_password_cb *cb, void *u);\n\
+          ```\n\n## Semantics\n\n- Reads PEM certificate armor from a BIO and decodes\
+          \ the DER certificate into `X509`.\n- For X.509 certificates, password callback\
+          \ is normally unused unless encrypted PEM wrapper features are involved.\n\
+          \n## Return Value Semantics\n\n- Returns `X509 *` on success.\n- Returns\
+          \ `NULL` on PEM or DER parse failure.\n\n## Ownership and Buffer Constraints\n\
+          \n- Returned certificate is caller-owned and freed with `X509_free()`.\n\
+          - If `x != NULL`, the pointed object may be reused/replaced according to\
+          \ OpenSSL d2i conventions.\n\n## Harness Generation Notes\n\n- Use `B"
+        metadata:
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md
+          layer: api_constraints
+          doc_type: api_constraint
+          library: openssl
+      - rank: 4
+        score: 0.7049966969331883
+        distance: 0.4184463620185852
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_bytes_read_bio.md
+        text: "# API Constraints: PEM_bytes_read_bio (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_bytes_read_bio`\n- Header declaration: `include/openssl/pem.h`\n\
+          - Implementation file: `crypto/pem/pem_lib.c`\n- Signature:\n\n```c\nint\
+          \ PEM_bytes_read_bio(unsigned char **pdata, long *plen, char **pnm,\n  \
+          \                     const char *name, BIO *bp,\n                     \
+          \  pem_password_cb *cb, void *u);\n```\n\n## Semantics\n\n- Reads a named\
+          \ PEM block from a BIO and returns decoded bytes.\n- Uses EAY-compatible\
+          \ PEM parsing flags.\n- Encrypted PEM headers are processed through `PEM_do_header()`,\
+          \ which derives a key and calls `EVP_DecryptInit_ex()`, `EVP_DecryptUpdate()`,\
+          \ and `EVP_DecryptFinal_ex()`.\n\n## Return Value Semantics\n\n- Returns\
+          \ `1` on success.\n- Returns `0` on PEM, decrypt, password, allocation,\
+          \ or decode failure.\n\n## Ownership and Buffer Constraints\n\n- On success,\
+          \ `*pdata` points to an OpenSSL-allocated decoded buffer; caller frees with\
+          \ `"
+        metadata:
+          doc_type: api_constraint
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_bytes_read_bio.md
+          layer: api_constraints
+          library: openssl
+      - rank: 5
+        score: 0.6730330864293412
+        distance: 0.4858110547065735
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__genrsa.c.md
+        text: ";\n    EVP_CIPHER_free(enc);\n    BIO_free_all(out);\n    release_engine(eng);\n\
+          \    OPENSSL_free(passout);\n    if (ret != 0)\n```\n\n## Call pattern 5\n\
+          \n```c\nEVP_PKEY_get_bn_param(pkey, \"e\", &e);\n        if (e == NULL)\
+          \ {\n            BIO_printf(bio_err, \"Error cannot access RSA e\\n\");\n\
+          \            goto end;\n        }\n        hexe = BN_bn2hex(e);\n      \
+          \  dece = BN_bn2dec(e);\n        if (hexe && dece) {\n            BIO_printf(bio_err,\
+          \ \"e is %s (0x%s)\\n\", dece, hexe);\n        }\n        OPENSSL_free(hexe);\n\
+          \        OPENSSL_free(dece);\n        BN_free(e);\n    }\n    if (traditional)\
+          \ {\n        if (!PEM_write_bio_PrivateKey_traditional(out, pkey, enc, NULL,\
+          \ 0,\n                NULL, passout))\n            goto end;\n    } else\
+          \ {\n        if (!PEM_write_bio_PrivateKey(out, pkey, enc, NULL, 0, NULL,\
+          \ passout))\n            goto end;\n    }\n\n    ret = 0;\nend:\n    BN_free(bn);\n\
+          \    BN_GENCB_free(cb);\n    EVP_PKEY_CTX_free(ctx);\n    EVP_PKEY_free(pkey);\n\
+          \    EVP_CIPHER_free(enc);\n    BIO_free_all(out);\n    release_eng"
+        metadata:
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__genrsa.c.md
+          library: openssl
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl PEM_read_bio_ECPrivateKey implementation\
+        \ source code parameters return error\",\n  \"top_k\": 5,\n  \"results\":\
+        \ [\n    {\n      \"rank\": 1,\n      \"score\": 0.7405102626903936,\n   \
+        \   \"distance\": 0.35042017698287964,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md\"\
+        ,\n      \"text\": \"# API Constraints: PEM_read_bio_PUBKEY (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_read_bio_PUBKEY`\\n- Header/manpage: `include/openssl/pem.h`,\
+        \ `doc/man3/PEM_read_bio_PrivateKey.pod`\\n- Implementation file: `crypto/pem/pem_pkey.c`\\\
+        n- Signature:\\n\\n```c\\nEVP_PKEY *PEM_read_bio_PUBKEY(BIO *bp, EVP_PKEY\
+        \ **x,\\n                              pem_password_cb *cb, void *u);\\n```\\\
+        n\\n## Semantics\\n\\n- Reads a PEM SubjectPublicKeyInfo public key into an\
+        \ `EVP_PKEY`.\\n- Decoder path can skip unsupported PEM blocks while looking\
+        \ for a usable public key.\\n\\n## Return Value Semantics\\n\\n- Returns `EVP_PKEY\
+        \ *` on success.\\n- Returns `NULL` on parse/decode/unsupported-key failure.\\\
+        n\\n## Ownership and Buffer Constraints\\n\\n- Returned `EVP_PKEY` is caller-owned.\\\
+        n- Input memory belongs to the BIO.\\n- The API hides decoded DER buffers\
+        \ from the caller.\\n\\n## Harness Generation Notes\\n\\n- Use `BIO_new_mem_buf(public_pem,\
+        \ len)` and call `PEM_read_bio_PUBKEY()`.\\n- For `\",\n      \"metadata\"\
+        : {\n        \"library\": \"openssl\",\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md\"\
+        ,\n        \"layer\": \"api_constraints\",\n        \"doc_type\": \"api_constraint\"\
+        \n      }\n    },\n    {\n      \"rank\": 2,\n      \"score\": 0.7315271976082329,\n\
+        \      \"distance\": 0.3670031726360321,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md\"\
+        ,\n      \"text\": \"# API Constraints: PEM_read_bio_PrivateKey (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_read_bio_PrivateKey`\\n- Header/manpage: `include/openssl/pem.h`,\
+        \ `doc/man3/PEM_read_bio_PrivateKey.pod`\\n- Implementation file: `crypto/pem/pem_pkey.c`\\\
+        n- Signature:\\n\\n```c\\nEVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY\
+        \ **x,\\n                                  pem_password_cb *cb, void *u);\\\
+        n```\\n\\n## Semantics\\n\\n- Reads a PEM private key from `BIO`.\\n- Uses\
+        \ decoder path first, then legacy PEM byte extraction / DER decode fallback.\\\
+        n- Supports encrypted PEM through password callback.\\n\\n## Return Value\
+        \ Semantics\\n\\n- Returns `EVP_PKEY *` on success.\\n- Returns `NULL` on\
+        \ parse, decode, password, or unsupported-key failure; callers inspect OpenSSL\
+        \ error queue.\\n\\n## Ownership and Buffer Constraints\\n\\n- Returned key\
+        \ is caller-owned and must be freed with `EVP_PKEY_free()`.\\n- If `x != NULL`,\
+        \ any previous `*x` can be replaced/freed by the read routine.\",\n      \"\
+        metadata\": {\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md\"\
+        ,\n        \"doc_type\": \"api_constraint\",\n        \"layer\": \"api_constraints\"\
+        ,\n        \"library\": \"openssl\"\n      }\n    },\n    {\n      \"rank\"\
+        : 3,\n      \"score\": 0.7077351967996961,\n      \"distance\": 0.4129578471183777,\n\
+        \      \"layer\": \"api_constraints\",\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md\"\
+        ,\n      \"text\": \"# API Constraints: PEM_read_bio_X509 (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_read_bio_X509`\\n- Header/manpage: `include/openssl/pem.h`,\
+        \ `doc/man3/PEM_read_bio_PrivateKey.pod`\\n- Implementation family: PEM ASN.1\
+        \ read macros and X.509 DER decode\\n- Signature:\\n\\n```c\\nX509 *PEM_read_bio_X509(BIO\
+        \ *bp, X509 **x,\\n                        pem_password_cb *cb, void *u);\\\
+        n```\\n\\n## Semantics\\n\\n- Reads PEM certificate armor from a BIO and decodes\
+        \ the DER certificate into `X509`.\\n- For X.509 certificates, password callback\
+        \ is normally unused unless encrypted PEM wrapper features are involved.\\\
+        n\\n## Return Value Semantics\\n\\n- Returns `X509 *` on success.\\n- Returns\
+        \ `NULL` on PEM or DER parse failure.\\n\\n## Ownership and Buffer Constraints\\\
+        n\\n- Returned certificate is caller-owned and freed with `X509_free()`.\\\
+        n- If `x != NULL`, the pointed object may be reused/replaced according to\
+        \ OpenSSL d2i conventions.\\n\\n## Harness Generation Notes\\n\\n- Use `B\"\
+        ,\n      \"metadata\": {\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md\"\
+        ,\n        \"layer\": \"api_constraints\",\n        \"doc_type\": \"api_constraint\"\
+        ,\n        \"library\": \"openssl\"\n      }\n    },\n    {\n      \"rank\"\
+        : 4,\n      \"score\": 0.7049966969331883,\n      \"distance\": 0.4184463620185852,\n\
+        \      \"layer\": \"api_constraints\",\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_bytes_read_bio.md\"\
+        ,\n      \"text\": \"# API Constraints: PEM_bytes_read_bio (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_bytes_read_bio`\\n- Header declaration: `include/openssl/pem.h`\\\
+        n- Implementation file: `crypto/pem/pem_lib.c`\\n- Signature:\\n\\n```c\\\
+        nint PEM_bytes_read_bio(unsigned char **pdata, long *plen, char **pnm,\\n\
+        \                       const char *name, BIO *bp,\\n                    \
+        \   pem_password_cb *cb, void *u);\\n```\\n\\n## Semantics\\n\\n- Reads a\
+        \ named PEM block from a BIO and returns decoded bytes.\\n- Uses EAY-compatible\
+        \ PEM parsing flags.\\n- Encrypted PEM headers are processed through `PEM_do_header()`,\
+        \ which derives a key and calls `EVP_DecryptInit_ex()`, `EVP_DecryptUpdate()`,\
+        \ and `EVP_DecryptFinal_ex()`.\\n\\n## Return Value Semantics\\n\\n- Returns\
+        \ `1` on success.\\n- Returns `0` on PEM, decrypt, password, allocation, or\
+        \ decode failure.\\n\\n## Ownership and Buffer Constraints\\n\\n- On success,\
+        \ `*pdata` points to an OpenSSL-allocated decoded buffer; caller frees with\
+        \ `\",\n      \"metadata\": {\n        \"doc_type\": \"api_constraint\",\n\
+        \        \"source_file\": \"knowled"
+      stderr_preview: ''
+      truncated: true
+      kind: target_api_implementation
+      use_for_feature_inference: target
+    - query: openssl PEM_read_bio_ECPrivateKey usage example unit test API call pattern
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7212089863881456
+        distance: 0.3865606486797333
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/3.5.5/pem_target_api_evidence.md
+        text: "# Unit Test / Example Evidence: OpenSSL PEM Target APIs\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## APIs Covered\n\n- `PEM_read_bio_PrivateKey`\n\
+          - `PEM_read_bio_PUBKEY`\n- `PEM_read_bio_X509`\n- `PEM_bytes_read_bio`\n\
+          \n## Found Evidence\n\nstatus: partially_found_in_local_tests\n\n- `test/bio_pw_callback_test.c`\n\
+          \  - Direct encrypted/private-key callback coverage for `PEM_read_bio_PrivateKey()`.\n\
+          - `test/threadstest.c`, `test/ocspapitest.c`, `test/x509_check_cert_pkey_test.c`\n\
+          \  - Direct `PEM_read_bio_PrivateKey()` usage.\n- `test/x509_test.c`, `test/crltest.c`,\
+          \ `test/algorithmid_test.c`, `test/v3ext.c`\n  - Direct `PEM_read_bio_X509()`\
+          \ usage.\n- `engines/e_ossltest.c`\n  - Direct `PEM_read_bio_PUBKEY()` and\
+          \ `PEM_read_bio_PrivateKey()` usage.\n- `crypto/pem/pem_pkey.c`\n  - Internal\
+          \ high-level key readers call `PEM_bytes_read_bio()` / `PEM_bytes_read_bio_secmem()`.\n\
+          \n## Missing Local Evidence\n\nstatus: not_found_in_local_tests\n\napi:\
+          \ `PEM_bytes_read_bio`\n\nsearched_paths:\n- `/home/wen/wo"
+        metadata:
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/3.5.5/pem_target_api_evidence.md
+          library: openssl
+      - rank: 2
+        score: 0.7154361365479088
+        distance: 0.39774879813194275
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__req.c.md
+        text: "# Official test/example call patterns: openssl\n\nLibrary: openssl\n\
+          Version: 3.5.5\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/apps/req.c\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\ntpubkey\
+          \ = X509_REQ_get0_pubkey(req);\n        if (tpubkey == NULL) {\n       \
+          \     BIO_puts(bio_err, \"Modulus is unavailable\\n\");\n            goto\
+          \ end;\n        }\n        BIO_puts(out, \"Modulus=\");\n        if (EVP_PKEY_is_a(tpubkey,\
+          \ \"RSA\") || EVP_PKEY_is_a(tpubkey, \"RSA-PSS\")) {\n            BIGNUM\
+          \ *n = NULL;\n\n            if (!EVP_PKEY_get_bn_param(tpubkey, \"n\", &n))\n\
+          \                goto end;\n            BN_print(out, n);\n            BN_free(n);\n\
+          \        } else {\n            BIO_puts(out, \"Wrong Algorithm type\");\n\
+          \        }\n        BIO_puts(out, \"\\n\");\n    }\n\n    if (!noout &&\
+          \ !gen_x509) {\n        if (outformat == FORMAT_ASN1)\n            i = i2d_X509_REQ_bio(out,\
+          \ req);\n        else if (newhdr)\n            i = PEM_write_bio_X509_REQ_NEW(out,\
+          \ req);\n        else\n            i = PEM_write"
+        metadata:
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__req.c.md
+          library: openssl
+      - rank: 3
+        score: 0.7060077256289918
+        distance: 0.41641509532928467
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__demos__pkey__EVP_PKEY_RSA_keygen.c.md
+        text: "# Official test/example call patterns: openssl\n\nLibrary: openssl\n\
+          Version: 3.5.5\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/demos/pkey/EVP_PKEY_RSA_keygen.c\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\n/*\n\
+          \     * Output a PEM encoding of the private key. Please note that this\
+          \ output is\n     * not encrypted. You may wish to use the arguments to\
+          \ specify encryption of\n     * the key if you are storing it on disk. See\
+          \ PEM_write_PrivateKey(3).\n     */\n    if (PEM_write_PrivateKey(stdout,\
+          \ pkey, NULL, NULL, 0, NULL, NULL) == 0) {\n        fprintf(stderr, \"Failed\
+          \ to output PEM-encoded private key\\n\");\n        goto cleanup;\n    }\n\
+          \n    ret = 1;\ncleanup:\n    BN_free(n); /* not secret */\n    BN_free(e);\
+          \ /* not secret */\n    BN_clear_free(d); /* secret - scrub before freeing\
+          \ */\n    BN_clear_free(p); /* secret - scrub before freeing */\n    BN_clear_free(q);\
+          \ /* secret - scrub before freeing */\n    return ret;\n}\n\nint main(int\
+          \ argc, char **argv)\n{\n    int ret = EXIT_FAILURE"
+        metadata:
+          doc_type: unit_test_call_pattern
+          library: openssl
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__demos__pkey__EVP_PKEY_RSA_keygen.c.md
+      - rank: 4
+        score: 0.7026024538086294
+        distance: 0.4232799708843231
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md
+        text: "# API Constraints: PEM_read_bio_PUBKEY (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_read_bio_PUBKEY`\n- Header/manpage: `include/openssl/pem.h`,\
+          \ `doc/man3/PEM_read_bio_PrivateKey.pod`\n- Implementation file: `crypto/pem/pem_pkey.c`\n\
+          - Signature:\n\n```c\nEVP_PKEY *PEM_read_bio_PUBKEY(BIO *bp, EVP_PKEY **x,\n\
+          \                              pem_password_cb *cb, void *u);\n```\n\n##\
+          \ Semantics\n\n- Reads a PEM SubjectPublicKeyInfo public key into an `EVP_PKEY`.\n\
+          - Decoder path can skip unsupported PEM blocks while looking for a usable\
+          \ public key.\n\n## Return Value Semantics\n\n- Returns `EVP_PKEY *` on\
+          \ success.\n- Returns `NULL` on parse/decode/unsupported-key failure.\n\n\
+          ## Ownership and Buffer Constraints\n\n- Returned `EVP_PKEY` is caller-owned.\n\
+          - Input memory belongs to the BIO.\n- The API hides decoded DER buffers\
+          \ from the caller.\n\n## Harness Generation Notes\n\n- Use `BIO_new_mem_buf(public_pem,\
+          \ len)` and call `PEM_read_bio_PUBKEY()`.\n- For `"
+        metadata:
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md
+          doc_type: api_constraint
+          layer: api_constraints
+          library: openssl
+      - rank: 5
+        score: 0.6987528087245977
+        distance: 0.43112125992774963
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__demos__pkey__EVP_PKEY_EC_keygen.c.md
+        text: "# Official test/example call patterns: openssl\n\nLibrary: openssl\n\
+          Version: 3.5.5\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/demos/pkey/EVP_PKEY_EC_keygen.c\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\nif\
+          \ (!EVP_PKEY_get_octet_string_param(pkey, OSSL_PKEY_PARAM_PUB_KEY,\n   \
+          \         out_pubkey, sizeof(out_pubkey),\n            &out_pubkey_len))\
+          \ {\n        fprintf(stderr, \"Failed to get public key\\n\");\n       \
+          \ goto cleanup;\n    }\n\n    if (!EVP_PKEY_get_bn_param(pkey, OSSL_PKEY_PARAM_PRIV_KEY,\
+          \ &out_priv)) {\n        fprintf(stderr, \"Failed to get private key\\n\"\
+          );\n        goto cleanup;\n    }\n\n    out_privkey_len = BN_bn2bin(out_priv,\
+          \ out_privkey);\n    if (out_privkey_len <= 0 || out_privkey_len > sizeof(out_privkey))\
+          \ {\n        fprintf(stderr, \"BN_bn2bin failed\\n\");\n        goto cleanup;\n\
+          \    }\n\n    fprintf(stdout, \"Curve name: %s\\n\", out_curvename);\n \
+          \   fprintf(stdout, \"Public key:\\n\");\n    BIO_dump_indent_fp(stdout,\
+          \ out_pubkey, out_pubkey_len, 2);\n    fprintf(stdo"
+        metadata:
+          library: openssl
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__demos__pkey__EVP_PKEY_EC_keygen.c.md
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl PEM_read_bio_ECPrivateKey usage example\
+        \ unit test API call pattern\",\n  \"top_k\": 5,\n  \"results\": [\n    {\n\
+        \      \"rank\": 1,\n      \"score\": 0.7212089863881456,\n      \"distance\"\
+        : 0.3865606486797333,\n      \"layer\": \"unit_tests\",\n      \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/3.5.5/pem_target_api_evidence.md\",\n\
+        \      \"text\": \"# Unit Test / Example Evidence: OpenSSL PEM Target APIs\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## APIs\
+        \ Covered\\n\\n- `PEM_read_bio_PrivateKey`\\n- `PEM_read_bio_PUBKEY`\\n- `PEM_read_bio_X509`\\\
+        n- `PEM_bytes_read_bio`\\n\\n## Found Evidence\\n\\nstatus: partially_found_in_local_tests\\\
+        n\\n- `test/bio_pw_callback_test.c`\\n  - Direct encrypted/private-key callback\
+        \ coverage for `PEM_read_bio_PrivateKey()`.\\n- `test/threadstest.c`, `test/ocspapitest.c`,\
+        \ `test/x509_check_cert_pkey_test.c`\\n  - Direct `PEM_read_bio_PrivateKey()`\
+        \ usage.\\n- `test/x509_test.c`, `test/crltest.c`, `test/algorithmid_test.c`,\
+        \ `test/v3ext.c`\\n  - Direct `PEM_read_bio_X509()` usage.\\n- `engines/e_ossltest.c`\\\
+        n  - Direct `PEM_read_bio_PUBKEY()` and `PEM_read_bio_PrivateKey()` usage.\\\
+        n- `crypto/pem/pem_pkey.c`\\n  - Internal high-level key readers call `PEM_bytes_read_bio()`\
+        \ / `PEM_bytes_read_bio_secmem()`.\\n\\n## Missing Local Evidence\\n\\nstatus:\
+        \ not_found_in_local_tests\\n\\napi: `PEM_bytes_read_bio`\\n\\nsearched_paths:\\\
+        n- `/home/wen/wo\",\n      \"metadata\": {\n        \"layer\": \"unit_tests\"\
+        ,\n        \"doc_type\": \"unit_test_call_pattern\",\n        \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/3.5.5/pem_target_api_evidence.md\",\n\
+        \        \"library\": \"openssl\"\n      }\n    },\n    {\n      \"rank\"\
+        : 2,\n      \"score\": 0.7154361365479088,\n      \"distance\": 0.39774879813194275,\n\
+        \      \"layer\": \"unit_tests\",\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__req.c.md\"\
+        ,\n      \"text\": \"# Official test/example call patterns: openssl\\n\\nLibrary:\
+        \ openssl\\nVersion: 3.5.5\\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/apps/req.c\\\
+        nKnowledge type: unit_tests_or_examples\\n\\n## Call pattern 1\\n\\n```c\\\
+        ntpubkey = X509_REQ_get0_pubkey(req);\\n        if (tpubkey == NULL) {\\n\
+        \            BIO_puts(bio_err, \\\"Modulus is unavailable\\\\n\\\");\\n  \
+        \          goto end;\\n        }\\n        BIO_puts(out, \\\"Modulus=\\\"\
+        );\\n        if (EVP_PKEY_is_a(tpubkey, \\\"RSA\\\") || EVP_PKEY_is_a(tpubkey,\
+        \ \\\"RSA-PSS\\\")) {\\n            BIGNUM *n = NULL;\\n\\n            if\
+        \ (!EVP_PKEY_get_bn_param(tpubkey, \\\"n\\\", &n))\\n                goto\
+        \ end;\\n            BN_print(out, n);\\n            BN_free(n);\\n      \
+        \  } else {\\n            BIO_puts(out, \\\"Wrong Algorithm type\\\");\\n\
+        \        }\\n        BIO_puts(out, \\\"\\\\n\\\");\\n    }\\n\\n    if (!noout\
+        \ && !gen_x509) {\\n        if (outformat == FORMAT_ASN1)\\n            i\
+        \ = i2d_X509_REQ_bio(out, req);\\n        else if (newhdr)\\n            i\
+        \ = PEM_write_bio_X509_REQ_NEW(out, req);\\n        else\\n            i =\
+        \ PEM_write\",\n      \"metadata\": {\n        \"layer\": \"unit_tests\",\n\
+        \        \"doc_type\": \"unit_test_call_pattern\",\n        \"source_file\"\
+        : \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__apps__req.c.md\"\
+        ,\n        \"library\": \"openssl\"\n      }\n    },\n    {\n      \"rank\"\
+        : 3,\n      \"score\": 0.7060077256289918,\n      \"distance\": 0.41641509532928467,\n\
+        \      \"layer\": \"unit_tests\",\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__demos__pkey__EVP_PKEY_RSA_keygen.c.md\"\
+        ,\n      \"text\": \"# Official test/example call patterns: openssl\\n\\nLibrary:\
+        \ openssl\\nVersion: 3.5.5\\nSource file: /home/wen/work/clean_sources/openssl-3.5.5/demos/pkey/EVP_PKEY_RSA_keygen.c\\\
+        nKnowledge type: unit_tests_or_examples\\n\\n## Call pattern 1\\n\\n```c\\\
+        n/*\\n     * Output a PEM encoding of the private key. Please note that this\
+        \ output is\\n     * not encrypted. You may wish to use the arguments to specify\
+        \ encryption of\\n     * the key if you are storing it on disk. See PEM_write_PrivateKey(3).\\\
+        n     */\\n    if (PEM_write_PrivateKey(stdout, pkey, NULL, NULL, 0, NULL,\
+        \ NULL) == 0) {\\n        fprintf(stderr, \\\"Failed to output PEM-encoded\
+        \ private key\\\\n\\\");\\n        goto cleanup;\\n    }\\n\\n    ret = 1;\\\
+        ncleanup:\\n    BN_free(n); /* not secret */\\n    BN_free(e); /* not secret\
+        \ */\\n    BN_clear_free(d); /* secret - scrub before freeing */\\n    BN_clear_free(p);\
+        \ /* secret - scrub before freeing */\\n    BN_clear_free(q); /* secret -\
+        \ scrub before freeing */\\n    return ret;\\n}\\n\\nint main(int argc, char\
+        \ **argv)\\n{\\n    int ret = EXIT_FAILURE\",\n      \"metadata\": {\n   \
+        \     \"doc_type\": \"unit_test_call_pattern\",\n        \"library\": \"openssl\"\
+        ,\n        \"layer\": \"unit_tests\",\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__demos__pkey__EVP_PKEY_RSA_keygen.c.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 4,\n      \"score\": 0.7026024538086294,\n\
+        \      \"distance\": 0.4232799708843231,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md\"\
+        ,\n      \"text\": \"# API Constraints: PEM_read_bio_PUBKEY (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_read_bio_PUBKEY`\\n- Header/manpage: `include/openssl/pem.h`,\
+        \ `doc/man3/PEM_read_bio_PrivateKey.pod`\\n- Implementation file: `crypto/pem/pem_pkey.c`\\\
+        n- Signature:\\n\\n```c\\nEVP_PKEY *PEM_read_bio_PUBKEY(BIO *bp, EVP_PKEY\
+        \ **x,\\n                              pem_password_cb *cb, void *u);\\n```\\\
+        n\\n## Semantics\\n\\n- Reads a PEM SubjectPublicKeyInfo public key into an\
+        \ `EVP_PKEY`.\\n- Decoder path can skip unsupported PEM blocks while looking\
+        \ for a usable public key.\\n\\n## Return Value Semantics\\n\\n- Returns `EVP_PKEY\
+        \ *` on success.\\n- Returns `NULL` on parse/decode/unsupported-key failure.\\\
+        n\\n## Ownership and Buffer Constraints\\n\\n- Returned `EVP_PKEY` is caller-owned.\\\
+        n- Input memory belongs to the BIO.\\n- The API hides decoded DER buffers\
+        \ from the caller.\\n\\n## Harness Generation Notes\\n\\n- U"
+      stderr_preview: ''
+      truncated: true
+      kind: target_api_usage
+      use_for_feature_inference: target
+    - query: 'openssl PEM_read_bio_ECPrivateKey pem_parser_entrypoint encrypted_pem_path_with_password
+        malformed_or_short_base64_body decoded_buffer_length_can_be_zero_or_tiny padding_check_reads_last_byte
+        observable_asan_heap_underflow_or_safe_error  pem_parser_entrypoint encrypted_pem_path_with_password
+        malformed_or_short_base64_body exact_mbedtls_error_code '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7286852007535108
+        distance: 0.37233471870422363
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md
+        text: "# API Constraints: PEM_read_bio_PUBKEY (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_read_bio_PUBKEY`\n- Header/manpage: `include/openssl/pem.h`,\
+          \ `doc/man3/PEM_read_bio_PrivateKey.pod`\n- Implementation file: `crypto/pem/pem_pkey.c`\n\
+          - Signature:\n\n```c\nEVP_PKEY *PEM_read_bio_PUBKEY(BIO *bp, EVP_PKEY **x,\n\
+          \                              pem_password_cb *cb, void *u);\n```\n\n##\
+          \ Semantics\n\n- Reads a PEM SubjectPublicKeyInfo public key into an `EVP_PKEY`.\n\
+          - Decoder path can skip unsupported PEM blocks while looking for a usable\
+          \ public key.\n\n## Return Value Semantics\n\n- Returns `EVP_PKEY *` on\
+          \ success.\n- Returns `NULL` on parse/decode/unsupported-key failure.\n\n\
+          ## Ownership and Buffer Constraints\n\n- Returned `EVP_PKEY` is caller-owned.\n\
+          - Input memory belongs to the BIO.\n- The API hides decoded DER buffers\
+          \ from the caller.\n\n## Harness Generation Notes\n\n- Use `BIO_new_mem_buf(public_pem,\
+          \ len)` and call `PEM_read_bio_PUBKEY()`.\n- For `"
+        metadata:
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md
+          doc_type: api_constraint
+          layer: api_constraints
+          library: openssl
+      - rank: 2
+        score: 0.7260854132824573
+        distance: 0.3772484362125397
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md
+        text: "# API Constraints: PEM_read_bio_PrivateKey (OpenSSL 3.5.5)\n\nSource\
+          \ version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_read_bio_PrivateKey`\n- Header/manpage: `include/openssl/pem.h`,\
+          \ `doc/man3/PEM_read_bio_PrivateKey.pod`\n- Implementation file: `crypto/pem/pem_pkey.c`\n\
+          - Signature:\n\n```c\nEVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY\
+          \ **x,\n                                  pem_password_cb *cb, void *u);\n\
+          ```\n\n## Semantics\n\n- Reads a PEM private key from `BIO`.\n- Uses decoder\
+          \ path first, then legacy PEM byte extraction / DER decode fallback.\n-\
+          \ Supports encrypted PEM through password callback.\n\n## Return Value Semantics\n\
+          \n- Returns `EVP_PKEY *` on success.\n- Returns `NULL` on parse, decode,\
+          \ password, or unsupported-key failure; callers inspect OpenSSL error queue.\n\
+          \n## Ownership and Buffer Constraints\n\n- Returned key is caller-owned\
+          \ and must be freed with `EVP_PKEY_free()`.\n- If `x != NULL`, any previous\
+          \ `*x` can be replaced/freed by the read routine."
+        metadata:
+          layer: api_constraints
+          doc_type: api_constraint
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md
+          library: openssl
+      - rank: 3
+        score: 0.7156762890693511
+        distance: 0.3972797691822052
+        layer: poc_patterns
+        source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0011.md
+        text: "t_len < 1) {\n    return MBEDTLS_ERR_PEM_INVALID_DATA;\n}\n```\n\n\
+          ## Trigger Condition\n\nThe PoC calls `mbedtls_pem_read_buffer()` on an\
+          \ encrypted EC private key PEM\nblock with:\n\n- `Proc-Type: 4,ENCRYPTED`\n\
+          - `DEK-Info: AES-128-CBC,...`\n- password `pwd`\n- malformed base64 body\
+          \ `8Q` immediately before the footer\n\nThis drives the encrypted PEM path\
+          \ into PKCS padding validation with an empty\nor invalid decoded buffer.\n\
+          \n## Buggy and Fixed Behavior\n\nBuggy behavior:\n\n```text\ncalling mbedtls_pem_read_buffer...\n\
+          READ of size 1\npem_check_pkcs_padding\naddress is located 1 bytes before\
+          \ a heap-allocated region\nexit_code=1\n```\n\nFixed behavior:\n\n```text\n\
+          calling mbedtls_pem_read_buffer...\nret=-4352\nexpected fixed ret=-4352\n\
+          use_len=140\n[OK] fixed behavior: malformed PEM rejected safely.\n```\n\n\
+          ## Oracle\n\nBug signal:\n\n- AddressSanitizer reports a one-byte heap-buffer-underflow/overflow.\n\
+          - The read occurs in `pem_check_pkcs_padding`.\n- The reported address is\
+          \ one byte before the decoded heap buffer.\n\nSafe signal:"
+        metadata:
+          doc_type: poc_pattern
+          source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0011.md
+          layer: poc_patterns
+          library: mbedtls
+      - rank: 4
+        score: 0.7101931984669388
+        distance: 0.4080675542354584
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md
+        text: "# API Constraints: PEM_read_bio_X509 (OpenSSL 3.5.5)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function\
+          \ name: `PEM_read_bio_X509`\n- Header/manpage: `include/openssl/pem.h`,\
+          \ `doc/man3/PEM_read_bio_PrivateKey.pod`\n- Implementation family: PEM ASN.1\
+          \ read macros and X.509 DER decode\n- Signature:\n\n```c\nX509 *PEM_read_bio_X509(BIO\
+          \ *bp, X509 **x,\n                        pem_password_cb *cb, void *u);\n\
+          ```\n\n## Semantics\n\n- Reads PEM certificate armor from a BIO and decodes\
+          \ the DER certificate into `X509`.\n- For X.509 certificates, password callback\
+          \ is normally unused unless encrypted PEM wrapper features are involved.\n\
+          \n## Return Value Semantics\n\n- Returns `X509 *` on success.\n- Returns\
+          \ `NULL` on PEM or DER parse failure.\n\n## Ownership and Buffer Constraints\n\
+          \n- Returned certificate is caller-owned and freed with `X509_free()`.\n\
+          - If `x != NULL`, the pointed object may be reused/replaced according to\
+          \ OpenSSL d2i conventions.\n\n## Harness Generation Notes\n\n- Use `B"
+        metadata:
+          doc_type: api_constraint
+          library: openssl
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md
+          layer: api_constraints
+      - rank: 5
+        score: 0.7099599106537725
+        distance: 0.40853023529052734
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md
+        text: 'th `EVP_PKEY_free()`.
+
+          - If `x != NULL`, any previous `*x` can be replaced/freed by the read routine.
+
+          - Input bytes are owned by the BIO; internal decoded buffers are OpenSSL-owned
+          temporaries.
+
+
+          ## Harness Generation Notes
+
+
+          - Create an in-memory BIO with `BIO_new_mem_buf()`, call read API, check
+          NULL vs non-NULL, then free `EVP_PKEY` and `BIO`.
+
+          - For encrypted PEM migration from `MBEDTLS-POC-0011`, include password
+          callback behavior and malformed/short base64 input.
+
+
+          ## Vulnerability-Pattern Migration Notes
+
+
+          - Candidate for encrypted PEM parser migration.
+
+          - Strong if malformed encrypted PEM reaches base64/decrypt/padding paths
+          with observable failure.
+
+          - Weaker than lower-level `PEM_bytes_read_bio` for decoded-buffer boundary
+          visibility.
+
+
+          ## Related Tests or Examples Found Locally
+
+
+          - `test/bio_pw_callback_test.c`: encrypted/private-key PEM read callback
+          tests.
+
+          - `test/threadstest.c`, `test/ocspapitest.c`, `test/x509_check_cert_pkey_test.c`:
+          direct private-key PEM reads.
+
+          - `crypto/pem/pem'
+        metadata:
+          layer: api_constraints
+          library: openssl
+          doc_type: api_constraint
+          source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md
+      error: ''
+      stdout_preview: "{\n  \"query\": \"openssl PEM_read_bio_ECPrivateKey pem_parser_entrypoint\
+        \ encrypted_pem_path_with_password malformed_or_short_base64_body decoded_buffer_length_can_be_zero_or_tiny\
+        \ padding_check_reads_last_byte observable_asan_heap_underflow_or_safe_error\
+        \  pem_parser_entrypoint encrypted_pem_path_with_password malformed_or_short_base64_body\
+        \ exact_mbedtls_error_code \",\n  \"top_k\": 5,\n  \"results\": [\n    {\n\
+        \      \"rank\": 1,\n      \"score\": 0.7286852007535108,\n      \"distance\"\
+        : 0.37233471870422363,\n      \"layer\": \"api_constraints\",\n      \"source_file\"\
+        : \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md\",\n\
+        \      \"text\": \"# API Constraints: PEM_read_bio_PUBKEY (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_read_bio_PUBKEY`\\n- Header/manpage: `include/openssl/pem.h`,\
+        \ `doc/man3/PEM_read_bio_PrivateKey.pod`\\n- Implementation file: `crypto/pem/pem_pkey.c`\\\
+        n- Signature:\\n\\n```c\\nEVP_PKEY *PEM_read_bio_PUBKEY(BIO *bp, EVP_PKEY\
+        \ **x,\\n                              pem_password_cb *cb, void *u);\\n```\\\
+        n\\n## Semantics\\n\\n- Reads a PEM SubjectPublicKeyInfo public key into an\
+        \ `EVP_PKEY`.\\n- Decoder path can skip unsupported PEM blocks while looking\
+        \ for a usable public key.\\n\\n## Return Value Semantics\\n\\n- Returns `EVP_PKEY\
+        \ *` on success.\\n- Returns `NULL` on parse/decode/unsupported-key failure.\\\
+        n\\n## Ownership and Buffer Constraints\\n\\n- Returned `EVP_PKEY` is caller-owned.\\\
+        n- Input memory belongs to the BIO.\\n- The API hides decoded DER buffers\
+        \ from the caller.\\n\\n## Harness Generation Notes\\n\\n- Use `BIO_new_mem_buf(public_pem,\
+        \ len)` and call `PEM_read_bio_PUBKEY()`.\\n- For `\",\n      \"metadata\"\
+        : {\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PUBKEY.md\"\
+        ,\n        \"doc_type\": \"api_constraint\",\n        \"layer\": \"api_constraints\"\
+        ,\n        \"library\": \"openssl\"\n      }\n    },\n    {\n      \"rank\"\
+        : 2,\n      \"score\": 0.7260854132824573,\n      \"distance\": 0.3772484362125397,\n\
+        \      \"layer\": \"api_constraints\",\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md\"\
+        ,\n      \"text\": \"# API Constraints: PEM_read_bio_PrivateKey (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_read_bio_PrivateKey`\\n- Header/manpage: `include/openssl/pem.h`,\
+        \ `doc/man3/PEM_read_bio_PrivateKey.pod`\\n- Implementation file: `crypto/pem/pem_pkey.c`\\\
+        n- Signature:\\n\\n```c\\nEVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY\
+        \ **x,\\n                                  pem_password_cb *cb, void *u);\\\
+        n```\\n\\n## Semantics\\n\\n- Reads a PEM private key from `BIO`.\\n- Uses\
+        \ decoder path first, then legacy PEM byte extraction / DER decode fallback.\\\
+        n- Supports encrypted PEM through password callback.\\n\\n## Return Value\
+        \ Semantics\\n\\n- Returns `EVP_PKEY *` on success.\\n- Returns `NULL` on\
+        \ parse, decode, password, or unsupported-key failure; callers inspect OpenSSL\
+        \ error queue.\\n\\n## Ownership and Buffer Constraints\\n\\n- Returned key\
+        \ is caller-owned and must be freed with `EVP_PKEY_free()`.\\n- If `x != NULL`,\
+        \ any previous `*x` can be replaced/freed by the read routine.\",\n      \"\
+        metadata\": {\n        \"layer\": \"api_constraints\",\n        \"doc_type\"\
+        : \"api_constraint\",\n        \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_PrivateKey.md\"\
+        ,\n        \"library\": \"openssl\"\n      }\n    },\n    {\n      \"rank\"\
+        : 3,\n      \"score\": 0.7156762890693511,\n      \"distance\": 0.3972797691822052,\n\
+        \      \"layer\": \"poc_patterns\",\n      \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0011.md\"\
+        ,\n      \"text\": \"t_len < 1) {\\n    return MBEDTLS_ERR_PEM_INVALID_DATA;\\\
+        n}\\n```\\n\\n## Trigger Condition\\n\\nThe PoC calls `mbedtls_pem_read_buffer()`\
+        \ on an encrypted EC private key PEM\\nblock with:\\n\\n- `Proc-Type: 4,ENCRYPTED`\\\
+        n- `DEK-Info: AES-128-CBC,...`\\n- password `pwd`\\n- malformed base64 body\
+        \ `8Q` immediately before the footer\\n\\nThis drives the encrypted PEM path\
+        \ into PKCS padding validation with an empty\\nor invalid decoded buffer.\\\
+        n\\n## Buggy and Fixed Behavior\\n\\nBuggy behavior:\\n\\n```text\\ncalling\
+        \ mbedtls_pem_read_buffer...\\nREAD of size 1\\npem_check_pkcs_padding\\naddress\
+        \ is located 1 bytes before a heap-allocated region\\nexit_code=1\\n```\\\
+        n\\nFixed behavior:\\n\\n```text\\ncalling mbedtls_pem_read_buffer...\\nret=-4352\\\
+        nexpected fixed ret=-4352\\nuse_len=140\\n[OK] fixed behavior: malformed PEM\
+        \ rejected safely.\\n```\\n\\n## Oracle\\n\\nBug signal:\\n\\n- AddressSanitizer\
+        \ reports a one-byte heap-buffer-underflow/overflow.\\n- The read occurs in\
+        \ `pem_check_pkcs_padding`.\\n- The reported address is one byte before the\
+        \ decoded heap buffer.\\n\\nSafe signal:\",\n      \"metadata\": {\n     \
+        \   \"doc_type\": \"poc_pattern\",\n        \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0011.md\"\
+        ,\n        \"layer\": \"poc_patterns\",\n        \"library\": \"mbedtls\"\n\
+        \      }\n    },\n    {\n      \"rank\": 4,\n      \"score\": 0.7101931984669388,\n\
+        \      \"distance\": 0.4080675542354584,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md\"\
+        ,\n      \"text\": \"# API Constraints: PEM_read_bio_X509 (OpenSSL 3.5.5)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\\n\\n## API\\\
+        n\\n- API/function name: `PEM_read_bio_X509`\\n- Header/manpage: `include/openssl/pem.h`,\
+        \ `doc/man3/PEM_read_bio_PrivateKey.pod`\\n- Implementation family: PEM ASN.1\
+        \ read macros and X.509 DER decode\\n- Signature:\\n\\n```c\\nX509 *PEM_read_bio_X509(BIO\
+        \ *bp, X509 **x,\\n                        pem_password_cb *cb, void *u);\\\
+        n```\\n\\n## Semantics\\n\\n- Reads PEM certificate armor from a BIO and decodes\
+        \ the DER certificate into `X509`.\\n- For X.509 certificates, password callback\
+        \ is normally unused unless encrypted PEM wrapper features are involved.\\\
+        n\\n## Return Value Semantics\\n\\n- Returns `X509 *` on success.\\n- Returns\
+        \ `NULL` on PEM or DER parse failure.\\n\\n## Ownership and Buffer Constraints\\\
+        n\\n- Returned certificate is caller-owned and freed "
+      stderr_preview: ''
+      truncated: true
+      kind: vulnerability_path_compatibility
+      use_for_feature_inference: target
+    inferred_features:
+      observed_features_from_target_evidence:
+      - encrypted_pem_path_with_password
+      - library_allocated_output
+      - malformed_or_short_base64_body
+      - pem_parser_entrypoint
+      - radix_or_textual_base_context
+      - signed_or_negative_encoding
+      negative_or_weakened_features:
+      - caller_provided_output_buffer
+      - exact_mbedtls_error_code
+      - library_writes_to_caller_buffer
+      effective_observed_features:
+      - encrypted_pem_path_with_password
+      - library_allocated_output
+      - malformed_or_short_base64_body
+      - pem_parser_entrypoint
+      - radix_or_textual_base_context
+      - signed_or_negative_encoding
+      feature_conflicts: []
+      candidate_preserved_features:
+      - encrypted_pem_path_with_password
+      - malformed_or_short_base64_body
+      - pem_parser_entrypoint
+      candidate_lost_or_weakened_features:
+      - exact_mbedtls_error_code
+      bug_class_requirements:
+        required: []
+        disallowed: []
+        optional: []
+      required_present: []
+      required_missing: []
+      disallowed_present: []
+      optional_present: []
+      evidence_hits:
+        caller_provided_output_buffer:
+          positive_hits: []
+          negative_hits:
+          - OPENSSL_free
+        library_writes_to_caller_buffer:
+          positive_hits: []
+          negative_hits:
+          - OPENSSL_free
+        library_allocated_output:
+          positive_hits:
+          - OPENSSL_free
+          - must be freed
+          negative_hits: []
+        signed_or_negative_encoding:
+          positive_hits:
+          - signed
+          negative_hits: []
+        radix_or_textual_base_context:
+          positive_hits:
+          - base
+          - hex
+          negative_hits: []
+evidence_collection:
+  method: config_driven_rag_evidence_collector
+  top_k: 5
+  target_api_filter: ''
+  max_candidates: null
+  max_queries_per_candidate: null
+  feature_rules: config/evidence_feature_rules.yaml
+  bug_classes:
+  - pem_parser_entrypoint
+  - encrypted_pem_path_with_password
+  - malformed_or_short_base64_body
+  - decoded_buffer_length_can_be_zero_or_tiny
+  - padding_check_reads_last_byte
+  - observable_asan_heap_underflow_or_safe_error
+  source_pattern:
+    pattern_id: MBEDTLS-POC-0011
+    root_cause_summary: ''
+    must_preserve_features: []
+    optional_features: []
+    not_required_features: []
+    good_target_api_features: []
+    bad_target_api_features: []
+    rag_query_context: 'template_id: PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW
+      api: mbedtls_pem_read_buffer operation: pem_encrypted_parse_padding_check bug_class:
+      heap_buffer_underflow one_byte_read_before_heap_region trigger_call: ret = mbedtls_pem_read_buffer(&ctx,
+      header, footer, malformed_pem, pwd, pwdlen, &use_len) oracle: if (ret != 0)
+      { safe rejection }
+
+      '
+  note: Evidence is retrieved before LLM adapter filling. Source-pattern evidence
+    is kept separate from target-API evidence to avoid feature contamination.

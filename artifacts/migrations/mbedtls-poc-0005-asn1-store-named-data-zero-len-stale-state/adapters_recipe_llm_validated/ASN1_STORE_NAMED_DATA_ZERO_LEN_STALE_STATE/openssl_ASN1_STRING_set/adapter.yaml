@@ -1,0 +1,32 @@
+source_pattern_id: MBEDTLS-POC-0005
+template_id: ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE
+harness_family: object_state_lifecycle
+oracle_type: stale_pointer_length_state_oracle
+target_library: openssl
+target_api: ASN1_STRING_set
+applicability: generate
+adapter_recipe: adapter_recipes/openssl/ASN1_STRING_set.object_state_lifecycle.yaml
+evidence_file: migration_candidates/asn1/asn1_store_named_data_zero_len_stale_state/candidates_with_evidence.yaml
+slot_bindings:
+  asn1_string_variable: s
+  return_code_variable: ret
+  first_data_variable: first_data
+  reuse_data_variable: reuse_data
+preserved_features:
+- mutable_named_object_with_pointer_length_pair
+- repeated_update_of_same_object
+- zero_length_update_modifies_pointer_state
+lost_or_weakened_features:
+- OID_based_object_lookup
+- linked_list_storage
+- exact_stale_null_pointer_path
+_adapter_mode: recipe_slot_filling
+_ignored_disallowed_fields: []
+_ignored_non_slot_fields: []
+_llm_status: ok
+include_headers: []
+validation:
+  status: ok
+  errors: []
+  warnings: []
+  normalized: true

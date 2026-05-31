@@ -1,0 +1,49 @@
+template_id: PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW
+template_name: mbedtls_pem_read_buffer encrypted PEM empty-buffer underflow template
+source_api: mbedtls_pem_read_buffer
+selection_policy:
+  method: ast_lite_high_value_mask_unit_selection
+  rules:
+    - Prefer role=mutation_point units.
+    - Always retain trigger_call function_call units.
+    - Always retain oracle statement units.
+    - Limit cleanup units to representative statements.
+  context_keywords:
+    - pem
+    - encrypted
+    - padding
+    - buf
+    - input_len
+    - base64
+selected_units:
+  - name: PEM_BODY_macro
+    kind: preproc_def
+    role: mutation_point
+    code: '#define PEM_BODY_CONTENT "[PEM_BODY]"'
+    placeholder: '[PEM_BODY]'
+    mask_level: macro_level
+    priority: high
+  - name: pem_read_buffer_trigger
+    kind: call_expression
+    role: trigger_call
+    code: 'ret = mbedtls_pem_read_buffer(&ctx, "-----BEGIN EC PRIVATE KEY-----", "-----END EC PRIVATE KEY-----", (const unsigned char *)malformed_pem, (const unsigned char *)"pwd", 3, &use_len)'
+    mask_level: function_call_level
+    priority: high
+  - name: oracle_safe_check
+    kind: if_statement
+    role: oracle
+    code: 'if (ret != 0) { printf("[OK] fixed behavior: malformed encrypted PEM rejected safely.\\n"); }'
+    mask_level: statement_level
+    priority: high
+  - name: pem_init
+    kind: call_expression
+    role: init
+    code: 'mbedtls_pem_init(&ctx)'
+    mask_level: function_call_level
+    priority: medium
+  - name: pem_free
+    kind: call_expression
+    role: cleanup
+    code: 'mbedtls_pem_free(&ctx)'
+    mask_level: function_call_level
+    priority: medium

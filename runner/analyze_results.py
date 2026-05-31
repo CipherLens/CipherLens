@@ -94,6 +94,47 @@ BIGNUM_SERIALIZATION_BUFFER_NORMAL_PATTERNS = [
     "[INFO] target serialized into provided buffer; canary intact.",
 ]
 
+NULL_DEREF_DISPATCH_SAFE_REJECT_PATTERNS = [
+    "[OK] null_deref_dispatch:",
+]
+
+NULL_DEREF_DISPATCH_TRIAGE_PATTERNS = [
+    "[TRIAGE] null_deref_dispatch:",
+]
+
+OBJECT_STATE_LIFECYCLE_SAFE_PATTERNS = [
+    "[OK] fixed behavior: safe reallocation",
+    "[OK] object_state_lifecycle: safe update",
+    "[OK] object_state_lifecycle: safe",
+]
+
+OBJECT_STATE_LIFECYCLE_TRIAGE_PATTERNS = [
+    "[INFO] object_state_lifecycle:",
+    "[TRIAGE] object_state_lifecycle:",
+]
+
+INVALID_PARAM_SETUP_BUG_PATTERNS = [
+    "[BUG] source accepted invalid CCM shortened tag length",
+    "[BUG] target accepted invalid CCM tag length",
+    "[BUG] invalid AEAD tag length accepted",
+]
+
+INVALID_PARAM_SETUP_SAFE_REJECT_PATTERNS = [
+    "[OK] source rejected invalid CCM",
+    "[OK] target rejected invalid CCM",
+]
+
+INVALID_PARAM_SETUP_NORMAL_PATTERNS = [
+    "[OK] source accepted valid CCM tag length",
+    "[OK] target accepted valid CCM tag length",
+]
+
+INVALID_PARAM_SETUP_TRIAGE_PATTERNS = [
+    "[INFO] source rejected valid CCM tag length",
+    "[INFO] target rejected valid CCM tag length",
+    "[INFO] invalid_parameter_setup_oracle:",
+]
+
 HARNESS_ERROR_PATTERNS = [
     "read A failed",
     "read B failed",
@@ -254,6 +295,52 @@ def is_openssl_bn_signed_bn2bin_buffer_boundary_record(
         and "BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER" in joined
         and "BN_signed_bn2bin" in joined
         and is_bignum_serialization_buffer_boundary_record(record, text, result)
+    )
+
+
+def is_object_state_lifecycle_record(
+    record: Dict[str, Any],
+    text: str,
+    result: Dict[str, Any],
+) -> bool:
+    markers = [
+        str(record.get("relative_source", "")),
+        str(record.get("source", "")),
+        str(result.get("template_id", "")),
+        str(result.get("case_name", "")),
+        text,
+    ]
+    joined = "\n".join(markers)
+    return (
+        "ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE" in joined
+        or "MBEDTLS-POC-0005" in joined
+        or "object_state_lifecycle" in joined
+        or "ASN1_STRING_set" in joined
+        or "asn1_store_named_data" in joined
+        or "safe reallocation after zero-length" in joined
+    )
+
+
+def is_invalid_param_setup_record(
+    record: Dict[str, Any],
+    text: str,
+    result: Dict[str, Any],
+) -> bool:
+    markers = [
+        str(record.get("relative_source", "")),
+        str(record.get("source", "")),
+        str(result.get("template_id", "")),
+        str(result.get("case_name", "")),
+        text,
+    ]
+    joined = "\n".join(markers)
+    return (
+        "PSA_AEAD_INVALID_SHORTENED_TAG_SETUP" in joined
+        or "MBEDTLS-POC-0028" in joined
+        or "invalid_parameter_setup_oracle" in joined
+        or "EVP_CIPHER_CTX_ctrl" in joined
+        or "CCM shortened tag length" in joined
+        or "CCM tag length" in joined
     )
 
 
@@ -482,6 +569,60 @@ def classify_record(record: Dict[str, Any]) -> Dict[str, Any]:
             "Bignum arithmetic semantic projection reached a normal or mismatched "
             "arithmetic path that needs manual review."
         )
+        return result
+
+    if (
+        contains_any(text, OBJECT_STATE_LIFECYCLE_SAFE_PATTERNS)
+        and is_object_state_lifecycle_record(record, text, result)
+    ):
+        result["verdict"] = "safe_reject_behavior"
+        result["reason"] = (
+            "Object state lifecycle handled safely: zero-length update did not create stale "
+            "pointer-length state; later reuse completed without crash."
+        )
+        return result
+
+    if (
+        contains_any(text, OBJECT_STATE_LIFECYCLE_TRIAGE_PATTERNS)
+        and is_object_state_lifecycle_record(record, text, result)
+    ):
+        result["verdict"] = "normal_behavior_needs_triage"
+        result["reason"] = "Object state lifecycle behavior needs manual review."
+        return result
+
+    if (
+        contains_any(text, INVALID_PARAM_SETUP_BUG_PATTERNS)
+        and is_invalid_param_setup_record(record, text, result)
+    ):
+        result["verdict"] = "bug_candidate"
+        result["reason"] = "Invalid AEAD setup parameter (e.g., CCM tag length) was accepted when it should be rejected."
+        return result
+
+    if (
+        contains_any(text, INVALID_PARAM_SETUP_SAFE_REJECT_PATTERNS)
+        and is_invalid_param_setup_record(record, text, result)
+    ):
+        result["verdict"] = "safe_reject_behavior"
+        result["reason"] = "Invalid AEAD setup parameter (e.g., invalid CCM tag length) was correctly rejected."
+        return result
+
+    if (
+        contains_any(text, INVALID_PARAM_SETUP_NORMAL_PATTERNS)
+        and is_invalid_param_setup_record(record, text, result)
+    ):
+        result["verdict"] = "normal_expected_behavior"
+        result["reason"] = (
+            "Valid AEAD setup parameter (e.g., valid CCM tag length) was accepted. "
+            "This is expected normal behavior, not a migrated bug candidate."
+        )
+        return result
+
+    if (
+        contains_any(text, INVALID_PARAM_SETUP_TRIAGE_PATTERNS)
+        and is_invalid_param_setup_record(record, text, result)
+    ):
+        result["verdict"] = "normal_behavior_needs_triage"
+        result["reason"] = "AEAD setup parameter behavior needs manual review."
         return result
 
     if contains_any(text, SAFE_PATTERNS):

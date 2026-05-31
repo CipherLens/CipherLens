@@ -1,0 +1,99 @@
+template_id: ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE
+template_name: mbedtls_asn1_store_named_data zero-length stale pointer-length state template
+source_file: poc_asn1_store_named_data_null_deref.c
+source_library: mbedtls
+source_api: mbedtls_asn1_store_named_data
+language: c
+masking_design:
+  mode: ast_aware_lightweight
+  preserve_compilable_skeleton: true
+  note: >
+    Records AST-like masking roles for the ASN.1 named data stale pointer-length
+    state lifecycle pattern. Template remains compilable with placeholder macros.
+poc_pattern:
+  pattern_id: MBEDTLS-POC-0005
+  bug_category: stale_pointer_length_state
+  failure_signal:
+    - ASAN_null_dereference
+    - SEGV_in_memcpy
+includes:
+  - stdio.h
+  - string.h
+  - mbedtls/asn1write.h
+  - mbedtls/asn1.h
+roles:
+  init:
+    - order: 1
+      code: 'mbedtls_asn1_named_data *head = NULL;'
+      placeholders: []
+  input_construction:
+    - order: 2
+      code: 'unsigned char val1[FIRST_VALUE_LEN]; unsigned char val2[FIRST_VALUE_LEN];'
+      placeholders:
+        - '[FIRST_VALUE_LEN]'
+  trigger_call:
+    - order: 3
+      code: 'ret = mbedtls_asn1_store_named_data(&head, oid_cn, oid_len, val1, FIRST_VALUE_LEN)'
+      placeholders:
+        - '[FIRST_VALUE_LEN]'
+    - order: 4
+      code: 'ret = mbedtls_asn1_store_named_data(&head, oid_cn, oid_len, NULL, 0)'
+      placeholders: []
+    - order: 5
+      code: 'ret = mbedtls_asn1_store_named_data(&head, oid_cn, oid_len, val2, FIRST_VALUE_LEN)'
+      placeholders:
+        - '[FIRST_VALUE_LEN]'
+  oracle:
+    - order: 6
+      code: 'if (ret->val.p && ret->val.len == FIRST_VALUE_LEN && memcmp(...) == 0) { [OK] fixed behavior }'
+      placeholders: []
+  cleanup:
+    - order: 7
+      code: 'mbedtls_asn1_free_named_data_list(&head)'
+      placeholders: []
+masking_levels:
+  macro_level:
+    - macro: FIRST_VALUE_LEN
+      original: '#define FIRST_VALUE_LEN 4'
+      masked: '#define FIRST_VALUE_LEN [FIRST_VALUE_LEN]'
+      placeholders:
+        - '[FIRST_VALUE_LEN]'
+      ast_kind: preproc_def
+      mask_level: macro_level
+  api_argument_or_value_level:
+    - api_or_function: mbedtls_asn1_store_named_data
+      role: trigger_call
+      statement: 'mbedtls_asn1_store_named_data(&head, oid_cn, oid_len, val1, FIRST_VALUE_LEN)'
+      placeholder: '[FIRST_VALUE_LEN]'
+      mutation_point:
+        name: FIRST_VALUE_LEN
+        type: int
+        default: 4
+        values: [4, 8]
+        strategy: boundary_values
+        constraint: >
+          Nonzero buffer size triggering the stale-state bug path.
+          Bug triggers when step3 reuse length == step1 initial length.
+        priority: high
+      ast_kind: call_expression_or_argument
+      mask_level: api_argument_level
+rag_query_context: >
+  template_id: ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE
+  api: mbedtls_asn1_store_named_data
+  operation: asn1_named_data_zero_len_stale_state_lifecycle
+  bug_class: stale_pointer_length_state null_pointer_dereference
+  trigger_call: mbedtls_asn1_store_named_data(&head, oid, oid_len, val, FIRST_VALUE_LEN)
+  zero_update: mbedtls_asn1_store_named_data(&head, oid, oid_len, NULL, 0)
+  reuse: mbedtls_asn1_store_named_data(&head, oid, oid_len, val2, FIRST_VALUE_LEN)
+  oracle: if val.p != NULL and val.len correct after step3 -> [OK] fixed behavior
+cross_generation_hints:
+  semantic_operation: asn1_named_data_zero_len_stale_state_lifecycle
+  api_family: ASN1NamedData
+  bug_class:
+    - stale_pointer_length_state
+    - reuse_after_zero_length_update
+  must_preserve:
+    - input construction role
+    - trigger API role
+    - oracle role
+    - cleanup role

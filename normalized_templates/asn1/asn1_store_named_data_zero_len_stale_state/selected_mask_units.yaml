@@ -1,0 +1,55 @@
+template_id: ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE
+template_name: mbedtls_asn1_store_named_data zero-length stale pointer-length state template
+source_api: mbedtls_asn1_store_named_data
+selection_policy:
+  method: ast_lite_high_value_mask_unit_selection
+  rules:
+    - Prefer role=mutation_point units.
+    - Always retain all three trigger_call units (step1/step2/step3).
+    - Always retain oracle statement units.
+    - Limit cleanup units to representative statements.
+  context_keywords:
+    - val.p
+    - val.len
+    - zero_len
+    - stale
+    - asn1_store_named_data
+    - reuse
+selected_units:
+  - name: FIRST_VALUE_LEN_macro
+    kind: preproc_def
+    role: mutation_point
+    code: '#define FIRST_VALUE_LEN [FIRST_VALUE_LEN]'
+    placeholder: '[FIRST_VALUE_LEN]'
+    mask_level: macro_level
+    priority: high
+  - name: step1_store_nonzero
+    kind: call_expression
+    role: trigger_call
+    code: 'ret = mbedtls_asn1_store_named_data(&head, oid_cn, oid_len, val1, FIRST_VALUE_LEN)'
+    mask_level: function_call_level
+    priority: high
+  - name: step2_zero_length_update
+    kind: call_expression
+    role: trigger_call
+    code: 'ret = mbedtls_asn1_store_named_data(&head, oid_cn, oid_len, NULL, 0)'
+    mask_level: function_call_level
+    priority: high
+  - name: step3_reuse_same_len
+    kind: call_expression
+    role: trigger_call
+    code: 'ret = mbedtls_asn1_store_named_data(&head, oid_cn, oid_len, val2, FIRST_VALUE_LEN)'
+    mask_level: function_call_level
+    priority: high
+  - name: oracle_safe_realloc_check
+    kind: if_statement
+    role: oracle
+    code: 'if (ret->val.p && ret->val.len == FIRST_VALUE_LEN && memcmp == 0) { [OK] fixed behavior }'
+    mask_level: statement_level
+    priority: high
+  - name: free_named_data_list
+    kind: call_expression
+    role: cleanup
+    code: 'mbedtls_asn1_free_named_data_list(&head)'
+    mask_level: function_call_level
+    priority: medium

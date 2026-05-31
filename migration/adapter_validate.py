@@ -139,6 +139,126 @@ BIGNUM_BUFFER_CANARY_APIS = {
     "BN_signed_bn2bin",
 }
 
+NULL_DEREF_DISPATCH_APIS = {
+    "EVP_DigestVerify",
+}
+
+CRASH_SANITIZER_ORACLE_APIS = {
+    "PEM_read_bio_PrivateKey",
+}
+
+INVALID_PARAMETER_SETUP_ORACLE_APIS = {
+    "EVP_CIPHER_CTX_ctrl",
+}
+
+OBJECT_STATE_LIFECYCLE_APIS = {
+    "ASN1_STRING_set",
+}
+
+OBJECT_STATE_LIFECYCLE_FORBIDDEN_RESIDUE = [
+    "BIGNUM",
+    "BN_new",
+    "BN_free",
+    "BN_set_word",
+    "BN_bn2binpad",
+    "BN_signed_bn2bin",
+    "BN_usub",
+    "BN_ucmp",
+    "d2i_X509",
+    "X509_free",
+    "ASN1_item_d2i",
+    "d2i_RSAPrivateKey",
+    "d2i_PrivateKey",
+    "d2i_RSA_PUBKEY",
+    "EVP_DecryptFinal_ex",
+    "EVP_CIPHER_CTX",
+    "EVP_CIPHER_CTX_ctrl",
+    "EVP_DigestVerifyInit",
+    "PEM_read_bio_PrivateKey",
+    "CANARY_SIZE",
+    "BUFLEN",
+    "consumed_len",
+    "openssl/bn.h",
+    "openssl/x509.h",
+    "openssl/evp.h",
+    "openssl/pem.h",
+]
+
+INVALID_PARAMETER_SETUP_ORACLE_FORBIDDEN_RESIDUE = [
+    "BIGNUM",
+    "BN_new",
+    "BN_free",
+    "BN_set_word",
+    "BN_bn2binpad",
+    "BN_signed_bn2bin",
+    "BN_usub",
+    "BN_ucmp",
+    "d2i_X509",
+    "X509_free",
+    "ASN1_item_d2i",
+    "d2i_RSAPrivateKey",
+    "d2i_PrivateKey",
+    "d2i_RSA_PUBKEY",
+    "EVP_DecryptFinal_ex",
+    "EVP_DigestVerifyInit",
+    "PEM_read_bio_PrivateKey",
+    "CANARY_SIZE",
+    "BUFLEN",
+    "consumed_len",
+    "openssl/bn.h",
+    "openssl/x509.h",
+    "openssl/pem.h",
+]
+
+CRASH_SANITIZER_ORACLE_FORBIDDEN_RESIDUE = [
+    "BIGNUM",
+    "BN_new",
+    "BN_free",
+    "BN_set_word",
+    "BN_bn2binpad",
+    "BN_signed_bn2bin",
+    "BN_usub",
+    "BN_ucmp",
+    "d2i_X509",
+    "X509_free",
+    "ASN1_item_d2i",
+    "d2i_RSAPrivateKey",
+    "d2i_PrivateKey",
+    "d2i_RSA_PUBKEY",
+    "EVP_DecryptFinal_ex",
+    "EVP_CIPHER_CTX",
+    "EVP_DigestVerifyInit",
+    "CANARY_SIZE",
+    "BUFLEN",
+    "consumed_len",
+    "openssl/bn.h",
+    "openssl/x509.h",
+]
+
+NULL_DEREF_DISPATCH_FORBIDDEN_RESIDUE = [
+    "BIGNUM",
+    "BN_new",
+    "BN_free",
+    "BN_set_word",
+    "BN_bn2binpad",
+    "BN_signed_bn2bin",
+    "BN_usub",
+    "BN_ucmp",
+    "d2i_X509",
+    "X509_free",
+    "ASN1_item_d2i",
+    "EVP_DecryptFinal_ex",
+    "EVP_CIPHER_CTX",
+    "d2i_RSAPrivateKey",
+    "d2i_PrivateKey",
+    "d2i_RSA_PUBKEY",
+    "CANARY_SIZE",
+    "BUFLEN",
+    "consumed_len",
+    "openssl/bn.h",
+    "openssl/x509.h",
+]
+
 BIGNUM_BUFFER_CANARY_FORBIDDEN_RESIDUE = [
     "EVP_DecryptFinal_ex",
     "EVP_CIPHER_CTX",
@@ -479,6 +599,52 @@ def validate_recipe_adapter(adapter: Dict[str, Any], errors: List[str]) -> bool:
             errors.append(
                 f"{adapter.get('target_api')} recipe must use harness_family=buffer_canary_boundary"
             )
+    elif adapter.get("target_api") in OBJECT_STATE_LIFECYCLE_APIS:
+        if recipe.get("harness_family") != "object_state_lifecycle":
+            errors.append(
+                f"{adapter.get('target_api')} recipe must use harness_family=object_state_lifecycle"
+            )
+        if recipe.get("oracle_type") not in {
+            "stale_pointer_length_state_oracle",
+            "object_lifecycle_state_oracle",
+        }:
+            errors.append(
+                f"{adapter.get('target_api')} recipe must use an object_state_lifecycle oracle_type"
+            )
+    elif adapter.get("target_api") in INVALID_PARAMETER_SETUP_ORACLE_APIS:
+        if recipe.get("harness_family") != "invalid_parameter_setup_oracle":
+            errors.append(
+                f"{adapter.get('target_api')} recipe must use harness_family=invalid_parameter_setup_oracle"
+            )
+        if recipe.get("oracle_type") not in {
+            "invalid_aead_tag_length_oracle",
+            "invalid_parameter_return_code_oracle",
+        }:
+            errors.append(
+                f"{adapter.get('target_api')} recipe must use an invalid_parameter_setup_oracle oracle_type"
+            )
+    elif adapter.get("target_api") in CRASH_SANITIZER_ORACLE_APIS:
+        if recipe.get("harness_family") != "crash_sanitizer_oracle":
+            errors.append(
+                f"{adapter.get('target_api')} recipe must use harness_family=crash_sanitizer_oracle"
+            )
+        if recipe.get("oracle_type") not in {
+            "heap_underflow_sanitizer_oracle",
+            "heap_overflow_sanitizer_oracle",
+            "generic_sanitizer_crash_oracle",
+        }:
+            errors.append(
+                f"{adapter.get('target_api')} recipe must use a crash_sanitizer_oracle oracle_type"
+            )
+    elif adapter.get("target_api") in NULL_DEREF_DISPATCH_APIS:
+        if recipe.get("harness_family") != "null_deref_dispatch":
+            errors.append(
+                f"{adapter.get('target_api')} recipe must use harness_family=null_deref_dispatch"
+            )
+        if recipe.get("oracle_type") != "crash_sanitizer_or_safe_error_oracle":
+            errors.append(
+                f"{adapter.get('target_api')} recipe must use oracle_type=crash_sanitizer_or_safe_error_oracle"
+            )
     elif adapter.get("target_api") == "d2i_X509":
         if recipe.get("harness_family") != "x509_asn1_inner_boundary":
             errors.append("d2i_X509 recipe must use harness_family=x509_asn1_inner_boundary")
@@ -696,6 +862,231 @@ def validate_x509_asn1_inner_boundary_recipe_adapter(adapter: Dict[str, Any], er
         errors.append("d2i_X509 recipe must describe return-code observability")
 
 
+def validate_object_state_lifecycle_recipe_adapter(adapter: Dict[str, Any], errors: List[str]) -> None:
+    target_api = adapter.get("target_api")
+    if target_api not in OBJECT_STATE_LIFECYCLE_APIS or not is_recipe_adapter(adapter):
+        return
+
+    recipe = load_recipe_for_adapter(adapter, errors)
+    if not recipe:
+        return
+
+    if recipe.get("harness_family") != "object_state_lifecycle":
+        errors.append(f"{target_api} recipe adapter must use harness_family=object_state_lifecycle")
+
+    recipe_text = "\n".join(iter_string_values(recipe))
+    adapter_text = "\n".join(iter_string_values(adapter))
+    recipe_semantic_obj = copy.deepcopy(recipe)
+    recipe_semantic_obj.pop("forbidden_terms", None)
+    cross_family_text = "\n".join([adapter_text, "\n".join(iter_string_values(recipe_semantic_obj))])
+
+    headers = [str(x).strip() for x in ensure_list(recipe.get("include_headers"))]
+    if "openssl/asn1.h" not in headers:
+        errors.append(f"{target_api} recipe adapter must include openssl/asn1.h in adapter_recipe")
+
+    for token in OBJECT_STATE_LIFECYCLE_FORBIDDEN_RESIDUE:
+        if token in cross_family_text:
+            errors.append(f"{target_api} recipe adapter contains cross-family residue: {token}")
+
+    required_tokens = ["ASN1_STRING_set", "ASN1_STRING_new", "ASN1_STRING_free"]
+    combined_text = "\n".join([recipe_text, adapter_text])
+    for token in required_tokens:
+        if token not in combined_text:
+            errors.append(f"{target_api} recipe adapter must preserve required token: {token}")
+
+    allowed_slots = ensure_dict(recipe.get("allowed_slots"))
+    slot_bindings = ensure_dict(adapter.get("slot_bindings"))
+
+    observable_slots = {
+        "ASN1_STRING variable observable": ["asn1_string_variable"],
+        "return code observable": ["return_code_variable"],
+    }
+    for label, slots in observable_slots.items():
+        if not any(slot in allowed_slots and str(slot_bindings.get(slot) or "").strip() for slot in slots):
+            errors.append(f"{target_api} recipe adapter must expose {label}")
+
+    behavior_text = "\n".join(
+        iter_string_values({
+            "safe_behavior": recipe.get("safe_behavior"),
+            "bug_behavior": recipe.get("bug_behavior"),
+        })
+    ).lower()
+    if "safe" not in behavior_text and "realloc" not in behavior_text:
+        errors.append(f"{target_api} recipe must describe safe reallocation behavior")
+    if "crash" not in behavior_text and "asan" not in behavior_text and "null" not in behavior_text:
+        errors.append(f"{target_api} recipe must describe crash/ASAN/NULL bug behavior")
+
+
+def validate_invalid_parameter_setup_oracle_recipe_adapter(adapter: Dict[str, Any], errors: List[str]) -> None:
+    target_api = adapter.get("target_api")
+    if target_api not in INVALID_PARAMETER_SETUP_ORACLE_APIS or not is_recipe_adapter(adapter):
+        return
+
+    recipe = load_recipe_for_adapter(adapter, errors)
+    if not recipe:
+        return
+
+    if recipe.get("harness_family") != "invalid_parameter_setup_oracle":
+        errors.append(f"{target_api} recipe adapter must use harness_family=invalid_parameter_setup_oracle")
+
+    recipe_text = "\n".join(iter_string_values(recipe))
+    adapter_text = "\n".join(iter_string_values(adapter))
+    recipe_semantic_obj = copy.deepcopy(recipe)
+    recipe_semantic_obj.pop("forbidden_terms", None)
+    cross_family_text = "\n".join([adapter_text, "\n".join(iter_string_values(recipe_semantic_obj))])
+
+    headers = [str(x).strip() for x in ensure_list(recipe.get("include_headers"))]
+    if "openssl/evp.h" not in headers:
+        errors.append(f"{target_api} recipe adapter must include openssl/evp.h in adapter_recipe")
+
+    for token in INVALID_PARAMETER_SETUP_ORACLE_FORBIDDEN_RESIDUE:
+        if token in cross_family_text:
+            errors.append(f"{target_api} recipe adapter contains cross-family residue: {token}")
+
+    required_tokens = ["EVP_CIPHER_CTX_ctrl", "EVP_CTRL_CCM_SET_TAG", "EVP_aes_128_ccm"]
+    combined_text = "\n".join([recipe_text, adapter_text])
+    for token in required_tokens:
+        if token not in combined_text:
+            errors.append(f"{target_api} recipe adapter must preserve required token: {token}")
+
+    allowed_slots = ensure_dict(recipe.get("allowed_slots"))
+    slot_bindings = ensure_dict(adapter.get("slot_bindings"))
+
+    observable_slots = {
+        "tag length observable": ["aead_cipher", "return_code_variable"],
+        "ctx observable": ["ctx_variable"],
+    }
+    for label, slots in observable_slots.items():
+        if not any(slot in allowed_slots and str(slot_bindings.get(slot) or "").strip() for slot in slots):
+            errors.append(f"{target_api} recipe adapter must expose {label}")
+
+    behavior_text = "\n".join(
+        iter_string_values({
+            "safe_behavior": recipe.get("safe_behavior"),
+            "bug_behavior": recipe.get("bug_behavior"),
+        })
+    ).lower()
+    if "reject" not in behavior_text and "ret <= 0" not in behavior_text:
+        errors.append(f"{target_api} recipe must describe rejection safe behavior")
+    if "accept" not in behavior_text and "ret > 0" not in behavior_text:
+        errors.append(f"{target_api} recipe must describe acceptance bug behavior")
+
+
+def validate_crash_sanitizer_oracle_recipe_adapter(adapter: Dict[str, Any], errors: List[str]) -> None:
+    target_api = adapter.get("target_api")
+    if target_api not in CRASH_SANITIZER_ORACLE_APIS or not is_recipe_adapter(adapter):
+        return
+
+    recipe = load_recipe_for_adapter(adapter, errors)
+    if not recipe:
+        return
+
+    if recipe.get("harness_family") != "crash_sanitizer_oracle":
+        errors.append(f"{target_api} recipe adapter must use harness_family=crash_sanitizer_oracle")
+
+    recipe_text = "\n".join(iter_string_values(recipe))
+    adapter_text = "\n".join(iter_string_values(adapter))
+    recipe_semantic_obj = copy.deepcopy(recipe)
+    recipe_semantic_obj.pop("forbidden_terms", None)
+    cross_family_text = "\n".join([adapter_text, "\n".join(iter_string_values(recipe_semantic_obj))])
+
+    headers = [str(x).strip() for x in ensure_list(recipe.get("include_headers"))]
+    if "openssl/pem.h" not in headers:
+        errors.append(f"{target_api} recipe adapter must include openssl/pem.h in adapter_recipe")
+
+    for token in CRASH_SANITIZER_ORACLE_FORBIDDEN_RESIDUE:
+        if token in cross_family_text:
+            errors.append(f"{target_api} recipe adapter contains cross-family residue: {token}")
+
+    required_tokens = ["PEM_read_bio_PrivateKey", "BIO_new_mem_buf", "BIO_free"]
+    combined_text = "\n".join([recipe_text, adapter_text])
+    for token in required_tokens:
+        if token not in combined_text:
+            errors.append(f"{target_api} recipe adapter must preserve required token: {token}")
+
+    allowed_slots = ensure_dict(recipe.get("allowed_slots"))
+    slot_bindings = ensure_dict(adapter.get("slot_bindings"))
+
+    observable_slots = {
+        "bio observable": ["bio_variable"],
+        "key result observable": ["pkey_variable"],
+    }
+    for label, slots in observable_slots.items():
+        if not any(slot in allowed_slots and str(slot_bindings.get(slot) or "").strip() for slot in slots):
+            errors.append(f"{target_api} recipe adapter must expose {label}")
+
+    behavior_text = "\n".join(
+        iter_string_values({
+            "safe_behavior": recipe.get("safe_behavior"),
+            "bug_behavior": recipe.get("bug_behavior"),
+        })
+    ).lower()
+    if "null" not in behavior_text and "reject" not in behavior_text:
+        errors.append(f"{target_api} recipe must describe NULL/rejection safe behavior")
+    if "crash" not in behavior_text and "asan" not in behavior_text and "sanitizer" not in behavior_text:
+        errors.append(f"{target_api} recipe must describe crash/ASAN bug behavior")
+
+
+def validate_null_deref_dispatch_recipe_adapter(adapter: Dict[str, Any], errors: List[str]) -> None:
+    target_api = adapter.get("target_api")
+    if target_api not in NULL_DEREF_DISPATCH_APIS or not is_recipe_adapter(adapter):
+        return
+
+    recipe = load_recipe_for_adapter(adapter, errors)
+    if not recipe:
+        return
+
+    if recipe.get("harness_family") != "null_deref_dispatch":
+        errors.append(f"{target_api} recipe adapter must use harness_family=null_deref_dispatch")
+    if recipe.get("oracle_type") != "crash_sanitizer_or_safe_error_oracle":
+        errors.append(f"{target_api} recipe adapter must use oracle_type=crash_sanitizer_or_safe_error_oracle")
+
+    recipe_text = "\n".join(iter_string_values(recipe))
+    adapter_text = "\n".join(iter_string_values(adapter))
+    recipe_semantic_obj = copy.deepcopy(recipe)
+    recipe_semantic_obj.pop("forbidden_terms", None)
+    cross_family_text = "\n".join([adapter_text, "\n".join(iter_string_values(recipe_semantic_obj))])
+
+    headers = [str(x).strip() for x in ensure_list(recipe.get("include_headers"))]
+    if "openssl/evp.h" not in headers:
+        errors.append(f"{target_api} recipe adapter must include openssl/evp.h in adapter_recipe")
+
+    for token in NULL_DEREF_DISPATCH_FORBIDDEN_RESIDUE:
+        if token in cross_family_text:
+            errors.append(f"{target_api} recipe adapter contains cross-family residue: {token}")
+
+    required_tokens = ["EVP_DigestVerifyInit", "EVP_PKEY_CTX_set_rsa_padding", "EVP_MD_CTX"]
+    combined_text = "\n".join([recipe_text, adapter_text])
+    for token in required_tokens:
+        if token not in combined_text:
+            errors.append(f"{target_api} recipe adapter must preserve required token: {token}")
+
+    allowed_slots = ensure_dict(recipe.get("allowed_slots"))
+    slot_bindings = ensure_dict(adapter.get("slot_bindings"))
+
+    observable_slots = {
+        "hash algorithm observable": ["md_algorithm"],
+        "incompatible key observable": ["incompatible_key_variable"],
+        "return code observable": ["return_code_variable"],
+    }
+    for label, slots in observable_slots.items():
+        if not any(slot in allowed_slots and str(slot_bindings.get(slot) or "").strip() for slot in slots):
+            errors.append(f"{target_api} recipe adapter must expose {label}")
+
+    behavior_text = "\n".join(
+        iter_string_values(
+            {
+                "safe_behavior": recipe.get("safe_behavior"),
+                "bug_behavior": recipe.get("bug_behavior"),
+            }
+        )
+    ).lower()
+    if "crash" not in behavior_text and "asan" not in behavior_text and "segv" not in behavior_text:
+        errors.append(f"{target_api} recipe must describe crash/ASAN/SEGV bug behavior")
+    if "safe" not in behavior_text and "reject" not in behavior_text:
+        errors.append(f"{target_api} recipe must describe safe rejection behavior")
+
+
 def validate_evp_decrypt_final_adapter(adapter: Dict[str, Any], errors: List[str]) -> None:
     if adapter.get("target_api") != "EVP_DecryptFinal_ex":
         return
@@ -805,6 +1196,10 @@ def normalize_and_validate(obj: Dict[str, Any]) -> Dict[str, Any]:
     validate_evp_decrypt_final_adapter(adapter, errors)
     validate_bn_usub_recipe_adapter(adapter, errors)
     validate_bignum_buffer_canary_recipe_adapter(adapter, errors)
+    validate_null_deref_dispatch_recipe_adapter(adapter, errors)
+    validate_crash_sanitizer_oracle_recipe_adapter(adapter, errors)
+    validate_invalid_parameter_setup_oracle_recipe_adapter(adapter, errors)
+    validate_object_state_lifecycle_recipe_adapter(adapter, errors)
 
     adapter["validation"] = {
         "status": "needs_repair" if errors else "ok",

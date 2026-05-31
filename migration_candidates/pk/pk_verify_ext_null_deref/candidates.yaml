@@ -1,0 +1,157 @@
+template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+source_template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+source:
+  library: mbedtls
+  api: mbedtls_pk_verify_ext
+  pattern_id: MBEDTLS-POC-0003
+  root_cause_summary: >
+    mbedtls_pk_verify_ext() enters the RSASSA-PSS verification path without first
+    checking that the supplied PK context is an RSA context. For opaque PSA-wrapped
+    keys, mbedtls_pk_rsa(*ctx) returns NULL. The RSA-PSS path dereferences the NULL
+    RSA context, causing a segmentation fault. The fix adds a type guard:
+    if (mbedtls_pk_get_type(ctx) != MBEDTLS_PK_RSA) return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE.
+  vulnerability_path_features:
+    must_preserve:
+      - generic_polymorphic_key_context_dispatch
+      - rsa_pss_specific_verification_path_or_rsa_dispatch_code
+      - incompatible_or_mismatched_key_type_entry
+      - missing_type_check_before_rsa_context_access
+      - observable_crash_vs_safe_error_return
+    optional:
+      - psa_opaque_key_mechanism
+      - exact_mbedtls_error_code_value
+      - exact_rsa_key_size
+    not_required:
+      - exact_psa_opaque_key_import_sequence
+      - exact_mbedtls_internal_function_name
+
+scoring_policy:
+  operation_family: 0.15
+  function_behavior: 0.20
+  parameter_structure: 0.20
+  vulnerability_path: 0.30
+  harness_feasibility: 0.15
+  decision_rule:
+    generate: final >= 75 and vulnerability_path >= 70
+    needs_llm_review: final >= 55 and vulnerability_path >= 50
+    skip: otherwise
+  score_notes:
+    - The key criterion is whether the target API has a polymorphic key dispatch layer
+      where an incompatible key type can reach RSA-specific code.
+    - Exact mbedTLS error codes and PSA mechanisms are not required.
+    - Oracle must be: crash (ASAN/SEGV/exit 139) or safe error return.
+
+required_features:
+  - target has a generic or polymorphic public-key context or dispatch layer
+  - target has an RSA-PSS signature verification path or RSA-specific dispatch code
+  - target can receive a key object of incompatible type relative to the operation
+  - target exposes observable return code or crash signal for incompatible key type
+  - harness can construct incompatible key type without full TLS handshake
+  - harness is a standalone compilable C program
+
+target_candidates:
+  - target_library: openssl
+    target_api: EVP_DigestVerify
+    library: openssl
+    api: EVP_DigestVerify
+    source_template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+    source_api: mbedtls_pk_verify_ext
+    decision: generate
+    migration_applicability: applicable
+    applicability: strong_candidate
+    scores:
+      operation_family: 85
+      function_behavior: 80
+      parameter_structure: 75
+      vulnerability_path: 72
+      harness_feasibility: 85
+      final: 78
+    preserved_features:
+      - EVP_PKEY is a polymorphic key dispatch layer analogous to mbedTLS PK context
+      - EVP_DigestVerifyInit dispatches internally to RSA-specific or ECDSA-specific methods
+      - passing an EC key to a verify operation that requests RSA-PSS padding replicates
+        the incompatible key type scenario
+      - EVP_PKEY_CTX_set_rsa_padding reachable from EVP_DigestVerifyInit dispatch path
+      - return code oracle observable through all EVP_Digest* return values
+      - ASAN or UBSAN crash oracle available through sanitizer-linked compilation
+      - standalone harness constructable without TLS handshake
+    preserved_vulnerability_features:
+      - generic_polymorphic_key_context_dispatch
+      - rsa_pss_specific_verification_path_or_rsa_dispatch_code
+      - incompatible_or_mismatched_key_type_entry
+      - observable_crash_vs_safe_error_return
+    weakened_features:
+      - OpenSSL EVP dispatch uses explicit pmeth type table; type check is more robust
+        than the historical mbedTLS missing guard
+      - PSA opaque key concept has no direct OpenSSL equivalent; replaced by EC key
+        type mismatch scenario
+      - modern OpenSSL (3.x) performs type validation at EVP_DigestVerifyInit or
+        EVP_PKEY_CTX_set_rsa_padding so crash is unlikely on current version
+    lost_or_weakened_features:
+      - psa_opaque_key_mechanism
+      - exact_mbedtls_error_code_value
+      - exact_mbedtls_internal_type_guard_location
+    migration_reason: >
+      Strongest target candidate. EVP_DigestVerify uses EVP_PKEY which is a generic
+      key dispatch layer analogous to the mbedTLS PK context. By passing an EC key
+      (incompatible type for RSA-PSS) and requesting RSA-PSS padding via
+      EVP_PKEY_CTX_set_rsa_padding, the harness probes whether the OpenSSL dispatch
+      safely rejects the incompatible type combination or crashes. The expected result
+      on current OpenSSL 3.x is safe rejection, making this a migrated_safe result.
+      This is a valid research outcome showing that OpenSSL has stronger type checking.
+    required_features:
+      - generate RSA signing key and produce RSA-PSS signature with EVP_DigestSignInit
+      - generate EC key (incompatible type for RSA-PSS)
+      - call EVP_DigestVerifyInit with EC key and SHA-256 hash
+      - call EVP_PKEY_CTX_set_rsa_padding with RSA_PKCS1_PSS_PADDING (probes dispatch)
+      - observe return code at each step; process crash would be caught by ASAN
+      - cleanup EVP_MD_CTX and EVP_PKEY objects
+    notes:
+      - The harness uses RSA_KEY_BITS parameterized by [KEY_BITS] to match source mutation.
+      - Expected migration verdict is migrated_safe; both mbedTLS (fixed) and OpenSSL
+        safely reject the incompatible key type.
+
+  - target_library: openssl
+    target_api: EVP_PKEY_verify
+    library: openssl
+    api: EVP_PKEY_verify
+    source_template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+    source_api: mbedtls_pk_verify_ext
+    decision: needs_llm_review
+    migration_applicability: applicable_with_limitations
+    applicability: weak_candidate
+    scores:
+      operation_family: 80
+      function_behavior: 78
+      parameter_structure: 70
+      vulnerability_path: 63
+      harness_feasibility: 78
+      final: 72
+    preserved_features:
+      - EVP_PKEY_verify dispatches based on key type via EVP_PKEY_CTX
+      - return code observable
+      - incompatible key type scenario constructable
+    preserved_vulnerability_features:
+      - generic_polymorphic_key_context_dispatch
+      - observable_crash_vs_safe_error_return
+    weakened_features:
+      - EVP_PKEY_verify requires pre-digested input not raw data
+      - RSA-PSS padding must be set through separate EVP_PKEY_CTX calls
+      - more complex harness setup than EVP_DigestVerify
+    lost_or_weakened_features:
+      - psa_opaque_key_mechanism
+      - exact_mbedtls_error_code_value
+      - rsa_pss_specific_verification_path_or_rsa_dispatch_code
+    migration_reason: >
+      Weaker candidate than EVP_DigestVerify because it requires pre-digested input
+      and more complex EVP_PKEY_CTX management. Use EVP_DigestVerify as the primary
+      target. Consider this as a secondary candidate if the primary harness does not
+      expose a useful oracle.
+    required_features:
+      - construct EC key (incompatible type)
+      - call EVP_PKEY_verify_init and set RSA-PSS padding
+      - call EVP_PKEY_verify with pre-digested data
+      - observe return code
+    notes:
+      - Prefer EVP_DigestVerify for automatic adapter generation.
+      - This candidate is kept as context evidence only.

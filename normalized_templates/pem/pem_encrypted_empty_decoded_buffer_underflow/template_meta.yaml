@@ -1,0 +1,82 @@
+template_id: PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW
+template_name: mbedtls_pem_read_buffer encrypted PEM empty-buffer underflow template
+backend: api_harness
+language: c
+status: normalized
+poc_source:
+  file: poc_pem_underflow.c
+  library: mbedtls
+  api: mbedtls_pem_read_buffer
+operation:
+  abstract: pem_encrypted_parse_padding_check
+  api_family: PEMParser
+  bug_class:
+    - heap_buffer_underflow
+    - one_byte_read_before_heap_region
+    - missing_length_guard_before_padding_access
+source_api:
+  library: mbedtls
+  function: mbedtls_pem_read_buffer
+mutation_points:
+  - name: PEM_BODY
+    placeholder: '[PEM_BODY]'
+    type: string
+    default: '8Q'
+    values:
+      - '8Q'
+      - '8Q=='
+      - 'AAAA'
+      - 'AAAABBBB'
+    strategy: short_body_variants
+    constraint: Must be a base64 string short enough that the decoded buffer is empty or smaller than one AES-128 block (16 bytes).
+    priority: high
+    normalized: true
+oracle:
+  memory_safety:
+    - no_heap_buffer_underflow
+    - no_asan_read_before_heap_region
+    - sanitizer_clean
+  bug_candidate:
+    - asan_heap_buffer_underflow
+    - READ_of_size_1_in_pem_check_pkcs_padding
+    - address_1_byte_before_heap_region
+    - exit_code_nonzero_with_asan
+  fixed_or_safe:
+    - ret_nonzero_no_asan
+    - malformed_PEM_rejected_safely
+verdict:
+  true_positive:
+    condition: process_crash_or_asan_heap_underflow == true
+    exit_code: nonzero_or_signal
+  fixed_behavior:
+    condition: ret != 0 and no_asan_signal
+    exit_code: 0
+generation_policy:
+  max_cases: 16
+  priority:
+    - short_pem_body
+    - encrypted_pem_path
+  compile_with:
+    - asan
+    - ubsan
+expected_buggy_behavior:
+  signal: asan_heap_buffer_underflow
+  exit_code: 1
+  description: READ of size 1 in pem_check_pkcs_padding, 1 byte before heap region
+expected_fixed_behavior:
+  ret: -44
+  description: base64 or padding error returned safely, no ASAN signal
+rag_requirements:
+  retrieve:
+    - mbedtls_pem_read_buffer API constraints
+    - OpenSSL PEM encrypted key parsing API
+    - cross-library candidate mappings
+llm_enrichment:
+  source: glm
+  oracle_notes:
+    - Check for ASAN heap-buffer-underflow or heap-buffer-overflow signals
+    - Verify that the function returns a nonzero error code without crashing
+    - Distinguish ASAN crash from intentional harness exit
+normalization:
+  enabled: true
+  policy: template_id_specific_safe_whitelist

@@ -1,0 +1,42 @@
+template_id: ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE
+template_name: mbedtls_asn1_store_named_data zero-length stale pointer-length state template
+source_api: mbedtls_asn1_store_named_data
+ast_analysis:
+  tool: ast_mask_lite
+  language: c
+  nodes:
+    - kind: preproc_def
+      name: FIRST_VALUE_LEN
+      code: '#define FIRST_VALUE_LEN [FIRST_VALUE_LEN]'
+      role: mutation_point
+      mask_level: macro_level
+      placeholder: '[FIRST_VALUE_LEN]'
+    - kind: call_expression
+      function: mbedtls_asn1_store_named_data
+      role: trigger_call_step1
+      code: 'ret = mbedtls_asn1_store_named_data(&head, oid_cn, oid_len, val1, FIRST_VALUE_LEN)'
+      mask_level: function_call_level
+    - kind: call_expression
+      function: mbedtls_asn1_store_named_data
+      role: trigger_call_step2_zero_len
+      code: 'ret = mbedtls_asn1_store_named_data(&head, oid_cn, oid_len, NULL, 0)'
+      mask_level: function_call_level
+    - kind: call_expression
+      function: mbedtls_asn1_store_named_data
+      role: trigger_call_step3_reuse
+      code: 'ret = mbedtls_asn1_store_named_data(&head, oid_cn, oid_len, val2, FIRST_VALUE_LEN)'
+      mask_level: function_call_level
+    - kind: if_statement
+      role: oracle
+      code: 'if (ret->val.p && ret->val.len == FIRST_VALUE_LEN && memcmp == 0) { [OK] fixed behavior }'
+      mask_level: statement_level
+    - kind: call_expression
+      function: mbedtls_asn1_free_named_data_list
+      role: cleanup
+      code: 'mbedtls_asn1_free_named_data_list(&head)'
+      mask_level: function_call_level
+selected_high_value_nodes:
+  - FIRST_VALUE_LEN macro (primary mutation point)
+  - three mbedtls_asn1_store_named_data calls (step1/step2/step3)
+  - oracle if-statement
+  - mbedtls_asn1_free_named_data_list cleanup

@@ -1,0 +1,62 @@
+template_id: PSA_AEAD_INVALID_SHORTENED_TAG_SETUP
+template_name: psa_aead_decrypt_setup invalid shortened CCM tag length template
+source_api: psa_aead_decrypt_setup
+selection_policy:
+  method: ast_lite_high_value_mask_unit_selection
+  rules:
+    - Prefer role=mutation_point units.
+    - Always retain trigger_call function_call units.
+    - Always retain oracle statement units.
+    - Limit cleanup units to representative statements.
+  context_keywords:
+    - tag_length
+    - shortened_tag
+    - ccm
+    - aead
+    - invalid
+    - psa_aead
+selected_units:
+  - name: TAG_LENGTH_macro
+    kind: preproc_def
+    role: mutation_point
+    code: '#define TAG_LENGTH [TAG_LENGTH]'
+    placeholder: '[TAG_LENGTH]'
+    mask_level: macro_level
+    priority: high
+  - name: KEY_BITS_macro
+    kind: preproc_def
+    role: mutation_point
+    code: '#define KEY_BITS [KEY_BITS]'
+    placeholder: '[KEY_BITS]'
+    mask_level: macro_level
+    priority: medium
+  - name: aead_algorithm_construction
+    kind: call_expression
+    role: input_construction
+    code: 'PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, TAG_LENGTH)'
+    mask_level: api_argument_level
+    priority: high
+  - name: psa_aead_decrypt_setup_trigger
+    kind: call_expression
+    role: trigger_call
+    code: 'status = psa_aead_decrypt_setup(&operation, key_id, alg)'
+    mask_level: function_call_level
+    priority: high
+  - name: oracle_tag_length_check
+    kind: if_statement
+    role: oracle
+    code: 'if (!is_valid_ccm_tag_length(TAG_LENGTH)) { if (status == PSA_SUCCESS) { [BUG] } else { [OK] } }'
+    mask_level: statement_level
+    priority: high
+  - name: psa_aead_abort_cleanup
+    kind: call_expression
+    role: cleanup
+    code: 'psa_aead_abort(&operation)'
+    mask_level: function_call_level
+    priority: medium
+  - name: psa_destroy_key_cleanup
+    kind: call_expression
+    role: cleanup
+    code: 'psa_destroy_key(key_id)'
+    mask_level: function_call_level
+    priority: medium

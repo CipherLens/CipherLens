@@ -1,0 +1,83 @@
+{
+  "mutation_updates": {
+    "KEY_BITS": {
+      "values": [
+        0,
+        512,
+        1024,
+        2048,
+        4096
+      ],
+      "strategy": "boundary_values",
+      "constraint": "Must be a valid key size for RSA-PSS",
+      "priority": "high"
+    },
+    "HASH_LEN": {
+      "values": [
+        0,
+        16,
+        32,
+        64,
+        128
+      ],
+      "strategy": "boundary_values",
+      "constraint": "Must match the hash size for the chosen MD_ALG",
+      "priority": "high"
+    },
+    "SIG_LEN": {
+      "values": [
+        0,
+        64,
+        128,
+        256,
+        512
+      ],
+      "strategy": "boundary_values",
+      "constraint": "Must be a valid RSA-PSS signature length",
+      "priority": "high"
+    },
+    "MD_ALG": {
+      "values": [
+        "MBEDTLS_MD_SHA256",
+        "MBEDTLS_MD_SHA384",
+        "MBEDTLS_MD_SHA512",
+        "MBEDTLS_MD_SHA224"
+      ],
+      "strategy": "enum_values",
+      "constraint": "Must be a valid hash algorithm for RSA-PSS",
+      "priority": "medium"
+    },
+    "PK_VERIFY_TYPE": {
+      "values": [
+        "MBEDTLS_PK_RSASSA_PSS",
+        "MBEDTLS_PK_RSASSA_PSS_MGF1_SHA256",
+        "MBEDTLS_PK_RSASSA_PSS_MGF1_SHA384",
+        "MBEDTLS_PK_RSASSA_PSS_MGF1_SHA512"
+      ],
+      "strategy": "enum_values",
+      "constraint": "Must be a valid RSA-PSS verification type",
+      "priority": "medium"
+    },
+    "EXPECTED_SALT_LEN": {
+      "values": [
+        "MBEDTLS_RSA_SALT_LEN_NONE",
+        "MBEDTLS_RSA_SALT_LEN_ANY",
+        "MBEDTLS_RSA_SALT_LEN_32",
+        "MBEDTLS_RSA_SALT_LEN_48"
+      ],
+      "strategy": "enum_values",
+      "constraint": "Must be a valid salt length for RSA-PSS",
+      "priority": "medium"
+    }
+  },
+  "oracle_notes": [
+    "Check for null pointer dereferences and crashes using ASan",
+    "Verify that the function returns MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE under specific conditions",
+    "Ensure that the behavior matches the expected fixed version behavior"
+  ],
+  "generation_notes": [
+    "The mutation points focus on boundary values and enum-like macros to trigger potential null-dereference vulnerabilities.",
+    "The priority is set based on the likelihood of triggering the bug class (null_pointer_dereference, opaque_key_type_confusion, missing_context_type_check).",
+    "The values chosen for buffer sizes and enum-like macros are based on the API constraints and typical usage patterns."
+  ]
+}

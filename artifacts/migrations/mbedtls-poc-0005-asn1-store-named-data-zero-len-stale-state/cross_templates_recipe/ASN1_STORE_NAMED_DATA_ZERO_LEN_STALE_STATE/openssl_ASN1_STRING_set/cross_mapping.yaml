@@ -1,0 +1,69 @@
+source:
+  library: mbedtls
+  api: mbedtls_asn1_store_named_data
+  template_id: ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE
+  semantic_operation: asn1_named_data_zero_len_stale_state_lifecycle
+  bug_class:
+  - stale_pointer_length_state
+  - null_pointer_dereference
+  - reuse_after_zero_length_update
+  poc_pattern:
+    pattern_id: MBEDTLS-POC-0005
+    bug_category: stale_pointer_length_state
+    failure_signal:
+    - ASAN_null_dereference
+    - SEGV_in_memcpy
+target:
+  library: openssl
+  candidate_api: ASN1_STRING_set
+adapter:
+  adapter_recipe: adapter_recipes/openssl/ASN1_STRING_set.object_state_lifecycle.yaml
+  slot_bindings:
+    asn1_string_variable: s
+    return_code_variable: ret
+    first_data_variable: first_data
+    reuse_data_variable: reuse_data
+  adapter_mode: recipe_slot_filling
+  include_headers: []
+  type_mapping: {}
+  constant_mapping: {}
+  init_block: ''
+  input_construction_block: ''
+  trigger_block: ''
+  return_value_semantics: ''
+  oracle_strategy: {}
+  cleanup_block: ''
+  llm_status: ok
+candidate:
+  library: openssl
+  api: ASN1_STRING_set
+  decision: generate
+  scores:
+    operation_family: 70
+    function_behavior: 60
+    parameter_structure: 65
+    vulnerability_path: 50
+    harness_feasibility: 85
+    final: 62
+preserved_vulnerability_features:
+- mutable_named_object_with_pointer_length_pair
+- repeated_update_of_same_object
+- zero_length_update_modifies_pointer_state
+lost_or_weakened_features:
+- OID_based_object_lookup
+- linked_list_storage
+- exact_stale_null_pointer_path
+source_expected_behavior:
+  buggy:
+    signal: ASAN_null_dereference
+    exit_code: 1
+    description: memcpy to NULL val.p after stale val.len prevents reallocation
+  fixed:
+    description: val.len cleared after zero-length update; step3 safely reallocates
+  note: The target API is not expected to reproduce exact mbedTLS numeric error codes;
+    cross-library validation uses the oracle semantics defined by the migrated harness
+    family.
+notes:
+- Generated from LLM-filled structured adapter YAML.
+- The C harness skeleton is fixed; the target-specific blocks come from adapter.yaml.
+- This is vulnerability-path migration, not strict full API semantic equivalence.

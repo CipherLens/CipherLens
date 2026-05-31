@@ -1,0 +1,98 @@
+template_id: PSA_AEAD_INVALID_SHORTENED_TAG_SETUP
+source_template_id: PSA_AEAD_INVALID_SHORTENED_TAG_SETUP
+source:
+  library: mbedtls
+  api: psa_aead_decrypt_setup
+  pattern_id: MBEDTLS-POC-0028
+  root_cause_summary: >
+    psa_aead_setup() did not call psa_validate_tag_length() before accepting the
+    operation. For CCM, tag length 3 is invalid (only even lengths 4-16 are valid),
+    but the buggy version returned PSA_SUCCESS. Fixed by validating tag length during
+    setup and returning PSA_ERROR_INVALID_ARGUMENT for invalid values.
+  vulnerability_path_features:
+    must_preserve:
+      - aead_setup_api_entrypoint
+      - shortened_tag_length_parameter
+      - algorithm_specific_tag_length_validation
+      - invalid_parameter_return_code_observable
+      - setup_time_validation_not_deferred_to_operation_use
+    optional:
+      - CCM_algorithm_specifically
+      - AES_key_type
+    not_required:
+      - exact_PSA_error_code
+      - exact_mbedTLS_internal_function_name
+
+scoring_policy:
+  operation_family: 0.15
+  function_behavior: 0.20
+  parameter_structure: 0.20
+  vulnerability_path: 0.30
+  harness_feasibility: 0.15
+  decision_rule:
+    generate: final >= 75 and vulnerability_path >= 70
+    needs_llm_review: final >= 55 and vulnerability_path >= 50
+    skip: otherwise
+  score_notes:
+    - Key criterion is whether the target API validates AEAD tag length at setup/control time.
+    - The oracle must be observable through the return code of the setup or ctrl call.
+    - PSA-specific algorithm encoding is projected to OpenSSL EVP ctrl semantics.
+
+required_features:
+  - target has a setup or ctrl API for AEAD tag length specification
+  - target validates the tag length at setup/control time (not deferred)
+  - target returns an observable error code for invalid tag length
+  - harness is a standalone compilable C program
+  - OpenSSL CCM mode supports EVP_CTRL_CCM_SET_TAG ctrl command
+
+target_candidates:
+  - target_library: openssl
+    target_api: EVP_CIPHER_CTX_ctrl
+    library: openssl
+    api: EVP_CIPHER_CTX_ctrl
+    source_template_id: PSA_AEAD_INVALID_SHORTENED_TAG_SETUP
+    source_api: psa_aead_decrypt_setup
+    decision: generate
+    migration_applicability: applicable
+    applicability: strong_candidate
+    scores:
+      operation_family: 85
+      function_behavior: 80
+      parameter_structure: 82
+      vulnerability_path: 80
+      harness_feasibility: 88
+      final: 83
+    preserved_features:
+      - EVP_CIPHER_CTX_ctrl with EVP_CTRL_CCM_SET_TAG sets CCM tag length at setup time
+      - ctrl return code is observable (1=accepted, 0=rejected)
+      - invalid CCM tag length 3 is rejected by OpenSSL 3.5.5 (ctrl returns 0)
+      - valid CCM tag lengths (4, 6, 8, 10, 12, 14, 16) are accepted (ctrl returns 1)
+      - harness does not require full AEAD operation; tag length validation observable at ctrl step
+    preserved_vulnerability_features:
+      - aead_setup_api_entrypoint
+      - shortened_tag_length_parameter
+      - algorithm_specific_tag_length_validation
+      - invalid_parameter_return_code_observable
+    weakened_features:
+      - OpenSSL uses EVP ctrl interface rather than PSA algorithm encoding
+      - PSA_ALG_AEAD_WITH_SHORTENED_TAG encoding has no direct OpenSSL equivalent
+      - validation happens at EVP ctrl not at a separate setup API
+    lost_or_weakened_features:
+      - exact_PSA_error_code
+      - PSA_algorithm_encoding
+    migration_reason: >
+      Strongest candidate. EVP_CIPHER_CTX_ctrl with EVP_CTRL_CCM_SET_TAG directly
+      controls the CCM tag length at context setup time and returns an observable code.
+      OpenSSL 3.5.5 rejects tag_len=3 (returns 0) and accepts valid lengths (returns 1).
+      The vulnerability-path projection is: PSA invalid shortened tag rejection →
+      EVP CCM ctrl invalid tag rejection. Expected migration verdict: migrated_safe.
+    required_features:
+      - EVP_CIPHER_CTX_new() and initialize with EVP_aes_128_ccm()
+      - EVP_DecryptInit_ex(ctx, EVP_aes_128_ccm(), NULL, NULL, NULL) to set cipher
+      - EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_TAG, TAG_LENGTH, NULL) to probe validation
+      - observe ctrl return code (0 = rejected, 1 = accepted)
+      - EVP_CIPHER_CTX_free(ctx)
+    notes:
+      - Both libraries safely reject tag_len=3 in current versions → migrated_safe expected.
+      - Oracle: tag_len=3 accepted → bug_candidate; rejected → safe_reject_behavior.
+      - Valid tag lengths (4, 8, 12, 16) accepted by both → normal_expected_behavior.

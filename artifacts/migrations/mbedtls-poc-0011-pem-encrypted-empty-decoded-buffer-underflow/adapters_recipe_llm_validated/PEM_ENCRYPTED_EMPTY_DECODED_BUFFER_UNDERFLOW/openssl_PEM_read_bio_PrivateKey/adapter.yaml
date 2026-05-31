@@ -1,0 +1,33 @@
+source_pattern_id: MBEDTLS-POC-0011
+template_id: PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW
+harness_family: crash_sanitizer_oracle
+oracle_type: heap_underflow_sanitizer_oracle
+target_library: openssl
+target_api: PEM_read_bio_PrivateKey
+applicability: generate
+adapter_recipe: adapter_recipes/openssl/PEM_read_bio_PrivateKey.crash_sanitizer_oracle.yaml
+evidence_file: migration_candidates/pem/pem_encrypted_empty_decoded_buffer_underflow/candidates_with_evidence.yaml
+slot_bindings:
+  pem_header_label: EC PRIVATE KEY
+  password_string: pwd
+  bio_variable: bio
+  pkey_variable: pkey
+  return_code_variable: ret
+preserved_features:
+- pem_parser_entrypoint
+- encrypted_pem_path_with_password
+- malformed_or_short_base64_body
+- observable_asan_heap_underflow_or_safe_error
+lost_or_weakened_features:
+- exact_pem_check_pkcs_padding_internal_function
+- exact_mbedtls_error_code
+_adapter_mode: recipe_slot_filling
+_ignored_disallowed_fields: []
+_ignored_non_slot_fields: []
+_llm_status: ok
+include_headers: []
+validation:
+  status: ok
+  errors: []
+  warnings: []
+  normalized: true

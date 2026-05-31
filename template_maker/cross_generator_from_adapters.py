@@ -226,6 +226,109 @@ BUFFER_CANARY_RECIPE_FORBIDDEN_TOKENS = [
     "BN_ucmp",
 ]
 
+OBJECT_STATE_LIFECYCLE_FORBIDDEN_TOKENS = [
+    "BIGNUM",
+    "BN_new",
+    "BN_free",
+    "BN_set_word",
+    "BN_bn2binpad",
+    "BN_signed_bn2bin",
+    "BN_usub",
+    "BN_ucmp",
+    "d2i_X509",
+    "X509_free",
+    "d2i_RSAPrivateKey",
+    "d2i_PrivateKey",
+    "d2i_RSA_PUBKEY",
+    "EVP_DecryptFinal_ex",
+    "EVP_CIPHER_CTX",
+    "EVP_CIPHER_CTX_ctrl",
+    "EVP_DigestVerifyInit",
+    "PEM_read_bio_PrivateKey",
+    "CANARY_SIZE",
+    "BUFLEN",
+    "consumed_len",
+    "openssl/bn.h",
+    "openssl/x509.h",
+    "openssl/evp.h",
+    "openssl/pem.h",
+]
+
+INVALID_PARAMETER_SETUP_ORACLE_FORBIDDEN_TOKENS = [
+    "BIGNUM",
+    "BN_new",
+    "BN_free",
+    "BN_set_word",
+    "BN_bn2binpad",
+    "BN_signed_bn2bin",
+    "BN_usub",
+    "BN_ucmp",
+    "d2i_X509",
+    "X509_free",
+    "ASN1_item_d2i",
+    "d2i_RSAPrivateKey",
+    "d2i_PrivateKey",
+    "d2i_RSA_PUBKEY",
+    "EVP_DecryptFinal_ex",
+    "EVP_DigestVerifyInit",
+    "PEM_read_bio_PrivateKey",
+    "CANARY_SIZE",
+    "BUFLEN",
+    "consumed_len",
+    "openssl/bn.h",
+    "openssl/x509.h",
+    "openssl/pem.h",
+]
+
+CRASH_SANITIZER_ORACLE_FORBIDDEN_TOKENS = [
+    "BIGNUM",
+    "BN_new",
+    "BN_free",
+    "BN_set_word",
+    "BN_bn2binpad",
+    "BN_signed_bn2bin",
+    "BN_usub",
+    "BN_ucmp",
+    "d2i_X509",
+    "X509_free",
+    "ASN1_item_d2i",
+    "d2i_RSAPrivateKey",
+    "d2i_PrivateKey",
+    "d2i_RSA_PUBKEY",
+    "EVP_DecryptFinal_ex",
+    "EVP_CIPHER_CTX",
+    "EVP_DigestVerifyInit",
+    "CANARY_SIZE",
+    "BUFLEN",
+    "consumed_len",
+    "openssl/bn.h",
+    "openssl/x509.h",
+]
+
+NULL_DEREF_DISPATCH_FORBIDDEN_TOKENS = [
+    "BIGNUM",
+    "BN_new",
+    "BN_free",
+    "BN_set_word",
+    "BN_bn2binpad",
+    "BN_signed_bn2bin",
+    "BN_usub",
+    "BN_ucmp",
+    "d2i_X509",
+    "X509_free",
+    "ASN1_item_d2i",
+    "d2i_RSAPrivateKey",
+    "d2i_PrivateKey",
+    "d2i_RSA_PUBKEY",
+    "EVP_DecryptFinal_ex",
+    "EVP_CIPHER_CTX",
+    "CANARY_SIZE",
+    "BUFLEN",
+    "consumed_len",
+    "openssl/bn.h",
+    "openssl/x509.h",
+]
+
 
 def scrub_forbidden_tokens(value: Any, replacement: str = "omitted_from_semantic_projection") -> Any:
     if isinstance(value, str):
@@ -306,6 +409,626 @@ def is_x509_asn1_inner_boundary_recipe(
         and recipe.get("harness_family") in {"x509_asn1_inner_boundary", "asn1_inner_boundary"}
         and recipe.get("oracle_type") == "inner_asn1_boundary_semantic_oracle"
     )
+
+
+def is_object_state_lifecycle_recipe(
+    adapter: Dict[str, Any],
+    recipe: Optional[Dict[str, Any]] = None,
+) -> bool:
+    if not is_recipe_adapter(adapter):
+        return False
+    recipe = recipe or load_adapter_recipe(adapter)
+    return (
+        recipe.get("harness_family") == "object_state_lifecycle"
+        and recipe.get("oracle_type") in {
+            "stale_pointer_length_state_oracle",
+            "object_lifecycle_state_oracle",
+        }
+    )
+
+
+def render_object_state_lifecycle_from_recipe(
+    adapter: Dict[str, Any],
+    source_template_dir: Path,
+    source_meta: Dict[str, Any],
+    mask_report: Dict[str, Any],
+) -> str:
+    recipe = load_adapter_recipe(adapter)
+    target_api = recipe.get("target_api", "")
+
+    if target_api != "ASN1_STRING_set":
+        raise ValueError(
+            f"object_state_lifecycle recipe renderer currently supports only ASN1_STRING_set, got {target_api!r}"
+        )
+    if recipe.get("harness_family") != "object_state_lifecycle":
+        raise ValueError("recipe harness_family must be object_state_lifecycle")
+
+    s_var = c_identifier(slot(adapter, recipe, "asn1_string_variable"), "s")
+    ret_var = c_identifier(slot(adapter, recipe, "return_code_variable"), "ret")
+    first_data_var = c_identifier(slot(adapter, recipe, "first_data_variable"), "first_data")
+    reuse_data_var = c_identifier(slot(adapter, recipe, "reuse_data_variable"), "reuse_data")
+
+    include_lines = render_include_lines(
+        {"include_headers": recipe.get("include_headers", [])},
+        ["stdio.h", "stdlib.h", "string.h", "openssl/asn1.h", "openssl/err.h"],
+    )
+
+    return f'''{include_lines}
+
+#define FIRST_VALUE_LEN [FIRST_VALUE_LEN]
+
+int main(void)
+{{
+    ASN1_STRING *{s_var} = NULL;
+    int {ret_var} = 0;
+    unsigned char {first_data_var}[FIRST_VALUE_LEN];
+    unsigned char {reuse_data_var}[FIRST_VALUE_LEN];
+
+    setbuf(stdout, NULL);
+
+    memset({first_data_var}, 0x11, FIRST_VALUE_LEN);
+    memset({reuse_data_var}, 0xaa, FIRST_VALUE_LEN);
+
+    printf("template_mutation FIRST_VALUE_LEN=%d\\n", FIRST_VALUE_LEN);
+
+    /*
+     * Semantic projection from mbedtls_asn1_store_named_data lifecycle:
+     *   step1: nonzero value → internal buffer allocated
+     *   step2: zero-length update → internal state modified
+     *   step3: same-length reuse → safe reallocation or potential crash
+     *
+     * OpenSSL ASN1_STRING_set keeps the buffer allocated on zero-length update.
+     * Expected result: migrated_safe (no crash; OpenSSL handles lifecycle safely).
+     */
+    {s_var} = ASN1_STRING_new();
+    if ({s_var} == NULL) {{
+        printf("[ERROR] ASN1_STRING_new failed.\\n");
+        return 2;
+    }}
+
+    /* Step 1: set nonzero value (FIRST_VALUE_LEN bytes). */
+    {ret_var} = ASN1_STRING_set({s_var}, {first_data_var}, FIRST_VALUE_LEN);
+    printf("step1 ASN1_STRING_set(len=%d) ret=%d data=%p len=%d\\n",
+           FIRST_VALUE_LEN, {ret_var},
+           (void *) ASN1_STRING_get0_data({s_var}),
+           ASN1_STRING_length({s_var}));
+    if ({ret_var} != 1) {{
+        printf("[INFO] object_state_lifecycle: step1 failed. ret=%d\\n", {ret_var});
+        ASN1_STRING_free({s_var});
+        return 2;
+    }}
+
+    /* Step 2: zero-length update (the stale-state trigger in vulnerable systems). */
+    {ret_var} = ASN1_STRING_set({s_var}, NULL, 0);
+    printf("step2 ASN1_STRING_set(len=0) ret=%d data=%p len=%d\\n",
+           {ret_var},
+           (void *) ASN1_STRING_get0_data({s_var}),
+           ASN1_STRING_length({s_var}));
+    if ({ret_var} != 1) {{
+        printf("[INFO] object_state_lifecycle: step2 failed. ret=%d\\n", {ret_var});
+        ASN1_STRING_free({s_var});
+        return 2;
+    }}
+
+    /* Step 3: reuse with same length as step1.
+     * Buggy systems: skip reallocation, memcpy to NULL → crash.
+     * OpenSSL: safe reallocation or in-place write. */
+    {ret_var} = ASN1_STRING_set({s_var}, {reuse_data_var}, FIRST_VALUE_LEN);
+    printf("step3 ASN1_STRING_set(len=%d) ret=%d data=%p len=%d\\n",
+           FIRST_VALUE_LEN, {ret_var},
+           (void *) ASN1_STRING_get0_data({s_var}),
+           ASN1_STRING_length({s_var}));
+
+    if ({ret_var} == 1 &&
+        ASN1_STRING_length({s_var}) == FIRST_VALUE_LEN &&
+        ASN1_STRING_get0_data({s_var}) != NULL) {{
+        printf("[OK] object_state_lifecycle: safe update after zero-length reset. ret=%d\\n", {ret_var});
+    }} else if ({ret_var} != 1) {{
+        printf("[INFO] object_state_lifecycle: step3 failed. ret=%d\\n", {ret_var});
+    }} else {{
+        printf("[TRIAGE] object_state_lifecycle: unexpected state. ret=%d len=%d\\n",
+               {ret_var}, ASN1_STRING_length({s_var}));
+    }}
+
+    ASN1_STRING_free({s_var});
+    return 0;
+}}
+'''
+
+
+def is_invalid_parameter_setup_oracle_recipe(
+    adapter: Dict[str, Any],
+    recipe: Optional[Dict[str, Any]] = None,
+) -> bool:
+    if not is_recipe_adapter(adapter):
+        return False
+    recipe = recipe or load_adapter_recipe(adapter)
+    return (
+        recipe.get("harness_family") == "invalid_parameter_setup_oracle"
+        and recipe.get("oracle_type") in {
+            "invalid_aead_tag_length_oracle",
+            "invalid_parameter_return_code_oracle",
+        }
+    )
+
+
+def render_invalid_parameter_setup_oracle_from_recipe(
+    adapter: Dict[str, Any],
+    source_template_dir: Path,
+    source_meta: Dict[str, Any],
+    mask_report: Dict[str, Any],
+) -> str:
+    recipe = load_adapter_recipe(adapter)
+    target_api = recipe.get("target_api", "")
+
+    if target_api != "EVP_CIPHER_CTX_ctrl":
+        raise ValueError(
+            f"invalid_parameter_setup_oracle recipe renderer currently supports only EVP_CIPHER_CTX_ctrl, got {target_api!r}"
+        )
+    if recipe.get("harness_family") != "invalid_parameter_setup_oracle":
+        raise ValueError("recipe harness_family must be invalid_parameter_setup_oracle")
+
+    cipher = slot(adapter, recipe, "aead_cipher")
+    ctx_var = c_identifier(slot(adapter, recipe, "ctx_variable"), "ctx")
+    ret_var = c_identifier(slot(adapter, recipe, "return_code_variable"), "ret")
+    init_ret_var = c_identifier(slot(adapter, recipe, "init_ret_variable"), "init_ret")
+
+    include_lines = render_include_lines(
+        {"include_headers": recipe.get("include_headers", [])},
+        ["stdio.h", "stdlib.h", "string.h", "openssl/evp.h", "openssl/err.h"],
+    )
+
+    return f'''{include_lines}
+
+#define TAG_LENGTH [TAG_LENGTH]
+
+/*
+ * CCM allows only even tag lengths from 4 to 16.
+ * Returns 1 if valid, 0 if invalid.
+ */
+static int is_valid_ccm_tag_length(int tlen)
+{{
+    return (tlen >= 4 && tlen <= 16 && (tlen % 2 == 0));
+}}
+
+int main(void)
+{{
+    EVP_CIPHER_CTX *{ctx_var} = NULL;
+    int {ret_var} = 0;
+    int {init_ret_var} = 0;
+
+    setbuf(stdout, NULL);
+
+    printf("template_mutation TAG_LENGTH=%d\\n", TAG_LENGTH);
+
+    /*
+     * Source vulnerability: PSA psa_aead_setup() accepted invalid CCM tag
+     * length 3 without validation. Fixed by psa_validate_tag_length().
+     * Target probe: EVP_CIPHER_CTX_ctrl with EVP_CTRL_CCM_SET_TAG and
+     * invalid tag length. Oracle: ctrl return code (0=rejected, 1=accepted).
+     */
+    {ctx_var} = EVP_CIPHER_CTX_new();
+    if ({ctx_var} == NULL) {{
+        printf("[ERROR] EVP_CIPHER_CTX_new failed.\\n");
+        return 2;
+    }}
+
+    {init_ret_var} = EVP_DecryptInit_ex({ctx_var}, {cipher}, NULL, NULL, NULL);
+    printf("EVP_DecryptInit_ex ret=%d\\n", {init_ret_var});
+    if ({init_ret_var} <= 0) {{
+        printf("[INFO] invalid_parameter_setup_oracle: EVP_DecryptInit_ex failed (init_ret=%d).\\n",
+               {init_ret_var});
+        EVP_CIPHER_CTX_free({ctx_var});
+        return 2;
+    }}
+
+    printf("calling EVP_CIPHER_CTX_ctrl(EVP_CTRL_CCM_SET_TAG, %d)...\\n", TAG_LENGTH);
+    {ret_var} = EVP_CIPHER_CTX_ctrl({ctx_var}, EVP_CTRL_CCM_SET_TAG, TAG_LENGTH, NULL);
+    printf("EVP_CIPHER_CTX_ctrl ret=%d\\n", {ret_var});
+
+    if (!is_valid_ccm_tag_length(TAG_LENGTH)) {{
+        if ({ret_var} > 0) {{
+            printf("[BUG] target accepted invalid CCM tag length=%d at ctrl.\\n", TAG_LENGTH);
+        }} else {{
+            printf("[OK] target rejected invalid CCM tag length=%d.\\n", TAG_LENGTH);
+        }}
+    }} else {{
+        if ({ret_var} > 0) {{
+            printf("[OK] target accepted valid CCM tag length=%d.\\n", TAG_LENGTH);
+        }} else {{
+            printf("[INFO] target rejected valid CCM tag length=%d (needs triage).\\n", TAG_LENGTH);
+        }}
+    }}
+
+    EVP_CIPHER_CTX_free({ctx_var});
+    return 0;
+}}
+'''
+
+
+def is_crash_sanitizer_oracle_recipe(
+    adapter: Dict[str, Any],
+    recipe: Optional[Dict[str, Any]] = None,
+) -> bool:
+    if not is_recipe_adapter(adapter):
+        return False
+    recipe = recipe or load_adapter_recipe(adapter)
+    return (
+        recipe.get("harness_family") == "crash_sanitizer_oracle"
+        and recipe.get("oracle_type") in {
+            "heap_underflow_sanitizer_oracle",
+            "heap_overflow_sanitizer_oracle",
+            "generic_sanitizer_crash_oracle",
+        }
+    )
+
+
+def render_crash_sanitizer_oracle_from_recipe(
+    adapter: Dict[str, Any],
+    source_template_dir: Path,
+    source_meta: Dict[str, Any],
+    mask_report: Dict[str, Any],
+) -> str:
+    recipe = load_adapter_recipe(adapter)
+    target_api = recipe.get("target_api", "")
+
+    if target_api != "PEM_read_bio_PrivateKey":
+        raise ValueError(
+            f"crash_sanitizer_oracle recipe renderer currently supports only PEM_read_bio_PrivateKey, got {target_api!r}"
+        )
+    if recipe.get("harness_family") != "crash_sanitizer_oracle":
+        raise ValueError("recipe harness_family must be crash_sanitizer_oracle")
+
+    pem_label = slot(adapter, recipe, "pem_header_label")
+    password = slot(adapter, recipe, "password_string")
+    bio_var = c_identifier(slot(adapter, recipe, "bio_variable"), "bio")
+    pkey_var = c_identifier(slot(adapter, recipe, "pkey_variable"), "pkey")
+    ret_var = c_identifier(slot(adapter, recipe, "return_code_variable"), "ret")
+
+    include_lines = render_include_lines(
+        {"include_headers": recipe.get("include_headers", [])},
+        ["stdio.h", "stdlib.h", "string.h", "openssl/pem.h", "openssl/evp.h",
+         "openssl/bio.h", "openssl/err.h"],
+    )
+
+    pem_header = f"-----BEGIN {pem_label}-----"
+    pem_footer = f"-----END {pem_label}-----"
+
+    return f'''{include_lines}
+
+#define PEM_BODY_CONTENT "[PEM_BODY]"
+
+static const char malformed_pem[] =
+    "{pem_header}\\r\\n"
+    "Proc-Type: 4,ENCRYPTED\\r\\n"
+    "DEK-Info: AES-128-CBC,AAAABBBBCCCCDDDDEEEEFFFFAAAABBBB\\r\\n"
+    "\\r\\n"
+    PEM_BODY_CONTENT "\\r\\n"
+    "{pem_footer}\\r\\n";
+
+static int poc_pem_pwd_cb(char *buf, int size, int rwflag, void *userdata)
+{{
+    const char *pwd = "{password}";
+    int len = (int) strlen(pwd);
+    (void) rwflag;
+    (void) userdata;
+    if (len > size) {{
+        len = size;
+    }}
+    memcpy(buf, pwd, (size_t) len);
+    return len;
+}}
+
+int main(void)
+{{
+    BIO *{bio_var} = NULL;
+    EVP_PKEY *{pkey_var} = NULL;
+    int {ret_var} = 0;
+
+    setbuf(stdout, NULL);
+
+    printf("template_mutation PEM_BODY=%s\\n", PEM_BODY_CONTENT);
+
+    /*
+     * Construct malformed encrypted PEM with short base64 body.
+     * Source vulnerability: mbedTLS pem_check_pkcs_padding reads
+     * input[input_len - 1] without checking input_len >= 1 when the
+     * decoded buffer is empty. Oracle: ASAN heap-buffer-underflow or safe rejection.
+     */
+    {bio_var} = BIO_new_mem_buf(malformed_pem, -1);
+    if ({bio_var} == NULL) {{
+        printf("[ERROR] BIO_new_mem_buf failed.\\n");
+        return 2;
+    }}
+
+    printf("calling PEM_read_bio_PrivateKey with malformed encrypted PEM...\\n");
+
+    {pkey_var} = PEM_read_bio_PrivateKey({bio_var}, NULL, poc_pem_pwd_cb, NULL);
+
+    if ({pkey_var} == NULL) {{
+        printf("[OK] null_deref_dispatch: malformed encrypted PEM rejected safely by PEM_read_bio_PrivateKey.\\n");
+        {ret_var} = 0;
+    }} else {{
+        printf("[TRIAGE] crash_sanitizer_oracle: malformed encrypted PEM accepted unexpectedly.\\n");
+        EVP_PKEY_free({pkey_var});
+        {ret_var} = 2;
+    }}
+
+    BIO_free({bio_var});
+    return {ret_var};
+}}
+'''
+
+
+def is_null_deref_dispatch_recipe(
+    adapter: Dict[str, Any],
+    recipe: Optional[Dict[str, Any]] = None,
+) -> bool:
+    if not is_recipe_adapter(adapter):
+        return False
+    recipe = recipe or load_adapter_recipe(adapter)
+    return (
+        recipe.get("target_api") == "EVP_DigestVerify"
+        and recipe.get("harness_family") == "null_deref_dispatch"
+        and recipe.get("oracle_type") == "crash_sanitizer_or_safe_error_oracle"
+    )
+
+
+def render_null_deref_dispatch_mbedtls_harness(source_meta: Dict[str, Any]) -> str:
+    return r'''#include <stdio.h>
+#include <string.h>
+
+#include "mbedtls/pk.h"
+#include "mbedtls/md.h"
+#include "psa/crypto.h"
+
+#define KEY_BITS [KEY_BITS]
+
+int main(void)
+{
+    mbedtls_pk_context pk;
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
+    psa_status_t psa_status;
+    int key_generated = 0;
+    int ret = 0;
+
+    unsigned char hash[32];
+    unsigned char sig[512];
+
+    setbuf(stdout, NULL);
+
+    memset(hash, 0x2a, sizeof(hash));
+    memset(sig, 0x5a, sizeof(sig));
+
+    mbedtls_pk_init(&pk);
+
+    printf("template_mutation KEY_BITS=%d\n", KEY_BITS);
+
+    psa_status = psa_crypto_init();
+    if (psa_status != PSA_SUCCESS) {
+        printf("[ERROR] psa_crypto_init failed: %d\n", (int) psa_status);
+        ret = 2;
+        goto cleanup;
+    }
+
+    psa_set_key_type(&key_attr, PSA_KEY_TYPE_RSA_KEY_PAIR);
+    psa_set_key_bits(&key_attr, KEY_BITS);
+    psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_SIGN_HASH);
+    psa_set_key_algorithm(&key_attr, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256));
+
+    psa_status = psa_generate_key(&key_attr, &key_id);
+    if (psa_status != PSA_SUCCESS) {
+        printf("[ERROR] psa_generate_key failed: %d\n", (int) psa_status);
+        ret = 2;
+        goto cleanup;
+    }
+    key_generated = 1;
+
+    /*
+     * mbedtls_pk_wrap_psa replaces the historical mbedtls_pk_setup_opaque
+     * (removed in 4.x). Wraps a PSA key into a PK context.
+     */
+    ret = mbedtls_pk_wrap_psa(&pk, key_id);
+    if (ret != 0) {
+        printf("[ERROR] mbedtls_pk_wrap_psa failed: %d\n", ret);
+        goto cleanup;
+    }
+
+    printf("psa_key_type=%u\n", (unsigned) mbedtls_pk_get_key_type(&pk));
+    printf("calling mbedtls_pk_verify_ext with MBEDTLS_PK_SIGALG_RSA_PSS...\n");
+
+    /*
+     * In mbedTLS 3.x buggy: the opaque key path crashed via NULL deref on
+     * mbedtls_pk_rsa(). In 4.x this path is gone; the API dispatches
+     * through PSA for wrapped keys and returns an error for sign-only keys.
+     */
+    ret = mbedtls_pk_verify_ext(MBEDTLS_PK_SIGALG_RSA_PSS, &pk,
+                                MBEDTLS_MD_SHA256,
+                                hash, sizeof(hash),
+                                sig, sizeof(sig));
+
+    printf("verify_ext ret=%d\n", ret);
+    printf("expected=%d\n", MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE);
+
+    if (ret == MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE) {
+        printf("[OK] fixed behavior: unsupported opaque verify_ext rejected safely.\n");
+    } else if (ret != 0) {
+        printf("[OK] fixed behavior: opaque RSA-PSS verify_ext rejected safely. ret=%d\n", ret);
+    } else {
+        printf("[INFO] opaque key verify returned success for dummy sig.\n");
+    }
+
+cleanup:
+    mbedtls_pk_free(&pk);
+    if (key_generated) {
+        psa_destroy_key(key_id);
+    }
+    return 0;
+}
+'''
+
+
+def render_null_deref_dispatch_from_recipe(
+    adapter: Dict[str, Any],
+    source_template_dir: Path,
+    source_meta: Dict[str, Any],
+    mask_report: Dict[str, Any],
+) -> str:
+    recipe = load_adapter_recipe(adapter)
+
+    if recipe.get("target_api") != "EVP_DigestVerify":
+        raise ValueError("null_deref_dispatch recipe renderer currently supports only EVP_DigestVerify")
+    if recipe.get("harness_family") != "null_deref_dispatch":
+        raise ValueError("recipe harness_family must be null_deref_dispatch")
+    if recipe.get("oracle_type") != "crash_sanitizer_or_safe_error_oracle":
+        raise ValueError("recipe oracle_type must be crash_sanitizer_or_safe_error_oracle")
+
+    md_alg = slot(adapter, recipe, "md_algorithm")
+    ec_curve = slot(adapter, recipe, "ec_curve_nid")
+    sign_key_var = c_identifier(slot(adapter, recipe, "signing_key_variable"), "sign_key")
+    target_key_var = c_identifier(slot(adapter, recipe, "incompatible_key_variable"), "target_key")
+    verify_ctx_var = c_identifier(slot(adapter, recipe, "verify_ctx_variable"), "verify_ctx")
+    sign_ctx_var = c_identifier(slot(adapter, recipe, "sign_ctx_variable"), "sign_ctx")
+    ret_var = c_identifier(slot(adapter, recipe, "return_code_variable"), "ret")
+
+    include_lines = render_include_lines(
+        {"include_headers": recipe.get("include_headers", [])},
+        ["stdio.h", "stdlib.h", "string.h", "openssl/evp.h", "openssl/rsa.h", "openssl/ec.h", "openssl/err.h"],
+    )
+
+    return f'''{include_lines}
+
+#define RSA_KEY_BITS [KEY_BITS]
+
+int main(void)
+{{
+    EVP_PKEY_CTX *kgen_ctx = NULL;
+    EVP_PKEY *{sign_key_var} = NULL;
+    EVP_PKEY *{target_key_var} = NULL;
+    EVP_MD_CTX *{sign_ctx_var} = NULL;
+    EVP_MD_CTX *{verify_ctx_var} = NULL;
+    EVP_PKEY_CTX *pctx = NULL;
+    unsigned char sig[512];
+    size_t sig_len = sizeof(sig);
+    const unsigned char test_data[] = "null_deref_dispatch_probe";
+    size_t test_data_len = sizeof(test_data) - 1;
+    int {ret_var} = 0;
+    int exit_code = 0;
+
+    setbuf(stdout, NULL);
+
+    printf("template_mutation KEY_BITS=%d\\n", RSA_KEY_BITS);
+
+    /* Step 1: Generate RSA signing key */
+    kgen_ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+    if (kgen_ctx == NULL) {{
+        printf("[ERROR] RSA keygen ctx new failed.\\n");
+        return 2;
+    }}
+    if (EVP_PKEY_keygen_init(kgen_ctx) <= 0 ||
+        EVP_PKEY_CTX_set_rsa_keygen_bits(kgen_ctx, RSA_KEY_BITS) <= 0 ||
+        EVP_PKEY_keygen(kgen_ctx, &{sign_key_var}) <= 0) {{
+        printf("[ERROR] RSA keygen failed.\\n");
+        EVP_PKEY_CTX_free(kgen_ctx);
+        return 2;
+    }}
+    EVP_PKEY_CTX_free(kgen_ctx);
+    kgen_ctx = NULL;
+
+    /* Step 2: Sign test data with RSA-PSS to produce a real signature */
+    {sign_ctx_var} = EVP_MD_CTX_new();
+    if ({sign_ctx_var} == NULL) {{
+        printf("[ERROR] sign ctx new failed.\\n");
+        goto cleanup;
+    }}
+    if (EVP_DigestSignInit({sign_ctx_var}, &pctx, {md_alg}, NULL, {sign_key_var}) <= 0) {{
+        printf("[ERROR] DigestSignInit failed.\\n");
+        goto cleanup;
+    }}
+    if (EVP_PKEY_CTX_set_rsa_padding(pctx, RSA_PKCS1_PSS_PADDING) <= 0) {{
+        printf("[ERROR] set RSA-PSS padding on sign ctx failed.\\n");
+        goto cleanup;
+    }}
+    pctx = NULL;
+    if (EVP_DigestSignUpdate({sign_ctx_var}, test_data, test_data_len) <= 0 ||
+        EVP_DigestSignFinal({sign_ctx_var}, sig, &sig_len) <= 0) {{
+        printf("[ERROR] DigestSign failed.\\n");
+        goto cleanup;
+    }}
+    EVP_MD_CTX_free({sign_ctx_var});
+    {sign_ctx_var} = NULL;
+
+    printf("rsa_sign_ok=yes sig_len=%zu\\n", sig_len);
+
+    /* Step 3: Generate incompatible EC key ({ec_curve}) */
+    kgen_ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
+    if (kgen_ctx == NULL ||
+        EVP_PKEY_keygen_init(kgen_ctx) <= 0 ||
+        EVP_PKEY_CTX_set_ec_paramgen_curve_nid(kgen_ctx, {ec_curve}) <= 0 ||
+        EVP_PKEY_keygen(kgen_ctx, &{target_key_var}) <= 0) {{
+        printf("[ERROR] EC keygen failed.\\n");
+        goto cleanup;
+    }}
+    EVP_PKEY_CTX_free(kgen_ctx);
+    kgen_ctx = NULL;
+
+    printf("ec_key_type=%d\\n", EVP_PKEY_id({target_key_var}));
+    printf("calling EVP_DigestVerifyInit with incompatible EC key...\\n");
+
+    /* Step 4: Trigger - EVP_DigestVerifyInit with incompatible EC key */
+    {verify_ctx_var} = EVP_MD_CTX_new();
+    if ({verify_ctx_var} == NULL) {{
+        printf("[ERROR] verify ctx new failed.\\n");
+        goto cleanup;
+    }}
+
+    {ret_var} = EVP_DigestVerifyInit({verify_ctx_var}, &pctx, {md_alg}, NULL, {target_key_var});
+    printf("EVP_DigestVerifyInit ret=%d\\n", {ret_var});
+    if ({ret_var} <= 0) {{
+        printf("[OK] null_deref_dispatch: incompatible EC key rejected safely at EVP_DigestVerifyInit.\\n");
+        exit_code = 0;
+        goto cleanup;
+    }}
+
+    /* Step 5: Probe RSA-PSS padding dispatch path */
+    {ret_var} = EVP_PKEY_CTX_set_rsa_padding(pctx, RSA_PKCS1_PSS_PADDING);
+    printf("EVP_PKEY_CTX_set_rsa_padding ret=%d\\n", {ret_var});
+    if ({ret_var} <= 0) {{
+        printf("[OK] null_deref_dispatch: RSA-PSS padding rejected safely for incompatible EC key.\\n");
+        exit_code = 0;
+        goto cleanup;
+    }}
+    pctx = NULL;
+
+    /* Step 6: Attempt verify update and final with incompatible key */
+    {ret_var} = EVP_DigestVerifyUpdate({verify_ctx_var}, test_data, test_data_len);
+    printf("EVP_DigestVerifyUpdate ret=%d\\n", {ret_var});
+    if ({ret_var} <= 0) {{
+        printf("[OK] null_deref_dispatch: incompatible EC key rejected safely at EVP_DigestVerifyUpdate.\\n");
+        exit_code = 0;
+        goto cleanup;
+    }}
+
+    {ret_var} = EVP_DigestVerifyFinal({verify_ctx_var}, sig, sig_len);
+    printf("EVP_DigestVerifyFinal ret=%d\\n", {ret_var});
+    if ({ret_var} <= 0) {{
+        printf("[OK] null_deref_dispatch: incompatible EC key rejected safely at EVP_DigestVerifyFinal.\\n");
+        exit_code = 0;
+    }} else {{
+        printf("[TRIAGE] null_deref_dispatch: incompatible EC key verify unexpectedly succeeded. ret=%d\\n", {ret_var});
+        exit_code = 2;
+    }}
+
+cleanup:
+    EVP_MD_CTX_free({sign_ctx_var});
+    EVP_MD_CTX_free({verify_ctx_var});
+    EVP_PKEY_free({sign_key_var});
+    EVP_PKEY_free({target_key_var});
+    EVP_PKEY_CTX_free(kgen_ctx);
+    return exit_code;
+}}
+'''
 
 
 def bignum_semantic_projection_meta(source_meta: Dict[str, Any], adapter: Dict[str, Any]) -> Dict[str, Any]:
@@ -1611,6 +2334,46 @@ def render_target_c_from_adapter(
                 source_meta,
                 mask_report,
             )
+        if (
+            harness_family == "null_deref_dispatch"
+            and is_null_deref_dispatch_recipe(adapter, recipe)
+        ):
+            return render_null_deref_dispatch_from_recipe(
+                adapter,
+                source_template_dir,
+                source_meta,
+                mask_report,
+            )
+        if (
+            harness_family == "crash_sanitizer_oracle"
+            and is_crash_sanitizer_oracle_recipe(adapter, recipe)
+        ):
+            return render_crash_sanitizer_oracle_from_recipe(
+                adapter,
+                source_template_dir,
+                source_meta,
+                mask_report,
+            )
+        if (
+            harness_family == "invalid_parameter_setup_oracle"
+            and is_invalid_parameter_setup_oracle_recipe(adapter, recipe)
+        ):
+            return render_invalid_parameter_setup_oracle_from_recipe(
+                adapter,
+                source_template_dir,
+                source_meta,
+                mask_report,
+            )
+        if (
+            harness_family == "object_state_lifecycle"
+            and is_object_state_lifecycle_recipe(adapter, recipe)
+        ):
+            return render_object_state_lifecycle_from_recipe(
+                adapter,
+                source_template_dir,
+                source_meta,
+                mask_report,
+            )
         raise ValueError(f"unknown recipe harness_family={harness_family!r}")
 
     harness_family = source_meta.get("harness_family") or "buffer_canary_boundary"
@@ -1758,6 +2521,10 @@ def generate_one(adapter_file: Path, adapter_root: Path, out_root: Path) -> bool
                 '#include "mbedtls/private/bignum.h"',
             )
             write_text(source_out, source_text)
+
+    if recipe and is_null_deref_dispatch_recipe(adapter, recipe):
+        source_out = out_dir / "tmpl_mbedtls.c"
+        write_text(source_out, render_null_deref_dispatch_mbedtls_harness(source_meta))
 
     if is_bignum_projection:
         write_text(

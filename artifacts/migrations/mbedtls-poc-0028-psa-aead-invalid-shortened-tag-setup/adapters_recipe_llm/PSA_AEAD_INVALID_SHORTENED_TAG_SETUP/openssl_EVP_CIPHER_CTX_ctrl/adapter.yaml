@@ -1,0 +1,28 @@
+source_pattern_id: MBEDTLS-POC-0028
+template_id: PSA_AEAD_INVALID_SHORTENED_TAG_SETUP
+harness_family: invalid_parameter_setup_oracle
+oracle_type: invalid_aead_tag_length_oracle
+target_library: openssl
+target_api: EVP_CIPHER_CTX_ctrl
+applicability: generate
+adapter_recipe: adapter_recipes/openssl/EVP_CIPHER_CTX_ctrl.invalid_parameter_setup_oracle.yaml
+evidence_file: migration_candidates/psa/psa_aead_invalid_shortened_tag_setup/candidates_with_evidence.yaml
+slot_bindings:
+  aead_cipher: EVP_aes_128_ccm()
+  ctx_variable: ctx
+  return_code_variable: ret
+  init_ret_variable: init_ret
+preserved_features:
+- aead_setup_api_entrypoint
+- shortened_tag_length_parameter
+- algorithm_specific_tag_length_validation
+- invalid_parameter_return_code_observable
+lost_or_weakened_features:
+- exact_PSA_error_code
+- PSA_algorithm_encoding
+_adapter_mode: recipe_slot_filling
+_ignored_disallowed_fields: []
+_ignored_non_slot_fields: []
+_llm_raw_preview: '{"slot_bindings": {"aead_cipher": "EVP_aes_128_ccm()", "ctx_variable":
+  "ctx", "return_code_variable": "ret", "init_ret_variable": "init_ret"}}'
+_llm_status: ok

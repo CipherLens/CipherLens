@@ -1,0 +1,64 @@
+source:
+  library: mbedtls
+  api: mbedtls_pk_verify_ext
+  template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+  semantic_operation: pk_verify_ext_opaque_key
+  bug_class:
+  - null_pointer_dereference
+  - opaque_key_type_confusion
+  - missing_context_type_check
+  poc_pattern: {}
+target:
+  library: openssl
+  candidate_api: EVP_DigestVerify
+adapter:
+  adapter_recipe: adapter_recipes/openssl/EVP_DigestVerify.null_deref_dispatch.yaml
+  slot_bindings:
+    md_algorithm: EVP_sha256()
+    ec_curve_nid: NID_X9_62_prime256v1
+    signing_key_variable: sign_key
+    incompatible_key_variable: target_key
+    verify_ctx_variable: verify_ctx
+    sign_ctx_variable: sign_ctx
+    return_code_variable: ret
+  adapter_mode: recipe_slot_filling
+  include_headers: []
+  type_mapping: {}
+  constant_mapping: {}
+  init_block: ''
+  input_construction_block: ''
+  trigger_block: ''
+  return_value_semantics: ''
+  oracle_strategy: {}
+  cleanup_block: ''
+  llm_status: ok
+candidate:
+  library: openssl
+  api: EVP_DigestVerify
+  decision: generate
+  scores:
+    operation_family: 85
+    function_behavior: 80
+    parameter_structure: 75
+    vulnerability_path: 72
+    harness_feasibility: 85
+    final: 78
+preserved_vulnerability_features:
+- generic_polymorphic_key_context_dispatch
+- rsa_pss_specific_verification_path_or_rsa_dispatch_code
+- incompatible_or_mismatched_key_type_entry
+- observable_crash_vs_safe_error_return
+lost_or_weakened_features:
+- psa_opaque_key_mechanism
+- exact_mbedtls_error_code_value
+- exact_mbedtls_internal_type_guard_location
+source_expected_behavior:
+  buggy: {}
+  fixed: {}
+  note: The target API is not expected to reproduce exact mbedTLS numeric error codes;
+    cross-library validation uses the oracle semantics defined by the migrated harness
+    family.
+notes:
+- Generated from LLM-filled structured adapter YAML.
+- The C harness skeleton is fixed; the target-specific blocks come from adapter.yaml.
+- This is vulnerability-path migration, not strict full API semantic equivalence.

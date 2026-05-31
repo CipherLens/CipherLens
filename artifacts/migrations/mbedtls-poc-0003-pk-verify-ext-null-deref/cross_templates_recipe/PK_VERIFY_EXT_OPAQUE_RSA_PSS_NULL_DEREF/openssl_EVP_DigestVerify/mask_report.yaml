@@ -1,0 +1,260 @@
+template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+template_name: mbedtls_pk_verify_ext opaque RSA-PSS null-deref template
+source_file: poc_pk_verify_ext_null_deref_v2.c
+source_library: mbedtls
+source_api: mbedtls_pk_verify_ext
+language: c
+masking_design:
+  mode: ast_aware_lightweight
+  preserve_compilable_skeleton: true
+  note: This report records AST-like masking roles and source-level contexts. The
+    generated C template remains compilable; block-level masks are recorded as metadata
+    rather than replacing code with <|BLOCK|>.
+poc_pattern: {}
+includes:
+- stdio.h
+- string.h
+- mbedtls/pk.h
+- mbedtls/rsa.h
+- mbedtls/md.h
+- mbedtls/ctr_drbg.h
+- mbedtls/entropy.h
+- psa/crypto.h
+roles:
+  init:
+  - order: 16
+    code: mbedtls_pk_init(&pk);
+    placeholders: []
+  - order: 22
+    code: '} status = psa_crypto_init();'
+    placeholders: []
+  - order: 40
+    code: mbedtls_pk_init(&pk);
+    placeholders: []
+  input_construction: []
+  trigger_call:
+  - order: 46
+    code: ret = mbedtls_pk_verify_ext([PK_VERIFY_TYPE], &pss_opts, &pk, [MD_ALG],
+      hash, sizeof(hash), sig, sizeof(sig));
+    placeholders:
+    - '[MD_ALG]'
+    - '[PK_VERIFY_TYPE]'
+  oracle:
+  - order: 12
+    code: pss_opts.expected_salt_len = [EXPECTED_SALT_LEN];
+    placeholders:
+    - '[EXPECTED_SALT_LEN]'
+  - order: 49
+    code: 'if (ret == MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE) { printf("[OK] fixed behavior:
+      unsupported opaque verify_ext rejected safely.\n");'
+    placeholders: []
+  cleanup:
+  - order: 21
+    code: goto cleanup;
+    placeholders: []
+  - order: 25
+    code: goto cleanup;
+    placeholders: []
+  - order: 28
+    code: goto cleanup;
+    placeholders: []
+  - order: 31
+    code: goto cleanup;
+    placeholders: []
+  - order: 35
+    code: goto cleanup;
+    placeholders: []
+  - order: 38
+    code: goto cleanup;
+    placeholders: []
+  - order: 39
+    code: '} mbedtls_pk_free(&pk);'
+    placeholders: []
+  - order: 43
+    code: goto cleanup;
+    placeholders: []
+  - order: 51
+    code: '} cleanup: mbedtls_pk_free(&pk);'
+    placeholders: []
+  - order: 53
+    code: '} mbedtls_ctr_drbg_free(&ctr_drbg);'
+    placeholders: []
+  - order: 54
+    code: mbedtls_entropy_free(&entropy);
+    placeholders: []
+  - order: 55
+    code: mbedtls_psa_crypto_free();
+    placeholders: []
+  other_context:
+  - order: 2
+    code: mbedtls_pk_context pk;
+    placeholders: []
+  - order: 3
+    code: mbedtls_entropy_context entropy;
+    placeholders: []
+  - order: 4
+    code: mbedtls_ctr_drbg_context ctr_drbg;
+    placeholders: []
+  - order: 6
+    code: mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    placeholders: []
+  - order: 7
+    code: unsigned char hash[HASH_LEN];
+    placeholders:
+    - '[HASH_LEN]'
+  - order: 8
+    code: unsigned char sig[SIG_LEN];
+    placeholders:
+    - '[SIG_LEN]'
+  - order: 10
+    code: mbedtls_pk_rsassa_pss_options pss_opts;
+    placeholders: []
+  - order: 11
+    code: pss_opts.mgf1_hash_id = [MD_ALG];
+    placeholders:
+    - '[MD_ALG]'
+  - order: 17
+    code: mbedtls_entropy_init(&entropy);
+    placeholders: []
+  - order: 18
+    code: mbedtls_ctr_drbg_init(&ctr_drbg);
+    placeholders: []
+  - order: 19
+    code: ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const
+      unsigned char *) pers, strlen(pers));
+    placeholders: []
+  - order: 26
+    code: '} ret = mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA));'
+    placeholders: []
+  - order: 27
+    code: 'if (ret != 0) { printf("mbedtls_pk_setup failed: %d\n", ret);'
+    placeholders: []
+  - order: 29
+    code: '} ret = mbedtls_rsa_gen_key(mbedtls_pk_rsa(pk), mbedtls_ctr_drbg_random,
+      &ctr_drbg, KEY_BITS, 65537);'
+    placeholders: []
+  - order: 30
+    code: 'if (ret != 0) { printf("mbedtls_rsa_gen_key failed: %d\n", ret);'
+    placeholders: []
+  - order: 32
+    code: '} mbedtls_rsa_set_padding(mbedtls_pk_rsa(pk), MBEDTLS_RSA_PKCS_V21, MBEDTLS_MD_NONE);'
+    placeholders: []
+  - order: 33
+    code: ret = mbedtls_pk_get_psa_attributes(&pk, PSA_KEY_USAGE_SIGN_HASH, &key_attr);
+    placeholders: []
+  - order: 34
+    code: 'if (ret != 0) { printf("mbedtls_pk_get_psa_attributes failed: %d\n", ret);'
+    placeholders: []
+  - order: 36
+    code: '} ret = mbedtls_pk_import_into_psa(&pk, &key_attr, &key_id);'
+    placeholders: []
+  - order: 37
+    code: 'if (ret != 0) { printf("mbedtls_pk_import_into_psa failed: %d\n", ret);'
+    placeholders: []
+  - order: 41
+    code: ret = mbedtls_pk_setup_opaque(&pk, key_id);
+    placeholders: []
+  - order: 42
+    code: 'if (ret != 0) { printf("mbedtls_pk_setup_opaque failed: %d\n", ret);'
+    placeholders: []
+  - order: 44
+    code: '} printf("opaque pk type = %d\n", (int) mbedtls_pk_get_type(&pk));'
+    placeholders: []
+  - order: 45
+    code: printf("calling mbedtls_pk_verify_ext...\n");
+    placeholders: []
+  - order: 52
+    code: if (!mbedtls_svc_key_id_is_null(key_id)) { psa_destroy_key(key_id);
+    placeholders: []
+masking_levels:
+  macro_level:
+  - macro: KEY_BITS
+    original: '#define KEY_BITS 1024'
+    masked: '#define KEY_BITS [KEY_BITS]'
+    placeholders:
+    - '[KEY_BITS]'
+    ast_kind: preproc_def
+    mask_level: macro_level
+  - macro: HASH_LEN
+    original: '#define HASH_LEN 32'
+    masked: '#define HASH_LEN [HASH_LEN]'
+    placeholders:
+    - '[HASH_LEN]'
+    ast_kind: preproc_def
+    mask_level: macro_level
+  - macro: SIG_LEN
+    original: '#define SIG_LEN 128'
+    masked: '#define SIG_LEN [SIG_LEN]'
+    placeholders:
+    - '[SIG_LEN]'
+    ast_kind: preproc_def
+    mask_level: macro_level
+  api_argument_or_value_level:
+  - api_or_function: mbedtls_pk_verify_ext
+    role: trigger_call
+    statement: ret = mbedtls_pk_verify_ext([PK_VERIFY_TYPE], &pss_opts, &pk, [MD_ALG],
+      hash, sizeof(hash), sig, sizeof(sig));
+    placeholder: '[MD_ALG]'
+    mutation_point:
+      name: MD_ALG
+      type: enum
+      default: MBEDTLS_MD_SHA256
+      values:
+      - MBEDTLS_MD_SHA256
+      - MBEDTLS_MD_SHA384
+      - MBEDTLS_MD_SHA512
+      strategy: enum_values
+      constraint: Must be a valid hash algorithm for RSA-PSS
+      priority: medium
+    ast_kind: call_expression_or_argument
+    mask_level: api_argument_level
+  - api_or_function: mbedtls_pk_verify_ext
+    role: trigger_call
+    statement: ret = mbedtls_pk_verify_ext([PK_VERIFY_TYPE], &pss_opts, &pk, [MD_ALG],
+      hash, sizeof(hash), sig, sizeof(sig));
+    placeholder: '[PK_VERIFY_TYPE]'
+    mutation_point:
+      name: PK_VERIFY_TYPE
+      type: enum
+      default: MBEDTLS_PK_RSASSA_PSS
+      values:
+      - MBEDTLS_PK_RSASSA_PSS
+      - MBEDTLS_PK_RSA
+      strategy: enum_values
+      constraint: Must be a valid RSA-PSS verification type
+      priority: medium
+    ast_kind: call_expression_or_argument
+    mask_level: api_argument_level
+  statement_level:
+    enabled: true
+    strategy: classify statements into init/input/trigger/oracle/cleanup roles
+  block_level:
+    enabled: metadata_only
+    strategy: record logical blocks without replacing compilable C blocks
+rag_query_context: 'template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+
+  api: mbedtls_pk_verify_ext
+
+  operation: pk_verify_ext_opaque_key
+
+  bug_class: null_pointer_dereference opaque_key_type_confusion missing_context_type_check
+
+  trigger_call: ret = mbedtls_pk_verify_ext([PK_VERIFY_TYPE], &pss_opts, &pk, [MD_ALG],
+  hash, sizeof(hash), sig, sizeof(sig));
+
+  oracle: pss_opts.expected_salt_len = [EXPECTED_SALT_LEN];
+
+  oracle: if (ret == MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE) { printf("[OK] fixed behavior:
+  unsupported opaque verify_ext rejected safely.\n");'
+cross_generation_hints:
+  semantic_operation: pk_verify_ext_opaque_key
+  api_family: SignatureVerify
+  bug_class:
+  - null_pointer_dereference
+  - opaque_key_type_confusion
+  - missing_context_type_check
+  must_preserve:
+  - input construction role
+  - trigger API role
+  - oracle role
+  - cleanup role

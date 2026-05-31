@@ -1,3 +1,48 @@
+object_state_lifecycle:
+  oracle_types:
+    - stale_pointer_length_state_oracle
+    - object_lifecycle_state_oracle
+  required_observables:
+    - update_return_code_or_pointer
+    - object_state_transition
+    - crash_or_sanitizer_signal
+  target_api_features:
+    - mutable_object_with_internal_buffer
+    - repeated_update_of_same_object
+    - zero_length_update_semantics
+    - return_code_or_pointer_observable
+  safe_behavior:
+    condition: zero-length update leaves consistent state; later reuse does not crash
+    description: zero-length update clears or keeps consistent pointer-length state; safe reallocation on reuse
+  bug_behavior:
+    condition: ASAN/SEGV/NULL deref or exit 139 after zero-length update reuse
+    description: stale pointer-length state causes NULL pointer dereference on reuse
+  triage_behavior:
+    condition: unexpected return code but no crash
+    description: behavior differs from source oracle but no memory safety violation; needs manual review
+
+invalid_parameter_setup_oracle:
+  oracle_types:
+    - invalid_aead_tag_length_oracle
+    - invalid_parameter_return_code_oracle
+  required_observables:
+    - setup_or_ctrl_return_code
+    - parameter_value
+    - invalid_parameter_indicator
+  target_api_features:
+    - setup_or_ctrl_api_for_parameter_validation
+    - algorithm_specific_parameter_constraints
+    - return_code_observable_at_setup_time
+  safe_behavior:
+    condition: invalid parameter rejected with error return code
+    description: target API correctly rejects invalid parameter at setup/ctrl time
+  bug_behavior:
+    condition: invalid parameter accepted with success return code
+    description: target API accepts invalid parameter that should be rejected
+  triage_behavior:
+    condition: setup/init step failed before reaching the parameter validation
+    description: validation path not reached; needs oracle tightening
+
 buffer_canary_boundary:
   oracle_types:
     - canary_boundary_oracle
@@ -38,3 +83,49 @@ bignum_arithmetic_semantic:
     - caller_visible_result_object
   limitations:
     - OpenSSL 3.x BIGNUM is opaque and cannot expose direct limb-boundary canary behavior.
+
+crash_sanitizer_oracle:
+  oracle_types:
+    - heap_underflow_sanitizer_oracle
+    - heap_overflow_sanitizer_oracle
+    - generic_sanitizer_crash_oracle
+  required_observables:
+    - asan_or_ubsan_signal
+    - process_exit_code
+    - return_code_or_null_pointer
+  target_api_features:
+    - parser_or_decoder_entrypoint
+    - attacker_controlled_input_bytes
+    - internal_memory_access_from_decoded_content
+    - return_code_or_null_pointer_observable
+  safe_behavior:
+    condition: return_code != 0 or return_pointer == NULL and no ASAN/UBSAN signal
+    description: target safely rejects malformed input without memory safety violation
+  bug_behavior:
+    condition: ASAN/UBSAN crash or SEGV or exit 139
+    description: target exhibits memory safety violation on malformed input path
+  triage_behavior:
+    condition: return success unexpectedly
+    description: malformed input accepted; oracle needs strengthening
+
+null_deref_dispatch:
+  oracle_types:
+    - crash_sanitizer_or_safe_error_oracle
+  required_observables:
+    - return_code
+    - crash_signal_or_asan_output
+    - dispatch_path_entry
+  target_api_features:
+    - polymorphic_key_or_object_dispatch
+    - type_specific_internal_code_path
+    - incompatible_key_or_object_type_constructable
+    - return_code_or_sanitizer_observable
+  safe_behavior:
+    condition: return_code <= 0 at any dispatch step
+    description: target safely rejects incompatible key or object type before internal dereference
+  bug_behavior:
+    condition: process crash with ASAN/UBSAN/SEGV/exit 139
+    description: target dispatches into type-specific code without type guard and crashes
+  triage_behavior:
+    condition: return_code > 0 unexpectedly
+    description: incompatible key type accepted without crash; needs oracle tightening

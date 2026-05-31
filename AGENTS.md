@@ -1100,34 +1100,182 @@ Do not write keys into repository files.
 
 ---
 
-## Full Migration Command Template
+## Unified Recipe-Slot Migration Runbook
 
-Use variables for a new migration task:
+This section is the standard workflow for migrating a new PoC under the current recipe-slot framework.
+
+The standard artifact layout is:
+
+```text
+artifacts/migrations/<poc-slug>/
+  adapters_recipe_llm/
+  adapters_recipe_llm_validated/
+  cross_templates_recipe/
+  rendered_cases_recipe/
+  results/
+    run_recipe.jsonl
+    run_recipe.summary.json
+    run_recipe.verdicts.jsonl
+    run_recipe.migration_summary.json
+    run_recipe.migration_pairs.jsonl
+  logs/
+```
+
+The standard chain is:
+
+```text
+real PoC / patch / running log
+    ↓
+root cause / mutation points / oracle
+    ↓
+PoC Pattern Knowledge
+    ↓
+normalized source template: tmpl_mbedtls.c
+    ↓
+template_meta.yaml + mask_report.yaml
+    ↓
+ast_mask_report.yaml + selected_mask_units.yaml
+    ↓
+RAG evidence + candidates_with_evidence.yaml
+    ↓
+adapter recipe
+    ↓
+LLM generates slot_bindings only
+    ↓
+adapter.yaml
+    ↓
+adapter_validate
+    ↓
+cross_generator_from_adapters
+    ↓
+render_cases
+    ↓
+compile_run
+    ↓
+analyze_results / analyze_cross_results
+    ↓
+migration verdict
+```
+
+The LLM must not generate complete C harnesses in the normal workflow. In recipe-slot mode, the LLM should only generate:
+
+```yaml
+slot_bindings:
+```
+
+The following free-form fields must not be accepted from LLM output in recipe-slot mode:
+
+```text
+init_block
+input_construction_block
+trigger_block
+cleanup_block
+oracle_strategy
+```
+
+If these fields appear in LLM output, `adapter_filler.py` should ignore them.
+
+---
+
+### 1. Environment Setup
+
+Always start from:
+
+```bash
+cd ~/work/crypto-pattern-fuzz
+source .venv/bin/activate
+export PYTHONPATH=.
+export CLEAN_SOURCES_ROOT="${CLEAN_SOURCES_ROOT:-$HOME/work/clean_sources}"
+```
+
+If using LLM adapter generation, set the key only in the shell:
+
+```bash
+read -rsp "ZHIPUAI_API_KEY: " ZHIPUAI_API_KEY
+echo
+export ZHIPUAI_API_KEY
+export GLM_API_KEY="$ZHIPUAI_API_KEY"
+```
+
+Never print API key contents. Never commit API keys. Never write API keys into repository files.
+
+---
+
+### 2. Define PoC Variables
+
+For each new PoC, define variables first:
 
 ```bash
 POC_ID="MBEDTLS-POC-XXXX"
 CATEGORY="<category>"
 SLUG="<slug>"
+TARGET_LIBRARY="openssl"
+TARGET_API="<target_api>"
+HARNESS_FAMILY="<harness_family>"
 
 TEMPLATE_ROOT="normalized_templates/${CATEGORY}/${SLUG}"
 CANDIDATE_DIR="migration_candidates/${CATEGORY}/${SLUG}"
-ADAPTER_ROOT="adapters_${SLUG}"
-VALIDATED_ADAPTER_ROOT="adapters_${SLUG}_validated"
-CROSS_ROOT="cross_templates_${SLUG}_from_validated_adapters"
-RENDERED_ROOT="rendered_cases_${SLUG}_from_validated_adapters"
-RESULT_PREFIX="runner/results/run_${SLUG}"
-
 MASK_REPORT="${TEMPLATE_ROOT}/mask_report.yaml"
-CANDIDATES="${CANDIDATE_DIR}/candidates.yaml"
 CANDIDATES_WITH_EVIDENCE="${CANDIDATE_DIR}/candidates_with_evidence.yaml"
-RESULT_JSONL="${RESULT_PREFIX}.jsonl"
-SUMMARY_JSON="${RESULT_PREFIX}.summary.json"
-VERDICTS_JSONL="${RESULT_PREFIX}.verdicts.jsonl"
-MIGRATION_SUMMARY_JSON="${RESULT_PREFIX}.migration_summary.json"
-MIGRATION_PAIRS_JSONL="${RESULT_PREFIX}.migration_pairs.jsonl"
+
+ARTIFACT_ROOT="artifacts/migrations/<poc-slug>"
+ADAPTER_ROOT="${ARTIFACT_ROOT}/adapters_recipe_llm"
+VALIDATED_ADAPTER_ROOT="${ARTIFACT_ROOT}/adapters_recipe_llm_validated"
+CROSS_ROOT="${ARTIFACT_ROOT}/cross_templates_recipe"
+RENDERED_ROOT="${ARTIFACT_ROOT}/rendered_cases_recipe"
+RESULT_JSONL="${ARTIFACT_ROOT}/results/run_recipe.jsonl"
+SUMMARY_JSON="${ARTIFACT_ROOT}/results/run_recipe.summary.json"
+VERDICTS_JSONL="${ARTIFACT_ROOT}/results/run_recipe.verdicts.jsonl"
+MIGRATION_SUMMARY_JSON="${ARTIFACT_ROOT}/results/run_recipe.migration_summary.json"
+MIGRATION_PAIRS_JSONL="${ARTIFACT_ROOT}/results/run_recipe.migration_pairs.jsonl"
+
+mkdir -p \
+  "$ADAPTER_ROOT" \
+  "$VALIDATED_ADAPTER_ROOT" \
+  "$CROSS_ROOT" \
+  "$RENDERED_ROOT" \
+  "$ARTIFACT_ROOT/results" \
+  "$ARTIFACT_ROOT/logs"
 ```
 
-Validate and mask template:
+For multiple target APIs, run the adapter generation step once per target API.
+
+---
+
+### 3. Verify Existing Inputs
+
+Before adapter generation:
+
+```bash
+test -f "$MASK_REPORT" && echo "OK mask report" || echo "[ERROR] missing mask report"
+test -f "${TEMPLATE_ROOT}/template_meta.yaml" && echo "OK template_meta" || echo "[ERROR] missing template_meta"
+test -f "${TEMPLATE_ROOT}/tmpl_mbedtls.c" && echo "OK source template" || echo "[ERROR] missing tmpl_mbedtls.c"
+test -f "$CANDIDATES_WITH_EVIDENCE" && echo "OK candidates evidence" || echo "[ERROR] missing candidates_with_evidence"
+```
+
+Inspect metadata:
+
+```bash
+grep -E "template_id:|pattern_id:|harness_family:|oracle_type:" "$MASK_REPORT" "${TEMPLATE_ROOT}/template_meta.yaml" || true
+```
+
+Do not continue if `MASK_REPORT` points to the wrong PoC. Avoid broad greps such as `der`, because it may accidentally match unrelated words such as `deref`.
+
+Prefer content-based lookup:
+
+```bash
+find normalized_templates -type f -name "mask_report.yaml" -print | while read f; do
+  if grep -q "$POC_ID\|<EXPECTED_TEMPLATE_ID>" "$f"; then
+    echo "$f"
+  fi
+done
+```
+
+---
+
+### 4. Validate and Mask Template
+
+If the normalized template has not been checked:
 
 ```bash
 PYTHONPATH=. python3 -m template_maker.validate_template \
@@ -1140,9 +1288,25 @@ PYTHONPATH=. python3 -m template_maker.ast_mask_select \
   --root "$TEMPLATE_ROOT"
 ```
 
-Collect evidence:
+Expected template artifacts:
+
+```text
+tmpl_mbedtls.c
+template_meta.yaml
+mask_report.yaml
+ast_mask_report.yaml
+selected_mask_units.yaml
+```
+
+---
+
+### 5. Collect or Refresh Candidate Evidence
+
+If `candidates_with_evidence.yaml` is missing or stale:
 
 ```bash
+CANDIDATES="${CANDIDATE_DIR}/candidates.yaml"
+
 PYTHONPATH=. python3 -m migration.evidence_collector \
   --candidates "$CANDIDATES" \
   --mask-report "$MASK_REPORT" \
@@ -1150,68 +1314,238 @@ PYTHONPATH=. python3 -m migration.evidence_collector \
   --top-k 5
 ```
 
-Generate adapter with LLM:
+Candidate evidence should explain:
+
+```text
+target_library
+target_api
+decision
+migration_applicability
+operation_family
+function_behavior
+parameter_structure
+vulnerability_path
+harness_feasibility
+oracle_observability
+preserved_features
+lost_or_weakened_features
+```
+
+Do not rely on name similarity alone.
+
+---
+
+### 6. Create or Reuse Adapter Recipe
+
+Each target API should have a recipe file under:
+
+```text
+adapter_recipes/<target_library>/<target_api>.<harness_family>.yaml
+```
+
+Examples:
+
+```text
+adapter_recipes/openssl/BN_signed_bn2bin.buffer_canary_boundary.yaml
+adapter_recipes/openssl/BN_usub.bignum_arithmetic_semantic.yaml
+adapter_recipes/openssl/EVP_DecryptFinal_ex.return_code_outlen_semantic.yaml
+adapter_recipes/openssl/d2i_RSAPrivateKey.der_pointer_consumption.yaml
+adapter_recipes/openssl/d2i_X509.x509_asn1_inner_boundary.yaml
+```
+
+A recipe should define at least:
+
+```yaml
+target_library:
+target_api:
+harness_family:
+oracle_type:
+include_headers:
+objects:
+fixed_setup_sequence:
+trigger_call:
+allowed_slots:
+safe_behavior:
+bug_behavior:
+forbidden_terms:
+```
+
+The recipe is the reusable family-level specification. The adapter is the PoC-specific binding.
+
+---
+
+### 7. Generate Recipe-Slot Adapter with LLM
+
+Run `adapter_filler` in strict recipe mode.
 
 ```bash
+ADAPTER_RECIPE="adapter_recipes/${TARGET_LIBRARY}/${TARGET_API}.${HARNESS_FAMILY}.yaml"
+
 PYTHONPATH=. python3 -m migration.adapter_filler \
   --mask-report "$MASK_REPORT" \
   --candidates-with-evidence "$CANDIDATES_WITH_EVIDENCE" \
   --out-root "$ADAPTER_ROOT" \
-  --use-llm
+  --use-llm \
+  --include-non-generate \
+  --target-library "$TARGET_LIBRARY" \
+  --target-api "$TARGET_API" \
+  --adapter-recipe "$ADAPTER_RECIPE" \
+  --require-recipes
 ```
 
-Validate adapter:
+For multiple target APIs, repeat this command with different `TARGET_API` and `ADAPTER_RECIPE`, while keeping the same `ADAPTER_ROOT`.
+
+Check adapter output:
 
 ```bash
+find "$ADAPTER_ROOT" -name adapter.yaml -print -exec sed -n '1,180p' {} \;
+
+grep -R "_adapter_mode\|_llm_status\|slot_bindings\|_ignored_non_slot_fields\|_ignored_disallowed_fields" "$ADAPTER_ROOT"
+
+grep -R "init_block\|input_construction_block\|trigger_block\|cleanup_block\|oracle_strategy" "$ADAPTER_ROOT" \
+  || echo "OK: no free-form block fields"
+
+grep -R "manual_ok" "$ADAPTER_ROOT" \
+  || echo "OK: no manual_ok in LLM output"
+```
+
+Expected:
+
+```text
+_adapter_mode: recipe_slot_filling
+_llm_status: ok
+slot_bindings:
+_ignored_disallowed_fields: []
+```
+
+If `_llm_status` is `fallback`, stop and investigate. If `manual_ok` appears, document that it is manual rather than LLM-generated.
+
+---
+
+### 8. Validate Adapter
+
+```bash
+rm -rf "$VALIDATED_ADAPTER_ROOT"
+
 PYTHONPATH=. python3 -m migration.adapter_validate \
   --adapter-root "$ADAPTER_ROOT" \
   --out-root "$VALIDATED_ADAPTER_ROOT"
 ```
 
-Generate cross templates:
+Inspect validation output:
 
 ```bash
+find "$VALIDATED_ADAPTER_ROOT" -name adapter.yaml -print -exec sed -n '1,180p' {} \;
+
+grep -R "validation:\|status:\|errors:\|warnings:" "$VALIDATED_ADAPTER_ROOT"
+```
+
+Expected:
+
+```text
+[SUMMARY] ok: N
+[SUMMARY] needs_repair: 0
+```
+
+If `needs_repair > 0`, do not continue blindly. Check whether the validator is incorrectly applying legacy free-form checks to a recipe-slot adapter. If so, improve `adapter_validate.py` at the harness-family level rather than adding forbidden free-form blocks to the adapter.
+
+---
+
+### 9. Generate Cross Templates
+
+```bash
+rm -rf "$CROSS_ROOT"
+mkdir -p "$CROSS_ROOT"
+
 PYTHONPATH=. python3 -m template_maker.cross_generator_from_adapters \
   --adapter-root "$VALIDATED_ADAPTER_ROOT" \
   --out-root "$CROSS_ROOT"
 ```
 
-Render concrete cases:
+Inspect generated templates:
 
 ```bash
+find "$CROSS_ROOT" -type f | sort
+
+grep -R "target_api\|harness_family\|oracle_type" "$CROSS_ROOT" | head -120
+```
+
+If the generator reports:
+
+```text
+unknown recipe harness_family='<family>'
+```
+
+then the adapter is probably valid, but `cross_generator_from_adapters.py` lacks a recipe renderer for that family. Add a reusable renderer or recipe wrapper for that harness family.
+
+Do not add one-off code for a single PoC if the family can be generalized.
+
+---
+
+### 10. Render Concrete Cases
+
+```bash
+rm -rf "$RENDERED_ROOT"
+mkdir -p "$RENDERED_ROOT"
+
 PYTHONPATH=. python3 -m template_maker.render_cases \
   --root "$CROSS_ROOT" \
   --out-root "$RENDERED_ROOT" \
-  --max-cases 32
+  --max-cases 64
 ```
 
 Check unresolved placeholders:
 
 ```bash
-grep -R "\[.*\]" -n "$RENDERED_ROOT" --include="*.c" || echo "OK: C placeholders rendered"
+grep -R "\[.*\]" -n "$RENDERED_ROOT" --include="*.c" \
+  || echo "OK: C placeholders rendered"
 ```
 
-Compile and run:
+Some placeholder-like text in comments may be acceptable, but placeholders in executable code are not.
+
+---
+
+### 11. Compile and Run
 
 ```bash
+mkdir -p "$ARTIFACT_ROOT/results"
+
 PYTHONPATH=. python3 -m runner.compile_run \
   --input-root "$RENDERED_ROOT" \
   --result "$RESULT_JSONL" \
   --keep-going
 ```
 
-Analyze single-case results:
+If any case has `compile_error`, print the first error:
+
+```bash
+python3 - <<PY
+import json
+path = "${RESULT_JSONL}"
+with open(path, "r", encoding="utf-8") as f:
+    for line in f:
+        obj = json.loads(line)
+        if obj.get("status") == "compile_error":
+            print("=" * 100)
+            print(obj.get("source"))
+            print("library:", obj.get("library"))
+            print((obj.get("compile") or {}).get("stderr", ""))
+            break
+PY
+```
+
+Do not continue to final interpretation until compile errors are understood.
+
+---
+
+### 12. Analyze Results
 
 ```bash
 PYTHONPATH=. python3 -m runner.analyze_results \
   --input "$RESULT_JSONL" \
   --output "$SUMMARY_JSON" \
   --case-output "$VERDICTS_JSONL"
-```
 
-Analyze cross-library pairs:
-
-```bash
 PYTHONPATH=. python3 -m runner.analyze_cross_results \
   --input "$SUMMARY_JSON" \
   --output "$MIGRATION_SUMMARY_JSON" \
@@ -1237,35 +1571,148 @@ print("migration_verdict_counts:", m.get("migration_verdict_counts"))
 PY
 ```
 
+When reporting results, always include:
+
+```text
+total_cases
+raw_status_counts
+verdict_counts
+total_pairs
+migration_verdict_counts
+crash evidence, if any
+semantic interpretation
+next recommended step
+```
+
 ---
 
-## Standard Checks Before Editing
+### 13. Crash / Bug / Triage Interpretation
 
-Before making changes, inspect:
+Do not treat every nonzero exit as a crash.
 
-```bash
-git status --short
-git log --oneline -5
+Crash evidence requires explicit evidence such as:
+
+```text
+ASAN
+UBSAN
+SEGV
+heap-buffer-overflow
+stack-buffer-overflow
+use-after-free
+exit code 139
 ```
 
-If there is a merge or rebase conflict, stop and ask the user.
+Common interpretations:
 
-Before committing or pushing, inspect:
+```text
+bug_candidate:
+  The target shows behavior matching the migrated vulnerability oracle.
+
+migrated_bug_candidate:
+  Source is safe/rejecting, while target shows bug-like behavior.
+
+semantic_projection_limitation:
+  The target behavior is expected for the target low-level API,
+  and the source vulnerability path is only partially projected.
+
+normal_expected_behavior:
+  The target succeeds on a normal safe path and no oracle violation occurs.
+
+migrated_safe:
+  Source and target both behave safely.
+
+migration_needs_triage:
+  The current oracle is not strong enough to classify the behavior.
+```
+
+Safe/safe results are valid and should be recorded. Do not report safe/safe results as vulnerabilities.
+
+---
+
+### 14. Standard Result Paths
+
+Every completed migration should produce:
+
+```text
+${ARTIFACT_ROOT}/results/run_recipe.jsonl
+${ARTIFACT_ROOT}/results/run_recipe.summary.json
+${ARTIFACT_ROOT}/results/run_recipe.verdicts.jsonl
+${ARTIFACT_ROOT}/results/run_recipe.migration_summary.json
+${ARTIFACT_ROOT}/results/run_recipe.migration_pairs.jsonl
+```
+
+Avoid creating inconsistent result filenames unless there is a strong reason.
+
+---
+
+### 15. Regression Re-run from Rendered Cases
+
+If adapters and templates already exist and only the runner/analyzer needs to be rerun, do not rerun `adapter_filler`.
+
+Start from `rendered_cases_recipe`:
 
 ```bash
+PYTHONPATH=. python3 -m runner.compile_run \
+  --input-root "$RENDERED_ROOT" \
+  --result "$RESULT_JSONL" \
+  --keep-going
+
+PYTHONPATH=. python3 -m runner.analyze_results \
+  --input "$RESULT_JSONL" \
+  --output "$SUMMARY_JSON" \
+  --case-output "$VERDICTS_JSONL"
+
+PYTHONPATH=. python3 -m runner.analyze_cross_results \
+  --input "$SUMMARY_JSON" \
+  --output "$MIGRATION_SUMMARY_JSON" \
+  --pair-output "$MIGRATION_PAIRS_JSONL" \
+  --source-lib mbedtls \
+  --target-lib openssl
+```
+
+This is useful for verifying that existing PoCs still work after analyzer or runner changes.
+
+---
+
+### 16. Before Commit / Push
+
+Before committing:
+
+```bash
+git status -sb
 git status --short
 git diff --stat
-git diff | grep -i "api_key\|apikey\|zhipu\|glm\|sk-" || echo "OK: no obvious API key in diff"
-grep -R "/home/wen/work/clean_sources" -n config runner template_maker migration scripts docs 2>/dev/null || echo "OK: no hardcoded clean_sources path"
 ```
 
-Do not run:
+Check staged content:
 
 ```bash
+git diff --cached --stat
+git diff --cached --name-only | sort
+```
+
+Check secrets:
+
+```bash
+git diff --cached | grep -Ei "ZHIPUAI_API_KEY|GLM_API_KEY|api[_-]?key|secret|token|sk-" \
+  || echo "OK: no obvious key/token strings in staged diff"
+```
+
+Check accidental temp files:
+
+```bash
+git diff --cached --name-only | grep -E "__pycache__|\.pyc$|runner/build|\.venv|manual_backup|glm_validated|glm$" \
+  || echo "OK: no obvious cache/build/temp dirs staged"
+```
+
+Do not use:
+
+```bash
+git add .
 git push --force
 ```
 
----
+Prefer explicit `git add` commands for the files and artifact roots relevant to the migration task.
 
 ## Notes for Coding Agents
 

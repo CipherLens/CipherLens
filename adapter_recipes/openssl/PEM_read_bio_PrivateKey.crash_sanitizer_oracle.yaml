@@ -1,0 +1,88 @@
+target_library: openssl
+target_api: PEM_read_bio_PrivateKey
+harness_family: crash_sanitizer_oracle
+oracle_type: heap_underflow_sanitizer_oracle
+
+include_headers:
+  - openssl/pem.h
+  - openssl/evp.h
+  - openssl/bio.h
+  - openssl/err.h
+  - stdio.h
+  - stdlib.h
+  - string.h
+
+objects:
+  bio:
+    type: BIO *
+    new: BIO_new_mem_buf
+    free: BIO_free
+  pkey:
+    type: EVP_PKEY *
+    new: PEM_read_bio_PrivateKey
+    free: EVP_PKEY_free
+
+fixed_setup_sequence:
+  - construct_malformed_encrypted_pem_with_PEM_BODY
+  - BIO_new_mem_buf_from_malformed_pem
+  - PEM_read_bio_PrivateKey_with_password_callback
+
+trigger_call:
+  function: PEM_read_bio_PrivateKey
+  return_object: pkey
+  bio: bio
+  password_callback: pem_password_cb
+  expected_return: NULL
+
+allowed_slots:
+  pem_header_label:
+    description: PEM header/footer key type label (e.g., "EC PRIVATE KEY")
+    default: EC PRIVATE KEY
+  password_string:
+    description: password string used in the PEM password callback
+    default: pwd
+  bio_variable:
+    description: C variable name for the memory BIO
+    default: bio
+  pkey_variable:
+    description: C variable name for the returned EVP_PKEY
+    default: pkey
+  return_code_variable:
+    description: C variable name for the integer result code
+    default: ret
+
+safe_behavior:
+  condition: pkey == NULL and no ASAN/UBSAN signal
+  description: OpenSSL safely rejects malformed encrypted PEM with short base64 body
+
+bug_behavior:
+  condition: process crash with ASAN heap-buffer-underflow or SEGV or exit 139
+  description: OpenSSL PEM padding check reads before the decoded heap buffer
+
+triage_behavior:
+  condition: pkey != NULL unexpectedly
+  description: malformed PEM accepted; oracle not sufficient without further checks
+
+forbidden_terms:
+  - BIGNUM
+  - BN_new
+  - BN_free
+  - BN_set_word
+  - BN_bn2binpad
+  - BN_signed_bn2bin
+  - BN_usub
+  - BN_ucmp
+  - d2i_X509
+  - X509_free
+  - ASN1_item_d2i
+  - d2i_RSAPrivateKey
+  - d2i_PrivateKey
+  - d2i_RSA_PUBKEY
+  - EVP_DecryptFinal_ex
+  - EVP_CIPHER_CTX
+  - EVP_DigestVerifyInit
+  - CANARY_SIZE
+  - BUFLEN
+  - consumed_len
+  - openssl/bn.h
+  - openssl/x509.h

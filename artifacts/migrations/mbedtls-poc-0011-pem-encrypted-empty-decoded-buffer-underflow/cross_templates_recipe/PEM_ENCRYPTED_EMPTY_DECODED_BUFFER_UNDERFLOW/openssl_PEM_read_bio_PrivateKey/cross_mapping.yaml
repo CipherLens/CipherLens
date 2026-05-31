@@ -1,0 +1,71 @@
+source:
+  library: mbedtls
+  api: mbedtls_pem_read_buffer
+  template_id: PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW
+  semantic_operation: pem_encrypted_parse_padding_check
+  bug_class:
+  - heap_buffer_underflow
+  - one_byte_read_before_heap_region
+  - missing_length_guard_before_padding_access
+  poc_pattern:
+    pattern_id: MBEDTLS-POC-0011
+    bug_category: one_byte_heap_buffer_underflow
+    failure_signal:
+    - asan_heap_buffer_underflow
+    - READ_of_size_1_before_heap_region
+target:
+  library: openssl
+  candidate_api: PEM_read_bio_PrivateKey
+adapter:
+  adapter_recipe: adapter_recipes/openssl/PEM_read_bio_PrivateKey.crash_sanitizer_oracle.yaml
+  slot_bindings:
+    pem_header_label: EC PRIVATE KEY
+    password_string: pwd
+    bio_variable: bio
+    pkey_variable: pkey
+    return_code_variable: ret
+  adapter_mode: recipe_slot_filling
+  include_headers: []
+  type_mapping: {}
+  constant_mapping: {}
+  init_block: ''
+  input_construction_block: ''
+  trigger_block: ''
+  return_value_semantics: ''
+  oracle_strategy: {}
+  cleanup_block: ''
+  llm_status: ok
+candidate:
+  library: openssl
+  api: PEM_read_bio_PrivateKey
+  decision: generate
+  scores:
+    operation_family: 90
+    function_behavior: 85
+    parameter_structure: 80
+    vulnerability_path: 78
+    harness_feasibility: 88
+    final: 83
+preserved_vulnerability_features:
+- pem_parser_entrypoint
+- encrypted_pem_path_with_password
+- malformed_or_short_base64_body
+- observable_asan_heap_underflow_or_safe_error
+lost_or_weakened_features:
+- exact_pem_check_pkcs_padding_internal_function
+- exact_mbedtls_error_code
+source_expected_behavior:
+  buggy:
+    signal: asan_heap_buffer_underflow
+    exit_code: 1
+    description: READ of size 1 in pem_check_pkcs_padding, 1 byte before heap region
+  fixed:
+    ret: -44
+    description: base64 or padding error returned safely, no ASAN signal
+  note: The target API is not expected to reproduce exact mbedTLS numeric error codes;
+    cross-library validation uses the oracle semantics defined by the migrated harness
+    family.
+notes:
+- Generated from LLM-filled structured adapter YAML.
+- The C harness skeleton is fixed; the target-specific blocks come from adapter.yaml.
+- This is vulnerability-path migration, not strict full API semantic equivalence.

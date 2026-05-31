@@ -1,0 +1,69 @@
+source:
+  library: mbedtls
+  api: psa_aead_decrypt_setup
+  template_id: PSA_AEAD_INVALID_SHORTENED_TAG_SETUP
+  semantic_operation: psa_aead_setup_tag_length_validation
+  bug_class:
+  - invalid_parameter_accepted
+  - invalid_aead_tag_length_accepted
+  - missing_tag_length_validation_at_setup
+  poc_pattern:
+    pattern_id: MBEDTLS-POC-0028
+    bug_category: invalid_aead_tag_length_accepted
+    failure_signal:
+    - PSA_SUCCESS_for_invalid_CCM_tag_length
+    - invalid_argument_after_fix
+target:
+  library: openssl
+  candidate_api: EVP_CIPHER_CTX_ctrl
+adapter:
+  adapter_recipe: adapter_recipes/openssl/EVP_CIPHER_CTX_ctrl.invalid_parameter_setup_oracle.yaml
+  slot_bindings:
+    aead_cipher: EVP_aes_128_ccm()
+    ctx_variable: ctx
+    return_code_variable: ret
+    init_ret_variable: init_ret
+  adapter_mode: recipe_slot_filling
+  include_headers: []
+  type_mapping: {}
+  constant_mapping: {}
+  init_block: ''
+  input_construction_block: ''
+  trigger_block: ''
+  return_value_semantics: ''
+  oracle_strategy: {}
+  cleanup_block: ''
+  llm_status: ok
+candidate:
+  library: openssl
+  api: EVP_CIPHER_CTX_ctrl
+  decision: generate
+  scores:
+    operation_family: 85
+    function_behavior: 80
+    parameter_structure: 82
+    vulnerability_path: 80
+    harness_feasibility: 88
+    final: 83
+preserved_vulnerability_features:
+- aead_setup_api_entrypoint
+- shortened_tag_length_parameter
+- algorithm_specific_tag_length_validation
+- invalid_parameter_return_code_observable
+lost_or_weakened_features:
+- exact_PSA_error_code
+- PSA_algorithm_encoding
+source_expected_behavior:
+  buggy:
+    setup_status: 0
+    description: PSA_SUCCESS returned for CCM tag length 3 (should be rejected)
+  fixed:
+    setup_status: -135
+    description: PSA_ERROR_INVALID_ARGUMENT returned for CCM tag length 3
+  note: The target API is not expected to reproduce exact mbedTLS numeric error codes;
+    cross-library validation uses the oracle semantics defined by the migrated harness
+    family.
+notes:
+- Generated from LLM-filled structured adapter YAML.
+- The C harness skeleton is fixed; the target-specific blocks come from adapter.yaml.
+- This is vulnerability-path migration, not strict full API semantic equivalence.

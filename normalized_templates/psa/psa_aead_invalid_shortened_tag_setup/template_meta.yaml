@@ -1,0 +1,101 @@
+template_id: PSA_AEAD_INVALID_SHORTENED_TAG_SETUP
+template_name: psa_aead_decrypt_setup invalid shortened CCM tag length template
+backend: api_harness
+language: c
+status: normalized
+poc_source:
+  file: poc_psa_aead_invalid_tag_setup.c
+  library: mbedtls
+  api: psa_aead_decrypt_setup
+operation:
+  abstract: psa_aead_setup_tag_length_validation
+  api_family: AEADSetup
+  bug_class:
+    - invalid_parameter_accepted
+    - invalid_aead_tag_length_accepted
+    - missing_tag_length_validation_at_setup
+source_api:
+  library: mbedtls
+  function: psa_aead_decrypt_setup
+pattern_id: MBEDTLS-POC-0028
+harness_family: invalid_parameter_setup_oracle
+oracle_type: invalid_aead_tag_length_oracle
+mutation_points:
+  - name: TAG_LENGTH
+    placeholder: '[TAG_LENGTH]'
+    type: int
+    default: 3
+    values:
+      - 3
+      - 4
+      - 8
+      - 12
+      - 16
+    strategy: boundary_values
+    constraint: >
+      CCM valid tag lengths are 4, 6, 8, 10, 12, 14, 16.
+      Tag length 3 is invalid and is the primary bug trigger.
+      Valid lengths test the normal acceptance path.
+    priority: high
+    normalized: true
+  - name: KEY_BITS
+    placeholder: '[KEY_BITS]'
+    type: int
+    default: 128
+    values:
+      - 128
+    strategy: fixed
+    constraint: AES-128 key for CCM
+    priority: medium
+    normalized: true
+  - name: KEY_TYPE
+    placeholder: '[KEY_TYPE]'
+    type: constant
+    default: PSA_KEY_TYPE_AES
+    values:
+      - PSA_KEY_TYPE_AES
+    strategy: fixed
+    constraint: AES key type for CCM AEAD
+    priority: medium
+    normalized: true
+oracle:
+  invalid_tag_accepted:
+    - psa_aead_decrypt_setup_returns_PSA_SUCCESS_for_invalid_tag
+    - EVP_CIPHER_CTX_ctrl_accepts_invalid_CCM_tag_length
+  valid_tag_accepted:
+    - psa_aead_decrypt_setup_returns_PSA_SUCCESS_for_valid_tag
+    - EVP_CIPHER_CTX_ctrl_accepts_valid_CCM_tag_length
+  invalid_tag_rejected:
+    - psa_aead_decrypt_setup_returns_PSA_ERROR_INVALID_ARGUMENT
+    - EVP_CIPHER_CTX_ctrl_rejects_invalid_CCM_tag_length
+verdict:
+  bug_candidate:
+    condition: invalid tag length (e.g., 3) accepted with PSA_SUCCESS or ctrl_ret > 0
+  safe_reject_behavior:
+    condition: invalid tag length rejected with error code
+  normal_expected_behavior:
+    condition: valid tag length accepted with PSA_SUCCESS or ctrl_ret > 0
+  triage:
+    condition: valid tag length rejected (unexpected)
+generation_policy:
+  max_cases: 16
+  priority:
+    - invalid_tag_length_3
+    - valid_boundary_lengths
+  compile_with:
+    - asan
+    - ubsan
+expected_buggy_behavior:
+  setup_status: 0
+  description: PSA_SUCCESS returned for CCM tag length 3 (should be rejected)
+expected_fixed_behavior:
+  setup_status: -135
+  description: PSA_ERROR_INVALID_ARGUMENT returned for CCM tag length 3
+rag_requirements:
+  retrieve:
+    - psa_aead_decrypt_setup API constraints
+    - OpenSSL EVP CCM tag length ctrl API
+    - cross-library candidate mappings
+normalization:
+  enabled: true
+  policy: template_id_specific_safe_whitelist

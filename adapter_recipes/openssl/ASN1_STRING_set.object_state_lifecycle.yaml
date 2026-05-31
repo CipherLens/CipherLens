@@ -1,0 +1,82 @@
+target_library: openssl
+target_api: ASN1_STRING_set
+harness_family: object_state_lifecycle
+oracle_type: stale_pointer_length_state_oracle
+
+include_headers:
+  - openssl/asn1.h
+  - openssl/err.h
+  - stdio.h
+  - string.h
+  - stdlib.h
+
+objects:
+  asn1_string:
+    type: ASN1_STRING *
+    new: ASN1_STRING_new
+    free: ASN1_STRING_free
+
+fixed_setup_sequence:
+  - ASN1_STRING_new
+  - step1_ASN1_STRING_set_nonzero_value
+  - step2_ASN1_STRING_set_zero_length
+  - step3_ASN1_STRING_set_nonzero_reuse
+  - observe_return_code_and_data_state
+
+trigger_call:
+  function: ASN1_STRING_set
+  step1: nonzero_value_initial
+  step2: zero_length_update
+  step3: nonzero_value_reuse
+  return_code: ret
+
+semantic_projection_note: >
+  ASN1_STRING_set is a semantic projection target for mbedtls_asn1_store_named_data.
+  OpenSSL's implementation does not have the stale-pointer bug (it keeps the buffer
+  allocated on zero-length update). This test demonstrates safe lifecycle handling.
+  Expected result: migrated_safe (no crash in current OpenSSL 3.x).
+
+allowed_slots:
+  asn1_string_variable:
+    description: C variable name for the ASN1_STRING object
+    default: s
+  return_code_variable:
+    description: C variable name for the ASN1_STRING_set return code
+    default: ret
+  first_data_variable:
+    description: C variable name for the first (nonzero) data buffer
+    default: first_data
+  reuse_data_variable:
+    description: C variable name for the reuse data buffer
+    default: reuse_data
+
+safe_behavior:
+  condition: ret == 1 and ASN1_STRING_length(s) == FIRST_VALUE_LEN and data != NULL after step3
+  description: zero-length update does not leave stale NULL pointer; safe reallocation on reuse
+
+bug_behavior:
+  condition: ASAN/SEGV/NULL deref or exit 139
+  description: stale pointer-length state causes NULL dereference on step3 memcpy
+
+triage_behavior:
+  condition: ret != 1 for a valid update sequence
+  description: unexpected failure; needs manual review
+
+forbidden_terms:
+  - d2i_X509
+  - d2i_RSAPrivateKey
+  - d2i_PrivateKey
+  - d2i_RSA_PUBKEY
+  - BN_usub
+  - BN_signed_bn2bin
+  - PEM_read_bio_PrivateKey
+  - EVP_CIPHER_CTX_ctrl
+  - EVP_DigestVerifyInit
+  - mbedtls_pk_verify_ext
+  - CANARY_SIZE
+  - BUFLEN
+  - consumed_len
+  - openssl/bn.h
+  - openssl/x509.h
+  - openssl/pem.h
+  - openssl/evp.h

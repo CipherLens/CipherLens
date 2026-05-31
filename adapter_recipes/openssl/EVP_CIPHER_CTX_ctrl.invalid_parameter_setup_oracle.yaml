@@ -1,0 +1,79 @@
+target_library: openssl
+target_api: EVP_CIPHER_CTX_ctrl
+harness_family: invalid_parameter_setup_oracle
+oracle_type: invalid_aead_tag_length_oracle
+
+include_headers:
+  - openssl/evp.h
+  - openssl/err.h
+  - stdio.h
+  - string.h
+  - stdlib.h
+
+objects:
+  cipher_ctx:
+    type: EVP_CIPHER_CTX *
+    new: EVP_CIPHER_CTX_new
+    free: EVP_CIPHER_CTX_free
+
+fixed_setup_sequence:
+  - EVP_CIPHER_CTX_new
+  - EVP_DecryptInit_ex_with_ccm_cipher
+  - EVP_CIPHER_CTX_ctrl_SET_TAG_with_tag_length
+  - observe_return_code
+  - EVP_CIPHER_CTX_free
+
+trigger_call:
+  function: EVP_CIPHER_CTX_ctrl
+  ctrl_command: EVP_CTRL_CCM_SET_TAG
+  return_code: ret
+  tag_length: TAG_LENGTH
+
+allowed_slots:
+  aead_cipher:
+    description: OpenSSL EVP CCM cipher expression (e.g., EVP_aes_128_ccm())
+    default: EVP_aes_128_ccm()
+  ctx_variable:
+    description: C variable name for the EVP_CIPHER_CTX pointer
+    default: ctx
+  return_code_variable:
+    description: C variable name for EVP_CIPHER_CTX_ctrl return code
+    default: ret
+  init_ret_variable:
+    description: C variable name for EVP_DecryptInit_ex return code
+    default: init_ret
+
+safe_behavior:
+  condition: ret <= 0
+  description: >
+    OpenSSL EVP CCM ctrl rejects the invalid tag length (returns 0).
+    This is the expected safe behavior for tag_len=3.
+
+bug_behavior:
+  condition: ret > 0
+  description: >
+    OpenSSL EVP CCM ctrl accepts an invalid tag length (returns 1 for tag_len=3).
+    This is the bug-candidate behavior.
+
+triage_behavior:
+  condition: init_ret <= 0
+  description: >
+    EVP_DecryptInit_ex failed before ctrl could be called;
+    tag length validation path not reached.
+
+forbidden_terms:
+  - d2i_X509
+  - d2i_RSAPrivateKey
+  - d2i_PrivateKey
+  - d2i_RSA_PUBKEY
+  - BN_usub
+  - BN_signed_bn2bin
+  - PEM_read_bio_PrivateKey
+  - EVP_DigestVerifyInit
+  - mbedtls_pk_verify_ext
+  - CANARY_SIZE
+  - BUFLEN
+  - consumed_len
+  - openssl/bn.h
+  - openssl/x509.h
+  - openssl/pem.h

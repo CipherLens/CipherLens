@@ -1,0 +1,111 @@
+target_library: openssl
+target_api: EVP_DigestVerify
+harness_family: null_deref_dispatch
+oracle_type: crash_sanitizer_or_safe_error_oracle
+
+include_headers:
+  - openssl/evp.h
+  - openssl/rsa.h
+  - openssl/ec.h
+  - openssl/err.h
+  - stdio.h
+  - stdlib.h
+  - string.h
+
+objects:
+  signing_key:
+    type: EVP_PKEY *
+    new: EVP_PKEY_keygen (RSA)
+    free: EVP_PKEY_free
+  incompatible_key:
+    type: EVP_PKEY *
+    new: EVP_PKEY_keygen (EC)
+    free: EVP_PKEY_free
+  sign_ctx:
+    type: EVP_MD_CTX *
+    new: EVP_MD_CTX_new
+    free: EVP_MD_CTX_free
+  verify_ctx:
+    type: EVP_MD_CTX *
+    new: EVP_MD_CTX_new
+    free: EVP_MD_CTX_free
+
+fixed_setup_sequence:
+  - generate_rsa_signing_key_with_KEY_BITS
+  - sign_test_data_with_rsa_pss
+  - generate_ec_incompatible_key
+  - EVP_DigestVerifyInit_with_incompatible_key
+  - EVP_PKEY_CTX_set_rsa_padding_probe
+  - EVP_DigestVerifyUpdate_and_Final
+
+trigger_call:
+  function: EVP_DigestVerifyInit
+  probe_function: EVP_PKEY_CTX_set_rsa_padding
+  verify_function: EVP_DigestVerifyFinal
+  return_code: ret
+  key_object: incompatible_key
+  hash_algorithm: md_algorithm
+
+allowed_slots:
+  md_algorithm:
+    description: OpenSSL hash algorithm expression for signing and verification (e.g. EVP_sha256())
+    default: EVP_sha256()
+  ec_curve_nid:
+    description: NID of the incompatible EC key curve (e.g. NID_X9_62_prime256v1)
+    default: NID_X9_62_prime256v1
+  signing_key_variable:
+    description: C variable name for the RSA signing key (EVP_PKEY *)
+    default: sign_key
+  incompatible_key_variable:
+    description: C variable name for the incompatible EC key (EVP_PKEY *)
+    default: target_key
+  verify_ctx_variable:
+    description: C variable name for the verification EVP_MD_CTX
+    default: verify_ctx
+  sign_ctx_variable:
+    description: C variable name for the signing EVP_MD_CTX
+    default: sign_ctx
+  return_code_variable:
+    description: C variable name for the integer return code observable
+    default: ret
+
+safe_behavior:
+  condition: ret <= 0 at EVP_DigestVerifyInit, EVP_PKEY_CTX_set_rsa_padding, or EVP_DigestVerifyFinal
+  description: >
+    OpenSSL safely rejects the incompatible EC key before or during RSA-PSS
+    dispatch; no crash occurs and return code signals type mismatch or padding error.
+
+bug_behavior:
+  condition: process crash with ASAN heap/null deref or SEGV or exit code 139
+  description: >
+    Target dispatches into RSA-PSS-specific code without checking that the key
+    is an RSA key; internal RSA context pointer is NULL and causes a crash.
+
+triage_behavior:
+  condition: ret > 0 and no crash
+  description: >
+    Incompatible key verification unexpectedly succeeded; oracle not sufficient to
+    classify; needs manual inspection.
+
+forbidden_terms:
+  - BIGNUM
+  - BN_new
+  - BN_free
+  - BN_set_word
+  - BN_bn2binpad
+  - BN_signed_bn2bin
+  - BN_usub
+  - BN_ucmp
+  - d2i_X509
+  - X509_free
+  - ASN1_item_d2i
+  - d2i_RSAPrivateKey
+  - d2i_PrivateKey
+  - d2i_RSA_PUBKEY
+  - EVP_DecryptFinal_ex
+  - EVP_CIPHER_CTX
+  - CANARY_SIZE
+  - BUFLEN
+  - consumed_len
+  - openssl/bn.h
+  - openssl/x509.h

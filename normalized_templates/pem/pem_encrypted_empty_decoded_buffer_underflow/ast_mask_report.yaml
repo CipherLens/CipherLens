@@ -1,0 +1,37 @@
+template_id: PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW
+template_name: mbedtls_pem_read_buffer encrypted PEM empty-buffer underflow template
+source_api: mbedtls_pem_read_buffer
+ast_analysis:
+  tool: ast_mask_lite
+  language: c
+  nodes:
+    - kind: preproc_def
+      name: PEM_BODY_CONTENT
+      code: '#define PEM_BODY_CONTENT "[PEM_BODY]"'
+      role: mutation_point
+      mask_level: macro_level
+      placeholder: '[PEM_BODY]'
+    - kind: string_literal
+      role: input_construction
+      code: '"-----BEGIN EC PRIVATE KEY-----\\r\\nProc-Type: 4,ENCRYPTED\\r\\n..."'
+      mask_level: value_level
+    - kind: call_expression
+      function: mbedtls_pem_read_buffer
+      role: trigger_call
+      code: 'ret = mbedtls_pem_read_buffer(&ctx, header, footer, (const unsigned char *)malformed_pem, (const unsigned char *)"pwd", 3, &use_len)'
+      mask_level: function_call_level
+      placeholders: []
+    - kind: if_statement
+      role: oracle
+      code: 'if (ret != 0) { printf("[OK] fixed behavior: malformed encrypted PEM rejected safely.\\n"); }'
+      mask_level: statement_level
+    - kind: call_expression
+      function: mbedtls_pem_free
+      role: cleanup
+      code: 'mbedtls_pem_free(&ctx)'
+      mask_level: function_call_level
+selected_high_value_nodes:
+  - PEM_BODY macro (mutation point)
+  - mbedtls_pem_read_buffer trigger call
+  - oracle if-statement
+  - mbedtls_pem_init / mbedtls_pem_free init/cleanup

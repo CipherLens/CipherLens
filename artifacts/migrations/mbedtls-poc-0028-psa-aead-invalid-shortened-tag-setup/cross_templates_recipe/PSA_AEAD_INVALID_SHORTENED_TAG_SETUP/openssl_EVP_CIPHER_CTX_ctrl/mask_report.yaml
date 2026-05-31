@@ -1,0 +1,111 @@
+template_id: PSA_AEAD_INVALID_SHORTENED_TAG_SETUP
+template_name: psa_aead_decrypt_setup invalid shortened CCM tag length template
+source_file: poc_psa_aead_invalid_tag_setup.c
+source_library: mbedtls
+source_api: psa_aead_decrypt_setup
+language: c
+masking_design:
+  mode: ast_aware_lightweight
+  preserve_compilable_skeleton: true
+  note: >
+    Records AST-like masking roles for the PSA AEAD invalid shortened tag
+    setup pattern. The C template remains compilable with placeholder macros.
+poc_pattern:
+  pattern_id: MBEDTLS-POC-0028
+  bug_category: invalid_aead_tag_length_accepted
+  failure_signal:
+    - PSA_SUCCESS_for_invalid_CCM_tag_length
+    - invalid_argument_after_fix
+includes:
+  - stdio.h
+  - string.h
+  - psa/crypto.h
+roles:
+  init:
+    - order: 1
+      code: psa_crypto_init()
+      placeholders: []
+    - order: 2
+      code: 'psa_algorithm_t alg = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, TAG_LENGTH)'
+      placeholders:
+        - '[TAG_LENGTH]'
+  input_construction:
+    - order: 3
+      code: import_aes_key(&key_id, alg, KEY_TYPE_VALUE, KEY_BITS)
+      placeholders:
+        - '[KEY_BITS]'
+        - '[KEY_TYPE]'
+  trigger_call:
+    - order: 4
+      code: psa_aead_decrypt_setup(&operation, key_id, alg)
+      placeholders: []
+  oracle:
+    - order: 5
+      code: 'if (!is_valid_ccm_tag_length(TAG_LENGTH)) { if (status == PSA_SUCCESS) { [BUG] } else { [OK] } }'
+      placeholders: []
+  cleanup:
+    - order: 6
+      code: 'psa_aead_abort(&operation); psa_destroy_key(key_id);'
+      placeholders: []
+masking_levels:
+  macro_level:
+    - macro: TAG_LENGTH
+      original: '#define TAG_LENGTH 3'
+      masked: '#define TAG_LENGTH [TAG_LENGTH]'
+      placeholders:
+        - '[TAG_LENGTH]'
+      ast_kind: preproc_def
+      mask_level: macro_level
+    - macro: KEY_BITS
+      original: '#define KEY_BITS 128'
+      masked: '#define KEY_BITS [KEY_BITS]'
+      placeholders:
+        - '[KEY_BITS]'
+      ast_kind: preproc_def
+      mask_level: macro_level
+    - macro: KEY_TYPE_VALUE
+      original: '#define KEY_TYPE_VALUE PSA_KEY_TYPE_AES'
+      masked: '#define KEY_TYPE_VALUE [KEY_TYPE]'
+      placeholders:
+        - '[KEY_TYPE]'
+      ast_kind: preproc_def
+      mask_level: macro_level
+  api_argument_or_value_level:
+    - api_or_function: PSA_ALG_AEAD_WITH_SHORTENED_TAG
+      role: input_construction
+      statement: 'PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, TAG_LENGTH)'
+      placeholder: '[TAG_LENGTH]'
+      mutation_point:
+        name: TAG_LENGTH
+        type: int
+        default: 3
+        values: [3, 4, 8, 12, 16]
+        strategy: boundary_values
+        constraint: CCM valid lengths are 4,6,8,10,12,14,16; 3 is invalid
+        priority: high
+      ast_kind: call_expression_or_argument
+      mask_level: api_argument_level
+    - api_or_function: psa_aead_decrypt_setup
+      role: trigger_call
+      statement: 'status = psa_aead_decrypt_setup(&operation, key_id, alg)'
+      placeholder: ''
+      ast_kind: call_expression
+      mask_level: function_call_level
+rag_query_context: >
+  template_id: PSA_AEAD_INVALID_SHORTENED_TAG_SETUP
+  api: psa_aead_decrypt_setup
+  operation: psa_aead_setup_tag_length_validation
+  bug_class: invalid_aead_tag_length_accepted
+  trigger_call: status = psa_aead_decrypt_setup(&operation, key_id, PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, TAG_LENGTH))
+  oracle: if TAG_LENGTH invalid and status == PSA_SUCCESS -> [BUG]; if rejected -> [OK]
+cross_generation_hints:
+  semantic_operation: psa_aead_setup_tag_length_validation
+  api_family: AEADSetup
+  bug_class:
+    - invalid_aead_tag_length_accepted
+    - missing_tag_length_validation_at_setup
+  must_preserve:
+    - input construction role
+    - trigger API role
+    - oracle role
+    - cleanup role

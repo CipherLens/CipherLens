@@ -1,0 +1,90 @@
+template_id: PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW
+template_name: mbedtls_pem_read_buffer encrypted PEM empty-buffer underflow template
+source_file: poc_pem_underflow.c
+source_library: mbedtls
+source_api: mbedtls_pem_read_buffer
+language: c
+masking_design:
+  mode: ast_aware_lightweight
+  preserve_compilable_skeleton: true
+  note: >
+    Records AST-like masking roles and source-level contexts for the PEM
+    encrypted-buffer underflow pattern. The generated C template remains
+    compilable; block-level masks are metadata rather than replacing code.
+poc_pattern:
+  pattern_id: MBEDTLS-POC-0011
+  bug_category: one_byte_heap_buffer_underflow
+  failure_signal:
+    - asan_heap_buffer_underflow
+    - READ_of_size_1_before_heap_region
+includes:
+  - stdio.h
+  - string.h
+  - mbedtls/pem.h
+roles:
+  init:
+    - order: 1
+      code: mbedtls_pem_init(&ctx);
+      placeholders: []
+  input_construction:
+    - order: 2
+      code: 'static const char malformed_pem[] = "-----BEGIN EC PRIVATE KEY-----\r\nProc-Type: 4,ENCRYPTED\r\nDEK-Info: AES-128-CBC,...\r\n\r\n[PEM_BODY]\r\n-----END EC PRIVATE KEY-----\r\n";'
+      placeholders:
+        - '[PEM_BODY]'
+  trigger_call:
+    - order: 3
+      code: 'ret = mbedtls_pem_read_buffer(&ctx, header, footer, (const unsigned char *)malformed_pem, (const unsigned char *)"pwd", 3, &use_len);'
+      placeholders: []
+  oracle:
+    - order: 4
+      code: 'if (ret != 0) { printf("[OK] fixed behavior: malformed encrypted PEM rejected safely.\n"); }'
+      placeholders: []
+  cleanup:
+    - order: 5
+      code: mbedtls_pem_free(&ctx);
+      placeholders: []
+masking_levels:
+  macro_level: []
+  api_argument_or_value_level:
+    - api_or_function: mbedtls_pem_read_buffer
+      role: input_construction
+      statement: 'malformed_pem[] = ... PEM_BODY_CONTENT ...'
+      placeholder: '[PEM_BODY]'
+      mutation_point:
+        name: PEM_BODY
+        type: string
+        default: '8Q'
+        values:
+          - '8Q'
+          - '8Q=='
+          - 'AAAA'
+          - 'AAAABBBB'
+        strategy: short_body_variants
+        constraint: base64 string short enough to produce empty or sub-block decoded buffer
+        priority: high
+      ast_kind: string_literal
+      mask_level: value_level
+  statement_level:
+    enabled: true
+    strategy: classify statements into init/input/trigger/oracle/cleanup roles
+  block_level:
+    enabled: metadata_only
+    strategy: record logical blocks without replacing compilable C blocks
+rag_query_context: >
+  template_id: PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW
+  api: mbedtls_pem_read_buffer
+  operation: pem_encrypted_parse_padding_check
+  bug_class: heap_buffer_underflow one_byte_read_before_heap_region
+  trigger_call: ret = mbedtls_pem_read_buffer(&ctx, header, footer, malformed_pem, pwd, pwdlen, &use_len)
+  oracle: if (ret != 0) { safe rejection }
+cross_generation_hints:
+  semantic_operation: pem_encrypted_parse_padding_check
+  api_family: PEMParser
+  bug_class:
+    - heap_buffer_underflow
+    - missing_length_guard_before_padding_access
+  must_preserve:
+    - input construction role
+    - trigger API role
+    - oracle role
+    - cleanup role

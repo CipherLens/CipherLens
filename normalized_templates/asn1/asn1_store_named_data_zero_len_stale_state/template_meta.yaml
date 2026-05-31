@@ -1,0 +1,85 @@
+template_id: ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE
+template_name: mbedtls_asn1_store_named_data zero-length stale pointer-length state template
+backend: api_harness
+language: c
+status: normalized
+poc_source:
+  file: poc_asn1_store_named_data_null_deref.c
+  library: mbedtls
+  api: mbedtls_asn1_store_named_data
+operation:
+  abstract: asn1_named_data_zero_len_stale_state_lifecycle
+  api_family: ASN1NamedData
+  bug_class:
+    - stale_pointer_length_state
+    - null_pointer_dereference
+    - reuse_after_zero_length_update
+source_api:
+  library: mbedtls
+  function: mbedtls_asn1_store_named_data
+pattern_id: MBEDTLS-POC-0005
+harness_family: object_state_lifecycle
+oracle_type: stale_pointer_length_state_oracle
+mutation_points:
+  - name: FIRST_VALUE_LEN
+    placeholder: '[FIRST_VALUE_LEN]'
+    type: int
+    default: 4
+    values:
+      - 4
+      - 8
+    strategy: boundary_values
+    constraint: >
+      Nonzero buffer size for the initial named-data value and the subsequent
+      reuse step. The original bug triggers when REUSE_VALUE_LEN == FIRST_VALUE_LEN,
+      causing the buggy code to skip reallocation after the zero-length update.
+    priority: high
+    normalized: true
+oracle:
+  memory_safety:
+    - no_null_pointer_dereference
+    - no_asan_memcpy_to_null
+    - safe_reallocation_after_zero_length_update
+  bug_candidate:
+    - ASAN_null_dereference_in_memcpy
+    - SEGV_after_zero_length_update
+    - exit_code_139
+  fixed_or_safe:
+    - val.len_cleared_after_zero_length_update
+    - safe_realloc_on_reuse
+verdict:
+  bug_candidate:
+    condition: process crash with ASAN/SEGV after step3 when FIRST_VALUE_LEN matches stale val.len
+  fixed_or_safe:
+    condition: three-step sequence completes without crash; val.p valid and val.len correct after step3
+generation_policy:
+  max_cases: 8
+  priority:
+    - FIRST_VALUE_LEN_4
+    - FIRST_VALUE_LEN_8
+  compile_with:
+    - asan
+    - ubsan
+expected_buggy_behavior:
+  signal: ASAN_null_dereference
+  exit_code: 1
+  description: memcpy to NULL val.p after stale val.len prevents reallocation
+expected_fixed_behavior:
+  description: val.len cleared after zero-length update; step3 safely reallocates
+cross_generation_notes:
+  semantic_projection:
+    note: >
+      OpenSSL does not have a direct equivalent to mbedtls_asn1_store_named_data
+      (OID-keyed linked-list named-data storage). The migration uses ASN1_STRING_set
+      as a semantic projection target: it manages the same 'pointer + length'
+      internal state and supports the same nonempty→zero→nonempty lifecycle.
+      OpenSSL's implementation does not have the stale-pointer bug (it handles
+      zero-length updates safely). Expected result: migrated_safe.
+rag_requirements:
+  retrieve:
+    - mbedtls_asn1_store_named_data API constraints
+    - OpenSSL ASN1_STRING_set API
+    - cross-library candidate mappings for ASN.1 named data
+normalization:
+  enabled: true
+  policy: template_id_specific_safe_whitelist
