@@ -1,0 +1,64 @@
+target_library: openssl
+target_api: d2i_PrivateKey
+harness_family: der_pointer_consumption
+oracle_type: pointer_consumption_semantic_oracle
+include_headers:
+  - openssl/evp.h
+  - openssl/rsa.h
+  - openssl/err.h
+forbidden_terms:
+  - BIGNUM
+  - BN_new
+  - BN_free
+  - BN_set_word
+  - BN_bn2binpad
+  - BN_signed_bn2bin
+  - BN_usub
+  - BN_ucmp
+  - d2i_X509
+  - X509_free
+  - ASN1_item_d2i
+  - EVP_DecryptFinal_ex
+  - EVP_CIPHER_CTX
+  - EVP_DigestVerifyInit
+  - PEM_read_bio_PrivateKey
+  - CANARY_SIZE
+  - BUFLEN
+  - openssl/bn.h
+  - openssl/x509.h
+  - openssl/pem.h
+required_api_calls:
+  - d2i_PrivateKey
+  - EVP_PKEY_free
+allowed_slots:
+  pointer_variable:
+    description: DER input cursor passed as const unsigned char **ppin.
+    default: p
+  consumed_len_variable:
+    description: Long integer recording how many DER bytes the target decoder consumed.
+    default: consumed_len
+  return_code_variable:
+    description: Integer return-code variable used by the generated harness.
+    default: ret
+  input_buffer:
+    description: Caller-controlled DER byte buffer.
+    default: der
+  input_length:
+    description: Total DER length including appended trailing garbage.
+    default: der_len
+  decoded_object:
+    description: EVP_PKEY object returned by d2i_PrivateKey.
+    default: pkey
+safe_behavior:
+  - d2i_PrivateKey rejects the DER input with trailing garbage.
+  - d2i_PrivateKey succeeds only if the consumed pointer reaches the full input length.
+bug_behavior:
+  - d2i_PrivateKey returns a non-NULL object while consumed_len is smaller than der_len.
+  - This indicates the decoder accepted a valid prefix object and left trailing garbage unconsumed.
+triage_behavior:
+  - The target accepts unexpected key encodings or formats outside the source RSA DER path.
+  - The target exposes ambiguous pointer advancement that needs manual review.
+notes:
+  - This recipe models the DER top-level trailing-garbage pointer-consumption oracle.
+  - The renderer calls d2i_PrivateKey(EVP_PKEY_RSA, NULL, &p, der_len) and compares p - der with der_len.
+  - This is a semantic migration oracle, not a crash or coverage-guided fuzzing path.

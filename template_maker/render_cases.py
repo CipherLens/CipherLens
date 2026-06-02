@@ -1,6 +1,7 @@
 import argparse
 import itertools
 import re
+import shutil
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -18,6 +19,7 @@ IGNORED_BRACKET_TAGS = {
     "[DIFF]",
     "[FAIL]",
     "[PASS]",
+    "[TRIAGE]",
 }
 
 
@@ -89,6 +91,22 @@ def get_template_files(template_dir: Path) -> List[Path]:
         list(template_dir.glob("tmpl_*.cc")) +
         list(template_dir.glob("tmpl_*.cxx"))
     )
+
+
+def copy_metadata_files(template_dir: Path, out_dir: Path) -> None:
+    metadata_names = [
+        "template_meta.yaml",
+        "cross_mapping.yaml",
+        "adapter_meta.yaml",
+        "mask_report.yaml",
+        "ast_mask_report.yaml",
+        "selected_mask_units.yaml",
+        "README.md",
+    ]
+    for name in metadata_names:
+        src = template_dir / name
+        if src.exists():
+            shutil.copy2(src, out_dir / name)
 
 
 def output_name_for_template(template_file: Path, case_id: str) -> str:
@@ -296,6 +314,7 @@ def render_template_dir(template_dir: Path, root: Path, out_root: Path, global_m
     rel_dir = template_dir.relative_to(root)
     out_dir = out_root / rel_dir
     out_dir.mkdir(parents=True, exist_ok=True)
+    copy_metadata_files(template_dir, out_dir)
 
     count = 0
 
@@ -351,7 +370,6 @@ def main() -> int:
         return 1
 
     if out_root.exists():
-        import shutil
         shutil.rmtree(out_root)
 
     template_dirs = find_template_dirs(root)

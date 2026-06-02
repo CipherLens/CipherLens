@@ -1,0 +1,70 @@
+target_library: openssl
+target_api: EVP_DigestVerify
+harness_family: null_deref_dispatch
+oracle_type: crash_sanitizer_or_safe_error_oracle
+include_headers:
+  - openssl/evp.h
+  - openssl/rsa.h
+  - openssl/ec.h
+  - openssl/err.h
+forbidden_terms:
+  - BIGNUM
+  - BN_new
+  - BN_free
+  - BN_set_word
+  - BN_bn2binpad
+  - BN_signed_bn2bin
+  - BN_usub
+  - BN_ucmp
+  - d2i_X509
+  - X509_free
+  - ASN1_item_d2i
+  - d2i_RSAPrivateKey
+  - d2i_PrivateKey
+  - d2i_RSA_PUBKEY
+  - EVP_DecryptFinal_ex
+  - EVP_CIPHER_CTX
+  - CANARY_SIZE
+  - BUFLEN
+  - consumed_len
+  - openssl/bn.h
+  - openssl/x509.h
+required_api_calls:
+  - EVP_DigestVerifyInit
+  - EVP_DigestVerifyUpdate
+  - EVP_DigestVerifyFinal
+  - EVP_PKEY_CTX_set_rsa_padding
+  - EVP_MD_CTX_new
+  - EVP_MD_CTX_free
+allowed_slots:
+  md_algorithm:
+    description: OpenSSL EVP_MD expression used for both signing and verification.
+    default: EVP_sha256()
+  ec_curve_nid:
+    description: EC curve NID used to generate an incompatible verification key.
+    default: NID_X9_62_prime256v1
+  signing_key_variable:
+    description: EVP_PKEY variable holding the RSA signing key.
+    default: sign_key
+  incompatible_key_variable:
+    description: EVP_PKEY variable holding the incompatible EC verification key.
+    default: target_key
+  verify_ctx_variable:
+    description: EVP_MD_CTX variable used for the target verification path.
+    default: verify_ctx
+  sign_ctx_variable:
+    description: EVP_MD_CTX variable used to produce a real RSA-PSS signature.
+    default: sign_ctx
+  return_code_variable:
+    description: Integer variable used to observe return-code behavior.
+    default: ret
+safe_behavior:
+  - EVP_DigestVerifyInit, padding setup, update, or final rejects the incompatible key safely.
+  - The process exits normally without ASAN, UBSAN, SEGV, or null-deref evidence.
+bug_behavior:
+  - Incompatible key dispatch reaches a crash, ASAN/UBSAN report, SEGV, or null dereference.
+triage_behavior:
+  - EVP_DigestVerify unexpectedly succeeds with an incompatible key/signature path.
+notes:
+  - Recipe intentionally models a dispatch/type-mismatch migration path, not exact mbedTLS opaque PSA key internals.
+  - Renderer creates a valid RSA-PSS signature first, then attempts verification through an incompatible EC key path.

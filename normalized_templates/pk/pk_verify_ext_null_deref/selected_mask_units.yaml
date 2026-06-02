@@ -1,6 +1,9 @@
 template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
 template_name: mbedtls_pk_verify_ext opaque RSA-PSS null-deref template
 source_api: mbedtls_pk_verify_ext
+trigger_apis:
+- mbedtls_pk_verify_ext
+harness_family: null_deref_dispatch
 selection_policy:
   method: ast_lite_high_value_mask_unit_selection
   rules:
@@ -8,21 +11,39 @@ selection_policy:
   - Prefer mask_level=value or api_argument units.
   - Always retain trigger_call function_call/statement units.
   - Always retain oracle statement/block units.
-  - Retain input_preparation/helper_function/block only when boundary keywords are
-    present.
+  - Retain input_preparation/helper_function/block only when harness-family context
+    keywords are present.
+  - Use configured preferred_roles as scoring hints for each harness family.
+  - Use configured oracle_variables to prioritize oracle-observable units.
+  - Limit input/helper context to representative high-scoring units.
   - Limit cleanup units to one or two representative statements.
   - Deduplicate repeated code snippets.
   context_keywords:
-  - canary
-  - prepare_output_with_canary
-  - buffer
-  - buf
-  - limb
-  - X->p
-  - X->n
-  - raw
-  - CANARY_SIZE
-  - BUFLEN
+  - dispatch
+  - type
+  - opaque
+  - context
+  - pk_verify_ext
+  - DigestVerify
+  family_rules_source: config/harness_family_ast_rules.yaml
+  family_rule:
+    context_keywords:
+    - dispatch
+    - type
+    - opaque
+    - context
+    - pk_verify_ext
+    - DigestVerify
+    oracle_variables:
+    - ret
+    preferred_roles:
+    - mutation_point
+    - trigger_call
+    - oracle
+    - input_preparation
+    - cleanup
+    context_limit: 12
+    cleanup_limit: 2
 selected_units:
 - unit_id: ASTLITE-0098
   mask_level: function_call
@@ -35,46 +56,32 @@ selected_units:
   priority: high
   function: mbedtls_pk_verify_ext
   line: 124
+  line_start: 124
+  line_end: 133
+  enclosing_function: ''
+  node_type: call_expression
   selection_reason: Selected because [PK_VERIFY_TYPE] is a mutation point with function_call
     granularity.
   suggested_use: migrate_api_call
-  selection_score: 79
-- unit_id: ASTLITE-0045
-  mask_level: value
+  selection_score: 131
+- unit_id: ASTLITE-0005
+  mask_level: api_argument
   role: mutation_point
-  placeholder: '[HASH_LEN]'
-  code: '#define HASH_LEN [HASH_LEN]'
-  source: mask_report.masking_levels.macro_level
-  reason: Macro-level placeholder controls a generated constant or buffer size.
+  placeholder: '[PK_VERIFY_TYPE]'
+  code: PK_VERIFY_TYPE
+  source: template_meta.mutation_points
+  reason: Must be a valid RSA-PSS verification type
   priority: medium
-  macro: HASH_LEN
-  selection_reason: Selected because [HASH_LEN] is a mutation point with value granularity.
-  suggested_use: mutate_value
-  selection_score: 78
-- unit_id: ASTLITE-0044
-  mask_level: value
-  role: mutation_point
-  placeholder: '[KEY_BITS]'
-  code: '#define KEY_BITS [KEY_BITS]'
-  source: mask_report.masking_levels.macro_level
-  reason: Macro-level placeholder controls a generated constant or buffer size.
-  priority: medium
-  macro: KEY_BITS
-  selection_reason: Selected because [KEY_BITS] is a mutation point with value granularity.
-  suggested_use: mutate_value
-  selection_score: 78
-- unit_id: ASTLITE-0046
-  mask_level: value
-  role: mutation_point
-  placeholder: '[SIG_LEN]'
-  code: '#define SIG_LEN [SIG_LEN]'
-  source: mask_report.masking_levels.macro_level
-  reason: Macro-level placeholder controls a generated constant or buffer size.
-  priority: medium
-  macro: SIG_LEN
-  selection_reason: Selected because [SIG_LEN] is a mutation point with value granularity.
-  suggested_use: mutate_value
-  selection_score: 78
+  mutation_name: PK_VERIFY_TYPE
+  mutation_type: enum
+  default: MBEDTLS_PK_RSASSA_PSS
+  values:
+  - MBEDTLS_PK_RSASSA_PSS
+  - MBEDTLS_PK_RSA
+  selection_reason: Selected because [PK_VERIFY_TYPE] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 123
 - unit_id: ASTLITE-0002
   mask_level: api_argument
   role: mutation_point
@@ -94,36 +101,7 @@ selected_units:
   selection_reason: Selected because [HASH_LEN] is a mutation point with api_argument
     granularity.
   suggested_use: mutate_api_argument
-  selection_score: 74
-- unit_id: ASTLITE-0050
-  mask_level: api_argument
-  role: mutation_point
-  placeholder: '[HASH_LEN]'
-  code: '#include <stdio.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/rsa.h"
-    #include "mbedtls/md.h" #include "mbedtls/ctr_drbg.h" #include "mbedtls/entropy.h"
-    #include "psa/crypto.h" #define KEY_BITS [KEY_BITS] #define HASH_LEN [HASH_LEN]
-    #define SIG_LEN [SIG_LEN] int main(void) {'
-  source: tmpl_mbedtls.c.placeholder_statement
-  reason: Must match the hash size for the chosen MD_ALG
-  priority: high
-  line: 1
-  selection_reason: Selected because [HASH_LEN] is a mutation point with api_argument
-    granularity.
-  suggested_use: mutate_api_argument
-  selection_score: 74
-- unit_id: ASTLITE-0060
-  mask_level: api_argument
-  role: mutation_point
-  placeholder: '[HASH_LEN]'
-  code: unsigned char hash[HASH_LEN];
-  source: tmpl_mbedtls.c.placeholder_statement
-  reason: Must match the hash size for the chosen MD_ALG
-  priority: high
-  line: 26
-  selection_reason: Selected because [HASH_LEN] is a mutation point with api_argument
-    granularity.
-  suggested_use: mutate_api_argument
-  selection_score: 74
+  selection_score: 119
 - unit_id: ASTLITE-0001
   mask_level: value
   role: mutation_point
@@ -140,22 +118,7 @@ selected_units:
   - 2048
   selection_reason: Selected because [KEY_BITS] is a mutation point with value granularity.
   suggested_use: mutate_value
-  selection_score: 74
-- unit_id: ASTLITE-0049
-  mask_level: value
-  role: mutation_point
-  placeholder: '[KEY_BITS]'
-  code: '#include <stdio.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/rsa.h"
-    #include "mbedtls/md.h" #include "mbedtls/ctr_drbg.h" #include "mbedtls/entropy.h"
-    #include "psa/crypto.h" #define KEY_BITS [KEY_BITS] #define HASH_LEN [HASH_LEN]
-    #define SIG_LEN [SIG_LEN] int main(void) {'
-  source: tmpl_mbedtls.c.placeholder_statement
-  reason: Must be a valid key size for RSA-PSS
-  priority: high
-  line: 1
-  selection_reason: Selected because [KEY_BITS] is a mutation point with value granularity.
-  suggested_use: mutate_value
-  selection_score: 74
+  selection_score: 119
 - unit_id: ASTLITE-0003
   mask_level: api_argument
   role: mutation_point
@@ -173,36 +136,7 @@ selected_units:
   selection_reason: Selected because [SIG_LEN] is a mutation point with api_argument
     granularity.
   suggested_use: mutate_api_argument
-  selection_score: 74
-- unit_id: ASTLITE-0051
-  mask_level: api_argument
-  role: mutation_point
-  placeholder: '[SIG_LEN]'
-  code: '#include <stdio.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/rsa.h"
-    #include "mbedtls/md.h" #include "mbedtls/ctr_drbg.h" #include "mbedtls/entropy.h"
-    #include "psa/crypto.h" #define KEY_BITS [KEY_BITS] #define HASH_LEN [HASH_LEN]
-    #define SIG_LEN [SIG_LEN] int main(void) {'
-  source: tmpl_mbedtls.c.placeholder_statement
-  reason: Must be a valid RSA-PSS signature length
-  priority: high
-  line: 1
-  selection_reason: Selected because [SIG_LEN] is a mutation point with api_argument
-    granularity.
-  suggested_use: mutate_api_argument
-  selection_score: 74
-- unit_id: ASTLITE-0062
-  mask_level: api_argument
-  role: mutation_point
-  placeholder: '[SIG_LEN]'
-  code: unsigned char sig[SIG_LEN];
-  source: tmpl_mbedtls.c.placeholder_statement
-  reason: Must be a valid RSA-PSS signature length
-  priority: high
-  line: 27
-  selection_reason: Selected because [SIG_LEN] is a mutation point with api_argument
-    granularity.
-  suggested_use: mutate_api_argument
-  selection_score: 74
+  selection_score: 119
 - unit_id: ASTLITE-0006
   mask_level: api_argument
   role: mutation_point
@@ -219,20 +153,7 @@ selected_units:
   selection_reason: Selected because [EXPECTED_SALT_LEN] is a mutation point with
     api_argument granularity.
   suggested_use: mutate_api_argument
-  selection_score: 72
-- unit_id: ASTLITE-0067
-  mask_level: api_argument
-  role: mutation_point
-  placeholder: '[EXPECTED_SALT_LEN]'
-  code: pss_opts.expected_salt_len = [EXPECTED_SALT_LEN];
-  source: tmpl_mbedtls.c.placeholder_statement
-  reason: Must be a valid salt length for RSA-PSS
-  priority: medium
-  line: 33
-  selection_reason: Selected because [EXPECTED_SALT_LEN] is a mutation point with
-    api_argument granularity.
-  suggested_use: mutate_api_argument
-  selection_score: 72
+  selection_score: 117
 - unit_id: ASTLITE-0004
   mask_level: api_argument
   role: mutation_point
@@ -251,50 +172,7 @@ selected_units:
   selection_reason: Selected because [MD_ALG] is a mutation point with api_argument
     granularity.
   suggested_use: mutate_api_argument
-  selection_score: 72
-- unit_id: ASTLITE-0066
-  mask_level: api_argument
-  role: mutation_point
-  placeholder: '[MD_ALG]'
-  code: pss_opts.mgf1_hash_id = [MD_ALG];
-  source: tmpl_mbedtls.c.placeholder_statement
-  reason: Must be a valid hash algorithm for RSA-PSS
-  priority: medium
-  line: 32
-  selection_reason: Selected because [MD_ALG] is a mutation point with api_argument
-    granularity.
-  suggested_use: mutate_api_argument
-  selection_score: 72
-- unit_id: ASTLITE-0005
-  mask_level: api_argument
-  role: mutation_point
-  placeholder: '[PK_VERIFY_TYPE]'
-  code: PK_VERIFY_TYPE
-  source: template_meta.mutation_points
-  reason: Must be a valid RSA-PSS verification type
-  priority: medium
-  mutation_name: PK_VERIFY_TYPE
-  mutation_type: enum
-  default: MBEDTLS_PK_RSASSA_PSS
-  values:
-  - MBEDTLS_PK_RSASSA_PSS
-  - MBEDTLS_PK_RSA
-  selection_reason: Selected because [PK_VERIFY_TYPE] is a mutation point with api_argument
-    granularity.
-  suggested_use: mutate_api_argument
-  selection_score: 72
-- unit_id: ASTLITE-0105
-  mask_level: value
-  role: mutation_point
-  placeholder: '[INFO]'
-  code: printf("[INFO] returned without crash, ret=%d\n", ret);
-  source: tmpl_mbedtls.c.placeholder_statement
-  reason: Statement contains a template placeholder.
-  priority: medium
-  line: 141
-  selection_reason: Selected because [INFO] is a mutation point with value granularity.
-  suggested_use: mutate_value
-  selection_score: 64
+  selection_score: 117
 - unit_id: ASTLITE-0100
   mask_level: statement
   role: oracle
@@ -304,10 +182,97 @@ selected_units:
   reason: Statement classified as oracle by AST-lite role rules.
   priority: medium
   line: 136
+  line_start: 136
+  line_end: 136
+  enclosing_function: ''
+  node_type: statement
   selection_reason: Required oracle unit for preserving the vulnerability signal and
     fixed/safe behavior checks.
   suggested_use: preserve_oracle
-  selection_score: 49
+  selection_score: 95
+- unit_id: ASTLITE-0009
+  mask_level: api_argument
+  role: trigger_call
+  placeholder: '[MD_ALG]'
+  code: ret = mbedtls_pk_verify_ext([PK_VERIFY_TYPE], &pss_opts, &pk, [MD_ALG], hash,
+    sizeof(hash), sig, sizeof(sig));
+  source: mask_report.roles.trigger_call
+  reason: Role-aware statement recorded by mask_report role 'trigger_call'.
+  priority: medium
+  order: 46
+  node_type: statement
+  selection_reason: Required trigger_call unit for preserving and migrating the source
+    API invocation.
+  suggested_use: migrate_api_call
+  selection_score: 94
+- unit_id: ASTLITE-0060
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[HASH_LEN]'
+  code: unsigned char hash[HASH_LEN];
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Must match the hash size for the chosen MD_ALG
+  priority: high
+  line: 26
+  line_start: 26
+  line_end: 26
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected because [HASH_LEN] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 84
+- unit_id: ASTLITE-0062
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[SIG_LEN]'
+  code: unsigned char sig[SIG_LEN];
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Must be a valid RSA-PSS signature length
+  priority: high
+  line: 27
+  line_start: 27
+  line_end: 27
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected because [SIG_LEN] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 84
+- unit_id: ASTLITE-0067
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[EXPECTED_SALT_LEN]'
+  code: pss_opts.expected_salt_len = [EXPECTED_SALT_LEN];
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Must be a valid salt length for RSA-PSS
+  priority: medium
+  line: 33
+  line_start: 33
+  line_end: 33
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected because [EXPECTED_SALT_LEN] is a mutation point with
+    api_argument granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 82
+- unit_id: ASTLITE-0066
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[MD_ALG]'
+  code: pss_opts.mgf1_hash_id = [MD_ALG];
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Must be a valid hash algorithm for RSA-PSS
+  priority: medium
+  line: 32
+  line_start: 32
+  line_end: 32
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected because [MD_ALG] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 82
 - unit_id: ASTLITE-0103
   mask_level: statement
   role: oracle
@@ -317,75 +282,229 @@ selected_units:
   reason: Statement classified as oracle by AST-lite role rules.
   priority: medium
   line: 139
+  line_start: 139
+  line_end: 139
+  enclosing_function: ''
+  node_type: statement
   selection_reason: Required oracle unit for preserving the vulnerability signal and
     fixed/safe behavior checks.
   suggested_use: preserve_oracle
-  selection_score: 49
-- unit_id: ASTLITE-0068
-  mask_level: function_call
+  selection_score: 81
+- unit_id: ASTLITE-0029
+  mask_level: statement
   role: helper_function
   placeholder: ''
-  code: setbuf(stdout, NULL);
-  source: tmpl_mbedtls.c.function_call
-  reason: Function call 'setbuf' identified by AST-lite call matching.
+  code: ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const
+    unsigned char *) pers, strlen(pers));
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
   priority: medium
-  function: setbuf
-  line: 35
-  selection_reason: Selected as high-value input/helper context because it references
-    canary, buffer, limb, or output-boundary state.
+  order: 19
+  node_type: statement
+  selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
   suggested_use: preserve_input_preparation
-  selection_score: 37
-- unit_id: ASTLITE-0089
-  mask_level: function_call
+  selection_score: 38
+- unit_id: ASTLITE-0030
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: '} ret = mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA));'
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 26
+  node_type: statement
+  selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
+  suggested_use: preserve_input_preparation
+  selection_score: 38
+- unit_id: ASTLITE-0031
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: 'if (ret != 0) { printf("mbedtls_pk_setup failed: %d\n", ret);'
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 27
+  node_type: statement
+  selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
+  suggested_use: preserve_input_preparation
+  selection_score: 38
+- unit_id: ASTLITE-0032
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: '} ret = mbedtls_rsa_gen_key(mbedtls_pk_rsa(pk), mbedtls_ctr_drbg_random,
+    &ctr_drbg, KEY_BITS, 65537);'
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 29
+  node_type: statement
+  selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
+  suggested_use: preserve_input_preparation
+  selection_score: 38
+- unit_id: ASTLITE-0033
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: 'if (ret != 0) { printf("mbedtls_rsa_gen_key failed: %d\n", ret);'
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 30
+  node_type: statement
+  selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
+  suggested_use: preserve_input_preparation
+  selection_score: 38
+- unit_id: ASTLITE-0035
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: ret = mbedtls_pk_get_psa_attributes(&pk, PSA_KEY_USAGE_SIGN_HASH, &key_attr);
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 33
+  node_type: statement
+  selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
+  suggested_use: preserve_input_preparation
+  selection_score: 38
+- unit_id: ASTLITE-0036
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: 'if (ret != 0) { printf("mbedtls_pk_get_psa_attributes failed: %d\n", ret);'
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 34
+  node_type: statement
+  selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
+  suggested_use: preserve_input_preparation
+  selection_score: 38
+- unit_id: ASTLITE-0037
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: '} ret = mbedtls_pk_import_into_psa(&pk, &key_attr, &key_id);'
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 36
+  node_type: statement
+  selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
+  suggested_use: preserve_input_preparation
+  selection_score: 38
+- unit_id: ASTLITE-0038
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: 'if (ret != 0) { printf("mbedtls_pk_import_into_psa failed: %d\n", ret);'
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 37
+  node_type: statement
+  selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
+  suggested_use: preserve_input_preparation
+  selection_score: 38
+- unit_id: ASTLITE-0039
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: ret = mbedtls_pk_setup_opaque(&pk, key_id);
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 41
+  node_type: statement
+  selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
+  suggested_use: preserve_input_preparation
+  selection_score: 38
+- unit_id: ASTLITE-0040
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: 'if (ret != 0) { printf("mbedtls_pk_setup_opaque failed: %d\n", ret);'
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 42
+  node_type: statement
+  selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
+  suggested_use: preserve_input_preparation
+  selection_score: 38
+- unit_id: ASTLITE-0053
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: int ret = 0;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 16
+  line_start: 16
+  line_end: 16
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
+  suggested_use: preserve_input_preparation
+  selection_score: 38
+- unit_id: ASTLITE-0013
+  mask_level: statement
   role: cleanup
   placeholder: ''
-  code: mbedtls_pk_free(&pk);
-  source: tmpl_mbedtls.c.function_call
-  reason: Function call 'mbedtls_pk_free' identified by AST-lite call matching.
+  code: goto cleanup;
+  source: mask_report.roles.cleanup
+  reason: Role-aware statement recorded by mask_report role 'cleanup'.
   priority: medium
-  function: mbedtls_pk_free
-  line: 103
+  order: 21
+  node_type: statement
   selection_reason: Selected limited cleanup context needed to keep generated harnesses
     well-scoped.
   suggested_use: preserve_cleanup
-  selection_score: 17
-- unit_id: ASTLITE-0111
-  mask_level: function_call
+  selection_score: 14
+- unit_id: ASTLITE-0014
+  mask_level: statement
   role: cleanup
   placeholder: ''
-  code: mbedtls_ctr_drbg_free(&ctr_drbg);
-  source: tmpl_mbedtls.c.function_call
-  reason: Function call 'mbedtls_ctr_drbg_free' identified by AST-lite call matching.
+  code: '} mbedtls_pk_free(&pk);'
+  source: mask_report.roles.cleanup
+  reason: Role-aware statement recorded by mask_report role 'cleanup'.
   priority: medium
-  function: mbedtls_ctr_drbg_free
-  line: 151
+  order: 39
+  node_type: statement
   selection_reason: Selected limited cleanup context needed to keep generated harnesses
     well-scoped.
   suggested_use: preserve_cleanup
-  selection_score: 17
+  selection_score: 14
 selection_summary:
-  selected_count: 23
+  selected_count: 28
   source_unit_count: 115
   by_role:
     cleanup: 2
-    helper_function: 1
-    mutation_point: 17
+    helper_function: 12
+    mutation_point: 10
     oracle: 2
-    trigger_call: 1
+    trigger_call: 2
   by_mask_level:
-    api_argument: 11
-    function_call: 4
-    statement: 2
-    value: 6
+    api_argument: 10
+    function_call: 1
+    statement: 15
+    type: 1
+    value: 1
   by_suggested_use:
-    migrate_api_call: 1
-    mutate_api_argument: 11
-    mutate_value: 6
+    migrate_api_call: 2
+    mutate_api_argument: 9
+    mutate_value: 1
     preserve_cleanup: 2
-    preserve_input_preparation: 1
+    preserve_input_preparation: 12
     preserve_oracle: 2
 rejected_summary:
-  count: 21
+  count: 62
   by_reason:
-    cleanup_limit_reached: 14
-    duplicate_code_or_unit: 7
+    cleanup_limit_reached: 10
+    context_limit_reached: 21
+    duplicate_code_or_unit: 15
+    noise_header_comment_or_log_label: 16

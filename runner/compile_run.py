@@ -4,7 +4,7 @@ import os
 import shlex
 import subprocess
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
 
@@ -21,12 +21,21 @@ def load_yaml(path: Path) -> Dict[str, Any]:
 
 
 def detect_library(path: Path) -> str:
-    s = str(path).lower()
-    if "mbedtls" in s:
-        return "mbedtls"
-    if "openssl" in s:
+    name = path.name.lower()
+    if name.endswith("_openssl.c") or name.endswith("_openssl.cpp") or name == "default_openssl.c":
         return "openssl"
-    if "botan" in s:
+    if name.endswith("_mbedtls.c") or name.endswith("_mbedtls.cpp") or name == "default_mbedtls.c":
+        return "mbedtls"
+    if name.endswith("_botan.c") or name.endswith("_botan.cpp") or name == "default_botan.c":
+        return "botan"
+
+    # Fallback is intentionally limited to the filename. Artifact roots may
+    # contain strings such as "mbedtls-poc" even for OpenSSL target cases.
+    if "openssl" in name:
+        return "openssl"
+    if "mbedtls" in name:
+        return "mbedtls"
+    if "botan" in name:
         return "botan"
     return "unknown"
 
@@ -117,6 +126,102 @@ def truncate_text(s: str, limit: int = 12000) -> str:
     return s[:limit] + f"\n...[truncated {len(s) - limit} chars]..."
 
 
+def find_nearest_file(start: Path, stop: Path, filename: str) -> Optional[Path]:
+    current = start.resolve()
+    stop = stop.resolve()
+
+    while True:
+        candidate = current / filename
+        if candidate.exists():
+            return candidate
+        if current == stop or stop not in current.parents:
+            return None
+        current = current.parent
+
+
+def load_yaml_if_exists(path: Optional[Path]) -> Dict[str, Any]:
+    if path is None or not path.exists():
+        return {}
+    try:
+        return load_yaml(path)
+    except Exception as e:
+        return {"_load_error": str(e)}
+
+
+def infer_target_from_cross_mapping(cross_mapping: Dict[str, Any], library: str) -> Dict[str, str]:
+    target = cross_mapping.get("target", {}) if isinstance(cross_mapping.get("target"), dict) else {}
+    if target:
+        return {
+            "target_library": str(target.get("library") or library or ""),
+            "target_api": str(target.get("candidate_api") or target.get("api") or ""),
+        }
+    return {"target_library": library or "", "target_api": ""}
+
+
+def infer_target_from_template_meta(template_meta: Dict[str, Any], library: str) -> Dict[str, str]:
+    cross_library = template_meta.get("cross_library", {})
+    if isinstance(cross_library, dict):
+        if library in cross_library and isinstance(cross_library[library], dict):
+            return {
+                "target_library": library,
+                "target_api": str(cross_library[library].get("target_api") or ""),
+            }
+        for lib, meta in cross_library.items():
+            if isinstance(meta, dict):
+                return {
+                    "target_library": str(lib),
+                    "target_api": str(meta.get("target_api") or ""),
+                }
+    return {"target_library": library or "", "target_api": ""}
+
+
+def compact_ast_mask_selection(template_meta: Dict[str, Any], cross_mapping: Dict[str, Any], adapter_meta: Dict[str, Any]) -> Dict[str, Any]:
+    for obj in (template_meta, cross_mapping, adapter_meta):
+        if not isinstance(obj, dict):
+            continue
+        value = obj.get("ast_mask_selection") or obj.get("ast_mask_selection_trace")
+        if isinstance(value, dict):
+            return value
+    return {}
+
+
+def load_case_metadata(src: Path, input_root: Path, library: str) -> Dict[str, Any]:
+    template_meta_path = find_nearest_file(src.parent, input_root, "template_meta.yaml")
+    cross_mapping_path = find_nearest_file(src.parent, input_root, "cross_mapping.yaml")
+    adapter_meta_path = find_nearest_file(src.parent, input_root, "adapter_meta.yaml")
+
+    template_meta = load_yaml_if_exists(template_meta_path)
+    cross_mapping = load_yaml_if_exists(cross_mapping_path)
+    adapter_meta = load_yaml_if_exists(adapter_meta_path)
+
+    target_from_mapping = infer_target_from_cross_mapping(cross_mapping, library)
+    target_from_meta = infer_target_from_template_meta(template_meta, library)
+    source_from_mapping = cross_mapping.get("source", {}) if isinstance(cross_mapping.get("source"), dict) else {}
+    poc_source = template_meta.get("poc_source", {}) if isinstance(template_meta.get("poc_source"), dict) else {}
+
+    target_library = target_from_mapping.get("target_library") or target_from_meta.get("target_library") or library
+    target_api = target_from_mapping.get("target_api") or target_from_meta.get("target_api")
+
+    return {
+        "template": {
+            "template_id": template_meta.get("template_id") or source_from_mapping.get("template_id") or "",
+            "source_template_id": template_meta.get("source_template_id") or "",
+            "harness_family": template_meta.get("harness_family") or cross_mapping.get("harness_family") or "",
+            "oracle_type": template_meta.get("oracle_type") or cross_mapping.get("oracle_type") or "",
+            "source_library": poc_source.get("library") or source_from_mapping.get("library") or template_meta.get("source_library", ""),
+            "source_api": poc_source.get("api") or source_from_mapping.get("api") or template_meta.get("source_api", ""),
+            "target_library": target_library or "",
+            "target_api": target_api or "",
+        },
+        "metadata_files": {
+            "template_meta": str(template_meta_path) if template_meta_path else "",
+            "cross_mapping": str(cross_mapping_path) if cross_mapping_path else "",
+            "adapter_meta": str(adapter_meta_path) if adapter_meta_path else "",
+        },
+        "ast_mask_selection": compact_ast_mask_selection(template_meta, cross_mapping, adapter_meta),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Compile and run rendered C/C++ harnesses.")
     parser.add_argument("--input-root", default="rendered_cases", help="Rendered cases root.")
@@ -160,11 +265,15 @@ def main() -> int:
             ensure_parent(output_bin)
 
             compile_cmd = build_compile_command(src, output_bin, cfg, library)
+            case_metadata = load_case_metadata(src, input_root, library)
 
             record: Dict[str, Any] = {
                 "source": str(src),
                 "relative_source": str(rel),
                 "library": library,
+                "template": case_metadata["template"],
+                "metadata_files": case_metadata["metadata_files"],
+                "ast_mask_selection": case_metadata["ast_mask_selection"],
                 "binary": str(output_bin),
                 "compile_cmd": compile_cmd,
                 "compile_cmd_str": shell_join(compile_cmd),
@@ -176,6 +285,12 @@ def main() -> int:
             print("=" * 100)
             print(f"[CASE] {src}")
             print(f"[LIB]  {library}")
+            if record["template"].get("template_id"):
+                print(
+                    f"[META] template={record['template'].get('template_id')} "
+                    f"family={record['template'].get('harness_family')} "
+                    f"target={record['template'].get('target_library')}.{record['template'].get('target_api')}"
+                )
             print(f"[CMD]  {record['compile_cmd_str']}")
 
             if args.dry_run:

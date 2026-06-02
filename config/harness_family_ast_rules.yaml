@@ -1,0 +1,224 @@
+# Family-aware AST-lite selection rules.
+# These rules keep ast_mask_select.py data-driven while preserving its built-in
+# fallback behavior when this file is absent or incomplete.
+
+default:
+  context_keywords:
+    - canary
+    - prepare_output_with_canary
+    - buffer
+    - buf
+    - limb
+    - X->p
+    - X->n
+    - raw
+    - CANARY_SIZE
+    - BUFLEN
+  preferred_roles:
+    - mutation_point
+    - trigger_call
+    - oracle
+    - input_preparation
+    - helper_function
+    - cleanup
+  context_limit: 12
+  cleanup_limit: 2
+
+buffer_canary_boundary:
+  context_keywords:
+    - canary
+    - prepare_output_with_canary
+    - buffer
+    - buf
+    - CANARY_SIZE
+    - BUFLEN
+    - output
+    - memset
+  oracle_variables:
+    - ret
+    - buf
+    - canary
+  preferred_roles:
+    - mutation_point
+    - trigger_call
+    - oracle
+    - input_preparation
+    - cleanup
+  context_limit: 12
+  cleanup_limit: 2
+
+der_pointer_consumption:
+  context_keywords:
+    - DER
+    - ASN1
+    - ASN.1
+    - SEQUENCE
+    - trailing
+    - TRAILING_GARBAGE
+    - base_hex
+    - der_len
+    - consumed_len
+    - p
+    - ppin
+    - p - der
+    - end
+    - len
+    - parse_key
+    - parse_pubkey
+    - d2i
+    - d2i_
+    - select_base_der_hex
+    - build_der_with_trailing_garbage
+  oracle_variables:
+    - ret
+    - consumed_len
+    - der_len
+    - p
+  preferred_roles:
+    - mutation_point
+    - trigger_call
+    - oracle
+    - input_preparation
+    - helper_function
+    - cleanup
+  context_limit: 12
+  cleanup_limit: 2
+
+x509_asn1_inner_boundary:
+  aliases:
+    - asn1_inner_boundary
+  context_keywords:
+    - x509
+    - X509
+    - ASN1
+    - ASN.1
+    - asn1
+    - der
+    - DER
+    - certificate
+    - inner
+    - boundary
+    - d2i_X509
+    - malformed
+  oracle_variables:
+    - ret
+    - consumed_len
+    - der_len
+  preferred_roles:
+    - mutation_point
+    - trigger_call
+    - oracle
+    - input_preparation
+  context_limit: 12
+  cleanup_limit: 2
+
+return_code_outlen_semantic:
+  context_keywords:
+    - ret
+    - out
+    - out_len
+    - output
+    - output_length
+    - padding
+    - final
+    - finish
+    - error path
+    - EVP_DecryptFinal_ex
+    - EVP_CipherFinal_ex
+  oracle_variables:
+    - ret
+    - final_len
+    - finish_olen
+    - out_len
+  preferred_roles:
+    - mutation_point
+    - trigger_call
+    - oracle
+    - input_preparation
+    - cleanup
+  context_limit: 12
+  cleanup_limit: 2
+
+crash_sanitizer_oracle:
+  context_keywords:
+    - AddressSanitizer
+    - UndefinedBehaviorSanitizer
+    - SEGV
+    - crash
+    - overflow
+    - underflow
+    - use-after-free
+    - malformed
+  preferred_roles:
+    - mutation_point
+    - trigger_call
+    - oracle
+    - input_preparation
+  context_limit: 12
+  cleanup_limit: 2
+
+object_state_lifecycle:
+  context_keywords:
+    - state
+    - lifecycle
+    - init
+    - free
+    - reuse
+    - zero
+    - stale
+    - length
+    - pointer
+  oracle_variables:
+    - ret
+    - len
+    - data
+  preferred_roles:
+    - mutation_point
+    - trigger_call
+    - oracle
+    - input_preparation
+    - cleanup
+  context_limit: 12
+  cleanup_limit: 2
+
+null_deref_dispatch:
+  context_keywords:
+    - NULL
+    - null
+    - dispatch
+    - type
+    - opaque
+    - context
+    - pk_verify_ext
+    - DigestVerify
+  oracle_variables:
+    - ret
+  preferred_roles:
+    - mutation_point
+    - trigger_call
+    - oracle
+    - input_preparation
+    - cleanup
+  context_limit: 12
+  cleanup_limit: 2
+
+invalid_parameter_setup_oracle:
+  context_keywords:
+    - invalid
+    - parameter
+    - tag
+    - length
+    - CCM
+    - AEAD
+    - ctrl
+    - EVP_CIPHER_CTX_ctrl
+  oracle_variables:
+    - ret
+    - tag_len
+  preferred_roles:
+    - mutation_point
+    - trigger_call
+    - oracle
+    - input_preparation
+  context_limit: 12
+  cleanup_limit: 2

@@ -93,11 +93,57 @@ def normalize_mask_level(level: Any, placeholder: str = "", code: str = "") -> s
     return "statement"
 
 
-def infer_role(code: str, source_api: str = "", helper_names: Optional[Iterable[str]] = None) -> str:
+def collect_trigger_apis(meta: Dict[str, Any], mask_report: Dict[str, Any]) -> List[str]:
+    apis: List[str] = []
+
+    def add(value: Any) -> None:
+        text = str(value or "").strip()
+        if text and text not in apis:
+            apis.append(text)
+
+    for api in mask_report.get("trigger_apis", []) or []:
+        add(api)
+
+    source_api = meta.get("source_api")
+    if isinstance(source_api, dict):
+        add(source_api.get("function"))
+    elif isinstance(source_api, str):
+        add(source_api)
+
+    add(meta.get("source_api_name"))
+    add(meta.get("poc_source", {}).get("api"))
+
+    for api in meta.get("internal_apis", []) or []:
+        add(api)
+
+    pattern_source = mask_report.get("poc_pattern", {}).get("source", {}) or {}
+    add(pattern_source.get("api"))
+    for key in ["related_apis", "internal_functions"]:
+        for api in pattern_source.get(key, []) or []:
+            add(api)
+
+    return apis
+
+
+def is_trigger_call_text(code: str, trigger_apis: Iterable[str]) -> bool:
+    text = code or ""
+    for api in trigger_apis:
+        if api and re.search(rf"\b{re.escape(api)}\s*\(", text):
+            return True
+    return False
+
+
+def infer_role(
+    code: str,
+    source_api: str = "",
+    helper_names: Optional[Iterable[str]] = None,
+    trigger_apis: Optional[Iterable[str]] = None,
+) -> str:
     text = code or ""
     helper_set = set(helper_names or [])
+    api_set = list(trigger_apis or ([] if not source_api else [source_api]))
 
-    if source_api and re.search(rf"\b{re.escape(source_api)}\s*\(", text):
+    if is_trigger_call_text(text, api_set):
         return "trigger_call"
     if any(re.search(rf"\b{re.escape(name)}\s*\(", text) for name in helper_set):
         if "canary" in text or "[BUG]" in text or "[OK]" in text:
@@ -179,12 +225,22 @@ def extract_statement_spans(c_text: str) -> List[Dict[str, Any]]:
         if terminates and paren_depth <= 0:
             code = clean_code(" ".join(current))
             if code:
-                spans.append({"line": start_line, "code": code})
+                spans.append({
+                    "line": start_line,
+                    "line_start": start_line,
+                    "line_end": line_no,
+                    "code": code,
+                })
             current = []
             paren_depth = 0
 
     if current:
-        spans.append({"line": start_line, "code": clean_code(" ".join(current))})
+        spans.append({
+            "line": start_line,
+            "line_start": start_line,
+            "line_end": start_line + len(current) - 1,
+            "code": clean_code(" ".join(current)),
+        })
 
     return spans
 
@@ -219,10 +275,14 @@ def extract_helper_blocks(c_text: str) -> List[Dict[str, Any]]:
         if close_index < 0:
             continue
         block = c_text[match.start() : close_index + 1]
+        line_start = line_number_at(c_text, match.start())
+        line_end = line_number_at(c_text, close_index)
         blocks.append(
             {
                 "name": name,
-                "line": line_number_at(c_text, match.start()),
+                "line": line_start,
+                "line_start": line_start,
+                "line_end": line_end,
                 "code": block.strip(),
             }
         )
@@ -237,6 +297,35 @@ def function_calls_in(code: str) -> List[str]:
         if name not in calls:
             calls.append(name)
     return calls
+
+
+def line_extra(obj: Dict[str, Any]) -> Dict[str, Any]:
+    extra: Dict[str, Any] = {}
+    line_start = obj.get("line_start", obj.get("line"))
+    line_end = obj.get("line_end", line_start)
+    if line_start not in (None, ""):
+        extra["line"] = line_start
+        extra["line_start"] = line_start
+    if line_end not in (None, ""):
+        extra["line_end"] = line_end
+    return extra
+
+
+def enclosing_function_for_line(line: Any, helper_blocks: List[Dict[str, Any]]) -> str:
+    try:
+        line_no = int(line)
+    except Exception:
+        return ""
+
+    for block in helper_blocks:
+        start = block.get("line_start", block.get("line"))
+        end = block.get("line_end", start)
+        try:
+            if int(start) <= line_no <= int(end):
+                return str(block.get("name", ""))
+        except Exception:
+            continue
+    return ""
 
 
 def find_mutation_point(meta: Dict[str, Any], mask_report: Dict[str, Any], placeholder: str) -> Dict[str, Any]:
@@ -318,7 +407,11 @@ def units_from_roles(mask_report: Dict[str, Any]) -> List[Dict[str, Any]]:
                         source=f"mask_report.roles.{raw_role}",
                         reason=f"Role-aware statement recorded by mask_report role '{raw_role}'.",
                         priority="medium",
-                        extra={"order": item.get("order", "")},
+                        extra={
+                            "order": item.get("order", ""),
+                            **line_extra(item),
+                            "node_type": "statement",
+                        },
                     )
                 )
     return out
@@ -339,7 +432,7 @@ def units_from_masking_levels(mask_report: Dict[str, Any]) -> List[Dict[str, Any
                     source="mask_report.masking_levels.macro_level",
                     reason="Macro-level placeholder controls a generated constant or buffer size.",
                     priority="medium",
-                    extra={"macro": item.get("macro", "")},
+                    extra={"macro": item.get("macro", ""), "node_type": "preproc_def"},
                 )
             )
 
@@ -355,7 +448,11 @@ def units_from_masking_levels(mask_report: Dict[str, Any]) -> List[Dict[str, Any
                 source="mask_report.masking_levels.api_argument_or_value_level",
                 reason=mutation.get("reason") or mutation.get("constraint") or "API argument/value mask from mask_report.",
                 priority=mutation.get("priority", "medium"),
-                extra={"api_or_function": item.get("api_or_function", "")},
+                extra={
+                    "api_or_function": item.get("api_or_function", ""),
+                    **line_extra(item),
+                    "node_type": item.get("ast_kind", "call_expression_or_argument"),
+                },
             )
         )
 
@@ -385,6 +482,7 @@ def units_from_occlusion(mask_report: Dict[str, Any]) -> List[Dict[str, Any]]:
 def units_from_c_template(
     c_text: str,
     source_api: str,
+    trigger_apis: List[str],
     meta: Dict[str, Any],
     mask_report: Dict[str, Any],
 ) -> List[Dict[str, Any]]:
@@ -403,14 +501,19 @@ def units_from_c_template(
                 source="tmpl_mbedtls.c.helper_function",
                 reason=f"Static helper function block '{block['name']}' identified by AST-lite brace matching.",
                 priority="medium",
-                extra={"function": block["name"], "line": block["line"]},
+                extra={
+                    "function": block["name"],
+                    **line_extra(block),
+                    "node_type": "function_definition",
+                    "enclosing_function": block["name"],
+                },
             )
         )
 
     for span in spans:
         code = span["code"]
         phs = placeholders_in(code)
-        role = infer_role(code, source_api, helper_names)
+        role = infer_role(code, source_api, helper_names, trigger_apis)
 
         if phs:
             for ph in phs:
@@ -424,11 +527,11 @@ def units_from_c_template(
                         source="tmpl_mbedtls.c.placeholder_statement",
                         reason=mp.get("reason") or mp.get("constraint") or "Statement contains a template placeholder.",
                         priority=mp.get("priority", "medium"),
-                        extra={"line": span["line"]},
+                        extra={**line_extra(span), "enclosing_function": enclosing_function_for_line(span.get("line_start", span.get("line")), helper_blocks), "node_type": "statement"},
                     )
                 )
 
-        if source_api and re.search(rf"\b{re.escape(source_api)}\s*\(", code):
+        if is_trigger_call_text(code, trigger_apis):
             out.append(
                 make_unit(
                     mask_level="statement",
@@ -438,7 +541,7 @@ def units_from_c_template(
                     source="tmpl_mbedtls.c.source_api_statement",
                     reason="Statement invokes the source API trigger.",
                     priority="high",
-                    extra={"line": span["line"]},
+                    extra={**line_extra(span), "enclosing_function": enclosing_function_for_line(span.get("line_start", span.get("line")), helper_blocks), "node_type": "statement"},
                 )
             )
 
@@ -446,13 +549,13 @@ def units_from_c_template(
             out.append(
                 make_unit(
                     mask_level="type",
-                    role=infer_role(code, source_api, helper_names),
+                    role=infer_role(code, source_api, helper_names, trigger_apis),
                     placeholder=phs[0] if phs else "",
                     code=code,
                     source="tmpl_mbedtls.c.type_declaration",
                     reason="Type declaration identified by AST-lite declaration matching.",
                     priority="medium",
-                    extra={"line": span["line"]},
+                    extra={**line_extra(span), "enclosing_function": enclosing_function_for_line(span.get("line_start", span.get("line")), helper_blocks), "node_type": "statement"},
                 )
             )
 
@@ -466,12 +569,12 @@ def units_from_c_template(
                     source="tmpl_mbedtls.c.role_statement",
                     reason=f"Statement classified as {role} by AST-lite role rules.",
                     priority="medium",
-                    extra={"line": span["line"]},
+                    extra={**line_extra(span), "enclosing_function": enclosing_function_for_line(span.get("line_start", span.get("line")), helper_blocks), "node_type": "statement"},
                 )
             )
 
         for call in function_calls_in(code):
-            call_role = "trigger_call" if call == source_api else infer_role(code, source_api, helper_names)
+            call_role = "trigger_call" if call in trigger_apis else infer_role(code, source_api, helper_names, trigger_apis)
             if call in helper_names and call_role not in {"oracle", "trigger_call"}:
                 call_role = "input_preparation"
             out.append(
@@ -482,8 +585,8 @@ def units_from_c_template(
                     code=code,
                     source="tmpl_mbedtls.c.function_call",
                     reason=f"Function call '{call}' identified by AST-lite call matching.",
-                    priority="high" if call == source_api else "medium",
-                    extra={"function": call, "line": span["line"]},
+                    priority="high" if call in trigger_apis else "medium",
+                    extra={"function": call, **line_extra(span), "enclosing_function": enclosing_function_for_line(span.get("line_start", span.get("line")), helper_blocks), "node_type": "call_expression"},
                 )
             )
 
@@ -517,13 +620,17 @@ def build_report(template_dir: Path) -> Dict[str, Any]:
         or meta.get("poc_source", {}).get("library")
         or ""
     )
+    trigger_apis = collect_trigger_apis(meta, mask_report)
+    if source_api and source_api not in trigger_apis:
+        trigger_apis.insert(0, source_api)
+    harness_family = str(mask_report.get("harness_family") or meta.get("harness_family") or "")
 
     raw_units: List[Dict[str, Any]] = []
     raw_units.extend(units_from_mutation_points(meta, mask_report))
     raw_units.extend(units_from_roles(mask_report))
     raw_units.extend(units_from_masking_levels(mask_report))
     raw_units.extend(units_from_occlusion(mask_report))
-    raw_units.extend(units_from_c_template(c_text, source_api, meta, mask_report))
+    raw_units.extend(units_from_c_template(c_text, source_api, trigger_apis, meta, mask_report))
 
     units: List[Dict[str, Any]] = []
     seen = set()
@@ -536,6 +643,8 @@ def build_report(template_dir: Path) -> Dict[str, Any]:
         "template_name": mask_report.get("template_name") or meta.get("template_name", ""),
         "source_api": source_api,
         "source_library": source_library,
+        "trigger_apis": trigger_apis,
+        "harness_family": harness_family,
         "summary": {
             "method": "ast_lite_regex_template_role_aware",
             "template_dir": str(template_dir),
