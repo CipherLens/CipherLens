@@ -2,21 +2,25 @@ object_state_lifecycle:
   oracle_types:
     - stale_pointer_length_state_oracle
     - object_lifecycle_state_oracle
+    - mac_context_size_lifecycle_oracle
   required_observables:
     - update_return_code_or_pointer
     - object_state_transition
     - crash_or_sanitizer_signal
+    - context_size_or_return_code
   target_api_features:
     - mutable_object_with_internal_buffer
     - repeated_update_of_same_object
     - zero_length_update_semantics
     - return_code_or_pointer_observable
+    - context_setup_state_transition
+    - initialized_size_query
   safe_behavior:
-    condition: zero-length update leaves consistent state; later reuse does not crash
-    description: zero-length update clears or keeps consistent pointer-length state; safe reallocation on reuse
+    condition: zero-length update or pre-setup context use leaves consistent state; later initialized use does not crash
+    description: object lifecycle transitions are handled safely, including pre-setup MAC context use and initialized size query
   bug_behavior:
-    condition: ASAN/SEGV/NULL deref or exit 139 after zero-length update reuse
-    description: stale pointer-length state causes NULL pointer dereference on reuse
+    condition: ASAN/SEGV/NULL deref or exit 139 after invalid object lifecycle transition
+    description: stale or uninitialized object state causes NULL pointer dereference on reuse or context operation
   triage_behavior:
     condition: unexpected return code but no crash
     description: behavior differs from source oracle but no memory safety violation; needs manual review
@@ -134,6 +138,7 @@ pkey_capability_mismatch_oracle:
   oracle_types:
     - public_key_sign_rejection_oracle
     - capability_mismatch_safe_error_oracle
+    - rsa_invalid_key_sign_rejection_oracle
   required_observables:
     - sign_return_code
     - crash_signal_or_asan_output
@@ -141,23 +146,26 @@ pkey_capability_mismatch_oracle:
   target_api_features:
     - asymmetric_signing_api
     - public_only_key_constructable
+    - invalid_or_tiny_private_key_constructable
     - key_usage_or_capability_check
     - return_code_observable
     - no_private_key_component
   safe_behavior:
     condition: sign returns error code AND no crash AND signing does not succeed
     description: >
-      Target library safely rejects signing attempt with a public-only key.
+      Target library safely rejects signing attempt with a public-only key or
+      invalid/tiny private key material.
       Correct behavior: return error code (e.g. PSA_ERROR_NOT_PERMITTED,
-      MBEDTLS_ERR_PK_TYPE_MISMATCH, or equivalent) without crash.
+      PSA_ERROR_INVALID_ARGUMENT, MBEDTLS_ERR_PK_TYPE_MISMATCH, or equivalent)
+      without crash.
   bug_behavior:
-    condition: ASAN/UBSAN crash or SEGV or exit 139 during signing with public-only key
+    condition: ASAN/UBSAN crash or SEGV or exit 139 during signing with invalid key material
     description: >
-      Target library attempts to sign with public-only key and dereferences NULL
-      private key material, causing crash or undefined behavior.
+      Target library attempts to sign with public-only or invalid/tiny key material
+      and dereferences invalid private key state, causing crash or undefined behavior.
   triage_behavior:
-    condition: sign returns success (0 or PSA_SUCCESS) with public-only key
+    condition: sign returns success (0 or PSA_SUCCESS) with invalid key material
     description: >
-      Signing succeeded with public-only key — capability mismatch not detected.
-      This is a semantic violation requiring manual review.
+      Signing succeeded with public-only or invalid/tiny RSA key material. This is
+      a semantic violation requiring manual review.
       May indicate incorrect key policy setup in harness.

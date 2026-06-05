@@ -1,0 +1,109 @@
+target_library: mbedtls
+target_api: psa_sign_hash
+harness_family: pkey_capability_mismatch_oracle
+oracle_type: rsa_invalid_key_sign_rejection_oracle
+
+include_headers:
+  - psa/crypto.h
+  - stdio.h
+  - string.h
+  - stdlib.h
+
+objects:
+  - name: psa_initialized
+    type: int
+    init: "psa_crypto_init() == PSA_SUCCESS"
+    cleanup: "mbedtls_psa_crypto_free()"
+  - name: key_id
+    type: psa_key_id_t
+    init: "0"
+    cleanup: "psa_destroy_key(key_id)"
+  - name: sig
+    type: "unsigned char[512]"
+    init: "zero"
+    cleanup: "none"
+  - name: sig_len
+    type: size_t
+    init: "0"
+    cleanup: "none"
+
+fixed_setup_sequence:
+  - psa_crypto_init
+  - psa_key_attributes_set_type_to_rsa_key_pair
+  - psa_key_attributes_set_sign_usage
+  - psa_import_key
+
+trigger_call:
+  function: psa_sign_hash
+  key_id: key_id
+  algorithm: key_algorithm
+  hash: hash
+  hash_length: hash_len
+  signature: sig
+  signature_size: sizeof(sig)
+  signature_length: "&sig_len"
+  return_code: status
+
+allowed_slots:
+  key_type:
+    description: PSA key type for RSA private key material.
+    default: PSA_KEY_TYPE_RSA_KEY_PAIR
+  key_bits:
+    description: Declared key size in bits for tiny/invalid RSA material.
+    default: 32
+  key_algorithm:
+    description: PSA signing algorithm.
+    default: PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH)
+  key_usage_flags:
+    description: >
+      Key usage flags include signing so the oracle tests invalid/tiny key
+      material rather than missing sign permission.
+    default: PSA_KEY_USAGE_SIGN_HASH
+  rsa_key_der:
+    description: >
+      DER byte initializer for intentionally tiny or invalid RSA private key
+      material. The renderer provides a default malformed PKCS#1-like sequence.
+    default: "default_tiny_rsa_private_key_der"
+  hash_alg:
+    description: Symbolic hash algorithm used for mutation metadata.
+    default: PSA_ALG_SHA_256
+  hash_len:
+    description: Hash length in bytes passed to psa_sign_hash.
+    default: 32
+  sig_len:
+    description: Signature buffer length in bytes.
+    default: 512
+
+safe_behavior:
+  condition: >
+    psa_import_key or psa_sign_hash returns a non-success status AND no crash or
+    ASAN/UBSAN signal.
+  description: >
+    PSA correctly rejects tiny or invalid RSA private key material before or
+    during signing.
+
+bug_behavior:
+  condition: ASAN/UBSAN crash or SEGV during psa_import_key or psa_sign_hash
+  description: >
+    PSA implementation dereferences invalid RSA key material during import or
+    signing, causing crash or undefined behavior.
+
+triage_behavior:
+  condition: psa_sign_hash returns PSA_SUCCESS with invalid/tiny RSA key material
+  description: >
+    Signing succeeded with invalid RSA key material; manual review required.
+
+forbidden_terms:
+  - EVP_CIPHER_CTX_copy
+  - EVP_CIPHER_CTX_dup
+  - EVP_aes_128_gcm
+  - BIO_s_secmem
+  - CRYPTO_secure_malloc_init
+  - d2i_X509
+  - PEM_read_bio_X509
+  - EVP_DigestSignInit
+  - EVP_DigestSign
+  - RSA_new
+  - RSA_set0_key
+  - BN_new
+  - openssl/

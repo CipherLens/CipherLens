@@ -113,6 +113,20 @@ OBJECT_STATE_LIFECYCLE_TRIAGE_PATTERNS = [
     "[TRIAGE] object_state_lifecycle:",
 ]
 
+MAC_CONTEXT_LIFECYCLE_BUG_PATTERNS = [
+    "[BUG] mac_context_lifecycle: crash or sanitizer signal",
+]
+
+MAC_CONTEXT_LIFECYCLE_SAFE_PATTERNS = [
+    "[OK] mac_context_lifecycle: pre-setup operation rejected safely",
+    "[OK] mac_context_lifecycle: initialized size matched",
+    "[OK] mac_context_lifecycle: initialized MAC operation completed",
+]
+
+MAC_CONTEXT_LIFECYCLE_TRIAGE_PATTERNS = [
+    "[TRIAGE] mac_context_lifecycle: unexpected size/state",
+]
+
 INVALID_PARAM_SETUP_BUG_PATTERNS = [
     "[BUG] source accepted invalid CCM shortened tag length",
     "[BUG] target accepted invalid CCM tag length",
@@ -132,6 +146,15 @@ PKEY_CAPABILITY_MISMATCH_SAFE_REJECT_PATTERNS = [
 PKEY_CAPABILITY_MISMATCH_TRIAGE_PATTERNS = [
     "[TRIAGE] signing with public-only key succeeded",
     "[WARNING] public-only key signing succeeded!",
+]
+
+RSA_INVALID_KEY_SIGN_SAFE_REJECT_PATTERNS = [
+    "[SAFE] invalid RSA key signing rejected",
+]
+
+RSA_INVALID_KEY_SIGN_TRIAGE_PATTERNS = [
+    "[TRIAGE] signing with invalid RSA key succeeded",
+    "[WARNING] invalid RSA key signing succeeded",
 ]
 
 INVALID_PARAM_SETUP_SAFE_REJECT_PATTERNS = [
@@ -336,6 +359,29 @@ def is_object_state_lifecycle_record(
     )
 
 
+def is_mac_context_lifecycle_record(
+    record: Dict[str, Any],
+    text: str,
+    result: Dict[str, Any],
+) -> bool:
+    markers = [
+        str(record.get("relative_source", "")),
+        str(record.get("source", "")),
+        str(result.get("template_id", "")),
+        str(result.get("case_name", "")),
+        text,
+    ]
+    joined = "\n".join(markers)
+    return (
+        "EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE" in joined
+        or "OPENSSL-ISSUE-22842" in joined
+        or "mac_context_lifecycle" in joined
+        or "mac_context_size_lifecycle_oracle" in joined
+        or "mbedtls_md_hmac_starts" in joined
+        or "EVP_MAC_CTX_get_mac_size" in joined
+    )
+
+
 def is_invalid_param_setup_record(
     record: Dict[str, Any],
     text: str,
@@ -481,6 +527,14 @@ def classify_record(record: Dict[str, Any]) -> Dict[str, Any]:
         result["reason"] = "Invalid-padding finalization failed but the caller-visible output length was polluted."
         return result
 
+    if (
+        contains_any(text, MAC_CONTEXT_LIFECYCLE_BUG_PATTERNS)
+        and is_mac_context_lifecycle_record(record, text, result)
+    ):
+        result["verdict"] = "bug_candidate"
+        result["reason"] = "MAC context lifecycle crashed or reported a sanitizer signal during state use."
+        return result
+
     if contains_any(text, BUG_PATTERNS):
         result["verdict"] = "bug_candidate"
         result["reason"] = "Harness reported explicit BUG/canary corruption pattern."
@@ -598,6 +652,25 @@ def classify_record(record: Dict[str, Any]) -> Dict[str, Any]:
         return result
 
     if (
+        contains_any(text, MAC_CONTEXT_LIFECYCLE_TRIAGE_PATTERNS)
+        and is_mac_context_lifecycle_record(record, text, result)
+    ):
+        result["verdict"] = "normal_behavior_needs_triage"
+        result["reason"] = "MAC context lifecycle semantic projection reached unexpected state or size behavior."
+        return result
+
+    if (
+        contains_any(text, MAC_CONTEXT_LIFECYCLE_SAFE_PATTERNS)
+        and is_mac_context_lifecycle_record(record, text, result)
+    ):
+        result["verdict"] = "safe_reject_behavior"
+        result["reason"] = (
+            "MAC context lifecycle semantic projection behaved safely: pre-setup "
+            "use was rejected without crash and/or initialized size matched."
+        )
+        return result
+
+    if (
         contains_any(text, OBJECT_STATE_LIFECYCLE_TRIAGE_PATTERNS)
         and is_object_state_lifecycle_record(record, text, result)
     ):
@@ -640,11 +713,27 @@ def classify_record(record: Dict[str, Any]) -> Dict[str, Any]:
         result["reason"] = "AEAD setup parameter behavior needs manual review."
         return result
 
+    if contains_any(text, RSA_INVALID_KEY_SIGN_SAFE_REJECT_PATTERNS):
+        result["verdict"] = "safe_reject_behavior"
+        result["reason"] = (
+            "Invalid or tiny RSA key signing was safely rejected by the target library "
+            "(rsa_invalid_key_sign_rejection_oracle: import/init/sign returned an error without crash)."
+        )
+        return result
+
     if contains_any(text, PKEY_CAPABILITY_MISMATCH_SAFE_REJECT_PATTERNS):
         result["verdict"] = "safe_reject_behavior"
         result["reason"] = (
             "Public-only key signing was safely rejected by the target library "
             "(capability mismatch oracle: PSA_ERROR_NOT_PERMITTED or equivalent error return)."
+        )
+        return result
+
+    if contains_any(text, RSA_INVALID_KEY_SIGN_TRIAGE_PATTERNS):
+        result["verdict"] = "normal_behavior_needs_triage"
+        result["reason"] = (
+            "Signing with invalid or tiny RSA key succeeded. Manual review required "
+            "to verify oracle correctness and key construction."
         )
         return result
 

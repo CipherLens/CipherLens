@@ -1,0 +1,64 @@
+template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE
+pattern_id: OPENSSL-ISSUE-22842
+source_library: openssl
+
+ast_units:
+  - unit_id: evp_mac_fetch_call
+    kind: call_expr
+    spelling: EVP_MAC_fetch
+    mutable: false
+    reason: required source MAC provider fetch
+
+  - unit_id: evp_mac_ctx_new_call
+    kind: call_expr
+    spelling: EVP_MAC_CTX_new
+    mutable: false
+    reason: allocates the MAC context whose lifecycle is tested
+
+  - unit_id: pre_init_get_size_call
+    kind: call_expr
+    spelling: EVP_MAC_CTX_get_mac_size
+    mutable: false
+    reason: STATE_A issue trigger before EVP_MAC_init
+
+  - unit_id: evp_mac_init_call
+    kind: call_expr
+    spelling: EVP_MAC_init
+    mutable: false
+    reason: creates initialized control state
+
+  - unit_id: post_init_get_size_call
+    kind: call_expr
+    spelling: EVP_MAC_CTX_get_mac_size
+    mutable: false
+    reason: STATE_B verifies initialized size behavior
+
+  - unit_id: mac_name_literal
+    kind: string_literal
+    slot: MAC_NAME
+    mutable: true
+    reason: MAC implementation selector
+
+  - unit_id: digest_name_literal
+    kind: string_literal
+    slot: DIGEST_NAME
+    mutable: true
+    reason: digest selector for HMAC size
+
+  - unit_id: key_bytes_literal
+    kind: string_literal
+    slot: KEY_BYTES
+    mutable: true
+    reason: key material for post-init HMAC setup
+
+  - unit_id: key_len_argument
+    kind: integer_literal
+    slot: KEY_LEN
+    mutable: true
+    reason: key length paired with key bytes
+
+  - unit_id: expected_mac_size_macro
+    kind: integer_literal
+    slot: EXPECTED_MAC_SIZE
+    mutable: true
+    reason: expected post-init MAC size oracle

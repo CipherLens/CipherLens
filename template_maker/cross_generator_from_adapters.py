@@ -423,8 +423,315 @@ def is_object_state_lifecycle_recipe(
         and recipe.get("oracle_type") in {
             "stale_pointer_length_state_oracle",
             "object_lifecycle_state_oracle",
+            "mac_context_size_lifecycle_oracle",
         }
     )
+
+
+def is_mac_context_size_lifecycle_recipe(
+    adapter: Dict[str, Any],
+    recipe: Optional[Dict[str, Any]] = None,
+) -> bool:
+    if not is_recipe_adapter(adapter):
+        return False
+    recipe = recipe or load_adapter_recipe(adapter)
+    return (
+        adapter.get("target_api") in {"mbedtls_md_hmac_starts", "psa_mac_sign_setup"}
+        and recipe.get("target_api") == adapter.get("target_api")
+        and recipe.get("harness_family") == "object_state_lifecycle"
+        and recipe.get("oracle_type") == "mac_context_size_lifecycle_oracle"
+    )
+
+
+def render_mac_context_size_lifecycle_from_recipe(
+    adapter: Dict[str, Any],
+    source_template_dir: Path,
+    source_meta: Dict[str, Any],
+    mask_report: Dict[str, Any],
+) -> str:
+    recipe = load_adapter_recipe(adapter)
+    if not is_mac_context_size_lifecycle_recipe(adapter, recipe):
+        raise ValueError("recipe must be mac_context_size_lifecycle_oracle for a supported MAC target")
+
+    if adapter.get("target_api") == "psa_mac_sign_setup":
+        return render_psa_mac_context_size_lifecycle_from_recipe(
+            adapter,
+            source_template_dir,
+            source_meta,
+            mask_report,
+        )
+
+    md_type = slot(adapter, recipe, "md_type")
+    hmac_flag = slot(adapter, recipe, "hmac_flag")
+    key_bytes = slot(adapter, recipe, "key_bytes")
+    key_len = slot(adapter, recipe, "key_len")
+    expected_mac_size = slot(adapter, recipe, "expected_mac_size")
+
+    include_lines = render_include_lines(
+        {"include_headers": recipe.get("include_headers", [])},
+        ["mbedtls/md.h", "mbedtls/error.h", "stdio.h", "signal.h", "stdlib.h", "string.h"],
+    )
+
+    return f'''{include_lines}
+
+#define EXPECTED_MAC_SIZE {expected_mac_size}
+#define KEY_LEN {key_len}
+
+/*
+ * Harness: object_state_lifecycle
+ * Oracle: mac_context_size_lifecycle_oracle
+ * Target API: mbedtls_md_hmac_starts
+ *
+ * This is an object lifecycle semantic projection of OpenSSL issue_22842.
+ * It validates mbedTLS md/HMAC context safety before and after setup; it does
+ * not reproduce OpenSSL provider algctx internals.
+ */
+
+static void bug_signal_handler(int signo)
+{{
+    fprintf(stderr, "[BUG] mac_context_lifecycle: crash or sanitizer signal: %d\\n", signo);
+    fflush(stderr);
+    _Exit(128 + signo);
+}}
+
+static void print_mbedtls_error(const char *label, int err)
+{{
+    char errbuf[256];
+
+    if (err == 0) {{
+        printf("%s error_string=OK\\n", label);
+        return;
+    }}
+
+    mbedtls_strerror(err, errbuf, sizeof(errbuf));
+    printf("%s error_string=%s\\n", label, errbuf);
+}}
+
+int main(void)
+{{
+    mbedtls_md_context_t ctx_pre;
+    mbedtls_md_context_t ctx_post;
+    const mbedtls_md_info_t *md_info = NULL;
+    static const unsigned char key[] = {key_bytes};
+    int ret = 1;
+    int pre_ret = 0;
+    int setup_ret = 0;
+    int post_ret = 0;
+    size_t mac_size = 0;
+
+    setbuf(stdout, NULL);
+    signal(SIGSEGV, bug_signal_handler);
+    signal(SIGABRT, bug_signal_handler);
+    signal(SIGBUS, bug_signal_handler);
+    signal(SIGILL, bug_signal_handler);
+
+    printf("template_mutation MD_TYPE=%s KEY_LEN=%d EXPECTED_MAC_SIZE=%d\\n",
+           "{md_type}", KEY_LEN, EXPECTED_MAC_SIZE);
+
+    mbedtls_md_init(&ctx_pre);
+    mbedtls_md_init(&ctx_post);
+
+    /*
+     * STATE_A: pre-setup lifecycle state. Safe behavior is an error return
+     * without crash. ctx_pre is freed immediately so the intentionally invalid
+     * operation cannot pollute STATE_B.
+     */
+    pre_ret = mbedtls_md_hmac_starts(&ctx_pre, key, KEY_LEN);
+    printf("pre-setup mbedtls_md_hmac_starts returned %d\\n", pre_ret);
+    print_mbedtls_error("pre_ret", pre_ret);
+    if (pre_ret != 0) {{
+        printf("[OK] mac_context_lifecycle: pre-setup operation rejected safely\\n");
+    }} else {{
+        printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: pre-setup HMAC start succeeded\\n");
+    }}
+    mbedtls_md_free(&ctx_pre);
+
+    /*
+     * STATE_B: independent context for normal setup + HMAC start + size query.
+     */
+    md_info = mbedtls_md_info_from_type({md_type});
+    if (md_info == NULL) {{
+        printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: md_info lookup failed\\n");
+        goto end;
+    }}
+
+    setup_ret = mbedtls_md_setup(&ctx_post, md_info, {hmac_flag});
+    printf("mbedtls_md_setup returned %d\\n", setup_ret);
+    print_mbedtls_error("setup_ret", setup_ret);
+    if (setup_ret != 0) {{
+        printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: md setup failed\\n");
+        goto end;
+    }}
+
+    post_ret = mbedtls_md_hmac_starts(&ctx_post, key, KEY_LEN);
+    printf("post-setup mbedtls_md_hmac_starts returned %d\\n", post_ret);
+    print_mbedtls_error("post_ret", post_ret);
+    if (post_ret != 0) {{
+        printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: post-setup HMAC start failed\\n");
+        goto end;
+    }}
+
+    mac_size = mbedtls_md_get_size(md_info);
+    printf("mbedtls_md_get_size returned %zu\\n", mac_size);
+    if (mac_size == EXPECTED_MAC_SIZE) {{
+        printf("[OK] mac_context_lifecycle: initialized size matched\\n");
+        ret = 0;
+    }} else {{
+        printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: size=%zu expected=%d\\n",
+               mac_size, EXPECTED_MAC_SIZE);
+    }}
+
+end:
+    mbedtls_md_free(&ctx_post);
+    return ret;
+}}
+'''
+
+
+def render_psa_mac_context_size_lifecycle_from_recipe(
+    adapter: Dict[str, Any],
+    source_template_dir: Path,
+    source_meta: Dict[str, Any],
+    mask_report: Dict[str, Any],
+) -> str:
+    recipe = load_adapter_recipe(adapter)
+    if not is_mac_context_size_lifecycle_recipe(adapter, recipe):
+        raise ValueError("recipe must be mac_context_size_lifecycle_oracle for PSA MAC")
+
+    key_type = slot(adapter, recipe, "key_type")
+    key_usage_flags = slot(adapter, recipe, "key_usage_flags")
+    key_algorithm = slot(adapter, recipe, "key_algorithm")
+    key_bytes = slot(adapter, recipe, "key_bytes")
+    key_len = slot(adapter, recipe, "key_len")
+    message_bytes = slot(adapter, recipe, "message_bytes")
+    message_len = slot(adapter, recipe, "message_len")
+    mac_len = slot(adapter, recipe, "mac_len")
+
+    include_lines = render_include_lines(
+        {"include_headers": recipe.get("include_headers", [])},
+        ["psa/crypto.h", "stdio.h", "signal.h", "stdlib.h", "string.h"],
+    )
+
+    return f'''{include_lines}
+
+#define KEY_LEN {key_len}
+#define MESSAGE_LEN {message_len}
+#define MAC_LEN {mac_len}
+
+/*
+ * Harness: object_state_lifecycle
+ * Oracle: mac_context_size_lifecycle_oracle
+ * Target API: psa_mac_sign_setup
+ *
+ * This is an object lifecycle semantic projection of OpenSSL issue_22842.
+ * It validates PSA MAC operation safety before setup and after normal setup;
+ * it does not reproduce OpenSSL provider algctx internals.
+ */
+
+static void bug_signal_handler(int signo)
+{{
+    fprintf(stderr, "[BUG] mac_context_lifecycle: crash or sanitizer signal: %d\\n", signo);
+    fflush(stderr);
+    _Exit(128 + signo);
+}}
+
+static void print_psa_status(const char *label, psa_status_t status)
+{{
+    printf("%s status=%d\\n", label, (int) status);
+}}
+
+int main(void)
+{{
+    static const unsigned char key_bytes[] = {key_bytes};
+    static const unsigned char message[] = {message_bytes};
+    unsigned char mac[MAC_LEN];
+    size_t mac_length = 0;
+
+    psa_status_t status;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key_id = 0;
+    psa_mac_operation_t operation_pre = PSA_MAC_OPERATION_INIT;
+    psa_mac_operation_t operation_post = PSA_MAC_OPERATION_INIT;
+    int ret = 1;
+
+    setbuf(stdout, NULL);
+    signal(SIGSEGV, bug_signal_handler);
+    signal(SIGABRT, bug_signal_handler);
+    signal(SIGBUS, bug_signal_handler);
+    signal(SIGILL, bug_signal_handler);
+    memset(mac, 0, sizeof(mac));
+
+    printf("template_mutation PSA_ALG=%s KEY_LEN=%d MESSAGE_LEN=%d MAC_LEN=%d\\n",
+           "{key_algorithm}", KEY_LEN, MESSAGE_LEN, MAC_LEN);
+
+    status = psa_crypto_init();
+    print_psa_status("psa_crypto_init", status);
+    if (status != PSA_SUCCESS) {{
+        printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: psa_crypto_init failed\\n");
+        goto end;
+    }}
+
+    psa_set_key_type(&attributes, {key_type});
+    psa_set_key_usage_flags(&attributes, {key_usage_flags});
+    psa_set_key_algorithm(&attributes, {key_algorithm});
+
+    status = psa_import_key(&attributes, key_bytes, KEY_LEN, &key_id);
+    print_psa_status("psa_import_key", status);
+    if (status != PSA_SUCCESS) {{
+        printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: psa_import_key failed\\n");
+        goto end;
+    }}
+
+    /*
+     * STATE_A: use a fresh operation before psa_mac_sign_setup. Safe behavior
+     * is rejection without crash. This operation is aborted immediately.
+     */
+    status = psa_mac_update(&operation_pre, message, MESSAGE_LEN);
+    print_psa_status("pre-setup psa_mac_update", status);
+    if (status != PSA_SUCCESS) {{
+        printf("[OK] mac_context_lifecycle: pre-setup operation rejected safely\\n");
+    }} else {{
+        printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: pre-setup MAC update succeeded\\n");
+    }}
+    psa_mac_abort(&operation_pre);
+
+    /*
+     * STATE_B: independent initialized operation.
+     */
+    status = psa_mac_sign_setup(&operation_post, key_id, {key_algorithm});
+    print_psa_status("psa_mac_sign_setup", status);
+    if (status != PSA_SUCCESS) {{
+        printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: psa_mac_sign_setup failed\\n");
+        goto end;
+    }}
+
+    status = psa_mac_update(&operation_post, message, MESSAGE_LEN);
+    print_psa_status("post-setup psa_mac_update", status);
+    if (status != PSA_SUCCESS) {{
+        printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: post-setup MAC update failed\\n");
+        goto end;
+    }}
+
+    status = psa_mac_sign_finish(&operation_post, mac, MAC_LEN, &mac_length);
+    print_psa_status("psa_mac_sign_finish", status);
+    printf("psa_mac_sign_finish mac_length=%zu\\n", mac_length);
+    if (status == PSA_SUCCESS && mac_length > 0 && mac_length <= MAC_LEN) {{
+        printf("[OK] mac_context_lifecycle: initialized MAC operation completed\\n");
+        ret = 0;
+    }} else {{
+        printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: finish status=%d mac_length=%zu\\n",
+               (int) status, mac_length);
+    }}
+
+end:
+    psa_mac_abort(&operation_pre);
+    psa_mac_abort(&operation_post);
+    if (key_id != 0)
+        psa_destroy_key(key_id);
+    mbedtls_psa_crypto_free();
+    return ret;
+}}
+'''
 
 
 def render_object_state_lifecycle_from_recipe(
@@ -435,6 +742,14 @@ def render_object_state_lifecycle_from_recipe(
 ) -> str:
     recipe = load_adapter_recipe(adapter)
     target_api = recipe.get("target_api", "")
+
+    if is_mac_context_size_lifecycle_recipe(adapter, recipe):
+        return render_mac_context_size_lifecycle_from_recipe(
+            adapter,
+            source_template_dir,
+            source_meta,
+            mask_report,
+        )
 
     if target_api != "ASN1_STRING_set":
         raise ValueError(
@@ -534,6 +849,80 @@ int main(void)
     return 0;
 }}
 '''
+
+
+def mac_context_size_lifecycle_meta(source_meta: Dict[str, Any], adapter: Dict[str, Any]) -> Dict[str, Any]:
+    meta = copy.deepcopy(source_meta)
+    meta["harness_family"] = "object_state_lifecycle"
+    meta["oracle_type"] = "mac_context_size_lifecycle_oracle"
+    meta["description"] = (
+        "Cross-library template for MAC context lifecycle size behavior. "
+        "Source: OpenSSL EVP_MAC_CTX_get_mac_size before and after EVP_MAC_init. "
+        "Target: mbedTLS md/HMAC pre-setup safe rejection and post-setup size query. "
+        "This is an object lifecycle semantic projection, not a strict provider "
+        "algctx NULL dereference reproduction."
+    )
+    meta["semantic_projection"] = {
+        "kind": "object_lifecycle_semantic_projection",
+        "strict_equivalence": False,
+        "note": (
+            "mbedTLS public md/HMAC APIs do not expose OpenSSL provider algctx "
+            "internals. The harness validates safe context lifecycle behavior."
+        ),
+    }
+    meta["mutation_points"] = [
+        {
+            "name": "MAC_NAME",
+            "placeholder": "[MAC_NAME]",
+            "type": "string",
+            "default": "HMAC",
+            "values": ["HMAC"],
+            "priority": "high",
+        },
+        {
+            "name": "DIGEST_NAME",
+            "placeholder": "[DIGEST_NAME]",
+            "type": "string",
+            "default": "SHA256",
+            "values": ["SHA256"],
+            "priority": "high",
+        },
+        {
+            "name": "KEY_BYTES",
+            "placeholder": "[KEY_BYTES]",
+            "type": "byte_array",
+            "default": '"rag-seed-hmac-key"',
+            "values": ['"rag-seed-hmac-key"'],
+            "priority": "medium",
+        },
+        {
+            "name": "KEY_LEN",
+            "placeholder": "[KEY_LEN]",
+            "type": "int",
+            "default": 17,
+            "values": [17],
+            "priority": "medium",
+        },
+        {
+            "name": "EXPECTED_MAC_SIZE",
+            "placeholder": "[EXPECTED_MAC_SIZE]",
+            "type": "int",
+            "default": 32,
+            "values": [32],
+            "priority": "high",
+        },
+    ]
+    meta["generation_policy"] = {
+        "max_cases": 8,
+        "priority": [
+            "MAC_NAME",
+            "DIGEST_NAME",
+            "EXPECTED_MAC_SIZE",
+            "KEY_BYTES",
+            "KEY_LEN",
+        ],
+    }
+    return meta
 
 
 def is_invalid_parameter_setup_oracle_recipe(
@@ -772,6 +1161,19 @@ def is_pkey_capability_mismatch_oracle_recipe(
     )
 
 
+def is_rsa_invalid_key_sign_rejection_recipe(
+    adapter: Dict[str, Any],
+    recipe: Optional[Dict[str, Any]] = None,
+) -> bool:
+    if recipe is None:
+        recipe = load_adapter_recipe(adapter)
+    return (
+        adapter.get("target_api") == "psa_sign_hash"
+        and recipe.get("harness_family") == "pkey_capability_mismatch_oracle"
+        and recipe.get("oracle_type") == "rsa_invalid_key_sign_rejection_oracle"
+    )
+
+
 def render_pkey_capability_mismatch_oracle_from_recipe(
     adapter: Dict[str, Any],
     source_template_dir: Path,
@@ -802,6 +1204,7 @@ def render_pkey_capability_mismatch_oracle_from_recipe(
     return f"""\
 #include <psa/crypto.h>
 #include <stdio.h>
+#include <signal.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -869,6 +1272,255 @@ end:
     return ret;
 }}
 """
+
+
+def rsa_key_der_initializer(value: str) -> str:
+    text = str(value or "").strip()
+    if text and text != "default_tiny_rsa_private_key_der":
+        return text.strip("{} \n")
+
+    # Malformed/tiny PKCS#1-like DER. The oracle accepts safe rejection at import
+    # or sign time; successful signing with this material is triage.
+    return (
+        "0x30,0x1b,"
+        "0x02,0x01,0x00,"
+        "0x02,0x02,0x0c,0xa1,"
+        "0x02,0x01,0x11,"
+        "0x02,0x02,0x0a,0xc1,"
+        "0x02,0x01,0x3d,"
+        "0x02,0x01,0x35,"
+        "0x02,0x01,0x31,"
+        "0x02,0x01,0x26,"
+        "0x02,0x01,0x26"
+    )
+
+
+def render_rsa_invalid_key_sign_rejection_from_recipe(
+    adapter: Dict[str, Any],
+    source_template_dir: Path,
+    source_meta: Dict[str, Any],
+    mask_report: Dict[str, Any],
+) -> str:
+    recipe = load_adapter_recipe(adapter)
+
+    if not is_rsa_invalid_key_sign_rejection_recipe(adapter, recipe):
+        raise ValueError("recipe must be rsa_invalid_key_sign_rejection_oracle for psa_sign_hash")
+
+    key_type = slot(adapter, recipe, "key_type")
+    key_algorithm = slot(adapter, recipe, "key_algorithm")
+    key_usage_flags = slot(adapter, recipe, "key_usage_flags")
+    rsa_key_der = rsa_key_der_initializer(slot(adapter, recipe, "rsa_key_der"))
+
+    return f"""\
+#include <psa/crypto.h>
+#include <stdio.h>
+#include <signal.h>
+#include <string.h>
+#include <stdlib.h>
+
+#define KEY_BITS [KEY_BITS]
+#define HASH_LEN [HASH_LEN]
+#define SIG_LEN [SIG_LEN]
+
+/*
+ * Harness: pkey_capability_mismatch_oracle
+ * Oracle: rsa_invalid_key_sign_rejection_oracle
+ * Target API: psa_sign_hash
+ *
+ * The key bytes intentionally encode tiny or invalid RSA private key material.
+ * Safe behavior is rejection at psa_import_key or psa_sign_hash without crash.
+ */
+
+static void bug_signal_handler(int signo)
+{{
+    fprintf(stderr, "[BUG] crash or sanitizer signal: %d\\n", signo);
+    fflush(stderr);
+    _Exit(128 + signo);
+}}
+
+int main(void)
+{{
+    static const unsigned char rsa_key_der[] = {{
+        {rsa_key_der}
+    }};
+    unsigned char hash[HASH_LEN];
+    unsigned char sig[SIG_LEN];
+    size_t sig_len = 0;
+
+    psa_status_t status;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key_id = 0;
+    int ret = 1;
+
+    setbuf(stdout, NULL);
+    signal(SIGSEGV, bug_signal_handler);
+    signal(SIGABRT, bug_signal_handler);
+    signal(SIGBUS, bug_signal_handler);
+    signal(SIGILL, bug_signal_handler);
+    memset(hash, 0x2a, sizeof(hash));
+    memset(sig, 0, sizeof(sig));
+
+    printf("template_mutation KEY_BITS=%d HASH_LEN=%d SIG_LEN=%d\\n",
+           KEY_BITS, HASH_LEN, SIG_LEN);
+
+    status = psa_crypto_init();
+    if (status != PSA_SUCCESS) {{
+        fprintf(stderr, "[SAFE] invalid RSA key signing rejected during psa_crypto_init: %d\\n",
+                (int) status);
+        ret = 0;
+        goto end;
+    }}
+
+    psa_set_key_type(&attributes, {key_type});
+    psa_set_key_bits(&attributes, KEY_BITS);
+    psa_set_key_usage_flags(&attributes, {key_usage_flags});
+    psa_set_key_algorithm(&attributes, {key_algorithm});
+
+    status = psa_import_key(&attributes, rsa_key_der, sizeof(rsa_key_der), &key_id);
+    printf("psa_import_key returned %d\\n", (int) status);
+    if (status != PSA_SUCCESS) {{
+        printf("[SAFE] invalid RSA key signing rejected by psa_import_key: %d\\n",
+               (int) status);
+        printf("[VERDICT] safe_fixed_behavior\\n");
+        ret = 0;
+        goto end;
+    }}
+
+    status = psa_sign_hash(key_id, PSA_ALG_RSA_PKCS1V15_SIGN([HASH_ALG]),
+                           hash, HASH_LEN,
+                           sig, sizeof(sig), &sig_len);
+    printf("psa_sign_hash returned %d sig_len=%zu\\n", (int) status, sig_len);
+
+    if (status == PSA_SUCCESS) {{
+        printf("[TRIAGE] signing with invalid RSA key succeeded\\n");
+    }} else {{
+        printf("[SAFE] invalid RSA key signing rejected by psa_sign_hash: %d\\n",
+               (int) status);
+        printf("[VERDICT] safe_fixed_behavior\\n");
+    }}
+    ret = 0;
+
+end:
+    if (key_id != 0)
+        psa_destroy_key(key_id);
+    mbedtls_psa_crypto_free();
+    return ret;
+}}
+"""
+
+
+def rsa_invalid_key_sign_rejection_meta(source_meta: Dict[str, Any], adapter: Dict[str, Any]) -> Dict[str, Any]:
+    meta = copy.deepcopy(source_meta)
+    meta["harness_family"] = "pkey_capability_mismatch_oracle"
+    meta["oracle_type"] = "rsa_invalid_key_sign_rejection_oracle"
+    meta["description"] = (
+        "Cross-library template for RSA tiny/invalid private key signing rejection. "
+        "Source: OpenSSL RSA_set0_key + EVP_DigestSign. Target: mbedTLS PSA "
+        "psa_import_key + psa_sign_hash. Safe behavior is rejection without crash."
+    )
+    meta["mutation_points"] = [
+        {
+            "name": "RSA_N_DEC",
+            "placeholder": "[RSA_N_DEC]",
+            "type": "string",
+            "default": "3233",
+            "values": ["3233", "15"],
+            "priority": "high",
+        },
+        {
+            "name": "RSA_E_DEC",
+            "placeholder": "[RSA_E_DEC]",
+            "type": "string",
+            "default": "17",
+            "values": ["17", "3"],
+            "priority": "high",
+        },
+        {
+            "name": "RSA_D_DEC",
+            "placeholder": "[RSA_D_DEC]",
+            "type": "string",
+            "default": "2753",
+            "values": ["2753", "1"],
+            "priority": "high",
+        },
+        {
+            "name": "MD_ALG",
+            "placeholder": "[MD_ALG]",
+            "type": "enum",
+            "default": "EVP_sha256()",
+            "values": ["EVP_sha256()", "EVP_sha384()"],
+            "priority": "medium",
+        },
+        {
+            "name": "MESSAGE_BYTES",
+            "placeholder": "[MESSAGE_BYTES]",
+            "type": "byte_array",
+            "default": '"Test\\0"',
+            "values": ['"Test\\0"', '"rsa-invalid-key\\0"'],
+            "priority": "low",
+        },
+        {
+            "name": "MESSAGE_LEN",
+            "placeholder": "[MESSAGE_LEN]",
+            "type": "int",
+            "default": 5,
+            "values": [5, 17],
+            "priority": "low",
+        },
+        {
+            "name": "SIG_BUF_LEN",
+            "placeholder": "[SIG_BUF_LEN]",
+            "type": "int",
+            "default": 512,
+            "values": [256, 512],
+            "priority": "low",
+        },
+        {
+            "name": "KEY_BITS",
+            "placeholder": "[KEY_BITS]",
+            "type": "int",
+            "default": 32,
+            "values": [32, 64],
+            "priority": "high",
+        },
+        {
+            "name": "HASH_ALG",
+            "placeholder": "[HASH_ALG]",
+            "type": "enum",
+            "default": "PSA_ALG_SHA_256",
+            "values": ["PSA_ALG_SHA_256", "PSA_ALG_SHA_384"],
+            "priority": "medium",
+        },
+        {
+            "name": "HASH_LEN",
+            "placeholder": "[HASH_LEN]",
+            "type": "int",
+            "default": 32,
+            "values": [32, 48],
+            "priority": "medium",
+        },
+        {
+            "name": "SIG_LEN",
+            "placeholder": "[SIG_LEN]",
+            "type": "int",
+            "default": 512,
+            "values": [256, 512],
+            "priority": "low",
+        },
+    ]
+    meta["generation_policy"] = {
+        "max_cases": 32,
+        "priority": [
+            "RSA_N_DEC",
+            "RSA_E_DEC",
+            "RSA_D_DEC",
+            "KEY_BITS",
+            "MD_ALG",
+            "HASH_ALG",
+            "HASH_LEN",
+        ],
+    }
+    return meta
 
 
 def is_null_deref_dispatch_recipe(
@@ -2487,6 +3139,16 @@ def render_target_c_from_adapter(
             )
         if (
             harness_family == "pkey_capability_mismatch_oracle"
+            and is_rsa_invalid_key_sign_rejection_recipe(adapter, recipe)
+        ):
+            return render_rsa_invalid_key_sign_rejection_from_recipe(
+                adapter,
+                source_template_dir,
+                source_meta,
+                mask_report,
+            )
+        if (
+            harness_family == "pkey_capability_mismatch_oracle"
             and is_pkey_capability_mismatch_oracle_recipe(adapter, recipe)
         ):
             return render_pkey_capability_mismatch_oracle_from_recipe(
@@ -2623,6 +3285,7 @@ def generate_one(adapter_file: Path, adapter_root: Path, out_root: Path) -> bool
     copy_names = [
         "poc_original.c",
         "tmpl_mbedtls.c",
+        "tmpl_openssl.c",
         "mask_report.yaml",
         "rag_context.json",
         "llm_updates.json",
@@ -2662,6 +3325,10 @@ def generate_one(adapter_file: Path, adapter_root: Path, out_root: Path) -> bool
     target_lib = adapter.get("target_library", "target")
 
     cross_meta = build_cross_meta(source_meta, adapter)
+    if recipe and is_mac_context_size_lifecycle_recipe(adapter, recipe):
+        cross_meta = mac_context_size_lifecycle_meta(cross_meta, adapter)
+    if recipe and is_rsa_invalid_key_sign_rejection_recipe(adapter, recipe):
+        cross_meta = rsa_invalid_key_sign_rejection_meta(cross_meta, adapter)
     if is_bignum_projection:
         cross_meta = bignum_semantic_projection_meta(cross_meta, adapter)
     dump_yaml(out_dir / "template_meta.yaml", cross_meta)

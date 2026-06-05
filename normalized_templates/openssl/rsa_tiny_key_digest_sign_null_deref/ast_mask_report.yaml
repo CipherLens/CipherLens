@@ -1,0 +1,87 @@
+template_id: RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF
+pattern_id: OPENSSL-ISSUE-21935
+source_library: openssl
+generated_by: manual_ast_analysis
+
+ast_units:
+  - unit_id: rsa_n_dec_arg
+    kind: string_literal_argument
+    call_site: bn_from_dec_or_null for n
+    source_text: '"3233"'
+    slot: RSA_N_DEC
+    mutable: true
+
+  - unit_id: rsa_e_dec_arg
+    kind: string_literal_argument
+    call_site: bn_from_dec_or_null for e
+    source_text: '"17"'
+    slot: RSA_E_DEC
+    mutable: true
+
+  - unit_id: rsa_d_dec_arg
+    kind: string_literal_argument
+    call_site: bn_from_dec_or_null for d
+    source_text: '"2753"'
+    slot: RSA_D_DEC
+    mutable: true
+
+  - unit_id: digest_algorithm_arg
+    kind: function_call_argument
+    call_site: EVP_DigestSignInit
+    argument_index: 2
+    source_text: EVP_sha256()
+    slot: MD_ALG
+    mutable: true
+
+  - unit_id: message_bytes_arr
+    kind: array_initializer
+    call_site: message declaration
+    source_text: '"Test\0"'
+    slot: MESSAGE_BYTES
+    mutable: true
+
+  - unit_id: message_len_decl
+    kind: array_size_constant
+    call_site: message declaration
+    source_text: "5"
+    slot: MESSAGE_LEN
+    mutable: true
+
+  - unit_id: signature_buffer_len
+    kind: array_size_constant
+    call_site: sig declaration
+    source_text: "512"
+    slot: SIG_BUF_LEN
+    mutable: true
+
+  - unit_id: rsa_set0_key_call
+    kind: function_call
+    call_site: RSA_set0_key
+    source_text: "RSA_set0_key(rsa, n, e, d)"
+    slot: RSA_SET0_KEY_CALL
+    mutable: false
+    reason: core invalid RSA key construction path
+
+  - unit_id: evp_pkey_assign_rsa_call
+    kind: function_call
+    call_site: EVP_PKEY_assign_RSA
+    source_text: "EVP_PKEY_assign_RSA(pkey, rsa)"
+    slot: EVP_PKEY_ASSIGN_RSA_CALL
+    mutable: false
+    reason: core bridge into EVP signing interface
+
+  - unit_id: digest_sign_init_call
+    kind: function_call
+    call_site: EVP_DigestSignInit
+    source_text: "EVP_DigestSignInit(mdctx, NULL, [MD_ALG], NULL, pkey)"
+    slot: INIT_CALL
+    mutable: false
+    reason: core signing-init trigger
+
+  - unit_id: digest_sign_call
+    kind: function_call
+    call_site: EVP_DigestSign
+    source_text: "EVP_DigestSign(mdctx, sig, &sig_len, message, sizeof(message) - 1)"
+    slot: SIGN_CALL
+    mutable: false
+    reason: core signing trigger

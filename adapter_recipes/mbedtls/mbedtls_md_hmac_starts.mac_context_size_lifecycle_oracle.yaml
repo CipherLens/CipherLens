@@ -1,0 +1,100 @@
+target_library: mbedtls
+target_api: mbedtls_md_hmac_starts
+harness_family: object_state_lifecycle
+oracle_type: mac_context_size_lifecycle_oracle
+status: deprecated_or_inapplicable_for_mbedtls_4_1_0
+recommendation: >
+  Do not use as the primary issue_22842 target on mbedTLS 4.1.0. Repository
+  evidence shows mbedtls_md_setup(..., hmac=1) is not the applicable HMAC path
+  and can force migration_needs_triage. Prefer
+  adapter_recipes/mbedtls/psa_mac_sign_setup.mac_context_size_lifecycle_oracle.yaml.
+
+include_headers:
+  - mbedtls/md.h
+  - stdio.h
+  - signal.h
+  - stdlib.h
+  - string.h
+
+objects:
+  md_ctx:
+    type: mbedtls_md_context_t
+    init: mbedtls_md_init
+    cleanup: mbedtls_md_free
+  md_info:
+    type: const mbedtls_md_info_t *
+    init: mbedtls_md_info_from_type
+    cleanup: none
+  ret:
+    type: int
+    init: "0"
+    cleanup: none
+
+fixed_setup_sequence:
+  - mbedtls_md_init
+  - pre_setup_mbedtls_md_hmac_starts
+  - mbedtls_md_info_from_type
+  - mbedtls_md_setup
+  - post_setup_mbedtls_md_hmac_starts
+  - mbedtls_md_get_size
+  - mbedtls_md_free
+
+trigger_call:
+  function: mbedtls_md_hmac_starts
+  pre_setup_state: before mbedtls_md_setup
+  post_setup_state: after mbedtls_md_setup
+  return_code: ret
+  size_observer: mbedtls_md_get_size
+
+allowed_slots:
+  md_type:
+    description: mbedTLS digest type used for HMAC setup.
+    default: MBEDTLS_MD_SHA256
+  hmac_flag:
+    description: hmac flag passed to mbedtls_md_setup.
+    default: 1
+  key_bytes:
+    description: C string literal used as HMAC key bytes.
+    default: '"rag-seed-hmac-key"'
+  key_len:
+    description: HMAC key length in bytes.
+    default: 17
+  expected_mac_size:
+    description: Expected initialized MAC size in bytes.
+    default: 32
+
+safe_behavior:
+  condition: >
+    pre-setup mbedtls_md_hmac_starts returns a nonzero error without crash, and
+    post-setup mbedtls_md_hmac_starts succeeds with mbedtls_md_get_size equal to
+    expected_mac_size.
+  description: >
+    mbedTLS md/HMAC context lifecycle handles use before setup safely and reports
+    the expected initialized MAC size after setup.
+
+bug_behavior:
+  condition: ASAN/UBSAN crash, SEGV, or exit 139 during pre-setup or post-setup HMAC lifecycle
+  description: MAC context lifecycle use reaches unsafe internal state and crashes.
+
+triage_behavior:
+  condition: >
+    pre-setup HMAC start succeeds unexpectedly, md setup fails, post-setup HMAC
+    start fails, or initialized size differs from expected_mac_size.
+  description: MAC lifecycle behavior needs manual review.
+
+semantic_projection_note: >
+  This recipe models OpenSSL issue_22842 as object_state_lifecycle semantic
+  projection. It does not reproduce OpenSSL provider algctx NULL dereference
+  internals; the renderer only uses mbedTLS md/HMAC public lifecycle APIs.
+
+forbidden_terms:
+  - EVP_MAC_fetch
+  - EVP_MAC_CTX_new
+  - EVP_MAC_CTX_get_mac_size
+  - EVP_MAC_init
+  - EVP_MAC_CTX_free
+  - EVP_MAC_free
+  - openssl/
+  - RSA_new
+  - RSA_set0_key
+  - EVP_DigestSign

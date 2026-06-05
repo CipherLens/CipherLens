@@ -1,0 +1,70 @@
+template_id: RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF
+pattern_id: OPENSSL-ISSUE-21935
+source_library: openssl
+
+selected_units:
+  - unit_id: rsa_n_dec_arg
+    slot: RSA_N_DEC
+    selected: true
+    priority: high
+    reason: RSA modulus controls tiny/invalid key material
+
+  - unit_id: rsa_e_dec_arg
+    slot: RSA_E_DEC
+    selected: true
+    priority: high
+    reason: RSA public exponent controls key validity
+
+  - unit_id: rsa_d_dec_arg
+    slot: RSA_D_DEC
+    selected: true
+    priority: high
+    reason: RSA private exponent controls invalid private key behavior
+
+  - unit_id: digest_algorithm_arg
+    slot: MD_ALG
+    selected: true
+    priority: medium
+    reason: Digest algorithm can affect RSA signing setup and validation
+
+  - unit_id: message_bytes_arr
+    slot: MESSAGE_BYTES
+    selected: true
+    priority: low
+    reason: Message content variation
+
+  - unit_id: message_len_decl
+    slot: MESSAGE_LEN
+    selected: true
+    priority: medium
+    reason: Message length variation
+
+  - unit_id: signature_buffer_len
+    slot: SIG_BUF_LEN
+    selected: true
+    priority: low
+    reason: Signature buffer capacity remains observable
+
+  - unit_id: rsa_set0_key_call
+    slot: RSA_SET0_KEY_CALL
+    selected: false
+    priority: critical
+    reason: Non-mutable; core invalid RSA key construction path
+
+  - unit_id: evp_pkey_assign_rsa_call
+    slot: EVP_PKEY_ASSIGN_RSA_CALL
+    selected: false
+    priority: critical
+    reason: Non-mutable; core bridge into EVP signing path
+
+  - unit_id: digest_sign_init_call
+    slot: INIT_CALL
+    selected: false
+    priority: critical
+    reason: Non-mutable; core signing-init trigger
+
+  - unit_id: digest_sign_call
+    slot: SIGN_CALL
+    selected: false
+    priority: critical
+    reason: Non-mutable; core signing trigger

@@ -1,0 +1,91 @@
+source_pattern_id: OPENSSL-ISSUE-21935
+template_id: RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF
+source_library: openssl
+source_api: EVP_DigestSign
+source_component: PKEY/RSA
+vulnerability_class: rsa_invalid_key_sign_rejection
+oracle_type: crash_sanitizer_or_safe_error_oracle
+
+migration_summary:
+  overall_decision: generate
+  primary_candidate: psa_sign_hash
+  primary_score: 82
+  primary_harness_family: pkey_capability_mismatch_oracle
+  primary_oracle: rsa_invalid_key_sign_rejection_oracle
+
+target_candidates:
+  - target_library: mbedtls
+    target_api: psa_sign_hash
+    target_version: "4.1.0 (PSA Crypto)"
+    decision: generate
+    migration_applicability: applicable
+    scores:
+      operation_family: 90
+      function_behavior: 85
+      parameter_structure: 75
+      vulnerability_path: 80
+      harness_feasibility: 85
+    final_score: 82
+    preserved_features:
+      - same operation family: RSA signing
+      - same rejection oracle: invalid or tiny RSA private key must not sign
+      - PSA exposes key import and signing through psa_import_key and psa_sign_hash
+      - safe rejection can occur at import or signing time
+      - return code and crash/sanitizer signals are observable
+      - self-contained single-process harness feasible
+    lost_or_weakened_features:
+      - PSA expects structured key material rather than OpenSSL RSA object ownership
+      - PSA may reject invalid key material during import before reaching sign dispatch
+      - exact OpenSSL BN_is_negative internal path is not preserved
+      - RSA key encoding differs from RSA_set0_key with BIGNUM components
+    reason: >
+      PSA Crypto `psa_sign_hash` is the strongest mbedTLS target for the issue_21935
+      signing-path pattern. The migrated harness can import deliberately tiny or
+      invalid RSA private key material and attempt `psa_sign_hash`. A fixed target
+      should reject at import or sign time without crash. The exact OpenSSL
+      BIGNUM dereference path is not preserved, but the high-level invalid RSA
+      signing oracle is preserved.
+
+  - target_library: mbedtls
+    target_api: mbedtls_pk_sign
+    target_version: "3.6.4 (legacy pk layer)"
+    decision: needs_llm_review
+    migration_applicability: applicable
+    scores:
+      operation_family: 85
+      function_behavior: 70
+      parameter_structure: 60
+      vulnerability_path: 65
+      harness_feasibility: 70
+    final_score: 70
+    preserved_features:
+      - mbedtls_pk_sign is a public RSA signing API
+      - invalid key signing can be represented through mbedtls_pk_context setup
+      - return code and sanitizer signals are observable
+    lost_or_weakened_features:
+      - constructing an invalid private RSA key through the public pk API is cumbersome
+      - direct BIGNUM ownership and RSA_set0_key semantics are not preserved
+      - PSA import provides clearer policy and rejection semantics
+    reason: >
+      `mbedtls_pk_sign` is a plausible fallback but constructing the exact invalid
+      key state is less direct than PSA key import. Keep for review only.
+
+  - target_library: mbedtls
+    target_api: no_equivalent_bn_internal_path
+    target_version: N/A
+    decision: skip
+    migration_applicability: weak_semantic_projection
+    scores:
+      operation_family: 0
+      function_behavior: 0
+      parameter_structure: 0
+      vulnerability_path: 0
+      harness_feasibility: 0
+    final_score: 0
+    preserved_features: []
+    lost_or_weakened_features:
+      - OpenSSL BN_is_negative internal dereference path has no mbedTLS public API equivalent
+    reason: >
+      The exact internal OpenSSL BIGNUM dereference path is not migratable through
+      mbedTLS public APIs. The valid migration target is the higher-level RSA
+      invalid-key signing rejection oracle.

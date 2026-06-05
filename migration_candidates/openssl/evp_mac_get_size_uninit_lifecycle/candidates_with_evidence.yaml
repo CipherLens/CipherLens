@@ -1,0 +1,87 @@
+source_pattern_id: OPENSSL-ISSUE-22842
+template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE
+source_library: openssl
+source_api: EVP_MAC_CTX_get_mac_size
+source_component: EVP/MAC
+vulnerability_class: mac_context_uninitialized_state_query
+oracle_type: mac_context_size_lifecycle_oracle
+
+migration_summary:
+  overall_decision: generate
+  primary_candidate: psa_mac_sign_setup
+  primary_score: 82
+  primary_harness_family: object_state_lifecycle
+  primary_oracle: mac_context_size_lifecycle_oracle
+  semantic_projection: true
+  semantic_projection_note: >
+    This migration is an object lifecycle semantic projection. It validates that
+    a PSA MAC operation safely rejects use before setup and completes the
+    initialized setup/update/finish lifecycle. It is not a strict equivalent
+    reproduction of OpenSSL provider algctx NULL dereference in
+    EVP_MAC_CTX_get_mac_size.
+
+evidence:
+  source_artifacts:
+    - path: datasets/openssl/poc_artifacts/issue_22842/metadata.json
+      finding: >
+        metadata identifies root cause as NULL pointer dereference in
+        EVP_MAC_CTX_get_mac_size due to uninitialized algctx cipher struct.
+    - path: datasets/openssl/poc_artifacts/issue_22842/poc.c
+      finding: >
+        current C artifact calls EVP_MAC_init before EVP_MAC_CTX_get_mac_size,
+        so it demonstrates post-init normal behavior rather than strict crash
+        reproduction.
+    - path: datasets/openssl/poc_artifacts/issue_22842/run.log
+      finding: EVP_MAC_init returned 1 and post-init get_mac_size returned 32.
+    - path: datasets/openssl/poc_artifacts/issue_22842/valgrind.log
+      finding: current RAG-seed candidate reports zero Valgrind errors.
+
+target_candidates:
+  - target_library: mbedtls
+    target_api: psa_mac_sign_setup
+    target_version: "PSA Crypto"
+    decision: generate
+    migration_applicability: applicable_with_semantic_projection
+    adapter_recipe: adapter_recipes/mbedtls/psa_mac_sign_setup.mac_context_size_lifecycle_oracle.yaml
+    scores:
+      operation_family: 85
+      function_behavior: 85
+      parameter_structure: 80
+      vulnerability_path: 70
+      harness_feasibility: 90
+    final_score: 82
+    preserved_features:
+      - PSA MAC operation lifecycle represents pre-setup and initialized operation states
+      - pre-setup psa_mac_update return code observes safe rejection
+      - psa_mac_sign_setup plus psa_mac_update plus psa_mac_sign_finish observes initialized behavior
+      - crash/sanitizer signals remain observable
+    lost_or_weakened_features:
+      - PSA MAC operation does not expose EVP_MAC_CTX_get_mac_size
+      - exact OpenSSL EVP_MAC_CTX_get_mac_size NULL dereference path is not preserved
+      - this validates lifecycle safety rather than provider-internal structure
+    reason: >
+      PSA MAC is the applicable mbedTLS 4.1.0 HMAC/MAC lifecycle path. The
+      renderer uses one PSA operation for pre-setup safe rejection and a separate
+      initialized operation for setup/update/finish success.
+
+  - target_library: mbedtls
+    target_api: mbedtls_md_hmac_starts
+    target_version: "4.1.0 legacy md layer"
+    decision: deprecated_or_inapplicable
+    migration_applicability: not_recommended_for_4_1_0
+    adapter_recipe: adapter_recipes/mbedtls/mbedtls_md_hmac_starts.mac_context_size_lifecycle_oracle.yaml
+    final_score: 49
+    reason: >
+      Deprecated for issue_22842 on mbedTLS 4.1.0: repository evidence indicates
+      mbedtls_md_setup(..., hmac=1) is not the valid HMAC path and returns a
+      setup failure. Continuing to use this target causes migration_needs_triage;
+      use PSA MAC lifecycle instead.
+
+  - target_library: mbedtls
+    target_api: mbedtls_md_get_size
+    decision: needs_llm_review
+    migration_applicability: weak_semantic_projection
+    final_score: 62
+    reason: >
+      Size query alone has no context lifecycle and should only appear as an
+      auxiliary observer inside the mbedtls_md_hmac_starts renderer.

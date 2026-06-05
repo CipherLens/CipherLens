@@ -175,6 +175,13 @@ INVALID_PARAMETER_SETUP_ORACLE_APIS = {
 
 OBJECT_STATE_LIFECYCLE_APIS = {
     "ASN1_STRING_set",
+    "mbedtls_md_hmac_starts",
+    "psa_mac_sign_setup",
+}
+
+MAC_CONTEXT_SIZE_LIFECYCLE_APIS = {
+    "mbedtls_md_hmac_starts",
+    "psa_mac_sign_setup",
 }
 
 OBJECT_STATE_LIFECYCLE_FORBIDDEN_RESIDUE = [
@@ -204,6 +211,21 @@ OBJECT_STATE_LIFECYCLE_FORBIDDEN_RESIDUE = [
     "openssl/x509.h",
     "openssl/evp.h",
     "openssl/pem.h",
+]
+
+MAC_CONTEXT_SIZE_LIFECYCLE_FORBIDDEN_RESIDUE = [
+    "EVP_MAC_fetch",
+    "EVP_MAC_CTX_new",
+    "EVP_MAC_CTX_get_mac_size",
+    "EVP_MAC_init",
+    "EVP_MAC_CTX_free",
+    "EVP_MAC_free",
+    "EVP_DigestSign",
+    "RSA_new",
+    "RSA_set0_key",
+    "ASN1_STRING_set",
+    "EVP_CIPHER_CTX",
+    "openssl/",
 ]
 
 INVALID_PARAMETER_SETUP_ORACLE_FORBIDDEN_RESIDUE = [
@@ -629,6 +651,7 @@ def validate_recipe_adapter(adapter: Dict[str, Any], errors: List[str]) -> bool:
         if recipe.get("oracle_type") not in {
             "stale_pointer_length_state_oracle",
             "object_lifecycle_state_oracle",
+            "mac_context_size_lifecycle_oracle",
         }:
             errors.append(
                 f"{adapter.get('target_api')} recipe must use an object_state_lifecycle oracle_type"
@@ -680,6 +703,7 @@ def validate_recipe_adapter(adapter: Dict[str, Any], errors: List[str]) -> bool:
         if recipe.get("oracle_type") not in {
             "public_key_sign_rejection_oracle",
             "capability_mismatch_safe_error_oracle",
+            "rsa_invalid_key_sign_rejection_oracle",
         }:
             errors.append(
                 f"{adapter.get('target_api')} recipe must use a pkey_capability_mismatch oracle_type"
@@ -771,6 +795,51 @@ def validate_bn_usub_recipe_adapter(adapter: Dict[str, Any], errors: List[str]) 
         errors.append("BN_usub recipe must describe comparison-based behavior")
     if "ret" not in recipe_text and "return_code" not in recipe_text:
         errors.append("BN_usub recipe must describe return-code observability")
+
+
+def validate_rsa_invalid_key_sign_rejection_recipe_adapter(adapter: Dict[str, Any], errors: List[str]) -> None:
+    if adapter.get("target_api") != "psa_sign_hash" or not is_recipe_adapter(adapter):
+        return
+
+    recipe_path = Path(str(adapter.get("adapter_recipe") or ""))
+    if not recipe_path.exists():
+        return
+    recipe = load_yaml(recipe_path)
+    if recipe.get("oracle_type") != "rsa_invalid_key_sign_rejection_oracle":
+        return
+
+    if recipe.get("harness_family") != "pkey_capability_mismatch_oracle":
+        errors.append("RSA invalid-key recipe must use harness_family=pkey_capability_mismatch_oracle")
+
+    allowed_slots = ensure_dict(recipe.get("allowed_slots"))
+    slot_bindings = ensure_dict(adapter.get("slot_bindings"))
+
+    required_slots = {
+        "key_type",
+        "key_bits",
+        "key_algorithm",
+        "key_usage_flags",
+        "rsa_key_der",
+        "hash_alg",
+        "hash_len",
+        "sig_len",
+    }
+    for slot_name in sorted(required_slots):
+        if slot_name not in allowed_slots:
+            errors.append(f"RSA invalid-key recipe must expose slot: {slot_name}")
+        if not str(slot_bindings.get(slot_name) or "").strip():
+            errors.append(f"RSA invalid-key adapter must bind slot: {slot_name}")
+
+    if str(slot_bindings.get("key_type") or "").strip() != "PSA_KEY_TYPE_RSA_KEY_PAIR":
+        errors.append("RSA invalid-key adapter key_type must be PSA_KEY_TYPE_RSA_KEY_PAIR")
+
+    usage = str(slot_bindings.get("key_usage_flags") or "")
+    if "PSA_KEY_USAGE_SIGN_HASH" not in usage:
+        errors.append("RSA invalid-key adapter key_usage_flags must include PSA_KEY_USAGE_SIGN_HASH")
+
+    algorithm = str(slot_bindings.get("key_algorithm") or "")
+    if "PSA_ALG_RSA" not in algorithm:
+        errors.append("RSA invalid-key adapter key_algorithm must be an RSA signing algorithm")
 
 
 def validate_bignum_buffer_canary_recipe_adapter(adapter: Dict[str, Any], errors: List[str]) -> None:
@@ -911,6 +980,10 @@ def validate_object_state_lifecycle_recipe_adapter(adapter: Dict[str, Any], erro
     if recipe.get("harness_family") != "object_state_lifecycle":
         errors.append(f"{target_api} recipe adapter must use harness_family=object_state_lifecycle")
 
+    if target_api in MAC_CONTEXT_SIZE_LIFECYCLE_APIS or recipe.get("oracle_type") == "mac_context_size_lifecycle_oracle":
+        validate_mac_context_size_lifecycle_recipe_adapter(adapter, recipe, errors)
+        return
+
     recipe_text = "\n".join(iter_string_values(recipe))
     adapter_text = "\n".join(iter_string_values(adapter))
     recipe_semantic_obj = copy.deepcopy(recipe)
@@ -952,6 +1025,97 @@ def validate_object_state_lifecycle_recipe_adapter(adapter: Dict[str, Any], erro
         errors.append(f"{target_api} recipe must describe safe reallocation behavior")
     if "crash" not in behavior_text and "asan" not in behavior_text and "null" not in behavior_text:
         errors.append(f"{target_api} recipe must describe crash/ASAN/NULL bug behavior")
+
+
+def validate_mac_context_size_lifecycle_recipe_adapter(
+    adapter: Dict[str, Any],
+    recipe: Dict[str, Any],
+    errors: List[str],
+) -> None:
+    target_api = adapter.get("target_api")
+
+    allowed_targets = {"mbedtls_md_hmac_starts", "psa_mac_sign_setup"}
+    if target_api not in allowed_targets:
+        errors.append("MAC context lifecycle adapter must target mbedtls_md_hmac_starts or psa_mac_sign_setup")
+
+    if recipe.get("target_api") != target_api:
+        errors.append(
+            f"MAC context lifecycle recipe target_api mismatch: recipe={recipe.get('target_api')} adapter={target_api}"
+        )
+
+    if recipe.get("harness_family") != "object_state_lifecycle":
+        errors.append("MAC context lifecycle recipe must use harness_family=object_state_lifecycle")
+
+    if recipe.get("oracle_type") != "mac_context_size_lifecycle_oracle":
+        errors.append("MAC context lifecycle recipe must use oracle_type=mac_context_size_lifecycle_oracle")
+
+    allowed_slots = ensure_dict(recipe.get("allowed_slots"))
+    slot_bindings = ensure_dict(adapter.get("slot_bindings"))
+    slot_text = "\n".join(iter_string_values(slot_bindings))
+
+    for token in MAC_CONTEXT_SIZE_LIFECYCLE_FORBIDDEN_RESIDUE:
+        if token in slot_text:
+            errors.append(f"MAC context lifecycle adapter slot_bindings contain cross-family residue: {token}")
+
+    headers = [str(x).strip() for x in ensure_list(recipe.get("include_headers"))]
+    if target_api == "mbedtls_md_hmac_starts":
+        if "mbedtls/md.h" not in headers:
+            errors.append("MAC context lifecycle md/HMAC recipe must include mbedtls/md.h")
+        required_slots = {
+            "md_type",
+            "hmac_flag",
+            "key_bytes",
+            "key_len",
+            "expected_mac_size",
+        }
+    else:
+        if "psa/crypto.h" not in headers:
+            errors.append("MAC context lifecycle PSA recipe must include psa/crypto.h")
+        required_slots = {
+            "key_type",
+            "key_usage_flags",
+            "key_algorithm",
+            "key_bytes",
+            "key_len",
+            "message_bytes",
+            "message_len",
+            "mac_len",
+        }
+
+    for slot_name in sorted(required_slots):
+        if slot_name not in allowed_slots:
+            errors.append(f"MAC context lifecycle recipe must expose slot: {slot_name}")
+        if not str(slot_bindings.get(slot_name) or "").strip():
+            errors.append(f"MAC context lifecycle adapter must bind slot: {slot_name}")
+
+    if target_api == "mbedtls_md_hmac_starts":
+        md_type = str(slot_bindings.get("md_type") or "").strip()
+        if md_type and not md_type.startswith("MBEDTLS_MD_"):
+            errors.append("MAC context lifecycle md_type must be an MBEDTLS_MD_* constant")
+
+        hmac_flag = str(slot_bindings.get("hmac_flag") or "").strip()
+        if hmac_flag and hmac_flag != "1":
+            errors.append("MAC context lifecycle hmac_flag must be 1")
+    else:
+        key_type = str(slot_bindings.get("key_type") or "").strip()
+        if key_type and key_type != "PSA_KEY_TYPE_HMAC":
+            errors.append("PSA MAC context lifecycle key_type must be PSA_KEY_TYPE_HMAC")
+
+        usage = str(slot_bindings.get("key_usage_flags") or "")
+        if "PSA_KEY_USAGE_SIGN_MESSAGE" not in usage:
+            errors.append("PSA MAC context lifecycle key_usage_flags must include PSA_KEY_USAGE_SIGN_MESSAGE")
+
+        algorithm = str(slot_bindings.get("key_algorithm") or "")
+        if "PSA_ALG_HMAC" not in algorithm:
+            errors.append("PSA MAC context lifecycle key_algorithm must be PSA_ALG_HMAC(...)")
+
+    recipe_text = "\n".join(iter_string_values(recipe)).lower()
+    if "pre-setup" not in recipe_text and "before setup" not in recipe_text:
+        errors.append("MAC context lifecycle recipe must describe pre-setup behavior")
+    if "post-setup" not in recipe_text and "after setup" not in recipe_text and "initialized" not in recipe_text:
+        errors.append("MAC context lifecycle recipe must describe post-setup behavior")
+    if "semantic projection" not in recipe_text:
+        errors.append("MAC context lifecycle recipe must document semantic projection limitation")
 
 
 def validate_invalid_parameter_setup_oracle_recipe_adapter(adapter: Dict[str, Any], errors: List[str]) -> None:
@@ -1237,6 +1401,7 @@ def normalize_and_validate(obj: Dict[str, Any]) -> Dict[str, Any]:
     validate_crash_sanitizer_oracle_recipe_adapter(adapter, errors)
     validate_invalid_parameter_setup_oracle_recipe_adapter(adapter, errors)
     validate_object_state_lifecycle_recipe_adapter(adapter, errors)
+    validate_rsa_invalid_key_sign_rejection_recipe_adapter(adapter, errors)
 
     adapter["validation"] = {
         "status": "needs_repair" if errors else "ok",

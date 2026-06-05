@@ -1,0 +1,87 @@
+template_id: RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF
+pattern_id: OPENSSL-ISSUE-21935
+source_library: openssl
+source_component: PKEY/RSA
+harness_family: pkey_capability_mismatch_oracle
+oracle_type: rsa_invalid_key_sign_rejection_oracle
+
+source_api:
+  - EVP_PKEY_new
+  - RSA_new
+  - RSA_set0_key
+  - EVP_PKEY_assign_RSA
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit
+  - EVP_DigestSign
+
+vulnerability_class: rsa_invalid_key_sign_rejection
+
+description: >
+  Template for testing that tiny or invalid RSA private key material is safely
+  rejected when it enters the OpenSSL EVP signing path. The core trigger is
+  RSA_set0_key + EVP_PKEY_assign_RSA followed by EVP_DigestSignInit and
+  EVP_DigestSign. A safe implementation rejects the key or signing attempt
+  without crash; a successful signature is triage.
+
+mask_slots:
+  - name: RSA_N_DEC
+    type: decimal_string
+    default: "3233"
+    variants:
+      - "3233"
+      - "15"
+      - "1"
+  - name: RSA_E_DEC
+    type: decimal_string
+    default: "17"
+    variants:
+      - "17"
+      - "3"
+      - "65537"
+  - name: RSA_D_DEC
+    type: decimal_string
+    default: "2753"
+    variants:
+      - "2753"
+      - "1"
+      - "0"
+  - name: MD_ALG
+    type: digest_selector
+    default: EVP_sha256()
+    variants:
+      - EVP_sha256()
+      - EVP_sha384()
+      - EVP_sha512()
+  - name: MESSAGE_BYTES
+    type: byte_array
+    default: '"Test\0"'
+  - name: MESSAGE_LEN
+    type: integer
+    default: 5
+  - name: SIG_BUF_LEN
+    type: integer
+    default: 512
+
+required_observables:
+  - key_setup_return_code
+  - init_return_code
+  - sign_return_code
+  - asan_or_ubsan_signal
+  - process_exit_code
+
+safe_behavior:
+  condition: RSA_set0_key != 1 OR EVP_DigestSignInit != 1 OR EVP_DigestSign != 1 with no crash
+  description: Tiny or invalid RSA key signing is rejected safely without crash
+
+bug_behavior:
+  condition: ASAN/UBSAN crash or SEGV during key setup or signing
+  description: Invalid RSA key material reaches an unsafe internal dereference
+
+triage_behavior:
+  condition: EVP_DigestSign returns 1 with invalid/tiny RSA key material
+  description: Invalid RSA signing succeeded; manual review required
+
+notes:
+  - strict_reproduction requires the affected openssl-SNAP-20230831 build
+  - current OpenSSL versions may reject at key setup, sign init, or sign call
+  - migration target: PSA psa_import_key + psa_sign_hash with invalid/tiny RSA key material

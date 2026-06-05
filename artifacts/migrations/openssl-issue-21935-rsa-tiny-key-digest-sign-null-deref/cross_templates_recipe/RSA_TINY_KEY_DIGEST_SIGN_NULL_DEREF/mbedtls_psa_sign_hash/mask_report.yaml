@@ -1,0 +1,103 @@
+template_id: RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF
+pattern_id: OPENSSL-ISSUE-21935
+source_library: openssl
+harness_family: pkey_capability_mismatch_oracle
+oracle_type: rsa_invalid_key_sign_rejection_oracle
+
+must_preserve_features:
+  - tiny_or_invalid_rsa_private_key_material
+  - rsa_key_assigned_to_evp_pkey
+  - digest_sign_init_and_sign
+  - invalid_key_sign_rejection_oracle
+  - crash_or_safe_error_oracle
+
+mask_units:
+  - slot: RSA_N_DEC
+    type: decimal_string
+    location: BN_dec2bn source for RSA modulus n
+    mutation_reason: Controls tiny or invalid modulus material
+    default_value: "3233"
+    variants:
+      - value: "3233"
+        label: toy_modulus
+      - value: "15"
+        label: composite_tiny_modulus
+      - value: "1"
+        label: invalid_modulus_one
+
+  - slot: RSA_E_DEC
+    type: decimal_string
+    location: BN_dec2bn source for RSA public exponent e
+    mutation_reason: Controls RSA exponent validity
+    default_value: "17"
+    variants:
+      - value: "17"
+        label: toy_exponent
+      - value: "3"
+        label: small_exponent
+      - value: "65537"
+        label: common_exponent
+
+  - slot: RSA_D_DEC
+    type: decimal_string
+    location: BN_dec2bn source for RSA private exponent d
+    mutation_reason: Controls invalid or tiny private exponent material
+    default_value: "2753"
+    variants:
+      - value: "2753"
+        label: toy_private_exponent
+      - value: "1"
+        label: invalid_private_exponent_one
+      - value: "0"
+        label: invalid_private_exponent_zero
+
+  - slot: MD_ALG
+    type: digest_selector
+    location: EVP_DigestSignInit digest argument
+    mutation_reason: Digest choice can influence RSA signing setup
+    default_value: EVP_sha256()
+    variants:
+      - value: EVP_sha256()
+        label: sha256
+      - value: EVP_sha384()
+        label: sha384
+      - value: EVP_sha512()
+        label: sha512
+
+  - slot: MESSAGE_BYTES
+    type: byte_array
+    location: message declaration
+    mutation_reason: Message content for signing attempt
+    default_value: '"Test\0"'
+
+  - slot: MESSAGE_LEN
+    type: integer
+    location: message array declaration
+    mutation_reason: Message size for signing attempt
+    default_value: 5
+
+  - slot: SIG_BUF_LEN
+    type: integer
+    location: signature buffer declaration
+    mutation_reason: Signature buffer capacity should remain observable
+    default_value: 512
+
+key_vulnerability_fragments:
+  - fragment: "RSA_set0_key(rsa, n, e, d)"
+    reason: installs tiny or invalid RSA key material
+  - fragment: "EVP_PKEY_assign_RSA(pkey, rsa)"
+    reason: exposes the RSA object through the EVP_PKEY signing interface
+  - fragment: "EVP_DigestSignInit(mdctx, NULL, [MD_ALG], NULL, pkey)"
+    reason: initializes signing with the invalid RSA key
+  - fragment: "EVP_DigestSign(mdctx, sig, &sig_len, message, sizeof(message) - 1)"
+    reason: core trigger; attempts to sign with invalid/tiny RSA key material
+
+immutable_structure:
+  - EVP_PKEY_new
+  - RSA_new
+  - RSA_set0_key
+  - EVP_PKEY_assign_RSA
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit
+  - EVP_DigestSign
+  - EVP_MD_CTX_free, EVP_PKEY_free, RSA_free, BN_free cleanup

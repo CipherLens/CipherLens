@@ -1,0 +1,107 @@
+target_library: mbedtls
+target_api: psa_mac_sign_setup
+harness_family: object_state_lifecycle
+oracle_type: mac_context_size_lifecycle_oracle
+
+include_headers:
+  - psa/crypto.h
+  - stdio.h
+  - signal.h
+  - stdlib.h
+  - string.h
+
+objects:
+  operation_pre:
+    type: psa_mac_operation_t
+    init: PSA_MAC_OPERATION_INIT
+    cleanup: psa_mac_abort
+  operation_post:
+    type: psa_mac_operation_t
+    init: PSA_MAC_OPERATION_INIT
+    cleanup: psa_mac_abort
+  key_id:
+    type: psa_key_id_t
+    init: "0"
+    cleanup: psa_destroy_key
+
+fixed_setup_sequence:
+  - psa_crypto_init
+  - psa_set_key_type
+  - psa_set_key_usage_flags
+  - psa_set_key_algorithm
+  - psa_import_key
+  - STATE_A_pre_setup_psa_mac_update
+  - STATE_B_psa_mac_sign_setup
+  - STATE_B_psa_mac_update
+  - STATE_B_psa_mac_sign_finish
+  - psa_mac_abort
+  - psa_destroy_key
+
+trigger_call:
+  function: psa_mac_sign_setup
+  pre_setup_state: psa_mac_update before psa_mac_sign_setup
+  post_setup_state: psa_mac_sign_setup then psa_mac_update then psa_mac_sign_finish
+  return_code: status
+
+allowed_slots:
+  key_type:
+    description: PSA key type used for HMAC.
+    default: PSA_KEY_TYPE_HMAC
+  key_usage_flags:
+    description: PSA usage flags for MAC signing.
+    default: PSA_KEY_USAGE_SIGN_MESSAGE
+  key_algorithm:
+    description: PSA MAC algorithm.
+    default: PSA_ALG_HMAC(PSA_ALG_SHA_256)
+  key_bytes:
+    description: C string literal used as imported HMAC key bytes.
+    default: '"rag-seed-hmac-key"'
+  key_len:
+    description: HMAC key length in bytes.
+    default: 17
+  message_bytes:
+    description: C string literal used as MAC input.
+    default: '"mac lifecycle message"'
+  message_len:
+    description: MAC input length in bytes.
+    default: 21
+  mac_len:
+    description: MAC output buffer length in bytes.
+    default: 32
+
+safe_behavior:
+  condition: >
+    psa_mac_update before psa_mac_sign_setup returns a non-success status without
+    crash, and a separate initialized operation completes
+    psa_mac_sign_setup -> psa_mac_update -> psa_mac_sign_finish successfully.
+  description: PSA MAC operation lifecycle safely rejects pre-setup operation use and completes initialized MAC operation.
+
+bug_behavior:
+  condition: ASAN/UBSAN crash, SEGV, or exit 139 during pre-setup or initialized PSA MAC lifecycle
+  description: PSA MAC operation lifecycle reaches unsafe internal state and crashes.
+
+triage_behavior:
+  condition: >
+    pre-setup psa_mac_update succeeds unexpectedly, key import/setup fails, or
+    initialized MAC operation fails before psa_mac_sign_finish.
+  description: PSA MAC lifecycle behavior needs manual review.
+
+semantic_projection_note: >
+  This recipe models OpenSSL issue_22842 as object_state_lifecycle semantic
+  projection. It does not reproduce OpenSSL provider algctx NULL dereference
+  internals; the renderer only uses PSA MAC public operation lifecycle APIs.
+
+forbidden_terms:
+  - EVP_MAC_fetch
+  - EVP_MAC_CTX_new
+  - EVP_MAC_CTX_get_mac_size
+  - EVP_MAC_init
+  - EVP_MAC_CTX_free
+  - EVP_MAC_free
+  - mbedtls_md_hmac_starts
+  - mbedtls_md_setup
+  - mbedtls_md_get_size
+  - openssl/
+  - RSA_new
+  - RSA_set0_key
+  - EVP_DigestSign

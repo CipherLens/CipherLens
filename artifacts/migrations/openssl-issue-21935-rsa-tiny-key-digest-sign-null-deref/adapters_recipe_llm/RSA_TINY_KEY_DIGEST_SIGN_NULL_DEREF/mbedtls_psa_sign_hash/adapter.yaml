@@ -1,0 +1,38 @@
+source_pattern_id: null
+template_id: RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF
+harness_family: pkey_capability_mismatch_oracle
+oracle_type: rsa_invalid_key_sign_rejection_oracle
+target_library: mbedtls
+target_api: psa_sign_hash
+applicability: generate
+adapter_recipe: adapter_recipes/mbedtls/psa_sign_hash.rsa_invalid_key_sign_rejection_oracle.yaml
+evidence_file: migration_candidates/openssl/rsa_tiny_key_digest_sign_null_deref/candidates_with_evidence.yaml
+slot_bindings:
+  key_type: PSA_KEY_TYPE_RSA_KEY_PAIR
+  key_bits: '32'
+  key_algorithm: PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH)
+  key_usage_flags: PSA_KEY_USAGE_SIGN_HASH
+  rsa_key_der: default_tiny_rsa_private_key_der
+  hash_alg: PSA_ALG_SHA_256
+  hash_len: '32'
+  sig_len: '512'
+preserved_features:
+- same operation family: RSA signing
+- same rejection oracle: invalid or tiny RSA private key must not sign
+- PSA exposes key import and signing through psa_import_key and psa_sign_hash
+- safe rejection can occur at import or signing time
+- return code and crash/sanitizer signals are observable
+- self-contained single-process harness feasible
+lost_or_weakened_features:
+- PSA expects structured key material rather than OpenSSL RSA object ownership
+- PSA may reject invalid key material during import before reaching sign dispatch
+- exact OpenSSL BN_is_negative internal path is not preserved
+- RSA key encoding differs from RSA_set0_key with BIGNUM components
+_adapter_mode: recipe_slot_filling
+_ignored_disallowed_fields: []
+_ignored_non_slot_fields: []
+_llm_raw_preview: '{"slot_bindings": {"key_type": "PSA_KEY_TYPE_RSA_KEY_PAIR", "key_bits":
+  "32", "key_algorithm": "PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH)", "key_usage_flags":
+  "PSA_KEY_USAGE_SIGN_HASH", "rsa_key_der": "default_tiny_rsa_private_key_der", "hash_alg":
+  "PSA_ALG_SHA_256", "hash_len": "32", "sig_len": "512"}}'
+_llm_status: ok

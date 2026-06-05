@@ -1,0 +1,206 @@
+template_id: RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF__MBEDTLS_PSA_SIGN_HASH
+pattern_id: OPENSSL-ISSUE-21935
+source_library: openssl
+source_component: PKEY/RSA
+harness_family: pkey_capability_mismatch_oracle
+oracle_type: rsa_invalid_key_sign_rejection_oracle
+source_api:
+- EVP_PKEY_new
+- RSA_new
+- RSA_set0_key
+- EVP_PKEY_assign_RSA
+- EVP_MD_CTX_new
+- EVP_DigestSignInit
+- EVP_DigestSign
+vulnerability_class: rsa_invalid_key_sign_rejection
+description: 'Cross-library template for RSA tiny/invalid private key signing rejection.
+  Source: OpenSSL RSA_set0_key + EVP_DigestSign. Target: mbedTLS PSA psa_import_key
+  + psa_sign_hash. Safe behavior is rejection without crash.'
+mask_slots:
+- name: RSA_N_DEC
+  type: decimal_string
+  default: '3233'
+  variants:
+  - '3233'
+  - '15'
+  - '1'
+- name: RSA_E_DEC
+  type: decimal_string
+  default: '17'
+  variants:
+  - '17'
+  - '3'
+  - '65537'
+- name: RSA_D_DEC
+  type: decimal_string
+  default: '2753'
+  variants:
+  - '2753'
+  - '1'
+  - '0'
+- name: MD_ALG
+  type: digest_selector
+  default: EVP_sha256()
+  variants:
+  - EVP_sha256()
+  - EVP_sha384()
+  - EVP_sha512()
+- name: MESSAGE_BYTES
+  type: byte_array
+  default: '"Test\0"'
+- name: MESSAGE_LEN
+  type: integer
+  default: 5
+- name: SIG_BUF_LEN
+  type: integer
+  default: 512
+required_observables:
+- key_setup_return_code
+- init_return_code
+- sign_return_code
+- asan_or_ubsan_signal
+- process_exit_code
+safe_behavior:
+  condition: RSA_set0_key != 1 OR EVP_DigestSignInit != 1 OR EVP_DigestSign != 1 with
+    no crash
+  description: Tiny or invalid RSA key signing is rejected safely without crash
+bug_behavior:
+  condition: ASAN/UBSAN crash or SEGV during key setup or signing
+  description: Invalid RSA key material reaches an unsafe internal dereference
+triage_behavior:
+  condition: EVP_DigestSign returns 1 with invalid/tiny RSA key material
+  description: Invalid RSA signing succeeded; manual review required
+notes:
+- strict_reproduction requires the affected openssl-SNAP-20230831 build
+- current OpenSSL versions may reject at key setup, sign init, or sign call
+- migration target: PSA psa_import_key + psa_sign_hash with invalid/tiny RSA key material
+status: cross_generated_from_llm_adapter
+source_template_id: RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF
+cross_library:
+  mbedtls:
+    target_api: psa_sign_hash
+    target_template: tmpl_mbedtls.c
+    adapter_source: recipe_slot_bindings
+    applicability: generate
+    preserved_features:
+    - same operation family: RSA signing
+    - same rejection oracle: invalid or tiny RSA private key must not sign
+    - PSA exposes key import and signing through psa_import_key and psa_sign_hash
+    - safe rejection can occur at import or signing time
+    - return code and crash/sanitizer signals are observable
+    - self-contained single-process harness feasible
+    lost_or_weakened_features:
+    - PSA expects structured key material rather than OpenSSL RSA object ownership
+    - PSA may reject invalid key material during import before reaching sign dispatch
+    - exact OpenSSL BN_is_negative internal path is not preserved
+    - RSA key encoding differs from RSA_set0_key with BIGNUM components
+    llm_status: ok
+    adapter_recipe: adapter_recipes/mbedtls/psa_sign_hash.rsa_invalid_key_sign_rejection_oracle.yaml
+    slot_bindings:
+      key_type: PSA_KEY_TYPE_RSA_KEY_PAIR
+      key_bits: '32'
+      key_algorithm: PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH)
+      key_usage_flags: PSA_KEY_USAGE_SIGN_HASH
+      rsa_key_der: default_tiny_rsa_private_key_der
+      hash_alg: PSA_ALG_SHA_256
+      hash_len: '32'
+      sig_len: '512'
+mutation_points:
+- name: RSA_N_DEC
+  placeholder: '[RSA_N_DEC]'
+  type: string
+  default: '3233'
+  values:
+  - '3233'
+  - '15'
+  priority: high
+- name: RSA_E_DEC
+  placeholder: '[RSA_E_DEC]'
+  type: string
+  default: '17'
+  values:
+  - '17'
+  - '3'
+  priority: high
+- name: RSA_D_DEC
+  placeholder: '[RSA_D_DEC]'
+  type: string
+  default: '2753'
+  values:
+  - '2753'
+  - '1'
+  priority: high
+- name: MD_ALG
+  placeholder: '[MD_ALG]'
+  type: enum
+  default: EVP_sha256()
+  values:
+  - EVP_sha256()
+  - EVP_sha384()
+  priority: medium
+- name: MESSAGE_BYTES
+  placeholder: '[MESSAGE_BYTES]'
+  type: byte_array
+  default: '"Test\0"'
+  values:
+  - '"Test\0"'
+  - '"rsa-invalid-key\0"'
+  priority: low
+- name: MESSAGE_LEN
+  placeholder: '[MESSAGE_LEN]'
+  type: int
+  default: 5
+  values:
+  - 5
+  - 17
+  priority: low
+- name: SIG_BUF_LEN
+  placeholder: '[SIG_BUF_LEN]'
+  type: int
+  default: 512
+  values:
+  - 256
+  - 512
+  priority: low
+- name: KEY_BITS
+  placeholder: '[KEY_BITS]'
+  type: int
+  default: 32
+  values:
+  - 32
+  - 64
+  priority: high
+- name: HASH_ALG
+  placeholder: '[HASH_ALG]'
+  type: enum
+  default: PSA_ALG_SHA_256
+  values:
+  - PSA_ALG_SHA_256
+  - PSA_ALG_SHA_384
+  priority: medium
+- name: HASH_LEN
+  placeholder: '[HASH_LEN]'
+  type: int
+  default: 32
+  values:
+  - 32
+  - 48
+  priority: medium
+- name: SIG_LEN
+  placeholder: '[SIG_LEN]'
+  type: int
+  default: 512
+  values:
+  - 256
+  - 512
+  priority: low
+generation_policy:
+  max_cases: 32
+  priority:
+  - RSA_N_DEC
+  - RSA_E_DEC
+  - RSA_D_DEC
+  - KEY_BITS
+  - MD_ALG
+  - HASH_ALG
+  - HASH_LEN

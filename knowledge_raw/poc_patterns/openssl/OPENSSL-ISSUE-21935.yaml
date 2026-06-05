@@ -1,0 +1,121 @@
+pattern_id: OPENSSL-ISSUE-21935
+template_id: RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF
+source_issue: 21935
+source_library: openssl
+source_component: PKEY/RSA
+source_url: https://github.com/openssl/openssl/issues/21935
+affected_version: "openssl-SNAP-20230831"
+state: closed
+
+source_api:
+  - EVP_PKEY_new
+  - RSA_new
+  - RSA_set0_key
+  - EVP_PKEY_assign_RSA
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit
+  - EVP_DigestSign
+
+vulnerability_class: rsa_invalid_key_sign_rejection
+trigger_behavior: NULL_DEREFERENCE_CRASH
+poc_type: C_API
+artifact_class: C_rag_seed_to_c_candidate
+quality: HQ
+strict_reproduction: false
+
+root_cause: >
+  A tiny or invalid RSA private key is constructed and assigned into an EVP_PKEY,
+  then passed into the EVP signing path. The reported affected snapshot crashed
+  through a NULL dereference in BIGNUM handling (`BN_is_negative`) while processing
+  invalid RSA key material during signing. A fixed library should reject the
+  invalid/tiny key at key setup, signing initialization, or signing time without
+  crashing and without producing a successful signature.
+root_cause_confidence: medium
+root_cause_source: issue_report_and_rag_seed_artifact
+
+trigger:
+  sequence:
+    - EVP_PKEY_new()
+    - RSA_new()
+    - BN_dec2bn() for tiny RSA n/e/d values
+    - RSA_set0_key(rsa, n, e, d)
+    - EVP_PKEY_assign_RSA(pkey, rsa)
+    - EVP_MD_CTX_new()
+    - EVP_DigestSignInit(mdctx, NULL, EVP_sha256(), NULL, pkey)
+    - EVP_DigestSign(mdctx, sig, &sig_len, message, message_len)
+  trigger_condition: >
+    The signing path receives an RSA EVP_PKEY backed by tiny/invalid private key
+    material. The key is syntactically constructable enough to enter the EVP path,
+    but must not crash or produce a successful signature.
+  observed_on_affected: NULL_DEREFERENCE_CRASH / SEGV
+  observed_on_current: controlled success or error path in the RAG-seed harness; strict reproduction not established
+
+buggy_behavior:
+  signal: SEGV / NULL_DEREFERENCE_CRASH
+  affected_version: openssl-SNAP-20230831
+  observable: crash or sanitizer signal during EVP_DigestSignInit or EVP_DigestSign
+  oracle: ASAN/UBSAN/SEGV/exit139
+
+safe_behavior:
+  signal: safe error return
+  current_version_note: >
+    On current OpenSSL builds the key may be rejected at setup, DigestSignInit, or
+    DigestSign. Any error return without crash is safe. A successful signature from
+    invalid/tiny RSA material is a triage signal.
+  oracle: EVP_DigestSignInit != 1 OR EVP_DigestSign != 1 AND no crash signal
+
+mutation_points:
+  - name: RSA_N_DEC
+    description: Decimal modulus string used for the RSA key
+    priority: high
+  - name: RSA_E_DEC
+    description: Decimal public exponent string used for the RSA key
+    priority: high
+  - name: RSA_D_DEC
+    description: Decimal private exponent string used for the RSA key
+    priority: high
+  - name: MD_ALG
+    description: Digest algorithm passed to EVP_DigestSignInit
+    priority: medium
+  - name: MESSAGE_LEN
+    description: Message size used for the signing attempt
+    priority: medium
+  - name: SIG_BUF_LEN
+    description: Signature buffer size
+    priority: low
+
+oracle:
+  oracle_type: crash_sanitizer_or_safe_error_oracle
+  bug_signals:
+    - ASAN/UBSAN crash during EVP_DigestSignInit or EVP_DigestSign
+    - SEGV / exit code 139
+  safe_signals:
+    - RSA_set0_key returns != 1
+    - EVP_DigestSignInit returns != 1
+    - EVP_DigestSign returns != 1
+  triage_signals:
+    - EVP_DigestSign returns 1 with tiny/invalid RSA private key
+
+original_reproduction:
+  type: standalone_c_api
+  requires_external_input: false
+  requires_server_client: false
+  requires_tls_handshake: false
+  independent_c_poc: true
+
+migration_applicability:
+  status: applicable
+  reason: >
+    The core vulnerability path is a signing operation with invalid/tiny RSA
+    private key material. PSA Crypto exposes RSA key import and psa_sign_hash.
+    A migrated mbedTLS harness can import deliberately invalid or undersized RSA
+    private key material and attempt psa_sign_hash. Safe behavior is rejection at
+    import or signing time without crash; a crash or successful signature is a bug
+    or triage signal.
+
+references:
+  issue_url: https://github.com/openssl/openssl/issues/21935
+  artifact_files:
+    - datasets/openssl/poc_artifacts/issue_21935/metadata.json
+    - datasets/openssl/poc_artifacts/issue_21935/poc.c
+    - datasets/openssl/poc_artifacts/issue_21935/README.md

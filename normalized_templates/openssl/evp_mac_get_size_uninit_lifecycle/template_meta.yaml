@@ -1,0 +1,78 @@
+template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE
+pattern_id: OPENSSL-ISSUE-22842
+source_library: openssl
+source_component: EVP/MAC
+harness_family: object_state_lifecycle
+oracle_type: mac_context_size_lifecycle_oracle
+
+source_api:
+  - EVP_MAC_fetch
+  - EVP_MAC_CTX_new
+  - EVP_MAC_CTX_get_mac_size
+  - EVP_MAC_init
+  - EVP_MAC_CTX_free
+  - EVP_MAC_free
+
+vulnerability_class: mac_context_uninitialized_state_query
+
+description: >
+  Template for testing MAC context lifecycle size behavior. STATE_A calls
+  EVP_MAC_CTX_get_mac_size before EVP_MAC_init to model the issue_22842
+  uninitialized provider algctx crash path. STATE_B initializes HMAC-SHA256 and
+  expects the initialized size query to return 32. The migration is an object
+  lifecycle semantic projection, not a strict equivalent reproduction of
+  OpenSSL provider algctx internals.
+
+mask_slots:
+  - name: MAC_NAME
+    type: string
+    default: HMAC
+    variants:
+      - HMAC
+  - name: DIGEST_NAME
+    type: string
+    default: SHA256
+    variants:
+      - SHA256
+  - name: KEY_BYTES
+    type: byte_array
+    default: '"rag-seed-hmac-key"'
+    variants:
+      - '"rag-seed-hmac-key"'
+  - name: KEY_LEN
+    type: integer
+    default: 17
+    variants:
+      - 17
+  - name: EXPECTED_MAC_SIZE
+    type: integer
+    default: 32
+    variants:
+      - 32
+
+required_observables:
+  - pre_setup_size_query_result
+  - init_return_code
+  - post_setup_size_query_result
+  - crash_or_sanitizer_signal
+  - process_exit_code
+
+safe_behavior:
+  condition: pre-init size query does not crash and post-init size equals expected MAC size
+  description: MAC context lifecycle safely handles pre-init state query and initialized size query
+
+bug_behavior:
+  condition: ASAN/UBSAN crash or SEGV during pre-init EVP_MAC_CTX_get_mac_size
+  description: Uninitialized MAC context state query reaches unsafe NULL provider algctx dereference
+
+triage_behavior:
+  condition: pre-init size is nonzero, post-init size mismatch, or init fails before observation
+  description: MAC context lifecycle behavior differs from expected projection and needs manual review
+
+semantic_projection:
+  kind: object_lifecycle_semantic_projection
+  strict_equivalence: false
+  note: >
+    The mbedTLS target models context setup/use lifecycle with md/HMAC APIs. It
+    does not reproduce OpenSSL provider algctx internal layout or the exact NULL
+    dereference path from issue_22842.

@@ -1,0 +1,115 @@
+pattern_id: OPENSSL-ISSUE-22842
+template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE
+source_issue: 22842
+source_library: openssl
+source_component: EVP/MAC
+source_url: https://github.com/openssl/openssl/issues/22842
+affected_version: "3.1.1"
+state: closed
+
+source_api:
+  - EVP_MAC_fetch
+  - EVP_MAC_CTX_new
+  - EVP_MAC_CTX_get_mac_size
+  - EVP_MAC_init
+  - EVP_MAC_CTX_free
+  - EVP_MAC_free
+
+vulnerability_class: mac_context_uninitialized_state_query
+trigger_behavior: NULL_DEREFERENCE_CRASH
+poc_type: C_API
+artifact_class: C_rag_seed_to_c_candidate
+quality: HQ
+strict_reproduction: false
+
+root_cause: >
+  EVP_MAC_CTX_get_mac_size could dereference a NULL provider MAC algctx/cipher
+  state when called on an EVP_MAC_CTX before EVP_MAC_init established the MAC
+  operation state. A safe implementation must handle size/state queries before
+  initialization without crashing, and must return the expected MAC size after
+  a successful HMAC-SHA256 initialization.
+root_cause_confidence: medium
+root_cause_source: metadata_and_rag_seed_artifact
+
+trigger:
+  sequence:
+    - EVP_MAC_fetch(NULL, "HMAC", NULL)
+    - EVP_MAC_CTX_new(mac)
+    - STATE_A: EVP_MAC_CTX_get_mac_size(ctx) before EVP_MAC_init
+    - EVP_MAC_init(ctx, key, key_len, digest=SHA256)
+    - STATE_B: EVP_MAC_CTX_get_mac_size(ctx) after init
+  trigger_condition: >
+    The source context is allocated but not initialized when the first size query
+    runs. The post-init query is a control state proving the same context can
+    return the expected HMAC size after setup.
+  observed_on_affected: NULL_DEREFERENCE_CRASH / SEGV
+  observed_on_current: RAG-seed candidate only exercised post-init success; strict reproduction not established
+
+buggy_behavior:
+  signal: SEGV / NULL_DEREFERENCE_CRASH
+  affected_version: OpenSSL 3.1.1
+  observable: crash or sanitizer signal during pre-init EVP_MAC_CTX_get_mac_size
+  oracle: ASAN/UBSAN/SEGV/exit139
+
+safe_behavior:
+  signal: safe state query or safe rejection
+  current_version_note: >
+    Current OpenSSL may return 0 for pre-init size query and 32 after HMAC-SHA256
+    initialization. The migration preserves the object lifecycle property, not
+    the provider algctx internal dereference.
+  oracle: no crash AND pre-init query safe AND post-init size equals expected MAC size
+
+mutation_points:
+  - name: MAC_NAME
+    description: MAC implementation fetched through EVP_MAC_fetch
+    priority: high
+  - name: DIGEST_NAME
+    description: digest name supplied through OSSL_MAC_PARAM_DIGEST
+    priority: high
+  - name: KEY_BYTES
+    description: HMAC key bytes
+    priority: medium
+  - name: KEY_LEN
+    description: HMAC key length
+    priority: medium
+  - name: EXPECTED_MAC_SIZE
+    description: expected initialized HMAC output size
+    priority: high
+
+oracle:
+  oracle_type: mac_context_size_lifecycle_oracle
+  bug_signals:
+    - ASAN/UBSAN crash during pre-init EVP_MAC_CTX_get_mac_size
+    - SEGV / exit code 139
+  safe_signals:
+    - pre-init size query completes without crash
+    - post-init HMAC-SHA256 size query returns 32
+  triage_signals:
+    - pre-init size is nonzero
+    - post-init size differs from expected MAC size
+    - init fails before post-init size query
+
+original_reproduction:
+  type: standalone_c_api
+  requires_external_input: false
+  requires_server_client: false
+  requires_tls_handshake: false
+  independent_c_poc: true
+
+migration_applicability:
+  status: applicable_with_semantic_projection
+  reason: >
+    mbedTLS legacy md/HMAC APIs expose a context lifecycle through
+    mbedtls_md_init, mbedtls_md_setup, mbedtls_md_hmac_starts, and
+    mbedtls_md_free. The migrated harness tests safe rejection before setup and
+    expected size behavior after setup. This is an object lifecycle semantic
+    projection and is not a strict reproduction of OpenSSL provider algctx NULL
+    dereference internals.
+
+references:
+  issue_url: https://github.com/openssl/openssl/issues/22842
+  artifact_files:
+    - datasets/openssl/poc_artifacts/issue_22842/metadata.json
+    - datasets/openssl/poc_artifacts/issue_22842/poc.c
+    - datasets/openssl/poc_artifacts/issue_22842/run.log
+    - datasets/openssl/poc_artifacts/issue_22842/valgrind.log

@@ -1,0 +1,87 @@
+source_pattern_id: OPENSSL-ISSUE-22842
+template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE
+source_library: openssl
+source_api: EVP_MAC_CTX_get_mac_size
+source_component: EVP/MAC
+vulnerability_class: mac_context_uninitialized_state_query
+oracle_type: mac_context_size_lifecycle_oracle
+
+migration_summary:
+  overall_decision: generate
+  primary_candidate: psa_mac_sign_setup
+  primary_score: 82
+  primary_harness_family: object_state_lifecycle
+  primary_oracle: mac_context_size_lifecycle_oracle
+
+target_candidates:
+  - target_library: mbedtls
+    target_api: psa_mac_sign_setup
+    target_version: "PSA Crypto"
+    decision: generate
+    migration_applicability: applicable_with_semantic_projection
+    scores:
+      operation_family: 85
+      function_behavior: 85
+      parameter_structure: 80
+      vulnerability_path: 70
+      harness_feasibility: 90
+    final_score: 82
+    preserved_features:
+      - PSA MAC operation lifecycle represents uninitialized vs initialized operation state
+      - pre-setup psa_mac_update can be observed as safe rejection without crash
+      - initialized psa_mac_sign_setup -> psa_mac_update -> psa_mac_sign_finish provides control state
+      - return code and crash/sanitizer signals are observable
+    lost_or_weakened_features:
+      - PSA operation API does not expose an EVP_MAC_CTX_get_mac_size equivalent
+      - exact OpenSSL EVP_MAC_CTX_get_mac_size internal dereference is not preserved
+      - pre-setup operation is psa_mac_update, not a direct get-size call
+    reason: >
+      PSA MAC is the valid mbedTLS 4.1.0 MAC lifecycle path. The migrated
+      harness uses one operation for pre-setup safe rejection and a separate
+      initialized operation for setup/update/finish success. This preserves the
+      object lifecycle oracle without relying on legacy md/HMAC setup.
+
+  - target_library: mbedtls
+    target_api: mbedtls_md_hmac_starts
+    target_version: "4.1.0 legacy md layer"
+    decision: deprecated_or_inapplicable
+    migration_applicability: not_recommended_for_4_1_0
+    scores:
+      operation_family: 70
+      function_behavior: 45
+      parameter_structure: 55
+      vulnerability_path: 35
+      harness_feasibility: 40
+    final_score: 49
+    preserved_features:
+      - legacy md/HMAC has context-like API shape
+    lost_or_weakened_features:
+      - mbedTLS 4.1.0 md_setup requires hmac=0
+      - HMAC lifecycle should use PSA MAC APIs
+      - md_setup(hmac=1) returns setup failure and causes migration_needs_triage
+    reason: >
+      Deprecated for issue_22842 on mbedTLS 4.1.0 because
+      mbedtls_md_setup(..., hmac=1) is not an applicable HMAC path. Keep the
+      recipe for historical comparison only; use PSA MAC as the primary target.
+
+  - target_library: mbedtls
+    target_api: mbedtls_md_get_size
+    target_version: "3.x/4.x legacy md layer"
+    decision: needs_llm_review
+    migration_applicability: weak_semantic_projection
+    scores:
+      operation_family: 75
+      function_behavior: 55
+      parameter_structure: 55
+      vulnerability_path: 35
+      harness_feasibility: 90
+    final_score: 62
+    preserved_features:
+      - exposes initialized digest/MAC size as a return value
+    lost_or_weakened_features:
+      - no context state transition
+      - cannot represent pre-init MAC context query
+    reason: >
+      mbedtls_md_get_size alone is too weak because it accepts md info rather
+      than a MAC context. Use only as an auxiliary observer in the HMAC lifecycle
+      renderer.

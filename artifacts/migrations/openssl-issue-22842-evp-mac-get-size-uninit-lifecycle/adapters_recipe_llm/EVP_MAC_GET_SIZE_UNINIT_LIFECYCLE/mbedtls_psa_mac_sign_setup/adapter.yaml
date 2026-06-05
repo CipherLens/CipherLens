@@ -1,0 +1,37 @@
+source_pattern_id: null
+template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE
+harness_family: object_state_lifecycle
+oracle_type: mac_context_size_lifecycle_oracle
+target_library: mbedtls
+target_api: psa_mac_sign_setup
+applicability: generate
+adapter_recipe: adapter_recipes/mbedtls/psa_mac_sign_setup.mac_context_size_lifecycle_oracle.yaml
+evidence_file: migration_candidates/openssl/evp_mac_get_size_uninit_lifecycle/candidates_with_evidence.yaml
+slot_bindings:
+  key_type: PSA_KEY_TYPE_HMAC
+  key_usage_flags: PSA_KEY_USAGE_SIGN_MESSAGE
+  key_algorithm: PSA_ALG_HMAC(PSA_ALG_SHA_256)
+  key_bytes: '"rag-seed-hmac-key"'
+  key_len: '17'
+  message_bytes: '"mac lifecycle message"'
+  message_len: '21'
+  mac_len: '32'
+preserved_features:
+- PSA MAC operation lifecycle represents pre-setup and initialized operation states
+- pre-setup psa_mac_update return code observes safe rejection
+- psa_mac_sign_setup plus psa_mac_update plus psa_mac_sign_finish observes initialized
+  behavior
+- crash/sanitizer signals remain observable
+lost_or_weakened_features:
+- PSA MAC operation does not expose EVP_MAC_CTX_get_mac_size
+- exact OpenSSL EVP_MAC_CTX_get_mac_size NULL dereference path is not preserved
+- this validates lifecycle safety rather than provider-internal structure
+_adapter_mode: recipe_slot_filling
+_ignored_disallowed_fields: []
+_ignored_non_slot_fields: []
+_llm_raw_preview: "{\n  \"slot_bindings\": {\n    \"key_type\": \"PSA_KEY_TYPE_HMAC\"\
+  ,\n    \"key_usage_flags\": \"PSA_KEY_USAGE_SIGN_MESSAGE\",\n    \"key_algorithm\"\
+  : \"PSA_ALG_HMAC(PSA_ALG_SHA_256)\",\n    \"key_bytes\": \"\\\"rag-seed-hmac-key\\\
+  \"\",\n    \"key_len\": \"17\",\n    \"message_bytes\": \"\\\"mac lifecycle message\\\
+  \"\",\n    \"message_len\": \"21\",\n    \"mac_len\": \"32\"\n  }\n}"
+_llm_status: ok
