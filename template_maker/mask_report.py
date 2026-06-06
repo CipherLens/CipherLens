@@ -1,7 +1,7 @@
 import argparse
 import re
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, Iterable, List
 
 import yaml
 
@@ -17,6 +17,85 @@ IGNORED_BRACKET_TAGS = {
     "[DIFF]",
     "[FAIL]",
     "[PASS]",
+}
+
+
+FAMILY_ROLE_KEYWORDS = {
+    "buffer_canary_boundary": {
+        "input_construction": [
+            "canary",
+            "buffer",
+            "buf",
+            "BUFLEN",
+            "CANARY_SIZE",
+            "prepare_output_with_canary",
+            "memset",
+        ],
+        "oracle": [
+            "canary_corrupted",
+            "AddressSanitizer",
+            "out-of-bounds",
+        ],
+    },
+    "der_pointer_consumption": {
+        "input_construction": [
+            "base_hex",
+            "TRAILING_GARBAGE",
+            "build_der_with_trailing_garbage",
+            "select_base_der_hex",
+        ],
+        "oracle": [
+            "consumed_len",
+            "der_len",
+            "trailing garbage",
+            "end != p + len",
+            "p + len",
+        ],
+    },
+    "x509_asn1_inner_boundary": {
+        "input_construction": [
+            "der",
+            "DER",
+            "ASN1",
+            "X509",
+            "certificate",
+        ],
+        "oracle": [
+            "ret",
+            "ASN1",
+            "rejected",
+            "out_of_data",
+        ],
+    },
+    "return_code_outlen_semantic": {
+        "input_construction": [
+            "out",
+            "out_len",
+            "output",
+            "padding",
+            "final",
+        ],
+        "oracle": [
+            "ret",
+            "out_len",
+            "output length",
+            "error path",
+        ],
+    },
+    "null_deref_dispatch": {
+        "input_construction": [
+            "type",
+            "opaque",
+            "dispatch",
+            "context",
+        ],
+        "oracle": [
+            "null",
+            "NULL",
+            "segmentation",
+            "AddressSanitizer",
+        ],
+    },
 }
 
 
@@ -122,6 +201,58 @@ def build_poc_pattern_rag_context(poc_pattern: Dict[str, Any]) -> str:
     return "\n".join(parts)
 
 
+def add_unique(out: List[str], value: Any) -> None:
+    text = str(value or "").strip()
+    if text and text not in out:
+        out.append(text)
+
+
+def collect_trigger_apis(meta: Dict[str, Any], poc_pattern: Dict[str, Any]) -> List[str]:
+    apis: List[str] = []
+
+    source_api = meta.get("source_api")
+    if isinstance(source_api, dict):
+        add_unique(apis, source_api.get("function"))
+    elif isinstance(source_api, str):
+        add_unique(apis, source_api)
+
+    add_unique(apis, meta.get("source_api_name"))
+    add_unique(apis, meta.get("poc_source", {}).get("api"))
+
+    for api in meta.get("internal_apis", []) or []:
+        add_unique(apis, api)
+
+    pattern_source = poc_pattern.get("source", {}) or {}
+    add_unique(apis, pattern_source.get("api"))
+    for key in ["related_apis", "internal_functions"]:
+        for api in pattern_source.get(key, []) or []:
+            add_unique(apis, api)
+
+    library = poc_pattern.get("library", {}) or {}
+    for api in library.get("affected_api", []) or []:
+        add_unique(apis, api)
+
+    return apis
+
+
+def get_harness_family(meta: Dict[str, Any], poc_pattern: Dict[str, Any]) -> str:
+    return str(
+        meta.get("harness_family")
+        or poc_pattern.get("harness_family")
+        or poc_pattern.get("classification", {}).get("harness_family")
+        or ""
+    )
+
+
+def family_keywords(harness_family: str, role: str) -> List[str]:
+    return FAMILY_ROLE_KEYWORDS.get(harness_family, {}).get(role, [])
+
+
+def contains_any_keyword(text: str, keywords: Iterable[str]) -> bool:
+    lower = text.lower()
+    return any(str(k).lower() in lower for k in keywords)
+
+
 def remove_comments(text: str) -> str:
     text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
     text = re.sub(r"//.*", "", text)
@@ -187,17 +318,32 @@ def extract_defines(text: str) -> Dict[str, str]:
     return defines
 
 
-def collect_statements(text: str) -> List[str]:
+def collect_statement_entries(text: str) -> List[Dict[str, Any]]:
     """
-    Lightweight C statement collector.
-    It is not a full C parser, but keeps multiline call statements together.
+    Lightweight C statement collector with source line ranges.
+    It is not a full C parser, but keeps multiline call statements together
+    and avoids merging function/block braces into the next statement.
     """
     cleaned = remove_comments(text)
-    stmts = []
-    buf = []
+    entries: List[Dict[str, Any]] = []
+    buf: List[str] = []
+    buf_start_line = 1
     paren_depth = 0
 
-    for line in cleaned.splitlines():
+    def flush(line_end: int) -> None:
+        nonlocal buf, buf_start_line, paren_depth
+        stmt = " ".join(part for part in buf if part).strip()
+        if stmt:
+            entries.append({
+                "code": stmt,
+                "line_start": buf_start_line,
+                "line_end": line_end,
+            })
+        buf = []
+        buf_start_line = line_end + 1
+        paren_depth = 0
+
+    for line_no, line in enumerate(cleaned.splitlines(), start=1):
         stripped = line.strip()
         if not stripped:
             continue
@@ -205,6 +351,16 @@ def collect_statements(text: str) -> List[str]:
         # Skip preprocessor lines here; they are handled separately.
         if stripped.startswith("#"):
             continue
+
+        if stripped == "}":
+            if buf:
+                flush(line_no - 1)
+            entries.append({"code": stripped, "line_start": line_no, "line_end": line_no})
+            buf_start_line = line_no + 1
+            continue
+
+        if not buf:
+            buf_start_line = line_no
 
         buf.append(stripped)
 
@@ -214,17 +370,35 @@ def collect_statements(text: str) -> List[str]:
             elif ch == ")":
                 paren_depth = max(0, paren_depth - 1)
 
+        if paren_depth == 0 and stripped.endswith("{"):
+            flush(line_no)
+            continue
+
         if ";" in stripped and paren_depth == 0:
             stmt = " ".join(buf)
             parts = stmt.split(";")
+            current_start = buf_start_line
             for part in parts[:-1]:
                 p = part.strip()
                 if p:
-                    stmts.append(p + ";")
+                    entries.append({
+                        "code": p + ";",
+                        "line_start": current_start,
+                        "line_end": line_no,
+                    })
+                    current_start = line_no
             tail = parts[-1].strip()
             buf = [tail] if tail else []
+            buf_start_line = line_no if tail else line_no + 1
 
-    return stmts
+    if buf:
+        flush(len(cleaned.splitlines()))
+
+    return entries
+
+
+def collect_statements(text: str) -> List[str]:
+    return [entry["code"] for entry in collect_statement_entries(text)]
 
 
 def extract_calls_from_statement(stmt: str) -> List[Dict[str, Any]]:
@@ -251,14 +425,21 @@ def extract_calls_from_statement(stmt: str) -> List[Dict[str, Any]]:
 
 def extract_all_calls(text: str) -> List[Dict[str, Any]]:
     calls = []
-    for idx, stmt in enumerate(collect_statements(text)):
+    for idx, entry in enumerate(collect_statement_entries(text)):
+        stmt = entry["code"]
         for c in extract_calls_from_statement(stmt):
             c["order"] = idx
+            c["line_start"] = entry.get("line_start")
+            c["line_end"] = entry.get("line_end")
             calls.append(c)
     return calls
 
 
-def classify_statement_role(stmt: str, trigger_api: str) -> str:
+def classify_statement_role(
+    stmt: str,
+    trigger_apis: Iterable[str],
+    harness_family: str = "",
+) -> str:
     s = stmt
     code_only = strip_string_literals(s)
 
@@ -271,6 +452,18 @@ def classify_statement_role(stmt: str, trigger_api: str) -> str:
     ]) or any(x in s for x in ["[BUG]", "[OK]"]):
         return "oracle"
 
+    for api in trigger_apis:
+        if not api or not re.search(rf"\b{re.escape(api)}\s*\(", code_only):
+            continue
+        # Function prototypes/declarations mention trigger APIs but do not execute them.
+        if code_only.strip().endswith(";") and "ret" not in code_only and "=" not in code_only:
+            return "other"
+        return "trigger_call"
+
+    if contains_any_keyword(code_only, family_keywords(harness_family, "oracle")):
+        if any(x in code_only for x in ["if", "return", "[BUG]", "[OK]"]):
+            return "oracle"
+
     if any(x in code_only for x in [
         "prepare_output_with_canary",
         "mbedtls_mpi_lset",
@@ -280,15 +473,13 @@ def classify_statement_role(stmt: str, trigger_api: str) -> str:
         "BN_hex2bn",
         "BN_dec2bn",
         "Botan::BigInt",
-    ]):
+    ]) or contains_any_keyword(code_only, family_keywords(harness_family, "input_construction")):
         return "input_construction"
-
-    if trigger_api and trigger_api in code_only:
-        return "trigger_call"
 
     if any(x in code_only for x in [
         "mbedtls_mpi_init",
         "mbedtls_pk_init",
+        "mbedtls_rsa_init",
         "BN_new",
         "psa_crypto_init",
     ]):
@@ -297,6 +488,7 @@ def classify_statement_role(stmt: str, trigger_api: str) -> str:
     if any(x in code_only for x in [
         "mbedtls_mpi_free",
         "mbedtls_pk_free",
+        "mbedtls_rsa_free",
         "BN_free",
         "free(",
         "cleanup",
@@ -348,7 +540,12 @@ def build_placeholder_map(meta: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
     return result
 
 
-def build_argument_level(masked: str, meta: Dict[str, Any], trigger_api: str) -> List[Dict[str, Any]]:
+def build_argument_level(
+    masked: str,
+    meta: Dict[str, Any],
+    trigger_apis: Iterable[str],
+    harness_family: str,
+) -> List[Dict[str, Any]]:
     placeholder_info = build_placeholder_map(meta)
     calls = extract_all_calls(masked)
     out = []
@@ -358,7 +555,7 @@ def build_argument_level(masked: str, meta: Dict[str, Any], trigger_api: str) ->
         if not phs:
             continue
 
-        role = classify_statement_role(call["statement"], trigger_api)
+        role = classify_statement_role(call["statement"], trigger_apis, harness_family)
 
         for ph in phs:
             out.append({
@@ -369,13 +566,19 @@ def build_argument_level(masked: str, meta: Dict[str, Any], trigger_api: str) ->
                 "mutation_point": placeholder_info.get(ph, {}),
                 "ast_kind": "call_expression_or_argument",
                 "mask_level": "api_argument_level" if role in {"trigger_call", "input_construction"} else "value_level",
+                "line_start": call.get("line_start"),
+                "line_end": call.get("line_end"),
             })
 
     return out
 
 
-def build_roles(masked: str, trigger_api: str) -> Dict[str, List[Dict[str, Any]]]:
-    stmts = collect_statements(masked)
+def build_roles(
+    masked: str,
+    trigger_apis: Iterable[str],
+    harness_family: str,
+) -> Dict[str, List[Dict[str, Any]]]:
+    entries = collect_statement_entries(masked)
 
     roles: Dict[str, List[Dict[str, Any]]] = {
         "init": [],
@@ -386,17 +589,27 @@ def build_roles(masked: str, trigger_api: str) -> Dict[str, List[Dict[str, Any]]
         "other_context": [],
     }
 
-    for idx, stmt in enumerate(stmts):
-        role = classify_statement_role(stmt, trigger_api)
+    for idx, stmt_entry in enumerate(entries):
+        stmt = stmt_entry["code"]
+        role = classify_statement_role(stmt, trigger_apis, harness_family)
         entry = {
             "order": idx,
             "code": stmt,
             "placeholders": extract_placeholders(stmt),
+            "line_start": stmt_entry.get("line_start"),
+            "line_end": stmt_entry.get("line_end"),
         }
 
         if role == "other":
             # Only keep context statements that contain placeholders or crypto APIs.
-            if entry["placeholders"] or "mbedtls_" in stmt or "BN_" in stmt or "Botan::" in stmt:
+            if (
+                entry["placeholders"]
+                or "mbedtls_" in stmt
+                or "BN_" in stmt
+                or "Botan::" in stmt
+                or contains_any_keyword(stmt, family_keywords(harness_family, "input_construction"))
+                or contains_any_keyword(stmt, family_keywords(harness_family, "oracle"))
+            ):
                 roles["other_context"].append(entry)
         else:
             roles[role].append(entry)
@@ -404,11 +617,18 @@ def build_roles(masked: str, trigger_api: str) -> Dict[str, List[Dict[str, Any]]
     return roles
 
 
-def build_rag_query_context(meta: Dict[str, Any], roles: Dict[str, List[Dict[str, Any]]]) -> str:
+def build_rag_query_context(
+    meta: Dict[str, Any],
+    roles: Dict[str, List[Dict[str, Any]]],
+    trigger_apis: Iterable[str],
+    harness_family: str,
+) -> str:
     parts = []
 
     parts.append(f"template_id: {meta.get('template_id', '')}")
     parts.append(f"api: {meta.get('poc_source', {}).get('api', '')}")
+    parts.append(f"trigger_apis: {list(trigger_apis)}")
+    parts.append(f"harness_family: {harness_family}")
     parts.append(f"operation: {meta.get('operation', {}).get('abstract', '')}")
     parts.append(f"bug_class: {' '.join(meta.get('operation', {}).get('bug_class', []))}")
 
@@ -435,11 +655,13 @@ def generate_report(template_dir: Path) -> Dict[str, Any]:
     original = read_text(poc_path)
     masked = read_text(tmpl_path)
 
-    trigger_api = meta.get("poc_source", {}).get("api", "")
+    trigger_apis = collect_trigger_apis(meta, poc_pattern)
+    trigger_api = trigger_apis[0] if trigger_apis else meta.get("poc_source", {}).get("api", "")
+    harness_family = get_harness_family(meta, poc_pattern)
 
-    roles = build_roles(masked, trigger_api)
+    roles = build_roles(masked, trigger_apis, harness_family)
     macro_level = build_macro_level(original, masked)
-    argument_level = build_argument_level(masked, meta, trigger_api)
+    argument_level = build_argument_level(masked, meta, trigger_apis, harness_family)
 
     report = {
         "template_id": meta.get("template_id", ""),
@@ -447,6 +669,8 @@ def generate_report(template_dir: Path) -> Dict[str, Any]:
         "source_file": meta.get("poc_source", {}).get("file", ""),
         "source_library": meta.get("poc_source", {}).get("library", ""),
         "source_api": trigger_api,
+        "trigger_apis": trigger_apis,
+        "harness_family": harness_family,
         "language": meta.get("language", "c"),
         "masking_design": {
             "mode": "ast_aware_lightweight",
@@ -472,11 +696,14 @@ def generate_report(template_dir: Path) -> Dict[str, Any]:
                 "strategy": "record logical blocks without replacing compilable C blocks",
             },
         },
-        "rag_query_context": build_rag_query_context(meta, roles),
+        "rag_query_context": build_rag_query_context(meta, roles, trigger_apis, harness_family),
         "cross_generation_hints": {
             "semantic_operation": meta.get("operation", {}).get("abstract", ""),
             "api_family": meta.get("operation", {}).get("api_family", ""),
             "bug_class": meta.get("operation", {}).get("bug_class", []),
+            "harness_family": harness_family,
+            "trigger_apis": trigger_apis,
+            "family_context_keywords": FAMILY_ROLE_KEYWORDS.get(harness_family, {}),
             "must_preserve": [
                 "input construction role",
                 "trigger API role",

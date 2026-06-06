@@ -2,6 +2,9 @@ template_id: BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER
 template_name: mbedtls_mpi_write_string negative small-buffer template
 source_api: mbedtls_mpi_write_string
 source_library: mbedtls
+trigger_apis:
+- mbedtls_mpi_write_string
+harness_family: buffer_canary_boundary
 summary:
   method: ast_lite_regex_template_role_aware
   template_dir: normalized_templates/bignum/mpi_write_string
@@ -98,6 +101,7 @@ ast_mask_units:
   reason: Role-aware statement recorded by mask_report role 'init'.
   priority: medium
   order: 10
+  node_type: statement
 - unit_id: ASTLITE-0006
   mask_level: value
   role: input_construction
@@ -107,6 +111,7 @@ ast_mask_units:
   reason: Role-aware statement recorded by mask_report role 'input_construction'.
   priority: medium
   order: 11
+  node_type: statement
 - unit_id: ASTLITE-0007
   mask_level: api_argument
   role: trigger_call
@@ -117,6 +122,7 @@ ast_mask_units:
   reason: Role-aware statement recorded by mask_report role 'trigger_call'.
   priority: medium
   order: 15
+  node_type: statement
 - unit_id: ASTLITE-0008
   mask_level: statement
   role: oracle
@@ -126,6 +132,7 @@ ast_mask_units:
   reason: Role-aware statement recorded by mask_report role 'oracle'.
   priority: medium
   order: 0
+  node_type: statement
 - unit_id: ASTLITE-0009
   mask_level: value
   role: oracle
@@ -136,6 +143,7 @@ ast_mask_units:
   reason: Role-aware statement recorded by mask_report role 'oracle'.
   priority: medium
   order: 25
+  node_type: statement
 - unit_id: ASTLITE-0010
   mask_level: value
   role: oracle
@@ -145,6 +153,7 @@ ast_mask_units:
   reason: Role-aware statement recorded by mask_report role 'oracle'.
   priority: medium
   order: 28
+  node_type: statement
 - unit_id: ASTLITE-0011
   mask_level: statement
   role: cleanup
@@ -154,6 +163,7 @@ ast_mask_units:
   reason: Role-aware statement recorded by mask_report role 'cleanup'.
   priority: medium
   order: 13
+  node_type: statement
 - unit_id: ASTLITE-0012
   mask_level: statement
   role: helper_function
@@ -163,6 +173,7 @@ ast_mask_units:
   reason: Role-aware statement recorded by mask_report role 'other_context'.
   priority: medium
   order: 4
+  node_type: statement
 - unit_id: ASTLITE-0013
   mask_level: statement
   role: helper_function
@@ -172,6 +183,7 @@ ast_mask_units:
   reason: Role-aware statement recorded by mask_report role 'other_context'.
   priority: medium
   order: 12
+  node_type: statement
 - unit_id: ASTLITE-0014
   mask_level: value
   role: mutation_point
@@ -181,6 +193,7 @@ ast_mask_units:
   reason: Macro-level placeholder controls a generated constant or buffer size.
   priority: medium
   macro: BUFLEN
+  node_type: preproc_def
 - unit_id: ASTLITE-0015
   mask_level: value
   role: mutation_point
@@ -190,6 +203,7 @@ ast_mask_units:
   reason: Macro-level placeholder controls a generated constant or buffer size.
   priority: medium
   macro: CANARY_SIZE
+  node_type: preproc_def
 - unit_id: ASTLITE-0016
   mask_level: api_argument
   role: input_construction
@@ -199,6 +213,7 @@ ast_mask_units:
   reason: VALUE must be a negative integer
   priority: high
   api_or_function: mbedtls_mpi_lset
+  node_type: call_expression_or_argument
 - unit_id: ASTLITE-0017
   mask_level: api_argument
   role: trigger_call
@@ -209,6 +224,7 @@ ast_mask_units:
   reason: RADIX must be a valid base between 2 and 36, inclusive
   priority: medium
   api_or_function: mbedtls_mpi_write_string
+  node_type: call_expression_or_argument
 - unit_id: ASTLITE-0018
   mask_level: identifier
   role: mutation_point
@@ -293,6 +309,10 @@ ast_mask_units:
   priority: medium
   function: canary_corrupted
   line: 11
+  line_start: 11
+  line_end: 19
+  node_type: function_definition
+  enclosing_function: canary_corrupted
 - unit_id: ASTLITE-0028
   mask_level: api_argument
   role: oracle
@@ -304,6 +324,10 @@ ast_mask_units:
   reason: BUFLEN must be a non-negative size_t value, including zero and small values
   priority: high
   line: 1
+  line_start: 1
+  line_end: 12
+  enclosing_function: ''
+  node_type: statement
 - unit_id: ASTLITE-0029
   mask_level: api_argument
   role: oracle
@@ -316,6 +340,10 @@ ast_mask_units:
     values
   priority: medium
   line: 1
+  line_start: 1
+  line_end: 12
+  enclosing_function: ''
+  node_type: statement
 - unit_id: ASTLITE-0030
   mask_level: statement
   role: oracle
@@ -327,6 +355,10 @@ ast_mask_units:
   reason: Statement classified as oracle by AST-lite role rules.
   priority: medium
   line: 1
+  line_start: 1
+  line_end: 12
+  enclosing_function: ''
+  node_type: statement
 - unit_id: ASTLITE-0031
   mask_level: function_call
   role: oracle
@@ -339,6 +371,10 @@ ast_mask_units:
   priority: medium
   function: canary_corrupted
   line: 1
+  line_start: 1
+  line_end: 12
+  enclosing_function: ''
+  node_type: call_expression
 - unit_id: ASTLITE-0032
   mask_level: function_call
   role: helper_function
@@ -349,6 +385,10 @@ ast_mask_units:
   priority: medium
   function: main
   line: 21
+  line_start: 21
+  line_end: 22
+  enclosing_function: ''
+  node_type: call_expression
 - unit_id: ASTLITE-0033
   mask_level: type
   role: helper_function
@@ -358,6 +398,10 @@ ast_mask_units:
   reason: Type declaration identified by AST-lite declaration matching.
   priority: medium
   line: 23
+  line_start: 23
+  line_end: 23
+  enclosing_function: ''
+  node_type: statement
 - unit_id: ASTLITE-0034
   mask_level: type
   role: helper_function
@@ -367,6 +411,10 @@ ast_mask_units:
   reason: Type declaration identified by AST-lite declaration matching.
   priority: medium
   line: 24
+  line_start: 24
+  line_end: 24
+  enclosing_function: ''
+  node_type: statement
 - unit_id: ASTLITE-0035
   mask_level: type
   role: helper_function
@@ -376,6 +424,10 @@ ast_mask_units:
   reason: Type declaration identified by AST-lite declaration matching.
   priority: medium
   line: 25
+  line_start: 25
+  line_end: 25
+  enclosing_function: ''
+  node_type: statement
 - unit_id: ASTLITE-0036
   mask_level: type
   role: helper_function
@@ -385,6 +437,10 @@ ast_mask_units:
   reason: Type declaration identified by AST-lite declaration matching.
   priority: medium
   line: 26
+  line_start: 26
+  line_end: 26
+  enclosing_function: ''
+  node_type: statement
 - unit_id: ASTLITE-0037
   mask_level: function_call
   role: input_construction
@@ -395,6 +451,10 @@ ast_mask_units:
   priority: medium
   function: memset
   line: 28
+  line_start: 28
+  line_end: 28
+  enclosing_function: ''
+  node_type: call_expression
 - unit_id: ASTLITE-0038
   mask_level: function_call
   role: input_construction
@@ -405,6 +465,10 @@ ast_mask_units:
   priority: medium
   function: memset
   line: 29
+  line_start: 29
+  line_end: 29
+  enclosing_function: ''
+  node_type: call_expression
 - unit_id: ASTLITE-0039
   mask_level: function_call
   role: input_preparation
@@ -415,6 +479,10 @@ ast_mask_units:
   priority: medium
   function: mbedtls_mpi_init
   line: 31
+  line_start: 31
+  line_end: 31
+  enclosing_function: ''
+  node_type: call_expression
 - unit_id: ASTLITE-0040
   mask_level: value
   role: input_construction
@@ -424,6 +492,10 @@ ast_mask_units:
   reason: VALUE must be a negative integer
   priority: high
   line: 33
+  line_start: 33
+  line_end: 33
+  enclosing_function: ''
+  node_type: statement
 - unit_id: ASTLITE-0041
   mask_level: function_call
   role: input_construction
@@ -434,6 +506,10 @@ ast_mask_units:
   priority: medium
   function: mbedtls_mpi_lset
   line: 33
+  line_start: 33
+  line_end: 33
+  enclosing_function: ''
+  node_type: call_expression
 - unit_id: ASTLITE-0042
   mask_level: function_call
   role: input_construction
@@ -444,6 +520,10 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 35
+  line_start: 35
+  line_end: 35
+  enclosing_function: ''
+  node_type: call_expression
 - unit_id: ASTLITE-0043
   mask_level: statement
   role: cleanup
@@ -453,6 +533,10 @@ ast_mask_units:
   reason: Statement classified as cleanup by AST-lite role rules.
   priority: medium
   line: 36
+  line_start: 36
+  line_end: 36
+  enclosing_function: ''
+  node_type: statement
 - unit_id: ASTLITE-0044
   mask_level: function_call
   role: cleanup
@@ -463,6 +547,10 @@ ast_mask_units:
   priority: medium
   function: mbedtls_mpi_free
   line: 36
+  line_start: 36
+  line_end: 36
+  enclosing_function: ''
+  node_type: call_expression
 - unit_id: ASTLITE-0045
   mask_level: api_argument
   role: trigger_call
@@ -472,6 +560,10 @@ ast_mask_units:
   reason: RADIX must be a valid base between 2 and 36, inclusive
   priority: medium
   line: 40
+  line_start: 40
+  line_end: 46
+  enclosing_function: ''
+  node_type: statement
 - unit_id: ASTLITE-0046
   mask_level: statement
   role: trigger_call
@@ -481,6 +573,10 @@ ast_mask_units:
   reason: Statement invokes the source API trigger.
   priority: high
   line: 40
+  line_start: 40
+  line_end: 46
+  enclosing_function: ''
+  node_type: statement
 - unit_id: ASTLITE-0047
   mask_level: function_call
   role: trigger_call
@@ -491,6 +587,10 @@ ast_mask_units:
   priority: high
   function: mbedtls_mpi_write_string
   line: 40
+  line_start: 40
+  line_end: 46
+  enclosing_function: ''
+  node_type: call_expression
 - unit_id: ASTLITE-0048
   mask_level: function_call
   role: helper_function
@@ -501,6 +601,10 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 48
+  line_start: 48
+  line_end: 48
+  enclosing_function: ''
+  node_type: call_expression
 - unit_id: ASTLITE-0049
   mask_level: function_call
   role: helper_function
@@ -511,6 +615,10 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 49
+  line_start: 49
+  line_end: 49
+  enclosing_function: ''
+  node_type: call_expression
 - unit_id: ASTLITE-0050
   mask_level: function_call
   role: helper_function
@@ -521,6 +629,10 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 50
+  line_start: 50
+  line_end: 50
+  enclosing_function: ''
+  node_type: call_expression
 - unit_id: ASTLITE-0051
   mask_level: type
   role: helper_function
@@ -530,6 +642,10 @@ ast_mask_units:
   reason: Type declaration identified by AST-lite declaration matching.
   priority: medium
   line: 53
+  line_start: 53
+  line_end: 53
+  enclosing_function: ''
+  node_type: statement
 - unit_id: ASTLITE-0052
   mask_level: function_call
   role: helper_function
@@ -540,6 +656,10 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 55
+  line_start: 55
+  line_end: 55
+  enclosing_function: ''
+  node_type: call_expression
 - unit_id: ASTLITE-0053
   mask_level: function_call
   role: helper_function
@@ -550,6 +670,10 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 57
+  line_start: 57
+  line_end: 57
+  enclosing_function: ''
+  node_type: call_expression
 - unit_id: ASTLITE-0054
   mask_level: function_call
   role: helper_function
@@ -560,6 +684,10 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 60
+  line_start: 60
+  line_end: 60
+  enclosing_function: ''
+  node_type: call_expression
 - unit_id: ASTLITE-0055
   mask_level: statement
   role: oracle
@@ -569,6 +697,10 @@ ast_mask_units:
   reason: Statement classified as oracle by AST-lite role rules.
   priority: medium
   line: 62
+  line_start: 62
+  line_end: 62
+  enclosing_function: ''
+  node_type: statement
 - unit_id: ASTLITE-0056
   mask_level: function_call
   role: oracle
@@ -579,6 +711,10 @@ ast_mask_units:
   priority: medium
   function: canary_corrupted
   line: 62
+  line_start: 62
+  line_end: 62
+  enclosing_function: ''
+  node_type: call_expression
 - unit_id: ASTLITE-0057
   mask_level: value
   role: oracle
@@ -588,6 +724,10 @@ ast_mask_units:
   reason: Statement contains a template placeholder.
   priority: medium
   line: 63
+  line_start: 63
+  line_end: 63
+  enclosing_function: ''
+  node_type: statement
 - unit_id: ASTLITE-0058
   mask_level: statement
   role: oracle
@@ -597,6 +737,10 @@ ast_mask_units:
   reason: Statement classified as oracle by AST-lite role rules.
   priority: medium
   line: 63
+  line_start: 63
+  line_end: 63
+  enclosing_function: ''
+  node_type: statement
 - unit_id: ASTLITE-0059
   mask_level: function_call
   role: oracle
@@ -607,6 +751,10 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 63
+  line_start: 63
+  line_end: 63
+  enclosing_function: ''
+  node_type: call_expression
 - unit_id: ASTLITE-0060
   mask_level: value
   role: oracle
@@ -616,6 +764,10 @@ ast_mask_units:
   reason: Statement contains a template placeholder.
   priority: medium
   line: 68
+  line_start: 68
+  line_end: 68
+  enclosing_function: ''
+  node_type: statement
 - unit_id: ASTLITE-0061
   mask_level: statement
   role: oracle
@@ -625,6 +777,10 @@ ast_mask_units:
   reason: Statement classified as oracle by AST-lite role rules.
   priority: medium
   line: 68
+  line_start: 68
+  line_end: 68
+  enclosing_function: ''
+  node_type: statement
 - unit_id: ASTLITE-0062
   mask_level: function_call
   role: oracle
@@ -635,6 +791,10 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 68
+  line_start: 68
+  line_end: 68
+  enclosing_function: ''
+  node_type: call_expression
 role_summary:
   cleanup: 3
   helper_function: 15

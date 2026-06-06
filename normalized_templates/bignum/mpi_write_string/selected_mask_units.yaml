@@ -1,6 +1,9 @@
 template_id: BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER
 template_name: mbedtls_mpi_write_string negative small-buffer template
 source_api: mbedtls_mpi_write_string
+trigger_apis:
+- mbedtls_mpi_write_string
+harness_family: buffer_canary_boundary
 selection_policy:
   method: ast_lite_high_value_mask_unit_selection
   rules:
@@ -8,8 +11,11 @@ selection_policy:
   - Prefer mask_level=value or api_argument units.
   - Always retain trigger_call function_call/statement units.
   - Always retain oracle statement/block units.
-  - Retain input_preparation/helper_function/block only when boundary keywords are
-    present.
+  - Retain input_preparation/helper_function/block only when harness-family context
+    keywords are present.
+  - Use configured preferred_roles as scoring hints for each harness family.
+  - Use configured oracle_variables to prioritize oracle-observable units.
+  - Limit input/helper context to representative high-scoring units.
   - Limit cleanup units to one or two representative statements.
   - Deduplicate repeated code snippets.
   context_keywords:
@@ -17,27 +23,34 @@ selection_policy:
   - prepare_output_with_canary
   - buffer
   - buf
-  - limb
-  - X->p
-  - X->n
-  - raw
   - CANARY_SIZE
   - BUFLEN
+  - output
+  - memset
+  family_rules_source: config/harness_family_ast_rules.yaml
+  family_rule:
+    context_keywords:
+    - canary
+    - prepare_output_with_canary
+    - buffer
+    - buf
+    - CANARY_SIZE
+    - BUFLEN
+    - output
+    - memset
+    oracle_variables:
+    - ret
+    - buf
+    - canary
+    preferred_roles:
+    - mutation_point
+    - trigger_call
+    - oracle
+    - input_preparation
+    - cleanup
+    context_limit: 12
+    cleanup_limit: 2
 selected_units:
-- unit_id: ASTLITE-0047
-  mask_level: function_call
-  role: trigger_call
-  placeholder: '[RADIX]'
-  code: ret = mbedtls_mpi_write_string( &X, [RADIX], (char *) buf, BUFLEN, &olen );
-  source: tmpl_mbedtls.c.function_call
-  reason: Function call 'mbedtls_mpi_write_string' identified by AST-lite call matching.
-  priority: high
-  function: mbedtls_mpi_write_string
-  line: 40
-  selection_reason: Selected because [RADIX] is a mutation point with function_call
-    granularity.
-  suggested_use: migrate_api_call
-  selection_score: 85
 - unit_id: ASTLITE-0003
   mask_level: api_argument
   role: mutation_point
@@ -64,33 +77,47 @@ selected_units:
   - 32
   selection_reason: Selected because [BUFLEN] is a mutation point with api_argument
     granularity.
-  suggested_use: mutate_api_argument
-  selection_score: 80
-- unit_id: ASTLITE-0014
-  mask_level: value
+  suggested_use: migrate_api_call
+  selection_score: 161
+- unit_id: ASTLITE-0002
+  mask_level: api_argument
   role: mutation_point
-  placeholder: '[BUFLEN]'
-  code: '#define BUFLEN [BUFLEN]'
-  source: mask_report.masking_levels.macro_level
-  reason: Macro-level placeholder controls a generated constant or buffer size.
+  placeholder: '[RADIX]'
+  code: mbedtls_mpi_write_string(..., 2, ...)
+  source: template_meta.mutation_points
+  reason: 'Controls the serialized representation and the conversion path.
+
+    '
   priority: medium
-  macro: BUFLEN
-  selection_reason: Selected because [BUFLEN] is a mutation point with value granularity.
-  suggested_use: mutate_value
-  selection_score: 78
-- unit_id: ASTLITE-0015
-  mask_level: value
-  role: mutation_point
-  placeholder: '[CANARY_SIZE]'
-  code: '#define CANARY_SIZE [CANARY_SIZE]'
-  source: mask_report.masking_levels.macro_level
-  reason: Macro-level placeholder controls a generated constant or buffer size.
-  priority: medium
-  macro: CANARY_SIZE
-  selection_reason: Selected because [CANARY_SIZE] is a mutation point with value
+  mutation_name: RADIX
+  mutation_type: enum
+  default: 2
+  values:
+  - 2
+  - 10
+  - 16
+  selection_reason: Selected because [RADIX] is a mutation point with api_argument
     granularity.
-  suggested_use: mutate_value
-  selection_score: 78
+  suggested_use: migrate_api_call
+  selection_score: 147
+- unit_id: ASTLITE-0047
+  mask_level: function_call
+  role: trigger_call
+  placeholder: '[RADIX]'
+  code: ret = mbedtls_mpi_write_string( &X, [RADIX], (char *) buf, BUFLEN, &olen );
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_mpi_write_string' identified by AST-lite call matching.
+  priority: high
+  function: mbedtls_mpi_write_string
+  line: 40
+  line_start: 40
+  line_end: 46
+  enclosing_function: ''
+  node_type: call_expression
+  selection_reason: Required trigger_call unit for preserving and migrating the source
+    API invocation.
+  suggested_use: migrate_api_call
+  selection_score: 131
 - unit_id: ASTLITE-0004
   mask_level: value
   role: mutation_point
@@ -111,7 +138,7 @@ selected_units:
   selection_reason: Selected because [CANARY_SIZE] is a mutation point with value
     granularity.
   suggested_use: mutate_value
-  selection_score: 76
+  selection_score: 127
 - unit_id: ASTLITE-0001
   mask_level: value
   role: mutation_point
@@ -136,69 +163,7 @@ selected_units:
   - 255
   selection_reason: Selected because [VALUE] is a mutation point with value granularity.
   suggested_use: mutate_value
-  selection_score: 74
-- unit_id: ASTLITE-0002
-  mask_level: api_argument
-  role: mutation_point
-  placeholder: '[RADIX]'
-  code: mbedtls_mpi_write_string(..., 2, ...)
-  source: template_meta.mutation_points
-  reason: 'Controls the serialized representation and the conversion path.
-
-    '
-  priority: medium
-  mutation_name: RADIX
-  mutation_type: enum
-  default: 2
-  values:
-  - 2
-  - 10
-  - 16
-  selection_reason: Selected because [RADIX] is a mutation point with api_argument
-    granularity.
-  suggested_use: mutate_api_argument
-  selection_score: 72
-- unit_id: ASTLITE-0008
-  mask_level: statement
-  role: oracle
-  placeholder: ''
-  code: static int canary_corrupted(unsigned char *buf) { for (size_t i = 0;
-  source: mask_report.roles.oracle
-  reason: Role-aware statement recorded by mask_report role 'oracle'.
-  priority: medium
-  order: 0
-  selection_reason: Required oracle unit for preserving the vulnerability signal and
-    fixed/safe behavior checks.
-  suggested_use: preserve_oracle
-  selection_score: 55
-- unit_id: ASTLITE-0030
-  mask_level: statement
-  role: oracle
-  placeholder: ''
-  code: '#include <stdio.h> #include <stdlib.h> #include <string.h> #include "mbedtls/bignum.h"
-    #define BUFLEN [BUFLEN] #define CANARY_SIZE [CANARY_SIZE] #define CANARY_BYTE
-    0xA5 static int canary_corrupted(unsigned char *buf) {'
-  source: tmpl_mbedtls.c.role_statement
-  reason: Statement classified as oracle by AST-lite role rules.
-  priority: medium
-  line: 1
-  selection_reason: Required oracle unit for preserving the vulnerability signal and
-    fixed/safe behavior checks.
-  suggested_use: preserve_oracle
-  selection_score: 55
-- unit_id: ASTLITE-0055
-  mask_level: statement
-  role: oracle
-  placeholder: ''
-  code: if (canary_corrupted(buf)) {
-  source: tmpl_mbedtls.c.role_statement
-  reason: Statement classified as oracle by AST-lite role rules.
-  priority: medium
-  line: 62
-  selection_reason: Required oracle unit for preserving the vulnerability signal and
-    fixed/safe behavior checks.
-  suggested_use: preserve_oracle
-  selection_score: 55
+  selection_score: 119
 - unit_id: ASTLITE-0058
   mask_level: statement
   role: oracle
@@ -208,10 +173,14 @@ selected_units:
   reason: Statement classified as oracle by AST-lite role rules.
   priority: medium
   line: 63
+  line_start: 63
+  line_end: 63
+  enclosing_function: ''
+  node_type: statement
   selection_reason: Required oracle unit for preserving the vulnerability signal and
     fixed/safe behavior checks.
   suggested_use: preserve_oracle
-  selection_score: 55
+  selection_score: 101
 - unit_id: ASTLITE-0061
   mask_level: statement
   role: oracle
@@ -221,10 +190,60 @@ selected_units:
   reason: Statement classified as oracle by AST-lite role rules.
   priority: medium
   line: 68
+  line_start: 68
+  line_end: 68
+  enclosing_function: ''
+  node_type: statement
   selection_reason: Required oracle unit for preserving the vulnerability signal and
     fixed/safe behavior checks.
   suggested_use: preserve_oracle
-  selection_score: 55
+  selection_score: 101
+- unit_id: ASTLITE-0007
+  mask_level: api_argument
+  role: trigger_call
+  placeholder: '[RADIX]'
+  code: '} ret = mbedtls_mpi_write_string( &X, [RADIX], (char *) buf, BUFLEN, &olen
+    );'
+  source: mask_report.roles.trigger_call
+  reason: Role-aware statement recorded by mask_report role 'trigger_call'.
+  priority: medium
+  order: 15
+  node_type: statement
+  selection_reason: Required trigger_call unit for preserving and migrating the source
+    API invocation.
+  suggested_use: migrate_api_call
+  selection_score: 94
+- unit_id: ASTLITE-0008
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: static int canary_corrupted(unsigned char *buf) { for (size_t i = 0;
+  source: mask_report.roles.oracle
+  reason: Role-aware statement recorded by mask_report role 'oracle'.
+  priority: medium
+  order: 0
+  node_type: statement
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 81
+- unit_id: ASTLITE-0055
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: if (canary_corrupted(buf)) {
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 62
+  line_start: 62
+  line_end: 62
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 81
 - unit_id: ASTLITE-0021
   mask_level: value
   role: mutation_point
@@ -235,7 +254,7 @@ selected_units:
   priority: medium
   selection_reason: Selected because this unit is a mutation point with value granularity.
   suggested_use: mutate_value
-  selection_score: 54
+  selection_score: 64
 - unit_id: ASTLITE-0022
   mask_level: value
   role: mutation_point
@@ -246,7 +265,7 @@ selected_units:
   priority: medium
   selection_reason: Selected because this unit is a mutation point with value granularity.
   suggested_use: mutate_value
-  selection_score: 54
+  selection_score: 64
 - unit_id: ASTLITE-0023
   mask_level: value
   role: mutation_point
@@ -257,7 +276,7 @@ selected_units:
   priority: medium
   selection_reason: Selected because this unit is a mutation point with value granularity.
   suggested_use: mutate_value
-  selection_score: 54
+  selection_score: 64
 - unit_id: ASTLITE-0026
   mask_level: block
   role: mutation_point
@@ -266,10 +285,9 @@ selected_units:
   source: mask_report.poc_pattern.occlusion_candidates.block_level
   reason: PoC pattern occlusion candidate for multi-granularity masking.
   priority: medium
-  selection_reason: Selected as high-value input/helper context because it references
-    canary, buffer, limb, or output-boundary state.
+  selection_reason: Selected as high-value input/helper context for harness_family=buffer_canary_boundary.
   suggested_use: llm_reconstruction_context
-  selection_score: 40
+  selection_score: 56
 - unit_id: ASTLITE-0027
   mask_level: block
   role: helper_function
@@ -282,24 +300,13 @@ selected_units:
   priority: medium
   function: canary_corrupted
   line: 11
-  selection_reason: Selected as high-value input/helper context because it references
-    canary, buffer, limb, or output-boundary state.
+  line_start: 11
+  line_end: 19
+  node_type: function_definition
+  enclosing_function: canary_corrupted
+  selection_reason: Selected as high-value input/helper context for harness_family=buffer_canary_boundary.
   suggested_use: preserve_input_preparation
-  selection_score: 37
-- unit_id: ASTLITE-0050
-  mask_level: function_call
-  role: helper_function
-  placeholder: ''
-  code: printf("buf/canary prefix=");
-  source: tmpl_mbedtls.c.function_call
-  reason: Function call 'printf' identified by AST-lite call matching.
-  priority: medium
-  function: printf
-  line: 50
-  selection_reason: Selected as high-value input/helper context because it references
-    canary, buffer, limb, or output-boundary state.
-  suggested_use: preserve_input_preparation
-  selection_score: 37
+  selection_score: 43
 - unit_id: ASTLITE-0034
   mask_level: type
   role: helper_function
@@ -309,10 +316,13 @@ selected_units:
   reason: Type declaration identified by AST-lite declaration matching.
   priority: medium
   line: 24
-  selection_reason: Selected as high-value input/helper context because it references
-    canary, buffer, limb, or output-boundary state.
+  line_start: 24
+  line_end: 24
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected as high-value input/helper context for harness_family=buffer_canary_boundary.
   suggested_use: preserve_input_preparation
-  selection_score: 32
+  selection_score: 38
 - unit_id: ASTLITE-0051
   mask_level: type
   role: helper_function
@@ -322,49 +332,52 @@ selected_units:
   reason: Type declaration identified by AST-lite declaration matching.
   priority: medium
   line: 53
-  selection_reason: Selected as high-value input/helper context because it references
-    canary, buffer, limb, or output-boundary state.
+  line_start: 53
+  line_end: 53
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected as high-value input/helper context for harness_family=buffer_canary_boundary.
   suggested_use: preserve_input_preparation
-  selection_score: 32
-- unit_id: ASTLITE-0044
-  mask_level: function_call
+  selection_score: 38
+- unit_id: ASTLITE-0011
+  mask_level: statement
   role: cleanup
   placeholder: ''
   code: mbedtls_mpi_free(&X);
-  source: tmpl_mbedtls.c.function_call
-  reason: Function call 'mbedtls_mpi_free' identified by AST-lite call matching.
+  source: mask_report.roles.cleanup
+  reason: Role-aware statement recorded by mask_report role 'cleanup'.
   priority: medium
-  function: mbedtls_mpi_free
-  line: 36
+  order: 13
+  node_type: statement
   selection_reason: Selected limited cleanup context needed to keep generated harnesses
     well-scoped.
   suggested_use: preserve_cleanup
-  selection_score: 17
+  selection_score: 14
 selection_summary:
-  selected_count: 21
+  selected_count: 18
   source_unit_count: 62
   by_role:
     cleanup: 1
-    helper_function: 4
-    mutation_point: 10
-    oracle: 5
-    trigger_call: 1
+    helper_function: 3
+    mutation_point: 8
+    oracle: 4
+    trigger_call: 2
   by_mask_level:
-    api_argument: 2
+    api_argument: 3
     block: 2
-    function_call: 3
+    function_call: 1
     statement: 5
     type: 2
-    value: 7
+    value: 5
   by_suggested_use:
     llm_reconstruction_context: 1
-    migrate_api_call: 1
-    mutate_api_argument: 2
-    mutate_value: 7
+    migrate_api_call: 4
+    mutate_value: 5
     preserve_cleanup: 1
-    preserve_input_preparation: 4
-    preserve_oracle: 5
+    preserve_input_preparation: 3
+    preserve_oracle: 4
 rejected_summary:
-  count: 7
+  count: 23
   by_reason:
-    duplicate_code_or_unit: 7
+    duplicate_code_or_unit: 8
+    noise_header_comment_or_log_label: 15

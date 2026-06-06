@@ -1,0 +1,1930 @@
+template_id: RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE
+template_name: mbedtls RSA DER top-level SEQUENCE trailing-garbage template
+source_api: mbedtls_pk_parse_key
+source_library: mbedtls
+trigger_apis:
+- mbedtls_pk_parse_key
+- mbedtls_rsa_parse_key
+- mbedtls_rsa_parse_pubkey
+- mbedtls_pk_parse_public_key
+harness_family: der_pointer_consumption
+summary:
+  method: tree_sitter_c_role_aware
+  backend: tree-sitter
+  template_dir: normalized_templates/rsa/rsa_der_trailing_garbage
+  unit_count: 69
+  parse_has_error: false
+  note: Tree-sitter C report generated from concrete syntax nodes. This backend is
+    optional and is intended to complement AST-lite.
+ast_mask_units:
+- unit_id: ASTLITE-0001
+  mask_level: value
+  role: mutation_point
+  placeholder: '[DER_KIND]'
+  code: '#define DER_KIND_VALUE "[DER_KIND]"'
+  source: tmpl_mbedtls.c.tree_sitter.preprocessor
+  reason: Preprocessor node contains template placeholder.
+  priority: high
+  line: 45
+  line_start: 45
+  line_end: 46
+  column_start: 1
+  column_end: 1
+  node_type: preproc_def
+  enclosing_function: ''
+  placeholder_dependencies:
+  - '[DER_KIND]'
+  identifiers_read:
+  - define
+  - DER_KIND_VALUE
+  - DER_KIND
+  identifiers_written: []
+- unit_id: ASTLITE-0002
+  mask_level: value
+  role: mutation_point
+  placeholder: '[PARSE_API_KIND]'
+  code: '#define PARSE_API_KIND_VALUE "[PARSE_API_KIND]"'
+  source: tmpl_mbedtls.c.tree_sitter.preprocessor
+  reason: Preprocessor node contains template placeholder.
+  priority: high
+  line: 46
+  line_start: 46
+  line_end: 47
+  column_start: 1
+  column_end: 1
+  node_type: preproc_def
+  enclosing_function: ''
+  placeholder_dependencies:
+  - '[PARSE_API_KIND]'
+  identifiers_read:
+  - define
+  - PARSE_API_KIND_VALUE
+  - PARSE_API_KIND
+  identifiers_written: []
+- unit_id: ASTLITE-0003
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRAILING_GARBAGE_BYTES]'
+  code: '#define TRAILING_GARBAGE_HEX "[TRAILING_GARBAGE_BYTES]"'
+  source: tmpl_mbedtls.c.tree_sitter.preprocessor
+  reason: Preprocessor node contains template placeholder.
+  priority: high
+  line: 47
+  line_start: 47
+  line_end: 48
+  column_start: 1
+  column_end: 1
+  node_type: preproc_def
+  enclosing_function: ''
+  placeholder_dependencies:
+  - '[TRAILING_GARBAGE_BYTES]'
+  identifiers_read:
+  - define
+  - TRAILING_GARBAGE_HEX
+  - TRAILING_GARBAGE_BYTES
+  identifiers_written: []
+- unit_id: ASTLITE-0004
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRAILING_GARBAGE_LEN]'
+  code: '#define TRAILING_GARBAGE_EXPECTED_LEN ((size_t) [TRAILING_GARBAGE_LEN])'
+  source: tmpl_mbedtls.c.tree_sitter.preprocessor
+  reason: Preprocessor node contains template placeholder.
+  priority: high
+  line: 48
+  line_start: 48
+  line_end: 49
+  column_start: 1
+  column_end: 1
+  node_type: preproc_def
+  enclosing_function: ''
+  placeholder_dependencies:
+  - '[TRAILING_GARBAGE_LEN]'
+  identifiers_read:
+  - define
+  - size_t
+  - TRAILING_GARBAGE_LEN
+  identifiers_written: []
+- unit_id: ASTLITE-0005
+  mask_level: value
+  role: mutation_point
+  placeholder: '[EXPECT_RET]'
+  code: '#define EXPECTED_RETURN_VALUE [EXPECT_RET]'
+  source: tmpl_mbedtls.c.tree_sitter.preprocessor
+  reason: Preprocessor node contains template placeholder.
+  priority: high
+  line: 49
+  line_start: 49
+  line_end: 50
+  column_start: 1
+  column_end: 1
+  node_type: preproc_def
+  enclosing_function: ''
+  placeholder_dependencies:
+  - '[EXPECT_RET]'
+  identifiers_read:
+  - define
+  - EXPECTED_RETURN_VALUE
+  - EXPECT_RET
+  identifiers_written: []
+- unit_id: ASTLITE-0006
+  mask_level: block
+  role: helper_function
+  placeholder: ''
+  code: static int hexval(int c) { if (c >= '0' && c <= '9') { return c - '0'; } if
+    (c >= 'a' && c <= 'f') { return c - 'a' + 10; } if (c >= 'A' && c <= 'F') { return
+    c - 'A' + 10; } return -1; }
+  source: tmpl_mbedtls.c.tree_sitter.function_definition
+  reason: Function definition identified by tree-sitter C parser.
+  priority: medium
+  line: 51
+  line_start: 51
+  line_end: 63
+  column_start: 1
+  column_end: 2
+  node_type: function_definition
+  enclosing_function: c
+  placeholder_dependencies: []
+  identifiers_read:
+  - static
+  - int
+  - c
+  - a
+  - f
+  - A
+  - F
+  identifiers_written: []
+  function: c
+- unit_id: ASTLITE-0007
+  mask_level: block
+  role: helper_function
+  placeholder: ''
+  code: static int hex_to_bin(const char *hex, unsigned char *out, size_t out_size,
+    size_t *out_len) { size_t n = 0; int hi = -1; while (*hex != '\0') { int v; if
+    (isspace((unsigned char) *hex)) { hex++; continue; } v = hexval((unsigned char)
+    *hex); if (v < 0) { return -1; } if (hi < 0) { hi = v; } else { if (n >= out_size)
+    { return -2; } out[n++] = (unsigned char) ((hi << 4) | v); hi = -1; } hex++; }
+    if (hi >= 0) { return -3; } *out_len = n; return 0; }
+  source: tmpl_mbedtls.c.tree_sitter.function_definition
+  reason: Function definition identified by tree-sitter C parser.
+  priority: medium
+  line: 65
+  line_start: 65
+  line_end: 105
+  column_start: 1
+  column_end: 2
+  node_type: function_definition
+  enclosing_function: out_len
+  placeholder_dependencies: []
+  identifiers_read:
+  - static
+  - int
+  - const
+  - char
+  - hex
+  - unsigned
+  - out
+  - size_t
+  - out_size
+  - continue
+  - else
+  identifiers_written:
+  - n
+  - hi
+  - v
+  - out_len
+  function: out_len
+- unit_id: ASTLITE-0008
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: isspace((unsigned char) *hex)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'isspace' identified by tree-sitter C parser.
+  priority: medium
+  line: 76
+  line_start: 76
+  line_end: 76
+  column_start: 13
+  column_end: 42
+  node_type: call_expression
+  enclosing_function: out_len
+  placeholder_dependencies: []
+  identifiers_read:
+  - unsigned
+  - char
+  - hex
+  identifiers_written: []
+  called_function: isspace
+  call_node_code: isspace((unsigned char) *hex)
+- unit_id: ASTLITE-0009
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: hexval((unsigned char) *hex)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'hexval' identified by tree-sitter C parser.
+  priority: medium
+  line: 81
+  line_start: 81
+  line_end: 81
+  column_start: 13
+  column_end: 41
+  node_type: call_expression
+  enclosing_function: out_len
+  placeholder_dependencies: []
+  identifiers_read:
+  - unsigned
+  - char
+  - hex
+  identifiers_written: []
+  called_function: hexval
+  call_node_code: hexval((unsigned char) *hex)
+- unit_id: ASTLITE-0010
+  mask_level: block
+  role: helper_function
+  placeholder: ''
+  code: 'static void rsa_init_compat(mbedtls_rsa_context *rsa) { #if defined(MBEDTLS_VERSION_NUMBER)
+    && MBEDTLS_VERSION_NUMBER < 0x03000000 mbedtls_rsa_init(rsa, MBEDTLS_RSA_PKCS_V15,
+    0); #else mbedtls_rsa_init(rsa); #endif }'
+  source: tmpl_mbedtls.c.tree_sitter.function_definition
+  reason: Function definition identified by tree-sitter C parser.
+  priority: medium
+  line: 107
+  line_start: 107
+  line_end: 114
+  column_start: 1
+  column_end: 2
+  node_type: function_definition
+  enclosing_function: rsa
+  placeholder_dependencies: []
+  identifiers_read:
+  - static
+  - void
+  - mbedtls_rsa_context
+  - rsa
+  - MBEDTLS_VERSION_NUMBER
+  - MBEDTLS_RSA_PKCS_V15
+  - else
+  - endif
+  identifiers_written: []
+  function: rsa
+- unit_id: ASTLITE-0011
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: mbedtls_rsa_init(rsa, MBEDTLS_RSA_PKCS_V15, 0)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_rsa_init' identified by tree-sitter C parser.
+  priority: medium
+  line: 110
+  line_start: 110
+  line_end: 110
+  column_start: 5
+  column_end: 51
+  node_type: call_expression
+  enclosing_function: rsa
+  placeholder_dependencies: []
+  identifiers_read:
+  - rsa
+  - MBEDTLS_RSA_PKCS_V15
+  identifiers_written: []
+  called_function: mbedtls_rsa_init
+  call_node_code: mbedtls_rsa_init(rsa, MBEDTLS_RSA_PKCS_V15, 0)
+- unit_id: ASTLITE-0012
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: mbedtls_rsa_init(rsa)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_rsa_init' identified by tree-sitter C parser.
+  priority: medium
+  line: 112
+  line_start: 112
+  line_end: 112
+  column_start: 5
+  column_end: 26
+  node_type: call_expression
+  enclosing_function: rsa
+  placeholder_dependencies: []
+  identifiers_read:
+  - rsa
+  identifiers_written: []
+  called_function: mbedtls_rsa_init
+  call_node_code: mbedtls_rsa_init(rsa)
+- unit_id: ASTLITE-0013
+  mask_level: block
+  role: helper_function
+  placeholder: ''
+  code: static const char *select_base_der_hex(const char *der_kind) { /* * Regression-test-derived
+    minimal private key from * data/pocs/core10/MBEDTLS-POC-0020/poc/poc_rsa_trailing_garbage.c,
+    * with the top-level trailing INTEGER removed. The base object is a * complete
+    PKCS#1 RSAPrivateKey SEQUENCE. */ static const char *private_base_hex = "3063020100021100cc8ab070369ede72920e5a51523c8571"
+    "02030100010211009a6318982a7231de1894c54aa4909201" "020900f3058fd8dc484d61020900d7770dbd8b78a2110209"
+    "009471f14c26428401020813425f060c4b72210208052b93" "d01747a87c"; /* * Regression-test-derived
+    minimal public key from the same source PoC, * with the top-level trailing INTEGER
+    removed. The base object is a * complete PKCS#1 RSAPublicKey SEQUENCE. */ static
+    const char *public_base_hex = "308189028181009f091e6968b474f76f0e9c237c1d895996"
+    "ae704b4f6d706acec8d2daac6209bf524aa3f658d0283a" "dba1077f6cbe92e425dcde52290b239cade91be86c884254"
+    "34986806e85734e159768f3dfea932baaa9409d25bace8ee" "9dce0cdde0903207299de575ae60feccf0daf82334ab836"
+    "38539b0da74072f253acea8afc8e66bb70203010001"; if (strcmp(der_kind, "private")
+    == 0) { return private_base_hex; } if (strcmp(der_kind, "public") == 0) { return
+    public_base_hex; } return NULL; }
+  source: tmpl_mbedtls.c.tree_sitter.function_definition
+  reason: Function definition identified by tree-sitter C parser.
+  priority: medium
+  line: 116
+  line_start: 116
+  line_end: 152
+  column_start: 1
+  column_end: 2
+  node_type: function_definition
+  enclosing_function: der_kind
+  placeholder_dependencies: []
+  identifiers_read:
+  - static
+  - const
+  - char
+  - der_kind
+  - Regression
+  - test
+  - derived
+  - minimal
+  - private
+  - key
+  - from
+  - data
+  - pocs
+  - core10
+  - MBEDTLS
+  - POC
+  - poc
+  - poc_rsa_trailing_garbage
+  - c
+  - with
+  - the
+  - top
+  - level
+  - trailing
+  - INTEGER
+  - removed
+  - The
+  - base
+  - object
+  - is
+  - a
+  - complete
+  - PKCS
+  - RSAPrivateKey
+  - SEQUENCE
+  - d01747a87c
+  - public
+  - same
+  - source
+  - PoC
+  - RSAPublicKey
+  - ae704b4f6d706acec8d2daac6209bf524aa3f658d0283a
+  - dba1077f6cbe92e425dcde52290b239cade91be86c884254
+  - 'NULL'
+  identifiers_written:
+  - private_base_hex
+  - public_base_hex
+  function: der_kind
+- unit_id: ASTLITE-0014
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: strcmp(der_kind, "private")
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'strcmp' identified by tree-sitter C parser.
+  priority: medium
+  line: 144
+  line_start: 144
+  line_end: 144
+  column_start: 9
+  column_end: 36
+  node_type: call_expression
+  enclosing_function: der_kind
+  placeholder_dependencies: []
+  identifiers_read:
+  - der_kind
+  - private
+  identifiers_written: []
+  called_function: strcmp
+  call_node_code: strcmp(der_kind, "private")
+- unit_id: ASTLITE-0015
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: strcmp(der_kind, "public")
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'strcmp' identified by tree-sitter C parser.
+  priority: medium
+  line: 147
+  line_start: 147
+  line_end: 147
+  column_start: 9
+  column_end: 35
+  node_type: call_expression
+  enclosing_function: der_kind
+  placeholder_dependencies: []
+  identifiers_read:
+  - der_kind
+  - public
+  identifiers_written: []
+  called_function: strcmp
+  call_node_code: strcmp(der_kind, "public")
+- unit_id: ASTLITE-0016
+  mask_level: block
+  role: helper_function
+  placeholder: ''
+  code: static int build_der_with_trailing_garbage(const char *base_hex, const char
+    *trailing_hex, unsigned char *der, size_t der_size, size_t *der_len, size_t *trailing_len)
+    { int ret; size_t base_len = 0; ret = hex_to_bin(base_hex, der, der_size, &base_len);
+    if (ret != 0) { return ret; } ret = hex_to_bin(trailing_hex, der + base_len, der_size
+    - base_len, trailing_len); if (ret != 0) { return ret; } *der_len = base_len +
+    *trailing_len; return 0; }
+  source: tmpl_mbedtls.c.tree_sitter.function_definition
+  reason: Function definition identified by tree-sitter C parser.
+  priority: medium
+  line: 154
+  line_start: 154
+  line_end: 179
+  column_start: 1
+  column_end: 2
+  node_type: function_definition
+  enclosing_function: trailing_len
+  placeholder_dependencies: []
+  identifiers_read:
+  - static
+  - int
+  - const
+  - char
+  - base_hex
+  - trailing_hex
+  - unsigned
+  - der
+  - size_t
+  - der_size
+  - trailing_len
+  identifiers_written:
+  - base_len
+  - ret
+  - der_len
+  function: trailing_len
+- unit_id: ASTLITE-0017
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: hex_to_bin(base_hex, der, der_size, &base_len)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'hex_to_bin' identified by tree-sitter C parser.
+  priority: medium
+  line: 164
+  line_start: 164
+  line_end: 164
+  column_start: 11
+  column_end: 57
+  node_type: call_expression
+  enclosing_function: trailing_len
+  placeholder_dependencies: []
+  identifiers_read:
+  - base_hex
+  - der
+  - der_size
+  - base_len
+  identifiers_written: []
+  called_function: hex_to_bin
+  call_node_code: hex_to_bin(base_hex, der, der_size, &base_len)
+- unit_id: ASTLITE-0018
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: hex_to_bin(trailing_hex, der + base_len, der_size - base_len, trailing_len)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'hex_to_bin' identified by tree-sitter C parser.
+  priority: medium
+  line: 169
+  line_start: 169
+  line_end: 172
+  column_start: 11
+  column_end: 35
+  node_type: call_expression
+  enclosing_function: trailing_len
+  placeholder_dependencies: []
+  identifiers_read:
+  - trailing_hex
+  - der
+  - base_len
+  - der_size
+  - trailing_len
+  identifiers_written: []
+  called_function: hex_to_bin
+  call_node_code: hex_to_bin(trailing_hex, der + base_len, der_size - base_len, trailing_len)
+- unit_id: ASTLITE-0019
+  mask_level: block
+  role: helper_function
+  placeholder: '[RSA_PRIVATE_PARSE_CALL]'
+  code: static int parse_with_selected_api(const char *parse_api_kind, const char
+    *der_kind, const unsigned char *der, size_t der_len) { int ret = -1; if (strcmp(parse_api_kind,
+    "rsa_private") == 0) { mbedtls_rsa_context rsa; rsa_init_compat(&rsa); /* [RSA_PRIVATE_PARSE_CALL]
+    */ ret = mbedtls_rsa_parse_key(&rsa, der, der_len); mbedtls_rsa_free(&rsa); return
+    ret; } if (strcmp(parse_api_kind, "rsa_public") == 0) { mbedtls_rsa_context rsa;
+    rsa_init_compat(&rsa); /* [RSA_PUBLIC_PARSE_CALL] */ ret = mbedtls_rsa_parse_pubkey(&rsa,
+    der, der_len); mbedtls_rsa_free(&rsa); return ret; } if (strcmp(parse_api_kind,
+    "pk_private") == 0) { mbedtls_pk_context pk; if (strcmp(der_kind, "private") !=
+    0) { return MBEDTLS_ERR_RSA_BAD_INPUT_DATA; } mbedtls_pk_init(&pk); ret = mbedtls_pk_parse_key(&pk,
+    der, der_len, NULL, 0); mbedtls_pk_free(&pk); return ret; } return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
+    }
+  source: tmpl_mbedtls.c.tree_sitter.function_definition
+  reason: Function definition identified by tree-sitter C parser.
+  priority: medium
+  line: 181
+  line_start: 181
+  line_end: 222
+  column_start: 1
+  column_end: 2
+  node_type: function_definition
+  enclosing_function: der_len
+  placeholder_dependencies:
+  - '[RSA_PRIVATE_PARSE_CALL]'
+  - '[RSA_PUBLIC_PARSE_CALL]'
+  identifiers_read:
+  - static
+  - int
+  - const
+  - char
+  - parse_api_kind
+  - der_kind
+  - unsigned
+  - der
+  - size_t
+  - der_len
+  - rsa_private
+  - mbedtls_rsa_context
+  - rsa
+  - RSA_PRIVATE_PARSE_CALL
+  - rsa_public
+  - RSA_PUBLIC_PARSE_CALL
+  - pk_private
+  - mbedtls_pk_context
+  - pk
+  - private
+  - MBEDTLS_ERR_RSA_BAD_INPUT_DATA
+  - 'NULL'
+  identifiers_written:
+  - ret
+  function: der_len
+- unit_id: ASTLITE-0020
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: strcmp(parse_api_kind, "rsa_private")
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'strcmp' identified by tree-sitter C parser.
+  priority: medium
+  line: 188
+  line_start: 188
+  line_end: 188
+  column_start: 9
+  column_end: 46
+  node_type: call_expression
+  enclosing_function: der_len
+  placeholder_dependencies: []
+  identifiers_read:
+  - parse_api_kind
+  - rsa_private
+  identifiers_written: []
+  called_function: strcmp
+  call_node_code: strcmp(parse_api_kind, "rsa_private")
+- unit_id: ASTLITE-0021
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: rsa_init_compat(&rsa)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'rsa_init_compat' identified by tree-sitter C parser.
+  priority: medium
+  line: 191
+  line_start: 191
+  line_end: 191
+  column_start: 9
+  column_end: 30
+  node_type: call_expression
+  enclosing_function: der_len
+  placeholder_dependencies: []
+  identifiers_read:
+  - rsa
+  identifiers_written: []
+  called_function: rsa_init_compat
+  call_node_code: rsa_init_compat(&rsa)
+- unit_id: ASTLITE-0022
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: ret = mbedtls_rsa_parse_key(&rsa, der, der_len);
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 193
+  line_start: 193
+  line_end: 193
+  column_start: 9
+  column_end: 57
+  node_type: expression_statement
+  enclosing_function: der_len
+  placeholder_dependencies: []
+  identifiers_read:
+  - rsa
+  - der
+  - der_len
+  identifiers_written:
+  - ret
+- unit_id: ASTLITE-0023
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: ret = mbedtls_rsa_parse_key(&rsa, der, der_len);
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_rsa_parse_key' identified by tree-sitter C parser.
+  priority: high
+  line: 193
+  line_start: 193
+  line_end: 193
+  column_start: 15
+  column_end: 56
+  node_type: call_expression
+  enclosing_function: der_len
+  placeholder_dependencies: []
+  identifiers_read:
+  - rsa
+  - der
+  - der_len
+  identifiers_written:
+  - ret
+  called_function: mbedtls_rsa_parse_key
+  call_node_code: mbedtls_rsa_parse_key(&rsa, der, der_len)
+- unit_id: ASTLITE-0024
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_rsa_free(&rsa);
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 194
+  line_start: 194
+  line_end: 194
+  column_start: 9
+  column_end: 32
+  node_type: expression_statement
+  enclosing_function: der_len
+  placeholder_dependencies: []
+  identifiers_read:
+  - rsa
+  identifiers_written: []
+- unit_id: ASTLITE-0025
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_rsa_free(&rsa)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_rsa_free' identified by tree-sitter C parser.
+  priority: medium
+  line: 194
+  line_start: 194
+  line_end: 194
+  column_start: 9
+  column_end: 31
+  node_type: call_expression
+  enclosing_function: der_len
+  placeholder_dependencies: []
+  identifiers_read:
+  - rsa
+  identifiers_written: []
+  called_function: mbedtls_rsa_free
+  call_node_code: mbedtls_rsa_free(&rsa)
+- unit_id: ASTLITE-0026
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: strcmp(parse_api_kind, "rsa_public")
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'strcmp' identified by tree-sitter C parser.
+  priority: medium
+  line: 198
+  line_start: 198
+  line_end: 198
+  column_start: 9
+  column_end: 45
+  node_type: call_expression
+  enclosing_function: der_len
+  placeholder_dependencies: []
+  identifiers_read:
+  - parse_api_kind
+  - rsa_public
+  identifiers_written: []
+  called_function: strcmp
+  call_node_code: strcmp(parse_api_kind, "rsa_public")
+- unit_id: ASTLITE-0027
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: ret = mbedtls_rsa_parse_pubkey(&rsa, der, der_len);
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 203
+  line_start: 203
+  line_end: 203
+  column_start: 9
+  column_end: 60
+  node_type: expression_statement
+  enclosing_function: der_len
+  placeholder_dependencies: []
+  identifiers_read:
+  - rsa
+  - der
+  - der_len
+  identifiers_written:
+  - ret
+- unit_id: ASTLITE-0028
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: ret = mbedtls_rsa_parse_pubkey(&rsa, der, der_len);
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_rsa_parse_pubkey' identified by tree-sitter C parser.
+  priority: high
+  line: 203
+  line_start: 203
+  line_end: 203
+  column_start: 15
+  column_end: 59
+  node_type: call_expression
+  enclosing_function: der_len
+  placeholder_dependencies: []
+  identifiers_read:
+  - rsa
+  - der
+  - der_len
+  identifiers_written:
+  - ret
+  called_function: mbedtls_rsa_parse_pubkey
+  call_node_code: mbedtls_rsa_parse_pubkey(&rsa, der, der_len)
+- unit_id: ASTLITE-0029
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: strcmp(parse_api_kind, "pk_private")
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'strcmp' identified by tree-sitter C parser.
+  priority: medium
+  line: 208
+  line_start: 208
+  line_end: 208
+  column_start: 9
+  column_end: 45
+  node_type: call_expression
+  enclosing_function: der_len
+  placeholder_dependencies: []
+  identifiers_read:
+  - parse_api_kind
+  - pk_private
+  identifiers_written: []
+  called_function: strcmp
+  call_node_code: strcmp(parse_api_kind, "pk_private")
+- unit_id: ASTLITE-0030
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: mbedtls_pk_init(&pk)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_pk_init' identified by tree-sitter C parser.
+  priority: medium
+  line: 215
+  line_start: 215
+  line_end: 215
+  column_start: 9
+  column_end: 29
+  node_type: call_expression
+  enclosing_function: der_len
+  placeholder_dependencies: []
+  identifiers_read:
+  - pk
+  identifiers_written: []
+  called_function: mbedtls_pk_init
+  call_node_code: mbedtls_pk_init(&pk)
+- unit_id: ASTLITE-0031
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: ret = mbedtls_pk_parse_key(&pk, der, der_len, NULL, 0);
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 216
+  line_start: 216
+  line_end: 216
+  column_start: 9
+  column_end: 64
+  node_type: expression_statement
+  enclosing_function: der_len
+  placeholder_dependencies: []
+  identifiers_read:
+  - pk
+  - der
+  - der_len
+  - 'NULL'
+  identifiers_written:
+  - ret
+- unit_id: ASTLITE-0032
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: ret = mbedtls_pk_parse_key(&pk, der, der_len, NULL, 0);
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_pk_parse_key' identified by tree-sitter C parser.
+  priority: high
+  line: 216
+  line_start: 216
+  line_end: 216
+  column_start: 15
+  column_end: 63
+  node_type: call_expression
+  enclosing_function: der_len
+  placeholder_dependencies: []
+  identifiers_read:
+  - pk
+  - der
+  - der_len
+  - 'NULL'
+  identifiers_written:
+  - ret
+  called_function: mbedtls_pk_parse_key
+  call_node_code: mbedtls_pk_parse_key(&pk, der, der_len, NULL, 0)
+- unit_id: ASTLITE-0033
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_pk_free(&pk);
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 217
+  line_start: 217
+  line_end: 217
+  column_start: 9
+  column_end: 30
+  node_type: expression_statement
+  enclosing_function: der_len
+  placeholder_dependencies: []
+  identifiers_read:
+  - pk
+  identifiers_written: []
+- unit_id: ASTLITE-0034
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_pk_free(&pk)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_pk_free' identified by tree-sitter C parser.
+  priority: medium
+  line: 217
+  line_start: 217
+  line_end: 217
+  column_start: 9
+  column_end: 29
+  node_type: call_expression
+  enclosing_function: der_len
+  placeholder_dependencies: []
+  identifiers_read:
+  - pk
+  identifiers_written: []
+  called_function: mbedtls_pk_free
+  call_node_code: mbedtls_pk_free(&pk)
+- unit_id: ASTLITE-0035
+  mask_level: block
+  role: entrypoint
+  placeholder: '[ERROR]'
+  code: 'int main(void) { const char *der_kind = DER_KIND_VALUE; const char *parse_api_kind
+    = PARSE_API_KIND_VALUE; const char *base_hex = NULL; unsigned char *der = NULL;
+    const size_t der_capacity = 512; size_t der_len = 0; size_t trailing_len = 0;
+    int ret; setbuf(stdout, NULL); base_hex = select_base_der_hex(der_kind); if (base_hex
+    == NULL) { printf("[ERROR] unsupported DER_KIND: %s\n", der_kind); return 2; }
+    der = calloc(der_capacity, 1); if (der == NULL) { printf("[ERROR] allocation failed\n");
+    return 2; } ret = build_der_with_trailing_garbage(base_hex, TRAILING_GARBAGE_HEX,
+    der, der_capacity, &der_len, &trailing_len); if (ret != 0) { printf("[ERROR] DER
+    construction failed: %d\n", ret); free(der); return 2; } if (trailing_len != TRAILING_GARBAGE_EXPECTED_LEN)
+    { printf("[ERROR] trailing garbage length mismatch: got=%zu expected=%zu\n", trailing_len,
+    TRAILING_GARBAGE_EXPECTED_LEN); free(der); return 2; } printf("DER kind: %s\n",
+    der_kind); printf("Parse API kind: %s\n", parse_api_kind); printf("DER length
+    with trailing garbage: %zu\n", der_len); printf("Trailing garbage length: %zu\n",
+    trailing_len); /* * Fixed source guard represented by [TOP_LEVEL_SEQUENCE_END_CHECK]:
+    * if (end != p + len) { return MBEDTLS_ERR_RSA_BAD_INPUT_DATA; } */ ret = parse_with_selected_api(parse_api_kind,
+    der_kind, der, der_len); printf("ret=%d\n", ret); printf("expected_buggy=0\n");
+    printf("expected_fixed_or_safe=%d\n", EXPECTED_RETURN_VALUE); if (ret == 0) {
+    printf("[BUG] parser accepted trailing garbage after top-level SEQUENCE.\n");
+    free(der); return 1; } if (ret == EXPECTED_RETURN_VALUE || ret == MBEDTLS_ERR_RSA_BAD_INPUT_DATA)
+    { printf("[OK] parser rejected trailing garbage.\n"); free(der); return 0; } printf("[INFO]
+    parser rejected trailing garbage with alternate ret=%d\n", ret); free(der); return
+    0; }'
+  source: tmpl_mbedtls.c.tree_sitter.function_definition
+  reason: Function definition identified by tree-sitter C parser.
+  priority: high
+  line: 224
+  line_start: 224
+  line_end: 299
+  column_start: 1
+  column_end: 2
+  node_type: function_definition
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[ERROR]'
+  - '[TOP_LEVEL_SEQUENCE_END_CHECK]'
+  - '[BUG]'
+  - '[OK]'
+  - '[INFO]'
+  identifiers_read:
+  - int
+  - void
+  - const
+  - char
+  - DER_KIND_VALUE
+  - PARSE_API_KIND_VALUE
+  - 'NULL'
+  - unsigned
+  - size_t
+  - stdout
+  - ERROR
+  - unsupported
+  - DER_KIND
+  - s
+  - n
+  - allocation
+  - failed
+  - TRAILING_GARBAGE_HEX
+  - DER
+  - construction
+  - d
+  - TRAILING_GARBAGE_EXPECTED_LEN
+  - trailing
+  - garbage
+  - length
+  - mismatch
+  - zu
+  - kind
+  - Parse
+  - API
+  - with
+  - Trailing
+  - Fixed
+  - source
+  - guard
+  - represented
+  - by
+  - TOP_LEVEL_SEQUENCE_END_CHECK
+  - end
+  - p
+  - len
+  - MBEDTLS_ERR_RSA_BAD_INPUT_DATA
+  - EXPECTED_RETURN_VALUE
+  - BUG
+  - parser
+  - accepted
+  - after
+  - top
+  - level
+  - SEQUENCE
+  - OK
+  - rejected
+  - INFO
+  - alternate
+  identifiers_written:
+  - der_kind
+  - parse_api_kind
+  - base_hex
+  - der
+  - der_capacity
+  - der_len
+  - trailing_len
+  - ret
+  - got
+  - expected
+  - expected_buggy
+  - expected_fixed_or_safe
+  function: main
+- unit_id: ASTLITE-0036
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: setbuf(stdout, NULL)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'setbuf' identified by tree-sitter C parser.
+  priority: medium
+  line: 235
+  line_start: 235
+  line_end: 235
+  column_start: 5
+  column_end: 25
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - stdout
+  - 'NULL'
+  identifiers_written: []
+  called_function: setbuf
+  call_node_code: setbuf(stdout, NULL)
+- unit_id: ASTLITE-0037
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: select_base_der_hex(der_kind)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'select_base_der_hex' identified by tree-sitter C parser.
+  priority: medium
+  line: 237
+  line_start: 237
+  line_end: 237
+  column_start: 16
+  column_end: 45
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - der_kind
+  identifiers_written: []
+  called_function: select_base_der_hex
+  call_node_code: select_base_der_hex(der_kind)
+- unit_id: ASTLITE-0038
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[ERROR]'
+  code: 'if (base_hex == NULL) { printf("[ERROR] unsupported DER_KIND: %s\n", der_kind);
+    return 2; }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 238
+  line_start: 238
+  line_end: 241
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[ERROR]'
+  identifiers_read:
+  - 'NULL'
+  - ERROR
+  - unsupported
+  - DER_KIND
+  - s
+  - n
+  - der_kind
+  identifiers_written:
+  - base_hex
+- unit_id: ASTLITE-0039
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[ERROR]'
+  code: 'printf("[ERROR] unsupported DER_KIND: %s\n", der_kind);'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 239
+  line_start: 239
+  line_end: 239
+  column_start: 9
+  column_end: 64
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[ERROR]'
+  identifiers_read:
+  - ERROR
+  - unsupported
+  - DER_KIND
+  - s
+  - n
+  - der_kind
+  identifiers_written: []
+- unit_id: ASTLITE-0040
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[ERROR]'
+  code: 'printf("[ERROR] unsupported DER_KIND: %s\n", der_kind)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 239
+  line_start: 239
+  line_end: 239
+  column_start: 9
+  column_end: 63
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[ERROR]'
+  identifiers_read:
+  - ERROR
+  - unsupported
+  - DER_KIND
+  - s
+  - n
+  - der_kind
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("[ERROR] unsupported DER_KIND: %s\n", der_kind)'
+- unit_id: ASTLITE-0041
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: calloc(der_capacity, 1)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'calloc' identified by tree-sitter C parser.
+  priority: medium
+  line: 243
+  line_start: 243
+  line_end: 243
+  column_start: 11
+  column_end: 34
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - der_capacity
+  identifiers_written: []
+  called_function: calloc
+  call_node_code: calloc(der_capacity, 1)
+- unit_id: ASTLITE-0042
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[ERROR]'
+  code: if (der == NULL) { printf("[ERROR] allocation failed\n"); return 2; }
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 244
+  line_start: 244
+  line_end: 247
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[ERROR]'
+  identifiers_read:
+  - 'NULL'
+  - ERROR
+  - allocation
+  - failed
+  - n
+  identifiers_written:
+  - der
+- unit_id: ASTLITE-0043
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[ERROR]'
+  code: printf("[ERROR] allocation failed\n");
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 245
+  line_start: 245
+  line_end: 245
+  column_start: 9
+  column_end: 47
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[ERROR]'
+  identifiers_read:
+  - ERROR
+  - allocation
+  - failed
+  - n
+  identifiers_written: []
+- unit_id: ASTLITE-0044
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[ERROR]'
+  code: printf("[ERROR] allocation failed\n")
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 245
+  line_start: 245
+  line_end: 245
+  column_start: 9
+  column_end: 46
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[ERROR]'
+  identifiers_read:
+  - ERROR
+  - allocation
+  - failed
+  - n
+  identifiers_written: []
+  called_function: printf
+  call_node_code: printf("[ERROR] allocation failed\n")
+- unit_id: ASTLITE-0045
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: build_der_with_trailing_garbage(base_hex, TRAILING_GARBAGE_HEX, der, der_capacity,
+    &der_len, &trailing_len)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'build_der_with_trailing_garbage' identified by tree-sitter
+    C parser.
+  priority: medium
+  line: 249
+  line_start: 249
+  line_end: 254
+  column_start: 11
+  column_end: 57
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - base_hex
+  - TRAILING_GARBAGE_HEX
+  - der
+  - der_capacity
+  - der_len
+  - trailing_len
+  identifiers_written: []
+  called_function: build_der_with_trailing_garbage
+  call_node_code: build_der_with_trailing_garbage(base_hex, TRAILING_GARBAGE_HEX,
+    der, der_capacity, &der_len, &trailing_len)
+- unit_id: ASTLITE-0046
+  mask_level: statement
+  role: cleanup
+  placeholder: '[ERROR]'
+  code: 'if (ret != 0) { printf("[ERROR] DER construction failed: %d\n", ret); free(der);
+    return 2; }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 255
+  line_start: 255
+  line_end: 259
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[ERROR]'
+  identifiers_read:
+  - ret
+  - ERROR
+  - DER
+  - construction
+  - failed
+  - d
+  - n
+  - der
+  identifiers_written: []
+- unit_id: ASTLITE-0047
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[ERROR]'
+  code: 'printf("[ERROR] DER construction failed: %d\n", ret);'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 256
+  line_start: 256
+  line_end: 256
+  column_start: 9
+  column_end: 62
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[ERROR]'
+  identifiers_read:
+  - ERROR
+  - DER
+  - construction
+  - failed
+  - d
+  - n
+  - ret
+  identifiers_written: []
+- unit_id: ASTLITE-0048
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[ERROR]'
+  code: 'printf("[ERROR] DER construction failed: %d\n", ret)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 256
+  line_start: 256
+  line_end: 256
+  column_start: 9
+  column_end: 61
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[ERROR]'
+  identifiers_read:
+  - ERROR
+  - DER
+  - construction
+  - failed
+  - d
+  - n
+  - ret
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("[ERROR] DER construction failed: %d\n", ret)'
+- unit_id: ASTLITE-0049
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: free(der);
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 257
+  line_start: 257
+  line_end: 257
+  column_start: 9
+  column_end: 19
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - der
+  identifiers_written: []
+- unit_id: ASTLITE-0050
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: free(der)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'free' identified by tree-sitter C parser.
+  priority: medium
+  line: 257
+  line_start: 257
+  line_end: 257
+  column_start: 9
+  column_end: 18
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - der
+  identifiers_written: []
+  called_function: free
+  call_node_code: free(der)
+- unit_id: ASTLITE-0051
+  mask_level: statement
+  role: cleanup
+  placeholder: '[ERROR]'
+  code: 'if (trailing_len != TRAILING_GARBAGE_EXPECTED_LEN) { printf("[ERROR] trailing
+    garbage length mismatch: got=%zu expected=%zu\n", trailing_len, TRAILING_GARBAGE_EXPECTED_LEN);
+    free(der); return 2; }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 261
+  line_start: 261
+  line_end: 266
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[ERROR]'
+  identifiers_read:
+  - trailing_len
+  - TRAILING_GARBAGE_EXPECTED_LEN
+  - ERROR
+  - trailing
+  - garbage
+  - length
+  - mismatch
+  - zu
+  - n
+  - der
+  identifiers_written:
+  - got
+  - expected
+- unit_id: ASTLITE-0052
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[ERROR]'
+  code: 'printf("[ERROR] trailing garbage length mismatch: got=%zu expected=%zu\n",
+    trailing_len, TRAILING_GARBAGE_EXPECTED_LEN);'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 262
+  line_start: 262
+  line_end: 263
+  column_start: 9
+  column_end: 61
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[ERROR]'
+  identifiers_read:
+  - ERROR
+  - trailing
+  - garbage
+  - length
+  - mismatch
+  - zu
+  - n
+  - trailing_len
+  - TRAILING_GARBAGE_EXPECTED_LEN
+  identifiers_written:
+  - got
+  - expected
+- unit_id: ASTLITE-0053
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[ERROR]'
+  code: 'printf("[ERROR] trailing garbage length mismatch: got=%zu expected=%zu\n",
+    trailing_len, TRAILING_GARBAGE_EXPECTED_LEN)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 262
+  line_start: 262
+  line_end: 263
+  column_start: 9
+  column_end: 60
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[ERROR]'
+  identifiers_read:
+  - ERROR
+  - trailing
+  - garbage
+  - length
+  - mismatch
+  - zu
+  - n
+  - trailing_len
+  - TRAILING_GARBAGE_EXPECTED_LEN
+  identifiers_written:
+  - got
+  - expected
+  called_function: printf
+  call_node_code: 'printf("[ERROR] trailing garbage length mismatch: got=%zu expected=%zu\n",
+    trailing_len, TRAILING_GARBAGE_EXPECTED_LEN)'
+- unit_id: ASTLITE-0054
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: 'printf("DER kind: %s\n", der_kind)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 268
+  line_start: 268
+  line_end: 268
+  column_start: 5
+  column_end: 39
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - DER
+  - kind
+  - s
+  - n
+  - der_kind
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("DER kind: %s\n", der_kind)'
+- unit_id: ASTLITE-0055
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: 'printf("Parse API kind: %s\n", parse_api_kind)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 269
+  line_start: 269
+  line_end: 269
+  column_start: 5
+  column_end: 51
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - Parse
+  - API
+  - kind
+  - s
+  - n
+  - parse_api_kind
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("Parse API kind: %s\n", parse_api_kind)'
+- unit_id: ASTLITE-0056
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: 'printf("DER length with trailing garbage: %zu\n", der_len)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 270
+  line_start: 270
+  line_end: 270
+  column_start: 5
+  column_end: 63
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - DER
+  - length
+  - with
+  - trailing
+  - garbage
+  - zu
+  - n
+  - der_len
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("DER length with trailing garbage: %zu\n", der_len)'
+- unit_id: ASTLITE-0057
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: 'printf("Trailing garbage length: %zu\n", trailing_len)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 271
+  line_start: 271
+  line_end: 271
+  column_start: 5
+  column_end: 59
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - Trailing
+  - garbage
+  - length
+  - zu
+  - n
+  - trailing_len
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("Trailing garbage length: %zu\n", trailing_len)'
+- unit_id: ASTLITE-0058
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: parse_with_selected_api(parse_api_kind, der_kind, der, der_len)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'parse_with_selected_api' identified by tree-sitter C parser.
+  priority: medium
+  line: 277
+  line_start: 277
+  line_end: 277
+  column_start: 11
+  column_end: 74
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - parse_api_kind
+  - der_kind
+  - der
+  - der_len
+  identifiers_written: []
+  called_function: parse_with_selected_api
+  call_node_code: parse_with_selected_api(parse_api_kind, der_kind, der, der_len)
+- unit_id: ASTLITE-0059
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("ret=%d\n", ret)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 279
+  line_start: 279
+  line_end: 279
+  column_start: 5
+  column_end: 28
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - d
+  - n
+  identifiers_written:
+  - ret
+  called_function: printf
+  call_node_code: printf("ret=%d\n", ret)
+- unit_id: ASTLITE-0060
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("expected_buggy=0\n")
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 280
+  line_start: 280
+  line_end: 280
+  column_start: 5
+  column_end: 33
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - n
+  identifiers_written:
+  - expected_buggy
+  called_function: printf
+  call_node_code: printf("expected_buggy=0\n")
+- unit_id: ASTLITE-0061
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("expected_fixed_or_safe=%d\n", EXPECTED_RETURN_VALUE)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 281
+  line_start: 281
+  line_end: 281
+  column_start: 5
+  column_end: 65
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - d
+  - n
+  - EXPECTED_RETURN_VALUE
+  identifiers_written:
+  - expected_fixed_or_safe
+  called_function: printf
+  call_node_code: printf("expected_fixed_or_safe=%d\n", EXPECTED_RETURN_VALUE)
+- unit_id: ASTLITE-0062
+  mask_level: statement
+  role: oracle
+  placeholder: '[BUG]'
+  code: if (ret == 0) { printf("[BUG] parser accepted trailing garbage after top-level
+    SEQUENCE.\n"); free(der); return 1; }
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 283
+  line_start: 283
+  line_end: 287
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[BUG]'
+  identifiers_read:
+  - BUG
+  - parser
+  - accepted
+  - trailing
+  - garbage
+  - after
+  - top
+  - level
+  - SEQUENCE
+  - n
+  - der
+  identifiers_written:
+  - ret
+- unit_id: ASTLITE-0063
+  mask_level: statement
+  role: oracle
+  placeholder: '[BUG]'
+  code: printf("[BUG] parser accepted trailing garbage after top-level SEQUENCE.\n");
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 284
+  line_start: 284
+  line_end: 284
+  column_start: 9
+  column_end: 86
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[BUG]'
+  identifiers_read:
+  - BUG
+  - parser
+  - accepted
+  - trailing
+  - garbage
+  - after
+  - top
+  - level
+  - SEQUENCE
+  - n
+  identifiers_written: []
+- unit_id: ASTLITE-0064
+  mask_level: function_call
+  role: oracle
+  placeholder: '[BUG]'
+  code: printf("[BUG] parser accepted trailing garbage after top-level SEQUENCE.\n")
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 284
+  line_start: 284
+  line_end: 284
+  column_start: 9
+  column_end: 85
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[BUG]'
+  identifiers_read:
+  - BUG
+  - parser
+  - accepted
+  - trailing
+  - garbage
+  - after
+  - top
+  - level
+  - SEQUENCE
+  - n
+  identifiers_written: []
+  called_function: printf
+  call_node_code: printf("[BUG] parser accepted trailing garbage after top-level SEQUENCE.\n")
+- unit_id: ASTLITE-0065
+  mask_level: statement
+  role: oracle
+  placeholder: '[OK]'
+  code: if (ret == EXPECTED_RETURN_VALUE || ret == MBEDTLS_ERR_RSA_BAD_INPUT_DATA)
+    { printf("[OK] parser rejected trailing garbage.\n"); free(der); return 0; }
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 289
+  line_start: 289
+  line_end: 294
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[OK]'
+  identifiers_read:
+  - EXPECTED_RETURN_VALUE
+  - MBEDTLS_ERR_RSA_BAD_INPUT_DATA
+  - OK
+  - parser
+  - rejected
+  - trailing
+  - garbage
+  - n
+  - der
+  identifiers_written:
+  - ret
+- unit_id: ASTLITE-0066
+  mask_level: statement
+  role: oracle
+  placeholder: '[OK]'
+  code: printf("[OK] parser rejected trailing garbage.\n");
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 291
+  line_start: 291
+  line_end: 291
+  column_start: 9
+  column_end: 60
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[OK]'
+  identifiers_read:
+  - OK
+  - parser
+  - rejected
+  - trailing
+  - garbage
+  - n
+  identifiers_written: []
+- unit_id: ASTLITE-0067
+  mask_level: function_call
+  role: oracle
+  placeholder: '[OK]'
+  code: printf("[OK] parser rejected trailing garbage.\n")
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 291
+  line_start: 291
+  line_end: 291
+  column_start: 9
+  column_end: 59
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[OK]'
+  identifiers_read:
+  - OK
+  - parser
+  - rejected
+  - trailing
+  - garbage
+  - n
+  identifiers_written: []
+  called_function: printf
+  call_node_code: printf("[OK] parser rejected trailing garbage.\n")
+- unit_id: ASTLITE-0068
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[INFO]'
+  code: printf("[INFO] parser rejected trailing garbage with alternate ret=%d\n",
+    ret);
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 296
+  line_start: 296
+  line_end: 296
+  column_start: 5
+  column_end: 84
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[INFO]'
+  identifiers_read:
+  - INFO
+  - parser
+  - rejected
+  - trailing
+  - garbage
+  - with
+  - alternate
+  - d
+  - n
+  identifiers_written:
+  - ret
+- unit_id: ASTLITE-0069
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[INFO]'
+  code: printf("[INFO] parser rejected trailing garbage with alternate ret=%d\n",
+    ret)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 296
+  line_start: 296
+  line_end: 296
+  column_start: 5
+  column_end: 83
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[INFO]'
+  identifiers_read:
+  - INFO
+  - parser
+  - rejected
+  - trailing
+  - garbage
+  - with
+  - alternate
+  - d
+  - n
+  identifiers_written:
+  - ret
+  called_function: printf
+  call_node_code: printf("[INFO] parser rejected trailing garbage with alternate ret=%d\n",
+    ret)
+role_summary:
+  cleanup: 8
+  entrypoint: 1
+  helper_function: 28
+  input_preparation: 3
+  mutation_point: 17
+  oracle: 6
+  trigger_call: 6
+mask_level_summary:
+  block: 7
+  function_call: 38
+  statement: 19
+  value: 5

@@ -142,6 +142,8 @@ def load_or_infer_adapter_meta(
             "template_meta": str(source_template_dir / "template_meta.yaml"),
             "mask_report": str(source_template_dir / "mask_report.yaml"),
             "source_template": str(source_template_dir / "tmpl_mbedtls.c"),
+            "ast_mask_report": str(source_template_dir / "ast_mask_report.yaml"),
+            "selected_mask_units": str(source_template_dir / "selected_mask_units.yaml"),
         },
         "inferred_adapter_meta": True,
     }
@@ -152,6 +154,104 @@ def optional_path(value: Any) -> Optional[Path]:
     if not text:
         return None
     return Path(text)
+
+
+def load_optional_yaml_path(path: Optional[Path]) -> Dict[str, Any]:
+    if path is None or not path.exists():
+        return {}
+    return load_yaml(path)
+
+
+def unit_compact(unit: Dict[str, Any]) -> Dict[str, Any]:
+    keep = [
+        "unit_id",
+        "role",
+        "mask_level",
+        "placeholder",
+        "suggested_use",
+        "selection_reason",
+        "selection_score",
+        "source",
+        "function",
+        "line_start",
+        "line_end",
+        "node_type",
+        "enclosing_function",
+    ]
+    return {key: unit.get(key) for key in keep if unit.get(key) not in (None, "", [])}
+
+
+def selected_units_by_use(selected_report: Dict[str, Any]) -> Dict[str, List[Dict[str, Any]]]:
+    grouped: Dict[str, List[Dict[str, Any]]] = {}
+    for unit in selected_report.get("selected_units", []) or []:
+        if not isinstance(unit, dict):
+            continue
+        key = str(unit.get("suggested_use") or "unspecified")
+        grouped.setdefault(key, []).append(unit_compact(unit))
+    return grouped
+
+
+def selected_units_summary(selected_report: Dict[str, Any]) -> Dict[str, Any]:
+    units = [u for u in selected_report.get("selected_units", []) or [] if isinstance(u, dict)]
+    if not selected_report:
+        return {}
+    selection_summary = (
+        selected_report.get("selection_summary", {})
+        if isinstance(selected_report.get("selection_summary"), dict)
+        else {}
+    )
+    return {
+        "selected_count": len(units),
+        "source_unit_count": selection_summary.get("source_unit_count"),
+        "trigger_apis": selected_report.get("trigger_apis", []),
+        "harness_family": selected_report.get("harness_family", ""),
+        "by_role": selection_summary.get("by_role", {}),
+        "by_mask_level": selection_summary.get("by_mask_level", {}),
+        "by_suggested_use": selection_summary.get("by_suggested_use", {}),
+    }
+
+
+def validate_selected_units_for_cross_generation(
+    selected_report: Dict[str, Any],
+    source_meta: Dict[str, Any],
+    adapter_file: Path,
+) -> None:
+    if not selected_report:
+        return
+
+    selected_family = str(selected_report.get("harness_family") or "")
+    source_family = str(source_meta.get("harness_family") or "")
+    if selected_family and source_family and selected_family != source_family:
+        raise ValueError(
+            f"selected_mask_units.yaml harness_family={selected_family!r} does not match "
+            f"template_meta.yaml harness_family={source_family!r} for {adapter_file}"
+        )
+
+    suggested = {
+        str(unit.get("suggested_use") or "")
+        for unit in selected_report.get("selected_units", []) or []
+        if isinstance(unit, dict)
+    }
+    roles = {
+        str(unit.get("role") or "")
+        for unit in selected_report.get("selected_units", []) or []
+        if isinstance(unit, dict)
+    }
+
+    if "migrate_api_call" not in suggested:
+        raise ValueError(f"selected_mask_units.yaml lacks suggested_use=migrate_api_call for {adapter_file}")
+    if "preserve_oracle" not in suggested and "oracle" not in roles:
+        raise ValueError(f"selected_mask_units.yaml lacks oracle/preserve_oracle context for {adapter_file}")
+
+
+def selected_trace_for_meta(selected_report: Dict[str, Any], selected_path: Optional[Path]) -> Dict[str, Any]:
+    if not selected_report:
+        return {}
+    return {
+        "source_file": str(selected_path) if selected_path else "",
+        "summary": selected_units_summary(selected_report),
+        "selected_units_by_use": selected_units_by_use(selected_report),
+    }
 
 
 def is_recipe_adapter(adapter: Dict[str, Any]) -> bool:
@@ -3167,7 +3267,12 @@ def render_target_c_from_adapter(
     return renderer(adapter, source_template_dir, source_meta, mask_report)
 
 
-def build_cross_meta(source_meta: Dict[str, Any], adapter: Dict[str, Any]) -> Dict[str, Any]:
+def build_cross_meta(
+    source_meta: Dict[str, Any],
+    adapter: Dict[str, Any],
+    selected_report: Optional[Dict[str, Any]] = None,
+    selected_path: Optional[Path] = None,
+) -> Dict[str, Any]:
     cross_meta = copy.deepcopy(source_meta)
     cross_meta["status"] = "cross_generated_from_llm_adapter"
 
@@ -3179,6 +3284,10 @@ def build_cross_meta(source_meta: Dict[str, Any], adapter: Dict[str, Any]) -> Di
     cross_meta["source_template_id"] = base_template_id
     cross_meta["template_id"] = f"{base_template_id}__{target_suffix}"
 
+    selected_trace = selected_trace_for_meta(selected_report or {}, selected_path)
+    if selected_trace:
+        cross_meta["ast_mask_selection_trace"] = selected_trace
+
     cross_meta.setdefault("cross_library", {})
     cross_meta["cross_library"][target_lib] = {
         "target_api": target_api,
@@ -3188,6 +3297,7 @@ def build_cross_meta(source_meta: Dict[str, Any], adapter: Dict[str, Any]) -> Di
         "preserved_features": adapter.get("preserved_features", []),
         "lost_or_weakened_features": adapter.get("lost_or_weakened_features", []),
         "llm_status": adapter.get("_llm_status"),
+        "ast_mask_selection_summary": selected_units_summary(selected_report or {}),
     }
 
     if is_recipe_adapter(adapter):
@@ -3207,6 +3317,8 @@ def build_cross_mapping(
     mask_report: Dict[str, Any],
     adapter: Dict[str, Any],
     adapter_meta: Dict[str, Any],
+    selected_report: Optional[Dict[str, Any]] = None,
+    selected_path: Optional[Path] = None,
 ) -> Dict[str, Any]:
     return {
         "source": {
@@ -3216,6 +3328,8 @@ def build_cross_mapping(
             "semantic_operation": source_meta.get("operation", {}).get("abstract"),
             "bug_class": source_meta.get("operation", {}).get("bug_class", []),
             "poc_pattern": mask_report.get("poc_pattern", {}),
+            "harness_family": source_meta.get("harness_family") or mask_report.get("harness_family"),
+            "trigger_apis": mask_report.get("trigger_apis", []),
         },
         "target": {
             "library": adapter.get("target_library"),
@@ -3237,6 +3351,11 @@ def build_cross_mapping(
             "llm_status": adapter.get("_llm_status"),
         },
         "candidate": adapter_meta.get("candidate", {}),
+        "ast_mask_selection": {
+            "source_file": str(selected_path) if selected_path else "",
+            "summary": selected_units_summary(selected_report or {}),
+            "selected_units_by_use": selected_units_by_use(selected_report or {}),
+        },
         "preserved_vulnerability_features": adapter.get("preserved_features", []),
         "lost_or_weakened_features": adapter.get("lost_or_weakened_features", []),
         "source_expected_behavior": {
@@ -3265,6 +3384,7 @@ def generate_one(adapter_file: Path, adapter_root: Path, out_root: Path) -> bool
     source_files = adapter_meta.get("source_files", {})
     template_meta_path = optional_path(source_files.get("template_meta"))
     mask_report_path = optional_path(source_files.get("mask_report"))
+    selected_units_path = optional_path(source_files.get("selected_mask_units"))
 
     if mask_report_path is None or not mask_report_path.exists():
         print(f"[FAIL] missing mask_report for adapter: {adapter_file}")
@@ -3277,6 +3397,10 @@ def generate_one(adapter_file: Path, adapter_root: Path, out_root: Path) -> bool
         source_template_dir = mask_report_path.parent
         source_meta = load_yaml(source_template_dir / "template_meta.yaml")
     mask_report = load_yaml(mask_report_path)
+    if selected_units_path is None:
+        selected_units_path = source_template_dir / "selected_mask_units.yaml"
+    selected_report = {} if is_bignum_projection else load_optional_yaml_path(selected_units_path)
+    validate_selected_units_for_cross_generation(selected_report, source_meta, adapter_file)
 
     rel = adapter_file.parent.relative_to(adapter_root)
     out_dir = out_root / rel
@@ -3287,6 +3411,8 @@ def generate_one(adapter_file: Path, adapter_root: Path, out_root: Path) -> bool
         "tmpl_mbedtls.c",
         "tmpl_openssl.c",
         "mask_report.yaml",
+        "ast_mask_report.yaml",
+        "selected_mask_units.yaml",
         "rag_context.json",
         "llm_updates.json",
         "normalization_report.json",
@@ -3324,7 +3450,7 @@ def generate_one(adapter_file: Path, adapter_root: Path, out_root: Path) -> bool
 
     target_lib = adapter.get("target_library", "target")
 
-    cross_meta = build_cross_meta(source_meta, adapter)
+    cross_meta = build_cross_meta(source_meta, adapter, selected_report, selected_units_path)
     if recipe and is_mac_context_size_lifecycle_recipe(adapter, recipe):
         cross_meta = mac_context_size_lifecycle_meta(cross_meta, adapter)
     if recipe and is_rsa_invalid_key_sign_rejection_recipe(adapter, recipe):
@@ -3338,7 +3464,7 @@ def generate_one(adapter_file: Path, adapter_root: Path, out_root: Path) -> bool
         render_target_c_from_adapter(adapter, source_template_dir, source_meta, mask_report),
     )
 
-    cross_mapping = build_cross_mapping(source_meta, mask_report, adapter, adapter_meta)
+    cross_mapping = build_cross_mapping(source_meta, mask_report, adapter, adapter_meta, selected_report, selected_units_path)
     if is_bignum_projection:
         cross_mapping = scrub_forbidden_tokens(cross_mapping)
     elif is_bignum_serialization_buffer_boundary_recipe(adapter, recipe) if recipe else False:
@@ -3474,6 +3600,12 @@ This template migrates the source vulnerability path using a structured adapter 
 
 The target-specific include, input-construction, trigger-call, return-semantics, oracle strategy, and cleanup blocks are stored in `cross_mapping.yaml`.
 
+## AST Mask Selection
+
+- Selected units: `{len(selected_report.get("selected_units", []) or []) if selected_report else 0}`
+- Selection source: `{selected_units_path if selected_report else "not available"}`
+- Trace fields are written to `template_meta.yaml` and `cross_mapping.yaml`.
+
 ## Files
 
 - `tmpl_mbedtls.c`
@@ -3481,6 +3613,8 @@ The target-specific include, input-construction, trigger-call, return-semantics,
 - `template_meta.yaml`
 - `cross_mapping.yaml`
 - `mask_report.yaml`
+- `ast_mask_report.yaml`
+- `selected_mask_units.yaml`
 """
     write_text(out_dir / "README.md", readme)
 

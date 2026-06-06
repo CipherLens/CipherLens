@@ -1,6 +1,10 @@
 template_id: RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF
 pattern_id: OPENSSL-ISSUE-21935
 source_library: openssl
+trigger_apis:
+  - EVP_DigestSignInit
+  - EVP_DigestSign
+harness_family: pkey_capability_mismatch_oracle
 
 selected_units:
   - unit_id: rsa_n_dec_arg
@@ -50,21 +54,27 @@ selected_units:
     selected: false
     priority: critical
     reason: Non-mutable; core invalid RSA key construction path
+    suggested_use: migrate_api_call
 
   - unit_id: evp_pkey_assign_rsa_call
     slot: EVP_PKEY_ASSIGN_RSA_CALL
     selected: false
     priority: critical
     reason: Non-mutable; core bridge into EVP signing path
+    suggested_use: migrate_api_call
 
   - unit_id: digest_sign_init_call
     slot: INIT_CALL
     selected: false
     priority: critical
     reason: Non-mutable; core signing-init trigger
+    role: oracle
+    suggested_use: migrate_api_call
 
   - unit_id: digest_sign_call
     slot: SIGN_CALL
     selected: false
     priority: critical
     reason: Non-mutable; core signing trigger
+    role: oracle
+    suggested_use: migrate_api_call

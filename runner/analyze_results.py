@@ -54,6 +54,8 @@ SAFE_PATTERNS = [
 DER_TRAILING_GARBAGE_SAFE_REJECT_PATTERNS = [
     "[OK] parser rejected trailing garbage.",
     "[INFO] parser rejected trailing garbage with alternate ret=",
+    "[OK] target rejected trailing-garbage input.",
+    "[OK] target decoded and consumed full input exactly.",
 ]
 
 X509_ASN1_INNER_BOUNDARY_SAFE_REJECT_PATTERNS = [
@@ -210,6 +212,61 @@ def contains_any(text: str, patterns: List[str]) -> bool:
     return any(p.lower() in lower for p in patterns)
 
 
+def template_info(record: Dict[str, Any]) -> Dict[str, Any]:
+    value = record.get("template", {})
+    return value if isinstance(value, dict) else {}
+
+
+def record_harness_family(record: Dict[str, Any], result: Dict[str, Any] | None = None) -> str:
+    tmpl = template_info(record)
+    if tmpl.get("harness_family"):
+        return str(tmpl.get("harness_family"))
+    if result and result.get("harness_family"):
+        return str(result.get("harness_family"))
+    return ""
+
+
+def record_oracle_type(record: Dict[str, Any], result: Dict[str, Any] | None = None) -> str:
+    tmpl = template_info(record)
+    if tmpl.get("oracle_type"):
+        return str(tmpl.get("oracle_type"))
+    if result and result.get("oracle_type"):
+        return str(result.get("oracle_type"))
+    return ""
+
+
+def record_target_api(record: Dict[str, Any]) -> str:
+    return str(template_info(record).get("target_api") or "")
+
+
+def record_target_library(record: Dict[str, Any]) -> str:
+    return str(template_info(record).get("target_library") or record.get("library") or "")
+
+
+def ast_mask_selection_summary(record: Dict[str, Any]) -> Dict[str, Any]:
+    selection = record.get("ast_mask_selection", {})
+    if not isinstance(selection, dict) or not selection:
+        return {}
+    summary = selection.get("summary") if isinstance(selection.get("summary"), dict) else selection
+    out = {
+        "available": True,
+        "source_file": selection.get("source_file", summary.get("source_file", "")),
+        "harness_family": summary.get("harness_family", ""),
+        "trigger_apis": summary.get("trigger_apis", []),
+        "selected_count": summary.get("selected_count"),
+        "by_suggested_use": summary.get("by_suggested_use", {}),
+        "by_role": summary.get("by_role", {}),
+    }
+    return {k: v for k, v in out.items() if v not in (None, "", [], {})}
+
+
+def is_reference_artifact(record: Dict[str, Any]) -> bool:
+    source = str(record.get("source", ""))
+    relative = str(record.get("relative_source", ""))
+    name = Path(source).name or Path(relative).name
+    return record.get("library") == "unknown" and name in {"poc_original.c", "poc_original.cpp"}
+
+
 def is_x509_asn1_inner_boundary_record(record: Dict[str, Any], text: str, result: Dict[str, Any]) -> bool:
     markers = [
         str(record.get("relative_source", "")),
@@ -219,6 +276,10 @@ def is_x509_asn1_inner_boundary_record(record: Dict[str, Any], text: str, result
         text,
     ]
     joined = "\n".join(markers)
+    if record_harness_family(record, result) in {"x509_asn1_inner_boundary", "asn1_inner_boundary"}:
+        return True
+    if record_oracle_type(record, result) == "inner_asn1_boundary_semantic_oracle":
+        return True
     return (
         "X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY" in joined
         or "MBEDTLS-POC-0017" in joined
@@ -236,6 +297,10 @@ def is_return_code_outlen_record(record: Dict[str, Any], text: str, result: Dict
         text,
     ]
     joined = "\n".join(markers)
+    if record_harness_family(record, result) == "return_code_outlen_semantic":
+        return True
+    if record_oracle_type(record, result) == "invalid_padding_output_length_oracle":
+        return True
     return (
         "CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW" in joined
         or "MBEDTLS-POC-0004" in joined
@@ -254,6 +319,10 @@ def is_bignum_arithmetic_semantic_record(record: Dict[str, Any], text: str, resu
         text,
     ]
     joined = "\n".join(markers)
+    if record_harness_family(record, result) == "bignum_arithmetic_semantic":
+        return True
+    if record_oracle_type(record, result) == "bignum_negative_result_rejection_oracle":
+        return True
     return (
         "BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY" in joined
         or "MBEDTLS-POC-0002" in joined
@@ -304,6 +373,13 @@ def is_bignum_serialization_buffer_boundary_record(
         text,
     ]
     joined = "\n".join(markers)
+    if record_harness_family(record, result) == "buffer_canary_boundary":
+        return True
+    if record_oracle_type(record, result) in {
+        "bignum_serialization_buffer_boundary_oracle",
+        "canary_after_output_limbs_and_return_code",
+    }:
+        return True
     return (
         "BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER" in joined
         or "MBEDTLS-POC-0001" in joined
@@ -349,6 +425,10 @@ def is_object_state_lifecycle_record(
         text,
     ]
     joined = "\n".join(markers)
+    if record_harness_family(record, result) == "object_state_lifecycle":
+        return True
+    if record_oracle_type(record, result) in {"stale_pointer_length_state_oracle", "object_lifecycle_state_oracle"}:
+        return True
     return (
         "ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE" in joined
         or "MBEDTLS-POC-0005" in joined
@@ -372,6 +452,10 @@ def is_mac_context_lifecycle_record(
         text,
     ]
     joined = "\n".join(markers)
+    if record_harness_family(record, result) == "object_state_lifecycle":
+        return True
+    if record_oracle_type(record, result) == "mac_context_size_lifecycle_oracle":
+        return True
     return (
         "EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE" in joined
         or "OPENSSL-ISSUE-22842" in joined
@@ -395,6 +479,10 @@ def is_invalid_param_setup_record(
         text,
     ]
     joined = "\n".join(markers)
+    if record_harness_family(record, result) == "invalid_parameter_setup_oracle":
+        return True
+    if record_oracle_type(record, result) in {"invalid_aead_tag_length_oracle", "invalid_parameter_return_code_oracle"}:
+        return True
     return (
         "PSA_AEAD_INVALID_SHORTENED_TAG_SETUP" in joined
         or "MBEDTLS-POC-0028" in joined
@@ -402,6 +490,27 @@ def is_invalid_param_setup_record(
         or "EVP_CIPHER_CTX_ctrl" in joined
         or "CCM shortened tag length" in joined
         or "CCM tag length" in joined
+    )
+
+
+def is_der_pointer_consumption_record(record: Dict[str, Any], text: str, result: Dict[str, Any]) -> bool:
+    if record_harness_family(record, result) == "der_pointer_consumption":
+        return True
+    if record_oracle_type(record, result) == "pointer_consumption_semantic_oracle":
+        return True
+    markers = [
+        str(record.get("relative_source", "")),
+        str(record.get("source", "")),
+        str(result.get("template_id", "")),
+        str(result.get("case_name", "")),
+        text,
+    ]
+    joined = "\n".join(markers)
+    return (
+        "RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE" in joined
+        or "MBEDTLS-POC-0020" in joined
+        or "der_pointer_consumption" in joined
+        or "trailing garbage unconsumed" in joined
     )
 
 
@@ -467,10 +576,20 @@ def classify_record(record: Dict[str, Any]) -> Dict[str, Any]:
 
     ret_info = parse_ret_expected(text)
 
+    tmpl = template_info(record)
     result = {
         "source": record.get("source", ""),
         "relative_source": record.get("relative_source", ""),
         "library": record.get("library", ""),
+        "template": tmpl,
+        "metadata_files": record.get("metadata_files", {}) if isinstance(record.get("metadata_files", {}), dict) else {},
+        "ast_mask_selection": ast_mask_selection_summary(record),
+        "template_id": tmpl.get("template_id", ""),
+        "source_template_id": tmpl.get("source_template_id", ""),
+        "harness_family": tmpl.get("harness_family", ""),
+        "oracle_type": tmpl.get("oracle_type", ""),
+        "target_library": record_target_library(record),
+        "target_api": record_target_api(record),
         "raw_status": status,
         "verdict": "",
         "reason": "",
@@ -485,9 +604,24 @@ def classify_record(record: Dict[str, Any]) -> Dict[str, Any]:
 
     manifest = load_manifest_for_record(record)
     if manifest:
-        result["template_id"] = manifest.get("template_id", "")
+        result["template_id"] = result.get("template_id") or manifest.get("template_id", "")
         result["case_name"] = manifest.get("case_name", "")
         result["mutation_mapping"] = manifest.get("mapping", {})
+
+    if status == "dry_run":
+        result["verdict"] = "not_executed"
+        result["reason"] = "Dry-run compile command was recorded but the harness was not compiled or executed."
+        return result
+
+    if is_reference_artifact(record):
+        result["verdict"] = "reference_artifact_skipped"
+        result["reason"] = "Reference PoC artifact is not a generated source/target library harness for verdict analysis."
+        return result
+
+    if record.get("library") == "unknown":
+        result["verdict"] = "unknown_library_skipped"
+        result["reason"] = "Runner could not infer a supported target library from the case filename."
+        return result
 
     if status == "compile_error":
         result["verdict"] = "build_or_template_error"
@@ -509,7 +643,7 @@ def classify_record(record: Dict[str, Any]) -> Dict[str, Any]:
         result["reason"] = "UBSAN-like runtime error pattern found in output."
         return result
 
-    if contains_any(text, DER_TRAILING_GARBAGE_BUG_PATTERNS):
+    if contains_any(text, DER_TRAILING_GARBAGE_BUG_PATTERNS) and is_der_pointer_consumption_record(record, text, result):
         result["verdict"] = "bug_candidate"
         result["reason"] = "DER parser decoded the leading object but left trailing garbage unconsumed."
         return result
@@ -563,7 +697,7 @@ def classify_record(record: Dict[str, Any]) -> Dict[str, Any]:
         result["reason"] = "Return code matches expected fixed behavior and no bug/crash pattern was observed."
         return result
 
-    if contains_any(text, DER_TRAILING_GARBAGE_SAFE_REJECT_PATTERNS):
+    if contains_any(text, DER_TRAILING_GARBAGE_SAFE_REJECT_PATTERNS) and is_der_pointer_consumption_record(record, text, result):
         result["verdict"] = "safe_reject_behavior"
         result["reason"] = "DER parser rejected the trailing-garbage input."
         return result
@@ -796,12 +930,20 @@ def main() -> int:
 
     verdict_counter = Counter(c["verdict"] for c in cases)
     raw_status_counter = Counter(c["raw_status"] for c in cases)
+    library_counter = Counter(c.get("library", "") for c in cases)
+    harness_family_counter = Counter(c.get("harness_family", "") for c in cases if c.get("harness_family"))
+    oracle_type_counter = Counter(c.get("oracle_type", "") for c in cases if c.get("oracle_type"))
+    target_api_counter = Counter(c.get("target_api", "") for c in cases if c.get("target_api"))
 
     summary = {
         "input": str(input_path),
         "total_cases": len(cases),
         "verdict_counts": dict(verdict_counter),
         "raw_status_counts": dict(raw_status_counter),
+        "library_counts": dict(library_counter),
+        "harness_family_counts": dict(harness_family_counter),
+        "oracle_type_counts": dict(oracle_type_counter),
+        "target_api_counts": dict(target_api_counter),
         "cases": cases,
     }
 
@@ -820,6 +962,8 @@ def main() -> int:
     print(f"[INFO] total cases: {len(cases)}")
     print(f"[INFO] verdict counts: {dict(verdict_counter)}")
     print(f"[INFO] raw status counts: {dict(raw_status_counter)}")
+    print(f"[INFO] library counts: {dict(library_counter)}")
+    print(f"[INFO] harness family counts: {dict(harness_family_counter)}")
 
     return 0
 

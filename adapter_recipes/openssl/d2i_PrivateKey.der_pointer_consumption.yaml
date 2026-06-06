@@ -6,6 +6,7 @@ oracle_type: pointer_consumption_semantic_oracle
 include_headers:
   - openssl/evp.h
   - openssl/rsa.h
+  - openssl/err.h
   - stdio.h
   - stdlib.h
   - string.h
@@ -32,48 +33,62 @@ trigger_call:
   input_pointer: p
   input_length: der_len
 
+required_api_calls:
+  - d2i_PrivateKey
+  - EVP_PKEY_free
+
 allowed_slots:
   der_kind:
-    description: selects private/public DER base object
+    description: Selects private/public DER base object.
     default: private
   key_type:
-    description: OpenSSL EVP key type selector
+    description: OpenSSL EVP key type selector.
     default: EVP_PKEY_RSA
   trailing_garbage_bytes:
-    description: hex string appended after a valid top-level DER object
+    description: Hex string appended after a valid top-level DER object.
     default: "0500"
   trailing_garbage_len:
-    description: expected trailing garbage length in bytes
+    description: Expected trailing garbage length in bytes.
     default: 2
   input_buffer:
-    description: complete DER input buffer
+    description: Caller-controlled complete DER byte buffer.
     default: der
   input_length:
-    description: total DER length including trailing garbage
+    description: Total DER length including appended trailing garbage.
     default: der_len
   pointer_variable:
-    description: OpenSSL d2i input pointer
+    description: DER input cursor passed as const unsigned char **ppin.
     default: p
   consumed_len_variable:
-    description: number of bytes consumed by d2i
+    description: Number of bytes consumed by d2i.
     default: consumed_len
   return_code_variable:
-    description: decoded object success/failure observable
+    description: Decoded object success/failure observable.
     default: ret
   decoded_object:
-    description: decoded EVP_PKEY object
+    description: EVP_PKEY object returned by d2i_PrivateKey.
     default: pkey
   trailing_len_variable:
-    description: observed trailing garbage length
+    description: Observed trailing garbage length.
     default: trailing_len
 
 safe_behavior:
   condition: ret != 0 or consumed_len == der_len
-  description: target either rejects trailing-garbage input or consumes the full input exactly
+  description: Target either rejects trailing-garbage input or consumes the full input exactly.
+  signals:
+    - d2i_PrivateKey rejects the DER input with trailing garbage.
+    - d2i_PrivateKey succeeds only if the consumed pointer reaches the full input length.
 
 bug_behavior:
   condition: ret == 0 and consumed_len < der_len
-  description: target decodes the leading DER object but leaves trailing garbage unconsumed
+  description: Target decodes the leading DER object but leaves trailing garbage unconsumed.
+  signals:
+    - d2i_PrivateKey returns a non-NULL object while consumed_len is smaller than der_len.
+    - This indicates the decoder accepted a valid prefix object and left trailing garbage unconsumed.
+
+triage_behavior:
+  - The target accepts unexpected key encodings or formats outside the source RSA DER path.
+  - The target exposes ambiguous pointer advancement that needs manual review.
 
 lost_or_weakened_features:
   - Generic EVP decoder weakens RSA-specific object-shape equivalence.
@@ -81,11 +96,28 @@ lost_or_weakened_features:
   - OpenSSL d2i APIs expose pointer advancement through ppin, so callers must check full input consumption explicitly.
 
 forbidden_terms:
+  - BIGNUM
+  - BN_new
+  - BN_free
+  - BN_set_word
+  - BN_bn2binpad
+  - BN_signed_bn2bin
   - BN_usub
   - BN_ucmp
-  - BN_signed_bn2bin
-  - CANARY_SIZE
-  - BUFLEN
+  - d2i_X509
+  - X509_free
+  - ASN1_item_d2i
   - EVP_DecryptFinal_ex
   - EVP_CIPHER_CTX
-  - d2i_X509
+  - EVP_DigestVerifyInit
+  - PEM_read_bio_PrivateKey
+  - CANARY_SIZE
+  - BUFLEN
+  - openssl/bn.h
+  - openssl/x509.h
+  - openssl/pem.h
+
+notes:
+  - This recipe models the DER top-level trailing-garbage pointer-consumption oracle.
+  - The renderer calls d2i_PrivateKey(EVP_PKEY_RSA, NULL, &p, der_len) and compares p - der with der_len.
+  - This is a semantic migration oracle, not a crash or coverage-guided fuzzing path.
