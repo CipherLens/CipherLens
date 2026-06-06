@@ -1,0 +1,782 @@
+template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+template_name: mbedtls_pk_verify_ext opaque RSA-PSS null-deref template
+source_api: mbedtls_pk_verify_ext
+trigger_apis:
+- mbedtls_pk_verify_ext
+harness_family: null_deref_dispatch
+selection_policy:
+  method: ast_lite_high_value_mask_unit_selection
+  rules:
+  - Prefer role=mutation_point units.
+  - Prefer mask_level=value or api_argument units.
+  - Always retain trigger_call function_call/statement units.
+  - Always retain oracle statement/block units.
+  - Retain input_preparation/helper_function/block only when harness-family context
+    keywords are present.
+  - Use configured preferred_roles as scoring hints for each harness family.
+  - Use configured oracle_variables to prioritize oracle-observable units.
+  - Limit input/helper context to representative high-scoring units.
+  - Limit cleanup units to one or two representative statements.
+  - Deduplicate repeated code snippets.
+  context_keywords:
+  - dispatch
+  - type
+  - opaque
+  - context
+  - pk_verify_ext
+  - DigestVerify
+  ast_report_name: ast_mask_report.tree_sitter.yaml
+  family_rules_source: config/harness_family_ast_rules.yaml
+  family_rule:
+    context_keywords:
+    - dispatch
+    - type
+    - opaque
+    - context
+    - pk_verify_ext
+    - DigestVerify
+    oracle_variables:
+    - ret
+    preferred_roles:
+    - mutation_point
+    - trigger_call
+    - oracle
+    - input_preparation
+    - cleanup
+    context_limit: 12
+    cleanup_limit: 2
+selected_units:
+- unit_id: ASTLITE-0045
+  mask_level: statement
+  role: trigger_call
+  placeholder: '[PK_VERIFY_TYPE]'
+  code: ret = mbedtls_pk_verify_ext([PK_VERIFY_TYPE], &pss_opts, &pk, [MD_ALG], hash,
+    sizeof(hash), sig, sizeof(sig));
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 126
+  line_start: 126
+  line_end: 133
+  column_start: 5
+  column_end: 46
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[PK_VERIFY_TYPE]'
+  - '[MD_ALG]'
+  identifiers_read:
+  - PK_VERIFY_TYPE
+  - pss_opts
+  - pk
+  - MD_ALG
+  - hash
+  - sig
+  identifiers_written:
+  - ret
+  selection_reason: Selected because [PK_VERIFY_TYPE] is a mutation point with statement
+    granularity.
+  suggested_use: migrate_api_call
+  selection_score: 126
+- unit_id: ASTLITE-0049
+  mask_level: statement
+  role: oracle
+  placeholder: '[OK]'
+  code: 'if (ret == MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE) { printf("[OK] fixed behavior:
+    unsupported opaque verify_ext rejected safely.\n"); } else { printf("[INFO] returned
+    without crash, ret=%d\n", ret); }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 138
+  line_start: 138
+  line_end: 142
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[OK]'
+  - '[INFO]'
+  identifiers_read:
+  - MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE
+  - OK
+  - fixed
+  - behavior
+  - unsupported
+  - opaque
+  - verify_ext
+  - rejected
+  - safely
+  - n
+  - else
+  - INFO
+  - returned
+  - without
+  - crash
+  - d
+  identifiers_written:
+  - ret
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 113
+- unit_id: ASTLITE-0047
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: printf("expected fixed ret=%d\n", MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE);
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 136
+  line_start: 136
+  line_end: 136
+  column_start: 5
+  column_end: 75
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - expected
+  - fixed
+  - d
+  - n
+  - MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE
+  identifiers_written:
+  - ret
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 97
+- unit_id: ASTLITE-0050
+  mask_level: statement
+  role: oracle
+  placeholder: '[OK]'
+  code: 'printf("[OK] fixed behavior: unsupported opaque verify_ext rejected safely.\n");'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 139
+  line_start: 139
+  line_end: 139
+  column_start: 9
+  column_end: 89
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[OK]'
+  identifiers_read:
+  - OK
+  - fixed
+  - behavior
+  - unsupported
+  - opaque
+  - verify_ext
+  - rejected
+  - safely
+  - n
+  identifiers_written: []
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 93
+- unit_id: ASTLITE-0002
+  mask_level: value
+  role: mutation_point
+  placeholder: '[HASH_LEN]'
+  code: '#define HASH_LEN [HASH_LEN]'
+  source: tmpl_mbedtls.c.tree_sitter.preprocessor
+  reason: Preprocessor node contains template placeholder.
+  priority: high
+  line: 12
+  line_start: 12
+  line_end: 13
+  column_start: 1
+  column_end: 1
+  node_type: preproc_def
+  enclosing_function: ''
+  placeholder_dependencies:
+  - '[HASH_LEN]'
+  identifiers_read:
+  - define
+  - HASH_LEN
+  identifiers_written: []
+  selection_reason: Selected because [HASH_LEN] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 84
+- unit_id: ASTLITE-0001
+  mask_level: value
+  role: mutation_point
+  placeholder: '[KEY_BITS]'
+  code: '#define KEY_BITS [KEY_BITS]'
+  source: tmpl_mbedtls.c.tree_sitter.preprocessor
+  reason: Preprocessor node contains template placeholder.
+  priority: high
+  line: 11
+  line_start: 11
+  line_end: 12
+  column_start: 1
+  column_end: 1
+  node_type: preproc_def
+  enclosing_function: ''
+  placeholder_dependencies:
+  - '[KEY_BITS]'
+  identifiers_read:
+  - define
+  - KEY_BITS
+  identifiers_written: []
+  selection_reason: Selected because [KEY_BITS] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 84
+- unit_id: ASTLITE-0003
+  mask_level: value
+  role: mutation_point
+  placeholder: '[SIG_LEN]'
+  code: '#define SIG_LEN [SIG_LEN]'
+  source: tmpl_mbedtls.c.tree_sitter.preprocessor
+  reason: Preprocessor node contains template placeholder.
+  priority: high
+  line: 13
+  line_start: 13
+  line_end: 14
+  column_start: 1
+  column_end: 1
+  node_type: preproc_def
+  enclosing_function: ''
+  placeholder_dependencies:
+  - '[SIG_LEN]'
+  identifiers_read:
+  - define
+  - SIG_LEN
+  identifiers_written: []
+  selection_reason: Selected because [SIG_LEN] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 84
+- unit_id: ASTLITE-0004
+  mask_level: block
+  role: entrypoint
+  placeholder: '[HASH_LEN]'
+  code: 'int main(void) { int ret = 0; psa_status_t status; mbedtls_pk_context pk;
+    mbedtls_entropy_context entropy; mbedtls_ctr_drbg_context ctr_drbg; psa_key_attributes_t
+    key_attr = PSA_KEY_ATTRIBUTES_INIT; mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    unsigned char hash[HASH_LEN]; unsigned char sig[SIG_LEN]; const char *pers = "poc_pk_verify_ext_v2";
+    mbedtls_pk_rsassa_pss_options pss_opts; pss_opts.mgf1_hash_id = [MD_ALG]; pss_opts.expected_salt_len
+    = [EXPECTED_SALT_LEN]; setbuf(stdout, NULL); memset(hash, 0x2a, sizeof(hash));
+    memset(sig, 0x5a, sizeof(sig)); mbedtls_pk_init(&pk); mbedtls_entropy_init(&entropy);
+    mbedtls_ctr_drbg_init(&ctr_drbg); ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func,
+    &entropy, (const unsigned char *) pers, strlen(pers)); if (ret != 0) { printf("ctr_drbg_seed
+    failed: %d\n", ret); goto cleanup; } status = psa_crypto_init(); if (status !=
+    PSA_SUCCESS) { printf("psa_crypto_init failed: %d\n", (int) status); ret = 2;
+    goto cleanup; } /* * Step 1: create a legacy RSA key. */ ret = mbedtls_pk_setup(&pk,
+    mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)); if (ret != 0) { printf("mbedtls_pk_setup
+    failed: %d\n", ret); goto cleanup; } ret = mbedtls_rsa_gen_key(mbedtls_pk_rsa(pk),
+    mbedtls_ctr_drbg_random, &ctr_drbg, KEY_BITS, 65537); if (ret != 0) { printf("mbedtls_rsa_gen_key
+    failed: %d\n", ret); goto cleanup; } /* * Align with the official regression-test
+    scenario: * RSASSA-PSS key path. */ mbedtls_rsa_set_padding(mbedtls_pk_rsa(pk),
+    MBEDTLS_RSA_PKCS_V21, MBEDTLS_MD_NONE); /* * Step 2: import into PSA and turn
+    the PK context into an opaque context. */ ret = mbedtls_pk_get_psa_attributes(&pk,
+    PSA_KEY_USAGE_SIGN_HASH, &key_attr); if (ret != 0) { printf("mbedtls_pk_get_psa_attributes
+    failed: %d\n", ret); goto cleanup; } ret = mbedtls_pk_import_into_psa(&pk, &key_attr,
+    &key_id); if (ret != 0) { printf("mbedtls_pk_import_into_psa failed: %d\n", ret);
+    goto cleanup; } mbedtls_pk_free(&pk); mbedtls_pk_init(&pk); ret = mbedtls_pk_setup_opaque(&pk,
+    key_id); if (ret != 0) { printf("mbedtls_pk_setup_opaque failed: %d\n", ret);
+    goto cleanup; } printf("opaque pk type = %d\n", (int) mbedtls_pk_get_type(&pk));
+    printf("calling mbedtls_pk_verify_ext...\n"); /* * Trigger point: * * Buggy version:
+    * no ctx type check before RSA-PSS path; * mbedtls_pk_rsa(*ctx) may return NULL;
+    * NULL dereference occurs. * * Fixed version: * returns MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE.
+    */ ret = mbedtls_pk_verify_ext([PK_VERIFY_TYPE], &pss_opts, &pk, [MD_ALG], hash,
+    sizeof(hash), sig, sizeof(sig)); printf("verify_ext ret=%d\n", ret); printf("expected
+    fixed ret=%d\n", MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE); if (ret == MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE)
+    { printf("[OK] fixed behavior: unsupported opaque verify_ext rejected safely.\n");
+    } else { printf("[INFO] returned without crash, ret=%d\n", ret); } cleanup: mbedtls_pk_free(&pk);
+    if (!mbedtls_svc_key_id_is_null(key_id)) { psa_destroy_key(key_id); } mbedtls_ctr_drbg_free(&ctr_drbg);
+    mbedtls_entropy_free(&entropy); mbedtls_psa_crypto_free(); return 0; }'
+  source: tmpl_mbedtls.c.tree_sitter.function_definition
+  reason: Function definition identified by tree-sitter C parser.
+  priority: high
+  line: 14
+  line_start: 14
+  line_end: 156
+  column_start: 1
+  column_end: 2
+  node_type: function_definition
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[HASH_LEN]'
+  - '[SIG_LEN]'
+  - '[MD_ALG]'
+  - '[EXPECTED_SALT_LEN]'
+  - '[PK_VERIFY_TYPE]'
+  - '[OK]'
+  - '[INFO]'
+  identifiers_read:
+  - int
+  - void
+  - psa_status_t
+  - mbedtls_pk_context
+  - pk
+  - mbedtls_entropy_context
+  - entropy
+  - mbedtls_ctr_drbg_context
+  - ctr_drbg
+  - psa_key_attributes_t
+  - PSA_KEY_ATTRIBUTES_INIT
+  - mbedtls_svc_key_id_t
+  - MBEDTLS_SVC_KEY_ID_INIT
+  - unsigned
+  - char
+  - hash
+  - HASH_LEN
+  - sig
+  - SIG_LEN
+  - const
+  - poc_pk_verify_ext_v2
+  - mbedtls_pk_rsassa_pss_options
+  - pss_opts
+  - MD_ALG
+  - EXPECTED_SALT_LEN
+  - stdout
+  - 'NULL'
+  - mbedtls_entropy_func
+  - ctr_drbg_seed
+  - failed
+  - d
+  - n
+  - goto
+  - cleanup
+  - PSA_SUCCESS
+  - Step
+  - create
+  - a
+  - legacy
+  - RSA
+  - key
+  - MBEDTLS_PK_RSA
+  - mbedtls_ctr_drbg_random
+  - KEY_BITS
+  - Align
+  - with
+  - the
+  - official
+  - regression
+  - test
+  - scenario
+  - RSASSA
+  - PSS
+  - path
+  - MBEDTLS_RSA_PKCS_V21
+  - MBEDTLS_MD_NONE
+  - import
+  - into
+  - PSA
+  - and
+  - turn
+  - PK
+  - context
+  - an
+  - opaque
+  - PSA_KEY_USAGE_SIGN_HASH
+  - calling
+  - Trigger
+  - point
+  - Buggy
+  - version
+  - 'no'
+  - ctx
+  - check
+  - before
+  - may
+  - dereference
+  - occurs
+  - Fixed
+  - returns
+  - MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE
+  - PK_VERIFY_TYPE
+  - verify_ext
+  - expected
+  - fixed
+  - OK
+  - behavior
+  - unsupported
+  - rejected
+  - safely
+  - else
+  - INFO
+  - returned
+  - without
+  - crash
+  identifiers_written:
+  - ret
+  - key_attr
+  - key_id
+  - pers
+  - mgf1_hash_id
+  - expected_salt_len
+  - status
+  - type
+  function: main
+  selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
+  suggested_use: migrate_api_call
+  selection_score: 71
+- unit_id: ASTLITE-0008
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[EXPECTED_SALT_LEN]'
+  code: pss_opts.expected_salt_len = [EXPECTED_SALT_LEN];
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 33
+  line_start: 33
+  line_end: 33
+  column_start: 5
+  column_end: 54
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[EXPECTED_SALT_LEN]'
+  identifiers_read:
+  - pss_opts
+  - EXPECTED_SALT_LEN
+  identifiers_written:
+  - expected_salt_len
+  selection_reason: Selected because [EXPECTED_SALT_LEN] is a mutation point with
+    statement granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 62
+- unit_id: ASTLITE-0005
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[HASH_LEN]'
+  code: unsigned char hash[HASH_LEN];
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 26
+  line_start: 26
+  line_end: 26
+  column_start: 5
+  column_end: 34
+  node_type: declaration
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[HASH_LEN]'
+  identifiers_read:
+  - unsigned
+  - char
+  - hash
+  - HASH_LEN
+  identifiers_written: []
+  selection_reason: Selected because [HASH_LEN] is a mutation point with statement
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 62
+- unit_id: ASTLITE-0007
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[MD_ALG]'
+  code: pss_opts.mgf1_hash_id = [MD_ALG];
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 32
+  line_start: 32
+  line_end: 32
+  column_start: 5
+  column_end: 38
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[MD_ALG]'
+  identifiers_read:
+  - pss_opts
+  - MD_ALG
+  identifiers_written:
+  - mgf1_hash_id
+  selection_reason: Selected because [MD_ALG] is a mutation point with statement granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 62
+- unit_id: ASTLITE-0006
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SIG_LEN]'
+  code: unsigned char sig[SIG_LEN];
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 27
+  line_start: 27
+  line_end: 27
+  column_start: 5
+  column_end: 32
+  node_type: declaration
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SIG_LEN]'
+  identifiers_read:
+  - unsigned
+  - char
+  - sig
+  - SIG_LEN
+  identifiers_written: []
+  selection_reason: Selected because [SIG_LEN] is a mutation point with statement
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 62
+- unit_id: ASTLITE-0048
+  mask_level: function_call
+  role: oracle
+  placeholder: ''
+  code: printf("expected fixed ret=%d\n", MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 136
+  line_start: 136
+  line_end: 136
+  column_start: 5
+  column_end: 74
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - expected
+  - fixed
+  - d
+  - n
+  - MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE
+  identifiers_written:
+  - ret
+  called_function: printf
+  call_node_code: printf("expected fixed ret=%d\n", MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE)
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 50
+- unit_id: ASTLITE-0051
+  mask_level: function_call
+  role: oracle
+  placeholder: '[OK]'
+  code: 'printf("[OK] fixed behavior: unsupported opaque verify_ext rejected safely.\n")'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 139
+  line_start: 139
+  line_end: 139
+  column_start: 9
+  column_end: 88
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[OK]'
+  identifiers_read:
+  - OK
+  - fixed
+  - behavior
+  - unsupported
+  - opaque
+  - verify_ext
+  - rejected
+  - safely
+  - n
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("[OK] fixed behavior: unsupported opaque verify_ext rejected
+    safely.\n")'
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 46
+- unit_id: ASTLITE-0023
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_pk_info_from_type' identified by tree-sitter C parser.
+  priority: medium
+  line: 64
+  line_start: 64
+  line_end: 64
+  column_start: 33
+  column_end: 74
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - MBEDTLS_PK_RSA
+  identifiers_written: []
+  called_function: mbedtls_pk_info_from_type
+  call_node_code: mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)
+  selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
+  suggested_use: preserve_input_preparation
+  selection_score: 32
+- unit_id: ASTLITE-0042
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("opaque pk type = %d\n", (int) mbedtls_pk_get_type(&pk))
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 112
+  line_start: 112
+  line_end: 112
+  column_start: 5
+  column_end: 68
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - opaque
+  - pk
+  - d
+  - n
+  - int
+  identifiers_written:
+  - type
+  called_function: printf
+  call_node_code: printf("opaque pk type = %d\n", (int) mbedtls_pk_get_type(&pk))
+  selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
+  suggested_use: preserve_input_preparation
+  selection_score: 32
+- unit_id: ASTLITE-0043
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: mbedtls_pk_get_type(&pk)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_pk_get_type' identified by tree-sitter C parser.
+  priority: medium
+  line: 112
+  line_start: 112
+  line_end: 112
+  column_start: 43
+  column_end: 67
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - pk
+  identifiers_written: []
+  called_function: mbedtls_pk_get_type
+  call_node_code: mbedtls_pk_get_type(&pk)
+  selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
+  suggested_use: preserve_input_preparation
+  selection_score: 32
+- unit_id: ASTLITE-0044
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("calling mbedtls_pk_verify_ext...\n")
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 113
+  line_start: 113
+  line_end: 113
+  column_start: 5
+  column_end: 49
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - calling
+  - mbedtls_pk_verify_ext
+  - n
+  identifiers_written: []
+  called_function: printf
+  call_node_code: printf("calling mbedtls_pk_verify_ext...\n")
+  selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
+  suggested_use: preserve_input_preparation
+  selection_score: 32
+- unit_id: ASTLITE-0040
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: 'if (ret != 0) { printf("mbedtls_pk_setup_opaque failed: %d\n", ret); goto
+    cleanup; }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 107
+  line_start: 107
+  line_end: 110
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - ret
+  - mbedtls_pk_setup_opaque
+  - failed
+  - d
+  - n
+  - goto
+  - cleanup
+  identifiers_written: []
+  selection_reason: Selected limited cleanup context needed to keep generated harnesses
+    well-scoped.
+  suggested_use: preserve_cleanup
+  selection_score: 26
+- unit_id: ASTLITE-0017
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: 'if (ret != 0) { printf("ctr_drbg_seed failed: %d\n", ret); goto cleanup;
+    }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 49
+  line_start: 49
+  line_end: 52
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - ret
+  - ctr_drbg_seed
+  - failed
+  - d
+  - n
+  - goto
+  - cleanup
+  identifiers_written: []
+  selection_reason: Selected limited cleanup context needed to keep generated harnesses
+    well-scoped.
+  suggested_use: preserve_cleanup
+  selection_score: 20
+selection_summary:
+  selected_count: 20
+  source_unit_count: 62
+  by_role:
+    cleanup: 2
+    entrypoint: 1
+    helper_function: 4
+    mutation_point: 7
+    oracle: 5
+    trigger_call: 1
+  by_mask_level:
+    block: 1
+    function_call: 6
+    statement: 10
+    value: 3
+  by_suggested_use:
+    llm_reconstruction_context: 4
+    migrate_api_call: 2
+    mutate_value: 3
+    preserve_cleanup: 2
+    preserve_input_preparation: 4
+    preserve_oracle: 5
+rejected_summary:
+  count: 22
+  by_reason:
+    cleanup_limit_reached: 13
+    duplicate_code_or_unit: 6
+    noise_header_comment_or_log_label: 3

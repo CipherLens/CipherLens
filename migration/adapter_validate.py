@@ -3,7 +3,7 @@ import copy
 import re
 import shutil
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import yaml
 
@@ -344,6 +344,169 @@ def load_yaml(path: Path) -> Dict[str, Any]:
     if not isinstance(obj, dict):
         return {}
     return obj
+
+
+def load_optional_yaml(path: Optional[Path]) -> Dict[str, Any]:
+    if path is None or not path.exists():
+        return {}
+    return load_yaml(path)
+
+
+def optional_path(value: Any) -> Optional[Path]:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    return Path(text)
+
+
+def find_normalized_template_dir(template_id: str, root: Path = Path("normalized_templates")) -> Optional[Path]:
+    if not template_id or not root.exists():
+        return None
+    for meta_path in sorted(root.rglob("template_meta.yaml")):
+        meta = load_yaml(meta_path)
+        if meta.get("template_id") == template_id or meta.get("source_template_id") == template_id:
+            return meta_path.parent
+    return None
+
+
+def load_adapter_meta(adapter_file: Optional[Path]) -> Dict[str, Any]:
+    if adapter_file is None:
+        return {}
+    meta_path = adapter_file.parent / "adapter_meta.yaml"
+    return load_optional_yaml(meta_path)
+
+
+def infer_template_id_from_adapter_path(adapter_file: Optional[Path], adapter_root: Optional[Path]) -> str:
+    if adapter_file is None or adapter_root is None:
+        return ""
+    try:
+        rel = adapter_file.parent.relative_to(adapter_root)
+        if rel.parts:
+            return rel.parts[0]
+    except ValueError:
+        return ""
+    return ""
+
+
+def find_selected_mask_units_path(
+    adapter: Dict[str, Any],
+    adapter_file: Optional[Path] = None,
+    adapter_root: Optional[Path] = None,
+) -> Optional[Path]:
+    adapter_meta = load_adapter_meta(adapter_file)
+    source_files = adapter_meta.get("source_files", {}) if isinstance(adapter_meta.get("source_files"), dict) else {}
+
+    for key in ["selected_mask_units", "selected_units", "selected_mask_report"]:
+        path = optional_path(source_files.get(key))
+        if path and path.exists():
+            return path
+
+    for key in ["template_meta", "mask_report", "source_template"]:
+        path = optional_path(source_files.get(key))
+        if path:
+            candidate = path.parent / "selected_mask_units.yaml"
+            if candidate.exists():
+                return candidate
+
+    for value in [
+        adapter.get("source_template_id"),
+        adapter.get("template_id"),
+        adapter.get("source_pattern_id"),
+        infer_template_id_from_adapter_path(adapter_file, adapter_root),
+    ]:
+        template_dir = find_normalized_template_dir(str(value or ""))
+        if template_dir is not None:
+            candidate = template_dir / "selected_mask_units.yaml"
+            if candidate.exists():
+                return candidate
+
+    return None
+
+
+def selected_units_summary(selected_report: Dict[str, Any]) -> Dict[str, Any]:
+    units = [u for u in selected_report.get("selected_units", []) or [] if isinstance(u, dict)]
+    if not selected_report:
+        return {}
+    summary = selected_report.get("selection_summary", {}) if isinstance(selected_report.get("selection_summary"), dict) else {}
+    return {
+        "selected_count": len(units),
+        "source_unit_count": summary.get("source_unit_count"),
+        "trigger_apis": selected_report.get("trigger_apis", []),
+        "harness_family": selected_report.get("harness_family", ""),
+        "by_role": summary.get("by_role", {}),
+        "by_mask_level": summary.get("by_mask_level", {}),
+        "by_suggested_use": summary.get("by_suggested_use", {}),
+    }
+
+
+def selected_suggested_uses(selected_report: Dict[str, Any]) -> set:
+    return {
+        str(unit.get("suggested_use") or "")
+        for unit in selected_report.get("selected_units", []) or []
+        if isinstance(unit, dict)
+    }
+
+
+def selected_roles(selected_report: Dict[str, Any]) -> set:
+    return {
+        str(unit.get("role") or "")
+        for unit in selected_report.get("selected_units", []) or []
+        if isinstance(unit, dict)
+    }
+
+
+def adapter_effective_harness_family(adapter: Dict[str, Any], errors: Optional[List[str]] = None) -> str:
+    if is_recipe_adapter(adapter):
+        recipe = load_recipe_for_adapter(adapter, errors if errors is not None else [])
+        if recipe.get("harness_family"):
+            return str(recipe.get("harness_family"))
+    return str(adapter.get("harness_family") or "")
+
+
+def validate_selected_mask_units_context(
+    adapter: Dict[str, Any],
+    selected_report: Dict[str, Any],
+    selected_path: Optional[Path],
+    errors: List[str],
+    warnings: List[str],
+) -> Dict[str, Any]:
+    if not selected_report:
+        return {}
+
+    selected_family = str(selected_report.get("harness_family") or "")
+    adapter_family = adapter_effective_harness_family(adapter, errors)
+    if selected_family and adapter_family and selected_family != adapter_family:
+        errors.append(
+            f"selected_mask_units harness_family mismatch: selected={selected_family} adapter={adapter_family}"
+        )
+
+    suggested = selected_suggested_uses(selected_report)
+    roles = selected_roles(selected_report)
+    if "migrate_api_call" not in suggested:
+        errors.append("selected_mask_units must include suggested_use=migrate_api_call")
+    if "preserve_oracle" not in suggested and "oracle" not in roles:
+        errors.append("selected_mask_units must include oracle/preserve_oracle context")
+
+    if is_recipe_adapter(adapter):
+        warnings.append("selected_mask_units loaded as trace context for recipe adapter")
+    else:
+        trigger_text = "\n".join(iter_string_values(adapter.get("trigger_block")))
+        target_api = str(adapter.get("target_api") or "")
+        if "migrate_api_call" in suggested and target_api and target_api not in trigger_text:
+            errors.append(f"trigger_block must call target_api required by selected mask units: {target_api}")
+
+        oracle_text = "\n".join([
+            str(adapter.get("return_value_semantics") or ""),
+            "\n".join(iter_string_values(adapter.get("oracle_strategy"))),
+            "\n".join(iter_string_values(adapter.get("notes"))),
+        ])
+        if ("preserve_oracle" in suggested or "oracle" in roles) and not oracle_text.strip():
+            errors.append("adapter must describe oracle semantics required by selected mask units")
+
+    return {
+        "source_file": str(selected_path) if selected_path else "",
+        "summary": selected_units_summary(selected_report),
+    }
 
 
 def dump_yaml(path: Path, obj: Dict[str, Any]) -> None:
@@ -1368,7 +1531,11 @@ def validate_evp_decrypt_final_adapter(adapter: Dict[str, Any], errors: List[str
         )
 
 
-def normalize_and_validate(obj: Dict[str, Any]) -> Dict[str, Any]:
+def normalize_and_validate(
+    obj: Dict[str, Any],
+    adapter_file: Optional[Path] = None,
+    adapter_root: Optional[Path] = None,
+) -> Dict[str, Any]:
     raw, used_schema_wrapper = find_required_output_schema(obj)
     adapter = build_standard_adapter(raw, obj)
 
@@ -1403,12 +1570,24 @@ def normalize_and_validate(obj: Dict[str, Any]) -> Dict[str, Any]:
     validate_object_state_lifecycle_recipe_adapter(adapter, errors)
     validate_rsa_invalid_key_sign_rejection_recipe_adapter(adapter, errors)
 
+    selected_path = find_selected_mask_units_path(adapter, adapter_file, adapter_root)
+    selected_report = load_optional_yaml(selected_path)
+    ast_selection_trace = validate_selected_mask_units_context(
+        adapter,
+        selected_report,
+        selected_path,
+        errors,
+        warnings,
+    )
+
     adapter["validation"] = {
         "status": "needs_repair" if errors else "ok",
         "errors": errors,
         "warnings": warnings,
         "normalized": True,
     }
+    if ast_selection_trace:
+        adapter["validation"]["ast_mask_selection"] = ast_selection_trace
     return adapter
 
 
@@ -1421,7 +1600,7 @@ def validate_all(adapter_root: Path, out_root: Path) -> Tuple[int, int]:
         rel = adapter_file.relative_to(adapter_root)
         out_file = out_root / rel
 
-        adapter = normalize_and_validate(load_yaml(adapter_file))
+        adapter = normalize_and_validate(load_yaml(adapter_file), adapter_file, adapter_root)
         dump_yaml(out_file, adapter)
 
         meta_file = adapter_file.parent / "adapter_meta.yaml"

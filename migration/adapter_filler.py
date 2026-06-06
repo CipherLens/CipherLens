@@ -2,11 +2,10 @@ import argparse
 import json
 import re
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import yaml
 
-from utils.query_llm import get_glm_response
 
 
 class NoAliasDumper(yaml.SafeDumper):
@@ -37,12 +36,97 @@ def candidate_api(candidate: Dict[str, Any]) -> str:
     return str(candidate.get("target_api") or candidate.get("api") or "")
 
 
+def candidate_list_key(candidates_obj: Dict[str, Any]) -> str:
+    if "target_candidates" in candidates_obj:
+        return "target_candidates"
+    if "candidates" in candidates_obj:
+        return "candidates"
+    return "target_candidates"
+
+
+def compact_selected_unit(unit: Dict[str, Any], max_code_chars: int = 500) -> Dict[str, Any]:
+    out = {
+        "unit_id": unit.get("unit_id", ""),
+        "mask_level": unit.get("mask_level", ""),
+        "role": unit.get("role", ""),
+        "placeholder": unit.get("placeholder", ""),
+        "suggested_use": unit.get("suggested_use", ""),
+        "function": unit.get("function", ""),
+        "selection_reason": unit.get("selection_reason", ""),
+        "selection_score": unit.get("selection_score"),
+        "source": unit.get("source", ""),
+    }
+    code = unit.get("code")
+    if code:
+        out["code"] = str(code)[:max_code_chars]
+    return {k: v for k, v in out.items() if v not in (None, "", [])}
+
+
+def summarize_selected_context(selected_mask_context: Dict[str, Any]) -> Dict[str, Any]:
+    if not selected_mask_context or not selected_mask_context.get("available"):
+        return {"available": False}
+    units = [u for u in selected_mask_context.get("selected_units", []) or [] if isinstance(u, dict)]
+    by_use: Dict[str, int] = {}
+    by_role: Dict[str, int] = {}
+    for unit in units:
+        use = str(unit.get("suggested_use") or "unspecified")
+        role = str(unit.get("role") or "unspecified")
+        by_use[use] = by_use.get(use, 0) + 1
+        by_role[role] = by_role.get(role, 0) + 1
+    return {
+        "available": True,
+        "source_file": selected_mask_context.get("source_file", ""),
+        "template_id": selected_mask_context.get("template_id", ""),
+        "harness_family": selected_mask_context.get("harness_family", ""),
+        "trigger_apis": selected_mask_context.get("trigger_apis", []),
+        "selected_count": len(units),
+        "by_suggested_use": by_use,
+        "by_role": by_role,
+    }
+
+
+def selected_context_by_use(selected_mask_context: Dict[str, Any], limit_per_use: int = 6) -> Dict[str, List[Dict[str, Any]]]:
+    grouped: Dict[str, List[Dict[str, Any]]] = {}
+    if not selected_mask_context or not selected_mask_context.get("available"):
+        return grouped
+    for unit in selected_mask_context.get("selected_units", []) or []:
+        if not isinstance(unit, dict):
+            continue
+        key = str(unit.get("suggested_use") or "unspecified")
+        bucket = grouped.setdefault(key, [])
+        if len(bucket) < limit_per_use:
+            bucket.append(compact_selected_unit(unit, max_code_chars=240))
+    return grouped
+
+
+def adapter_ast_mask_selection(selected_mask_context: Dict[str, Any]) -> Dict[str, Any]:
+    summary = summarize_selected_context(selected_mask_context)
+    if not summary.get("available"):
+        return summary
+    return {
+        **summary,
+        "selected_units_by_use": selected_context_by_use(selected_mask_context),
+    }
+
+
 def strip_code_fence(text: str) -> str:
     text = text.strip()
     if text.startswith("```"):
         text = re.sub(r"^```[a-zA-Z0-9_-]*\s*", "", text)
         text = re.sub(r"\s*```$", "", text)
     return text.strip()
+
+
+def call_llm(messages: List[Dict[str, str]]) -> str:
+    try:
+        from utils.query_llm import get_glm_response
+    except ModuleNotFoundError as e:
+        raise RuntimeError(
+            "LLM adapter generation requires optional dependency zhipuai. "
+            "Run without --use-llm for recipe/default adapter generation, "
+            "or install/configure the LLM dependency."
+        ) from e
+    return get_glm_response(messages)
 
 
 def parse_llm_json(text: str) -> Dict[str, Any]:
@@ -109,12 +193,60 @@ def compact_evidence(
     return out
 
 
-def load_selected_mask_context(mask_report_path: Path, max_code_chars: int = 500) -> Dict[str, Any]:
-    selected_path = mask_report_path.parent / "selected_mask_units.yaml"
+def selected_context_from_evidence(candidates_obj: Dict[str, Any]) -> Dict[str, Any]:
+    collection = candidates_obj.get("evidence_collection", {})
+    if not isinstance(collection, dict):
+        return {}
+
+    source_pattern = collection.get("source_pattern", {})
+    if not isinstance(source_pattern, dict):
+        source_pattern = {}
+
+    selected = source_pattern.get("selected_mask_units") or collection.get("selected_mask_units") or {}
+    if not isinstance(selected, dict):
+        return {}
+
+    summary = selected.get("summary", {}) if isinstance(selected.get("summary"), dict) else {}
+    units_by_use = selected.get("selected_units_by_use", {})
+    if not isinstance(units_by_use, dict):
+        units_by_use = {}
+
+    units: List[Dict[str, Any]] = []
+    for grouped in units_by_use.values():
+        if not isinstance(grouped, list):
+            continue
+        for unit in grouped:
+            if isinstance(unit, dict):
+                units.append(compact_selected_unit(unit))
+
+    if not summary and not units:
+        return {}
+
+    return {
+        "available": True,
+        "source": "candidates_with_evidence",
+        "source_file": selected.get("source_file", ""),
+        "template_id": source_pattern.get("template_id", ""),
+        "harness_family": summary.get("harness_family") or source_pattern.get("harness_family", ""),
+        "trigger_apis": summary.get("trigger_apis") or source_pattern.get("trigger_apis", []),
+        "selection_summary": summary,
+        "selected_units": units,
+        "selected_units_by_use": units_by_use,
+        "query_terms": selected.get("query_terms", {}),
+    }
+
+
+def load_selected_mask_context(
+    mask_report_path: Path,
+    selected_mask_units_path: Optional[Path] = None,
+    max_code_chars: int = 500,
+) -> Dict[str, Any]:
+    selected_path = selected_mask_units_path or (mask_report_path.parent / "selected_mask_units.yaml")
 
     if not selected_path.exists():
         return {
             "available": False,
+            "source": "selected_mask_units_file",
             "source_file": str(selected_path),
             "selected_units": [],
         }
@@ -125,26 +257,34 @@ def load_selected_mask_context(mask_report_path: Path, max_code_chars: int = 500
     for item in obj.get("selected_units", []) or []:
         if not isinstance(item, dict):
             continue
-        units.append(
-            {
-                "unit_id": item.get("unit_id", ""),
-                "mask_level": item.get("mask_level", ""),
-                "role": item.get("role", ""),
-                "placeholder": item.get("placeholder", ""),
-                "code": (item.get("code") or "")[:max_code_chars],
-                "suggested_use": item.get("suggested_use", ""),
-                "selection_reason": item.get("selection_reason", ""),
-                "selection_score": item.get("selection_score"),
-            }
-        )
+        units.append(compact_selected_unit(item, max_code_chars=max_code_chars))
 
     return {
         "available": True,
+        "source": "selected_mask_units_file",
         "source_file": str(selected_path),
         "template_id": obj.get("template_id", ""),
         "source_api": obj.get("source_api", ""),
+        "harness_family": obj.get("harness_family", ""),
+        "trigger_apis": obj.get("trigger_apis", []),
+        "selection_summary": obj.get("selection_summary", {}),
         "selected_units": units,
+        "selected_units_by_use": selected_context_by_use({"available": True, "selected_units": units}),
     }
+
+
+def merge_selected_mask_context(file_context: Dict[str, Any], evidence_context: Dict[str, Any]) -> Dict[str, Any]:
+    if evidence_context.get("available"):
+        merged = dict(file_context or {})
+        merged.update(evidence_context)
+        if not merged.get("source_file"):
+            merged["source_file"] = (file_context or {}).get("source_file", "")
+        if not merged.get("selected_units") and (file_context or {}).get("selected_units"):
+            merged["selected_units"] = file_context.get("selected_units", [])
+        if not merged.get("selected_units_by_use"):
+            merged["selected_units_by_use"] = selected_context_by_use(merged)
+        return merged
+    return file_context
 
 
 def load_template_meta_for_mask(mask_report_path: Path) -> Dict[str, Any]:
@@ -255,6 +395,7 @@ Important rules:
             "source_api": template_meta.get("source_api") or mask_report.get("source_api"),
             "harness_family": recipe.get("harness_family"),
             "oracle_type": recipe.get("oracle_type"),
+            "selected_mask_summary": summarize_selected_context(selected_mask_context),
             "root_cause": poc_pattern.get("root_cause", {}),
             "vulnerability_path_features": poc_pattern.get("vulnerability_path_features", {}),
             "mutation_points": template_meta.get("mutation_points") or poc_pattern.get("mutation_points", []),
@@ -370,8 +511,8 @@ Important rules:
             "mutation_points": poc_pattern.get("mutation_points", []),
         },
         "candidate": {
-            "library": candidate.get("library"),
-            "api": candidate.get("api"),
+            "library": candidate_library(candidate),
+            "api": candidate_api(candidate),
             "decision": candidate.get("decision"),
             "scores": candidate.get("scores"),
             "reason": candidate.get("reason"),
@@ -420,7 +561,7 @@ Important rules:
     ]
 
 
-def fallback_adapter(candidate: Dict[str, Any]) -> Dict[str, Any]:
+def fallback_adapter(candidate: Dict[str, Any], selected_mask_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     lib = candidate_library(candidate)
     api = candidate_api(candidate)
 
@@ -448,6 +589,7 @@ def fallback_adapter(candidate: Dict[str, Any]) -> Dict[str, Any]:
         "preserved_features": candidate.get("preserved_vulnerability_features", []),
         "lost_or_weakened_features": candidate.get("lost_or_weakened_features", []),
         "notes": ["Fallback adapter generated without valid LLM JSON."],
+        "ast_mask_selection": adapter_ast_mask_selection(selected_mask_context or {}),
     }
 
 
@@ -457,6 +599,7 @@ def recipe_fallback_adapter(
     candidate: Dict[str, Any],
     recipe_path: Path,
     recipe: Dict[str, Any],
+    selected_mask_context: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     return {
         "source_pattern_id": template_meta.get("source_pattern_id") or mask_report.get("poc_pattern", {}).get("pattern_id"),
@@ -476,6 +619,7 @@ def recipe_fallback_adapter(
             for key in recipe_defaults(recipe)
         },
         "notes": ["Recipe fallback adapter generated from recipe defaults."],
+        "ast_mask_selection": adapter_ast_mask_selection(selected_mask_context or {}),
     }
 
 
@@ -486,6 +630,7 @@ def build_recipe_adapter_from_llm(
     candidate: Dict[str, Any],
     recipe_path: Path,
     recipe: Dict[str, Any],
+    selected_mask_context: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     disallowed_fields = [
         "target_library",
@@ -523,6 +668,7 @@ def build_recipe_adapter_from_llm(
         "preserved_features": candidate.get("preserved_vulnerability_features") or candidate.get("preserved_features") or [],
         "lost_or_weakened_features": candidate.get("lost_or_weakened_features", []),
         "_adapter_mode": "recipe_slot_filling",
+        "ast_mask_selection": adapter_ast_mask_selection(selected_mask_context or {}),
         "_ignored_disallowed_fields": ignored,
         "_ignored_non_slot_fields": ignored_non_slot_fields,
     }
@@ -547,7 +693,7 @@ def generate_adapter(
 
     if recipe_path is not None and recipe:
         if not use_llm:
-            adapter = recipe_fallback_adapter(mask_report, template_meta, candidate, recipe_path, recipe)
+            adapter = recipe_fallback_adapter(mask_report, template_meta, candidate, recipe_path, recipe, selected_mask_context)
             adapter["_llm_status"] = "not_requested"
             return adapter
 
@@ -560,7 +706,7 @@ def generate_adapter(
             selected_mask_context=selected_mask_context,
         )
         try:
-            raw = get_glm_response(messages)
+            raw = call_llm(messages)
             parsed = parse_llm_json(raw)
             adapter = build_recipe_adapter_from_llm(
                 parsed,
@@ -569,6 +715,7 @@ def generate_adapter(
                 candidate,
                 recipe_path,
                 recipe,
+                selected_mask_context,
             )
             adapter["_llm_raw_preview"] = raw[:1200]
             adapter["_llm_status"] = "ok"
@@ -579,7 +726,7 @@ def generate_adapter(
                     f"recipe slot-filling LLM failed for {recipe_path}; "
                     "refusing fallback adapter generation"
                 ) from e
-            adapter = recipe_fallback_adapter(mask_report, template_meta, candidate, recipe_path, recipe)
+            adapter = recipe_fallback_adapter(mask_report, template_meta, candidate, recipe_path, recipe, selected_mask_context)
             adapter["_llm_status"] = "fallback"
             adapter["_llm_error"] = str(e)
             return adapter
@@ -590,18 +737,19 @@ def generate_adapter(
         raise RuntimeError(f"adapter recipe not found for {lib} {api}; refusing free-form adapter fallback")
 
     if not use_llm:
-        return fallback_adapter(candidate)
+        return fallback_adapter(candidate, selected_mask_context)
 
     messages = build_prompt(mask_report, candidate, selected_mask_context=selected_mask_context)
 
     try:
-        raw = get_glm_response(messages)
+        raw = call_llm(messages)
         adapter = parse_llm_json(raw)
+        adapter.setdefault("ast_mask_selection", adapter_ast_mask_selection(selected_mask_context or {}))
         adapter["_llm_raw_preview"] = raw[:1200]
         adapter["_llm_status"] = "ok"
         return adapter
     except Exception as e:
-        adapter = fallback_adapter(candidate)
+        adapter = fallback_adapter(candidate, selected_mask_context)
         adapter["_llm_status"] = "fallback"
         adapter["_llm_error"] = str(e)
         return adapter
@@ -624,6 +772,13 @@ def main() -> int:
         help="Fail instead of falling back to free-form adapter mode when no adapter recipe is found.",
     )
     parser.add_argument("--target-library", help="Only generate adapters for this target library.")
+    parser.add_argument(
+        "--selected-mask-units",
+        help=(
+            "Optional selected_mask_units YAML to use for adapter context. "
+            "If omitted, adapter_filler looks next to --mask-report."
+        ),
+    )
     parser.add_argument("--target-api", help="Only generate adapters for this target API.")
     parser.add_argument("--adapter-recipe", help="Use this adapter recipe instead of auto-discovering one.")
     parser.add_argument("--include-non-generate", action="store_true")
@@ -633,7 +788,14 @@ def main() -> int:
     mask_report = load_yaml(mask_report_path)
     template_meta = load_template_meta_for_mask(mask_report_path)
     candidates_obj = load_yaml(Path(args.candidates_with_evidence))
-    selected_mask_context = load_selected_mask_context(mask_report_path)
+    selected_mask_units_path = Path(args.selected_mask_units) if args.selected_mask_units else None
+    if selected_mask_units_path is not None and not selected_mask_units_path.exists():
+        parser.error(f"selected mask units not found: {selected_mask_units_path}")
+
+    selected_mask_context = merge_selected_mask_context(
+        load_selected_mask_context(mask_report_path, selected_mask_units_path),
+        selected_context_from_evidence(candidates_obj),
+    )
     adapter_recipe = Path(args.adapter_recipe) if args.adapter_recipe else None
     if adapter_recipe is not None and not adapter_recipe.exists():
         parser.error(f"adapter recipe not found: {adapter_recipe}")
@@ -643,7 +805,9 @@ def main() -> int:
 
     count = 0
 
-    for candidate in candidates_obj.get("target_candidates", []):
+    key = candidate_list_key(candidates_obj)
+
+    for candidate in candidates_obj.get(key, []):
         lib = candidate_library(candidate)
         api = candidate_api(candidate)
         if args.target_library and lib != args.target_library:
@@ -671,6 +835,7 @@ def main() -> int:
         )
         if adapter.get("adapter_recipe"):
             adapter["evidence_file"] = args.candidates_with_evidence
+        adapter.setdefault("ast_mask_selection", adapter_ast_mask_selection(selected_mask_context))
 
         out_dir = out_root / sanitize_name(str(template_id)) / f"{lib}_{sanitize_name(api)}"
         dump_yaml(out_dir / "adapter.yaml", adapter)
@@ -688,6 +853,7 @@ def main() -> int:
                 "candidates_with_evidence": args.candidates_with_evidence,
                 "selected_mask_units": selected_mask_context.get("source_file", ""),
             },
+            "ast_mask_selection": summarize_selected_context(selected_mask_context),
         }
         dump_yaml(out_dir / "adapter_meta.yaml", metadata)
 

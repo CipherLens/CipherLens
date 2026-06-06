@@ -2,10 +2,16 @@ template_id: RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE
 template_name: mbedtls RSA DER top-level SEQUENCE trailing-garbage template
 source_api: mbedtls_pk_parse_key
 source_library: mbedtls
+trigger_apis:
+- mbedtls_pk_parse_key
+- mbedtls_rsa_parse_key
+- mbedtls_rsa_parse_pubkey
+- mbedtls_pk_parse_public_key
+harness_family: der_pointer_consumption
 summary:
   method: ast_lite_regex_template_role_aware
   template_dir: normalized_templates/rsa/rsa_der_trailing_garbage
-  unit_count: 116
+  unit_count: 156
   note: Lightweight AST-like report generated from template metadata, mask_report
     roles, and regex/template-aware analysis of tmpl_mbedtls.c.
 ast_mask_units:
@@ -42,10 +48,12 @@ ast_mask_units:
   mask_level: value
   role: mutation_point
   placeholder: '[TRAILING_GARBAGE_BYTES]'
-  code: TRAILING_GARBAGE_BYTES
+  code: extra INTEGER outside the SEQUENCE
   source: template_meta.mutation_points
-  reason: Must be syntactically independent bytes appended after the complete top-level
-    SEQUENCE.
+  reason: 'Controls whether the parser sees a syntactically valid key followed by
+    unexpected data.
+
+    '
   priority: high
   mutation_name: TRAILING_GARBAGE_BYTES
   mutation_type: hex_bytes
@@ -84,128 +92,330 @@ ast_mask_units:
   values:
   - MBEDTLS_ERR_RSA_BAD_INPUT_DATA
 - unit_id: ASTLITE-0006
-  mask_level: value
+  mask_level: block
   role: mutation_point
   placeholder: '[TOP_LEVEL_SEQUENCE_END_CHECK]'
-  code: TOP_LEVEL_SEQUENCE_END_CHECK
+  code: if (end != p + len) { return MBEDTLS_ERR_RSA_BAD_INPUT_DATA; }
   source: template_meta.mutation_points
-  reason: Represents the source-level fix that rejects bytes outside the top-level
-    SEQUENCE.
+  reason: 'Rejects bytes outside the top-level RSAPrivateKey or RSAPublicKey SEQUENCE.
+
+    '
   priority: high
   mutation_name: TOP_LEVEL_SEQUENCE_END_CHECK
   mutation_type: statement
   default: if (end != p + len) { return MBEDTLS_ERR_RSA_BAD_INPUT_DATA; }
   values: []
 - unit_id: ASTLITE-0007
-  mask_level: value
+  mask_level: function_call
   role: mutation_point
   placeholder: '[RSA_PRIVATE_PARSE_CALL]'
-  code: RSA_PRIVATE_PARSE_CALL
+  code: mbedtls_rsa_parse_key(&rsa, der, der_len)
   source: template_meta.mutation_points
-  reason: Exercises PKCS#1 RSA private-key DER parser.
+  reason: 'Exercises trailing-garbage acceptance for RSA private keys.
+
+    '
   priority: high
   mutation_name: RSA_PRIVATE_PARSE_CALL
   mutation_type: function_call
   default: mbedtls_rsa_parse_key(&rsa, der, der_len)
   values: []
 - unit_id: ASTLITE-0008
-  mask_level: value
+  mask_level: function_call
   role: mutation_point
   placeholder: '[RSA_PUBLIC_PARSE_CALL]'
-  code: RSA_PUBLIC_PARSE_CALL
+  code: mbedtls_rsa_parse_pubkey(&rsa, der, der_len)
   source: template_meta.mutation_points
-  reason: Exercises PKCS#1 RSA public-key DER parser.
+  reason: 'Exercises trailing-garbage acceptance for RSA public keys.
+
+    '
   priority: high
   mutation_name: RSA_PUBLIC_PARSE_CALL
   mutation_type: function_call
   default: mbedtls_rsa_parse_pubkey(&rsa, der, der_len)
   values: []
 - unit_id: ASTLITE-0009
-  mask_level: value
+  mask_level: statement
+  role: input_preparation
+  placeholder: ''
+  code: mbedtls_rsa_init(rsa, MBEDTLS_RSA_PKCS_V15, 0);
+  source: mask_report.roles.init
+  reason: Role-aware statement recorded by mask_report role 'init'.
+  priority: medium
+  order: 45
+  line: 90
+  line_start: 90
+  line_end: 90
+  node_type: statement
+- unit_id: ASTLITE-0010
+  mask_level: statement
+  role: input_preparation
+  placeholder: ''
+  code: mbedtls_rsa_init(rsa);
+  source: mask_report.roles.init
+  reason: Role-aware statement recorded by mask_report role 'init'.
+  priority: medium
+  order: 46
+  line: 92
+  line_start: 92
+  line_end: 92
+  node_type: statement
+- unit_id: ASTLITE-0011
+  mask_level: statement
+  role: input_preparation
+  placeholder: ''
+  code: mbedtls_pk_init(&pk);
+  source: mask_report.roles.init
+  reason: Role-aware statement recorded by mask_report role 'init'.
+  priority: medium
+  order: 94
+  line: 186
+  line_start: 186
+  line_end: 186
+  node_type: statement
+- unit_id: ASTLITE-0012
+  mask_level: statement
   role: input_construction
-  placeholder: '[DER_KIND]'
+  placeholder: ''
+  code: static const char *select_base_der_hex(const char *der_kind) {
+  source: mask_report.roles.input_construction
+  reason: Role-aware statement recorded by mask_report role 'input_construction'.
+  priority: medium
+  order: 48
+  line: 96
+  line_start: 96
+  line_end: 97
+  node_type: statement
+- unit_id: ASTLITE-0013
+  mask_level: statement
+  role: input_construction
+  placeholder: ''
+  code: static const char *private_base_hex = "3063020100021100cc8ab070369ede72920e5a51523c8571"
+    "02030100010211009a6318982a7231de1894c54aa4909201" "020900f3058fd8dc484d61020900d7770dbd8b78a2110209"
+    "009471f14c26428401020813425f060c4b72210208052b93" "d01747a87c";
+  source: mask_report.roles.input_construction
+  reason: Role-aware statement recorded by mask_report role 'input_construction'.
+  priority: medium
+  order: 49
+  line: 99
+  line_start: 99
+  line_end: 104
+  node_type: statement
+- unit_id: ASTLITE-0014
+  mask_level: statement
+  role: input_construction
+  placeholder: ''
+  code: static const char *public_base_hex = "308189028181009f091e6968b474f76f0e9c237c1d895996"
+    "ae704b4f6d706acec8d2daac6209bf524aa3f658d0283a" "dba1077f6cbe92e425dcde52290b239cade91be86c884254"
+    "34986806e85734e159768f3dfea932baaa9409d25bace8ee" "9dce0cdde0903207299de575ae60feccf0daf82334ab836"
+    "38539b0da74072f253acea8afc8e66bb70203010001";
+  source: mask_report.roles.input_construction
+  reason: Role-aware statement recorded by mask_report role 'input_construction'.
+  priority: medium
+  order: 50
+  line: 107
+  line_start: 107
+  line_end: 113
+  node_type: statement
+- unit_id: ASTLITE-0015
+  mask_level: statement
+  role: input_construction
+  placeholder: ''
+  code: return private_base_hex;
+  source: mask_report.roles.input_construction
+  reason: Role-aware statement recorded by mask_report role 'input_construction'.
+  priority: medium
+  order: 52
+  line: 116
+  line_start: 116
+  line_end: 116
+  node_type: statement
+- unit_id: ASTLITE-0016
+  mask_level: statement
+  role: input_construction
+  placeholder: ''
+  code: return public_base_hex;
+  source: mask_report.roles.input_construction
+  reason: Role-aware statement recorded by mask_report role 'input_construction'.
+  priority: medium
+  order: 55
+  line: 119
+  line_start: 119
+  line_end: 119
+  node_type: statement
+- unit_id: ASTLITE-0017
+  mask_level: statement
+  role: input_construction
+  placeholder: ''
+  code: static int build_der_with_trailing_garbage(const char *base_hex, const char
+    *trailing_hex, unsigned char *der, size_t der_size, size_t *der_len, size_t *trailing_len)
+    {
+  source: mask_report.roles.input_construction
+  reason: Role-aware statement recorded by mask_report role 'input_construction'.
+  priority: medium
+  order: 59
+  line: 125
+  line_start: 125
+  line_end: 131
+  node_type: statement
+- unit_id: ASTLITE-0018
+  mask_level: statement
+  role: input_construction
+  placeholder: ''
+  code: ret = hex_to_bin(base_hex, der, der_size, &base_len);
+  source: mask_report.roles.input_construction
+  reason: Role-aware statement recorded by mask_report role 'input_construction'.
+  priority: medium
+  order: 62
+  line: 135
+  line_start: 135
+  line_end: 135
+  node_type: statement
+- unit_id: ASTLITE-0019
+  mask_level: statement
+  role: input_construction
+  placeholder: ''
+  code: const char *base_hex = NULL;
+  source: mask_report.roles.input_construction
+  reason: Role-aware statement recorded by mask_report role 'input_construction'.
+  priority: medium
+  order: 104
+  line: 199
+  line_start: 199
+  line_end: 199
+  node_type: statement
+- unit_id: ASTLITE-0020
+  mask_level: statement
+  role: input_construction
+  placeholder: ''
   code: base_hex = select_base_der_hex(der_kind);
   source: mask_report.roles.input_construction
   reason: Role-aware statement recorded by mask_report role 'input_construction'.
   priority: medium
-  order: 10
-- unit_id: ASTLITE-0010
-  mask_level: value
+  order: 111
+  line: 208
+  line_start: 208
+  line_end: 208
+  node_type: statement
+- unit_id: ASTLITE-0021
+  mask_level: statement
   role: input_construction
-  placeholder: '[TRAILING_GARBAGE_BYTES]'
-  code: ret = build_der_with_trailing_garbage(base_hex, TRAILING_GARBAGE_HEX, der,
-    sizeof(der), &der_len, &trailing_len);
+  placeholder: ''
+  code: if (base_hex == NULL) {
   source: mask_report.roles.input_construction
   reason: Role-aware statement recorded by mask_report role 'input_construction'.
   priority: medium
-  order: 20
-- unit_id: ASTLITE-0011
-  mask_level: api_argument
+  order: 112
+  line: 209
+  line_start: 209
+  line_end: 209
+  node_type: statement
+- unit_id: ASTLITE-0022
+  mask_level: statement
   role: input_construction
-  placeholder: '[TRAILING_GARBAGE_LEN]'
+  placeholder: ''
   code: ret = build_der_with_trailing_garbage(base_hex, TRAILING_GARBAGE_HEX, der,
-    sizeof(der), &der_len, &trailing_len);
+    der_capacity, &der_len, &trailing_len);
   source: mask_report.roles.input_construction
   reason: Role-aware statement recorded by mask_report role 'input_construction'.
   priority: medium
-  order: 20
-- unit_id: ASTLITE-0012
-  mask_level: value
-  role: trigger_call
-  placeholder: '[PARSE_API_KIND]'
-  code: ret = parse_with_selected_api(parse_api_kind, der_kind, der, der_len);
-  source: mask_report.roles.trigger_call
-  reason: Role-aware statement recorded by mask_report role 'trigger_call'.
+  order: 121
+  line: 220
+  line_start: 220
+  line_end: 225
+  node_type: statement
+- unit_id: ASTLITE-0023
+  mask_level: statement
+  role: input_construction
+  placeholder: ''
+  code: if (trailing_len != TRAILING_GARBAGE_EXPECTED_LEN) {
+  source: mask_report.roles.input_construction
+  reason: Role-aware statement recorded by mask_report role 'input_construction'.
   priority: medium
-  order: 30
-- unit_id: ASTLITE-0013
+  order: 127
+  line: 232
+  line_start: 232
+  line_end: 232
+  node_type: statement
+- unit_id: ASTLITE-0024
   mask_level: value
+  role: input_construction
+  placeholder: '[ERROR]'
+  code: 'printf("[ERROR] trailing garbage length mismatch: got=%zu expected=%zu\n",
+    trailing_len, TRAILING_GARBAGE_EXPECTED_LEN);'
+  source: mask_report.roles.input_construction
+  reason: Role-aware statement recorded by mask_report role 'input_construction'.
+  priority: medium
+  order: 128
+  line: 233
+  line_start: 233
+  line_end: 234
+  node_type: statement
+- unit_id: ASTLITE-0025
+  mask_level: statement
   role: trigger_call
-  placeholder: '[RSA_PRIVATE_PARSE_CALL]'
+  placeholder: ''
   code: ret = mbedtls_rsa_parse_key(&rsa, der, der_len);
   source: mask_report.roles.trigger_call
   reason: Role-aware statement recorded by mask_report role 'trigger_call'.
   priority: medium
-  order: 31
-- unit_id: ASTLITE-0014
-  mask_level: value
+  order: 78
+  line: 164
+  line_start: 164
+  line_end: 164
+  node_type: statement
+- unit_id: ASTLITE-0026
+  mask_level: statement
   role: trigger_call
-  placeholder: '[RSA_PUBLIC_PARSE_CALL]'
+  placeholder: ''
   code: ret = mbedtls_rsa_parse_pubkey(&rsa, der, der_len);
   source: mask_report.roles.trigger_call
   reason: Role-aware statement recorded by mask_report role 'trigger_call'.
   priority: medium
-  order: 32
-- unit_id: ASTLITE-0015
+  order: 85
+  line: 174
+  line_start: 174
+  line_end: 174
+  node_type: statement
+- unit_id: ASTLITE-0027
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: ret = mbedtls_pk_parse_key(&pk, der, der_len, NULL, 0);
+  source: mask_report.roles.trigger_call
+  reason: Role-aware statement recorded by mask_report role 'trigger_call'.
+  priority: medium
+  order: 95
+  line: 187
+  line_start: 187
+  line_end: 187
+  node_type: statement
+- unit_id: ASTLITE-0028
   mask_level: value
   role: oracle
   placeholder: '[BUG]'
-  code: if (ret == 0) { printf("[BUG] parser accepted trailing garbage after top-level
-    SEQUENCE.\n"); return 1; }
+  code: printf("[BUG] parser accepted trailing garbage after top-level SEQUENCE.\n");
   source: mask_report.roles.oracle
   reason: Role-aware statement recorded by mask_report role 'oracle'.
   priority: medium
-  order: 40
-- unit_id: ASTLITE-0016
+  order: 141
+  line: 252
+  line_start: 252
+  line_end: 252
+  node_type: statement
+- unit_id: ASTLITE-0029
   mask_level: value
   role: oracle
-  placeholder: '[EXPECT_RET]'
-  code: if (ret == EXPECTED_RETURN_VALUE || ret == MBEDTLS_ERR_RSA_BAD_INPUT_DATA)
-    { printf("[OK] parser rejected trailing garbage.\n"); return 0; }
+  placeholder: '[OK]'
+  code: printf("[OK] parser rejected trailing garbage.\n");
   source: mask_report.roles.oracle
   reason: Role-aware statement recorded by mask_report role 'oracle'.
   priority: medium
-  order: 41
-- unit_id: ASTLITE-0017
-  mask_level: value
-  role: oracle
-  placeholder: '[TOP_LEVEL_SEQUENCE_END_CHECK]'
-  code: if (end != p + len) { return MBEDTLS_ERR_RSA_BAD_INPUT_DATA; }
-  source: mask_report.roles.oracle
-  reason: Role-aware statement recorded by mask_report role 'oracle'.
-  priority: medium
-  order: 42
-- unit_id: ASTLITE-0018
+  order: 146
+  line: 259
+  line_start: 259
+  line_end: 259
+  node_type: statement
+- unit_id: ASTLITE-0030
   mask_level: statement
   role: cleanup
   placeholder: ''
@@ -213,8 +423,12 @@ ast_mask_units:
   source: mask_report.roles.cleanup
   reason: Role-aware statement recorded by mask_report role 'cleanup'.
   priority: medium
-  order: 50
-- unit_id: ASTLITE-0019
+  order: 79
+  line: 165
+  line_start: 165
+  line_end: 165
+  node_type: statement
+- unit_id: ASTLITE-0031
   mask_level: statement
   role: cleanup
   placeholder: ''
@@ -222,8 +436,283 @@ ast_mask_units:
   source: mask_report.roles.cleanup
   reason: Role-aware statement recorded by mask_report role 'cleanup'.
   priority: medium
-  order: 51
-- unit_id: ASTLITE-0020
+  order: 96
+  line: 188
+  line_start: 188
+  line_end: 188
+  node_type: statement
+- unit_id: ASTLITE-0032
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: free(der);
+  source: mask_report.roles.cleanup
+  reason: Role-aware statement recorded by mask_report role 'cleanup'.
+  priority: medium
+  order: 124
+  line: 228
+  line_start: 228
+  line_end: 228
+  node_type: statement
+- unit_id: ASTLITE-0033
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: int mbedtls_rsa_parse_key(mbedtls_rsa_context *rsa, const unsigned char *key,
+    size_t keylen);
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 0
+  line: 13
+  line_start: 13
+  line_end: 15
+  node_type: statement
+- unit_id: ASTLITE-0034
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: int mbedtls_rsa_parse_pubkey(mbedtls_rsa_context *rsa, const unsigned char
+    *key, size_t keylen);
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 1
+  line: 17
+  line_start: 17
+  line_end: 19
+  node_type: statement
+- unit_id: ASTLITE-0035
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: static void rsa_init_compat(mbedtls_rsa_context *rsa) {
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 44
+  line: 87
+  line_start: 87
+  line_end: 88
+  node_type: statement
+- unit_id: ASTLITE-0036
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: '*der_len = base_len + *trailing_len;'
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 70
+  line: 148
+  line_start: 148
+  line_end: 148
+  node_type: statement
+- unit_id: ASTLITE-0037
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: static int parse_with_selected_api(const char *parse_api_kind, const char
+    *der_kind, const unsigned char *der, size_t der_len) {
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 73
+  line: 152
+  line_start: 152
+  line_end: 156
+  node_type: statement
+- unit_id: ASTLITE-0038
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: mbedtls_rsa_context rsa;
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 76
+  line: 160
+  line_start: 160
+  line_end: 160
+  node_type: statement
+- unit_id: ASTLITE-0039
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: mbedtls_pk_context pk;
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 90
+  line: 180
+  line_start: 180
+  line_end: 180
+  node_type: statement
+- unit_id: ASTLITE-0040
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: size_t der_len = 0;
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 107
+  line: 202
+  line_start: 202
+  line_end: 202
+  node_type: statement
+- unit_id: ASTLITE-0041
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: 'printf("DER length with trailing garbage: %zu\n", der_len);'
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 134
+  line: 241
+  line_start: 241
+  line_end: 241
+  node_type: statement
+- unit_id: ASTLITE-0042
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: 'printf("Trailing garbage length: %zu\n", trailing_len);'
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 135
+  line: 242
+  line_start: 242
+  line_end: 242
+  node_type: statement
+- unit_id: ASTLITE-0043
+  mask_level: statement
+  role: helper_function
+  placeholder: ''
+  code: ret = parse_with_selected_api(parse_api_kind, der_kind, der, der_len);
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 136
+  line: 245
+  line_start: 245
+  line_end: 245
+  node_type: statement
+- unit_id: ASTLITE-0044
+  mask_level: value
+  role: helper_function
+  placeholder: '[INFO]'
+  code: printf("[INFO] parser rejected trailing garbage with alternate ret=%d\n",
+    ret);
+  source: mask_report.roles.other_context
+  reason: Role-aware statement recorded by mask_report role 'other_context'.
+  priority: medium
+  order: 150
+  line: 264
+  line_start: 264
+  line_end: 264
+  node_type: statement
+- unit_id: ASTLITE-0045
+  mask_level: value
+  role: mutation_point
+  placeholder: '[DER_KIND]'
+  code: '#define DER_KIND_VALUE "[DER_KIND]"'
+  source: mask_report.masking_levels.macro_level
+  reason: Macro-level placeholder controls a generated constant or buffer size.
+  priority: medium
+  macro: DER_KIND_VALUE
+  node_type: preproc_def
+- unit_id: ASTLITE-0046
+  mask_level: value
+  role: mutation_point
+  placeholder: '[PARSE_API_KIND]'
+  code: '#define PARSE_API_KIND_VALUE "[PARSE_API_KIND]"'
+  source: mask_report.masking_levels.macro_level
+  reason: Macro-level placeholder controls a generated constant or buffer size.
+  priority: medium
+  macro: PARSE_API_KIND_VALUE
+  node_type: preproc_def
+- unit_id: ASTLITE-0047
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRAILING_GARBAGE_BYTES]'
+  code: '#define TRAILING_GARBAGE_HEX "[TRAILING_GARBAGE_BYTES]"'
+  source: mask_report.masking_levels.macro_level
+  reason: Macro-level placeholder controls a generated constant or buffer size.
+  priority: medium
+  macro: TRAILING_GARBAGE_HEX
+  node_type: preproc_def
+- unit_id: ASTLITE-0048
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRAILING_GARBAGE_LEN]'
+  code: '#define TRAILING_GARBAGE_EXPECTED_LEN ((size_t) [TRAILING_GARBAGE_LEN])'
+  source: mask_report.masking_levels.macro_level
+  reason: Macro-level placeholder controls a generated constant or buffer size.
+  priority: medium
+  macro: TRAILING_GARBAGE_EXPECTED_LEN
+  node_type: preproc_def
+- unit_id: ASTLITE-0049
+  mask_level: value
+  role: mutation_point
+  placeholder: '[EXPECT_RET]'
+  code: '#define EXPECTED_RETURN_VALUE [EXPECT_RET]'
+  source: mask_report.masking_levels.macro_level
+  reason: Macro-level placeholder controls a generated constant or buffer size.
+  priority: medium
+  macro: EXPECTED_RETURN_VALUE
+  node_type: preproc_def
+- unit_id: ASTLITE-0050
+  mask_level: identifier
+  role: mutation_point
+  placeholder: ''
+  code: end
+  source: mask_report.poc_pattern.occlusion_candidates.identifier_level
+  reason: PoC pattern occlusion candidate for multi-granularity masking.
+  priority: medium
+- unit_id: ASTLITE-0051
+  mask_level: identifier
+  role: mutation_point
+  placeholder: ''
+  code: p
+  source: mask_report.poc_pattern.occlusion_candidates.identifier_level
+  reason: PoC pattern occlusion candidate for multi-granularity masking.
+  priority: medium
+- unit_id: ASTLITE-0052
+  mask_level: identifier
+  role: mutation_point
+  placeholder: ''
+  code: len
+  source: mask_report.poc_pattern.occlusion_candidates.identifier_level
+  reason: PoC pattern occlusion candidate for multi-granularity masking.
+  priority: medium
+- unit_id: ASTLITE-0053
+  mask_level: statement
+  role: mutation_point
+  placeholder: ''
+  code: end != p + len
+  source: mask_report.poc_pattern.occlusion_candidates.expression_level
+  reason: PoC pattern occlusion candidate for multi-granularity masking.
+  priority: medium
+- unit_id: ASTLITE-0054
+  mask_level: statement
+  role: mutation_point
+  placeholder: ''
+  code: return MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
+  source: mask_report.poc_pattern.occlusion_candidates.statement_level
+  reason: PoC pattern occlusion candidate for multi-granularity masking.
+  priority: medium
+- unit_id: ASTLITE-0055
+  mask_level: block
+  role: mutation_point
+  placeholder: ''
+  code: trailing-garbage rejection guard after top-level RSA SEQUENCE
+  source: mask_report.poc_pattern.occlusion_candidates.block_level
+  reason: PoC pattern occlusion candidate for multi-granularity masking.
+  priority: medium
+- unit_id: ASTLITE-0056
   mask_level: block
   role: helper_function
   placeholder: ''
@@ -235,7 +724,11 @@ ast_mask_units:
   priority: medium
   function: hexval
   line: 51
-- unit_id: ASTLITE-0021
+  line_start: 51
+  line_end: 63
+  node_type: function_definition
+  enclosing_function: hexval
+- unit_id: ASTLITE-0057
   mask_level: block
   role: helper_function
   placeholder: ''
@@ -250,7 +743,11 @@ ast_mask_units:
   priority: medium
   function: hex_to_bin
   line: 65
-- unit_id: ASTLITE-0022
+  line_start: 65
+  line_end: 105
+  node_type: function_definition
+  enclosing_function: hex_to_bin
+- unit_id: ASTLITE-0058
   mask_level: block
   role: helper_function
   placeholder: ''
@@ -263,7 +760,11 @@ ast_mask_units:
   priority: medium
   function: rsa_init_compat
   line: 107
-- unit_id: ASTLITE-0023
+  line_start: 107
+  line_end: 114
+  node_type: function_definition
+  enclosing_function: rsa_init_compat
+- unit_id: ASTLITE-0059
   mask_level: block
   role: helper_function
   placeholder: ''
@@ -279,7 +780,11 @@ ast_mask_units:
   priority: medium
   function: build_der_with_trailing_garbage
   line: 154
-- unit_id: ASTLITE-0024
+  line_start: 154
+  line_end: 179
+  node_type: function_definition
+  enclosing_function: build_der_with_trailing_garbage
+- unit_id: ASTLITE-0060
   mask_level: block
   role: helper_function
   placeholder: ''
@@ -300,14 +805,18 @@ ast_mask_units:
   priority: medium
   function: parse_with_selected_api
   line: 181
-- unit_id: ASTLITE-0025
+  line_start: 181
+  line_end: 222
+  node_type: function_definition
+  enclosing_function: parse_with_selected_api
+- unit_id: ASTLITE-0061
   mask_level: value
-  role: mutation_point
+  role: trigger_call
   placeholder: '[DER_KIND]'
   code: '* - [DER_KIND] * - [PARSE_API_KIND] * - [TRAILING_GARBAGE_BYTES] * - [TRAILING_GARBAGE_LEN]
     * - [EXPECT_RET] * - [TOP_LEVEL_SEQUENCE_END_CHECK] * - [RSA_PRIVATE_PARSE_CALL]
     * - [RSA_PUBLIC_PARSE_CALL] */ #include <ctype.h> #include <stdio.h> #include
-    <stdlib.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/rsa.h"
+    <stdlib.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/private/rsa.h"
     #include "mbedtls/version.h" /* * These functions are present in the mbedTLS RSA
     parser implementation used by * the source PoC, but may not be declared by the
     public headers under all build * configurations. The normalized source API remains
@@ -317,14 +826,18 @@ ast_mask_units:
   reason: DER_KIND selects the base PKCS#1 RSA object shape.
   priority: high
   line: 9
-- unit_id: ASTLITE-0026
+  line_start: 9
+  line_end: 35
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0062
   mask_level: value
-  role: mutation_point
+  role: trigger_call
   placeholder: '[PARSE_API_KIND]'
   code: '* - [DER_KIND] * - [PARSE_API_KIND] * - [TRAILING_GARBAGE_BYTES] * - [TRAILING_GARBAGE_LEN]
     * - [EXPECT_RET] * - [TOP_LEVEL_SEQUENCE_END_CHECK] * - [RSA_PRIVATE_PARSE_CALL]
     * - [RSA_PUBLIC_PARSE_CALL] */ #include <ctype.h> #include <stdio.h> #include
-    <stdlib.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/rsa.h"
+    <stdlib.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/private/rsa.h"
     #include "mbedtls/version.h" /* * These functions are present in the mbedTLS RSA
     parser implementation used by * the source PoC, but may not be declared by the
     public headers under all build * configurations. The normalized source API remains
@@ -334,14 +847,18 @@ ast_mask_units:
   reason: PARSE_API_KIND must be compatible with DER_KIND.
   priority: high
   line: 9
-- unit_id: ASTLITE-0027
+  line_start: 9
+  line_end: 35
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0063
   mask_level: value
-  role: mutation_point
+  role: trigger_call
   placeholder: '[TRAILING_GARBAGE_BYTES]'
   code: '* - [DER_KIND] * - [PARSE_API_KIND] * - [TRAILING_GARBAGE_BYTES] * - [TRAILING_GARBAGE_LEN]
     * - [EXPECT_RET] * - [TOP_LEVEL_SEQUENCE_END_CHECK] * - [RSA_PRIVATE_PARSE_CALL]
     * - [RSA_PUBLIC_PARSE_CALL] */ #include <ctype.h> #include <stdio.h> #include
-    <stdlib.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/rsa.h"
+    <stdlib.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/private/rsa.h"
     #include "mbedtls/version.h" /* * These functions are present in the mbedTLS RSA
     parser implementation used by * the source PoC, but may not be declared by the
     public headers under all build * configurations. The normalized source API remains
@@ -352,14 +869,18 @@ ast_mask_units:
     SEQUENCE.
   priority: high
   line: 9
-- unit_id: ASTLITE-0028
+  line_start: 9
+  line_end: 35
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0064
   mask_level: api_argument
-  role: mutation_point
+  role: trigger_call
   placeholder: '[TRAILING_GARBAGE_LEN]'
   code: '* - [DER_KIND] * - [PARSE_API_KIND] * - [TRAILING_GARBAGE_BYTES] * - [TRAILING_GARBAGE_LEN]
     * - [EXPECT_RET] * - [TOP_LEVEL_SEQUENCE_END_CHECK] * - [RSA_PRIVATE_PARSE_CALL]
     * - [RSA_PUBLIC_PARSE_CALL] */ #include <ctype.h> #include <stdio.h> #include
-    <stdlib.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/rsa.h"
+    <stdlib.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/private/rsa.h"
     #include "mbedtls/version.h" /* * These functions are present in the mbedTLS RSA
     parser implementation used by * the source PoC, but may not be declared by the
     public headers under all build * configurations. The normalized source API remains
@@ -369,14 +890,18 @@ ast_mask_units:
   reason: Must match the decoded byte length of TRAILING_GARBAGE_BYTES.
   priority: medium
   line: 9
-- unit_id: ASTLITE-0029
+  line_start: 9
+  line_end: 35
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0065
   mask_level: value
-  role: mutation_point
+  role: trigger_call
   placeholder: '[EXPECT_RET]'
   code: '* - [DER_KIND] * - [PARSE_API_KIND] * - [TRAILING_GARBAGE_BYTES] * - [TRAILING_GARBAGE_LEN]
     * - [EXPECT_RET] * - [TOP_LEVEL_SEQUENCE_END_CHECK] * - [RSA_PRIVATE_PARSE_CALL]
     * - [RSA_PUBLIC_PARSE_CALL] */ #include <ctype.h> #include <stdio.h> #include
-    <stdlib.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/rsa.h"
+    <stdlib.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/private/rsa.h"
     #include "mbedtls/version.h" /* * These functions are present in the mbedTLS RSA
     parser implementation used by * the source PoC, but may not be declared by the
     public headers under all build * configurations. The normalized source API remains
@@ -387,14 +912,18 @@ ast_mask_units:
     RSA SEQUENCE.
   priority: high
   line: 9
-- unit_id: ASTLITE-0030
+  line_start: 9
+  line_end: 35
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0066
   mask_level: value
-  role: mutation_point
+  role: trigger_call
   placeholder: '[TOP_LEVEL_SEQUENCE_END_CHECK]'
   code: '* - [DER_KIND] * - [PARSE_API_KIND] * - [TRAILING_GARBAGE_BYTES] * - [TRAILING_GARBAGE_LEN]
     * - [EXPECT_RET] * - [TOP_LEVEL_SEQUENCE_END_CHECK] * - [RSA_PRIVATE_PARSE_CALL]
     * - [RSA_PUBLIC_PARSE_CALL] */ #include <ctype.h> #include <stdio.h> #include
-    <stdlib.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/rsa.h"
+    <stdlib.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/private/rsa.h"
     #include "mbedtls/version.h" /* * These functions are present in the mbedTLS RSA
     parser implementation used by * the source PoC, but may not be declared by the
     public headers under all build * configurations. The normalized source API remains
@@ -405,14 +934,18 @@ ast_mask_units:
     SEQUENCE.
   priority: high
   line: 9
-- unit_id: ASTLITE-0031
+  line_start: 9
+  line_end: 35
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0067
   mask_level: value
-  role: mutation_point
+  role: trigger_call
   placeholder: '[RSA_PRIVATE_PARSE_CALL]'
   code: '* - [DER_KIND] * - [PARSE_API_KIND] * - [TRAILING_GARBAGE_BYTES] * - [TRAILING_GARBAGE_LEN]
     * - [EXPECT_RET] * - [TOP_LEVEL_SEQUENCE_END_CHECK] * - [RSA_PRIVATE_PARSE_CALL]
     * - [RSA_PUBLIC_PARSE_CALL] */ #include <ctype.h> #include <stdio.h> #include
-    <stdlib.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/rsa.h"
+    <stdlib.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/private/rsa.h"
     #include "mbedtls/version.h" /* * These functions are present in the mbedTLS RSA
     parser implementation used by * the source PoC, but may not be declared by the
     public headers under all build * configurations. The normalized source API remains
@@ -422,14 +955,18 @@ ast_mask_units:
   reason: Exercises PKCS#1 RSA private-key DER parser.
   priority: high
   line: 9
-- unit_id: ASTLITE-0032
+  line_start: 9
+  line_end: 35
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0068
   mask_level: value
-  role: mutation_point
+  role: trigger_call
   placeholder: '[RSA_PUBLIC_PARSE_CALL]'
   code: '* - [DER_KIND] * - [PARSE_API_KIND] * - [TRAILING_GARBAGE_BYTES] * - [TRAILING_GARBAGE_LEN]
     * - [EXPECT_RET] * - [TOP_LEVEL_SEQUENCE_END_CHECK] * - [RSA_PRIVATE_PARSE_CALL]
     * - [RSA_PUBLIC_PARSE_CALL] */ #include <ctype.h> #include <stdio.h> #include
-    <stdlib.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/rsa.h"
+    <stdlib.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/private/rsa.h"
     #include "mbedtls/version.h" /* * These functions are present in the mbedTLS RSA
     parser implementation used by * the source PoC, but may not be declared by the
     public headers under all build * configurations. The normalized source API remains
@@ -439,14 +976,39 @@ ast_mask_units:
   reason: Exercises PKCS#1 RSA public-key DER parser.
   priority: high
   line: 9
-- unit_id: ASTLITE-0033
+  line_start: 9
+  line_end: 35
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0069
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: '* - [DER_KIND] * - [PARSE_API_KIND] * - [TRAILING_GARBAGE_BYTES] * - [TRAILING_GARBAGE_LEN]
+    * - [EXPECT_RET] * - [TOP_LEVEL_SEQUENCE_END_CHECK] * - [RSA_PRIVATE_PARSE_CALL]
+    * - [RSA_PUBLIC_PARSE_CALL] */ #include <ctype.h> #include <stdio.h> #include
+    <stdlib.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/private/rsa.h"
+    #include "mbedtls/version.h" /* * These functions are present in the mbedTLS RSA
+    parser implementation used by * the source PoC, but may not be declared by the
+    public headers under all build * configurations. The normalized source API remains
+    mbedtls_pk_parse_key. */ int mbedtls_rsa_parse_key(mbedtls_rsa_context *rsa, const
+    unsigned char *key, size_t keylen);'
+  source: tmpl_mbedtls.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 9
+  line_start: 9
+  line_end: 35
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0070
   mask_level: function_call
-  role: mutation_point
+  role: trigger_call
   placeholder: '[DER_KIND]'
   code: '* - [DER_KIND] * - [PARSE_API_KIND] * - [TRAILING_GARBAGE_BYTES] * - [TRAILING_GARBAGE_LEN]
     * - [EXPECT_RET] * - [TOP_LEVEL_SEQUENCE_END_CHECK] * - [RSA_PRIVATE_PARSE_CALL]
     * - [RSA_PUBLIC_PARSE_CALL] */ #include <ctype.h> #include <stdio.h> #include
-    <stdlib.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/rsa.h"
+    <stdlib.h> #include <string.h> #include "mbedtls/pk.h" #include "mbedtls/private/rsa.h"
     #include "mbedtls/version.h" /* * These functions are present in the mbedTLS RSA
     parser implementation used by * the source PoC, but may not be declared by the
     public headers under all build * configurations. The normalized source API remains
@@ -454,21 +1016,43 @@ ast_mask_units:
     unsigned char *key, size_t keylen);'
   source: tmpl_mbedtls.c.function_call
   reason: Function call 'mbedtls_rsa_parse_key' identified by AST-lite call matching.
-  priority: medium
+  priority: high
   function: mbedtls_rsa_parse_key
   line: 9
-- unit_id: ASTLITE-0034
+  line_start: 9
+  line_end: 35
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0071
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: int mbedtls_rsa_parse_pubkey(mbedtls_rsa_context *rsa, const unsigned char
+    *key, size_t keylen);
+  source: tmpl_mbedtls.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 37
+  line_start: 37
+  line_end: 39
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0072
   mask_level: function_call
-  role: helper_function
+  role: trigger_call
   placeholder: ''
   code: int mbedtls_rsa_parse_pubkey(mbedtls_rsa_context *rsa, const unsigned char
     *key, size_t keylen);
   source: tmpl_mbedtls.c.function_call
   reason: Function call 'mbedtls_rsa_parse_pubkey' identified by AST-lite call matching.
-  priority: medium
+  priority: high
   function: mbedtls_rsa_parse_pubkey
   line: 37
-- unit_id: ASTLITE-0035
+  line_start: 37
+  line_end: 39
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0073
   mask_level: value
   role: input_preparation
   placeholder: '[DER_KIND]'
@@ -481,7 +1065,11 @@ ast_mask_units:
   reason: DER_KIND selects the base PKCS#1 RSA object shape.
   priority: high
   line: 41
-- unit_id: ASTLITE-0036
+  line_start: 41
+  line_end: 52
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0074
   mask_level: value
   role: input_preparation
   placeholder: '[PARSE_API_KIND]'
@@ -494,7 +1082,11 @@ ast_mask_units:
   reason: PARSE_API_KIND must be compatible with DER_KIND.
   priority: high
   line: 41
-- unit_id: ASTLITE-0037
+  line_start: 41
+  line_end: 52
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0075
   mask_level: value
   role: input_preparation
   placeholder: '[TRAILING_GARBAGE_BYTES]'
@@ -508,7 +1100,11 @@ ast_mask_units:
     SEQUENCE.
   priority: high
   line: 41
-- unit_id: ASTLITE-0038
+  line_start: 41
+  line_end: 52
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0076
   mask_level: api_argument
   role: input_preparation
   placeholder: '[TRAILING_GARBAGE_LEN]'
@@ -521,7 +1117,11 @@ ast_mask_units:
   reason: Must match the decoded byte length of TRAILING_GARBAGE_BYTES.
   priority: medium
   line: 41
-- unit_id: ASTLITE-0039
+  line_start: 41
+  line_end: 52
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0077
   mask_level: value
   role: input_preparation
   placeholder: '[EXPECT_RET]'
@@ -535,7 +1135,11 @@ ast_mask_units:
     RSA SEQUENCE.
   priority: high
   line: 41
-- unit_id: ASTLITE-0040
+  line_start: 41
+  line_end: 52
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0078
   mask_level: function_call
   role: input_preparation
   placeholder: '[DER_KIND]'
@@ -550,7 +1154,11 @@ ast_mask_units:
   priority: medium
   function: TRAILING_GARBAGE_EXPECTED_LEN
   line: 41
-- unit_id: ASTLITE-0041
+  line_start: 41
+  line_end: 52
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0079
   mask_level: function_call
   role: input_preparation
   placeholder: ''
@@ -561,7 +1169,11 @@ ast_mask_units:
   priority: medium
   function: hex_to_bin
   line: 65
-- unit_id: ASTLITE-0042
+  line_start: 65
+  line_end: 69
+  enclosing_function: hex_to_bin
+  node_type: call_expression
+- unit_id: ASTLITE-0080
   mask_level: type
   role: helper_function
   placeholder: ''
@@ -570,7 +1182,11 @@ ast_mask_units:
   reason: Type declaration identified by AST-lite declaration matching.
   priority: medium
   line: 70
-- unit_id: ASTLITE-0043
+  line_start: 70
+  line_end: 70
+  enclosing_function: hex_to_bin
+  node_type: statement
+- unit_id: ASTLITE-0081
   mask_level: type
   role: helper_function
   placeholder: ''
@@ -579,7 +1195,11 @@ ast_mask_units:
   reason: Type declaration identified by AST-lite declaration matching.
   priority: medium
   line: 71
-- unit_id: ASTLITE-0044
+  line_start: 71
+  line_end: 71
+  enclosing_function: hex_to_bin
+  node_type: statement
+- unit_id: ASTLITE-0082
   mask_level: type
   role: helper_function
   placeholder: ''
@@ -588,7 +1208,11 @@ ast_mask_units:
   reason: Type declaration identified by AST-lite declaration matching.
   priority: medium
   line: 74
-- unit_id: ASTLITE-0045
+  line_start: 74
+  line_end: 74
+  enclosing_function: hex_to_bin
+  node_type: statement
+- unit_id: ASTLITE-0083
   mask_level: function_call
   role: helper_function
   placeholder: ''
@@ -598,7 +1222,11 @@ ast_mask_units:
   priority: medium
   function: isspace
   line: 76
-- unit_id: ASTLITE-0046
+  line_start: 76
+  line_end: 76
+  enclosing_function: hex_to_bin
+  node_type: call_expression
+- unit_id: ASTLITE-0084
   mask_level: function_call
   role: input_preparation
   placeholder: ''
@@ -608,7 +1236,11 @@ ast_mask_units:
   priority: medium
   function: hexval
   line: 81
-- unit_id: ASTLITE-0047
+  line_start: 81
+  line_end: 81
+  enclosing_function: hex_to_bin
+  node_type: call_expression
+- unit_id: ASTLITE-0085
   mask_level: function_call
   role: input_preparation
   placeholder: ''
@@ -618,7 +1250,11 @@ ast_mask_units:
   priority: medium
   function: rsa_init_compat
   line: 107
-- unit_id: ASTLITE-0048
+  line_start: 107
+  line_end: 108
+  enclosing_function: rsa_init_compat
+  node_type: call_expression
+- unit_id: ASTLITE-0086
   mask_level: function_call
   role: input_preparation
   placeholder: ''
@@ -629,7 +1265,11 @@ ast_mask_units:
   priority: medium
   function: defined
   line: 109
-- unit_id: ASTLITE-0049
+  line_start: 109
+  line_end: 110
+  enclosing_function: rsa_init_compat
+  node_type: call_expression
+- unit_id: ASTLITE-0087
   mask_level: function_call
   role: input_preparation
   placeholder: ''
@@ -639,7 +1279,11 @@ ast_mask_units:
   priority: medium
   function: mbedtls_rsa_init
   line: 111
-- unit_id: ASTLITE-0050
+  line_start: 111
+  line_end: 112
+  enclosing_function: rsa_init_compat
+  node_type: call_expression
+- unit_id: ASTLITE-0088
   mask_level: function_call
   role: helper_function
   placeholder: ''
@@ -649,7 +1293,11 @@ ast_mask_units:
   priority: medium
   function: select_base_der_hex
   line: 116
-- unit_id: ASTLITE-0051
+  line_start: 116
+  line_end: 117
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0089
   mask_level: function_call
   role: helper_function
   placeholder: ''
@@ -659,7 +1307,11 @@ ast_mask_units:
   priority: medium
   function: strcmp
   line: 144
-- unit_id: ASTLITE-0052
+  line_start: 144
+  line_end: 144
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0090
   mask_level: function_call
   role: helper_function
   placeholder: ''
@@ -669,7 +1321,11 @@ ast_mask_units:
   priority: medium
   function: strcmp
   line: 147
-- unit_id: ASTLITE-0053
+  line_start: 147
+  line_end: 147
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0091
   mask_level: function_call
   role: input_preparation
   placeholder: ''
@@ -682,7 +1338,11 @@ ast_mask_units:
   priority: medium
   function: build_der_with_trailing_garbage
   line: 154
-- unit_id: ASTLITE-0054
+  line_start: 154
+  line_end: 160
+  enclosing_function: build_der_with_trailing_garbage
+  node_type: call_expression
+- unit_id: ASTLITE-0092
   mask_level: type
   role: helper_function
   placeholder: ''
@@ -691,7 +1351,11 @@ ast_mask_units:
   reason: Type declaration identified by AST-lite declaration matching.
   priority: medium
   line: 161
-- unit_id: ASTLITE-0055
+  line_start: 161
+  line_end: 161
+  enclosing_function: build_der_with_trailing_garbage
+  node_type: statement
+- unit_id: ASTLITE-0093
   mask_level: type
   role: helper_function
   placeholder: ''
@@ -700,7 +1364,11 @@ ast_mask_units:
   reason: Type declaration identified by AST-lite declaration matching.
   priority: medium
   line: 162
-- unit_id: ASTLITE-0056
+  line_start: 162
+  line_end: 162
+  enclosing_function: build_der_with_trailing_garbage
+  node_type: statement
+- unit_id: ASTLITE-0094
   mask_level: function_call
   role: input_preparation
   placeholder: ''
@@ -710,7 +1378,11 @@ ast_mask_units:
   priority: medium
   function: hex_to_bin
   line: 164
-- unit_id: ASTLITE-0057
+  line_start: 164
+  line_end: 164
+  enclosing_function: build_der_with_trailing_garbage
+  node_type: call_expression
+- unit_id: ASTLITE-0095
   mask_level: function_call
   role: input_preparation
   placeholder: ''
@@ -720,7 +1392,11 @@ ast_mask_units:
   priority: medium
   function: hex_to_bin
   line: 169
-- unit_id: ASTLITE-0058
+  line_start: 169
+  line_end: 172
+  enclosing_function: build_der_with_trailing_garbage
+  node_type: call_expression
+- unit_id: ASTLITE-0096
   mask_level: function_call
   role: input_preparation
   placeholder: ''
@@ -731,7 +1407,11 @@ ast_mask_units:
   priority: medium
   function: parse_with_selected_api
   line: 181
-- unit_id: ASTLITE-0059
+  line_start: 181
+  line_end: 185
+  enclosing_function: parse_with_selected_api
+  node_type: call_expression
+- unit_id: ASTLITE-0097
   mask_level: type
   role: helper_function
   placeholder: ''
@@ -740,7 +1420,11 @@ ast_mask_units:
   reason: Type declaration identified by AST-lite declaration matching.
   priority: medium
   line: 186
-- unit_id: ASTLITE-0060
+  line_start: 186
+  line_end: 186
+  enclosing_function: parse_with_selected_api
+  node_type: statement
+- unit_id: ASTLITE-0098
   mask_level: function_call
   role: helper_function
   placeholder: ''
@@ -750,7 +1434,11 @@ ast_mask_units:
   priority: medium
   function: strcmp
   line: 188
-- unit_id: ASTLITE-0061
+  line_start: 188
+  line_end: 188
+  enclosing_function: parse_with_selected_api
+  node_type: call_expression
+- unit_id: ASTLITE-0099
   mask_level: type
   role: helper_function
   placeholder: ''
@@ -759,7 +1447,11 @@ ast_mask_units:
   reason: Type declaration identified by AST-lite declaration matching.
   priority: medium
   line: 189
-- unit_id: ASTLITE-0062
+  line_start: 189
+  line_end: 189
+  enclosing_function: parse_with_selected_api
+  node_type: statement
+- unit_id: ASTLITE-0100
   mask_level: function_call
   role: input_preparation
   placeholder: ''
@@ -769,26 +1461,51 @@ ast_mask_units:
   priority: medium
   function: rsa_init_compat
   line: 191
-- unit_id: ASTLITE-0063
+  line_start: 191
+  line_end: 191
+  enclosing_function: parse_with_selected_api
+  node_type: call_expression
+- unit_id: ASTLITE-0101
   mask_level: value
-  role: mutation_point
+  role: trigger_call
   placeholder: '[RSA_PRIVATE_PARSE_CALL]'
   code: /* [RSA_PRIVATE_PARSE_CALL] */ ret = mbedtls_rsa_parse_key(&rsa, der, der_len);
   source: tmpl_mbedtls.c.placeholder_statement
   reason: Exercises PKCS#1 RSA private-key DER parser.
   priority: high
   line: 192
-- unit_id: ASTLITE-0064
+  line_start: 192
+  line_end: 193
+  enclosing_function: parse_with_selected_api
+  node_type: statement
+- unit_id: ASTLITE-0102
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: /* [RSA_PRIVATE_PARSE_CALL] */ ret = mbedtls_rsa_parse_key(&rsa, der, der_len);
+  source: tmpl_mbedtls.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 192
+  line_start: 192
+  line_end: 193
+  enclosing_function: parse_with_selected_api
+  node_type: statement
+- unit_id: ASTLITE-0103
   mask_level: function_call
-  role: mutation_point
+  role: trigger_call
   placeholder: '[RSA_PRIVATE_PARSE_CALL]'
   code: /* [RSA_PRIVATE_PARSE_CALL] */ ret = mbedtls_rsa_parse_key(&rsa, der, der_len);
   source: tmpl_mbedtls.c.function_call
   reason: Function call 'mbedtls_rsa_parse_key' identified by AST-lite call matching.
-  priority: medium
+  priority: high
   function: mbedtls_rsa_parse_key
   line: 192
-- unit_id: ASTLITE-0065
+  line_start: 192
+  line_end: 193
+  enclosing_function: parse_with_selected_api
+  node_type: call_expression
+- unit_id: ASTLITE-0104
   mask_level: statement
   role: cleanup
   placeholder: ''
@@ -797,7 +1514,11 @@ ast_mask_units:
   reason: Statement classified as cleanup by AST-lite role rules.
   priority: medium
   line: 194
-- unit_id: ASTLITE-0066
+  line_start: 194
+  line_end: 194
+  enclosing_function: parse_with_selected_api
+  node_type: statement
+- unit_id: ASTLITE-0105
   mask_level: function_call
   role: cleanup
   placeholder: ''
@@ -807,7 +1528,11 @@ ast_mask_units:
   priority: medium
   function: mbedtls_rsa_free
   line: 194
-- unit_id: ASTLITE-0067
+  line_start: 194
+  line_end: 194
+  enclosing_function: parse_with_selected_api
+  node_type: call_expression
+- unit_id: ASTLITE-0106
   mask_level: function_call
   role: helper_function
   placeholder: ''
@@ -817,26 +1542,51 @@ ast_mask_units:
   priority: medium
   function: strcmp
   line: 198
-- unit_id: ASTLITE-0068
+  line_start: 198
+  line_end: 198
+  enclosing_function: parse_with_selected_api
+  node_type: call_expression
+- unit_id: ASTLITE-0107
   mask_level: value
-  role: mutation_point
+  role: trigger_call
   placeholder: '[RSA_PUBLIC_PARSE_CALL]'
   code: /* [RSA_PUBLIC_PARSE_CALL] */ ret = mbedtls_rsa_parse_pubkey(&rsa, der, der_len);
   source: tmpl_mbedtls.c.placeholder_statement
   reason: Exercises PKCS#1 RSA public-key DER parser.
   priority: high
   line: 202
-- unit_id: ASTLITE-0069
+  line_start: 202
+  line_end: 203
+  enclosing_function: parse_with_selected_api
+  node_type: statement
+- unit_id: ASTLITE-0108
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: /* [RSA_PUBLIC_PARSE_CALL] */ ret = mbedtls_rsa_parse_pubkey(&rsa, der, der_len);
+  source: tmpl_mbedtls.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 202
+  line_start: 202
+  line_end: 203
+  enclosing_function: parse_with_selected_api
+  node_type: statement
+- unit_id: ASTLITE-0109
   mask_level: function_call
-  role: mutation_point
+  role: trigger_call
   placeholder: '[RSA_PUBLIC_PARSE_CALL]'
   code: /* [RSA_PUBLIC_PARSE_CALL] */ ret = mbedtls_rsa_parse_pubkey(&rsa, der, der_len);
   source: tmpl_mbedtls.c.function_call
   reason: Function call 'mbedtls_rsa_parse_pubkey' identified by AST-lite call matching.
-  priority: medium
+  priority: high
   function: mbedtls_rsa_parse_pubkey
   line: 202
-- unit_id: ASTLITE-0070
+  line_start: 202
+  line_end: 203
+  enclosing_function: parse_with_selected_api
+  node_type: call_expression
+- unit_id: ASTLITE-0110
   mask_level: function_call
   role: helper_function
   placeholder: ''
@@ -846,7 +1596,11 @@ ast_mask_units:
   priority: medium
   function: strcmp
   line: 208
-- unit_id: ASTLITE-0071
+  line_start: 208
+  line_end: 208
+  enclosing_function: parse_with_selected_api
+  node_type: call_expression
+- unit_id: ASTLITE-0111
   mask_level: type
   role: helper_function
   placeholder: ''
@@ -855,7 +1609,11 @@ ast_mask_units:
   reason: Type declaration identified by AST-lite declaration matching.
   priority: medium
   line: 209
-- unit_id: ASTLITE-0072
+  line_start: 209
+  line_end: 209
+  enclosing_function: parse_with_selected_api
+  node_type: statement
+- unit_id: ASTLITE-0112
   mask_level: function_call
   role: helper_function
   placeholder: ''
@@ -865,7 +1623,11 @@ ast_mask_units:
   priority: medium
   function: strcmp
   line: 211
-- unit_id: ASTLITE-0073
+  line_start: 211
+  line_end: 211
+  enclosing_function: parse_with_selected_api
+  node_type: call_expression
+- unit_id: ASTLITE-0113
   mask_level: function_call
   role: input_preparation
   placeholder: ''
@@ -875,7 +1637,11 @@ ast_mask_units:
   priority: medium
   function: mbedtls_pk_init
   line: 215
-- unit_id: ASTLITE-0074
+  line_start: 215
+  line_end: 215
+  enclosing_function: parse_with_selected_api
+  node_type: call_expression
+- unit_id: ASTLITE-0114
   mask_level: statement
   role: trigger_call
   placeholder: ''
@@ -884,7 +1650,11 @@ ast_mask_units:
   reason: Statement invokes the source API trigger.
   priority: high
   line: 216
-- unit_id: ASTLITE-0075
+  line_start: 216
+  line_end: 216
+  enclosing_function: parse_with_selected_api
+  node_type: statement
+- unit_id: ASTLITE-0115
   mask_level: function_call
   role: trigger_call
   placeholder: ''
@@ -894,7 +1664,11 @@ ast_mask_units:
   priority: high
   function: mbedtls_pk_parse_key
   line: 216
-- unit_id: ASTLITE-0076
+  line_start: 216
+  line_end: 216
+  enclosing_function: parse_with_selected_api
+  node_type: call_expression
+- unit_id: ASTLITE-0116
   mask_level: statement
   role: cleanup
   placeholder: ''
@@ -903,7 +1677,11 @@ ast_mask_units:
   reason: Statement classified as cleanup by AST-lite role rules.
   priority: medium
   line: 217
-- unit_id: ASTLITE-0077
+  line_start: 217
+  line_end: 217
+  enclosing_function: parse_with_selected_api
+  node_type: statement
+- unit_id: ASTLITE-0117
   mask_level: function_call
   role: cleanup
   placeholder: ''
@@ -913,7 +1691,11 @@ ast_mask_units:
   priority: medium
   function: mbedtls_pk_free
   line: 217
-- unit_id: ASTLITE-0078
+  line_start: 217
+  line_end: 217
+  enclosing_function: parse_with_selected_api
+  node_type: call_expression
+- unit_id: ASTLITE-0118
   mask_level: function_call
   role: helper_function
   placeholder: ''
@@ -923,7 +1705,11 @@ ast_mask_units:
   priority: medium
   function: main
   line: 224
-- unit_id: ASTLITE-0079
+  line_start: 224
+  line_end: 225
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0119
   mask_level: type
   role: helper_function
   placeholder: ''
@@ -932,7 +1718,11 @@ ast_mask_units:
   reason: Type declaration identified by AST-lite declaration matching.
   priority: medium
   line: 226
-- unit_id: ASTLITE-0080
+  line_start: 226
+  line_end: 226
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0120
   mask_level: type
   role: helper_function
   placeholder: ''
@@ -941,7 +1731,11 @@ ast_mask_units:
   reason: Type declaration identified by AST-lite declaration matching.
   priority: medium
   line: 227
-- unit_id: ASTLITE-0081
+  line_start: 227
+  line_end: 227
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0121
   mask_level: type
   role: helper_function
   placeholder: ''
@@ -950,7 +1744,11 @@ ast_mask_units:
   reason: Type declaration identified by AST-lite declaration matching.
   priority: medium
   line: 228
-- unit_id: ASTLITE-0082
+  line_start: 228
+  line_end: 228
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0122
   mask_level: type
   role: helper_function
   placeholder: ''
@@ -959,7 +1757,11 @@ ast_mask_units:
   reason: Type declaration identified by AST-lite declaration matching.
   priority: medium
   line: 229
-- unit_id: ASTLITE-0083
+  line_start: 229
+  line_end: 229
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0123
   mask_level: type
   role: helper_function
   placeholder: ''
@@ -968,7 +1770,11 @@ ast_mask_units:
   reason: Type declaration identified by AST-lite declaration matching.
   priority: medium
   line: 230
-- unit_id: ASTLITE-0084
+  line_start: 230
+  line_end: 230
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0124
   mask_level: type
   role: helper_function
   placeholder: ''
@@ -977,7 +1783,11 @@ ast_mask_units:
   reason: Type declaration identified by AST-lite declaration matching.
   priority: medium
   line: 231
-- unit_id: ASTLITE-0085
+  line_start: 231
+  line_end: 231
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0125
   mask_level: type
   role: helper_function
   placeholder: ''
@@ -986,7 +1796,11 @@ ast_mask_units:
   reason: Type declaration identified by AST-lite declaration matching.
   priority: medium
   line: 232
-- unit_id: ASTLITE-0086
+  line_start: 232
+  line_end: 232
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0126
   mask_level: function_call
   role: helper_function
   placeholder: ''
@@ -996,7 +1810,11 @@ ast_mask_units:
   priority: medium
   function: setbuf
   line: 235
-- unit_id: ASTLITE-0087
+  line_start: 235
+  line_end: 235
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0127
   mask_level: function_call
   role: helper_function
   placeholder: ''
@@ -1006,7 +1824,11 @@ ast_mask_units:
   priority: medium
   function: select_base_der_hex
   line: 237
-- unit_id: ASTLITE-0088
+  line_start: 237
+  line_end: 237
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0128
   mask_level: value
   role: mutation_point
   placeholder: '[ERROR]'
@@ -1015,7 +1837,11 @@ ast_mask_units:
   reason: Statement contains a template placeholder.
   priority: medium
   line: 239
-- unit_id: ASTLITE-0089
+  line_start: 239
+  line_end: 239
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0129
   mask_level: function_call
   role: mutation_point
   placeholder: '[ERROR]'
@@ -1025,7 +1851,11 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 239
-- unit_id: ASTLITE-0090
+  line_start: 239
+  line_end: 239
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0130
   mask_level: function_call
   role: helper_function
   placeholder: ''
@@ -1035,7 +1865,11 @@ ast_mask_units:
   priority: medium
   function: calloc
   line: 243
-- unit_id: ASTLITE-0091
+  line_start: 243
+  line_end: 243
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0131
   mask_level: value
   role: mutation_point
   placeholder: '[ERROR]'
@@ -1044,7 +1878,11 @@ ast_mask_units:
   reason: Statement contains a template placeholder.
   priority: medium
   line: 245
-- unit_id: ASTLITE-0092
+  line_start: 245
+  line_end: 245
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0132
   mask_level: function_call
   role: mutation_point
   placeholder: '[ERROR]'
@@ -1054,7 +1892,11 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 245
-- unit_id: ASTLITE-0093
+  line_start: 245
+  line_end: 245
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0133
   mask_level: function_call
   role: input_preparation
   placeholder: ''
@@ -1066,7 +1908,11 @@ ast_mask_units:
   priority: medium
   function: build_der_with_trailing_garbage
   line: 249
-- unit_id: ASTLITE-0094
+  line_start: 249
+  line_end: 254
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0134
   mask_level: value
   role: mutation_point
   placeholder: '[ERROR]'
@@ -1075,7 +1921,11 @@ ast_mask_units:
   reason: Statement contains a template placeholder.
   priority: medium
   line: 256
-- unit_id: ASTLITE-0095
+  line_start: 256
+  line_end: 256
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0135
   mask_level: function_call
   role: mutation_point
   placeholder: '[ERROR]'
@@ -1085,7 +1935,11 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 256
-- unit_id: ASTLITE-0096
+  line_start: 256
+  line_end: 256
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0136
   mask_level: statement
   role: cleanup
   placeholder: ''
@@ -1094,7 +1948,11 @@ ast_mask_units:
   reason: Statement classified as cleanup by AST-lite role rules.
   priority: medium
   line: 257
-- unit_id: ASTLITE-0097
+  line_start: 257
+  line_end: 257
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0137
   mask_level: function_call
   role: cleanup
   placeholder: ''
@@ -1104,7 +1962,11 @@ ast_mask_units:
   priority: medium
   function: free
   line: 257
-- unit_id: ASTLITE-0098
+  line_start: 257
+  line_end: 257
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0138
   mask_level: value
   role: mutation_point
   placeholder: '[ERROR]'
@@ -1114,7 +1976,11 @@ ast_mask_units:
   reason: Statement contains a template placeholder.
   priority: medium
   line: 262
-- unit_id: ASTLITE-0099
+  line_start: 262
+  line_end: 263
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0139
   mask_level: function_call
   role: mutation_point
   placeholder: '[ERROR]'
@@ -1125,7 +1991,11 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 262
-- unit_id: ASTLITE-0100
+  line_start: 262
+  line_end: 263
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0140
   mask_level: function_call
   role: helper_function
   placeholder: ''
@@ -1135,7 +2005,11 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 268
-- unit_id: ASTLITE-0101
+  line_start: 268
+  line_end: 268
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0141
   mask_level: function_call
   role: helper_function
   placeholder: ''
@@ -1145,7 +2019,11 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 269
-- unit_id: ASTLITE-0102
+  line_start: 269
+  line_end: 269
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0142
   mask_level: function_call
   role: helper_function
   placeholder: ''
@@ -1155,7 +2033,11 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 270
-- unit_id: ASTLITE-0103
+  line_start: 270
+  line_end: 270
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0143
   mask_level: function_call
   role: helper_function
   placeholder: ''
@@ -1165,7 +2047,11 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 271
-- unit_id: ASTLITE-0104
+  line_start: 271
+  line_end: 271
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0144
   mask_level: value
   role: mutation_point
   placeholder: '[TOP_LEVEL_SEQUENCE_END_CHECK]'
@@ -1175,7 +2061,11 @@ ast_mask_units:
     SEQUENCE.
   priority: high
   line: 273
-- unit_id: ASTLITE-0105
+  line_start: 273
+  line_end: 274
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0145
   mask_level: function_call
   role: input_preparation
   placeholder: ''
@@ -1185,7 +2075,11 @@ ast_mask_units:
   priority: medium
   function: parse_with_selected_api
   line: 276
-- unit_id: ASTLITE-0106
+  line_start: 276
+  line_end: 277
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0146
   mask_level: function_call
   role: helper_function
   placeholder: ''
@@ -1195,7 +2089,11 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 279
-- unit_id: ASTLITE-0107
+  line_start: 279
+  line_end: 279
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0147
   mask_level: function_call
   role: helper_function
   placeholder: ''
@@ -1205,7 +2103,11 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 280
-- unit_id: ASTLITE-0108
+  line_start: 280
+  line_end: 280
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0148
   mask_level: function_call
   role: helper_function
   placeholder: ''
@@ -1215,7 +2117,11 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 281
-- unit_id: ASTLITE-0109
+  line_start: 281
+  line_end: 281
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0149
   mask_level: value
   role: oracle
   placeholder: '[BUG]'
@@ -1224,7 +2130,11 @@ ast_mask_units:
   reason: Statement contains a template placeholder.
   priority: medium
   line: 284
-- unit_id: ASTLITE-0110
+  line_start: 284
+  line_end: 284
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0150
   mask_level: statement
   role: oracle
   placeholder: ''
@@ -1233,7 +2143,11 @@ ast_mask_units:
   reason: Statement classified as oracle by AST-lite role rules.
   priority: medium
   line: 284
-- unit_id: ASTLITE-0111
+  line_start: 284
+  line_end: 284
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0151
   mask_level: function_call
   role: oracle
   placeholder: '[BUG]'
@@ -1243,7 +2157,11 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 284
-- unit_id: ASTLITE-0112
+  line_start: 284
+  line_end: 284
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0152
   mask_level: value
   role: oracle
   placeholder: '[OK]'
@@ -1252,7 +2170,11 @@ ast_mask_units:
   reason: Statement contains a template placeholder.
   priority: medium
   line: 291
-- unit_id: ASTLITE-0113
+  line_start: 291
+  line_end: 291
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0153
   mask_level: statement
   role: oracle
   placeholder: ''
@@ -1261,7 +2183,11 @@ ast_mask_units:
   reason: Statement classified as oracle by AST-lite role rules.
   priority: medium
   line: 291
-- unit_id: ASTLITE-0114
+  line_start: 291
+  line_end: 291
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0154
   mask_level: function_call
   role: oracle
   placeholder: '[OK]'
@@ -1271,7 +2197,11 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 291
-- unit_id: ASTLITE-0115
+  line_start: 291
+  line_end: 291
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0155
   mask_level: value
   role: mutation_point
   placeholder: '[INFO]'
@@ -1281,7 +2211,11 @@ ast_mask_units:
   reason: Statement contains a template placeholder.
   priority: medium
   line: 296
-- unit_id: ASTLITE-0116
+  line_start: 296
+  line_end: 296
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0156
   mask_level: function_call
   role: mutation_point
   placeholder: '[INFO]'
@@ -1292,18 +2226,23 @@ ast_mask_units:
   priority: medium
   function: printf
   line: 296
+  line_start: 296
+  line_end: 296
+  enclosing_function: ''
+  node_type: call_expression
 role_summary:
-  cleanup: 8
-  helper_function: 40
-  input_construction: 3
-  input_preparation: 19
-  mutation_point: 32
-  oracle: 9
-  trigger_call: 5
+  cleanup: 9
+  helper_function: 51
+  input_construction: 13
+  input_preparation: 22
+  mutation_point: 30
+  oracle: 8
+  trigger_call: 23
 mask_level_summary:
-  api_argument: 4
-  block: 5
-  function_call: 48
-  statement: 8
+  api_argument: 3
+  block: 7
+  function_call: 50
+  identifier: 3
+  statement: 44
   type: 15
-  value: 36
+  value: 34

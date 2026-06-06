@@ -1,6 +1,10 @@
 template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE
 pattern_id: OPENSSL-ISSUE-22842
 source_library: openssl
+trigger_apis:
+  - EVP_MAC_CTX_get_mac_size
+  - EVP_MAC_init
+harness_family: object_state_lifecycle
 
 selected_units:
   - unit_id: mac_name_literal
@@ -38,15 +42,20 @@ selected_units:
     selected: false
     priority: critical
     reason: Non-mutable; original trigger before EVP_MAC_init
+    role: oracle
+    suggested_use: migrate_api_call
 
   - unit_id: evp_mac_init_call
     slot: INIT_CALL
     selected: false
     priority: critical
     reason: Non-mutable; establishes initialized control state
+    suggested_use: migrate_api_call
 
   - unit_id: post_init_get_size_call
     slot: POST_INIT_GET_SIZE_CALL
     selected: false
     priority: critical
     reason: Non-mutable; validates initialized size
+    role: oracle
+    suggested_use: migrate_api_call

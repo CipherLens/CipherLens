@@ -1,0 +1,1638 @@
+template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+template_name: mbedtls_pk_verify_ext opaque RSA-PSS null-deref template
+source_api: mbedtls_pk_verify_ext
+source_library: mbedtls
+trigger_apis:
+- mbedtls_pk_verify_ext
+harness_family: null_deref_dispatch
+summary:
+  method: tree_sitter_c_role_aware
+  backend: tree-sitter
+  template_dir: normalized_templates/pk/pk_verify_ext_null_deref
+  unit_count: 62
+  parse_has_error: true
+  note: Tree-sitter C report generated from concrete syntax nodes. This backend is
+    optional and is intended to complement AST-lite.
+ast_mask_units:
+- unit_id: ASTLITE-0001
+  mask_level: value
+  role: mutation_point
+  placeholder: '[KEY_BITS]'
+  code: '#define KEY_BITS [KEY_BITS]'
+  source: tmpl_mbedtls.c.tree_sitter.preprocessor
+  reason: Preprocessor node contains template placeholder.
+  priority: high
+  line: 11
+  line_start: 11
+  line_end: 12
+  column_start: 1
+  column_end: 1
+  node_type: preproc_def
+  enclosing_function: ''
+  placeholder_dependencies:
+  - '[KEY_BITS]'
+  identifiers_read:
+  - define
+  - KEY_BITS
+  identifiers_written: []
+- unit_id: ASTLITE-0002
+  mask_level: value
+  role: mutation_point
+  placeholder: '[HASH_LEN]'
+  code: '#define HASH_LEN [HASH_LEN]'
+  source: tmpl_mbedtls.c.tree_sitter.preprocessor
+  reason: Preprocessor node contains template placeholder.
+  priority: high
+  line: 12
+  line_start: 12
+  line_end: 13
+  column_start: 1
+  column_end: 1
+  node_type: preproc_def
+  enclosing_function: ''
+  placeholder_dependencies:
+  - '[HASH_LEN]'
+  identifiers_read:
+  - define
+  - HASH_LEN
+  identifiers_written: []
+- unit_id: ASTLITE-0003
+  mask_level: value
+  role: mutation_point
+  placeholder: '[SIG_LEN]'
+  code: '#define SIG_LEN [SIG_LEN]'
+  source: tmpl_mbedtls.c.tree_sitter.preprocessor
+  reason: Preprocessor node contains template placeholder.
+  priority: high
+  line: 13
+  line_start: 13
+  line_end: 14
+  column_start: 1
+  column_end: 1
+  node_type: preproc_def
+  enclosing_function: ''
+  placeholder_dependencies:
+  - '[SIG_LEN]'
+  identifiers_read:
+  - define
+  - SIG_LEN
+  identifiers_written: []
+- unit_id: ASTLITE-0004
+  mask_level: block
+  role: entrypoint
+  placeholder: '[HASH_LEN]'
+  code: 'int main(void) { int ret = 0; psa_status_t status; mbedtls_pk_context pk;
+    mbedtls_entropy_context entropy; mbedtls_ctr_drbg_context ctr_drbg; psa_key_attributes_t
+    key_attr = PSA_KEY_ATTRIBUTES_INIT; mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    unsigned char hash[HASH_LEN]; unsigned char sig[SIG_LEN]; const char *pers = "poc_pk_verify_ext_v2";
+    mbedtls_pk_rsassa_pss_options pss_opts; pss_opts.mgf1_hash_id = [MD_ALG]; pss_opts.expected_salt_len
+    = [EXPECTED_SALT_LEN]; setbuf(stdout, NULL); memset(hash, 0x2a, sizeof(hash));
+    memset(sig, 0x5a, sizeof(sig)); mbedtls_pk_init(&pk); mbedtls_entropy_init(&entropy);
+    mbedtls_ctr_drbg_init(&ctr_drbg); ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func,
+    &entropy, (const unsigned char *) pers, strlen(pers)); if (ret != 0) { printf("ctr_drbg_seed
+    failed: %d\n", ret); goto cleanup; } status = psa_crypto_init(); if (status !=
+    PSA_SUCCESS) { printf("psa_crypto_init failed: %d\n", (int) status); ret = 2;
+    goto cleanup; } /* * Step 1: create a legacy RSA key. */ ret = mbedtls_pk_setup(&pk,
+    mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)); if (ret != 0) { printf("mbedtls_pk_setup
+    failed: %d\n", ret); goto cleanup; } ret = mbedtls_rsa_gen_key(mbedtls_pk_rsa(pk),
+    mbedtls_ctr_drbg_random, &ctr_drbg, KEY_BITS, 65537); if (ret != 0) { printf("mbedtls_rsa_gen_key
+    failed: %d\n", ret); goto cleanup; } /* * Align with the official regression-test
+    scenario: * RSASSA-PSS key path. */ mbedtls_rsa_set_padding(mbedtls_pk_rsa(pk),
+    MBEDTLS_RSA_PKCS_V21, MBEDTLS_MD_NONE); /* * Step 2: import into PSA and turn
+    the PK context into an opaque context. */ ret = mbedtls_pk_get_psa_attributes(&pk,
+    PSA_KEY_USAGE_SIGN_HASH, &key_attr); if (ret != 0) { printf("mbedtls_pk_get_psa_attributes
+    failed: %d\n", ret); goto cleanup; } ret = mbedtls_pk_import_into_psa(&pk, &key_attr,
+    &key_id); if (ret != 0) { printf("mbedtls_pk_import_into_psa failed: %d\n", ret);
+    goto cleanup; } mbedtls_pk_free(&pk); mbedtls_pk_init(&pk); ret = mbedtls_pk_setup_opaque(&pk,
+    key_id); if (ret != 0) { printf("mbedtls_pk_setup_opaque failed: %d\n", ret);
+    goto cleanup; } printf("opaque pk type = %d\n", (int) mbedtls_pk_get_type(&pk));
+    printf("calling mbedtls_pk_verify_ext...\n"); /* * Trigger point: * * Buggy version:
+    * no ctx type check before RSA-PSS path; * mbedtls_pk_rsa(*ctx) may return NULL;
+    * NULL dereference occurs. * * Fixed version: * returns MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE.
+    */ ret = mbedtls_pk_verify_ext([PK_VERIFY_TYPE], &pss_opts, &pk, [MD_ALG], hash,
+    sizeof(hash), sig, sizeof(sig)); printf("verify_ext ret=%d\n", ret); printf("expected
+    fixed ret=%d\n", MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE); if (ret == MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE)
+    { printf("[OK] fixed behavior: unsupported opaque verify_ext rejected safely.\n");
+    } else { printf("[INFO] returned without crash, ret=%d\n", ret); } cleanup: mbedtls_pk_free(&pk);
+    if (!mbedtls_svc_key_id_is_null(key_id)) { psa_destroy_key(key_id); } mbedtls_ctr_drbg_free(&ctr_drbg);
+    mbedtls_entropy_free(&entropy); mbedtls_psa_crypto_free(); return 0; }'
+  source: tmpl_mbedtls.c.tree_sitter.function_definition
+  reason: Function definition identified by tree-sitter C parser.
+  priority: high
+  line: 14
+  line_start: 14
+  line_end: 156
+  column_start: 1
+  column_end: 2
+  node_type: function_definition
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[HASH_LEN]'
+  - '[SIG_LEN]'
+  - '[MD_ALG]'
+  - '[EXPECTED_SALT_LEN]'
+  - '[PK_VERIFY_TYPE]'
+  - '[OK]'
+  - '[INFO]'
+  identifiers_read:
+  - int
+  - void
+  - psa_status_t
+  - mbedtls_pk_context
+  - pk
+  - mbedtls_entropy_context
+  - entropy
+  - mbedtls_ctr_drbg_context
+  - ctr_drbg
+  - psa_key_attributes_t
+  - PSA_KEY_ATTRIBUTES_INIT
+  - mbedtls_svc_key_id_t
+  - MBEDTLS_SVC_KEY_ID_INIT
+  - unsigned
+  - char
+  - hash
+  - HASH_LEN
+  - sig
+  - SIG_LEN
+  - const
+  - poc_pk_verify_ext_v2
+  - mbedtls_pk_rsassa_pss_options
+  - pss_opts
+  - MD_ALG
+  - EXPECTED_SALT_LEN
+  - stdout
+  - 'NULL'
+  - mbedtls_entropy_func
+  - ctr_drbg_seed
+  - failed
+  - d
+  - n
+  - goto
+  - cleanup
+  - PSA_SUCCESS
+  - Step
+  - create
+  - a
+  - legacy
+  - RSA
+  - key
+  - MBEDTLS_PK_RSA
+  - mbedtls_ctr_drbg_random
+  - KEY_BITS
+  - Align
+  - with
+  - the
+  - official
+  - regression
+  - test
+  - scenario
+  - RSASSA
+  - PSS
+  - path
+  - MBEDTLS_RSA_PKCS_V21
+  - MBEDTLS_MD_NONE
+  - import
+  - into
+  - PSA
+  - and
+  - turn
+  - PK
+  - context
+  - an
+  - opaque
+  - PSA_KEY_USAGE_SIGN_HASH
+  - calling
+  - Trigger
+  - point
+  - Buggy
+  - version
+  - 'no'
+  - ctx
+  - check
+  - before
+  - may
+  - dereference
+  - occurs
+  - Fixed
+  - returns
+  - MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE
+  - PK_VERIFY_TYPE
+  - verify_ext
+  - expected
+  - fixed
+  - OK
+  - behavior
+  - unsupported
+  - rejected
+  - safely
+  - else
+  - INFO
+  - returned
+  - without
+  - crash
+  identifiers_written:
+  - ret
+  - key_attr
+  - key_id
+  - pers
+  - mgf1_hash_id
+  - expected_salt_len
+  - status
+  - type
+  function: main
+- unit_id: ASTLITE-0005
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[HASH_LEN]'
+  code: unsigned char hash[HASH_LEN];
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 26
+  line_start: 26
+  line_end: 26
+  column_start: 5
+  column_end: 34
+  node_type: declaration
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[HASH_LEN]'
+  identifiers_read:
+  - unsigned
+  - char
+  - hash
+  - HASH_LEN
+  identifiers_written: []
+- unit_id: ASTLITE-0006
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SIG_LEN]'
+  code: unsigned char sig[SIG_LEN];
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 27
+  line_start: 27
+  line_end: 27
+  column_start: 5
+  column_end: 32
+  node_type: declaration
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SIG_LEN]'
+  identifiers_read:
+  - unsigned
+  - char
+  - sig
+  - SIG_LEN
+  identifiers_written: []
+- unit_id: ASTLITE-0007
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[MD_ALG]'
+  code: pss_opts.mgf1_hash_id = [MD_ALG];
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 32
+  line_start: 32
+  line_end: 32
+  column_start: 5
+  column_end: 38
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[MD_ALG]'
+  identifiers_read:
+  - pss_opts
+  - MD_ALG
+  identifiers_written:
+  - mgf1_hash_id
+- unit_id: ASTLITE-0008
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[EXPECTED_SALT_LEN]'
+  code: pss_opts.expected_salt_len = [EXPECTED_SALT_LEN];
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 33
+  line_start: 33
+  line_end: 33
+  column_start: 5
+  column_end: 54
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[EXPECTED_SALT_LEN]'
+  identifiers_read:
+  - pss_opts
+  - EXPECTED_SALT_LEN
+  identifiers_written:
+  - expected_salt_len
+- unit_id: ASTLITE-0009
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: setbuf(stdout, NULL)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'setbuf' identified by tree-sitter C parser.
+  priority: medium
+  line: 35
+  line_start: 35
+  line_end: 35
+  column_start: 5
+  column_end: 25
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - stdout
+  - 'NULL'
+  identifiers_written: []
+  called_function: setbuf
+  call_node_code: setbuf(stdout, NULL)
+- unit_id: ASTLITE-0010
+  mask_level: function_call
+  role: input_construction
+  placeholder: ''
+  code: memset(hash, 0x2a, sizeof(hash))
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'memset' identified by tree-sitter C parser.
+  priority: medium
+  line: 37
+  line_start: 37
+  line_end: 37
+  column_start: 5
+  column_end: 37
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - hash
+  identifiers_written: []
+  called_function: memset
+  call_node_code: memset(hash, 0x2a, sizeof(hash))
+- unit_id: ASTLITE-0011
+  mask_level: function_call
+  role: input_construction
+  placeholder: ''
+  code: memset(sig, 0x5a, sizeof(sig))
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'memset' identified by tree-sitter C parser.
+  priority: medium
+  line: 38
+  line_start: 38
+  line_end: 38
+  column_start: 5
+  column_end: 35
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - sig
+  identifiers_written: []
+  called_function: memset
+  call_node_code: memset(sig, 0x5a, sizeof(sig))
+- unit_id: ASTLITE-0012
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: mbedtls_pk_init(&pk)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_pk_init' identified by tree-sitter C parser.
+  priority: medium
+  line: 40
+  line_start: 40
+  line_end: 40
+  column_start: 5
+  column_end: 25
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - pk
+  identifiers_written: []
+  called_function: mbedtls_pk_init
+  call_node_code: mbedtls_pk_init(&pk)
+- unit_id: ASTLITE-0013
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: mbedtls_entropy_init(&entropy)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_entropy_init' identified by tree-sitter C parser.
+  priority: medium
+  line: 41
+  line_start: 41
+  line_end: 41
+  column_start: 5
+  column_end: 35
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - entropy
+  identifiers_written: []
+  called_function: mbedtls_entropy_init
+  call_node_code: mbedtls_entropy_init(&entropy)
+- unit_id: ASTLITE-0014
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: mbedtls_ctr_drbg_init(&ctr_drbg)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_ctr_drbg_init' identified by tree-sitter C parser.
+  priority: medium
+  line: 42
+  line_start: 42
+  line_end: 42
+  column_start: 5
+  column_end: 37
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - ctr_drbg
+  identifiers_written: []
+  called_function: mbedtls_ctr_drbg_init
+  call_node_code: mbedtls_ctr_drbg_init(&ctr_drbg)
+- unit_id: ASTLITE-0015
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned
+    char *) pers, strlen(pers))
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_ctr_drbg_seed' identified by tree-sitter C parser.
+  priority: medium
+  line: 44
+  line_start: 44
+  line_end: 48
+  column_start: 11
+  column_end: 46
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - ctr_drbg
+  - mbedtls_entropy_func
+  - entropy
+  - const
+  - unsigned
+  - char
+  - pers
+  identifiers_written: []
+  called_function: mbedtls_ctr_drbg_seed
+  call_node_code: mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
+    (const unsigned char *) pers, strlen(pers))
+- unit_id: ASTLITE-0016
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: strlen(pers)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'strlen' identified by tree-sitter C parser.
+  priority: medium
+  line: 48
+  line_start: 48
+  line_end: 48
+  column_start: 33
+  column_end: 45
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - pers
+  identifiers_written: []
+  called_function: strlen
+  call_node_code: strlen(pers)
+- unit_id: ASTLITE-0017
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: 'if (ret != 0) { printf("ctr_drbg_seed failed: %d\n", ret); goto cleanup;
+    }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 49
+  line_start: 49
+  line_end: 52
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - ret
+  - ctr_drbg_seed
+  - failed
+  - d
+  - n
+  - goto
+  - cleanup
+  identifiers_written: []
+- unit_id: ASTLITE-0018
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: 'printf("ctr_drbg_seed failed: %d\n", ret)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 50
+  line_start: 50
+  line_end: 50
+  column_start: 9
+  column_end: 50
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - ctr_drbg_seed
+  - failed
+  - d
+  - n
+  - ret
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("ctr_drbg_seed failed: %d\n", ret)'
+- unit_id: ASTLITE-0019
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: psa_crypto_init()
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'psa_crypto_init' identified by tree-sitter C parser.
+  priority: medium
+  line: 54
+  line_start: 54
+  line_end: 54
+  column_start: 14
+  column_end: 31
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read: []
+  identifiers_written: []
+  called_function: psa_crypto_init
+  call_node_code: psa_crypto_init()
+- unit_id: ASTLITE-0020
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: 'if (status != PSA_SUCCESS) { printf("psa_crypto_init failed: %d\n", (int)
+    status); ret = 2; goto cleanup; }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 55
+  line_start: 55
+  line_end: 59
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - status
+  - PSA_SUCCESS
+  - psa_crypto_init
+  - failed
+  - d
+  - n
+  - int
+  - goto
+  - cleanup
+  identifiers_written:
+  - ret
+- unit_id: ASTLITE-0021
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: 'printf("psa_crypto_init failed: %d\n", (int) status)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 56
+  line_start: 56
+  line_end: 56
+  column_start: 9
+  column_end: 61
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - psa_crypto_init
+  - failed
+  - d
+  - n
+  - int
+  - status
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("psa_crypto_init failed: %d\n", (int) status)'
+- unit_id: ASTLITE-0022
+  mask_level: function_call
+  role: input_construction
+  placeholder: ''
+  code: mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA))
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_pk_setup' identified by tree-sitter C parser.
+  priority: medium
+  line: 64
+  line_start: 64
+  line_end: 64
+  column_start: 11
+  column_end: 75
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - pk
+  - MBEDTLS_PK_RSA
+  identifiers_written: []
+  called_function: mbedtls_pk_setup
+  call_node_code: mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA))
+- unit_id: ASTLITE-0023
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_pk_info_from_type' identified by tree-sitter C parser.
+  priority: medium
+  line: 64
+  line_start: 64
+  line_end: 64
+  column_start: 33
+  column_end: 74
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - MBEDTLS_PK_RSA
+  identifiers_written: []
+  called_function: mbedtls_pk_info_from_type
+  call_node_code: mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)
+- unit_id: ASTLITE-0024
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: 'if (ret != 0) { printf("mbedtls_pk_setup failed: %d\n", ret); goto cleanup;
+    }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 65
+  line_start: 65
+  line_end: 68
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - ret
+  - mbedtls_pk_setup
+  - failed
+  - d
+  - n
+  - goto
+  - cleanup
+  identifiers_written: []
+- unit_id: ASTLITE-0025
+  mask_level: function_call
+  role: input_construction
+  placeholder: ''
+  code: 'printf("mbedtls_pk_setup failed: %d\n", ret)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 66
+  line_start: 66
+  line_end: 66
+  column_start: 9
+  column_end: 53
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - mbedtls_pk_setup
+  - failed
+  - d
+  - n
+  - ret
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("mbedtls_pk_setup failed: %d\n", ret)'
+- unit_id: ASTLITE-0026
+  mask_level: function_call
+  role: input_construction
+  placeholder: ''
+  code: mbedtls_rsa_gen_key(mbedtls_pk_rsa(pk), mbedtls_ctr_drbg_random, &ctr_drbg,
+    KEY_BITS, 65537)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_rsa_gen_key' identified by tree-sitter C parser.
+  priority: medium
+  line: 70
+  line_start: 70
+  line_end: 74
+  column_start: 11
+  column_end: 37
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - pk
+  - mbedtls_ctr_drbg_random
+  - ctr_drbg
+  - KEY_BITS
+  identifiers_written: []
+  called_function: mbedtls_rsa_gen_key
+  call_node_code: mbedtls_rsa_gen_key(mbedtls_pk_rsa(pk), mbedtls_ctr_drbg_random,
+    &ctr_drbg, KEY_BITS, 65537)
+- unit_id: ASTLITE-0027
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: mbedtls_pk_rsa(pk)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_pk_rsa' identified by tree-sitter C parser.
+  priority: medium
+  line: 70
+  line_start: 70
+  line_end: 70
+  column_start: 31
+  column_end: 49
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - pk
+  identifiers_written: []
+  called_function: mbedtls_pk_rsa
+  call_node_code: mbedtls_pk_rsa(pk)
+- unit_id: ASTLITE-0028
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: 'if (ret != 0) { printf("mbedtls_rsa_gen_key failed: %d\n", ret); goto cleanup;
+    }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 75
+  line_start: 75
+  line_end: 78
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - ret
+  - mbedtls_rsa_gen_key
+  - failed
+  - d
+  - n
+  - goto
+  - cleanup
+  identifiers_written: []
+- unit_id: ASTLITE-0029
+  mask_level: function_call
+  role: input_construction
+  placeholder: ''
+  code: 'printf("mbedtls_rsa_gen_key failed: %d\n", ret)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 76
+  line_start: 76
+  line_end: 76
+  column_start: 9
+  column_end: 56
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - mbedtls_rsa_gen_key
+  - failed
+  - d
+  - n
+  - ret
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("mbedtls_rsa_gen_key failed: %d\n", ret)'
+- unit_id: ASTLITE-0030
+  mask_level: function_call
+  role: input_construction
+  placeholder: ''
+  code: mbedtls_rsa_set_padding(mbedtls_pk_rsa(pk), MBEDTLS_RSA_PKCS_V21, MBEDTLS_MD_NONE)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_rsa_set_padding' identified by tree-sitter C parser.
+  priority: medium
+  line: 84
+  line_start: 84
+  line_end: 86
+  column_start: 5
+  column_end: 45
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - pk
+  - MBEDTLS_RSA_PKCS_V21
+  - MBEDTLS_MD_NONE
+  identifiers_written: []
+  called_function: mbedtls_rsa_set_padding
+  call_node_code: mbedtls_rsa_set_padding(mbedtls_pk_rsa(pk), MBEDTLS_RSA_PKCS_V21,
+    MBEDTLS_MD_NONE)
+- unit_id: ASTLITE-0031
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: mbedtls_pk_get_psa_attributes(&pk, PSA_KEY_USAGE_SIGN_HASH, &key_attr)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_pk_get_psa_attributes' identified by tree-sitter
+    C parser.
+  priority: medium
+  line: 91
+  line_start: 91
+  line_end: 91
+  column_start: 11
+  column_end: 81
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - pk
+  - PSA_KEY_USAGE_SIGN_HASH
+  - key_attr
+  identifiers_written: []
+  called_function: mbedtls_pk_get_psa_attributes
+  call_node_code: mbedtls_pk_get_psa_attributes(&pk, PSA_KEY_USAGE_SIGN_HASH, &key_attr)
+- unit_id: ASTLITE-0032
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: 'if (ret != 0) { printf("mbedtls_pk_get_psa_attributes failed: %d\n", ret);
+    goto cleanup; }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 92
+  line_start: 92
+  line_end: 95
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - ret
+  - mbedtls_pk_get_psa_attributes
+  - failed
+  - d
+  - n
+  - goto
+  - cleanup
+  identifiers_written: []
+- unit_id: ASTLITE-0033
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: 'printf("mbedtls_pk_get_psa_attributes failed: %d\n", ret)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 93
+  line_start: 93
+  line_end: 93
+  column_start: 9
+  column_end: 66
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - mbedtls_pk_get_psa_attributes
+  - failed
+  - d
+  - n
+  - ret
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("mbedtls_pk_get_psa_attributes failed: %d\n", ret)'
+- unit_id: ASTLITE-0034
+  mask_level: function_call
+  role: input_construction
+  placeholder: ''
+  code: mbedtls_pk_import_into_psa(&pk, &key_attr, &key_id)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_pk_import_into_psa' identified by tree-sitter C parser.
+  priority: medium
+  line: 97
+  line_start: 97
+  line_end: 97
+  column_start: 11
+  column_end: 62
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - pk
+  - key_attr
+  - key_id
+  identifiers_written: []
+  called_function: mbedtls_pk_import_into_psa
+  call_node_code: mbedtls_pk_import_into_psa(&pk, &key_attr, &key_id)
+- unit_id: ASTLITE-0035
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: 'if (ret != 0) { printf("mbedtls_pk_import_into_psa failed: %d\n", ret); goto
+    cleanup; }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 98
+  line_start: 98
+  line_end: 101
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - ret
+  - mbedtls_pk_import_into_psa
+  - failed
+  - d
+  - n
+  - goto
+  - cleanup
+  identifiers_written: []
+- unit_id: ASTLITE-0036
+  mask_level: function_call
+  role: input_construction
+  placeholder: ''
+  code: 'printf("mbedtls_pk_import_into_psa failed: %d\n", ret)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 99
+  line_start: 99
+  line_end: 99
+  column_start: 9
+  column_end: 63
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - mbedtls_pk_import_into_psa
+  - failed
+  - d
+  - n
+  - ret
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("mbedtls_pk_import_into_psa failed: %d\n", ret)'
+- unit_id: ASTLITE-0037
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_pk_free(&pk);
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 103
+  line_start: 103
+  line_end: 103
+  column_start: 5
+  column_end: 26
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - pk
+  identifiers_written: []
+- unit_id: ASTLITE-0038
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_pk_free(&pk)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_pk_free' identified by tree-sitter C parser.
+  priority: medium
+  line: 103
+  line_start: 103
+  line_end: 103
+  column_start: 5
+  column_end: 25
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - pk
+  identifiers_written: []
+  called_function: mbedtls_pk_free
+  call_node_code: mbedtls_pk_free(&pk)
+- unit_id: ASTLITE-0039
+  mask_level: function_call
+  role: input_construction
+  placeholder: ''
+  code: mbedtls_pk_setup_opaque(&pk, key_id)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_pk_setup_opaque' identified by tree-sitter C parser.
+  priority: medium
+  line: 106
+  line_start: 106
+  line_end: 106
+  column_start: 11
+  column_end: 47
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - pk
+  - key_id
+  identifiers_written: []
+  called_function: mbedtls_pk_setup_opaque
+  call_node_code: mbedtls_pk_setup_opaque(&pk, key_id)
+- unit_id: ASTLITE-0040
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: 'if (ret != 0) { printf("mbedtls_pk_setup_opaque failed: %d\n", ret); goto
+    cleanup; }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 107
+  line_start: 107
+  line_end: 110
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - ret
+  - mbedtls_pk_setup_opaque
+  - failed
+  - d
+  - n
+  - goto
+  - cleanup
+  identifiers_written: []
+- unit_id: ASTLITE-0041
+  mask_level: function_call
+  role: input_construction
+  placeholder: ''
+  code: 'printf("mbedtls_pk_setup_opaque failed: %d\n", ret)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 108
+  line_start: 108
+  line_end: 108
+  column_start: 9
+  column_end: 60
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - mbedtls_pk_setup_opaque
+  - failed
+  - d
+  - n
+  - ret
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("mbedtls_pk_setup_opaque failed: %d\n", ret)'
+- unit_id: ASTLITE-0042
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("opaque pk type = %d\n", (int) mbedtls_pk_get_type(&pk))
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 112
+  line_start: 112
+  line_end: 112
+  column_start: 5
+  column_end: 68
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - opaque
+  - pk
+  - d
+  - n
+  - int
+  identifiers_written:
+  - type
+  called_function: printf
+  call_node_code: printf("opaque pk type = %d\n", (int) mbedtls_pk_get_type(&pk))
+- unit_id: ASTLITE-0043
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: mbedtls_pk_get_type(&pk)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_pk_get_type' identified by tree-sitter C parser.
+  priority: medium
+  line: 112
+  line_start: 112
+  line_end: 112
+  column_start: 43
+  column_end: 67
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - pk
+  identifiers_written: []
+  called_function: mbedtls_pk_get_type
+  call_node_code: mbedtls_pk_get_type(&pk)
+- unit_id: ASTLITE-0044
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("calling mbedtls_pk_verify_ext...\n")
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 113
+  line_start: 113
+  line_end: 113
+  column_start: 5
+  column_end: 49
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - calling
+  - mbedtls_pk_verify_ext
+  - n
+  identifiers_written: []
+  called_function: printf
+  call_node_code: printf("calling mbedtls_pk_verify_ext...\n")
+- unit_id: ASTLITE-0045
+  mask_level: statement
+  role: trigger_call
+  placeholder: '[PK_VERIFY_TYPE]'
+  code: ret = mbedtls_pk_verify_ext([PK_VERIFY_TYPE], &pss_opts, &pk, [MD_ALG], hash,
+    sizeof(hash), sig, sizeof(sig));
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 126
+  line_start: 126
+  line_end: 133
+  column_start: 5
+  column_end: 46
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[PK_VERIFY_TYPE]'
+  - '[MD_ALG]'
+  identifiers_read:
+  - PK_VERIFY_TYPE
+  - pss_opts
+  - pk
+  - MD_ALG
+  - hash
+  - sig
+  identifiers_written:
+  - ret
+- unit_id: ASTLITE-0046
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("verify_ext ret=%d\n", ret)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 135
+  line_start: 135
+  line_end: 135
+  column_start: 5
+  column_end: 39
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - verify_ext
+  - d
+  - n
+  identifiers_written:
+  - ret
+  called_function: printf
+  call_node_code: printf("verify_ext ret=%d\n", ret)
+- unit_id: ASTLITE-0047
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: printf("expected fixed ret=%d\n", MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE);
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 136
+  line_start: 136
+  line_end: 136
+  column_start: 5
+  column_end: 75
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - expected
+  - fixed
+  - d
+  - n
+  - MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE
+  identifiers_written:
+  - ret
+- unit_id: ASTLITE-0048
+  mask_level: function_call
+  role: oracle
+  placeholder: ''
+  code: printf("expected fixed ret=%d\n", MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 136
+  line_start: 136
+  line_end: 136
+  column_start: 5
+  column_end: 74
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - expected
+  - fixed
+  - d
+  - n
+  - MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE
+  identifiers_written:
+  - ret
+  called_function: printf
+  call_node_code: printf("expected fixed ret=%d\n", MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE)
+- unit_id: ASTLITE-0049
+  mask_level: statement
+  role: oracle
+  placeholder: '[OK]'
+  code: 'if (ret == MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE) { printf("[OK] fixed behavior:
+    unsupported opaque verify_ext rejected safely.\n"); } else { printf("[INFO] returned
+    without crash, ret=%d\n", ret); }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 138
+  line_start: 138
+  line_end: 142
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[OK]'
+  - '[INFO]'
+  identifiers_read:
+  - MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE
+  - OK
+  - fixed
+  - behavior
+  - unsupported
+  - opaque
+  - verify_ext
+  - rejected
+  - safely
+  - n
+  - else
+  - INFO
+  - returned
+  - without
+  - crash
+  - d
+  identifiers_written:
+  - ret
+- unit_id: ASTLITE-0050
+  mask_level: statement
+  role: oracle
+  placeholder: '[OK]'
+  code: 'printf("[OK] fixed behavior: unsupported opaque verify_ext rejected safely.\n");'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 139
+  line_start: 139
+  line_end: 139
+  column_start: 9
+  column_end: 89
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[OK]'
+  identifiers_read:
+  - OK
+  - fixed
+  - behavior
+  - unsupported
+  - opaque
+  - verify_ext
+  - rejected
+  - safely
+  - n
+  identifiers_written: []
+- unit_id: ASTLITE-0051
+  mask_level: function_call
+  role: oracle
+  placeholder: '[OK]'
+  code: 'printf("[OK] fixed behavior: unsupported opaque verify_ext rejected safely.\n")'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 139
+  line_start: 139
+  line_end: 139
+  column_start: 9
+  column_end: 88
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[OK]'
+  identifiers_read:
+  - OK
+  - fixed
+  - behavior
+  - unsupported
+  - opaque
+  - verify_ext
+  - rejected
+  - safely
+  - n
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("[OK] fixed behavior: unsupported opaque verify_ext rejected
+    safely.\n")'
+- unit_id: ASTLITE-0052
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[INFO]'
+  code: else { printf("[INFO] returned without crash, ret=%d\n", ret); }
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 140
+  line_start: 140
+  line_end: 142
+  column_start: 7
+  column_end: 6
+  node_type: else_clause
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[INFO]'
+  identifiers_read:
+  - else
+  - INFO
+  - returned
+  - without
+  - crash
+  - d
+  - n
+  identifiers_written:
+  - ret
+- unit_id: ASTLITE-0053
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[INFO]'
+  code: printf("[INFO] returned without crash, ret=%d\n", ret);
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 141
+  line_start: 141
+  line_end: 141
+  column_start: 9
+  column_end: 64
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[INFO]'
+  identifiers_read:
+  - INFO
+  - returned
+  - without
+  - crash
+  - d
+  - n
+  identifiers_written:
+  - ret
+- unit_id: ASTLITE-0054
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[INFO]'
+  code: printf("[INFO] returned without crash, ret=%d\n", ret)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 141
+  line_start: 141
+  line_end: 141
+  column_start: 9
+  column_end: 63
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[INFO]'
+  identifiers_read:
+  - INFO
+  - returned
+  - without
+  - crash
+  - d
+  - n
+  identifiers_written:
+  - ret
+  called_function: printf
+  call_node_code: printf("[INFO] returned without crash, ret=%d\n", ret)
+- unit_id: ASTLITE-0055
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: mbedtls_svc_key_id_is_null(key_id)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_svc_key_id_is_null' identified by tree-sitter C parser.
+  priority: medium
+  line: 147
+  line_start: 147
+  line_end: 147
+  column_start: 10
+  column_end: 44
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - key_id
+  identifiers_written: []
+  called_function: mbedtls_svc_key_id_is_null
+  call_node_code: mbedtls_svc_key_id_is_null(key_id)
+- unit_id: ASTLITE-0056
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: psa_destroy_key(key_id)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'psa_destroy_key' identified by tree-sitter C parser.
+  priority: medium
+  line: 148
+  line_start: 148
+  line_end: 148
+  column_start: 9
+  column_end: 32
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - key_id
+  identifiers_written: []
+  called_function: psa_destroy_key
+  call_node_code: psa_destroy_key(key_id)
+- unit_id: ASTLITE-0057
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_ctr_drbg_free(&ctr_drbg);
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 151
+  line_start: 151
+  line_end: 151
+  column_start: 5
+  column_end: 38
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - ctr_drbg
+  identifiers_written: []
+- unit_id: ASTLITE-0058
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_ctr_drbg_free(&ctr_drbg)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_ctr_drbg_free' identified by tree-sitter C parser.
+  priority: medium
+  line: 151
+  line_start: 151
+  line_end: 151
+  column_start: 5
+  column_end: 37
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - ctr_drbg
+  identifiers_written: []
+  called_function: mbedtls_ctr_drbg_free
+  call_node_code: mbedtls_ctr_drbg_free(&ctr_drbg)
+- unit_id: ASTLITE-0059
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_entropy_free(&entropy);
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 152
+  line_start: 152
+  line_end: 152
+  column_start: 5
+  column_end: 36
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - entropy
+  identifiers_written: []
+- unit_id: ASTLITE-0060
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_entropy_free(&entropy)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_entropy_free' identified by tree-sitter C parser.
+  priority: medium
+  line: 152
+  line_start: 152
+  line_end: 152
+  column_start: 5
+  column_end: 35
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - entropy
+  identifiers_written: []
+  called_function: mbedtls_entropy_free
+  call_node_code: mbedtls_entropy_free(&entropy)
+- unit_id: ASTLITE-0061
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_psa_crypto_free();
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 153
+  line_start: 153
+  line_end: 153
+  column_start: 5
+  column_end: 31
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read: []
+  identifiers_written: []
+- unit_id: ASTLITE-0062
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_psa_crypto_free()
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_psa_crypto_free' identified by tree-sitter C parser.
+  priority: medium
+  line: 153
+  line_start: 153
+  line_end: 153
+  column_start: 5
+  column_end: 30
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read: []
+  identifiers_written: []
+  called_function: mbedtls_psa_crypto_free
+  call_node_code: mbedtls_psa_crypto_free()
+role_summary:
+  cleanup: 15
+  entrypoint: 1
+  helper_function: 14
+  input_construction: 11
+  input_preparation: 5
+  mutation_point: 10
+  oracle: 5
+  trigger_call: 1
+mask_level_summary:
+  block: 1
+  function_call: 37
+  statement: 21
+  value: 3
