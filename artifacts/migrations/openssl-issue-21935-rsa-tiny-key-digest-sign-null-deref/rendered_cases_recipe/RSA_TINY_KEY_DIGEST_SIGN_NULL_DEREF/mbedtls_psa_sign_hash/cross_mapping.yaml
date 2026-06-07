@@ -1,0 +1,64 @@
+source:
+  library: null
+  api: null
+  template_id: RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF
+  semantic_operation: null
+  bug_class: []
+  poc_pattern: {}
+target:
+  library: mbedtls
+  candidate_api: psa_sign_hash
+adapter:
+  adapter_recipe: adapter_recipes/mbedtls/psa_sign_hash.rsa_invalid_key_sign_rejection_oracle.yaml
+  slot_bindings:
+    key_type: PSA_KEY_TYPE_RSA_KEY_PAIR
+    key_bits: '32'
+    key_algorithm: PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH)
+    key_usage_flags: PSA_KEY_USAGE_SIGN_HASH
+    rsa_key_der: default_tiny_rsa_private_key_der
+    hash_alg: PSA_ALG_SHA_256
+    hash_len: '32'
+    sig_len: '512'
+  adapter_mode: recipe_slot_filling
+  include_headers: []
+  type_mapping: {}
+  constant_mapping: {}
+  init_block: ''
+  input_construction_block: ''
+  trigger_block: ''
+  return_value_semantics: ''
+  oracle_strategy: {}
+  cleanup_block: ''
+  llm_status: ok
+candidate:
+  library: mbedtls
+  api: psa_sign_hash
+  decision: generate
+  scores:
+    operation_family: 90
+    function_behavior: 85
+    parameter_structure: 75
+    vulnerability_path: 80
+    harness_feasibility: 85
+preserved_vulnerability_features:
+- same operation family: RSA signing
+- same rejection oracle: invalid or tiny RSA private key must not sign
+- PSA exposes key import and signing through psa_import_key and psa_sign_hash
+- safe rejection can occur at import or signing time
+- return code and crash/sanitizer signals are observable
+- self-contained single-process harness feasible
+lost_or_weakened_features:
+- PSA expects structured key material rather than OpenSSL RSA object ownership
+- PSA may reject invalid key material during import before reaching sign dispatch
+- exact OpenSSL BN_is_negative internal path is not preserved
+- RSA key encoding differs from RSA_set0_key with BIGNUM components
+source_expected_behavior:
+  buggy: {}
+  fixed: {}
+  note: The target API is not expected to reproduce exact mbedTLS numeric error codes;
+    cross-library validation uses the oracle semantics defined by the migrated harness
+    family.
+notes:
+- Generated from LLM-filled structured adapter YAML.
+- The C harness skeleton is fixed; the target-specific blocks come from adapter.yaml.
+- This is vulnerability-path migration, not strict full API semantic equivalence.

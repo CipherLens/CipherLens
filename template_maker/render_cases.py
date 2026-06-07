@@ -1,4 +1,5 @@
 import argparse
+import ast
 import itertools
 import re
 import shutil
@@ -51,7 +52,46 @@ def find_template_dirs(root: Path) -> List[Path]:
     return sorted(p.parent for p in root.rglob("template_meta.yaml"))
 
 
-def value_to_code(value: Any) -> str:
+def bytes_to_c_initializer(data: bytes) -> str:
+    if not data:
+        return "{ }"
+
+    chunks = [f"0x{b:02x}" for b in data]
+    lines = []
+    for i in range(0, len(chunks), 12):
+        lines.append("    " + ", ".join(chunks[i:i + 12]))
+    return "{\n" + ",\n".join(lines) + "\n}"
+
+
+def byte_array_to_code(value: Any) -> str:
+    if isinstance(value, bytes):
+        return bytes_to_c_initializer(value)
+
+    text = str(value)
+    stripped = text.strip()
+
+    if stripped.startswith("{") and stripped.endswith("}") and "\x00" not in stripped:
+        return stripped
+
+    if stripped.startswith(("\"", "'")):
+        try:
+            decoded = ast.literal_eval(stripped)
+        except (SyntaxError, ValueError):
+            decoded = text
+    else:
+        decoded = text
+
+    if isinstance(decoded, bytes):
+        data = decoded
+    else:
+        data = str(decoded).encode("utf-8")
+
+    return bytes_to_c_initializer(data)
+
+
+def value_to_code(value: Any, value_type: str = "") -> str:
+    if value_type == "byte_array":
+        return byte_array_to_code(value)
     if isinstance(value, bool):
         return "1" if value else "0"
     return str(value)
@@ -68,7 +108,7 @@ def render_text(text: str, mapping: Dict[str, str]) -> str:
 
         escaped = re.escape(ph)
         pattern = rf"(?<![A-Za-z0-9_]){escaped}"
-        rendered = re.sub(pattern, mapping[ph], rendered)
+        rendered = re.sub(pattern, lambda _m, value=mapping[ph]: value, rendered)
 
     return rendered
 
@@ -153,6 +193,7 @@ def build_value_lists(meta: Dict[str, Any]) -> List[Dict[str, Any]]:
         value_lists.append({
             "name": name,
             "placeholder": ph,
+            "type": mp.get("type", ""),
             "values": values,
             "priority": mp.get("priority", "medium"),
         })
@@ -279,7 +320,8 @@ def generate_case_mappings(meta: Dict[str, Any], max_cases: int) -> List[Dict[st
     skipped_invalid = 0
 
     for vals in values_product:
-        mapping = {ph: value_to_code(v) for ph, v in zip(keys, vals)}
+        types = [x.get("type", "") for x in value_lists]
+        mapping = {ph: value_to_code(v, value_type) for ph, v, value_type in zip(keys, vals, types)}
         raw_values = {name: v for name, v in zip(names, vals)}
 
         if not is_valid_case(template_id, raw_values):
