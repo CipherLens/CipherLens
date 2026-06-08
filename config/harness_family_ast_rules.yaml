@@ -162,24 +162,135 @@ object_state_lifecycle:
     - state
     - lifecycle
     - init
+    - setup
+    - pre
+    - post
+    - update
+    - final
+    - finish
     - free
+    - abort
     - reuse
     - zero
     - stale
     - length
     - pointer
+    - size
+    - mac_length
+    - actual_len
+    - operation
+    - operation_pre
+    - operation_post
+    - EVP_MAC_CTX_get_mac_size
+    - EVP_MAC_init
+    - EVP_MAC_update
+    - EVP_MAC_final
+    - psa_mac_sign_setup
+    - psa_mac_update
+    - psa_mac_sign_finish
+    - psa_mac_abort
+    - mbedtls_md_hmac
   oracle_variables:
+    - status
     - ret
-    - len
-    - data
+    - mac_length
+    - actual_len
+    - out_len
+    - operation
+    - operation_pre
+    - operation_post
+    - ctx
+  trigger_functions:
+    - EVP_MAC_CTX_get_mac_size
+    - EVP_MAC_init
+    - EVP_MAC_update
+    - EVP_MAC_final
+    - psa_mac_sign_setup
+    - psa_mac_update
+    - psa_mac_sign_finish
+    - mbedtls_md_hmac_starts
+    - mbedtls_md_hmac_update
+    - mbedtls_md_hmac_finish
+  oracle_functions:
+    - EVP_MAC_CTX_get_mac_size
+    - psa_mac_update
+    - psa_mac_sign_finish
   preferred_roles:
     - mutation_point
     - trigger_call
     - oracle
     - input_preparation
+    - helper_function
     - cleanup
-  context_limit: 12
-  cleanup_limit: 2
+  context_limit: 16
+  cleanup_limit: 4
+
+pkey_capability_mismatch_oracle:
+  context_keywords:
+    - pkey
+    - PKEY
+    - RSA
+    - rsa
+    - digest
+    - sign
+    - verify
+    - capability
+    - mismatch
+    - key_id
+    - mdctx
+    - hash
+    - sig
+    - sig_len
+    - actual_sig_len
+    - EVP_PKEY_new_raw_public_key
+    - EVP_DigestSignInit
+    - EVP_DigestSign
+    - EVP_DigestVerify
+    - psa_import_key
+    - psa_sign_hash
+    - psa_sign_message
+    - psa_verify_hash
+    - psa_destroy_key
+  oracle_variables:
+    - ret
+    - status
+    - key_id
+    - pkey
+    - mdctx
+    - hash
+    - sig
+    - sig_len
+    - actual_sig_len
+  trigger_functions:
+    - EVP_PKEY_new
+    - RSA_new
+    - RSA_set0_key
+    - EVP_PKEY_assign_RSA
+    - EVP_PKEY_new_raw_public_key
+    - EVP_DigestSignInit
+    - EVP_DigestSign
+    - EVP_DigestVerify
+    - psa_import_key
+    - psa_sign_hash
+    - psa_sign_message
+    - psa_verify_hash
+  oracle_functions:
+    - EVP_DigestSignInit
+    - EVP_DigestSign
+    - EVP_DigestVerify
+    - psa_import_key
+    - psa_sign_hash
+    - psa_sign_message
+    - psa_verify_hash
+  preferred_roles:
+    - mutation_point
+    - trigger_call
+    - oracle
+    - input_preparation
+    - helper_function
+    - cleanup
+  context_limit: 16
+  cleanup_limit: 4
 
 null_deref_dispatch:
   context_keywords:

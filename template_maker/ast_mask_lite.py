@@ -23,6 +23,37 @@ CONTROL_WORDS = {
 }
 
 
+def infer_template_library(template_file: str, meta: Optional[Dict[str, Any]] = None, mask_report: Optional[Dict[str, Any]] = None) -> str:
+    name = Path(str(template_file or "")).name.lower()
+    if "openssl" in name:
+        return "openssl"
+    if "mbedtls" in name:
+        return "mbedtls"
+    if "botan" in name:
+        return "botan"
+    meta = meta or {}
+    mask_report = mask_report or {}
+    return str(mask_report.get("source_library") or meta.get("source_library") or "")
+
+
+def normalize_api_list(value: Any) -> List[str]:
+    out: List[str] = []
+
+    def add(item: Any) -> None:
+        if isinstance(item, dict):
+            item = item.get("function") or item.get("api") or ""
+        text = str(item or "").strip()
+        if text and text not in out:
+            out.append(text)
+
+    if isinstance(value, list):
+        for item in value:
+            add(item)
+    else:
+        add(value)
+    return out
+
+
 class NoAliasDumper(yaml.SafeDumper):
     def ignore_aliases(self, data):
         return True
@@ -93,7 +124,7 @@ def normalize_mask_level(level: Any, placeholder: str = "", code: str = "") -> s
     return "statement"
 
 
-def collect_trigger_apis(meta: Dict[str, Any], mask_report: Dict[str, Any]) -> List[str]:
+def collect_trigger_apis(meta: Dict[str, Any], mask_report: Dict[str, Any], template_library: str = "") -> List[str]:
     apis: List[str] = []
 
     def add(value: Any) -> None:
@@ -104,17 +135,21 @@ def collect_trigger_apis(meta: Dict[str, Any], mask_report: Dict[str, Any]) -> L
     for api in mask_report.get("trigger_apis", []) or []:
         add(api)
 
-    source_api = meta.get("source_api")
-    if isinstance(source_api, dict):
-        add(source_api.get("function"))
-    elif isinstance(source_api, str):
-        add(source_api)
+    for api in normalize_api_list(meta.get("source_api")):
+        add(api)
 
     add(meta.get("source_api_name"))
     add(meta.get("poc_source", {}).get("api"))
 
     for api in meta.get("internal_apis", []) or []:
         add(api)
+
+    template_library = str(template_library or "").strip()
+    if template_library:
+        cross_lib = meta.get("cross_library", {}) or {}
+        lib_spec = cross_lib.get(template_library, {}) if isinstance(cross_lib, dict) else {}
+        if isinstance(lib_spec, dict):
+            add(lib_spec.get("target_api"))
 
     pattern_source = mask_report.get("poc_pattern", {}).get("source", {}) or {}
     add(pattern_source.get("api"))
@@ -485,6 +520,8 @@ def units_from_c_template(
     trigger_apis: List[str],
     meta: Dict[str, Any],
     mask_report: Dict[str, Any],
+    template_file: str = "tmpl_mbedtls.c",
+    template_library: str = "",
 ) -> List[Dict[str, Any]]:
     out = []
     helper_blocks = extract_helper_blocks(c_text)
@@ -498,7 +535,7 @@ def units_from_c_template(
                 role="helper_function",
                 placeholder="",
                 code=block["code"],
-                source="tmpl_mbedtls.c.helper_function",
+                source=f"{template_file}.helper_function",
                 reason=f"Static helper function block '{block['name']}' identified by AST-lite brace matching.",
                 priority="medium",
                 extra={
@@ -506,6 +543,8 @@ def units_from_c_template(
                     **line_extra(block),
                     "node_type": "function_definition",
                     "enclosing_function": block["name"],
+                    "template_file": template_file,
+                    "template_library": template_library,
                 },
             )
         )
@@ -524,10 +563,10 @@ def units_from_c_template(
                         role=role,
                         placeholder=ph,
                         code=code,
-                        source="tmpl_mbedtls.c.placeholder_statement",
+                        source=f"{template_file}.placeholder_statement",
                         reason=mp.get("reason") or mp.get("constraint") or "Statement contains a template placeholder.",
                         priority=mp.get("priority", "medium"),
-                        extra={**line_extra(span), "enclosing_function": enclosing_function_for_line(span.get("line_start", span.get("line")), helper_blocks), "node_type": "statement"},
+                        extra={**line_extra(span), "enclosing_function": enclosing_function_for_line(span.get("line_start", span.get("line")), helper_blocks), "node_type": "statement", "template_file": template_file, "template_library": template_library},
                     )
                 )
 
@@ -538,10 +577,10 @@ def units_from_c_template(
                     role="trigger_call",
                     placeholder="",
                     code=code,
-                    source="tmpl_mbedtls.c.source_api_statement",
+                    source=f"{template_file}.source_api_statement",
                     reason="Statement invokes the source API trigger.",
                     priority="high",
-                    extra={**line_extra(span), "enclosing_function": enclosing_function_for_line(span.get("line_start", span.get("line")), helper_blocks), "node_type": "statement"},
+                    extra={**line_extra(span), "enclosing_function": enclosing_function_for_line(span.get("line_start", span.get("line")), helper_blocks), "node_type": "statement", "template_file": template_file, "template_library": template_library},
                 )
             )
 
@@ -552,10 +591,10 @@ def units_from_c_template(
                     role=infer_role(code, source_api, helper_names, trigger_apis),
                     placeholder=phs[0] if phs else "",
                     code=code,
-                    source="tmpl_mbedtls.c.type_declaration",
+                    source=f"{template_file}.type_declaration",
                     reason="Type declaration identified by AST-lite declaration matching.",
                     priority="medium",
-                    extra={**line_extra(span), "enclosing_function": enclosing_function_for_line(span.get("line_start", span.get("line")), helper_blocks), "node_type": "statement"},
+                    extra={**line_extra(span), "enclosing_function": enclosing_function_for_line(span.get("line_start", span.get("line")), helper_blocks), "node_type": "statement", "template_file": template_file, "template_library": template_library},
                 )
             )
 
@@ -566,10 +605,10 @@ def units_from_c_template(
                     role=role,
                     placeholder="",
                     code=code,
-                    source="tmpl_mbedtls.c.role_statement",
+                    source=f"{template_file}.role_statement",
                     reason=f"Statement classified as {role} by AST-lite role rules.",
                     priority="medium",
-                    extra={**line_extra(span), "enclosing_function": enclosing_function_for_line(span.get("line_start", span.get("line")), helper_blocks), "node_type": "statement"},
+                    extra={**line_extra(span), "enclosing_function": enclosing_function_for_line(span.get("line_start", span.get("line")), helper_blocks), "node_type": "statement", "template_file": template_file, "template_library": template_library},
                 )
             )
 
@@ -583,10 +622,10 @@ def units_from_c_template(
                     role=call_role,
                     placeholder=phs[0] if phs else "",
                     code=code,
-                    source="tmpl_mbedtls.c.function_call",
+                    source=f"{template_file}.function_call",
                     reason=f"Function call '{call}' identified by AST-lite call matching.",
                     priority="high" if call in trigger_apis else "medium",
-                    extra={"function": call, **line_extra(span), "enclosing_function": enclosing_function_for_line(span.get("line_start", span.get("line")), helper_blocks), "node_type": "call_expression"},
+                    extra={"function": call, "called_function": call, **line_extra(span), "enclosing_function": enclosing_function_for_line(span.get("line_start", span.get("line")), helper_blocks), "node_type": "call_expression", "template_file": template_file, "template_library": template_library},
                 )
             )
 
@@ -602,25 +641,21 @@ def summarize(units: List[Dict[str, Any]], field: str) -> Dict[str, int]:
     return dict(sorted(Counter(str(u.get(field, "")) for u in units).items()))
 
 
-def build_report(template_dir: Path) -> Dict[str, Any]:
+def build_report(template_dir: Path, template_file: str = "tmpl_mbedtls.c") -> Dict[str, Any]:
     meta = load_yaml(template_dir / "template_meta.yaml")
     mask_report = load_yaml(template_dir / "mask_report.yaml")
-    c_text = read_text(template_dir / "tmpl_mbedtls.c")
+    c_text = read_text(template_dir / template_file)
+    template_library = infer_template_library(template_file, meta, mask_report)
 
-    source_api_obj = meta.get("source_api", {}) if isinstance(meta.get("source_api"), dict) else {}
-    source_api = (
-        mask_report.get("source_api")
-        or source_api_obj.get("function")
-        or meta.get("poc_source", {}).get("api")
-        or ""
-    )
+    source_api_values = normalize_api_list(mask_report.get("source_api") or meta.get("source_api"))
+    source_api = source_api_values[0] if source_api_values else str(meta.get("poc_source", {}).get("api") or "")
     source_library = (
         mask_report.get("source_library")
         or source_api_obj.get("library")
         or meta.get("poc_source", {}).get("library")
         or ""
     )
-    trigger_apis = collect_trigger_apis(meta, mask_report)
+    trigger_apis = collect_trigger_apis(meta, mask_report, template_library=template_library)
     if source_api and source_api not in trigger_apis:
         trigger_apis.insert(0, source_api)
     harness_family = str(mask_report.get("harness_family") or meta.get("harness_family") or "")
@@ -630,7 +665,7 @@ def build_report(template_dir: Path) -> Dict[str, Any]:
     raw_units.extend(units_from_roles(mask_report))
     raw_units.extend(units_from_masking_levels(mask_report))
     raw_units.extend(units_from_occlusion(mask_report))
-    raw_units.extend(units_from_c_template(c_text, source_api, trigger_apis, meta, mask_report))
+    raw_units.extend(units_from_c_template(c_text, source_api, trigger_apis, meta, mask_report, template_file=template_file, template_library=template_library))
 
     units: List[Dict[str, Any]] = []
     seen = set()
@@ -643,11 +678,15 @@ def build_report(template_dir: Path) -> Dict[str, Any]:
         "template_name": mask_report.get("template_name") or meta.get("template_name", ""),
         "source_api": source_api,
         "source_library": source_library,
+        "template_file": template_file,
+        "template_library": template_library,
         "trigger_apis": trigger_apis,
         "harness_family": harness_family,
         "summary": {
             "method": "ast_lite_regex_template_role_aware",
             "template_dir": str(template_dir),
+            "template_file": template_file,
+            "template_library": template_library,
             "unit_count": len(units),
             "note": (
                 "Lightweight AST-like report generated from template metadata, "

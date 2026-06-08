@@ -8,6 +8,22 @@ from template_maker import ast_mask_lite
 
 IDENTIFIER_RE = re.compile(r"\b[A-Za-z_][A-Za-z0-9_]*\b")
 ASSIGNMENT_RE = re.compile(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*(?:[+\-*/%&|^]?=)")
+IDENTIFIER_STOPWORDS = {
+    "SAFE",
+    "TRIAGE",
+    "VERDICT",
+    "BUG",
+    "OK",
+    "INFO",
+    "WARN",
+    "ERROR",
+    "FAIL",
+    "PASS",
+    "not",
+    "private",
+    "public",
+    "key",
+}
 DECLARATION_NODE_TYPES = {
     "declaration",
     "init_declarator",
@@ -30,6 +46,22 @@ PREPROCESSOR_NODE_TYPES = {
     "preproc_function_def",
     "preproc_if",
     "preproc_ifdef",
+}
+IDENTIFIER_NODE_TYPES = {"identifier", "field_identifier"}
+DECLARATOR_NODE_TYPES = {
+    "array_declarator",
+    "function_declarator",
+    "init_declarator",
+    "parenthesized_declarator",
+    "pointer_declarator",
+}
+CALLABLE_NODE_TYPES = {"call_expression", "function_declarator"}
+SKIP_IDENTIFIER_PARENT_TYPES = {
+    "comment",
+    "char_literal",
+    "string_content",
+    "string_literal",
+    "system_lib_string",
 }
 
 
@@ -69,6 +101,14 @@ def clean_code(text: str) -> str:
     return ast_mask_lite.clean_code(text)
 
 
+def infer_template_library(template_file: str, meta: Optional[Dict[str, Any]] = None, mask_report: Optional[Dict[str, Any]] = None) -> str:
+    return ast_mask_lite.infer_template_library(template_file, meta, mask_report)
+
+
+def normalize_api_list(value: Any) -> List[str]:
+    return ast_mask_lite.normalize_api_list(value)
+
+
 def node_range(node: Any) -> Dict[str, int]:
     start_row, start_col = node.start_point
     end_row, end_col = node.end_point
@@ -85,6 +125,15 @@ def iter_nodes(node: Any) -> Iterable[Any]:
     yield node
     for child in getattr(node, "children", []) or []:
         yield from iter_nodes(child)
+
+
+def has_ancestor_type(node: Any, node_types: Set[str]) -> bool:
+    current = getattr(node, "parent", None)
+    while current is not None:
+        if current.type in node_types:
+            return True
+        current = getattr(current, "parent", None)
+    return False
 
 
 def first_descendant_of_type(node: Any, node_type: str) -> Optional[Any]:
@@ -163,34 +212,70 @@ def nearest_statement_node(node: Any) -> Any:
 def identifiers_in_node(node: Any, source_bytes: bytes) -> List[str]:
     seen: List[str] = []
     for item in iter_nodes(node):
-        if item.type not in {"identifier", "field_identifier"}:
+        if item.type not in IDENTIFIER_NODE_TYPES:
+            continue
+        if has_ancestor_type(item, SKIP_IDENTIFIER_PARENT_TYPES):
             continue
         text = node_text(item, source_bytes)
-        if text and text not in seen:
+        if text and text not in ast_mask_lite.CONTROL_WORDS and text not in IDENTIFIER_STOPWORDS and text not in seen:
             seen.append(text)
+    return seen
+
+
+def identifiers_written_by_ast(node: Any, source_bytes: bytes) -> List[str]:
+    seen: List[str] = []
+    for item in iter_nodes(node):
+        if item.type == "assignment_expression":
+            left = item.child_by_field_name("left")
+            if left is None:
+                continue
+            for name in identifiers_in_node(left, source_bytes):
+                if name not in seen:
+                    seen.append(name)
+        elif item.type == "init_declarator":
+            decl = item.child_by_field_name("declarator")
+            if decl is None:
+                continue
+            for candidate in iter_nodes(decl):
+                if candidate.type == "identifier":
+                    name = node_text(candidate, source_bytes)
+                    if name and name not in IDENTIFIER_STOPWORDS and name not in seen:
+                        seen.append(name)
+                    break
     return seen
 
 
 def identifiers_written_by_text(text: str) -> List[str]:
     seen: List[str] = []
     for name in ASSIGNMENT_RE.findall(text or ""):
+        if name in IDENTIFIER_STOPWORDS:
+            continue
         if name not in seen:
             seen.append(name)
     return seen
 
 
-def identifiers_read_from_text(text: str, called_function: str = "") -> List[str]:
-    written = set(identifiers_written_by_text(text))
-    calls = set(ast_mask_lite.function_calls_in(text))
-    excluded = written | calls | {called_function}
+def identifiers_read_from_ast(node: Any, source_bytes: bytes, called_function: str = "", written: Optional[List[str]] = None) -> List[str]:
+    written_set = set(written or [])
     seen: List[str] = []
-
-    for name in IDENTIFIER_RE.findall(text or ""):
-        if name in ast_mask_lite.CONTROL_WORDS or name in excluded:
+    for item in iter_nodes(node):
+        if item.type not in IDENTIFIER_NODE_TYPES:
             continue
-        if name not in seen:
-            seen.append(name)
-
+        if has_ancestor_type(item, SKIP_IDENTIFIER_PARENT_TYPES):
+            continue
+        text = node_text(item, source_bytes)
+        if not text or text in ast_mask_lite.CONTROL_WORDS or text in IDENTIFIER_STOPWORDS:
+            continue
+        if text == called_function or text in written_set:
+            continue
+        parent = getattr(item, "parent", None)
+        if parent is not None and parent.type in CALLABLE_NODE_TYPES and parent.child_by_field_name("function") is item:
+            continue
+        if parent is not None and parent.type in DECLARATOR_NODE_TYPES:
+            # Declaration names are written definitions, not read dependencies.
+            continue
+        if text not in seen:
+            seen.append(text)
     return seen
 
 
@@ -215,13 +300,13 @@ def make_ts_unit(
 ) -> Dict[str, Any]:
     code = code_override or node_text(node, source_bytes)
     deps = placeholder_dependencies(code)
-    written = identifiers_written_by_text(code)
+    written = identifiers_written_by_ast(node, source_bytes) or identifiers_written_by_text(code)
     unit_extra: Dict[str, Any] = {
         **node_range(node),
         "node_type": node.type,
         "enclosing_function": enclosing_function_for_node(node, function_ranges or []),
         "placeholder_dependencies": deps,
-        "identifiers_read": identifiers_read_from_text(code, called_function),
+        "identifiers_read": identifiers_read_from_ast(node, source_bytes, called_function, written),
         "identifiers_written": written,
     }
     if called_function:
@@ -263,6 +348,8 @@ def collect_units_from_tree(
     source_bytes: bytes,
     source_api: str,
     trigger_apis: List[str],
+    template_file: str = "tmpl_mbedtls.c",
+    template_library: str = "",
 ) -> List[Dict[str, Any]]:
     units: List[Dict[str, Any]] = []
     seen: Set[Tuple[Any, ...]] = set()
@@ -285,11 +372,11 @@ def collect_units_from_tree(
                     source_bytes=source_bytes,
                     mask_level="block",
                     role=role,
-                    source="tmpl_mbedtls.c.tree_sitter.function_definition",
+                    source=f"{template_file}.tree_sitter.function_definition",
                     reason="Function definition identified by tree-sitter C parser.",
                     priority="high" if name == "main" else "medium",
                     function_ranges=functions,
-                    extra={"function": name},
+                    extra={"function": name, "template_file": template_file, "template_library": template_library},
                 ),
             )
             continue
@@ -312,13 +399,13 @@ def collect_units_from_tree(
                     source_bytes=source_bytes,
                     mask_level="function_call",
                     role=role,
-                    source="tmpl_mbedtls.c.tree_sitter.call_expression",
+                    source=f"{template_file}.tree_sitter.call_expression",
                     reason=f"Function call '{called}' identified by tree-sitter C parser.",
                     priority="high" if role == "trigger_call" else "medium",
                     function_ranges=functions,
                     called_function=called,
                     code_override=unit_code,
-                    extra={"call_node_code": code},
+                    extra={"function": called, "call_node_code": code, "template_file": template_file, "template_library": template_library},
                 ),
             )
             continue
@@ -340,10 +427,11 @@ def collect_units_from_tree(
                         source_bytes=source_bytes,
                         mask_level="statement",
                         role=role,
-                        source="tmpl_mbedtls.c.tree_sitter.statement",
+                        source=f"{template_file}.tree_sitter.statement",
                         reason="Statement selected by tree-sitter role and placeholder analysis.",
                         priority="high" if role in {"oracle", "trigger_call"} else "medium",
                         function_ranges=functions,
+                        extra={"template_file": template_file, "template_library": template_library},
                     ),
                 )
             continue
@@ -357,10 +445,11 @@ def collect_units_from_tree(
                     source_bytes=source_bytes,
                     mask_level="value",
                     role="mutation_point",
-                    source="tmpl_mbedtls.c.tree_sitter.preprocessor",
+                    source=f"{template_file}.tree_sitter.preprocessor",
                     reason="Preprocessor node contains template placeholder.",
                     priority="high",
                     function_ranges=functions,
+                    extra={"template_file": template_file, "template_library": template_library},
                 ),
             )
 
@@ -368,42 +457,46 @@ def collect_units_from_tree(
     return units
 
 
-def build_report(template_dir: Path, parser: Any) -> Dict[str, Any]:
+def collect_trigger_apis(meta: Dict[str, Any], mask_report: Dict[str, Any], template_library: str = "") -> List[str]:
+    return ast_mask_lite.collect_trigger_apis(meta, mask_report, template_library=template_library)
+
+
+def build_report(template_dir: Path, parser: Any, template_file: str = "tmpl_mbedtls.c") -> Dict[str, Any]:
     meta = ast_mask_lite.load_yaml(template_dir / "template_meta.yaml")
     mask_report = ast_mask_lite.load_yaml(template_dir / "mask_report.yaml")
-    c_text = ast_mask_lite.read_text(template_dir / "tmpl_mbedtls.c")
+    c_text = ast_mask_lite.read_text(template_dir / template_file)
     source_bytes = c_text.encode("utf-8")
     tree = parser.parse(source_bytes)
+    template_library = infer_template_library(template_file, meta, mask_report)
 
-    source_api_obj = meta.get("source_api", {}) if isinstance(meta.get("source_api"), dict) else {}
-    source_api = (
-        mask_report.get("source_api")
-        or source_api_obj.get("function")
-        or meta.get("poc_source", {}).get("api")
-        or ""
-    )
+    source_api_values = normalize_api_list(mask_report.get("source_api") or meta.get("source_api"))
+    source_api = source_api_values[0] if source_api_values else str(meta.get("poc_source", {}).get("api") or "")
     source_library = (
         mask_report.get("source_library")
         or source_api_obj.get("library")
         or meta.get("poc_source", {}).get("library")
         or ""
     )
-    trigger_apis = ast_mask_lite.collect_trigger_apis(meta, mask_report)
+    trigger_apis = collect_trigger_apis(meta, mask_report, template_library=template_library)
     if source_api and source_api not in trigger_apis:
         trigger_apis.insert(0, source_api)
 
-    units = collect_units_from_tree(tree.root_node, source_bytes, source_api, trigger_apis)
+    units = collect_units_from_tree(tree.root_node, source_bytes, source_api, trigger_apis, template_file=template_file, template_library=template_library)
     return {
         "template_id": mask_report.get("template_id") or meta.get("template_id", ""),
         "template_name": mask_report.get("template_name") or meta.get("template_name", ""),
         "source_api": source_api,
         "source_library": source_library,
+        "template_file": template_file,
+        "template_library": template_library,
         "trigger_apis": trigger_apis,
         "harness_family": str(mask_report.get("harness_family") or meta.get("harness_family") or ""),
         "summary": {
             "method": "tree_sitter_c_role_aware",
             "backend": "tree-sitter",
             "template_dir": str(template_dir),
+            "template_file": template_file,
+            "template_library": template_library,
             "unit_count": len(units),
             "parse_has_error": bool(getattr(tree.root_node, "has_error", False)),
             "note": (
@@ -417,22 +510,35 @@ def build_report(template_dir: Path, parser: Any) -> Dict[str, Any]:
     }
 
 
-def run(root: Path, output_name: str) -> int:
+def output_path_for(template_dir: Path, output_name: str, template_file: str = "", multi_file: bool = False) -> Path:
+    if not multi_file or not template_file:
+        return template_dir / output_name
+    path = Path(output_name)
+    suffix = path.suffix or ".yaml"
+    stem = path.name[: -len(suffix)] if path.name.endswith(suffix) else path.name
+    template_stem = Path(template_file).stem.replace("tmpl_", "")
+    return template_dir / f"{stem}.{template_stem}{suffix}"
+
+
+def run(root: Path, output_name: str, template_files: Optional[List[str]] = None) -> int:
     if not root.exists():
         raise FileNotFoundError(f"root not found: {root}")
 
     parser, _language = load_tree_sitter_c()
     count = 0
+    template_files = template_files or []
 
     for template_dir in ast_mask_lite.find_template_dirs(root):
-        report = build_report(template_dir, parser)
-        out_path = template_dir / output_name
-        ast_mask_lite.dump_yaml(out_path, report)
-        print(f"[OK] wrote {out_path} units={len(report.get('ast_mask_units', []))}")
-        count += 1
+        selected_files = template_files or ["tmpl_mbedtls.c"]
+        for template_file in selected_files:
+            report = build_report(template_dir, parser, template_file=template_file)
+            out_path = output_path_for(template_dir, output_name, template_file, multi_file=len(selected_files) > 1)
+            ast_mask_lite.dump_yaml(out_path, report)
+            print(f"[OK] wrote {out_path} units={len(report.get('ast_mask_units', []))}")
+            count += 1
 
     print("=" * 80)
     print("[SUMMARY] backend: tree-sitter")
-    print(f"[SUMMARY] template dirs scanned: {count}")
+    print(f"[SUMMARY] reports written: {count}")
     print(f"[SUMMARY] root: {root}")
     return count

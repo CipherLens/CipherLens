@@ -284,6 +284,9 @@ def collect_trigger_apis(ast_report: Dict[str, Any], mask_report: Dict[str, Any]
     source_api = meta.get("source_api")
     if isinstance(source_api, dict):
         add(source_api.get("function"))
+    elif isinstance(source_api, list):
+        for api in source_api:
+            add(api)
     elif isinstance(source_api, str):
         add(source_api)
 
@@ -292,16 +295,36 @@ def collect_trigger_apis(ast_report: Dict[str, Any], mask_report: Dict[str, Any]
     for api in meta.get("internal_apis", []) or []:
         add(api)
 
+    template_library = str(ast_report.get("template_library") or "").strip()
+    if template_library:
+        cross_lib = meta.get("cross_library", {}) or {}
+        lib_spec = cross_lib.get(template_library, {}) if isinstance(cross_lib, dict) else {}
+        if isinstance(lib_spec, dict):
+            add(lib_spec.get("target_api"))
+
     return apis
 
 
-def is_actual_trigger_call(unit: Dict[str, Any], trigger_apis: Optional[Iterable[str]] = None) -> bool:
+def is_actual_trigger_call(
+    unit: Dict[str, Any],
+    trigger_apis: Optional[Iterable[str]] = None,
+    family_rule: Optional[Dict[str, Any]] = None,
+) -> bool:
     code = clean_code(unit.get("code", ""))
     function = str(unit.get("function", "") or "")
+    called_function = str(unit.get("called_function", "") or "")
     apis = [str(api) for api in (trigger_apis or []) if str(api or "").strip()]
+    apis.extend(rule_list(family_rule or {}, "trigger_functions"))
+    apis.extend(rule_list(family_rule or {}, "oracle_functions"))
+    apis = list(dict.fromkeys(api for api in apis if api))
 
     if function and function in apis:
         return True
+    if called_function and called_function in apis:
+        return True
+
+    if unit.get("mask_level") not in {"function_call", "statement"}:
+        return False
 
     if not apis:
         apis = [
@@ -317,14 +340,18 @@ def is_actual_trigger_call(unit: Dict[str, Any], trigger_apis: Optional[Iterable
     return False
 
 
-def is_actual_oracle_statement(unit: Dict[str, Any]) -> bool:
+def is_actual_oracle_statement(unit: Dict[str, Any], family_rule: Optional[Dict[str, Any]] = None) -> bool:
     code = clean_code(unit.get("code", ""))
-    if not any(token in code for token in ["ret", "[BUG]", "[OK]", "return 1", "return 0"]):
+    oracle_vars = rule_list(family_rule or {}, "oracle_variables")
+    oracle_functions = rule_list(family_rule or {}, "oracle_functions")
+    if oracle_functions and str(unit.get("called_function") or unit.get("function") or "") in oracle_functions:
+        return True
+    if not any(token in code for token in ["ret", "status", "[BUG]", "[OK]", "return 1", "return 0"]) and not contains_rule_variable(unit, oracle_vars):
         return False
     return code.startswith("if ") or code.startswith("if (") or code.startswith("printf(") or " return " in code
 
 
-def is_noise_unit(unit: Dict[str, Any], trigger_apis: Optional[Iterable[str]] = None) -> bool:
+def is_noise_unit(unit: Dict[str, Any], trigger_apis: Optional[Iterable[str]] = None, family_rule: Optional[Dict[str, Any]] = None) -> bool:
     code = str(unit.get("code", "") or "")
     source = str(unit.get("source", "") or "")
     role = str(unit.get("role", "") or "")
@@ -344,18 +371,18 @@ def is_noise_unit(unit: Dict[str, Any], trigger_apis: Optional[Iterable[str]] = 
     if role == "mutation_point" and (unit.get("placeholder") or unit.get("placeholder_dependencies")):
         return False
 
-    if source == "tmpl_mbedtls.c.function_call" and code.lstrip().startswith("*/"):
+    if source.endswith(".function_call") and code.lstrip().startswith("*/"):
         return True
 
     if has_header_or_prototype_noise(code):
         return True
 
-    if source == "tmpl_mbedtls.c.function_call" and not unit.get("enclosing_function") and "ret =" not in clean_code(code):
+    if source.endswith(".function_call") and not unit.get("enclosing_function") and "ret =" not in clean_code(code):
         return True
 
-    if is_actual_trigger_call(unit, trigger_apis):
+    if is_actual_trigger_call(unit, trigger_apis, family_rule):
         return False
-    if role == "oracle" and is_actual_oracle_statement(unit):
+    if role == "oracle" and is_actual_oracle_statement(unit, family_rule):
         return False
     if role == "cleanup":
         return False
@@ -365,11 +392,11 @@ def is_noise_unit(unit: Dict[str, Any], trigger_apis: Optional[Iterable[str]] = 
     if "#include" in code and placeholders >= 2:
         return True
 
-    if source == "tmpl_mbedtls.c.placeholder_statement" and len(code) > 800:
+    if source.endswith(".placeholder_statement") and len(code) > 800:
         return True
 
     if is_comment_like(code) and not (
-        (is_actual_trigger_call(unit, trigger_apis) or is_actual_oracle_statement(unit))
+        (is_actual_trigger_call(unit, trigger_apis, family_rule) or is_actual_oracle_statement(unit, family_rule))
     ):
         return True
 
@@ -471,11 +498,11 @@ def base_score(
         score += 20
     if role == "trigger_call" and level in {"function_call", "statement"}:
         score += 50
-    if is_actual_trigger_call(unit, trigger_apis):
+    if is_actual_trigger_call(unit, trigger_apis, family_rule):
         score += 30
     if role == "oracle" and level in {"statement", "block"}:
         score += 45
-    if role == "oracle" and is_actual_oracle_statement(unit):
+    if role == "oracle" and is_actual_oracle_statement(unit, family_rule):
         score += 20
     if role in {"input_preparation", "helper_function"} and contains_context_keyword(unit, context_keywords):
         score += 22
@@ -495,11 +522,15 @@ def base_score(
     return score
 
 
-def suggested_use_for(unit: Dict[str, Any], trigger_apis: Optional[Iterable[str]] = None) -> str:
+def suggested_use_for(
+    unit: Dict[str, Any],
+    trigger_apis: Optional[Iterable[str]] = None,
+    family_rule: Optional[Dict[str, Any]] = None,
+) -> str:
     role = unit.get("role", "")
     level = unit.get("mask_level", "")
 
-    if role == "trigger_call" or is_actual_trigger_call(unit, trigger_apis):
+    if role == "trigger_call" or is_actual_trigger_call(unit, trigger_apis, family_rule):
         return "migrate_api_call"
     if role == "oracle":
         return "preserve_oracle"
@@ -542,7 +573,7 @@ def clone_selected(
 ) -> Dict[str, Any]:
     out = dict(unit)
     out["selection_reason"] = selection_reason_for(unit, rule, harness_family)
-    out["suggested_use"] = suggested_use_for(unit, trigger_apis)
+    out["suggested_use"] = suggested_use_for(unit, trigger_apis, family_rule)
     out["selection_score"] = base_score(unit, context_keywords, trigger_apis, family_rule)
     return out
 
@@ -573,7 +604,7 @@ def add_selected(
     harness_family: str = "",
     family_rule: Optional[Dict[str, Any]] = None,
 ) -> None:
-    if is_noise_unit(unit, trigger_apis):
+    if is_noise_unit(unit, trigger_apis, family_rule):
         rejected.append({"unit_id": unit.get("unit_id"), "reason": "noise_header_comment_or_log_label", "role": unit.get("role"), "mask_level": unit.get("mask_level")})
         return
 
@@ -638,15 +669,15 @@ def select_units(
         role = unit.get("role")
         level = unit.get("mask_level")
         if (
-            (role == "trigger_call" and (level in {"function_call", "statement"} or is_actual_trigger_call(unit, trigger_apis)))
-            or (is_actual_trigger_call(unit, trigger_apis) and level in {"function_call", "statement"})
+            (role == "trigger_call" and (level in {"function_call", "statement"} or is_actual_trigger_call(unit, trigger_apis, family_rule)))
+            or (is_actual_trigger_call(unit, trigger_apis, family_rule) and level in {"function_call", "statement"})
         ):
             add_selected(selected, rejected, unit, "trigger_call", seen_exact, seen_code, dedupe_by_code=True, context_keywords=context_keywords, trigger_apis=trigger_apis, harness_family=harness_family, family_rule=family_rule)
 
     for unit in sorted(units, key=lambda u: (-base_score(u, context_keywords, trigger_apis, family_rule), u.get("unit_id", ""))):
         if unit.get("role") == "oracle" and (
             unit.get("mask_level") in {"statement", "block"}
-            or is_actual_oracle_statement(unit)
+            or is_actual_oracle_statement(unit, family_rule)
             or has_oracle_variable(unit, family_rule)
         ):
             add_selected(selected, rejected, unit, "oracle", seen_exact, seen_code, dedupe_by_code=True, context_keywords=context_keywords, trigger_apis=trigger_apis, harness_family=harness_family, family_rule=family_rule)
@@ -700,6 +731,14 @@ def rejected_summary(rejected: List[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
+def normalize_source_api(value: Any) -> Any:
+    if isinstance(value, dict):
+        return value.get("function", "")
+    if isinstance(value, list):
+        return [str(v) for v in value]
+    return value or ""
+
+
 def build_selected_report(
     template_dir: Path,
     family_rules: Optional[Dict[str, Any]] = None,
@@ -718,12 +757,14 @@ def build_selected_report(
 
     template_id = ast_report.get("template_id") or mask_report.get("template_id") or meta.get("template_id", "")
     template_name = ast_report.get("template_name") or mask_report.get("template_name") or meta.get("template_name", "")
-    source_api = ast_report.get("source_api") or mask_report.get("source_api") or meta.get("source_api", {}).get("function", "")
+    source_api = normalize_source_api(ast_report.get("source_api") or mask_report.get("source_api") or meta.get("source_api"))
 
     return {
         "template_id": template_id,
         "template_name": template_name,
         "source_api": source_api,
+        "template_file": ast_report.get("template_file", ""),
+        "template_library": ast_report.get("template_library", ""),
         "trigger_apis": trigger_apis,
         "harness_family": harness_family,
         "selection_policy": {
@@ -746,6 +787,8 @@ def build_selected_report(
             "family_rule": {
                 "context_keywords": rule_list(family_rule, "context_keywords"),
                 "oracle_variables": rule_list(family_rule, "oracle_variables"),
+                "trigger_functions": rule_list(family_rule, "trigger_functions"),
+                "oracle_functions": rule_list(family_rule, "oracle_functions"),
                 "preferred_roles": rule_list(family_rule, "preferred_roles"),
                 "context_limit": int_rule(family_rule, "context_limit", 12),
                 "cleanup_limit": int_rule(family_rule, "cleanup_limit", 2),
