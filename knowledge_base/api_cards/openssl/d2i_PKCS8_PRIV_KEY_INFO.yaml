@@ -1,0 +1,36 @@
+api: d2i_PKCS8_PRIV_KEY_INFO
+library: openssl
+family: der_parser
+signature: "PKCS8_PRIV_KEY_INFO *d2i_PKCS8_PRIV_KEY_INFO(PKCS8_PRIV_KEY_INFO **a, const unsigned char **ppin, long length)"
+parameter_semantics:
+  a: optional reuse/output PKCS8 info pointer
+  ppin: input DER pointer, advanced to consumed object end on success
+  length: available input length
+return_value_semantics:
+  success: returns PKCS8_PRIV_KEY_INFO pointer
+  failure: returns NULL
+state_preconditions:
+  - ppin must reference DER PrivateKeyInfo bytes
+valid_invalid_ranges:
+  valid: DER PKCS#8 PrivateKeyInfo
+  invalid: malformed ASN.1 sequence, algorithm, or private key field
+unsupported_conditions:
+  - full-input validation without comparing consumed pointer to end
+related_apis:
+  - PKCS8_PRIV_KEY_INFO_free
+  - EVP_PKCS82PKEY
+mutation_hints:
+  - trailing garbage
+  - malformed second object
+  - oversized length
+  - truncated private key octet string
+oracle_observables:
+  - parse_success
+  - consumed_len
+  - trailing_len
+  - caller_accept
+source_references:
+  - openssl/x509.h
+notes:
+  - "Known pitfall: low-level DER parser success is not equivalent to stream exhaustion."
+

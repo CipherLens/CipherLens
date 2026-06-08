@@ -1,0 +1,41 @@
+api: EVP_DigestVerify
+library: openssl
+family: pkey_verify
+signature: "int EVP_DigestVerify(EVP_MD_CTX *ctx, const unsigned char *sigret, size_t siglen, const unsigned char *tbs, size_t tbslen)"
+parameter_semantics:
+  ctx: initialized digest verify context
+  sigret: signature buffer
+  siglen: signature length
+  tbs: message bytes to verify
+  tbslen: message length
+return_value_semantics:
+  success: 1
+  invalid_signature: 0
+  error: negative or other non-1 error depending path
+state_preconditions:
+  - EVP_DigestVerifyInit must have succeeded
+  - key type and digest must be compatible
+valid_invalid_ranges:
+  valid: signature produced by matching private key and digest
+  invalid: wrong key type, wrong digest, malformed signature
+unsupported_conditions:
+  - public/private key role mismatch
+  - unsupported provider operation
+related_apis:
+  - EVP_DigestVerifyInit
+  - EVP_MD_CTX_new
+  - EVP_MD_CTX_free
+mutation_hints:
+  - wrong object type
+  - public-only key path
+  - malformed signature length
+  - unsupported digest/key pairing
+oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+source_references:
+  - openssl/evp.h
+notes:
+  - "Known pitfall: distinguish invalid signature from provider or dispatch errors."
+

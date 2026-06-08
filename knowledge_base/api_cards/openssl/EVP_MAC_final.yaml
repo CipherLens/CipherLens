@@ -1,0 +1,39 @@
+api: EVP_MAC_final
+library: openssl
+family: mac_lifecycle
+signature: "int EVP_MAC_final(EVP_MAC_CTX *ctx, unsigned char *out, size_t *outl, size_t outsize)"
+parameter_semantics:
+  ctx: MAC context
+  out: output buffer
+  outl: caller-visible output length
+  outsize: output buffer capacity
+return_value_semantics:
+  success: 1 and outl receives MAC length
+  failure: 0 and output state should remain safe for caller
+state_preconditions:
+  - context must be initialized with key and parameters
+  - update sequence must be valid for the selected MAC
+valid_invalid_ranges:
+  valid: initialized MAC context and sufficiently sized output buffer
+  invalid: final before setup, double final, undersized output
+unsupported_conditions:
+  - using ctx after invalid lifecycle transition
+related_apis:
+  - EVP_MAC_init
+  - EVP_MAC_update
+  - EVP_MAC_CTX_free
+mutation_hints:
+  - final before setup
+  - double final
+  - abort then final
+  - output buffer too small
+oracle_observables:
+  - return_code
+  - outl
+  - output_buffer_state
+  - sanitizer_signal
+source_references:
+  - openssl/evp.h
+notes:
+  - "Known pitfall: failure paths must not expose unsafe outl or stale output state."
+

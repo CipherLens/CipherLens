@@ -1,0 +1,38 @@
+api: d2i_X509
+library: openssl
+family: der_parser
+signature: "X509 *d2i_X509(X509 **a, const unsigned char **ppin, long length)"
+parameter_semantics:
+  a: optional reuse/output object pointer
+  ppin: input DER pointer, advanced to consumed object end on success
+  length: available input length
+return_value_semantics:
+  success: returns X509 object pointer
+  failure: returns NULL
+state_preconditions:
+  - ppin must point to a readable DER buffer pointer
+  - length must describe available bytes
+valid_invalid_ranges:
+  valid: complete DER X.509 certificate object
+  invalid: malformed ASN.1 certificate structure
+unsupported_conditions:
+  - caller expecting whole-input validation without checking "*ppin == end"
+related_apis:
+  - X509_free
+  - PEM_read_X509
+mutation_hints:
+  - trailing garbage
+  - malformed second object
+  - oversized length
+  - truncated inner ASN.1 field
+oracle_observables:
+  - parse_success
+  - consumed_len
+  - trailing_len
+  - caller_accept
+source_references:
+  - openssl/x509.h
+notes:
+  - "Known pitfall: d2i_* low-level APIs may advance the pointer only to the consumed object."
+  - "Whole-input callers should check p == end."
+

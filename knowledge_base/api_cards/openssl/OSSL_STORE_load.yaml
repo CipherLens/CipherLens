@@ -1,0 +1,37 @@
+api: OSSL_STORE_load
+library: openssl
+family: der_store_loader
+signature: "OSSL_STORE_INFO *OSSL_STORE_load(OSSL_STORE_CTX *ctx)"
+parameter_semantics:
+  ctx: store loading context created by OSSL_STORE_open_ex or related helpers
+return_value_semantics:
+  success: returns one OSSL_STORE_INFO object
+  end_or_failure: returns NULL; caller checks OSSL_STORE_eof and OSSL_STORE_error
+state_preconditions:
+  - ctx must be opened for the URI or input source
+valid_invalid_ranges:
+  valid: supported object stream content
+  invalid: malformed object stream or unsupported object type
+unsupported_conditions:
+  - single-object callers that stop after first object without EOF/error policy
+related_apis:
+  - OSSL_STORE_open_ex
+  - OSSL_STORE_INFO_free
+  - OSSL_STORE_eof
+  - OSSL_STORE_error
+mutation_hints:
+  - valid DER followed by malformed ASN.1 tail
+  - valid object followed by unsupported object
+  - malformed second object
+  - oversized trailing length
+oracle_observables:
+  - object_returned
+  - store_eof
+  - store_error
+  - caller_accept
+source_references:
+  - crypto/store/
+  - apps/lib/apps.c
+notes:
+  - "Known pitfall: object-stream semantics can be safe for stream callers but risky for single-object app helpers."
+

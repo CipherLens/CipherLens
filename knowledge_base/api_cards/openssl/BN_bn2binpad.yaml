@@ -1,0 +1,38 @@
+api: BN_bn2binpad
+library: openssl
+family: bignum_buffer
+signature: "int BN_bn2binpad(const BIGNUM *a, unsigned char *to, int tolen)"
+parameter_semantics:
+  a: input BIGNUM
+  to: caller-provided output buffer
+  tolen: explicit output buffer length
+return_value_semantics:
+  success: number of bytes written, normally tolen
+  failure: -1
+state_preconditions:
+  - a must be a valid BIGNUM
+  - to must point to at least tolen bytes
+valid_invalid_ranges:
+  valid: tolen large enough for serialized magnitude
+  invalid: tolen too small, NULL inputs
+unsupported_conditions:
+  - negative-value semantics differ from signed serialization APIs
+related_apis:
+  - BN_signed_bn2bin
+  - BN_bn2bin
+  - BN_free
+mutation_hints:
+  - small caller buffer
+  - negative number if mapped through signed API
+  - boundary tolen values
+  - canary after buffer
+oracle_observables:
+  - return_code
+  - bytes_written
+  - canary_state
+  - sanitizer_signal
+source_references:
+  - openssl/bn.h
+notes:
+  - "Known pitfall: preserve caller-provided buffer and explicit length when migrating boundary bugs."
+

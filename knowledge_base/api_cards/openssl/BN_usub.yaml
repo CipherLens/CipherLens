@@ -1,0 +1,38 @@
+api: BN_usub
+library: openssl
+family: bignum_arithmetic
+signature: "int BN_usub(BIGNUM *r, const BIGNUM *a, const BIGNUM *b)"
+parameter_semantics:
+  r: output BIGNUM
+  a: left operand, expected unsigned magnitude
+  b: right operand, expected unsigned magnitude
+return_value_semantics:
+  success: 1
+  failure: 0
+state_preconditions:
+  - r, a, and b must be valid BIGNUM objects
+  - caller should ensure unsigned subtraction preconditions
+valid_invalid_ranges:
+  valid: a >= b for unsigned subtraction
+  invalid: unsupported negative result path or invalid objects
+unsupported_conditions:
+  - using unsigned subtraction as signed arithmetic
+related_apis:
+  - BN_sub
+  - BN_add
+  - BN_cmp
+mutation_hints:
+  - a smaller than b
+  - zero-length limbs
+  - aliasing output and input
+  - boundary limb carry/borrow
+oracle_observables:
+  - return_code
+  - output_value
+  - output_sign
+  - sanitizer_signal
+source_references:
+  - openssl/bn.h
+notes:
+  - "Known pitfall: arithmetic semantic checks need output value/state, not only exit code."
+

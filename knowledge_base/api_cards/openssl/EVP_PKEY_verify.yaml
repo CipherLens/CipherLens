@@ -1,0 +1,41 @@
+api: EVP_PKEY_verify
+library: openssl
+family: pkey_verify
+signature: "int EVP_PKEY_verify(EVP_PKEY_CTX *ctx, const unsigned char *sig, size_t siglen, const unsigned char *tbs, size_t tbslen)"
+parameter_semantics:
+  ctx: initialized PKEY verify context
+  sig: signature buffer
+  siglen: signature length
+  tbs: digest or message bytes depending algorithm setup
+  tbslen: input length
+return_value_semantics:
+  success: 1
+  invalid_signature: 0
+  error: negative or provider-specific non-success
+state_preconditions:
+  - EVP_PKEY_verify_init must have succeeded
+  - algorithm-specific padding/digest options may be required
+valid_invalid_ranges:
+  valid: algorithm-compatible signature and data
+  invalid: malformed signature, wrong key, unsupported padding
+unsupported_conditions:
+  - missing verify init
+  - unsupported key operation
+related_apis:
+  - EVP_PKEY_CTX_new
+  - EVP_PKEY_verify_init
+  - EVP_PKEY_CTX_free
+mutation_hints:
+  - wrong object type
+  - tiny RSA key
+  - public-only/private-only mismatch
+  - malformed signature length
+oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+source_references:
+  - openssl/evp.h
+notes:
+  - "Known pitfall: setup errors should not be collapsed with invalid signature results."
+

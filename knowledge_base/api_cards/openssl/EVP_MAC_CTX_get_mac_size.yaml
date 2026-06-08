@@ -1,0 +1,34 @@
+api: EVP_MAC_CTX_get_mac_size
+library: openssl
+family: mac_lifecycle
+signature: "size_t EVP_MAC_CTX_get_mac_size(EVP_MAC_CTX *ctx)"
+parameter_semantics:
+  ctx: MAC context
+return_value_semantics:
+  success: returns MAC output size
+  failure_or_unknown: may return 0
+state_preconditions:
+  - context should have selected MAC implementation and parameters
+valid_invalid_ranges:
+  valid: initialized or parameterized MAC context
+  invalid: uninitialized, freed, or unsupported context state
+unsupported_conditions:
+  - stale or NULL context
+related_apis:
+  - EVP_MAC_fetch
+  - EVP_MAC_CTX_new
+  - EVP_MAC_init
+mutation_hints:
+  - get size before setup
+  - get size after failed init
+  - get size after final
+  - get size after abort-like cleanup
+oracle_observables:
+  - returned_size
+  - error_stack
+  - sanitizer_signal
+source_references:
+  - openssl/evp.h
+notes:
+  - "Known pitfall: size query behavior depends on lifecycle state."
+

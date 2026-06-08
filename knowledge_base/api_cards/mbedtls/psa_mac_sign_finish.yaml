@@ -1,0 +1,40 @@
+api: psa_mac_sign_finish
+library: mbedtls
+family: mac_lifecycle
+signature: "psa_status_t psa_mac_sign_finish(psa_mac_operation_t *operation, uint8_t *mac, size_t mac_size, size_t *mac_length)"
+parameter_semantics:
+  operation: PSA MAC operation state
+  mac: output buffer
+  mac_size: output buffer capacity
+  mac_length: caller-visible output length
+return_value_semantics:
+  success: PSA_SUCCESS and mac_length receives produced length
+  failure: PSA error status and output state should remain safe
+state_preconditions:
+  - operation must be set up for MAC sign
+  - updates may have been applied before finish
+valid_invalid_ranges:
+  valid: active sign operation and sufficient output buffer
+  invalid: finish before setup, double finish, undersized output
+unsupported_conditions:
+  - operation in verify mode
+  - aborted or inactive operation
+related_apis:
+  - psa_mac_sign_setup
+  - psa_mac_update
+  - psa_mac_abort
+mutation_hints:
+  - final before setup
+  - double final
+  - abort then final
+  - small mac_size
+oracle_observables:
+  - psa_status
+  - mac_length
+  - output_buffer_state
+  - sanitizer_signal
+source_references:
+  - psa/crypto.h
+notes:
+  - "Known pitfall: failure return must be interpreted with mac_length and operation state."
+

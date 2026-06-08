@@ -1,0 +1,36 @@
+api: d2i_PUBKEY
+library: openssl
+family: der_parser
+signature: "EVP_PKEY *d2i_PUBKEY(EVP_PKEY **a, const unsigned char **ppin, long length)"
+parameter_semantics:
+  a: optional reuse/output key pointer
+  ppin: input DER pointer, advanced to consumed SubjectPublicKeyInfo end on success
+  length: available input length
+return_value_semantics:
+  success: returns EVP_PKEY public key
+  failure: returns NULL
+state_preconditions:
+  - ppin must reference DER SubjectPublicKeyInfo bytes
+valid_invalid_ranges:
+  valid: DER SubjectPublicKeyInfo
+  invalid: malformed algorithm identifier or bit string
+unsupported_conditions:
+  - caller assumes full buffer consumed without pointer check
+related_apis:
+  - EVP_PKEY_free
+  - i2d_PUBKEY
+mutation_hints:
+  - trailing garbage
+  - malformed second object
+  - oversized length
+  - truncated bit string
+oracle_observables:
+  - parse_success
+  - consumed_len
+  - trailing_len
+  - caller_accept
+source_references:
+  - openssl/x509.h
+notes:
+  - "Known pitfall: success does not by itself prove whole-input consumption."
+
