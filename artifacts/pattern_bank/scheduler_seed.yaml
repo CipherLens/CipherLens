@@ -12,12 +12,30 @@ families:
     - semantic_candidate_observed
     recommended_next_action: der_full_consumption_v2
   cipher_aead_lifecycle:
-    priority_score: 0.65
+    priority_score: 0.42
     patterns:
     - MBEDTLS-POC-0004
     - MBEDTLS-POC-0028
     - OPENSSL-ISSUE-17715
     - OPENSSL-ISSUE-8980
+    triage_status: gcm_closed_negative_feedback
+    recommended_path: scheduler_rerank_or_non_gcm_aead_mutation
+    fallback_path: B_controlled_family_mutation_for_ccm_ctx_copy_or_init_failure
+    next_task_name: cipher_aead_lifecycle_ccm_or_ctx_copy_triage_v1
+    family_readiness: gcm_closed_non_gcm_spaces_available
+    oracle_quality: medium
+    vulnerability_conclusion: none_confirmed
+    gcm_closure:
+      latest_sprint: cipher_aead_lifecycle_gcm_closure_v1
+      final_without_update: legal_semantics
+      set_tag_after_final: permissive_but_harmless_or_mapping_gap
+      truncated_tag_length: legal_semantics
+      scheduler_action: lower_gcm_priority
+    remaining_spaces:
+    - ccm_lifecycle
+    - ctx_copy_or_reset
+    - init_failure_followed_by_operation
+    - error_path_output_state_pollution
     reasons:
     - clear_oracle
     - clear_output_state_oracle
@@ -26,7 +44,12 @@ families:
     - psa_aead_setup
     - return_code_outlen_semantic
     - reusable_family
-    recommended_next_action: cipher_aead_lifecycle_family_v1
+    - family_triage_v1_complete
+    - aead_lifecycle_api_group_mapped
+    - mutation_matrix_draft_ready
+    - gcm_closed_negative_feedback
+    - non_gcm_spaces_remain
+    recommended_next_action: scheduler_rerank_after_aead_gcm
   asn1_nested_boundary:
     priority_score: 0.6
     patterns:

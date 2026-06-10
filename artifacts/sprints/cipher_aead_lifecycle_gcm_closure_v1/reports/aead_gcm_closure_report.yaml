@@ -1,0 +1,62 @@
+sprint: cipher_aead_lifecycle_gcm_closure_v1
+family: cipher_aead_lifecycle
+subfamily: gcm
+status: closed_no_candidate
+vulnerability_conclusion: none_confirmed
+crash_evidence: none
+candidate_count: 3
+final_classification_counts:
+  legal_semantics: 2
+  permissive_but_harmless_or_mapping_gap: 1
+candidates:
+- candidate_id: aead_006_final_without_update_gcm_encrypt
+  old_classification: semantic_divergence_candidate
+  final_classification: legal_semantics
+  short_reason: GCM encryption with AAD and no plaintext update is a legal empty-plaintext/AAD-only
+    operation; tag-only output is expected.
+  cross_library_evidence:
+    openssl: mutation case succeeded without crash; semantic crosscheck did not show
+      oracle violation
+    mbedtls_psa: mbedTLS PSA accepts equivalent empty-plaintext/AAD-only GCM flow
+    botan: Botan finish() on empty plaintext with AAD succeeded and produced authentication
+      tag output
+  negative_feedback: true
+  scheduler_action: do_not_promote_gcm_final_without_update
+- candidate_id: aead_009_set_tag_after_final_gcm_decrypt
+  old_classification: permissive_behavior
+  final_classification: permissive_but_harmless_or_mapping_gap
+  short_reason: OpenSSL control-call ordering is permissive, but no authentication
+    bypass, crash, or state corruption evidence was observed; Botan has no post-final
+    SET_TAG equivalent.
+  cross_library_evidence:
+    openssl: post-final control behavior is permissive but no bug oracle fired
+    mbedtls_psa: semantic crosscheck did not produce vulnerability-like divergence
+    botan: no post-final SET_TAG equivalent, so this is a mapping gap rather than
+      migrated bug evidence
+  negative_feedback: true
+  scheduler_action: lower_priority_unless_version_matrix_suggests_state_bug
+- candidate_id: aead_012_truncated_tag_length_gcm_decrypt
+  previous_candidate_id: aead_012_wrong_tag_length_gcm_decrypt
+  old_classification: semantic_divergence_candidate
+  final_classification: legal_semantics
+  rename_recommendation: wrong_tag_length -> truncated_tag_length
+  short_reason: 8-byte GCM tags are permitted by the checked APIs/libraries; the old
+    name falsely implied invalid input.
+  cross_library_evidence:
+    openssl: 8-byte GCM tag path is accepted by the tested EVP API behavior
+    mbedtls_psa: mbedTLS PSA crosscheck accepted the truncated but allowed tag length
+    botan: Botan AES-128/GCM(8) encrypted/decrypted successfully with plaintext match
+  negative_feedback: true
+  scheduler_action: rename_and_do_not_use_as_bug_candidate_without_invalid_length_evidence
+scheduler_decision: lower GCM lifecycle priority; retain non-GCM AEAD spaces for later
+  exploration
+remaining_spaces:
+- ccm_lifecycle
+- ctx_copy_or_reset
+- init_failure_followed_by_operation
+- error_path_output_state_pollution
+claim_boundary:
+- no CVE claim
+- no exploit claim
+- no confirmed vulnerability
+- semantic crosscheck only

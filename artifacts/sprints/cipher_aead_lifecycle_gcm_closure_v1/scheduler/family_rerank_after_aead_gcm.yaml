@@ -1,0 +1,91 @@
+sprint: cipher_aead_lifecycle_gcm_closure_v1
+basis: AEAD-GCM branch closed as negative feedback; rerank next exploration families.
+ranked_families:
+- rank: 1
+  family: asn1_nested_boundary
+  priority: 0.82
+  available_seed:
+  - MBEDTLS-POC-0017
+  - OPENSSL-ISSUE-30581
+  evidence_quality: medium_high
+  expected_path: D_then_A
+  risk: must avoid conflating inner ASN.1 boundary with DER full-consumption/app-level
+    acceptance
+  next_action: audit OpenSSL issue seed and stabilize oracle before cross-library
+    adapter work
+- rank: 2
+  family: evp_pkey_context_lifecycle
+  priority: 0.76
+  available_seed:
+  - EVP_PKEY context/provider lifecycle issues from OpenSSL artifact pool
+  evidence_quality: medium
+  expected_path: D_then_A
+  risk: context lifecycle bugs may be version-specific and need tight reproduction
+  next_action: build focused seed inventory and map required observables
+- rank: 3
+  family: cipher_aead_lifecycle_ctx_copy
+  priority: 0.7
+  available_seed:
+  - OPENSSL-ISSUE-8980
+  evidence_quality: medium
+  expected_path: D_then_A_or_B_controlled
+  risk: avoid retesting closed GCM final/tag-length cases
+  next_action: scope ctx-copy/reset/init-failure only
+- rank: 4
+  family: x509_parsing
+  priority: 0.66
+  available_seed:
+  - MBEDTLS-POC-0017
+  evidence_quality: medium
+  expected_path: B_controlled_or_D_then_A
+  risk: known safe/safe outcome for current d2i_X509 malformed DER cases
+  next_action: use as negative-control or extend to distinct nested boundary seeds
+- rank: 5
+  family: cipher_aead_lifecycle_ccm
+  priority: 0.62
+  available_seed:
+  - MBEDTLS-POC-0028
+  - AEAD family inventory
+  evidence_quality: medium
+  expected_path: B_controlled_family_mutation
+  risk: oracle may be similar to closed GCM unless CCM-specific state semantics are
+    selected
+  next_action: derive CCM-only mutation matrix
+- rank: 6
+  family: pkey_verify_semantic
+  priority: 0.58
+  available_seed:
+  - EVP_PKEY_verify / mbedtls_pk_verify cards
+  evidence_quality: medium
+  expected_path: B_controlled
+  risk: signature verification differences often become safe/triage outcomes
+  next_action: only run after oracle and parameter mapping are strict
+- rank: 7
+  family: provider_fetch_lifecycle
+  priority: 0.54
+  available_seed:
+  - OpenSSL provider/fetch issue artifacts
+  evidence_quality: low_medium
+  expected_path: D_path_audit_first
+  risk: environment/provider configuration can dominate behavior
+  next_action: collect reproducible local issue seeds first
+- rank: 8
+  family: bn_error_path
+  priority: 0.5
+  available_seed:
+  - early bignum examples
+  evidence_quality: medium
+  expected_path: B_controlled
+  risk: lower novelty after existing bignum/canary work
+  next_action: defer unless scheduler needs stable baseline
+- rank: 9
+  family: ossl_store_decoder_boundary
+  priority: 0.46
+  available_seed:
+  - OpenSSL store/decoder artifacts if present
+  evidence_quality: low_medium
+  expected_path: D_path_audit_first
+  risk: decoder/provider interactions may be broad and noisy
+  next_action: inventory seeds before template work
+recommended_next_family: asn1_nested_boundary
+recommended_next_task_name: asn1_nested_boundary_d_path_audit_v1
