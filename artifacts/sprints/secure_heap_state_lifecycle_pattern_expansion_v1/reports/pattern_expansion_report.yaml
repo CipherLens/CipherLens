@@ -1,0 +1,80 @@
+sprint: secure_heap_state_lifecycle_pattern_expansion_v1
+family: secure_heap_state_lifecycle
+seed_issue: OPENSSL-ISSUE-28669
+entered_pattern_expansion: true
+continued_seed_reproduction_only: false
+execution_path: B-path same-family state expansion after D-path seed validation
+rag:
+  used: true
+  initial_sandbox_failure: Operation not permitted from local Ollama embedding
+  escalated_retry_success: true
+  rebuild_success: true
+  validation_query_recalled_expansion: true
+ast_mask:
+  used: true
+  files:
+    - artifacts/sprints/secure_heap_state_lifecycle_pattern_expansion_v1/mask/mask_report.yaml
+    - artifacts/sprints/secure_heap_state_lifecycle_pattern_expansion_v1/mask/selected_mask_units.yaml
+glm:
+  used: false
+  reason: no_structured_helper_for_b_path_pattern_expansion
+api_group:
+  - CRYPTO_secure_used
+  - CRYPTO_secure_malloc_initialized
+  - CRYPTO_secure_allocated
+  - OPENSSL_secure_malloc
+  - OPENSSL_secure_zalloc
+  - OPENSSL_secure_free
+  - CRYPTO_secure_malloc_done
+  - CRYPTO_secure_malloc_init
+state_sequences:
+  - pre_init_query
+  - initialized_query
+  - done_then_query
+  - done_twice
+  - reinit_after_done
+  - done_then_alloc
+  - done_then_free
+  - alloc_then_done_then_free
+  - init_failed_then_query
+  - initialized_alloc_free_control
+rendered_cases: 19
+compile_run:
+  total_cases: 19
+  raw_status_counts:
+    run_ok: 16
+    run_nonzero: 3
+  compile_error: 0
+analysis:
+  verdict_counts:
+    normal_defined_behavior: 16
+    crash_candidate: 3
+  novelty_counts:
+    non_novel_seed_reproduction: 2
+    new_state_combination_candidate: 1
+    normal_defined_behavior: 16
+seed_reproductions:
+  - secure_heap_exp_0000_seed_pre_init_used
+  - secure_heap_exp_0002_seed_done_then_used
+new_api_candidate: []
+new_state_combination_candidate:
+  - case_id: secure_heap_exp_0003_new_state_init_failed_then_used
+    api_under_test: CRYPTO_secure_used
+    state_sequence: init_failed_then_query
+    crash_signal: SIGSEGV_exit_139
+    interpretation: current_version_robustness_candidate
+normal_behavior_count: 16
+harness_errors: 0
+version_matrix:
+  mode: limited_single_version
+  tested_versions:
+    - openssl-3.5.5
+  regression_candidate: false
+claim_boundary:
+  confirmed_vulnerability: false
+  cve_claim: false
+  reason: API contract and multi-version affected/fixed range remain unconfirmed.
+next_family_recommendation:
+  - cipher_aead_lifecycle
+  - asn1_nested_boundary
+  - pkey_verify_semantic

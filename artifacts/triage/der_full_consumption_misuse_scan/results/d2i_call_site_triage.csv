@@ -1,0 +1,1696 @@
+file,line,api,classification,has_full_consumption_check,reason,evidence_snippet
+/home/wen/work/clean_sources/openssl-3.5.5/test/evp_extra_test.c,2325,d2i_PKCS8_PRIV_KEY_INFO,checks_full_consumption,true,nearby code appears to compare or compute consumed input,"2317:     const unsigned char *p;
+2318:     const APK_DATA *ak = &keydata_v2[i];
+2319:     const unsigned char *input = ak->kder;
+2320:     size_t input_len = ak->size;
+2321:     PKCS8_PRIV_KEY_INFO *p8inf = NULL;
+2322: 
+2323:     /* Can we parse PKCS#8 v2, ignoring the public key for now? */
+2324:     p = input;
+2325:     p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, &p, input_len);
+2326:     if (!TEST_ptr(p8inf)
+2327:         || !TEST_true(p == input + input_len))
+2328:         goto done;
+2329: 
+2330:     ret = 1;
+2331: done:
+2332:     PKCS8_PRIV_KEY_INFO_free(p8inf);
+2333:     return ret;"
+/home/wen/work/clean_sources/openssl-3.5.5/ssl/ssl_lib.c,384,d2i_PUBKEY,checks_full_consumption,true,nearby code appears to compare or compute consumed input,"376:                 ERR_raise(ERR_LIB_SSL, ERR_R_CRYPTO_LIB);
+377:                 X509_free(cert);
+378:                 tlsa_free(t);
+379:                 return -1;
+380:             }
+381:             break;
+382: 
+383:         case DANETLS_SELECTOR_SPKI:
+384:             if (!d2i_PUBKEY(&pkey, &p, ilen) || p < data || dlen != (size_t)(p - data)) {
+385:                 EVP_PKEY_free(pkey);
+386:                 tlsa_free(t);
+387:                 ERR_raise(ERR_LIB_SSL, SSL_R_DANE_TLSA_BAD_PUBLIC_KEY);
+388:                 return 0;
+389:             }
+390: 
+391:             /*
+392:              * For usage DANE-TA(2), we support authentication via ""2 1 0"" TLSA"
+/home/wen/work/clean_sources/openssl-3.5.5/fuzz/x509.c,69,d2i_X509,checks_full_consumption,true,nearby code appears to compare or compute consumed input,"61:     BIO_free(bio);
+62: 
+63:     X509_issuer_and_serial_hash(x509_1);
+64: 
+65:     i2d_X509(x509_1, &der);
+66:     OPENSSL_free(der);
+67: 
+68:     len = orig_len - (p - buf);
+69:     x509_2 = d2i_X509(NULL, &p, len);
+70:     if (x509_2 == NULL)
+71:         goto err;
+72: 
+73:     len = orig_len - (p - buf);
+74:     crl = d2i_X509_CRL(NULL, &p, len);
+75:     if (crl == NULL)
+76:         goto err;
+77: "
+/home/wen/work/clean_sources/openssl-3.5.5/ssl/ssl_lib.c,338,d2i_X509,checks_full_consumption,true,nearby code appears to compare or compute consumed input,"330:     /* Validate and cache full certificate or public key */
+331:     if (mtype == DANETLS_MATCHING_FULL) {
+332:         const unsigned char *p = data;
+333:         X509 *cert = NULL;
+334:         EVP_PKEY *pkey = NULL;
+335: 
+336:         switch (selector) {
+337:         case DANETLS_SELECTOR_CERT:
+338:             if (!d2i_X509(&cert, &p, ilen) || p < data || dlen != (size_t)(p - data)) {
+339:                 X509_free(cert);
+340:                 tlsa_free(t);
+341:                 ERR_raise(ERR_LIB_SSL, SSL_R_DANE_TLSA_BAD_CERTIFICATE);
+342:                 return 0;
+343:             }
+344:             if (X509_get0_pubkey(cert) == NULL) {
+345:                 X509_free(cert);
+346:                 tlsa_free(t);"
+/home/wen/work/clean_sources/openssl-3.5.5/test/danetest.c,113,d2i_X509,checks_full_consumption,true,nearby code appears to compare or compute consumed input,"105:         count < nelem && errtype == 0
+106:         && PEM_read_bio(fp, &name, &header, &data, &len) == 1;
+107:         ++count) {
+108:         if (strcmp(name, PEM_STRING_X509) == 0
+109:             || strcmp(name, PEM_STRING_X509_TRUSTED) == 0
+110:             || strcmp(name, PEM_STRING_X509_OLD) == 0) {
+111:             d2i_X509_t d = strcmp(name, PEM_STRING_X509_TRUSTED) != 0
+112:                 ? d2i_X509_AUX
+113:                 : d2i_X509;
+114:             X509 *cert;
+115:             const unsigned char *p = data;
+116: 
+117:             if (!TEST_ptr(cert = d(0, &p, len))
+118:                 || !TEST_long_eq(p - data, len)) {
+119:                 TEST_info(""Certificate parsing error"");
+120:                 goto err;
+121:             }"
+/home/wen/work/clean_sources/openssl-3.5.5/fuzz/x509.c,74,d2i_X509_CRL,checks_full_consumption,true,nearby code appears to compare or compute consumed input,"66:     OPENSSL_free(der);
+67: 
+68:     len = orig_len - (p - buf);
+69:     x509_2 = d2i_X509(NULL, &p, len);
+70:     if (x509_2 == NULL)
+71:         goto err;
+72: 
+73:     len = orig_len - (p - buf);
+74:     crl = d2i_X509_CRL(NULL, &p, len);
+75:     if (crl == NULL)
+76:         goto err;
+77: 
+78:     len = orig_len - (p - buf);
+79:     resp = d2i_OCSP_RESPONSE(NULL, &p, len);
+80: 
+81:     store = X509_STORE_new();
+82:     if (store == NULL)"
+/home/wen/work/clean_sources/openssl-3.5.5/crypto/store/store_result.c,559,d2i_PKCS12,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"551: {
+552:     int ok = 1;
+553: 
+554:     /* There is no specific object type for PKCS12 */
+555:     if (data->object_type == OSSL_OBJECT_UNKNOWN) {
+556:         /* Initial parsing */
+557:         PKCS12 *p12;
+558: 
+559:         p12 = d2i_PKCS12(NULL, (const unsigned char **)&data->octet_data,
+560:             data->octet_data_size);
+561: 
+562:         if (p12 != NULL) {
+563:             char *pass = NULL;
+564:             char tpass[PEM_BUFSIZE + 1];
+565:             size_t tpass_len;
+566:             EVP_PKEY *pkey = NULL;
+567:             X509 *cert = NULL;"
+/home/wen/work/clean_sources/openssl-3.5.5/engines/e_loader_attic.c,316,d2i_PKCS12,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"308:     if (ctx == NULL) {
+309:         /* Initial parsing */
+310:         PKCS12 *p12;
+311: 
+312:         if (pem_name != NULL)
+313:             /* No match, there is no PEM PKCS12 tag */
+314:             return NULL;
+315: 
+316:         if ((p12 = d2i_PKCS12(NULL, &blob, len)) != NULL) {
+317:             char *pass = NULL;
+318:             char tpass[PEM_BUFSIZE];
+319:             EVP_PKEY *pkey = NULL;
+320:             X509 *cert = NULL;
+321:             STACK_OF(X509) *chain = NULL;
+322: 
+323:             *matchcount = 1;
+324: "
+/home/wen/work/clean_sources/openssl-3.5.5/crypto/asn1/d2i_pr.c,52,d2i_PKCS8_PRIV_KEY_INFO,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"44:     if (keytype != EVP_PKEY_NONE) {
+45:         key_name = evp_pkey_type2name(keytype);
+46:         if (key_name == NULL)
+47:             return NULL;
+48:     }
+49: 
+50:     /* This is just a probe. It might fail, so we ignore errors */
+51:     ERR_set_mark();
+52:     p8info = d2i_PKCS8_PRIV_KEY_INFO(NULL, pp, len);
+53:     ERR_pop_to_mark();
+54:     if (p8info != NULL) {
+55:         int64_t v;
+56: 
+57:         /* ascertain version is 0 or 1 as per RFC5958 */
+58:         if (!ASN1_INTEGER_get_int64(&v, p8info->version)
+59:             || (v != 0 && v != 1)) {
+60:             *pp = p;"
+/home/wen/work/clean_sources/openssl-3.5.5/crypto/asn1/d2i_pr.c,132,d2i_PKCS8_PRIV_KEY_INFO,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"124:     }
+125: 
+126:     ERR_set_mark();
+127:     if (!ret->ameth->old_priv_decode || !ret->ameth->old_priv_decode(ret, &p, length)) {
+128:         if (ret->ameth->priv_decode != NULL
+129:             || ret->ameth->priv_decode_ex != NULL) {
+130:             EVP_PKEY *tmp;
+131:             PKCS8_PRIV_KEY_INFO *p8 = NULL;
+132:             p8 = d2i_PKCS8_PRIV_KEY_INFO(NULL, &p, length);
+133:             if (p8 == NULL) {
+134:                 ERR_clear_last_mark();
+135:                 goto err;
+136:             }
+137:             tmp = evp_pkcs82pkey_legacy(p8, libctx, propq);
+138:             PKCS8_PRIV_KEY_INFO_free(p8);
+139:             if (tmp == NULL) {
+140:                 ERR_clear_last_mark();"
+/home/wen/work/clean_sources/openssl-3.5.5/crypto/asn1/d2i_pr.c,213,d2i_PKCS8_PRIV_KEY_INFO,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"205:      * can just count the elements.
+206:      */
+207:     if (sk_ASN1_TYPE_num(inkey) == 6) {
+208:         keytype = EVP_PKEY_DSA;
+209:     } else if (sk_ASN1_TYPE_num(inkey) == 4) {
+210:         keytype = EVP_PKEY_EC;
+211:     } else if (sk_ASN1_TYPE_num(inkey) == 3) { /* This seems to be PKCS8, not
+212:                                                 * traditional format */
+213:         PKCS8_PRIV_KEY_INFO *p8 = d2i_PKCS8_PRIV_KEY_INFO(NULL, &p, length);
+214:         EVP_PKEY *ret;
+215: 
+216:         sk_ASN1_TYPE_pop_free(inkey, ASN1_TYPE_free);
+217:         if (p8 == NULL) {
+218:             ERR_raise(ERR_LIB_ASN1, ASN1_R_UNSUPPORTED_PUBLIC_KEY_TYPE);
+219:             return NULL;
+220:         }
+221:         ret = evp_pkcs82pkey_legacy(p8, libctx, propq);"
+/home/wen/work/clean_sources/openssl-3.5.5/crypto/evp/evp_pkey.c,148,d2i_PKCS8_PRIV_KEY_INFO,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"140:         if ((ctx = OSSL_ENCODER_CTX_new_for_pkey(pkey, selection,
+141:                  ""DER"", ""PrivateKeyInfo"",
+142:                  NULL))
+143:                 == NULL
+144:             || !OSSL_ENCODER_to_data(ctx, &der, &derlen))
+145:             goto error;
+146: 
+147:         pp = der;
+148:         p8 = d2i_PKCS8_PRIV_KEY_INFO(NULL, &pp, (long)derlen);
+149:         OPENSSL_free(der);
+150:         if (p8 == NULL)
+151:             goto error;
+152:     } else {
+153:         p8 = PKCS8_PRIV_KEY_INFO_new();
+154:         if (p8 == NULL) {
+155:             ERR_raise(ERR_LIB_EVP, ERR_R_ASN1_LIB);
+156:             return NULL;"
+/home/wen/work/clean_sources/openssl-3.5.5/crypto/pem/pem_pkey.c,138,d2i_PKCS8_PRIV_KEY_INFO,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"130:         }
+131:     }
+132:     ERR_clear_last_mark();
+133:     p = data;
+134: 
+135:     if (strcmp(nm, PEM_STRING_PKCS8INF) == 0) {
+136:         PKCS8_PRIV_KEY_INFO *p8inf;
+137: 
+138:         if ((p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, &p, len)) == NULL)
+139:             goto p8err;
+140:         ret = evp_pkcs82pkey_legacy(p8inf, libctx, propq);
+141:         if (x != NULL) {
+142:             EVP_PKEY_free(*x);
+143:             *x = ret;
+144:         }
+145:         PKCS8_PRIV_KEY_INFO_free(p8inf);
+146:     } else if (strcmp(nm, PEM_STRING_PKCS8) == 0) {"
+/home/wen/work/clean_sources/openssl-3.5.5/crypto/store/store_result.c,384,d2i_PKCS8_PRIV_KEY_INFO,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"376: 
+377:         /*
+378:          * If the encrypted PKCS#8 couldn't be decrypted,
+379:          * |der| is NULL
+380:          */
+381:         if (der != NULL) {
+382:             /* Try to unpack an unencrypted PKCS#8, that's easy */
+383:             derp = der;
+384:             p8info = d2i_PKCS8_PRIV_KEY_INFO(NULL, &derp, der_len);
+385: 
+386:             if (p8info != NULL) {
+387:                 pk = EVP_PKCS82PKEY_ex(p8info, libctx, propq);
+388:                 PKCS8_PRIV_KEY_INFO_free(p8info);
+389:             }
+390:         }
+391: 
+392:         if (pk != NULL)"
+/home/wen/work/clean_sources/openssl-3.5.5/engines/e_loader_attic.c,525,d2i_PKCS8_PRIV_KEY_INFO,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"517:     const char *propq)
+518: {
+519:     OSSL_STORE_INFO *store_info = NULL;
+520:     EVP_PKEY *pkey = NULL;
+521:     const EVP_PKEY_ASN1_METHOD *ameth = NULL;
+522: 
+523:     if (pem_name != NULL) {
+524:         if (strcmp(pem_name, PEM_STRING_PKCS8INF) == 0) {
+525:             PKCS8_PRIV_KEY_INFO *p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, &blob, len);
+526: 
+527:             *matchcount = 1;
+528:             if (p8inf != NULL)
+529:                 pkey = EVP_PKCS82PKEY_ex(p8inf, libctx, propq);
+530:             PKCS8_PRIV_KEY_INFO_free(p8inf);
+531:         } else {
+532:             int slen;
+533:             int pkey_id;"
+/home/wen/work/clean_sources/openssl-3.5.5/providers/implementations/encode_decode/decode_der2key.c,140,d2i_PKCS8_PRIV_KEY_INFO,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"132: static void *der2key_decode_p8(const unsigned char **input_der,
+133:     long input_der_len, struct der2key_ctx_st *ctx,
+134:     key_from_pkcs8_t *key_from_pkcs8)
+135: {
+136:     PKCS8_PRIV_KEY_INFO *p8inf = NULL;
+137:     const X509_ALGOR *alg = NULL;
+138:     void *key = NULL;
+139: 
+140:     if ((p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, input_der, input_der_len)) != NULL
+141:         && PKCS8_pkey_get0(NULL, NULL, NULL, &alg, p8inf)
+142:         && (OBJ_obj2nid(alg->algorithm) == ctx->desc->evp_type
+143:             /* Allow decoding sm2 private key with id_ecPublicKey */
+144:             || (OBJ_obj2nid(alg->algorithm) == NID_X9_62_id_ecPublicKey
+145:                 && ctx->desc->evp_type == NID_sm2)))
+146:         key = key_from_pkcs8(p8inf, PROV_LIBCTX_OF(ctx->provctx), ctx->propq);
+147:     PKCS8_PRIV_KEY_INFO_free(p8inf);
+148: "
+/home/wen/work/clean_sources/openssl-3.5.5/providers/implementations/encode_decode/decode_der2key.c,651,d2i_PKCS8_PRIV_KEY_INFO,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"643: {
+644:     SLH_DSA_KEY *key = NULL, *ret = NULL;
+645:     OSSL_LIB_CTX *libctx = PROV_LIBCTX_OF(ctx->provctx);
+646:     PKCS8_PRIV_KEY_INFO *p8inf = NULL;
+647:     const unsigned char *p;
+648:     const X509_ALGOR *alg = NULL;
+649:     int plen, ptype;
+650: 
+651:     if ((p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, der, der_len)) == NULL
+652:         || !PKCS8_pkey_get0(NULL, &p, &plen, &alg, p8inf))
+653:         goto end;
+654: 
+655:     /* Algorithm parameters must be absent. */
+656:     if ((X509_ALGOR_get0(NULL, &ptype, NULL, alg), ptype != V_ASN1_UNDEF)) {
+657:         ERR_raise_data(ERR_LIB_PROV, PROV_R_UNEXPECTED_KEY_PARAMETERS,
+658:             ""unexpected parameters with a PKCS#8 %s private key"",
+659:             ctx->desc->keytype_name);"
+/home/wen/work/clean_sources/openssl-3.5.5/providers/implementations/encode_decode/decode_epki2pki.c,161,d2i_PKCS8_PRIV_KEY_INFO,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"153:         }
+154:         X509_SIG_free(p8);
+155:     } else {
+156:         ERR_pop_to_mark();
+157:     }
+158: 
+159:     ERR_set_mark();
+160:     pder = der;
+161:     p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, &pder, der_len);
+162:     ERR_pop_to_mark();
+163: 
+164:     if (p8inf != NULL && PKCS8_pkey_get0(NULL, NULL, NULL, &alg, p8inf)) {
+165:         /*
+166:          * We have something and recognised it as PrivateKeyInfo, so let's
+167:          * pass all the applicable data to the callback.
+168:          */
+169:         char keytype[OSSL_MAX_NAME_SIZE];"
+/home/wen/work/clean_sources/openssl-3.5.5/providers/implementations/encode_decode/ml_dsa_codecs.c,425,d2i_PKCS8_PRIV_KEY_INFO,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"417:     const uint8_t *priv = NULL;
+418: 
+419:     /* Which ML-DSA variant? */
+420:     if ((v = ossl_ml_dsa_params_get(evp_type)) == NULL
+421:         || (codec = ml_dsa_get_codec(evp_type)) == NULL)
+422:         return 0;
+423: 
+424:     /* Extract the key OID and any parameters. */
+425:     if ((p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, &prvenc, prvlen)) == NULL)
+426:         return 0;
+427:     /* Shortest prefix is 4 bytes: seq tag/len  + octet string tag/len */
+428:     if (!PKCS8_pkey_get0(NULL, &buf, &len, &alg, p8inf))
+429:         goto end;
+430:     /* Bail out early if this is some other key type. */
+431:     if (OBJ_obj2nid(alg->algorithm) != evp_type)
+432:         goto end;
+433: "
+/home/wen/work/clean_sources/openssl-3.5.5/providers/implementations/encode_decode/ml_kem_codecs.c,292,d2i_PKCS8_PRIV_KEY_INFO,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"284:     uint16_t seed_magic;
+285: 
+286:     /* Which ML-KEM variant? */
+287:     if ((v = ossl_ml_kem_get_vinfo(evp_type)) == NULL
+288:         || (codec = ml_kem_get_codec(evp_type)) == NULL)
+289:         return 0;
+290: 
+291:     /* Extract the key OID and any parameters. */
+292:     if ((p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, &prvenc, prvlen)) == NULL)
+293:         return 0;
+294:     /* Shortest prefix is 4 bytes: seq tag/len  + octet string tag/len */
+295:     if (!PKCS8_pkey_get0(NULL, &buf, &len, &alg, p8inf))
+296:         goto end;
+297:     /* Bail out early if this is some other key type. */
+298:     if (OBJ_obj2nid(alg->algorithm) != evp_type)
+299:         goto end;
+300: "
+/home/wen/work/clean_sources/openssl-3.5.5/test/endecode_test.c,532,d2i_PKCS8_PRIV_KEY_INFO,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"524:     test_output_string(label, data, data_len - 1);
+525: }
+526: 
+527: static int check_unprotected_PKCS8_DER(const char *file, const int line,
+528:     const char *type,
+529:     const void *data, size_t data_len)
+530: {
+531:     const unsigned char *datap = data;
+532:     PKCS8_PRIV_KEY_INFO *p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, &datap, data_len);
+533:     int ok = 0;
+534: 
+535:     if (TEST_FL_ptr(p8inf)) {
+536:         EVP_PKEY *pkey = EVP_PKCS82PKEY_ex(p8inf, testctx, testpropq);
+537:         char *namelist = NULL;
+538: 
+539:         if (TEST_FL_ptr(pkey)) {
+540:             if (!(ok = TEST_FL_true(EVP_PKEY_is_a(pkey, type)))) {"
+/home/wen/work/clean_sources/openssl-3.5.5/test/evp_extra_test.c,2292,d2i_PKCS8_PRIV_KEY_INFO,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"2284: 
+2285: static int test_EVP_PKCS82PKEY(void)
+2286: {
+2287:     int ret = 0;
+2288:     const unsigned char *derp = kExampleBadECKeyDER;
+2289:     PKCS8_PRIV_KEY_INFO *p8inf = NULL;
+2290:     EVP_PKEY *pkey = NULL;
+2291: 
+2292:     if (!TEST_ptr(p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, &derp,
+2293:                       sizeof(kExampleBadECKeyDER))))
+2294:         goto done;
+2295: 
+2296:     if (!TEST_ptr_eq(derp,
+2297:             kExampleBadECKeyDER + sizeof(kExampleBadECKeyDER)))
+2298:         goto done;
+2299: 
+2300:     if (!TEST_ptr_null(pkey = EVP_PKCS82PKEY(p8inf)))"
+/home/wen/work/clean_sources/openssl-3.5.5/test/fake_rsaprov.c,830,d2i_PKCS8_PRIV_KEY_INFO,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"822: static void *fake_rsa_der2key_decode_p8(const unsigned char **input_der,
+823:     long input_der_len, struct der2key_ctx_st *ctx,
+824:     key_from_pkcs8_t *key_from_pkcs8)
+825: {
+826:     PKCS8_PRIV_KEY_INFO *p8inf = NULL;
+827:     const X509_ALGOR *alg = NULL;
+828:     void *key = NULL;
+829: 
+830:     if ((p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, input_der, input_der_len)) != NULL
+831:         && PKCS8_pkey_get0(NULL, NULL, NULL, &alg, p8inf)
+832:         && OBJ_obj2nid(alg->algorithm) == ctx->desc->evp_type)
+833:         key = key_from_pkcs8(p8inf, PROV_FAKE_RSA_LIBCTX_OF(ctx->provctx), NULL);
+834:     PKCS8_PRIV_KEY_INFO_free(p8inf);
+835: 
+836:     return key;
+837: }
+838: "
+/home/wen/work/clean_sources/openssl-3.5.5/test/tls-provider.c,2217,d2i_PKCS8_PRIV_KEY_INFO,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"2209: static void *xor_der2key_decode_p8(const unsigned char **input_der,
+2210:     long input_der_len, struct der2key_ctx_st *ctx,
+2211:     key_from_pkcs8_t *key_from_pkcs8)
+2212: {
+2213:     PKCS8_PRIV_KEY_INFO *p8inf = NULL;
+2214:     const X509_ALGOR *alg = NULL;
+2215:     void *key = NULL;
+2216: 
+2217:     if ((p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, input_der, input_der_len)) != NULL
+2218:         && PKCS8_pkey_get0(NULL, NULL, NULL, &alg, p8inf)
+2219:         && OBJ_obj2nid(alg->algorithm) == ctx->desc->evp_type)
+2220:         key = key_from_pkcs8(p8inf, PROV_XOR_LIBCTX_OF(ctx->provctx), NULL);
+2221:     PKCS8_PRIV_KEY_INFO_free(p8inf);
+2222: 
+2223:     return key;
+2224: }
+2225: "
+/home/wen/work/clean_sources/openssl-3.5.5/crypto/ct/ct_b64.c,154,d2i_PUBKEY,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"146: 
+147:     pkey_der_len = ct_base64_decode(pkey_base64, &pkey_der);
+148:     if (pkey_der_len < 0) {
+149:         ERR_raise(ERR_LIB_CT, CT_R_LOG_CONF_INVALID_KEY);
+150:         return 0;
+151:     }
+152: 
+153:     p = pkey_der;
+154:     pkey = d2i_PUBKEY_ex(NULL, &p, pkey_der_len, libctx, propq);
+155:     OPENSSL_free(pkey_der);
+156:     if (pkey == NULL) {
+157:         ERR_raise(ERR_LIB_CT, CT_R_LOG_CONF_INVALID_KEY);
+158:         return 0;
+159:     }
+160: 
+161:     *ct_log = CTLOG_new_ex(pkey, name, libctx, propq);
+162:     if (*ct_log == NULL) {"
+/home/wen/work/clean_sources/openssl-3.5.5/engines/e_loader_attic.c,657,d2i_PUBKEY,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"649: 
+650:     if (pem_name != NULL) {
+651:         if (strcmp(pem_name, PEM_STRING_PUBLIC) != 0)
+652:             /* No match */
+653:             return NULL;
+654:         *matchcount = 1;
+655:     }
+656: 
+657:     if ((pkey = d2i_PUBKEY(NULL, &blob, len)) != NULL) {
+658:         *matchcount = 1;
+659:         store_info = OSSL_STORE_INFO_new_PUBKEY(pkey);
+660:     }
+661: 
+662:     return store_info;
+663: }
+664: 
+665: static FILE_HANDLER PUBKEY_handler = {"
+/home/wen/work/clean_sources/openssl-3.5.5/ssl/ssl_asn1.c,347,d2i_PUBKEY,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"339:     EVP_PKEY_free(ret->peer_rpk);
+340:     ret->peer_rpk = NULL;
+341:     if (as->peer_rpk != NULL) {
+342:         const unsigned char *data = as->peer_rpk->data;
+343: 
+344:         /*
+345:          * |data| is incremented; we don't want to lose original ptr
+346:          */
+347:         ret->peer_rpk = d2i_PUBKEY_ex(NULL, &data, as->peer_rpk->length, libctx, propq);
+348:         if (ret->peer_rpk == NULL)
+349:             goto err;
+350:     }
+351: 
+352:     if (!ssl_session_memcpy(ret->sid_ctx, &ret->sid_ctx_length,
+353:             as->session_id_context, SSL_MAX_SID_CTX_LENGTH))
+354:         goto err;
+355: "
+/home/wen/work/clean_sources/openssl-3.5.5/ssl/statem/statem_lib.c,1281,d2i_PUBKEY,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"1273:         spki_len = cert_len;
+1274:     }
+1275: 
+1276:     if (!PACKET_get_bytes(pkt, &spki, spki_len)) {
+1277:         SSLfatal(sc, SSL_AD_DECODE_ERROR, SSL_R_LENGTH_MISMATCH);
+1278:         goto err;
+1279:     }
+1280:     spkistart = spki;
+1281:     if ((pkey = d2i_PUBKEY_ex(NULL, &spki, spki_len, sctx->libctx, sctx->propq)) == NULL
+1282:         || spki != (spkistart + spki_len)) {
+1283:         SSLfatal(sc, SSL_AD_DECODE_ERROR, SSL_R_LENGTH_MISMATCH);
+1284:         goto err;
+1285:     }
+1286:     if (EVP_PKEY_missing_parameters(pkey)) {
+1287:         SSLfatal(sc, SSL_AD_INTERNAL_ERROR,
+1288:             SSL_R_UNABLE_TO_FIND_PUBLIC_KEY_PARAMETERS);
+1289:         goto err;"
+/home/wen/work/clean_sources/openssl-3.5.5/ssl/t1_trce.c,1351,d2i_PUBKEY,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"1343:     if (msglen < clen + 3)
+1344:         return 0;
+1345: 
+1346:     msg += 3;
+1347: 
+1348:     BIO_indent(bio, indent, 80);
+1349:     BIO_printf(bio, ""raw_public_key, length=%d\n"", (int)clen);
+1350: 
+1351:     pkey = d2i_PUBKEY_ex(NULL, &msg, clen, ssl->ctx->libctx, ssl->ctx->propq);
+1352:     if (pkey == NULL)
+1353:         return 0;
+1354:     EVP_PKEY_print_public(bio, pkey, indent + 2, NULL);
+1355:     EVP_PKEY_free(pkey);
+1356:     *pmsg += clen + 3;
+1357:     *pmsglen -= clen + 3;
+1358:     return 1;
+1359: }"
+/home/wen/work/clean_sources/openssl-3.5.5/test/dhtest.c,926,d2i_PUBKEY,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"918:  * Loading a named group should not overwrite the private value length field.
+919:  */
+920: static int dh_load_pkcs3_namedgroup_privlen_test(void)
+921: {
+922:     int ret, privlen = 0;
+923:     EVP_PKEY *pkey = NULL;
+924:     const unsigned char *p = dh_pub_der;
+925: 
+926:     ret = TEST_ptr(pkey = d2i_PUBKEY_ex(NULL, &p, sizeof(dh_pub_der),
+927:                        NULL, NULL))
+928:         && TEST_true(EVP_PKEY_get_int_param(pkey, OSSL_PKEY_PARAM_DH_PRIV_LEN,
+929:             &privlen))
+930:         && TEST_int_eq(privlen, 1024);
+931: 
+932:     EVP_PKEY_free(pkey);
+933:     return ret;
+934: }"
+/home/wen/work/clean_sources/openssl-3.5.5/test/endecoder_legacy_test.c,660,d2i_PUBKEY,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"652:     if (test_stanza->i2d_PUBKEY != NULL) {
+653:         int selection = OSSL_KEYMGMT_SELECT_PUBLIC_KEY
+654:             | OSSL_KEYMGMT_SELECT_ALL_PARAMETERS;
+655:         const char *structure = ""SubjectPublicKeyInfo"";
+656: 
+657:         TEST_info(""Test OSSL_ENCODER against i2d_{TYPE}_PUBKEY for %s, %s"",
+658:             test_stanza->keytype, structure);
+659:         if (!test_DER(key->keytype, key->evp_type, legacy_obj,
+660:                 test_stanza->i2d_PUBKEY, test_stanza->d2i_PUBKEY,
+661:                 EVP_PKEY_eq, EVP_PKEY_print_public,
+662:                 pkey, selection, structure))
+663:             ok = 0;
+664:     }
+665: end:
+666:     EVP_PKEY_free(downgraded_pkey);
+667:     return ok;
+668: }"
+/home/wen/work/clean_sources/openssl-3.5.5/test/provider_pkey_test.c,755,d2i_PUBKEY,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"747:             goto end;
+748:         EVP_PKEY_free(pkey);
+749:         pkey = NULL;
+750: 
+751:         /* Decoding a DER-encoded X509_PUBKEY uses the properties to select the right provider */
+752:         if (!TEST_int_eq(reset_ctx_providers(&my_libctx, providers, libctx_prop), 1))
+753:             goto end;
+754:         p = encoded_pub;
+755:         if (!TEST_ptr(pkey = d2i_PUBKEY_ex(NULL, &p, len_pub, my_libctx, explicit_prop))
+756:             || !TEST_ptr_eq(EVP_PKEY_get0_provider(pkey), *curr_provider))
+757:             goto end;
+758:         EVP_PKEY_free(pkey);
+759:         pkey = NULL;
+760: 
+761:         /* Decoding a PKCS8_PRIV_KEY_INFO uses the properties to select the right provider */
+762:         if (!TEST_int_eq(reset_ctx_providers(&my_libctx, providers, libctx_prop), 1))
+763:             goto end;"
+/home/wen/work/clean_sources/openssl-3.5.5/test/x509_test.c,301,d2i_PUBKEY,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"293: 
+294:     cnt = test_get_argument_count();
+295:     if (cnt != 1) {
+296:         TEST_error(""Must specify a certificate file self-signed with RSA-PSS.\n"");
+297:         return 0;
+298:     }
+299: 
+300:     p = pubkeydata;
+301:     pubkey = d2i_PUBKEY(NULL, &p, sizeof(pubkeydata));
+302: 
+303:     p = privkeydata;
+304:     privkey = d2i_PrivateKey(EVP_PKEY_EC, NULL, &p, sizeof(privkeydata));
+305: 
+306:     if (pubkey == NULL || privkey == NULL) {
+307:         BIO_printf(bio_err, ""Failed to create keys\n"");
+308:         return 0;
+309:     }"
+/home/wen/work/clean_sources/openssl-3.5.5/crypto/crmf/crmf_lib.c,880,d2i_X509,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"872:     const unsigned char *p;
+873:     int len;
+874:     X509 *cert = NULL;
+875: 
+876:     buf = OSSL_CRMF_ENCRYPTEDVALUE_decrypt(ecert, libctx, propq, pkey, &len);
+877:     if ((p = buf) == NULL || (cert = X509_new_ex(libctx, propq)) == NULL)
+878:         goto end;
+879: 
+880:     if (d2i_X509(&cert, &p, len) == NULL) {
+881:         ERR_raise(ERR_LIB_CRMF, CRMF_R_ERROR_DECODING_CERTIFICATE);
+882:         X509_free(cert);
+883:         cert = NULL;
+884:     }
+885: 
+886: end:
+887:     OPENSSL_free(buf);
+888:     return cert;"
+/home/wen/work/clean_sources/openssl-3.5.5/crypto/pem/pem_info.c,107,d2i_X509,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"99:                     goto err;
+100:                 if ((xi = X509_INFO_new()) == NULL)
+101:                     goto err;
+102:                 goto start;
+103:             }
+104:             if ((strcmp(name, PEM_STRING_X509_TRUSTED) == 0))
+105:                 d2i = (D2I_OF(void))d2i_X509_AUX;
+106:             else
+107:                 d2i = (D2I_OF(void))d2i_X509;
+108:             xi->x509 = X509_new_ex(libctx, propq);
+109:             if (xi->x509 == NULL)
+110:                 goto err;
+111:             pp = &(xi->x509);
+112:         } else if (strcmp(name, PEM_STRING_X509_CRL) == 0) {
+113:             d2i = (D2I_OF(void))d2i_X509_CRL;
+114:             if (xi->crl != NULL) {
+115:                 if (!sk_X509_INFO_push(ret, xi))"
+/home/wen/work/clean_sources/openssl-3.5.5/crypto/store/store_result.c,501,d2i_X509,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"493:         if (data->data_type != NULL
+494:             && (OPENSSL_strcasecmp(data->data_type, PEM_STRING_X509_TRUSTED) == 0))
+495:             ignore_trusted = 0;
+496: 
+497:         if (d2i_X509_AUX(&cert, (const unsigned char **)&data->octet_data,
+498:                 data->octet_data_size)
+499:                 == NULL
+500:             && (!ignore_trusted
+501:                 || d2i_X509(&cert, (const unsigned char **)&data->octet_data,
+502:                        data->octet_data_size)
+503:                     == NULL)) {
+504:             X509_free(cert);
+505:             cert = NULL;
+506:         }
+507: 
+508:         if (cert != NULL) {
+509:             /* We determined the object type */"
+/home/wen/work/clean_sources/openssl-3.5.5/crypto/x509/x_x509.c,195,d2i_X509,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"187:     X509 *ret;
+188:     int freeret = 0;
+189: 
+190:     /* Save start position */
+191:     q = *pp;
+192: 
+193:     if (a == NULL || *a == NULL)
+194:         freeret = 1;
+195:     ret = d2i_X509(a, &q, length);
+196:     /* If certificate unreadable then forget it */
+197:     if (ret == NULL)
+198:         return NULL;
+199:     /* update length */
+200:     length -= q - *pp;
+201:     if (length > 0 && !d2i_X509_CERT_AUX(&ret->aux, &q, length))
+202:         goto err;
+203:     *pp = q;"
+/home/wen/work/clean_sources/openssl-3.5.5/engines/e_capi.c,1388,d2i_X509,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"1380:             BIO_printf(out, ""  Friendly Name \""%s\""\n"", fname);
+1381:             OPENSSL_free(fname);
+1382:         } else {
+1383:             BIO_printf(out, ""  <No Friendly Name>\n"");
+1384:         }
+1385:     }
+1386: 
+1387:     p = cert->pbCertEncoded;
+1388:     x = d2i_X509(NULL, &p, cert->cbCertEncoded);
+1389:     if (!x)
+1390:         BIO_printf(out, ""  <Can't parse certificate>\n"");
+1391:     if (flags & CAPI_DMP_SUMMARY) {
+1392:         BIO_printf(out, ""  Subject: "");
+1393:         X509_NAME_print_ex(out, X509_get_subject_name(x), 0, XN_FLAG_ONELINE);
+1394:         BIO_printf(out, ""\n  Issuer: "");
+1395:         X509_NAME_print_ex(out, X509_get_issuer_name(x), 0, XN_FLAG_ONELINE);
+1396:         BIO_printf(out, ""\n"");"
+/home/wen/work/clean_sources/openssl-3.5.5/engines/e_loader_attic.c,788,d2i_X509,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"780:         *matchcount = 1;
+781:     }
+782: 
+783:     cert = X509_new_ex(libctx, propq);
+784:     if (cert == NULL)
+785:         return NULL;
+786: 
+787:     if ((d2i_X509_AUX(&cert, &blob, len)) != NULL
+788:         || (ignore_trusted && (d2i_X509(&cert, &blob, len)) != NULL)) {
+789:         *matchcount = 1;
+790:         store_info = OSSL_STORE_INFO_new_CERT(cert);
+791:     }
+792: 
+793:     if (store_info == NULL)
+794:         X509_free(cert);
+795: 
+796:     return store_info;"
+/home/wen/work/clean_sources/openssl-3.5.5/fuzz/server.c,2366,d2i_X509,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"2358:     pkey = EVP_PKEY_new();
+2359:     EVP_PKEY_assign_RSA(pkey, privkey);
+2360:     ret = SSL_CTX_use_PrivateKey(ctx, pkey);
+2361:     OPENSSL_assert(ret == 1);
+2362:     EVP_PKEY_free(pkey);
+2363: #endif
+2364: 
+2365:     bufp = kCertificateDER;
+2366:     cert = d2i_X509(NULL, &bufp, sizeof(kCertificateDER));
+2367:     OPENSSL_assert(cert != NULL);
+2368:     ret = SSL_CTX_use_certificate(ctx, cert);
+2369:     OPENSSL_assert(ret == 1);
+2370:     X509_free(cert);
+2371: 
+2372: #ifndef OPENSSL_NO_EC
+2373: #ifndef OPENSSL_NO_DEPRECATED_3_0
+2374:     /* ECDSA */"
+/home/wen/work/clean_sources/openssl-3.5.5/fuzz/x509.c,51,d2i_X509,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"43:     X509_STORE_CTX *ctx = NULL;
+44:     X509_CRL *crl = NULL;
+45:     STACK_OF(X509_CRL) *crls = NULL;
+46:     STACK_OF(X509) *certs = NULL;
+47:     OCSP_RESPONSE *resp = NULL;
+48:     OCSP_BASICRESP *bs = NULL;
+49:     OCSP_CERTID *id = NULL;
+50: 
+51:     x509_1 = d2i_X509(NULL, &p, len);
+52:     if (x509_1 == NULL)
+53:         goto err;
+54: 
+55:     bio = BIO_new(BIO_s_null());
+56:     if (bio == NULL)
+57:         goto err;
+58: 
+59:     /* This will load and print the public key as well as extensions */"
+/home/wen/work/clean_sources/openssl-3.5.5/ssl/ssl_rsa.c,122,d2i_X509,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"114:     int ret;
+115: 
+116:     x = X509_new_ex(ssl->ctx->libctx, ssl->ctx->propq);
+117:     if (x == NULL) {
+118:         ERR_raise(ERR_LIB_SSL, ERR_R_ASN1_LIB);
+119:         return 0;
+120:     }
+121: 
+122:     if (d2i_X509(&x, &d, (long)len) == NULL) {
+123:         X509_free(x);
+124:         ERR_raise(ERR_LIB_SSL, ERR_R_ASN1_LIB);
+125:         return 0;
+126:     }
+127: 
+128:     ret = SSL_use_certificate(ssl, x);
+129:     X509_free(x);
+130:     return ret;"
+/home/wen/work/clean_sources/openssl-3.5.5/ssl/ssl_rsa.c,373,d2i_X509,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"365:     int ret;
+366: 
+367:     x = X509_new_ex(ctx->libctx, ctx->propq);
+368:     if (x == NULL) {
+369:         ERR_raise(ERR_LIB_SSL, ERR_R_ASN1_LIB);
+370:         return 0;
+371:     }
+372: 
+373:     if (d2i_X509(&x, &d, (long)len) == NULL) {
+374:         X509_free(x);
+375:         ERR_raise(ERR_LIB_SSL, ERR_R_ASN1_LIB);
+376:         return 0;
+377:     }
+378: 
+379:     ret = SSL_CTX_use_certificate(ctx, x);
+380:     X509_free(x);
+381:     return ret;"
+/home/wen/work/clean_sources/openssl-3.5.5/ssl/statem/statem_clnt.c,2038,d2i_X509,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"2030:         }
+2031: 
+2032:         certstart = certbytes;
+2033:         x = X509_new_ex(sctx->libctx, sctx->propq);
+2034:         if (x == NULL) {
+2035:             SSLfatal(s, SSL_AD_DECODE_ERROR, ERR_R_ASN1_LIB);
+2036:             goto err;
+2037:         }
+2038:         if (d2i_X509(&x, (const unsigned char **)&certbytes,
+2039:                 cert_len)
+2040:             == NULL) {
+2041:             SSLfatal(s, SSL_AD_BAD_CERTIFICATE, ERR_R_ASN1_LIB);
+2042:             goto err;
+2043:         }
+2044: 
+2045:         if (certbytes != (certstart + cert_len)) {
+2046:             SSLfatal(s, SSL_AD_DECODE_ERROR, SSL_R_CERT_LENGTH_MISMATCH);"
+/home/wen/work/clean_sources/openssl-3.5.5/ssl/statem/statem_srvr.c,3705,d2i_X509,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"3697:         }
+3698: 
+3699:         certstart = certbytes;
+3700:         x = X509_new_ex(sctx->libctx, sctx->propq);
+3701:         if (x == NULL) {
+3702:             SSLfatal(s, SSL_AD_DECODE_ERROR, ERR_R_X509_LIB);
+3703:             goto err;
+3704:         }
+3705:         if (d2i_X509(&x, (const unsigned char **)&certbytes, l) == NULL) {
+3706:             SSLfatal(s, SSL_AD_DECODE_ERROR, ERR_R_ASN1_LIB);
+3707:             goto err;
+3708:         }
+3709: 
+3710:         if (certbytes != (certstart + l)) {
+3711:             SSLfatal(s, SSL_AD_DECODE_ERROR, SSL_R_CERT_LENGTH_MISMATCH);
+3712:             goto err;
+3713:         }"
+/home/wen/work/clean_sources/openssl-3.5.5/ssl/t1_trce.c,1309,d2i_X509,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"1301:         return 0;
+1302:     clen = (p[0] << 16) | (p[1] << 8) | p[2];
+1303:     if (msglen < clen + 3)
+1304:         return 0;
+1305:     q = p + 3;
+1306:     BIO_indent(bio, indent, 80);
+1307:     BIO_printf(bio, ""ASN.1Cert, length=%d"", (int)clen);
+1308:     x = X509_new_ex(ctx->libctx, ctx->propq);
+1309:     if (x != NULL && d2i_X509(&x, &q, clen) == NULL) {
+1310:         X509_free(x);
+1311:         x = NULL;
+1312:     }
+1313:     if (x == NULL)
+1314:         BIO_puts(bio, ""<UNPARSABLE CERTIFICATE>\n"");
+1315:     else {
+1316:         BIO_puts(bio, ""\n------details-----\n"");
+1317:         X509_print_ex(bio, x, XN_FLAG_ONELINE, 0);"
+/home/wen/work/clean_sources/openssl-3.5.5/test/helpers/pkcs12.c,79,d2i_X509,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"71: /* --------------------------------------------------------------------------
+72:  * Test data load functions
+73:  */
+74: 
+75: static X509 *load_cert_asn1(const unsigned char *bytes, int len)
+76: {
+77:     X509 *cert = NULL;
+78: 
+79:     cert = d2i_X509(NULL, &bytes, len);
+80:     if (!TEST_ptr(cert))
+81:         goto err;
+82: err:
+83:     return cert;
+84: }
+85: 
+86: static EVP_PKEY *load_pkey_asn1(const unsigned char *bytes, int len)
+87: {"
+/home/wen/work/clean_sources/openssl-3.5.5/test/localetest.c,110,d2i_X509,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"102:         return TEST_skip(""Cannot set the locale necessary for test"");
+103: 
+104:     res = strcasecmp(str1, str2);
+105:     TEST_note(""Case-insensitive comparison via strcasecmp in current locale %s\n"", res ? ""failed"" : ""succeeded"");
+106: 
+107:     if (!TEST_false(OPENSSL_strcasecmp(str1, str2)))
+108:         return 0;
+109: 
+110:     cert = d2i_X509(NULL, &p, sizeof(der_bytes));
+111:     if (!TEST_ptr(cert))
+112:         return 0;
+113: 
+114:     cert_pubkey = X509_get_X509_PUBKEY(cert);
+115:     if (!TEST_ptr(cert_pubkey)) {
+116:         X509_free(cert);
+117:         return 0;
+118:     }"
+/home/wen/work/clean_sources/openssl-3.5.5/test/ossl_store_test.c,113,d2i_X509,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"105:     X509 *testcert = NULL;
+106:     const unsigned char *certptr = mscert;
+107: 
+108:     /*
+109:      * Test the winstore, by opening it, searching for the MS root certificate
+110:      * and ensure that it was found.  Note that we have to search by
+111:      * subject name, as winstore only allows searches by that method
+112:      */
+113:     ret = TEST_ptr(testcert = d2i_X509(NULL, &certptr, TEST_CERT_LEN))
+114:         && TEST_ptr(search = OSSL_STORE_SEARCH_by_name(X509_get_issuer_name(testcert)))
+115:         && TEST_ptr(ui_method = UI_create_method(""DummyUI""))
+116:         && TEST_ptr(sctx = OSSL_STORE_open_ex(""org.openssl.winstore:"", NULL,
+117:                         NULL, ui_method, NULL, NULL,
+118:                         NULL, NULL))
+119:         && TEST_true(OSSL_STORE_find(sctx, search))
+120:         && TEST_ptr(info = OSSL_STORE_load(sctx));
+121:     UI_destroy_method(ui_method);"
+/home/wen/work/clean_sources/openssl-3.5.5/test/pkcs12_format_test.c,3523,d2i_X509,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"3515:     EVP_PKEY *pkey_parsed = NULL;
+3516:     PKCS12 *p12 = NULL;
+3517:     PKCS12 *p12_parsed = NULL;
+3518:     PKCS12 *p12_recreated = NULL;
+3519:     const unsigned char *cert_bytes = CERT1;
+3520:     const unsigned char *key_bytes = KEY1;
+3521:     BIO *bio = NULL;
+3522: 
+3523:     cert = d2i_X509(NULL, &cert_bytes, sizeof(CERT1));
+3524:     if (!TEST_ptr(cert))
+3525:         goto err;
+3526:     pkey = d2i_AutoPrivateKey(NULL, &key_bytes, sizeof(KEY1));
+3527:     if (!TEST_ptr(pkey))
+3528:         goto err;
+3529:     p12 = PKCS12_create(""pass"", NULL, pkey, cert, NULL, NID_aes_256_cbc,
+3530:         NID_aes_256_cbc, 2, 1, 0);
+3531:     if (!TEST_ptr(p12))"
+/home/wen/work/clean_sources/openssl-3.5.5/test/x509_test.c,98,d2i_X509,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"90:  * signing to be different from the alg within the loaded cert.
+91:  */
+92: static int test_x509_tbs_cache(void)
+93: {
+94:     int ret;
+95:     X509 *x = NULL;
+96:     const unsigned char *p = certdata;
+97: 
+98:     ret = TEST_ptr(x = d2i_X509(NULL, &p, sizeof(certdata)))
+99:         && TEST_int_gt(X509_sign(x, privkey, signmd), 0)
+100:         && TEST_int_eq(X509_verify(x, pubkey), 1);
+101:     X509_free(x);
+102:     return ret;
+103: }
+104: 
+105: /*
+106:  * Test for Regression discussed in PR #19388"
+/home/wen/work/clean_sources/openssl-3.5.5/crypto/pem/pem_info.c,113,d2i_X509_CRL,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"105:                 d2i = (D2I_OF(void))d2i_X509_AUX;
+106:             else
+107:                 d2i = (D2I_OF(void))d2i_X509;
+108:             xi->x509 = X509_new_ex(libctx, propq);
+109:             if (xi->x509 == NULL)
+110:                 goto err;
+111:             pp = &(xi->x509);
+112:         } else if (strcmp(name, PEM_STRING_X509_CRL) == 0) {
+113:             d2i = (D2I_OF(void))d2i_X509_CRL;
+114:             if (xi->crl != NULL) {
+115:                 if (!sk_X509_INFO_push(ret, xi))
+116:                     goto err;
+117:                 if ((xi = X509_INFO_new()) == NULL)
+118:                     goto err;
+119:                 goto start;
+120:             }
+121:             pp = &(xi->crl);"
+/home/wen/work/clean_sources/openssl-3.5.5/crypto/store/store_result.c,527,d2i_X509_CRL,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"519: 
+520: static int try_crl(struct extracted_param_data_st *data, OSSL_STORE_INFO **v,
+521:     OSSL_LIB_CTX *libctx, const char *propq)
+522: {
+523:     if (data->object_type == OSSL_OBJECT_UNKNOWN
+524:         || data->object_type == OSSL_OBJECT_CRL) {
+525:         X509_CRL *crl;
+526: 
+527:         crl = d2i_X509_CRL(NULL, (const unsigned char **)&data->octet_data,
+528:             data->octet_data_size);
+529: 
+530:         if (crl != NULL)
+531:             /* We determined the object type */
+532:             data->object_type = OSSL_OBJECT_CRL;
+533: 
+534:         if (crl != NULL && !ossl_x509_crl_set0_libctx(crl, libctx, propq)) {
+535:             X509_CRL_free(crl);"
+/home/wen/work/clean_sources/openssl-3.5.5/engines/e_loader_attic.c,827,d2i_X509_CRL,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"819: 
+820:     if (pem_name != NULL) {
+821:         if (strcmp(pem_name, PEM_STRING_X509_CRL) != 0)
+822:             /* No match */
+823:             return NULL;
+824:         *matchcount = 1;
+825:     }
+826: 
+827:     if ((crl = d2i_X509_CRL(NULL, &blob, len)) != NULL) {
+828:         *matchcount = 1;
+829:         store_info = OSSL_STORE_INFO_new_CRL(crl);
+830:     }
+831: 
+832:     if (store_info == NULL)
+833:         X509_CRL_free(crl);
+834: 
+835:     return store_info;"
+/home/wen/work/clean_sources/openssl-3.5.5/fuzz/crl.c,29,d2i_X509_CRL,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"21:     return 1;
+22: }
+23: 
+24: int FuzzerTestOneInput(const uint8_t *buf, size_t len)
+25: {
+26:     const unsigned char *p = buf;
+27:     unsigned char *der = NULL;
+28: 
+29:     X509_CRL *crl = d2i_X509_CRL(NULL, &p, len);
+30:     if (crl != NULL) {
+31:         BIO *bio = BIO_new(BIO_s_null());
+32:         X509_CRL_print(bio, crl);
+33:         BIO_free(bio);
+34: 
+35:         i2d_X509_CRL(crl, &der);
+36:         OPENSSL_free(der);
+37: "
+/home/wen/work/clean_sources/openssl-3.5.5/test/x509_test.c,116,d2i_X509_CRL,potential_misuse,false,nearby code appears to check parse success without full-consumption check,"108:  * signing to be different from the alg within the loaded cert.
+109:  */
+110: static int test_x509_crl_tbs_cache(void)
+111: {
+112:     int ret;
+113:     X509_CRL *crl = NULL;
+114:     const unsigned char *p = crldata;
+115: 
+116:     ret = TEST_ptr(crl = d2i_X509_CRL(NULL, &p, sizeof(crldata)))
+117:         && TEST_int_gt(X509_CRL_sign(crl, privkey, signmd), 0)
+118:         && TEST_int_eq(X509_CRL_verify(crl, pubkey), 1);
+119: 
+120:     X509_CRL_free(crl);
+121:     return ret;
+122: }
+123: 
+124: static int test_asn1_item_verify(void)"
+/home/wen/work/clean_sources/openssl-3.5.5/apps/pkcs12.c,796,d2i_PKCS12,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"788:     if (in == NULL)
+789:         goto end;
+790: 
+791:     p12 = PKCS12_init_ex(NID_pkcs7_data, app_get0_libctx(), app_get0_propq());
+792:     if (p12 == NULL) {
+793:         ERR_print_errors(bio_err);
+794:         goto end;
+795:     }
+796:     if ((p12 = d2i_PKCS12_bio(in, &p12)) == NULL) {
+797:         ERR_print_errors(bio_err);
+798:         goto end;
+799:     }
+800: 
+801:     if (!noprompt) {
+802:         if (1) {
+803: #ifndef OPENSSL_NO_UI_CONSOLE
+804:             if (EVP_read_pw_string(pass, sizeof(pass), ""Enter Import Password:"","
+/home/wen/work/clean_sources/openssl-3.5.5/demos/pkcs12/pkread.c,67,d2i_PKCS12,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"59:         fprintf(stderr, ""Usage: pkread p12file password opfile\n"");
+60:         exit(EXIT_FAILURE);
+61:     }
+62: 
+63:     if ((fp = fopen(argv[1], ""rb"")) == NULL) {
+64:         fprintf(stderr, ""Error opening file %s\n"", argv[1]);
+65:         exit(EXIT_FAILURE);
+66:     }
+67:     p12 = d2i_PKCS12_fp(fp, NULL);
+68:     fclose(fp);
+69:     if (p12 == NULL) {
+70:         fprintf(stderr, ""Error reading PKCS#12 file\n"");
+71:         ERR_print_errors_fp(stderr);
+72:         goto err;
+73:     }
+74:     if (!PKCS12_parse(p12, argv[2], &pkey, &cert, &ca)) {
+75:         fprintf(stderr, ""Error parsing PKCS#12 file\n"");"
+/home/wen/work/clean_sources/openssl-3.5.5/test/helpers/pkcs12.c,212,d2i_PKCS12,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"204:     PKCS12 *p12 = NULL;
+205: 
+206:     /* Supply a p12 with library context/propq to the d2i decoder*/
+207:     if (!legacy) {
+208:         p12 = PKCS12_init_ex(NID_pkcs7_data, test_ctx, test_propq);
+209:         if (!TEST_ptr(p12))
+210:             goto err;
+211:     }
+212:     p12 = d2i_PKCS12_bio(bio, &p12);
+213:     BIO_free(bio);
+214:     if (!TEST_ptr(p12))
+215:         goto err;
+216:     if (mac == NULL) {
+217:         if (!TEST_false(PKCS12_mac_present(p12)))
+218:             goto err;
+219:     } else {
+220:         if (!check_p12_mac(p12, mac))"
+/home/wen/work/clean_sources/openssl-3.5.5/test/helpers/pkcs12.c,237,d2i_PKCS12,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"229: /* For use with existing files */
+230: static PKCS12 *read_p12(const char *infile, const PKCS12_ENC *mac)
+231: {
+232:     PKCS12 *p12 = NULL;
+233:     BIO *in = BIO_new_file(infile, ""r"");
+234: 
+235:     if (in == NULL)
+236:         goto err;
+237:     p12 = d2i_PKCS12_bio(in, NULL);
+238:     BIO_free(in);
+239:     if (!TEST_ptr(p12))
+240:         goto err;
+241:     if (mac == NULL) {
+242:         if (!TEST_false(PKCS12_mac_present(p12)))
+243:             goto err;
+244:     } else {
+245:         if (!check_p12_mac(p12, mac))"
+/home/wen/work/clean_sources/openssl-3.5.5/test/pkcs12_api_test.c,45,d2i_PKCS12,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"37:     bio = BIO_new_file(fpath, ""rb"");
+38:     if (!TEST_ptr(bio))
+39:         goto err;
+40: 
+41:     p12 = PKCS12_init_ex(NID_pkcs7_data, testctx, ""provider=default"");
+42:     if (!TEST_ptr(p12))
+43:         goto err;
+44: 
+45:     if (!TEST_true(p12 == d2i_PKCS12_bio(bio, &p12)))
+46:         goto err;
+47: 
+48:     BIO_free(bio);
+49: 
+50:     return p12;
+51: 
+52: err:
+53:     BIO_free(bio);"
+/home/wen/work/clean_sources/openssl-3.5.5/test/pkcs12_api_test.c,81,d2i_PKCS12,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"73:     if (!TEST_true(PKCS12_newpass(p12, in_pass, ""NEWPASS"")))
+74:         goto err;
+75:     if (!TEST_ptr(bio = BIO_new(BIO_s_mem())))
+76:         goto err;
+77:     if (!TEST_true(i2d_PKCS12_bio(bio, p12)))
+78:         goto err;
+79:     if (!TEST_ptr(p12new = PKCS12_init_ex(NID_pkcs7_data, testctx, ""provider=default"")))
+80:         goto err;
+81:     if (!TEST_ptr(d2i_PKCS12_bio(bio, &p12new)))
+82:         goto err;
+83:     if (!TEST_true(PKCS12_parse(p12new, ""NEWPASS"", &key2, &cert2, &ca2)))
+84:         goto err;
+85:     if (has_key) {
+86:         if (!TEST_ptr(key2) || !TEST_int_eq(EVP_PKEY_eq(key, key2), 1))
+87:             goto err;
+88:     }
+89:     if (has_cert) {"
+/home/wen/work/clean_sources/openssl-3.5.5/test/pkcs12_format_test.c,3544,d2i_PKCS12,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"3536:     bio = BIO_new(BIO_s_mem());
+3537:     if (!TEST_ptr(bio))
+3538:         goto err;
+3539:     if (!TEST_int_eq(i2d_PKCS12_bio(bio, p12), 1))
+3540:         goto err;
+3541:     p12_parsed = PKCS12_init_ex(NID_pkcs7_data, testctx, NULL);
+3542:     if (!TEST_ptr(p12_parsed))
+3543:         goto err;
+3544:     p12_parsed = d2i_PKCS12_bio(bio, &p12_parsed);
+3545:     if (!TEST_ptr(p12_parsed))
+3546:         goto err;
+3547:     if (!TEST_int_eq(PKCS12_parse(p12_parsed, ""pass"", &pkey_parsed,
+3548:                          &cert_parsed, NULL),
+3549:             1))
+3550:         goto err;
+3551: 
+3552:     /* cert_parsed also contains auxiliary data */"
+datasets/openssl/poc_artifacts/issue_17715/poc.c,85,d2i_PKCS12,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"77:     int ok = 0;
+78: 
+79:     fp = fopen(path, ""rb"");
+80:     if (fp == NULL) {
+81:         perror(""fopen"");
+82:         goto end;
+83:     }
+84: 
+85:     p12 = d2i_PKCS12_fp(fp, NULL);
+86:     if (p12 == NULL) {
+87:         fprintf(stderr, ""d2i_PKCS12_fp failed: %s\n"", path);
+88:         ERR_print_errors_fp(stderr);
+89:         goto end;
+90:     }
+91: 
+92:     parse_ok = PKCS12_parse(p12, passphrase, &pkey, &cert, &ca);
+93:     printf(""PKCS12_parse returned %d: %s\n"", parse_ok, path);"
+datasets/openssl/poc_artifacts/issue_17715/poc.c,87,d2i_PKCS12,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"79:     fp = fopen(path, ""rb"");
+80:     if (fp == NULL) {
+81:         perror(""fopen"");
+82:         goto end;
+83:     }
+84: 
+85:     p12 = d2i_PKCS12_fp(fp, NULL);
+86:     if (p12 == NULL) {
+87:         fprintf(stderr, ""d2i_PKCS12_fp failed: %s\n"", path);
+88:         ERR_print_errors_fp(stderr);
+89:         goto end;
+90:     }
+91: 
+92:     parse_ok = PKCS12_parse(p12, passphrase, &pkey, &cert, &ca);
+93:     printf(""PKCS12_parse returned %d: %s\n"", parse_ok, path);
+94:     if (parse_ok != 1) {
+95:         ERR_print_errors_fp(stderr);"
+datasets/openssl/poc_artifacts/issue_26106/poc.c,31,d2i_PKCS12,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"23: 
+24:     path = argv[1];
+25:     fp = fopen(path, ""rb"");
+26:     if (fp == NULL) {
+27:         perror(""fopen"");
+28:         goto end;
+29:     }
+30: 
+31:     p12 = d2i_PKCS12_fp(fp, NULL);
+32:     if (p12 == NULL) {
+33:         fprintf(stderr, ""d2i_PKCS12_fp failed\n"");
+34:         ERR_print_errors_fp(stderr);
+35:         goto end;
+36:     }
+37: 
+38:     ok = PKCS12_parse(p12, passphrase, &pkey, &cert, &ca);
+39:     printf(""PKCS12_parse returned %d\n"", ok);"
+datasets/openssl/poc_artifacts/issue_26106/poc.c,33,d2i_PKCS12,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"25:     fp = fopen(path, ""rb"");
+26:     if (fp == NULL) {
+27:         perror(""fopen"");
+28:         goto end;
+29:     }
+30: 
+31:     p12 = d2i_PKCS12_fp(fp, NULL);
+32:     if (p12 == NULL) {
+33:         fprintf(stderr, ""d2i_PKCS12_fp failed\n"");
+34:         ERR_print_errors_fp(stderr);
+35:         goto end;
+36:     }
+37: 
+38:     ok = PKCS12_parse(p12, passphrase, &pkey, &cert, &ca);
+39:     printf(""PKCS12_parse returned %d\n"", ok);
+40:     if (ok != 1) {
+41:         ERR_print_errors_fp(stderr);"
+datasets/openssl/poc_artifacts/issue_30581/poc.c,31,d2i_PKCS12,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"23:     }
+24: 
+25:     fp = fopen(argv[1], ""rb"");
+26:     if (fp == NULL) {
+27:         perror(""fopen"");
+28:         goto end;
+29:     }
+30: 
+31:     p12 = d2i_PKCS12_fp(fp, NULL);
+32:     if (p12 == NULL) {
+33:         fprintf(stderr, ""d2i_PKCS12_fp failed\n"");
+34:         ERR_print_errors_fp(stderr);
+35:         goto end;
+36:     }
+37: 
+38:     has_mac = PKCS12_mac_present(p12);
+39:     printf(""PKCS12_mac_present returned %d\n"", has_mac);"
+datasets/openssl/poc_artifacts/issue_30581/poc.c,33,d2i_PKCS12,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"25:     fp = fopen(argv[1], ""rb"");
+26:     if (fp == NULL) {
+27:         perror(""fopen"");
+28:         goto end;
+29:     }
+30: 
+31:     p12 = d2i_PKCS12_fp(fp, NULL);
+32:     if (p12 == NULL) {
+33:         fprintf(stderr, ""d2i_PKCS12_fp failed\n"");
+34:         ERR_print_errors_fp(stderr);
+35:         goto end;
+36:     }
+37: 
+38:     has_mac = PKCS12_mac_present(p12);
+39:     printf(""PKCS12_mac_present returned %d\n"", has_mac);
+40:     if (has_mac) {
+41:         mac_ok = PKCS12_verify_mac(p12, passphrase, -1);"
+/home/wen/work/clean_sources/openssl-3.5.5/apps/pkcs8.c,327,d2i_PKCS8_PRIV_KEY_INFO,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"319:         ret = 0;
+320:         goto end;
+321:     }
+322: 
+323:     if (nocrypt) {
+324:         if (informat == FORMAT_PEM || informat == FORMAT_UNDEF) {
+325:             p8inf = PEM_read_bio_PKCS8_PRIV_KEY_INFO(in, NULL, NULL, NULL);
+326:         } else if (informat == FORMAT_ASN1) {
+327:             p8inf = d2i_PKCS8_PRIV_KEY_INFO_bio(in, NULL);
+328:         } else {
+329:             BIO_printf(bio_err, ""Bad format specified for key\n"");
+330:             goto end;
+331:         }
+332:     } else {
+333:         if (informat == FORMAT_PEM || informat == FORMAT_UNDEF) {
+334:             p8 = PEM_read_bio_PKCS8(in, NULL, NULL, NULL);
+335:         } else if (informat == FORMAT_ASN1) {"
+/home/wen/work/clean_sources/openssl-3.5.5/crypto/x509/x_all.c,701,d2i_PKCS8_PRIV_KEY_INFO,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"693:     return ASN1_i2d_bio_of(X509_PUBKEY, i2d_X509_PUBKEY, bp, xpk);
+694: }
+695: 
+696: #ifndef OPENSSL_NO_STDIO
+697: PKCS8_PRIV_KEY_INFO *d2i_PKCS8_PRIV_KEY_INFO_fp(FILE *fp,
+698:     PKCS8_PRIV_KEY_INFO **p8inf)
+699: {
+700:     return ASN1_d2i_fp_of(PKCS8_PRIV_KEY_INFO, PKCS8_PRIV_KEY_INFO_new,
+701:         d2i_PKCS8_PRIV_KEY_INFO, fp, p8inf);
+702: }
+703: 
+704: int i2d_PKCS8_PRIV_KEY_INFO_fp(FILE *fp, const PKCS8_PRIV_KEY_INFO *p8inf)
+705: {
+706:     return ASN1_i2d_fp_of(PKCS8_PRIV_KEY_INFO, i2d_PKCS8_PRIV_KEY_INFO, fp,
+707:         p8inf);
+708: }
+709: "
+/home/wen/work/clean_sources/openssl-3.5.5/crypto/x509/x_all.c,781,d2i_PKCS8_PRIV_KEY_INFO,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"773: }
+774: 
+775: #endif
+776: 
+777: PKCS8_PRIV_KEY_INFO *d2i_PKCS8_PRIV_KEY_INFO_bio(BIO *bp,
+778:     PKCS8_PRIV_KEY_INFO **p8inf)
+779: {
+780:     return ASN1_d2i_bio_of(PKCS8_PRIV_KEY_INFO, PKCS8_PRIV_KEY_INFO_new,
+781:         d2i_PKCS8_PRIV_KEY_INFO, bp, p8inf);
+782: }
+783: 
+784: int i2d_PKCS8_PRIV_KEY_INFO_bio(BIO *bp, const PKCS8_PRIV_KEY_INFO *p8inf)
+785: {
+786:     return ASN1_i2d_bio_of(PKCS8_PRIV_KEY_INFO, i2d_PKCS8_PRIV_KEY_INFO, bp,
+787:         p8inf);
+788: }
+789: "
+/home/wen/work/clean_sources/openssl-3.5.5/test/evp_extra_test.c,2356,d2i_PKCS8_PRIV_KEY_INFO,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"2348:         return 1;
+2349: 
+2350:     if (!TEST_ptr(membio = BIO_new(BIO_s_mem()))
+2351:         || !TEST_ptr(pkey = load_example_rsa_key())
+2352:         || !TEST_int_gt(i2d_PKCS8PrivateKey_bio(membio, pkey, NULL,
+2353:                             NULL, 0, NULL, NULL),
+2354:             0)
+2355:         || !TEST_int_gt(BIO_get_mem_data(membio, &membuf), 0)
+2356:         || !TEST_ptr(p8inf = d2i_PKCS8_PRIV_KEY_INFO_bio(membio, NULL))
+2357:         || !TEST_ptr(pkey2 = EVP_PKCS82PKEY(p8inf))
+2358:         || !TEST_int_eq(ERR_peek_last_error(), 0)) {
+2359:         goto done;
+2360:     }
+2361: 
+2362:     ok = 1;
+2363: done:
+2364:     EVP_PKEY_free(pkey);"
+/home/wen/work/clean_sources/openssl-3.5.5/crypto/store/store_result.c,333,d2i_PUBKEY,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"325:     EVP_PKEY *pk = NULL;
+326:     const unsigned char *der = data->octet_data, *derp;
+327:     long der_len = (long)data->octet_data_size;
+328: 
+329:     /* Try PUBKEY first, that's a real easy target */
+330:     if (ctx->expected_type == 0
+331:         || ctx->expected_type == OSSL_STORE_INFO_PUBKEY) {
+332:         derp = der;
+333:         pk = d2i_PUBKEY_ex(NULL, &derp, der_len, libctx, propq);
+334: 
+335:         if (pk != NULL)
+336:             *store_info_new = OSSL_STORE_INFO_new_PUBKEY;
+337:     }
+338: 
+339:     /* Try private keys next */
+340:     if (pk == NULL
+341:         && (ctx->expected_type == 0"
+/home/wen/work/clean_sources/openssl-3.5.5/crypto/x509/x_all.c,850,d2i_PUBKEY,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"842:     void *ret = NULL;
+843:     int len;
+844: 
+845:     len = asn1_d2i_read_bio(bp, &b);
+846:     if (len < 0)
+847:         goto err;
+848: 
+849:     p = (unsigned char *)b->data;
+850:     ret = d2i_PUBKEY_ex(a, &p, len, libctx, propq);
+851: err:
+852:     BUF_MEM_free(b);
+853:     return ret;
+854: }
+855: 
+856: EVP_PKEY *d2i_PUBKEY_bio(BIO *bp, EVP_PKEY **a)
+857: {
+858:     return ASN1_d2i_bio_of(EVP_PKEY, EVP_PKEY_new, d2i_PUBKEY, bp, a);"
+/home/wen/work/clean_sources/openssl-3.5.5/providers/implementations/encode_decode/decode_der2key.c,287,d2i_PUBKEY,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"279:         }
+280:         if (key == NULL && ctx->selection != 0) {
+281:             ERR_clear_last_mark();
+282:             goto next;
+283:         }
+284:     }
+285:     if (key == NULL && (selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) != 0) {
+286:         derp = der;
+287:         if (ctx->desc->d2i_PUBKEY != NULL)
+288:             key = ctx->desc->d2i_PUBKEY(&derp, der_len, ctx);
+289:         else if (ctx->desc->d2i_public_key != NULL)
+290:             key = ctx->desc->d2i_public_key(NULL, &derp, der_len);
+291:         if (key == NULL && ctx->selection != 0) {
+292:             ERR_clear_last_mark();
+293:             goto next;
+294:         }
+295:     }"
+/home/wen/work/clean_sources/openssl-3.5.5/providers/implementations/encode_decode/decode_der2key.c,288,d2i_PUBKEY,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"280:         if (key == NULL && ctx->selection != 0) {
+281:             ERR_clear_last_mark();
+282:             goto next;
+283:         }
+284:     }
+285:     if (key == NULL && (selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) != 0) {
+286:         derp = der;
+287:         if (ctx->desc->d2i_PUBKEY != NULL)
+288:             key = ctx->desc->d2i_PUBKEY(&derp, der_len, ctx);
+289:         else if (ctx->desc->d2i_public_key != NULL)
+290:             key = ctx->desc->d2i_public_key(NULL, &derp, der_len);
+291:         if (key == NULL && ctx->selection != 0) {
+292:             ERR_clear_last_mark();
+293:             goto next;
+294:         }
+295:     }
+296:     if (key == NULL && (selection & OSSL_KEYMGMT_SELECT_ALL_PARAMETERS) != 0) {"
+/home/wen/work/clean_sources/openssl-3.5.5/test/fake_rsaprov.c,973,d2i_PUBKEY,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"965:         } else if (ctx->desc->d2i_private_key != NULL) {
+966:             key = ctx->desc->d2i_private_key(NULL, &derp, der_len);
+967:         }
+968:         if (key == NULL && ctx->selection != 0)
+969:             goto next;
+970:     }
+971:     if (key == NULL && (selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) != 0) {
+972:         derp = der;
+973:         if (ctx->desc->d2i_PUBKEY != NULL)
+974:             key = ctx->desc->d2i_PUBKEY(NULL, &derp, der_len);
+975:         else
+976:             key = ctx->desc->d2i_public_key(NULL, &derp, der_len);
+977:         if (key == NULL && ctx->selection != 0)
+978:             goto next;
+979:     }
+980:     if (key == NULL && (selection & OSSL_KEYMGMT_SELECT_ALL_PARAMETERS) != 0) {
+981:         derp = der;"
+/home/wen/work/clean_sources/openssl-3.5.5/test/fake_rsaprov.c,974,d2i_PUBKEY,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"966:             key = ctx->desc->d2i_private_key(NULL, &derp, der_len);
+967:         }
+968:         if (key == NULL && ctx->selection != 0)
+969:             goto next;
+970:     }
+971:     if (key == NULL && (selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) != 0) {
+972:         derp = der;
+973:         if (ctx->desc->d2i_PUBKEY != NULL)
+974:             key = ctx->desc->d2i_PUBKEY(NULL, &derp, der_len);
+975:         else
+976:             key = ctx->desc->d2i_public_key(NULL, &derp, der_len);
+977:         if (key == NULL && ctx->selection != 0)
+978:             goto next;
+979:     }
+980:     if (key == NULL && (selection & OSSL_KEYMGMT_SELECT_ALL_PARAMETERS) != 0) {
+981:         derp = der;
+982:         if (ctx->desc->d2i_key_params != NULL)"
+/home/wen/work/clean_sources/openssl-3.5.5/test/tls-provider.c,2358,d2i_PUBKEY,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"2350:         } else if (ctx->desc->d2i_private_key != NULL) {
+2351:             key = ctx->desc->d2i_private_key(NULL, &derp, der_len);
+2352:         }
+2353:         if (key == NULL && ctx->selection != 0)
+2354:             goto next;
+2355:     }
+2356:     if (key == NULL && (selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) != 0) {
+2357:         derp = der;
+2358:         if (ctx->desc->d2i_PUBKEY != NULL)
+2359:             key = ctx->desc->d2i_PUBKEY(NULL, &derp, der_len);
+2360:         else
+2361:             key = ctx->desc->d2i_public_key(NULL, &derp, der_len);
+2362:         if (key == NULL && ctx->selection != 0)
+2363:             goto next;
+2364:     }
+2365:     if (key == NULL && (selection & OSSL_KEYMGMT_SELECT_ALL_PARAMETERS) != 0) {
+2366:         derp = der;"
+/home/wen/work/clean_sources/openssl-3.5.5/test/tls-provider.c,2359,d2i_PUBKEY,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"2351:             key = ctx->desc->d2i_private_key(NULL, &derp, der_len);
+2352:         }
+2353:         if (key == NULL && ctx->selection != 0)
+2354:             goto next;
+2355:     }
+2356:     if (key == NULL && (selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) != 0) {
+2357:         derp = der;
+2358:         if (ctx->desc->d2i_PUBKEY != NULL)
+2359:             key = ctx->desc->d2i_PUBKEY(NULL, &derp, der_len);
+2360:         else
+2361:             key = ctx->desc->d2i_public_key(NULL, &derp, der_len);
+2362:         if (key == NULL && ctx->selection != 0)
+2363:             goto next;
+2364:     }
+2365:     if (key == NULL && (selection & OSSL_KEYMGMT_SELECT_ALL_PARAMETERS) != 0) {
+2366:         derp = der;
+2367:         if (ctx->desc->d2i_key_params != NULL)"
+/home/wen/work/clean_sources/openssl-3.5.5/crypto/crmf/crmf_lib.c,915,d2i_X509,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"907:         return OSSL_CRMF_ENCRYPTEDVALUE_get1_encCert(ecert->value.encryptedValue,
+908:             libctx, propq, pkey);
+909: #ifndef OPENSSL_NO_CMS
+910:     bio = CMS_EnvelopedData_decrypt(ecert->value.envelopedData, NULL,
+911:         pkey, NULL /* cert */, NULL, flags,
+912:         libctx, propq);
+913:     if (bio == NULL)
+914:         return NULL;
+915:     cert = d2i_X509_bio(bio, NULL);
+916:     if (cert == NULL)
+917:         ERR_raise(ERR_LIB_CRMF, CRMF_R_ERROR_DECODING_CERTIFICATE);
+918:     BIO_free(bio);
+919:     return cert;
+920: #else
+921:     (void)flags; /* prevent warning on unused parameter */
+922:     ERR_raise(ERR_LIB_CRMF, CRMF_R_CMS_NOT_SUPPORTED);
+923:     return NULL;"
+/home/wen/work/clean_sources/openssl-3.5.5/crypto/x509/by_file.c,152,d2i_X509,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"144:             if (x == NULL) {
+145:                 ERR_raise(ERR_LIB_X509, ERR_R_ASN1_LIB);
+146:                 count = 0;
+147:                 goto err;
+148:             }
+149:             count++;
+150:         }
+151:     } else if (type == X509_FILETYPE_ASN1) {
+152:         if (d2i_X509_bio(in, &x) == NULL) {
+153:             ERR_raise(ERR_LIB_X509, X509_R_NO_CERTIFICATE_FOUND);
+154:             goto err;
+155:         }
+156:         count = X509_STORE_add_cert(ctx->store_ctx, x);
+157:     } else {
+158:         ERR_raise(ERR_LIB_X509, X509_R_BAD_X509_FILETYPE);
+159:         goto err;
+160:     }"
+/home/wen/work/clean_sources/openssl-3.5.5/engines/e_capi.c,1731,d2i_X509,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"1723:     if (!hstore)
+1724:         return 0;
+1725:     /* Enumerate all certificates collect any matches */
+1726:     for (i = 0;; i++) {
+1727:         cert = CertEnumCertificatesInStore(hstore, cert);
+1728:         if (!cert)
+1729:             break;
+1730:         p = cert->pbCertEncoded;
+1731:         x = d2i_X509(NULL, &p, cert->cbCertEncoded);
+1732:         if (!x) {
+1733:             CAPI_trace(ctx, ""Can't Parse Certificate %d\n"", i);
+1734:             continue;
+1735:         }
+1736:         if (cert_issuer_match(ca_dn, x)
+1737:             && X509_check_purpose(x, X509_PURPOSE_SSL_CLIENT, 0)) {
+1738:             key = capi_get_cert_key(ctx, cert);
+1739:             if (!key) {"
+/home/wen/work/clean_sources/openssl-3.5.5/ssl/ssl_rsa.c,84,d2i_X509,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"76: 
+77:     x = X509_new_ex(ssl->ctx->libctx, ssl->ctx->propq);
+78:     if (x == NULL) {
+79:         ERR_raise(ERR_LIB_SSL, ERR_R_ASN1_LIB);
+80:         goto end;
+81:     }
+82:     if (type == SSL_FILETYPE_ASN1) {
+83:         j = ERR_R_ASN1_LIB;
+84:         cert = d2i_X509_bio(in, &x);
+85:     } else if (type == SSL_FILETYPE_PEM) {
+86:         SSL_CONNECTION *sc = SSL_CONNECTION_FROM_SSL(ssl);
+87: 
+88:         if (sc == NULL)
+89:             goto end;
+90: 
+91:         j = ERR_R_PEM_LIB;
+92:         cert = PEM_read_bio_X509(in, &x, sc->default_passwd_callback,"
+/home/wen/work/clean_sources/openssl-3.5.5/ssl/ssl_rsa.c,341,d2i_X509,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"333: 
+334:     x = X509_new_ex(ctx->libctx, ctx->propq);
+335:     if (x == NULL) {
+336:         ERR_raise(ERR_LIB_SSL, ERR_R_ASN1_LIB);
+337:         goto end;
+338:     }
+339:     if (type == SSL_FILETYPE_ASN1) {
+340:         j = ERR_R_ASN1_LIB;
+341:         cert = d2i_X509_bio(in, &x);
+342:     } else if (type == SSL_FILETYPE_PEM) {
+343:         j = ERR_R_PEM_LIB;
+344:         cert = PEM_read_bio_X509(in, &x, ctx->default_passwd_callback,
+345:             ctx->default_passwd_callback_userdata);
+346:     } else {
+347:         ERR_raise(ERR_LIB_SSL, SSL_R_BAD_SSL_FILETYPE);
+348:         goto end;
+349:     }"
+/home/wen/work/clean_sources/openssl-3.5.5/test/evp_libctx_test.c,337,d2i_X509,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"329:         0x2d, 0xb0, 0xc9, 0xaa, 0x5e, 0x42, 0x38, 0x50, 0xbf, 0x0f, 0xc0, 0xd9, 0x84, 0x44, 0x4b, 0x42,
+330:         0x24, 0xec, 0x14, 0xa3, 0xde, 0x11, 0xdf, 0x58, 0x7f, 0xc2, 0x4d, 0xb2, 0xd5, 0x42, 0x78, 0x6e,
+331:         0x52, 0x3e, 0xad, 0xc3, 0x5f, 0x04, 0xc4, 0xe6, 0x31, 0xaa, 0x81, 0x06, 0x8b, 0x13, 0x4b, 0x3c,
+332:         0x0e, 0x6a, 0xb1
+333:     };
+334: 
+335:     if (!TEST_ptr(bio = BIO_new_mem_buf(dhx_cert, sizeof(dhx_cert)))
+336:         || !TEST_ptr(cert = X509_new_ex(libctx, NULL))
+337:         || !TEST_ptr(d2i_X509_bio(bio, &cert)))
+338:         goto err;
+339:     ret = 1;
+340: err:
+341:     X509_free(cert);
+342:     BIO_free(bio);
+343:     return ret;
+344: }
+345: "
+/home/wen/work/clean_sources/openssl-3.5.5/test/http_test.c,226,d2i_X509,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"218:                 && TEST_str_eq(rtext, DOCTYPE_HTML);
+219:         } else if (do_txt) {
+220:             char rtext[sizeof(text1) + 1 /* more space than needed */];
+221: 
+222:             res = TEST_int_eq(BIO_gets(rsp, rtext, sizeof(rtext)),
+223:                       sizeof(text1) - 1)
+224:                 && TEST_str_eq(rtext, text1);
+225:         } else {
+226:             X509 *rcert = d2i_X509_bio(rsp, NULL);
+227: 
+228:             res = TEST_ptr(rcert) && TEST_int_eq(X509_cmp(x509, rcert), 0);
+229:             X509_free(rcert);
+230:         }
+231:         BIO_free(rsp);
+232:     }
+233: 
+234: err:"
+/home/wen/work/clean_sources/openssl-3.5.5/test/pkcs7_test.c,156,d2i_X509,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"148: 
+149:     if (!TEST_ptr(bio = BIO_new(BIO_s_mem())))
+150:         goto end;
+151:     for (i = 0; i < OSSL_NELEM(sig); ++i)
+152:         BIO_puts(bio, sig[i]);
+153: 
+154:     ret = TEST_ptr(msg_bio = BIO_new_mem_buf(signed_data, strlen(signed_data)))
+155:         && TEST_ptr(x509_bio = BIO_new_mem_buf(cert_der, sizeof(cert_der)))
+156:         && TEST_ptr(cert = d2i_X509_bio(x509_bio, NULL))
+157:         && TEST_int_eq(ERR_peek_error(), 0)
+158:         && TEST_ptr(store = X509_STORE_new())
+159:         && TEST_true(X509_STORE_add_cert(store, cert))
+160:         && TEST_ptr(p7 = SMIME_read_PKCS7(bio, NULL))
+161:         && TEST_int_eq(ERR_peek_error(), 0)
+162:         && TEST_true(PKCS7_verify(p7, NULL, store, msg_bio, NULL, PKCS7_TEXT))
+163:         && TEST_int_eq(ERR_peek_error(), 0);
+164: end:"
+/home/wen/work/clean_sources/openssl-3.5.5/test/pkcs7_test.c,368,d2i_X509,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"360:         0x90, 0x9D, 0x41, 0x7C, 0xA7, 0x83, 0xE9, 0xCA, 0x8E, 0x01, 0x6D, 0xB2,
+361:         0x2D, 0x6F, 0x81
+362:     };
+363: 
+364:     if (!TEST_ptr(bio = BIO_new_mem_buf(sig_der, sizeof sig_der)))
+365:         goto end;
+366: 
+367:     ret = TEST_ptr(x509_bio = BIO_new_mem_buf(smroot_der, sizeof smroot_der))
+368:         && TEST_ptr(cert = d2i_X509_bio(x509_bio, NULL))
+369:         && TEST_int_eq(ERR_peek_error(), 0)
+370:         && TEST_ptr(store = X509_STORE_new())
+371:         && TEST_true(X509_STORE_add_cert(store, cert))
+372:         && TEST_ptr(param = X509_STORE_get0_param(store))
+373:         && TEST_true(X509_VERIFY_PARAM_set_purpose(param,
+374:             X509_PURPOSE_CODE_SIGN))
+375:         && TEST_true(X509_STORE_set1_param(store, param))
+376:         && TEST_ptr(p7 = d2i_PKCS7_bio(bio, NULL))"
+/home/wen/work/clean_sources/openssl-3.5.5/test/x509aux.c,38,d2i_X509,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"30:     int err = 0;
+31:     BIO *fp = BIO_new_file(test_get_argument(num), ""r"");
+32: 
+33:     if (!TEST_ptr(fp))
+34:         return 0;
+35: 
+36:     for (c = 0; !err && PEM_read_bio(fp, &name, &header, &data, &len); ++c) {
+37:         const int trusted = (strcmp(name, PEM_STRING_X509_TRUSTED) == 0);
+38:         d2i_X509_t d2i = trusted ? d2i_X509_AUX : d2i_X509;
+39:         i2d_X509_t i2d = trusted ? i2d_X509_AUX : i2d_X509;
+40:         X509 *cert = NULL;
+41:         X509 *reuse = NULL;
+42:         const unsigned char *p = data;
+43:         unsigned char *buf = NULL;
+44:         unsigned char *bufp;
+45:         long enclen;
+46: "
+datasets/openssl/poc_artifacts/issue_13860/poc.c,30,d2i_X509,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"22: 
+23:     bio = BIO_new_file(path, ""rb"");
+24:     if (bio == NULL) {
+25:         fprintf(stderr, ""BIO_new_file failed: %s\n"", path);
+26:         ERR_print_errors_fp(stderr);
+27:         goto end;
+28:     }
+29: 
+30:     cert = d2i_X509_bio(bio, NULL);
+31:     if (cert == NULL) {
+32:         fprintf(stderr, ""d2i_X509_bio failed\n"");
+33:         ERR_print_errors_fp(stderr);
+34:         goto end;
+35:     }
+36: 
+37:     pkey = X509_get_pubkey(cert);
+38:     if (pkey == NULL) {"
+datasets/openssl/poc_artifacts/issue_13860/poc.c,32,d2i_X509,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"24:     if (bio == NULL) {
+25:         fprintf(stderr, ""BIO_new_file failed: %s\n"", path);
+26:         ERR_print_errors_fp(stderr);
+27:         goto end;
+28:     }
+29: 
+30:     cert = d2i_X509_bio(bio, NULL);
+31:     if (cert == NULL) {
+32:         fprintf(stderr, ""d2i_X509_bio failed\n"");
+33:         ERR_print_errors_fp(stderr);
+34:         goto end;
+35:     }
+36: 
+37:     pkey = X509_get_pubkey(cert);
+38:     if (pkey == NULL) {
+39:         fprintf(stderr, ""X509_get_pubkey failed\n"");
+40:         ERR_print_errors_fp(stderr);"
+datasets/openssl/poc_artifacts/issue_29574/poc.c,38,d2i_X509,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"30:         ERR_clear_error();
+31:         bio = BIO_new_file(argv[1], ""rb"");
+32:         if (bio == NULL) {
+33:             fprintf(stderr, ""BIO_new_file failed for DER fallback: %s\n"", argv[1]);
+34:             ERR_print_errors_fp(stderr);
+35:             goto end;
+36:         }
+37: 
+38:         cert = d2i_X509_bio(bio, NULL);
+39:         if (cert == NULL) {
+40:             fprintf(stderr, ""certificate parse failed as PEM and DER\n"");
+41:             ERR_print_errors_fp(stderr);
+42:             goto end;
+43:         }
+44:     }
+45: 
+46:     if (X509_print_fp(stdout, cert) != 1) {"
+/home/wen/work/clean_sources/openssl-3.5.5/apps/crl2pkcs7.c,120,d2i_X509_CRL,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"112:         goto opthelp;
+113: 
+114:     if (!nocrl) {
+115:         in = bio_open_default(infile, 'r', informat);
+116:         if (in == NULL)
+117:             goto end;
+118: 
+119:         if (informat == FORMAT_ASN1)
+120:             crl = d2i_X509_CRL_bio(in, NULL);
+121:         else if (informat == FORMAT_PEM)
+122:             crl = PEM_read_bio_X509_CRL(in, NULL, NULL, NULL);
+123:         if (crl == NULL) {
+124:             BIO_printf(bio_err, ""unable to load CRL\n"");
+125:             ERR_print_errors(bio_err);
+126:             goto end;
+127:         }
+128:     }"
+/home/wen/work/clean_sources/openssl-3.5.5/crypto/x509/by_file.c,216,d2i_X509_CRL,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"208:                 count = 0;
+209:                 goto err;
+210:             }
+211:             count++;
+212:             X509_CRL_free(x);
+213:             x = NULL;
+214:         }
+215:     } else if (type == X509_FILETYPE_ASN1) {
+216:         x = d2i_X509_CRL_bio(in, NULL);
+217:         if (x == NULL) {
+218:             ERR_raise(ERR_LIB_X509, X509_R_NO_CRL_FOUND);
+219:             goto err;
+220:         }
+221:         count = X509_STORE_add_crl(ctx->store_ctx, x);
+222:     } else {
+223:         ERR_raise(ERR_LIB_X509, X509_R_BAD_X509_FILETYPE);
+224:         goto err;"
+/home/wen/work/clean_sources/openssl-3.5.5/apps/lib/apps.c,492,d2i_X509_REQ,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"484: 
+485:     if (format == FORMAT_UNDEF)
+486:         format = FORMAT_PEM;
+487:     in = bio_open_default(file, 'r', format);
+488:     if (in == NULL)
+489:         goto end;
+490: 
+491:     if (format == FORMAT_ASN1)
+492:         req = d2i_X509_REQ_bio(in, NULL);
+493:     else if (format == FORMAT_PEM)
+494:         req = PEM_read_bio_X509_REQ(in, NULL, NULL, NULL);
+495:     else
+496:         print_format_error(format, OPT_FMT_PEMDER);
+497: 
+498: end:
+499:     if (req == NULL) {
+500:         ERR_print_errors(bio_err);"
+/home/wen/work/clean_sources/openssl-3.5.5/test/testutil/load.c,102,d2i_X509_REQ,prefix_parse_intended,false,context suggests decoder/stream/prefix parsing path,"94:     X509_REQ *csr = NULL;
+95:     BIO *bio = NULL;
+96: 
+97:     if (!TEST_ptr(file) || !TEST_ptr(bio = BIO_new_file(file, ""rb"")))
+98:         return NULL;
+99: 
+100:     csr = X509_REQ_new_ex(libctx, NULL);
+101:     if (TEST_ptr(csr))
+102:         (void)TEST_ptr(d2i_X509_REQ_bio(bio, &csr));
+103:     BIO_free(bio);
+104:     return csr;
+105: }"
+/home/wen/work/clean_sources/openssl-3.5.5/providers/implementations/encode_decode/decode_der2key.c,99,d2i_PUBKEY,unknown_needs_manual_review,false,no clear full-consumption check found in local context,"91:     /* The selection mask for OSSL_FUNC_decoder_does_selection() */
+92:     int selection_mask;
+93: 
+94:     /* For type specific decoders, we use the corresponding d2i */
+95:     d2i_of_void *d2i_private_key; /* From type-specific DER */
+96:     d2i_of_void *d2i_public_key; /* From type-specific DER */
+97:     d2i_of_void *d2i_key_params; /* From type-specific DER */
+98:     d2i_PKCS8_fn *d2i_PKCS8; /* Wrapped in a PrivateKeyInfo */
+99:     d2i_PUBKEY_fn *d2i_PUBKEY; /* Wrapped in a SubjectPublicKeyInfo */
+100: 
+101:     /*
+102:      * For any key, we may need to check that the key meets expectations.
+103:      * This is useful when the same functions can decode several variants
+104:      * of a key.
+105:      */
+106:     check_key_fn *check_key;
+107: "
+/home/wen/work/clean_sources/openssl-3.5.5/test/endecode_test.c,815,d2i_PUBKEY,unknown_needs_manual_review,false,no clear full-consumption check found in local context,"807:     return ret;
+808: }
+809: #endif
+810: 
+811: static int check_public_DER(const char *file, const int line,
+812:     const char *type, const void *data, size_t data_len)
+813: {
+814:     const unsigned char *datap = data;
+815:     EVP_PKEY *pkey = d2i_PUBKEY_ex(NULL, &datap, data_len, testctx, testpropq);
+816:     int ok = (TEST_FL_ptr(pkey) && TEST_FL_true(EVP_PKEY_is_a(pkey, type)));
+817: 
+818:     EVP_PKEY_free(pkey);
+819:     return ok;
+820: }
+821: 
+822: static int test_public_via_DER(const char *type, EVP_PKEY *key, int fips)
+823: {"

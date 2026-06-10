@@ -1,0 +1,22 @@
+recommended_next_family:
+  family: secure_heap_state_lifecycle
+  seed_issue: OPENSSL-ISSUE-28669
+  reason: 'This is the only top5 candidate with local crash evidence: SIGSEGV/exit
+    139 plus Valgrind Invalid read. Treat it as a sprint seed, not as a new vulnerability
+    claim.'
+  readiness_score: 0.8
+  severity_score: 0.75
+  required_before_runnable:
+  - Confirm behavior against intended OpenSSL versions
+  - Add a safe initialized secure-heap control case
+  - Decide whether CRYPTO_secure_used pre-init call is valid API usage or harness
+    misuse
+  - Create pattern knowledge and recipe-slot adapter before rendering cases
+  proposed_execution_path: D_then_A
+  proposed_sprint_name: secure_heap_state_lifecycle_v1
+  should_start_runnable_sprint_now: true
+  blocking_questions:
+  - Is CRYPTO_secure_used before secure heap initialization documented as safe or
+    undefined?
+  - Which OpenSSL versions are affected locally and upstream?
+  - Can the oracle distinguish expected precondition failure from NULL dereference?

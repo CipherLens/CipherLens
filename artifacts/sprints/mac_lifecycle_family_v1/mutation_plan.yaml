@@ -1,0 +1,46 @@
+schema_version: 1
+family: mac_lifecycle
+status: skeleton_needs_validation
+seed_patterns:
+  - OPENSSL-ISSUE-22842
+
+mutation_dimensions:
+  lifecycle_sequence:
+    values:
+      - normal_init_update_final
+      - repeated_final
+      - update_after_final
+      - reset_after_final
+      - free_then_reuse
+      - abort_then_update
+
+  algorithm:
+    values:
+      - cmac_aes
+      - hmac_sha256
+
+  input_length:
+    values:
+      - 0
+      - 1
+      - 16
+      - 64
+
+  key_length:
+    values:
+      - valid
+      - zero
+      - short
+      - long
+
+oracle:
+  verdicts:
+    - normal_success
+    - strict_bad_state
+    - permissive_legacy_behavior
+    - behavior_divergence_candidate
+    - harness_error
+
+execution_notes:
+  - Do not generate large concrete case sets in this preparation sprint.
+  - Use recipe-slot adapter validation before cross-generator and render-matrix expansion.

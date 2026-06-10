@@ -1,0 +1,47 @@
+template_id: MAC_LIFECYCLE_V1_SOURCE_TEMPLATE
+pattern_id: OPENSSL-ISSUE-22842
+harness_family: mac_lifecycle
+oracle_type: lifecycle_state_transition_semantic_oracle
+evidence_mode: manual_structured_evidence_for_llm_verification
+notes:
+  - Sprint-local candidate file created only to verify strict GLM recipe-slot filling.
+  - This is not automatic candidate_mapper output.
+target_candidates:
+  - target_library: openssl_mbedtls
+    target_api: mac_lifecycle
+    decision: generate
+    migration_applicability: applicable_for_recipe_slot_verification
+    operation_family: MAC lifecycle
+    function_behavior: Compare OpenSSL EVP_MAC CMAC lifecycle transitions with mbedTLS PSA MAC lifecycle transitions.
+    parameter_structure: Both sides expose operation/context state, update input, final output buffer, output length, and return-code/status observability.
+    vulnerability_path: repeated_final and update_after_final exercise terminal-state handling after successful MAC finalization.
+    harness_feasibility: Recipe provides fixed OpenSSL EVP_MAC and mbedTLS PSA MAC setup/update/final/abort/free slots.
+    oracle_observability: return_code, output_length, output_buffer_state, operation_state, sanitizer_signal
+    scores:
+      operation_family: 90
+      function_behavior: 85
+      parameter_structure: 80
+      vulnerability_path: 80
+      harness_feasibility: 85
+      oracle_observability: 85
+      final_score: 83
+    reason: OpenSSL EVP_MAC CMAC and mbedTLS PSA MAC preserve the lifecycle state-transition oracle needed for repeated-final and update-after-final comparison.
+    parameter_mapping:
+      openssl_context: EVP_MAC_CTX
+      openssl_algorithm: CMAC
+      openssl_update_api: EVP_MAC_update
+      openssl_final_api: EVP_MAC_final
+      mbedtls_operation: psa_mac_operation_t
+      mbedtls_algorithm: PSA_ALG_CMAC
+      mbedtls_update_api: psa_mac_update
+      mbedtls_final_api: psa_mac_sign_finish
+    preserved_vulnerability_features:
+      - lifecycle state transition after terminal finalization
+      - repeated_final observability
+      - update_after_final observability
+      - caller-visible return code or status
+      - caller-visible output length
+      - sanitizer signal if lifecycle misuse reaches memory-unsafe behavior
+    lost_or_weakened_features:
+      - OpenSSL provider semantics may allow legacy or permissive repeated final behavior that needs triage rather than immediate vulnerability classification.
+      - mbedTLS PSA has no direct public equivalent for OpenSSL get-size-before-setup queries.

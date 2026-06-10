@@ -1,0 +1,185 @@
+template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP__mac_lifecycle_0062
+pattern_id: OPENSSL-ISSUE-22842
+source_library: openssl
+source_component: EVP/MAC
+harness_family: object_state_lifecycle
+oracle_type: mac_context_size_lifecycle_oracle
+source_api:
+- EVP_MAC_fetch
+- EVP_MAC_CTX_new
+- EVP_MAC_CTX_get_mac_size
+- EVP_MAC_init
+- EVP_MAC_CTX_free
+- EVP_MAC_free
+vulnerability_class: mac_context_uninitialized_state_query
+description: 'Cross-library template for MAC context lifecycle size behavior. Source:
+  OpenSSL EVP_MAC_CTX_get_mac_size before and after EVP_MAC_init. Target: mbedTLS
+  md/HMAC pre-setup safe rejection and post-setup size query. This is an object lifecycle
+  semantic projection, not a strict provider algctx NULL dereference reproduction.'
+mask_slots:
+- name: MAC_NAME
+  type: string
+  default: HMAC
+  variants:
+  - HMAC
+- name: DIGEST_NAME
+  type: string
+  default: SHA256
+  variants:
+  - SHA256
+- name: KEY_BYTES
+  type: byte_array
+  default: '"rag-seed-hmac-key"'
+  variants:
+  - '"rag-seed-hmac-key"'
+- name: KEY_LEN
+  type: integer
+  default: 17
+  variants:
+  - 17
+- name: EXPECTED_MAC_SIZE
+  type: integer
+  default: 32
+  variants:
+  - 32
+required_observables:
+- pre_setup_size_query_result
+- init_return_code
+- post_setup_size_query_result
+- crash_or_sanitizer_signal
+- process_exit_code
+safe_behavior:
+  condition: pre-init size query does not crash and post-init size equals expected
+    MAC size
+  description: MAC context lifecycle safely handles pre-init state query and initialized
+    size query
+bug_behavior:
+  condition: ASAN/UBSAN crash or SEGV during pre-init EVP_MAC_CTX_get_mac_size
+  description: Uninitialized MAC context state query reaches unsafe NULL provider
+    algctx dereference
+triage_behavior:
+  condition: pre-init size is nonzero, post-init size mismatch, or init fails before
+    observation
+  description: MAC context lifecycle behavior differs from expected projection and
+    needs manual review
+semantic_projection:
+  kind: object_lifecycle_semantic_projection
+  strict_equivalence: false
+  note: mbedTLS public md/HMAC APIs do not expose OpenSSL provider algctx internals.
+    The harness validates safe context lifecycle behavior.
+status: cross_generated_from_llm_adapter
+source_template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE
+cross_library:
+  mbedtls:
+    target_api: psa_mac_sign_setup
+    target_template: tmpl_mbedtls.c
+    adapter_source: recipe_slot_bindings
+    applicability: generate
+    preserved_features:
+    - PSA MAC operation lifecycle represents pre-setup and initialized operation states
+    - pre-setup psa_mac_update return code observes safe rejection
+    - psa_mac_sign_setup plus psa_mac_update plus psa_mac_sign_finish observes initialized
+      behavior
+    - crash/sanitizer signals remain observable
+    lost_or_weakened_features:
+    - PSA MAC operation does not expose EVP_MAC_CTX_get_mac_size
+    - exact OpenSSL EVP_MAC_CTX_get_mac_size NULL dereference path is not preserved
+    - this validates lifecycle safety rather than provider-internal structure
+    llm_status: ok
+    adapter_recipe: adapter_recipes/mbedtls/psa_mac_sign_setup.mac_context_size_lifecycle_oracle.yaml
+    slot_bindings:
+      key_type: PSA_KEY_TYPE_HMAC
+      key_usage_flags: PSA_KEY_USAGE_SIGN_MESSAGE
+      key_algorithm: PSA_ALG_HMAC(PSA_ALG_SHA_256)
+      key_bytes: '"rag-seed-hmac-key"'
+      key_len: '17'
+      message_bytes: '"mac lifecycle message"'
+      message_len: '21'
+      mac_len: '32'
+mutation_points:
+- name: MAC_NAME
+  placeholder: '[MAC_NAME]'
+  type: string
+  default: CMAC
+  values:
+  - CMAC
+  priority: high
+- name: DIGEST_NAME
+  placeholder: '[DIGEST_NAME]'
+  type: string
+  default: SHA256
+  values:
+  - SHA256
+  priority: high
+- name: KEY_BYTES
+  placeholder: '[KEY_BYTES]'
+  type: byte_array
+  default: '"rag-seed-hmac-key"'
+  values:
+  - '"rag-seed-hmac-key"'
+  priority: medium
+- name: KEY_LEN
+  placeholder: '[KEY_LEN]'
+  type: int
+  default: 17
+  values:
+  - 17
+  priority: medium
+- name: EXPECTED_MAC_SIZE
+  placeholder: '[EXPECTED_MAC_SIZE]'
+  type: int
+  default: 32
+  values:
+  - 32
+  priority: high
+generation_policy:
+  max_cases: 1
+  priority:
+  - MAC_NAME
+  - DIGEST_NAME
+  - KEY_BYTES
+  - KEY_LEN
+  - EXPECTED_MAC_SIZE
+render_matrix_case:
+  case_id: mac_lifecycle_0062
+  source_matrix_entry:
+    case_id: mac_lifecycle_0062
+    values:
+      mac_algorithm: CMAC
+      digest_or_cipher: AES-256-CBC
+      lifecycle_sequence: update_before_setup
+    oracle_observables:
+    - return_code
+    - output_length
+    - operation_state
+    - sanitizer_signal
+    expected_candidate_types:
+    - unexpected_success_candidate
+    - failure_path_output_state_triage
+    - allowed_legacy_semantics
+    - safe_negative
+    - crash_candidate
+  mapped_values:
+    MAC_NAME: CMAC
+    DIGEST_NAME: SHA256
+    DIGEST_NAME_mapping_note: base_default_used_because_render_matrix_dimension_is_unsupported_or_unmapped
+    KEY_BYTES: '"rag-seed-hmac-key"'
+    KEY_BYTES_mapping_note: base_default_used_because_render_matrix_dimension_is_unsupported_or_unmapped
+    KEY_LEN: 17
+    KEY_LEN_mapping_note: base_default_used_because_render_matrix_dimension_is_unsupported_or_unmapped
+    EXPECTED_MAC_SIZE: 32
+    EXPECTED_MAC_SIZE_mapping_note: base_default_used_because_render_matrix_dimension_is_unsupported_or_unmapped
+  unsupported_dimensions:
+  - dimension: mac_algorithm
+    value: CMAC
+    reason: target template is fixed to PSA_KEY_TYPE_HMAC and PSA_ALG_HMAC(PSA_ALG_SHA_256)
+    requires_template_or_recipe_extension: true
+  - dimension: digest_or_cipher
+    value: AES-256-CBC
+    reason: current MAC lifecycle template has digest placeholders, not cipher placeholders
+    requires_template_or_recipe_extension: true
+  - dimension: lifecycle_sequence
+    value: update_before_setup
+    reason: current templates have fixed STATE_A/STATE_B lifecycle code and no lifecycle_sequence
+      placeholder
+    requires_template_or_recipe_extension: true

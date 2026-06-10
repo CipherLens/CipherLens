@@ -1,0 +1,536 @@
+template_id: RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF
+template_name: ''
+source_api:
+- EVP_PKEY_new
+- RSA_new
+- RSA_set0_key
+- EVP_PKEY_assign_RSA
+- EVP_MD_CTX_new
+- EVP_DigestSignInit
+- EVP_DigestSign
+trigger_apis: []
+harness_family: pkey_capability_mismatch_oracle
+selection_policy:
+  method: ast_lite_high_value_mask_unit_selection
+  rules:
+  - Prefer role=mutation_point units.
+  - Prefer mask_level=value or api_argument units.
+  - Always retain trigger_call function_call/statement units.
+  - Always retain oracle statement/block units.
+  - Retain input_preparation/helper_function/block only when harness-family context
+    keywords are present.
+  - Use configured preferred_roles as scoring hints for each harness family.
+  - Use configured oracle_variables to prioritize oracle-observable units.
+  - Limit input/helper context to representative high-scoring units.
+  - Limit cleanup units to one or two representative statements.
+  - Deduplicate repeated code snippets.
+  context_keywords:
+  - canary
+  - prepare_output_with_canary
+  - buffer
+  - buf
+  - limb
+  - X->p
+  - X->n
+  - raw
+  - CANARY_SIZE
+  - BUFLEN
+  ast_report_name: ast_mask_report.lite.yaml
+  family_rules_source: config/harness_family_ast_rules.yaml
+  family_rule: {}
+selected_units:
+- unit_id: ASTLITE-0008
+  mask_level: value
+  role: mutation_point
+  placeholder: '[KEY_BITS]'
+  code: KEY_BITS
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: KEY_BITS
+  mutation_type: int
+  default: 32
+  values:
+  - 32
+  - 64
+  selection_reason: Selected because [KEY_BITS] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 109
+- unit_id: ASTLITE-0010
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[HASH_LEN]'
+  code: HASH_LEN
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: medium
+  mutation_name: HASH_LEN
+  mutation_type: int
+  default: 32
+  values:
+  - 32
+  - 48
+  selection_reason: Selected because [HASH_LEN] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 107
+- unit_id: ASTLITE-0004
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[MD_ALG]'
+  code: MD_ALG
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: medium
+  mutation_name: MD_ALG
+  mutation_type: enum
+  default: EVP_sha256()
+  values:
+  - EVP_sha256()
+  - EVP_sha384()
+  selection_reason: Selected because [MD_ALG] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 107
+- unit_id: ASTLITE-0011
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[SIG_LEN]'
+  code: SIG_LEN
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: low
+  mutation_name: SIG_LEN
+  mutation_type: int
+  default: 512
+  values:
+  - 256
+  - 512
+  selection_reason: Selected because [SIG_LEN] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 105
+- unit_id: ASTLITE-0007
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[SIG_BUF_LEN]'
+  code: SIG_BUF_LEN
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: low
+  mutation_name: SIG_BUF_LEN
+  mutation_type: int
+  default: 512
+  values:
+  - 256
+  - 512
+  selection_reason: Selected because [SIG_BUF_LEN] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 103
+- unit_id: ASTLITE-0003
+  mask_level: value
+  role: mutation_point
+  placeholder: '[RSA_D_DEC]'
+  code: RSA_D_DEC
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: RSA_D_DEC
+  mutation_type: string
+  default: '2753'
+  values:
+  - '2753'
+  - '1'
+  selection_reason: Selected because [RSA_D_DEC] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 101
+- unit_id: ASTLITE-0002
+  mask_level: value
+  role: mutation_point
+  placeholder: '[RSA_E_DEC]'
+  code: RSA_E_DEC
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: RSA_E_DEC
+  mutation_type: string
+  default: '17'
+  values:
+  - '17'
+  - '3'
+  selection_reason: Selected because [RSA_E_DEC] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 101
+- unit_id: ASTLITE-0001
+  mask_level: value
+  role: mutation_point
+  placeholder: '[RSA_N_DEC]'
+  code: RSA_N_DEC
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: RSA_N_DEC
+  mutation_type: string
+  default: '3233'
+  values:
+  - '3233'
+  - '15'
+  selection_reason: Selected because [RSA_N_DEC] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 101
+- unit_id: ASTLITE-0009
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[HASH_ALG]'
+  code: HASH_ALG
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: medium
+  mutation_name: HASH_ALG
+  mutation_type: enum
+  default: PSA_ALG_SHA_256
+  values:
+  - PSA_ALG_SHA_256
+  - PSA_ALG_SHA_384
+  selection_reason: Selected because [HASH_ALG] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 99
+- unit_id: ASTLITE-0005
+  mask_level: value
+  role: mutation_point
+  placeholder: '[MESSAGE_BYTES]'
+  code: MESSAGE_BYTES
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: low
+  mutation_name: MESSAGE_BYTES
+  mutation_type: byte_array
+  default: '"Test\0"'
+  values:
+  - '"Test\0"'
+  - '"rsa-invalid-key\0"'
+  selection_reason: Selected because [MESSAGE_BYTES] is a mutation point with value
+    granularity.
+  suggested_use: mutate_value
+  selection_score: 97
+- unit_id: ASTLITE-0006
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[MESSAGE_LEN]'
+  code: MESSAGE_LEN
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: low
+  mutation_name: MESSAGE_LEN
+  mutation_type: int
+  default: 5
+  values:
+  - 5
+  - 17
+  selection_reason: Selected because [MESSAGE_LEN] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 97
+- unit_id: ASTLITE-0023
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[HASH_LEN]'
+  code: unsigned char hash[HASH_LEN];
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 32
+  line_start: 32
+  line_end: 32
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected because [HASH_LEN] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 72
+- unit_id: ASTLITE-0025
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[SIG_LEN]'
+  code: unsigned char sig[SIG_LEN];
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: low
+  line: 33
+  line_start: 33
+  line_end: 33
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected because [SIG_LEN] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 70
+- unit_id: ASTLITE-0053
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[HASH_ALG]'
+  code: status = psa_sign_hash(key_id, PSA_ALG_RSA_PKCS1V15_SIGN([HASH_ALG]), hash,
+    HASH_LEN, sig, sizeof(sig), &sig_len);
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 75
+  line_start: 75
+  line_end: 77
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected because [HASH_ALG] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 64
+- unit_id: ASTLITE-0049
+  mask_level: value
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: 'printf("[SAFE] invalid RSA key signing rejected by psa_import_key: %d\n",
+    (int) status);'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 68
+  line_start: 68
+  line_end: 69
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected because [SAFE] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 64
+- unit_id: ASTLITE-0058
+  mask_level: value
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: 'printf("[SAFE] invalid RSA key signing rejected by psa_sign_hash: %d\n",
+    (int) status);'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 83
+  line_start: 83
+  line_end: 84
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected because [SAFE] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 64
+- unit_id: ASTLITE-0056
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: printf("[TRIAGE] signing with invalid RSA key succeeded\n");
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 81
+  line_start: 81
+  line_end: 81
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected because [TRIAGE] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 64
+- unit_id: ASTLITE-0051
+  mask_level: value
+  role: mutation_point
+  placeholder: '[VERDICT]'
+  code: printf("[VERDICT] safe_fixed_behavior\n");
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 70
+  line_start: 70
+  line_end: 70
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected because [VERDICT] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 64
+- unit_id: ASTLITE-0024
+  mask_level: type
+  role: mutation_point
+  placeholder: '[HASH_LEN]'
+  code: unsigned char hash[HASH_LEN];
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 32
+  line_start: 32
+  line_end: 32
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected because [HASH_LEN] is a mutation point with type granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 52
+- unit_id: ASTLITE-0026
+  mask_level: type
+  role: mutation_point
+  placeholder: '[SIG_LEN]'
+  code: unsigned char sig[SIG_LEN];
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 33
+  line_start: 33
+  line_end: 33
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected because [SIG_LEN] is a mutation point with type granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 52
+- unit_id: ASTLITE-0054
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[HASH_ALG]'
+  code: status = psa_sign_hash(key_id, PSA_ALG_RSA_PKCS1V15_SIGN([HASH_ALG]), hash,
+    HASH_LEN, sig, sizeof(sig), &sig_len);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'psa_sign_hash' identified by AST-lite call matching.
+  priority: medium
+  function: psa_sign_hash
+  line: 75
+  line_start: 75
+  line_end: 77
+  enclosing_function: ''
+  node_type: call_expression
+  selection_reason: Selected because [HASH_ALG] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 49
+- unit_id: ASTLITE-0050
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: 'printf("[SAFE] invalid RSA key signing rejected by psa_import_key: %d\n",
+    (int) status);'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 68
+  line_start: 68
+  line_end: 69
+  enclosing_function: ''
+  node_type: call_expression
+  selection_reason: Selected because [SAFE] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 49
+- unit_id: ASTLITE-0059
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: 'printf("[SAFE] invalid RSA key signing rejected by psa_sign_hash: %d\n",
+    (int) status);'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 83
+  line_start: 83
+  line_end: 84
+  enclosing_function: ''
+  node_type: call_expression
+  selection_reason: Selected because [SAFE] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 49
+- unit_id: ASTLITE-0057
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: printf("[TRIAGE] signing with invalid RSA key succeeded\n");
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 81
+  line_start: 81
+  line_end: 81
+  enclosing_function: ''
+  node_type: call_expression
+  selection_reason: Selected because [TRIAGE] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 49
+- unit_id: ASTLITE-0052
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[VERDICT]'
+  code: printf("[VERDICT] safe_fixed_behavior\n");
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 70
+  line_start: 70
+  line_end: 70
+  enclosing_function: ''
+  node_type: call_expression
+  selection_reason: Selected because [VERDICT] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 49
+- unit_id: ASTLITE-0018
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: 'fprintf(stderr, "[BUG] crash or sanitizer signal: %d\n", signo);'
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 22
+  line_start: 22
+  line_end: 22
+  enclosing_function: bug_signal_handler
+  node_type: statement
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 49
+- unit_id: ASTLITE-0061
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_psa_crypto_free();
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as cleanup by AST-lite role rules.
+  priority: medium
+  line: 92
+  line_start: 92
+  line_end: 92
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected limited cleanup context needed to keep generated harnesses
+    well-scoped.
+  suggested_use: preserve_cleanup
+  selection_score: 12
+selection_summary:
+  selected_count: 27
+  source_unit_count: 62
+  by_role:
+    cleanup: 1
+    mutation_point: 25
+    oracle: 1
+  by_mask_level:
+    api_argument: 9
+    function_call: 5
+    statement: 2
+    type: 2
+    value: 9
+  by_suggested_use:
+    llm_reconstruction_context: 7
+    mutate_api_argument: 9
+    mutate_value: 9
+    preserve_cleanup: 1
+    preserve_oracle: 1
+rejected_summary:
+  count: 6
+  by_reason:
+    duplicate_code_or_unit: 4
+    noise_header_comment_or_log_label: 2

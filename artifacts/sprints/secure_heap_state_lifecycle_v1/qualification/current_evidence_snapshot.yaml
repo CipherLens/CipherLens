@@ -1,0 +1,60 @@
+snapshot_name: OPENSSL-ISSUE-28669 current evidence snapshot
+family: secure_heap_state_lifecycle
+api: CRYPTO_secure_used
+source_sprint: artifacts/sprints/secure_heap_state_lifecycle_v1
+current_analyzer:
+  analyzer: runner/analyze_secure_heap_state.py
+  total_cases: 5
+  raw_status_counts:
+    run_nonzero: 2
+    run_ok: 3
+  verdict_counts:
+    crash_candidate: 2
+    normal_defined_behavior: 2
+    safe_precondition_failure: 1
+crash_cases:
+  - case_id: secure_heap_0000_pre_init_used_only
+    state: pre_init
+    call_sequence: used_only
+    exit_code: 139
+    signal: 11
+    verdict: crash_candidate
+  - case_id: secure_heap_0003_done_then_used
+    state: initialized_then_done
+    call_sequence: done_then_used
+    exit_code: 139
+    signal: 11
+    verdict: crash_candidate
+control_cases:
+  - case_id: secure_heap_0001_initialized_used
+    state: initialized
+    call_sequence: initialized_then_used
+    exit_code: 0
+    verdict: normal_defined_behavior
+  - case_id: secure_heap_0002_initialized_check_used
+    state: initialized
+    call_sequence: initialized_check_then_used
+    exit_code: 0
+    verdict: normal_defined_behavior
+  - case_id: secure_heap_0004_done_check_then_used
+    state: initialized_then_done_then_used
+    call_sequence: initialized_check_then_used
+    exit_code: 0
+    verdict: safe_precondition_failure
+crash_evidence:
+  current_sigsegv: true
+  current_exit_139: true
+  current_valgrind_invalid_read: false
+  current_asan: false
+  current_ubsan: false
+  historical_valgrind_invalid_read: true
+missing_evidence:
+  - manual API contract confirmation for CRYPTO_secure_used before init and after done
+  - current gdb backtrace
+  - current Valgrind run, if valgrind is available
+  - ASAN/UBSAN build and rerun
+  - version matrix beyond local openssl-3.5.5
+strict_interpretation: >
+  Current evidence supports crash_candidate / precondition triage. It does not
+  support a confirmed vulnerability or CVE claim without API contract and
+  version evidence.

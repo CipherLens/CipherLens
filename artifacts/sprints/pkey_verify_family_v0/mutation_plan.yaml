@@ -1,0 +1,203 @@
+family: pkey_verify_semantic
+profile: pkey_verify_v0
+source:
+  pattern_id: ''
+  template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+  source_library: ''
+  source_api: ''
+  oracle_type: ''
+target_candidate:
+  target_library: openssl
+  target_api: EVP_DigestVerify
+  decision: generate
+  migration_applicability: applicable
+  final_score: ''
+evidence_sources:
+  candidates_with_evidence: migration_candidates/pk/pk_verify_ext_null_deref/candidates_with_evidence.yaml
+  api_cards_root: knowledge_base/api_cards
+  api_cards:
+  - path: knowledge_base/api_cards/mbedtls/mbedtls_pk_verify.yaml
+    library: mbedtls
+    api: mbedtls_pk_verify
+    family: pkey_verify
+    match_reason: family_card_fallback
+    mutation_hints:
+    - wrong digest algorithm
+    - wrong hash length
+    - all-zero signature
+    - truncated signature
+    - wrong public key
+    - RSA-PSS versus PKCS1 v1.5 padding mismatch through mbedtls_pk_verify_ext
+    oracle_observables:
+    - return_code
+    - sanitizer_signal
+    - signature_acceptance
+  - path: knowledge_base/api_cards/mbedtls/psa_verify_hash.yaml
+    library: mbedtls
+    api: psa_verify_hash
+    family: pkey_verify
+    match_reason: family_card_fallback
+    mutation_hints:
+    - invalid signature acceptance
+    - bitflip signature
+    - wrong digest algorithm
+    - wrong key usage flags
+    - algorithm/key mismatch
+    - shortened signature
+    - wrong hash length
+    oracle_observables:
+    - psa_status
+    - sanitizer_signal
+    - error_class
+    - signature_acceptance
+  - path: knowledge_base/api_cards/openssl/EVP_DigestVerify.yaml
+    library: openssl
+    api: EVP_DigestVerify
+    family: pkey_verify
+    match_reason: family_card_fallback
+    mutation_hints:
+    - invalid signature acceptance
+    - bitflip signature
+    - wrong digest algorithm
+    - wrong hash length
+    - wrong public key
+    - RSA-PSS salt length mismatch
+    - padding mismatch
+    - wrong object type
+    - public-only key path
+    - malformed signature length
+    - unsupported digest/key pairing
+    oracle_observables:
+    - return_code
+    - error_stack
+    - sanitizer_signal
+    - signature_acceptance
+  - path: knowledge_base/api_cards/openssl/EVP_DigestVerifyInit.yaml
+    library: openssl
+    api: EVP_DigestVerifyInit
+    family: pkey_verify
+    match_reason: family_card_fallback
+    mutation_hints:
+    - wrong digest algorithm
+    - mismatched key type
+    - public key without expected verification capability
+    - RSA-PSS setup on non-RSA key
+    - digest/key compatibility boundary
+    oracle_observables:
+    - return_code
+    - error_stack
+    - sanitizer_signal
+  - path: knowledge_base/api_cards/openssl/EVP_PKEY_CTX_set_rsa_padding.yaml
+    library: openssl
+    api: EVP_PKEY_CTX_set_rsa_padding
+    family: pkey_verify
+    match_reason: family_card_fallback
+    mutation_hints:
+    - RSA-PSS requested on non-RSA key
+    - padding mismatch between signer and verifier
+    - RSA_PKCS1_PADDING versus RSA_PKCS1_PSS_PADDING
+    - unsupported padding setup should be safe rejection
+    oracle_observables:
+    - return_code
+    - error_stack
+    - sanitizer_signal
+  - path: knowledge_base/api_cards/openssl/EVP_PKEY_CTX_set_rsa_pss_saltlen.yaml
+    library: openssl
+    api: EVP_PKEY_CTX_set_rsa_pss_saltlen
+    family: pkey_verify
+    match_reason: family_card_fallback
+    mutation_hints:
+    - pss_saltlen_mismatch
+    - RSA-PSS signature verified with wrong expected salt length
+    - zero salt versus digest-length salt
+    - setup error versus invalid signature distinction
+    oracle_observables:
+    - return_code
+    - error_stack
+    - signature_acceptance
+    - sanitizer_signal
+  - path: knowledge_base/api_cards/openssl/EVP_PKEY_verify.yaml
+    library: openssl
+    api: EVP_PKEY_verify
+    family: pkey_verify
+    match_reason: family_card_fallback
+    mutation_hints:
+    - invalid signature acceptance
+    - bitflip signature
+    - wrong digest algorithm
+    - wrong hash length
+    - wrong public key
+    - RSA-PSS salt length mismatch
+    - padding mismatch
+    - wrong object type
+    - tiny RSA key
+    - public-only/private-only mismatch
+    - malformed signature length
+    oracle_observables:
+    - return_code
+    - error_stack
+    - sanitizer_signal
+    - signature_acceptance
+mutation_dimensions:
+  key_type:
+    values:
+    - rsa
+    source: family_rule
+  digest_mutation:
+    values:
+    - matching_digest
+    - wrong_digest_algorithm
+    - wrong_hash_length
+    source: family_rule
+  key_mutation:
+    values:
+    - matching_key
+    - wrong_key
+    source: family_rule
+  padding_mutation:
+    values:
+    - rsa_pkcs1_v15
+    - rsa_pss
+    - pss_saltlen_mismatch
+    source: family_rule
+  signature_mutation:
+    values:
+    - valid_signature
+    - invalid_signature
+    - truncated_signature
+    - all_zero_signature
+    - bitflip_signature
+    source: family_rule
+  verify_api:
+    values:
+    - EVP_DigestVerify
+    - EVP_PKEY_verify
+    source: family_rule
+legal_combinations: {}
+projection_limitations: {}
+feedback_sources:
+- api_cards
+- pk_verify_ext_null_deref_seed
+high_value_sequences:
+- invalid_signature
+- wrong_digest
+- wrong_hash_length
+- wrong_key
+- pss_saltlen_mismatch
+- padding_mismatch
+oracle_observables:
+- return_code
+- error_stack
+- sanitizer_signal
+- signature_acceptance
+expected_candidate_types:
+- unexpected_success_candidate
+- behavior_divergence_candidate
+- safe_negative
+- projection_limitation
+- crash_candidate
+- harness_error
+notes:
+- This file is a family-level mutation plan only.
+- It does not generate C harness code.
+- render_cases.py does not consume this plan directly in the current pipeline.

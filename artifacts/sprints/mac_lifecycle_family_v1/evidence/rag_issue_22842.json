@@ -1,0 +1,299 @@
+{
+  "query": "OPENSSL-ISSUE-22842 MAC lifecycle repeated final update after final",
+  "top_k": 12,
+  "results": [
+    {
+      "rank": 1,
+      "score": 1.1884925804965496,
+      "distance": 0.5911086797714233,
+      "base_score": 0.6284925804965495,
+      "rerank_score": 1.1884925804965496,
+      "rerank_reasons": [
+        "layer:poc_patterns",
+        "family_match:mac_lifecycle",
+        "library_match:openssl",
+        "keyword_overlap:issue,mac,openssl",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "## OPENSSL-ISSUE-22842\n\n- Source: datasets/openssl/poc_artifacts/issue_22842\n- Family: mac_lifecycle\n- Oracle type: crash_or_sanitizer\n- Root cause: NULL pointer dereference in EVP_MAC_CTX_get_mac_size() due to uninitialized algctx cipher struct\n- Source API: EVP_MAC_CTX_new(), EVP_MAC_CTX_get_mac_size(), EVP_MAC_init()\n- Target API: unknown\n- Historical verdict: unknown\n- Feedback summary: none\n- Scheduler priority: 0.6 (clear_oracle, has_controlled_template_or_artifact, has_rag_evidence, reusable_family)\n- Notes: Title: SIGSEGV from EVP_MAC_CTX_get_mac_size(). Component: EVP/MAC. Trigger behavior: NULL_DEREFERENCE_CRASH.",
+      "metadata": {
+        "oracle_type": "crash_or_sanitizer",
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+        "layer": "poc_patterns",
+        "doc_type": "poc_pattern",
+        "pattern_id": "OPENSSL-ISSUE-22842",
+        "family": "mac_lifecycle",
+        "library": ""
+      }
+    },
+    {
+      "rank": 2,
+      "score": 1.1884925804965496,
+      "distance": 0.5911086797714233,
+      "base_score": 0.6284925804965495,
+      "rerank_score": 1.1884925804965496,
+      "rerank_reasons": [
+        "layer:poc_patterns",
+        "family_match:mac_lifecycle",
+        "library_match:openssl",
+        "keyword_overlap:issue,mac,openssl",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/openssl_issue_patterns.md",
+      "text": "## OPENSSL-ISSUE-22842\n\n- Source: datasets/openssl/poc_artifacts/issue_22842\n- Family: mac_lifecycle\n- Oracle type: crash_or_sanitizer\n- Root cause: NULL pointer dereference in EVP_MAC_CTX_get_mac_size() due to uninitialized algctx cipher struct\n- Source API: EVP_MAC_CTX_new(), EVP_MAC_CTX_get_mac_size(), EVP_MAC_init()\n- Target API: unknown\n- Historical verdict: unknown\n- Feedback summary: none\n- Scheduler priority: 0.6 (clear_oracle, has_controlled_template_or_artifact, has_rag_evidence, reusable_family)\n- Notes: Title: SIGSEGV from EVP_MAC_CTX_get_mac_size(). Component: EVP/MAC. Trigger behavior: NULL_DEREFERENCE_CRASH.",
+      "metadata": {
+        "doc_type": "poc_pattern",
+        "family": "mac_lifecycle",
+        "source_file": "knowledge_raw/poc_patterns/openssl_issue_patterns.md",
+        "library": "",
+        "layer": "poc_patterns",
+        "oracle_type": "crash_or_sanitizer",
+        "pattern_id": "OPENSSL-ISSUE-22842"
+      }
+    },
+    {
+      "rank": 3,
+      "score": 1.072816059000237,
+      "distance": 0.6318110227584839,
+      "base_score": 0.612816059000237,
+      "rerank_score": 1.072816059000237,
+      "rerank_reasons": [
+        "family_match:mac_lifecycle",
+        "library_match:openssl",
+        "layer:api_cards",
+        "keyword_overlap:lifecycle,mac,openssl",
+        "recent_feedback_source"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/openssl/EVP_MAC_final.yaml",
+      "text": "Source: API Card\napi: EVP_MAC_final\nlibrary: openssl\nfamily: mac_lifecycle\nsignature: int EVP_MAC_final(EVP_MAC_CTX *ctx, unsigned char *out, size_t *outl, size_t outsize)\nparameter_semantics: ctx: MAC context\nout: output buffer\noutl: caller-visible output length\noutsize: output buffer capacity\nreturn_value_semantics: success: 1 and outl receives MAC length\nfailure: 0 and output state should remain safe for caller\nvalid_invalid_ranges: valid: initialized MAC context and sufficiently sized output buffer\ninvalid: final before setup, update after final for strict lifecycle APIs, undersized\n  output\nunsupported_conditions: - using ctx after invalid lifecycle transition\nmutation_hints: - final before setup\n- double final\n- update after final\n- third final\n- update after second final\n- abort then final\n- output buffer too small\noracle_observables: - return_code\n- outl\n- output_buffer_state\n- sanitizer_signal\nknown_pitfalls: - HMAC failure-path outl observations should be classified as failure_path_output_state_triage,\n  not bug_candidate, without stronger output-state evidence.\n- HMAC+AES and CMAC+SHA are invalid parameter projections; skip them or mark projection_limitation.\nnotes: - 'Known pitfall: failure paths must not expose unsafe outl or stale output state.'\n- 'Feedback: OpenSSL CMAC repeated final may be allowed legacy/provider semantics\n  rather than a vulnerability by itself.'\n- 'Observed CMAC behavior: a second EVP_MAC_final() can succeed and return outl=16.'\n- 'MAC lifecycle v2 minimal confirmation: CMAC AES-128-CBC and AES-256-CBC accepted\n  EVP_MAC_update() after EVP_MAC_final(); a follow-up EVP_MAC_final() also succeeded\n  and produced a different 16-byte output.'\n- 'MAC lifecycle v2 minimal confirmation: CMAC third-final sequences returned success\n  for final1/final2/final3, each with outl=16 and distinct output bytes.'\n- 'MAC lifecycle v2 minimal confirmation: CMAC update-after-second-final sequences\n  returned success for final1, final2, update-after-second-final, and final3.'\n- High-value follow-up mutations are update-after-final and update-after-second-final\n  because they show continuation after a terminal-looking finalization state.\n- Third-final is useful evidence but should be treated as allowed_legacy_semantics_needs_review\n  until OpenSSL documentation confirms whether repeated finalization is intentional\n  provider semantics.\n- 'Classification guidance: do not report these CMAC lifecycle observations as confirmed\n  vulnerabilities without documentation review and caller-impact evidence.'\n",
+      "metadata": {
+        "doc_type": "api_card",
+        "api": "EVP_MAC_final",
+        "source_file": "knowledge_base/api_cards/openssl/EVP_MAC_final.yaml",
+        "library": "openssl",
+        "family": "mac_lifecycle",
+        "layer": "api_cards"
+      }
+    },
+    {
+      "rank": 4,
+      "score": 0.9144854625580829,
+      "distance": 0.7406880855560303,
+      "base_score": 0.574485462558083,
+      "rerank_score": 0.9144854625580829,
+      "rerank_reasons": [
+        "family_match:mac_lifecycle",
+        "layer:api_cards",
+        "keyword_overlap:lifecycle,mac",
+        "recent_feedback_source"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/mbedtls/psa_mac_sign_finish.yaml",
+      "text": "Source: API Card\napi: psa_mac_sign_finish\nlibrary: mbedtls\nfamily: mac_lifecycle\nsignature: psa_status_t psa_mac_sign_finish(psa_mac_operation_t *operation, uint8_t *mac, size_t mac_size, size_t *mac_length)\nparameter_semantics: operation: PSA MAC operation state\nmac: output buffer\nmac_size: output buffer capacity\nmac_length: caller-visible output length\nreturn_value_semantics: success: PSA_SUCCESS and mac_length receives produced length\nfailure: PSA error status and output state should remain safe\nvalid_invalid_ranges: valid: active sign operation and sufficient output buffer\ninvalid: finish before setup, double finish, undersized output\nunsupported_conditions: - operation in verify mode\n- aborted or inactive operation\nmutation_hints: - final before setup\n- double final\n- update after final\n- third final\n- update after second final\n- abort then final\n- final after abort\n- query after final\n- query after abort\n- small mac_size\noracle_observables: - psa_status\n- mac_length\n- output_buffer_state\n- sanitizer_signal\nknown_pitfalls: - mbedTLS PSA MAC has no public query-size-before-setup equivalent; mark that projection\n  as projection_limitation.\n- Invalid algorithm projections such as HMAC+AES or CMAC+SHA should be avoided or\n  marked projection_limitation.\nnotes: - 'Known pitfall: failure return must be interpreted with mac_length and operation\n  state.'\n- 'Feedback: successful psa_mac_sign_finish() terminates the PSA MAC operation.'\n- 'Observed behavior: repeated psa_mac_sign_finish() after success returns BAD_STATE-like\n  failure, not a second successful MAC.'\n- 'MAC lifecycle v2 minimal confirmation: after successful CMAC finish, mbedTLS PSA\n  rejects update-after-finish, second finish, third finish, and update-after-second-finish\n  with status -137.'\n- MAC lifecycle v2 minimal confirmation was stable under normal and ASan/UBSan runs;\n  no sanitizer crash was observed.\n- 'Classification guidance: PSA strict lifecycle rejection is a safe negative side\n  of CMAC double-final comparison, not crash evidence.'\n",
+      "metadata": {
+        "source_file": "knowledge_base/api_cards/mbedtls/psa_mac_sign_finish.yaml",
+        "family": "mac_lifecycle",
+        "library": "mbedtls",
+        "doc_type": "api_card",
+        "api": "psa_mac_sign_finish",
+        "layer": "api_cards"
+      }
+    },
+    {
+      "rank": 5,
+      "score": 0.7884436812248514,
+      "distance": 0.6710010170936584,
+      "base_score": 0.5984436812248515,
+      "rerank_score": 0.7884436812248514,
+      "rerank_reasons": [
+        "library_match:openssl",
+        "keyword_overlap:issue,openssl",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "## OPENSSL-ISSUE-11567\n\n- Source: datasets/openssl/poc_artifacts/issue_11567\n- Family: x509_parsing\n- Oracle type: behavior_divergence\n- Root cause: Newer OpenSSL versions do not support zero serial numbers, which is non-conforming with RFC 5280.\n- Source API: X509v3 Subject Key Identifier, X509v3 Authority Key Identifier, X509v3 Basic Constraints, md5WithRSAEncryption\n- Target API: unknown\n- Historical verdict: unknown\n- Feedback summary: none\n- Scheduler priority: 0.3 (clear_oracle, reusable_family)\n- Notes: Title: semantic bug when verifying certificate file. Component: X509/ASN1. Trigger behavior: WRONG_RESULT.",
+      "metadata": {
+        "pattern_id": "OPENSSL-ISSUE-11567",
+        "oracle_type": "behavior_divergence",
+        "library": "",
+        "family": "x509_parsing",
+        "layer": "poc_patterns",
+        "doc_type": "poc_pattern",
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md"
+      }
+    },
+    {
+      "rank": 6,
+      "score": 0.7884436812248514,
+      "distance": 0.6710010170936584,
+      "base_score": 0.5984436812248515,
+      "rerank_score": 0.7884436812248514,
+      "rerank_reasons": [
+        "library_match:openssl",
+        "keyword_overlap:issue,openssl",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/openssl_issue_patterns.md",
+      "text": "## OPENSSL-ISSUE-11567\n\n- Source: datasets/openssl/poc_artifacts/issue_11567\n- Family: x509_parsing\n- Oracle type: behavior_divergence\n- Root cause: Newer OpenSSL versions do not support zero serial numbers, which is non-conforming with RFC 5280.\n- Source API: X509v3 Subject Key Identifier, X509v3 Authority Key Identifier, X509v3 Basic Constraints, md5WithRSAEncryption\n- Target API: unknown\n- Historical verdict: unknown\n- Feedback summary: none\n- Scheduler priority: 0.3 (clear_oracle, reusable_family)\n- Notes: Title: semantic bug when verifying certificate file. Component: X509/ASN1. Trigger behavior: WRONG_RESULT.",
+      "metadata": {
+        "pattern_id": "OPENSSL-ISSUE-11567",
+        "source_file": "knowledge_raw/poc_patterns/openssl_issue_patterns.md",
+        "family": "x509_parsing",
+        "layer": "poc_patterns",
+        "library": "",
+        "doc_type": "poc_pattern",
+        "oracle_type": "behavior_divergence"
+      }
+    },
+    {
+      "rank": 7,
+      "score": 0.7804057295328355,
+      "distance": 0.6937505006790161,
+      "base_score": 0.5904057295328355,
+      "rerank_score": 0.7804057295328355,
+      "rerank_reasons": [
+        "library_match:openssl",
+        "keyword_overlap:issue,openssl",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "## OPENSSL-ISSUE-2630\n\n- Source: datasets/openssl/poc_artifacts/issue_2630\n- Family: api_state_machine\n- Oracle type: crash_or_sanitizer\n- Root cause: unknown\n- Source API: CRYPTO_secure_malloc_init, BIO_new, BIO_write\n- Target API: unknown\n- Historical verdict: unknown\n- Feedback summary: none\n- Scheduler priority: 0.3 (clear_oracle, reusable_family)\n- Notes: Title: Secure heap impl.: segmentation fault in sh_add_to_list for small allocations. Component: BIO/SECURE_HEAP. Trigger behavior: SEGV.",
+      "metadata": {
+        "doc_type": "poc_pattern",
+        "family": "api_state_machine",
+        "pattern_id": "OPENSSL-ISSUE-2630",
+        "library": "",
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+        "layer": "poc_patterns",
+        "oracle_type": "crash_or_sanitizer"
+      }
+    },
+    {
+      "rank": 8,
+      "score": 0.7804057295328355,
+      "distance": 0.6937505006790161,
+      "base_score": 0.5904057295328355,
+      "rerank_score": 0.7804057295328355,
+      "rerank_reasons": [
+        "library_match:openssl",
+        "keyword_overlap:issue,openssl",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/openssl_issue_patterns.md",
+      "text": "## OPENSSL-ISSUE-2630\n\n- Source: datasets/openssl/poc_artifacts/issue_2630\n- Family: api_state_machine\n- Oracle type: crash_or_sanitizer\n- Root cause: unknown\n- Source API: CRYPTO_secure_malloc_init, BIO_new, BIO_write\n- Target API: unknown\n- Historical verdict: unknown\n- Feedback summary: none\n- Scheduler priority: 0.3 (clear_oracle, reusable_family)\n- Notes: Title: Secure heap impl.: segmentation fault in sh_add_to_list for small allocations. Component: BIO/SECURE_HEAP. Trigger behavior: SEGV.",
+      "metadata": {
+        "source_file": "knowledge_raw/poc_patterns/openssl_issue_patterns.md",
+        "pattern_id": "OPENSSL-ISSUE-2630",
+        "doc_type": "poc_pattern",
+        "library": "",
+        "oracle_type": "crash_or_sanitizer",
+        "layer": "poc_patterns",
+        "family": "api_state_machine"
+      }
+    },
+    {
+      "rank": 9,
+      "score": 0.7758826279568891,
+      "distance": 0.7068265080451965,
+      "base_score": 0.5858826279568891,
+      "rerank_score": 0.7758826279568891,
+      "rerank_reasons": [
+        "library_match:openssl",
+        "keyword_overlap:issue,openssl",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "## OPENSSL-ISSUE-8435\n\n- Source: datasets/openssl/poc_artifacts/issue_8435\n- Family: pkey_verify_semantic\n- Oracle type: behavior_divergence\n- Root cause: OpenSSL treats SM2 keys like normal ECC keys, leading to invalid private keys.\n- Source API: pkey, pkeyutl, sm2_id\n- Target API: unknown\n- Historical verdict: unknown\n- Feedback summary: none\n- Scheduler priority: 0.3 (clear_oracle, reusable_family)\n- Notes: Title: SM2 private key cannot produce valid signatures. Component: PKEY/ECC/SM2. Trigger behavior: WRONG_RESULT.",
+      "metadata": {
+        "oracle_type": "behavior_divergence",
+        "library": "",
+        "pattern_id": "OPENSSL-ISSUE-8435",
+        "family": "pkey_verify_semantic",
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+        "doc_type": "poc_pattern",
+        "layer": "poc_patterns"
+      }
+    },
+    {
+      "rank": 10,
+      "score": 0.7758826279568891,
+      "distance": 0.7068265080451965,
+      "base_score": 0.5858826279568891,
+      "rerank_score": 0.7758826279568891,
+      "rerank_reasons": [
+        "library_match:openssl",
+        "keyword_overlap:issue,openssl",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/openssl_issue_patterns.md",
+      "text": "## OPENSSL-ISSUE-8435\n\n- Source: datasets/openssl/poc_artifacts/issue_8435\n- Family: pkey_verify_semantic\n- Oracle type: behavior_divergence\n- Root cause: OpenSSL treats SM2 keys like normal ECC keys, leading to invalid private keys.\n- Source API: pkey, pkeyutl, sm2_id\n- Target API: unknown\n- Historical verdict: unknown\n- Feedback summary: none\n- Scheduler priority: 0.3 (clear_oracle, reusable_family)\n- Notes: Title: SM2 private key cannot produce valid signatures. Component: PKEY/ECC/SM2. Trigger behavior: WRONG_RESULT.",
+      "metadata": {
+        "pattern_id": "OPENSSL-ISSUE-8435",
+        "doc_type": "poc_pattern",
+        "source_file": "knowledge_raw/poc_patterns/openssl_issue_patterns.md",
+        "library": "",
+        "layer": "poc_patterns",
+        "family": "pkey_verify_semantic",
+        "oracle_type": "behavior_divergence"
+      }
+    },
+    {
+      "rank": 11,
+      "score": 0.7731790415860709,
+      "distance": 0.7147392630577087,
+      "base_score": 0.5831790415860708,
+      "rerank_score": 0.7731790415860709,
+      "rerank_reasons": [
+        "library_match:openssl",
+        "keyword_overlap:issue,openssl",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "## OPENSSL-ISSUE-30889\n\n- Source: datasets/openssl/poc_artifacts/issue_30889\n- Family: pkey_verify_semantic\n- Oracle type: crash_or_sanitizer\n- Root cause: NULL_DEREFERENCE_CRASH\n- Source API: pkey_main, encode_private_key\n- Target API: unknown\n- Historical verdict: unknown\n- Feedback summary: none\n- Scheduler priority: 0.3 (clear_oracle, reusable_family)\n- Notes: Title: Segfault in 'openssl pkey' for interactive encryption (v4.0.0). Component: PKEY/ML-DSA/RSA. Trigger behavior: SEGV.",
+      "metadata": {
+        "family": "pkey_verify_semantic",
+        "layer": "poc_patterns",
+        "oracle_type": "crash_or_sanitizer",
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+        "doc_type": "poc_pattern",
+        "pattern_id": "OPENSSL-ISSUE-30889",
+        "library": ""
+      }
+    },
+    {
+      "rank": 12,
+      "score": 0.7731790415860709,
+      "distance": 0.7147392630577087,
+      "base_score": 0.5831790415860708,
+      "rerank_score": 0.7731790415860709,
+      "rerank_reasons": [
+        "library_match:openssl",
+        "keyword_overlap:issue,openssl",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/openssl_issue_patterns.md",
+      "text": "## OPENSSL-ISSUE-30889\n\n- Source: datasets/openssl/poc_artifacts/issue_30889\n- Family: pkey_verify_semantic\n- Oracle type: crash_or_sanitizer\n- Root cause: NULL_DEREFERENCE_CRASH\n- Source API: pkey_main, encode_private_key\n- Target API: unknown\n- Historical verdict: unknown\n- Feedback summary: none\n- Scheduler priority: 0.3 (clear_oracle, reusable_family)\n- Notes: Title: Segfault in 'openssl pkey' for interactive encryption (v4.0.0). Component: PKEY/ML-DSA/RSA. Trigger behavior: SEGV.",
+      "metadata": {
+        "pattern_id": "OPENSSL-ISSUE-30889",
+        "family": "pkey_verify_semantic",
+        "source_file": "knowledge_raw/poc_patterns/openssl_issue_patterns.md",
+        "doc_type": "poc_pattern",
+        "library": "",
+        "oracle_type": "crash_or_sanitizer",
+        "layer": "poc_patterns"
+      }
+    }
+  ]
+}

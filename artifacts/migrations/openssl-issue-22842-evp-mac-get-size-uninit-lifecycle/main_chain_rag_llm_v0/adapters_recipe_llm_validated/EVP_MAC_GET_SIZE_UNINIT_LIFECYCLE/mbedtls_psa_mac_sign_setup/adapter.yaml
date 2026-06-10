@@ -1,0 +1,51 @@
+source_pattern_id: null
+template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE
+harness_family: object_state_lifecycle
+oracle_type: mac_context_size_lifecycle_oracle
+target_library: mbedtls
+target_api: psa_mac_sign_setup
+applicability: generate
+adapter_recipe: adapter_recipes/mbedtls/psa_mac_sign_setup.mac_context_size_lifecycle_oracle.yaml
+evidence_file: artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_rag_llm_v0/candidates_with_evidence.yaml
+slot_bindings:
+  key_type: PSA_KEY_TYPE_HMAC
+  key_usage_flags: PSA_KEY_USAGE_SIGN_MESSAGE
+  key_algorithm: PSA_ALG_HMAC(PSA_ALG_SHA_256)
+  key_bytes: '"rag-seed-hmac-key"'
+  key_len: '17'
+  message_bytes: '"mac lifecycle message"'
+  message_len: '21'
+  mac_len: '32'
+preserved_features:
+- PSA MAC operation lifecycle represents uninitialized vs initialized operation state
+- pre-setup psa_mac_update can be observed as safe rejection without crash
+- initialized psa_mac_sign_setup -> psa_mac_update -> psa_mac_sign_finish provides
+  control state
+- return code and crash/sanitizer signals are observable
+lost_or_weakened_features:
+- PSA operation API does not expose an EVP_MAC_CTX_get_mac_size equivalent
+- exact OpenSSL EVP_MAC_CTX_get_mac_size internal dereference is not preserved
+- pre-setup operation is psa_mac_update, not a direct get-size call
+_adapter_mode: recipe_slot_filling
+_ignored_disallowed_fields: []
+_ignored_non_slot_fields: []
+_llm_status: ok
+include_headers: []
+validation:
+  status: ok
+  errors: []
+  warnings:
+  - selected_mask_units loaded as trace context for recipe adapter
+  normalized: true
+  ast_mask_selection:
+    source_file: normalized_templates/openssl/evp_mac_get_size_uninit_lifecycle/selected_mask_units.yaml
+    summary:
+      selected_count: 8
+      source_unit_count: null
+      trigger_apis:
+      - EVP_MAC_CTX_get_mac_size
+      - EVP_MAC_init
+      harness_family: object_state_lifecycle
+      by_role: {}
+      by_mask_level: {}
+      by_suggested_use: {}

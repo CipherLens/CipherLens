@@ -1,0 +1,43 @@
+schema_version: 1
+template_id: MAC_LIFECYCLE_V1_SOURCE_TEMPLATE
+pattern_id: OPENSSL-ISSUE-22842
+harness_family: mac_lifecycle
+oracle_type: lifecycle_state_transition_semantic_oracle
+status: minimal_structured_mask_report
+source_template: artifacts/sprints/mac_lifecycle_family_v1/source_template/tmpl_mac_lifecycle.c
+mask_strategy: ast_lite_placeholder_skeleton
+mask_units:
+  - id: MAC_INIT_API
+    granularity: call_expr
+    role: lifecycle_init
+    placeholder: MAC_INIT_API
+  - id: MAC_UPDATE_API
+    granularity: call_expr
+    role: lifecycle_update
+    placeholder: MAC_UPDATE_API
+  - id: MAC_FINAL_API
+    granularity: call_expr
+    role: lifecycle_final
+    placeholder: MAC_FINAL_API
+  - id: MAC_RESET_API
+    granularity: call_expr
+    role: lifecycle_reset_or_abort
+    placeholder: MAC_RESET_API
+  - id: MAC_FREE_API
+    granularity: call_expr
+    role: lifecycle_cleanup
+    placeholder: MAC_FREE_API
+  - id: FINAL_AFTER_FINAL_ACTION
+    granularity: call_sequence
+    role: lifecycle_state_transition
+    placeholder: FINAL_AFTER_FINAL_ACTION
+  - id: UPDATE_AFTER_FINAL_ACTION
+    granularity: call_sequence
+    role: lifecycle_state_transition
+    placeholder: UPDATE_AFTER_FINAL_ACTION
+  - id: EXPECTED_STATE_BEHAVIOR
+    granularity: oracle
+    role: expected_behavior
+    placeholder: EXPECTED_STATE_BEHAVIOR
+notes:
+  - This minimal mask keeps AST-lite/mask/selected-unit structure visible before full template normalization.

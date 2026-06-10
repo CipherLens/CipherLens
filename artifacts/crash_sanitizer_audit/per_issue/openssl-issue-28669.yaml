@@ -1,0 +1,48 @@
+issue_id: OPENSSL-ISSUE-28669
+family: secure_heap_state_lifecycle
+oracle_type: crash_or_sanitizer
+migration_status: pending_migration
+artifact_path: datasets/openssl/poc_artifacts/issue_28669
+evidence_files:
+- datasets/openssl/poc_artifacts/issue_28669/README.md
+- datasets/openssl/poc_artifacts/issue_28669/metadata.json
+has_local_artifact: true
+has_readme_or_metadata_or_summary: true
+has_crash_log: false
+has_sanitizer_signature: false
+has_repro_command: true
+has_version_info: true
+crash_signal:
+  asan: false
+  ubsan: false
+  segv: true
+  exit_139: true
+  heap_buffer_overflow: false
+  stack_buffer_overflow: false
+  use_after_free: false
+  other:
+  - valgrind_invalid_read
+only_nonzero_exit: false
+harness_misuse_risk: medium
+version_dependency: unknown
+reproducibility_score: 0.85
+crash_confidence_score: 0.9
+harness_validity_score: 0.75
+migration_readiness_score: 0.8
+severity_score: 0.75
+recommended_verdict: ready_for_runnable_family
+recommended_next_action: Start a small D_then_A secure-heap lifecycle sprint that
+  reproduces CRYPTO_secure_used without secure heap init, then adds safe-control cases.
+notes:
+- 'Title: NULL rwlock dereference in CRYPTO_secure_used when secure heap is not initialized.'
+- 'Component: CRYPTO/MEM_SEC.'
+- 'Trigger behavior: NULL_DEREFERENCE_CRASH.'
+- 'Artifact summary local_test_result: segmentation_fault_and_valgrind_invalid_read.'
+- Local harness validation exists, but strict historical reproduction is not confirmed.
+- Need to inspect README / metadata / crash / repro files.
+- 'Compiled successfully against system OpenSSL 3.0.13. Normal execution triggered
+  SIGSEGV with exit code 139. Valgrind reported Invalid read of size 4 and ERROR SUMMARY:
+  1 errors from 1 contexts. This is local artifact validation, not strict reproduction
+  against the original affected version.'
+- Local artifact reports SIGSEGV exit 139 and Valgrind Invalid read against system
+  OpenSSL.

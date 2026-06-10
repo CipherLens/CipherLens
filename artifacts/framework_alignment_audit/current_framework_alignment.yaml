@@ -1,0 +1,44 @@
+framework_goal_alignment:
+  intended_goal: historical pattern guided cross-library/cross-version/same-family vulnerability candidate discovery
+  current_status: partially_aligned
+  risk: secure_heap_state_lifecycle_v1 currently stops at seed validation unless followed by pattern expansion
+  required_next_step: version provenance + novelty check + pattern expansion
+path_status:
+  A_recipe_slot_cross_library:
+    status: active
+    representative_result: MAC lifecycle full A-path
+    evidence: artifacts/migrations/mac_lifecycle_glm_full_a_path
+    interpretation: >
+      MAC lifecycle demonstrates the intended recipe-slot chain: RAG evidence,
+      strict slot filling, adapter validation, template rendering, compile/run,
+      and cross-result analysis.
+  B_controlled_family_mutation:
+    status: active
+    representative_result: controlled family mutation matrices
+    interpretation: >
+      Path B is valid for data-driven same-family state or mutation exploration,
+      but it must feed new candidate discovery rather than stop at seed replay.
+  C_app_level_validation_gap:
+    status: active
+    representative_result: DER full-consumption app-level triage
+    interpretation: >
+      DER full-consumption is C-path semantic validation-gap evidence, not a
+      crash or confirmed vulnerability claim.
+  D_crash_sanitizer_audit:
+    status: active
+    representative_result: secure_heap_state_lifecycle_v1 seed validation
+    interpretation: >
+      secure_heap_state_lifecycle_v1 is D_then_B seed validation and oracle
+      calibration. It is not cross-library migration and is not final discovery.
+framework_questions:
+  is_pattern_guided_migration_framework: true
+  historical_reproducer_regression_risk: true
+  mac_lifecycle_represents_full_a_path: true
+  der_full_consumption_represents_c_path: true
+  secure_heap_is_seed_validation: true
+  secure_heap_entered_true_pattern_expansion: false
+required_actions:
+  - establish version provenance and novelty classification for OPENSSL-ISSUE-28669
+  - expand secure_heap_state_lifecycle into same-family API/state matrix
+  - run cross-version core matrix against all available OpenSSL versions
+  - define cross-library analogous lifecycle oracle without forcing direct CRYPTO_secure_used equivalence

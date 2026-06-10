@@ -1,0 +1,25 @@
+family: secure_heap_state_lifecycle
+seed_issue: OPENSSL-ISSUE-28669
+target_library: openssl
+target_api: CRYPTO_secure_used
+cases:
+  - case_id: secure_heap_0000_pre_init_used_only
+    secure_heap_state: pre_init
+    call_sequence: used_only
+    expected_control: no_crash_or_documented_precondition_failure
+  - case_id: secure_heap_0001_initialized_used
+    secure_heap_state: initialized
+    call_sequence: initialized_then_used
+    expected_control: safe_success_or_defined_return
+  - case_id: secure_heap_0002_initialized_check_used
+    secure_heap_state: initialized
+    call_sequence: initialized_check_then_used
+    expected_control: safe_success_or_defined_return
+  - case_id: secure_heap_0003_done_then_used
+    secure_heap_state: initialized_then_done
+    call_sequence: done_then_used
+    expected_control: safe_failure_or_defined_return
+  - case_id: secure_heap_0004_done_check_then_used
+    secure_heap_state: initialized_then_done_then_used
+    call_sequence: initialized_check_then_used
+    expected_control: safe_precondition_guard

@@ -1,0 +1,28 @@
+template_id: SECURE_HEAP_STATE_LIFECYCLE_V1_SOURCE_TEMPLATE
+pattern_id: OPENSSL-ISSUE-28669
+description: Normalized secure heap state lifecycle template for CRYPTO_secure_used precondition triage.
+harness_family: secure_heap_state_lifecycle
+oracle_type: secure_heap_preinit_crash_oracle
+target_library: openssl
+target_api: CRYPTO_secure_used
+is_final_harness: false
+llm_freeform_c_allowed: false
+slot_placeholders:
+  - SECURE_HEAP_INIT_API
+  - SECURE_HEAP_USED_API
+  - SECURE_HEAP_DONE_API
+  - SECURE_HEAP_INITIALIZED_CHECK_API
+  - SECURE_HEAP_STATE_SEQUENCE
+  - CRASH_ORACLE
+required_observables:
+  - exit_code
+  - signal
+  - return_value
+  - initialized_state
+  - sanitizer_signal
+safe_behavior:
+  initialized_control: initialized secure heap query returns a defined value without crash
+triage_behavior:
+  precondition_failure: pre-init call returns safely or is documented as caller misuse
+bug_behavior:
+  crash_candidate: pre-init or post-done call reaches SIGSEGV, exit 139, ASAN/UBSAN, or Valgrind Invalid read

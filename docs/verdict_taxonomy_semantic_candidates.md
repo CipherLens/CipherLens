@@ -61,6 +61,21 @@ behavior, app-level validation gaps, and issue-grade candidates.
 : A behavior difference caused by documented compatibility semantics rather
   than a validation gap.
 
+`allowed_legacy_semantics_needs_review`
+: A behavior difference that may be intentional legacy/provider semantics, but
+  still needs documentation or maintainer review before it can be treated as
+  ordinary API design behavior. For MAC lifecycle work, OpenSSL CMAC repeated
+  `EVP_MAC_final()` success, including third-final success, is in this bucket
+  unless caller impact or stronger documentation evidence upgrades it.
+
+`lifecycle_semantic_divergence_candidate`
+: A source/target lifecycle difference where one library continues to allow an
+  operation after a terminal state while the paired API rejects it. This is a
+  semantic candidate, not a confirmed vulnerability. For example, OpenSSL CMAC
+  may allow `EVP_MAC_update()` after `EVP_MAC_final()` or after a second final,
+  while mbedTLS PSA MAC treats successful `psa_mac_sign_finish()` as terminal
+  and rejects follow-up update/finish calls with a BAD_STATE-like status.
+
 `projection_limitation`
 : The migrated harness does not preserve the original vulnerability path well
   enough to classify the result as a candidate.
@@ -86,6 +101,7 @@ Low-value candidates:
 High-value candidates:
 
 - `unexpected_success_candidate`
+- `lifecycle_semantic_divergence_candidate`
 - `failure_path_output_state_triage`
 - `app_command_accepts_malformed_tail`
 - `app_level_accepts_valid_prefix_with_malformed_tail`
@@ -106,6 +122,22 @@ API design behavior:
   consumed pointers.
 - Object-stream APIs can accept multiple objects when the caller drains the
   stream or intentionally takes one object.
+- MAC repeated-final behavior can be allowed legacy/provider semantics. OpenSSL
+  CMAC double-final observations should be reported as
+  `allowed_legacy_semantics_needs_review`, not as confirmed vulnerabilities,
+  until documentation says otherwise.
+- MAC update-after-final and update-after-second-final behavior remains a
+  higher-value `lifecycle_semantic_divergence_candidate` because it indicates
+  state continuation after a terminal-looking finalization call. It still
+  requires documentation review and caller-impact evidence before any
+  vulnerability claim.
+- mbedTLS PSA MAC successful `psa_mac_sign_finish()` terminates the operation;
+  repeated finish rejection is a safe lifecycle behavior.
+- HMAC failure-path nonzero `outl` or stale output observations should remain
+  `failure_path_output_state_triage` until a precise oracle proves unsafe
+  caller-visible state.
+- HMAC+AES and CMAC+SHA are invalid semantic projections. Avoid rendering them,
+  or classify them as `projection_limitation`.
 
 Crash handling:
 
@@ -114,4 +146,3 @@ Crash handling:
   `stack-buffer-overflow`, `use-after-free`, or equivalent evidence.
 - A nonzero exit can be an intentional oracle signal such as `[BUG] target
   decoded first DER object but left trailing garbage unconsumed.`
-

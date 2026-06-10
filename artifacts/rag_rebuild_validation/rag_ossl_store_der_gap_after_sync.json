@@ -1,0 +1,368 @@
+{
+  "query": "ossl_store full consumption app-level DER gap malformed ASN.1 tail x509 pkey pkcs8 storeutl",
+  "top_k": 15,
+  "results": [
+    {
+      "rank": 1,
+      "score": 1.1235596513150763,
+      "distance": 0.603695809841156,
+      "base_score": 0.6235596513150762,
+      "rerank_score": 1.1235596513150763,
+      "rerank_reasons": [
+        "api_match:ossl_store",
+        "layer:api_cards",
+        "source_file_api_match",
+        "keyword_overlap:app,asn,der,malformed,tail"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/openssl/OSSL_STORE_load.yaml",
+      "text": "Source: API Card\napi: OSSL_STORE_load\nlibrary: openssl\nfamily: der_store_loader\nsignature: OSSL_STORE_INFO *OSSL_STORE_load(OSSL_STORE_CTX *ctx)\nparameter_semantics: ctx: store loading context created by OSSL_STORE_open_ex or related helpers\nreturn_value_semantics: success: returns one OSSL_STORE_INFO object\nend_or_failure: returns NULL; caller checks OSSL_STORE_eof and OSSL_STORE_error\nvalid_invalid_ranges: valid: supported object stream content\ninvalid: malformed object stream or unsupported object type\nunsupported_conditions: - single-object callers that stop after first object without EOF/error policy\nmutation_hints: - valid DER followed by malformed ASN.1 tail\n- valid object followed by unsupported object\n- malformed second object\n- oversized trailing length\noracle_observables: - object_returned\n- store_eof\n- store_error\n- caller_accept\nnotes: - 'Known pitfall: object-stream semantics can be safe for stream callers but risky\n  for single-object app helpers.'\n",
+      "metadata": {
+        "api": "OSSL_STORE_load",
+        "family": "der_store_loader",
+        "layer": "api_cards",
+        "doc_type": "api_card",
+        "source_file": "knowledge_base/api_cards/openssl/OSSL_STORE_load.yaml",
+        "library": "openssl"
+      }
+    },
+    {
+      "rank": 2,
+      "score": 1.0745643126234687,
+      "distance": 0.6819038391113281,
+      "base_score": 0.5945643126234688,
+      "rerank_score": 1.0745643126234687,
+      "rerank_reasons": [
+        "layer:poc_patterns",
+        "family_match:der_full_consumption",
+        "keyword_overlap:app,der,level,malformed",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+      "text": "## MBEDTLS-POC-0020\n\n- Source: data/pocs/core10/MBEDTLS-POC-0020\n- Family: der_full_consumption\n- Oracle type: full_consumption_semantic\n- Root cause: Incorrect edge-case handling in mbedtls_pk_parse_key.\n- Source API: mbedtls_pk_parse_key, mbedtls_rsa_parse_key, mbedtls_rsa_parse_pubkey\n- Target API: d2i_RSAPrivateKey, d2i_PrivateKey, d2i_RSA_PUBKEY\n- Historical verdict: app_level_validation_gap_candidate\n- Feedback summary: app_level_validation_gap_candidate; total_cases=75; verdict_counts={'app_level_validation_gap_candidate': 30, 'expected_prefix_accept_behavior': 39, 'malformed_baseline_reject': 3, 'valid_baseline_success': 3}\n- Scheduler priority: 0.9 (app_level_validation_gap_candidate, clear_oracle, controlled_app_level_wrapper, der_v2_feedback, reusable_der_family, semantic_candidate_observed)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: accepts malformed key / trailing garbage. DER v2 controlled app-level sprint observed valid DER prefix plus malformed t",
+      "metadata": {
+        "family": "der_full_consumption",
+        "layer": "poc_patterns",
+        "oracle_type": "full_consumption_semantic",
+        "library": "",
+        "pattern_id": "MBEDTLS-POC-0020",
+        "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+        "doc_type": "poc_pattern"
+      }
+    },
+    {
+      "rank": 3,
+      "score": 1.0745643126234687,
+      "distance": 0.6819038391113281,
+      "base_score": 0.5945643126234688,
+      "rerank_score": 1.0745643126234687,
+      "rerank_reasons": [
+        "layer:poc_patterns",
+        "family_match:der_full_consumption",
+        "keyword_overlap:app,der,level,malformed",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "## MBEDTLS-POC-0020\n\n- Source: data/pocs/core10/MBEDTLS-POC-0020\n- Family: der_full_consumption\n- Oracle type: full_consumption_semantic\n- Root cause: Incorrect edge-case handling in mbedtls_pk_parse_key.\n- Source API: mbedtls_pk_parse_key, mbedtls_rsa_parse_key, mbedtls_rsa_parse_pubkey\n- Target API: d2i_RSAPrivateKey, d2i_PrivateKey, d2i_RSA_PUBKEY\n- Historical verdict: app_level_validation_gap_candidate\n- Feedback summary: app_level_validation_gap_candidate; total_cases=75; verdict_counts={'app_level_validation_gap_candidate': 30, 'expected_prefix_accept_behavior': 39, 'malformed_baseline_reject': 3, 'valid_baseline_success': 3}\n- Scheduler priority: 0.9 (app_level_validation_gap_candidate, clear_oracle, controlled_app_level_wrapper, der_v2_feedback, reusable_der_family, semantic_candidate_observed)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: accepts malformed key / trailing garbage. DER v2 controlled app-level sprint observed valid DER prefix plus malformed t",
+      "metadata": {
+        "family": "der_full_consumption",
+        "layer": "poc_patterns",
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+        "library": "",
+        "pattern_id": "MBEDTLS-POC-0020",
+        "doc_type": "poc_pattern",
+        "oracle_type": "full_consumption_semantic"
+      }
+    },
+    {
+      "rank": 4,
+      "score": 1.0224247490437883,
+      "distance": 0.6599583625793457,
+      "base_score": 0.6024247490437883,
+      "rerank_score": 1.0224247490437883,
+      "rerank_reasons": [
+        "layer:poc_patterns",
+        "family_match:asn1_nested_boundary",
+        "keyword_overlap:asn",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "## OPENSSL-ISSUE-30581\n\n- Source: datasets/openssl/poc_artifacts/issue_30581\n- Family: asn1_nested_boundary\n- Oracle type: crash_or_sanitizer\n- Root cause: Dereferencing a NULL pointer when decoding PBKDF2 salt as ASN.1 NULL in the CLI info path.\n- Source API: ASN1_STRING_length, pkcs12_main, do_cmd, main, BIO_puts, BIO_printf, ASN1_INTEGER_get\n- Target API: unknown\n- Historical verdict: unknown\n- Feedback summary: none\n- Scheduler priority: 0.3 (clear_oracle, reusable_family)\n- Notes: Title: NULL pointer dereference in openssl pkcs12 -info when printing PBMAC1 salt metadata. Component: PKCS12/ASN1. Trigger behavior: NULL_DEREFERENCE_CRASH.",
+      "metadata": {
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+        "oracle_type": "crash_or_sanitizer",
+        "doc_type": "poc_pattern",
+        "layer": "poc_patterns",
+        "family": "asn1_nested_boundary",
+        "library": "",
+        "pattern_id": "OPENSSL-ISSUE-30581"
+      }
+    },
+    {
+      "rank": 5,
+      "score": 1.0224247490437883,
+      "distance": 0.6599583625793457,
+      "base_score": 0.6024247490437883,
+      "rerank_score": 1.0224247490437883,
+      "rerank_reasons": [
+        "layer:poc_patterns",
+        "family_match:asn1_nested_boundary",
+        "keyword_overlap:asn",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/openssl_issue_patterns.md",
+      "text": "## OPENSSL-ISSUE-30581\n\n- Source: datasets/openssl/poc_artifacts/issue_30581\n- Family: asn1_nested_boundary\n- Oracle type: crash_or_sanitizer\n- Root cause: Dereferencing a NULL pointer when decoding PBKDF2 salt as ASN.1 NULL in the CLI info path.\n- Source API: ASN1_STRING_length, pkcs12_main, do_cmd, main, BIO_puts, BIO_printf, ASN1_INTEGER_get\n- Target API: unknown\n- Historical verdict: unknown\n- Feedback summary: none\n- Scheduler priority: 0.3 (clear_oracle, reusable_family)\n- Notes: Title: NULL pointer dereference in openssl pkcs12 -info when printing PBMAC1 salt metadata. Component: PKCS12/ASN1. Trigger behavior: NULL_DEREFERENCE_CRASH.",
+      "metadata": {
+        "oracle_type": "crash_or_sanitizer",
+        "source_file": "knowledge_raw/poc_patterns/openssl_issue_patterns.md",
+        "family": "asn1_nested_boundary",
+        "layer": "poc_patterns",
+        "pattern_id": "OPENSSL-ISSUE-30581",
+        "doc_type": "poc_pattern",
+        "library": ""
+      }
+    },
+    {
+      "rank": 6,
+      "score": 1.003438175754744,
+      "distance": 0.6571705937385559,
+      "base_score": 0.6034381757547439,
+      "rerank_score": 1.003438175754744,
+      "rerank_reasons": [
+        "layer:poc_patterns",
+        "family_match:asn1_nested_boundary",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "## OPENSSL-ISSUE-26106\n\n- Source: datasets/openssl/poc_artifacts/issue_26106\n- Family: asn1_nested_boundary\n- Oracle type: crash_or_sanitizer\n- Root cause: NULL pointer dereference in X509_ALGOR_get0 during PKCS#12 processing\n- Source API: X509_ALGOR_get0\n- Target API: unknown\n- Historical verdict: unknown\n- Feedback summary: none\n- Scheduler priority: 0.3 (clear_oracle, reusable_family)\n- Notes: Title: Segmentation fault in X509_ALGOR_get0 during PKCS#12 processing. Component: PKCS12/X509_ALGOR. Trigger behavior: NULL_DEREFERENCE_CRASH.",
+      "metadata": {
+        "family": "asn1_nested_boundary",
+        "oracle_type": "crash_or_sanitizer",
+        "layer": "poc_patterns",
+        "doc_type": "poc_pattern",
+        "pattern_id": "OPENSSL-ISSUE-26106",
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+        "library": ""
+      }
+    },
+    {
+      "rank": 7,
+      "score": 1.003438175754744,
+      "distance": 0.6571705937385559,
+      "base_score": 0.6034381757547439,
+      "rerank_score": 1.003438175754744,
+      "rerank_reasons": [
+        "layer:poc_patterns",
+        "family_match:asn1_nested_boundary",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/openssl_issue_patterns.md",
+      "text": "## OPENSSL-ISSUE-26106\n\n- Source: datasets/openssl/poc_artifacts/issue_26106\n- Family: asn1_nested_boundary\n- Oracle type: crash_or_sanitizer\n- Root cause: NULL pointer dereference in X509_ALGOR_get0 during PKCS#12 processing\n- Source API: X509_ALGOR_get0\n- Target API: unknown\n- Historical verdict: unknown\n- Feedback summary: none\n- Scheduler priority: 0.3 (clear_oracle, reusable_family)\n- Notes: Title: Segmentation fault in X509_ALGOR_get0 during PKCS#12 processing. Component: PKCS12/X509_ALGOR. Trigger behavior: NULL_DEREFERENCE_CRASH.",
+      "metadata": {
+        "oracle_type": "crash_or_sanitizer",
+        "family": "asn1_nested_boundary",
+        "source_file": "knowledge_raw/poc_patterns/openssl_issue_patterns.md",
+        "layer": "poc_patterns",
+        "doc_type": "poc_pattern",
+        "library": "",
+        "pattern_id": "OPENSSL-ISSUE-26106"
+      }
+    },
+    {
+      "rank": 8,
+      "score": 0.9960181088837918,
+      "distance": 0.6778013706207275,
+      "base_score": 0.5960181088837918,
+      "rerank_score": 0.9960181088837918,
+      "rerank_reasons": [
+        "api_match:ossl_store",
+        "source_file_api_match",
+        "keyword_overlap:app,asn,consumption,der,full,level",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/der_full_consumption_ossl_store_evidence.md",
+      "text": "## Evidence Layers\n\nThe older `artifacts/triage/ossl_store_full_consumption/` material is issue-level evidence. It shows that user-facing OpenSSL commands can process a valid leading DER object and produce observable output while ignoring malformed ASN.1 trailing bytes. The same triage also checked malformed-only inputs, which were rejected. That distinction keeps the finding scoped to valid-prefix acceptance with trailing malformed content, not arbitrary malformed input acceptance.\n\nThe DER full-consumption v2 sprint is framework-level systematic reproduction. It connects the Pattern Bank, candidate queue, scheduler, controlled mutation matrix, app-level runner, analyzer, and feedback loop to the same behavior.",
+      "metadata": {
+        "layer": "poc_patterns",
+        "family": "",
+        "oracle_type": "",
+        "library": "",
+        "pattern_id": "Evidence Layers",
+        "source_file": "knowledge_raw/poc_patterns/der_full_consumption_ossl_store_evidence.md",
+        "doc_type": "poc_pattern"
+      }
+    },
+    {
+      "rank": 9,
+      "score": 0.9915278798834137,
+      "distance": 0.6905373930931091,
+      "base_score": 0.5915278798834137,
+      "rerank_score": 0.9915278798834137,
+      "rerank_reasons": [
+        "layer:poc_patterns",
+        "family_match:asn1_nested_boundary",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "## OPENSSL-ISSUE-28669\n\n- Source: datasets/openssl/poc_artifacts/issue_28669\n- Family: asn1_nested_boundary\n- Oracle type: crash_or_sanitizer\n- Root cause: unknown\n- Source API: CRYPTO_secure_used\n- Target API: unknown\n- Historical verdict: crash_or_sanitizer\n- Feedback summary: none\n- Scheduler priority: 0.6 (has_candidate_signal, clear_oracle, reusable_family)\n- Notes: Title: NULL rwlock dereference in CRYPTO_secure_used when secure heap is not initialized. Component: CRYPTO/MEM_SEC. Trigger behavior: NULL_DEREFERENCE_CRASH.",
+      "metadata": {
+        "pattern_id": "OPENSSL-ISSUE-28669",
+        "doc_type": "poc_pattern",
+        "layer": "poc_patterns",
+        "oracle_type": "crash_or_sanitizer",
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+        "library": "",
+        "family": "asn1_nested_boundary"
+      }
+    },
+    {
+      "rank": 10,
+      "score": 0.9915278798834137,
+      "distance": 0.6905373930931091,
+      "base_score": 0.5915278798834137,
+      "rerank_score": 0.9915278798834137,
+      "rerank_reasons": [
+        "layer:poc_patterns",
+        "family_match:asn1_nested_boundary",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/openssl_issue_patterns.md",
+      "text": "## OPENSSL-ISSUE-28669\n\n- Source: datasets/openssl/poc_artifacts/issue_28669\n- Family: asn1_nested_boundary\n- Oracle type: crash_or_sanitizer\n- Root cause: unknown\n- Source API: CRYPTO_secure_used\n- Target API: unknown\n- Historical verdict: crash_or_sanitizer\n- Feedback summary: none\n- Scheduler priority: 0.6 (has_candidate_signal, clear_oracle, reusable_family)\n- Notes: Title: NULL rwlock dereference in CRYPTO_secure_used when secure heap is not initialized. Component: CRYPTO/MEM_SEC. Trigger behavior: NULL_DEREFERENCE_CRASH.",
+      "metadata": {
+        "source_file": "knowledge_raw/poc_patterns/openssl_issue_patterns.md",
+        "layer": "poc_patterns",
+        "pattern_id": "OPENSSL-ISSUE-28669",
+        "family": "asn1_nested_boundary",
+        "oracle_type": "crash_or_sanitizer",
+        "library": "",
+        "doc_type": "poc_pattern"
+      }
+    },
+    {
+      "rank": 11,
+      "score": 0.9892175662330036,
+      "distance": 0.6971659660339355,
+      "base_score": 0.5892175662330036,
+      "rerank_score": 0.9892175662330036,
+      "rerank_reasons": [
+        "layer:poc_patterns",
+        "family_match:asn1_nested_boundary",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "## OPENSSL-ISSUE-18168\n\n- Source: datasets/openssl/poc_artifacts/issue_18168\n- Family: asn1_nested_boundary\n- Oracle type: crash_or_sanitizer\n- Root cause: unknown\n- Source API: WPACKET_put_bytes__, int_der_w_integer, ossl_DER_w_ulong, ossl_DER_w_RSASSA_PSS_params, prepare_rsa_params, key_to_pki_pem_priv_bio, key2any_encode, rsapss_to_PrivateKeyInfo_pem_encode\n- Target API: unknown\n- Historical verdict: unknown\n- Feedback summary: none\n- Scheduler priority: 0.3 (clear_oracle, reusable_family)\n- Notes: Title: Assertion failure in WPACKET_put_bytes__, packet.c:387, openssl-rsa. Component: WPACKET/DER_WRITER/RSA. Trigger behavior: ASSERTION_FAILURE.",
+      "metadata": {
+        "doc_type": "poc_pattern",
+        "family": "asn1_nested_boundary",
+        "library": "",
+        "layer": "poc_patterns",
+        "pattern_id": "OPENSSL-ISSUE-18168",
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+        "oracle_type": "crash_or_sanitizer"
+      }
+    },
+    {
+      "rank": 12,
+      "score": 0.9892175662330036,
+      "distance": 0.6971659660339355,
+      "base_score": 0.5892175662330036,
+      "rerank_score": 0.9892175662330036,
+      "rerank_reasons": [
+        "layer:poc_patterns",
+        "family_match:asn1_nested_boundary",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/openssl_issue_patterns.md",
+      "text": "## OPENSSL-ISSUE-18168\n\n- Source: datasets/openssl/poc_artifacts/issue_18168\n- Family: asn1_nested_boundary\n- Oracle type: crash_or_sanitizer\n- Root cause: unknown\n- Source API: WPACKET_put_bytes__, int_der_w_integer, ossl_DER_w_ulong, ossl_DER_w_RSASSA_PSS_params, prepare_rsa_params, key_to_pki_pem_priv_bio, key2any_encode, rsapss_to_PrivateKeyInfo_pem_encode\n- Target API: unknown\n- Historical verdict: unknown\n- Feedback summary: none\n- Scheduler priority: 0.3 (clear_oracle, reusable_family)\n- Notes: Title: Assertion failure in WPACKET_put_bytes__, packet.c:387, openssl-rsa. Component: WPACKET/DER_WRITER/RSA. Trigger behavior: ASSERTION_FAILURE.",
+      "metadata": {
+        "layer": "poc_patterns",
+        "family": "asn1_nested_boundary",
+        "library": "",
+        "oracle_type": "crash_or_sanitizer",
+        "pattern_id": "OPENSSL-ISSUE-18168",
+        "doc_type": "poc_pattern",
+        "source_file": "knowledge_raw/poc_patterns/openssl_issue_patterns.md"
+      }
+    },
+    {
+      "rank": 13,
+      "score": 0.9233873862974551,
+      "distance": 0.604138970375061,
+      "base_score": 0.623387386297455,
+      "rerank_score": 0.9233873862974551,
+      "rerank_reasons": [
+        "api_match:ossl_store",
+        "source_file_api_match",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/der_full_consumption_ossl_store_evidence.md",
+      "text": "## Interpretation\n\nThis is not crash evidence. There is no ASAN/UBSAN report, SEGV, heap overflow, stack overflow, or use-after-free signal in the current result.\n\nThis is not a confirmed vulnerability and must not be described as a CVE. The current label is `app_level_validation_gap_candidate`. A stronger claim would require documentation review, caller-impact analysis, and a minimized upstream-quality reproducer.\n\nIf an upstream issue is prepared later, cite the existing minimal reproducer and summaries under:\n\n- `artifacts/triage/ossl_store_full_consumption/minimal_reproducer/`\n- `artifacts/triage/ossl_store_full_consumption/results/app_level_der_gap_overall_README.md`\n- `artifacts/triage/ossl_store_full_consumption/results/app_level_der_gap_overall_summary.json`\n- `artifacts/sprints/der_full_consumption_v2/results/behavior_summary.json`\n- `artifacts/feedback/der_full_consumption_feedback.jsonl`",
+      "metadata": {
+        "doc_type": "poc_pattern",
+        "source_file": "knowledge_raw/poc_patterns/der_full_consumption_ossl_store_evidence.md",
+        "family": "",
+        "library": "",
+        "oracle_type": "",
+        "pattern_id": "Interpretation",
+        "layer": "poc_patterns"
+      }
+    },
+    {
+      "rank": 14,
+      "score": 0.8736807687758134,
+      "distance": 0.6033843755722046,
+      "base_score": 0.6236807687758134,
+      "rerank_score": 0.8736807687758134,
+      "rerank_reasons": [
+        "layer:api_cards",
+        "keyword_overlap:asn,der,full,level,malformed,pkcs8"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/openssl/d2i_PKCS8_PRIV_KEY_INFO.yaml",
+      "text": "Source: API Card\napi: d2i_PKCS8_PRIV_KEY_INFO\nlibrary: openssl\nfamily: der_parser\nsignature: PKCS8_PRIV_KEY_INFO *d2i_PKCS8_PRIV_KEY_INFO(PKCS8_PRIV_KEY_INFO **a, const unsigned char **ppin, long length)\nparameter_semantics: a: optional reuse/output PKCS8 info pointer\nppin: input DER pointer, advanced to consumed object end on success\nlength: available input length\nreturn_value_semantics: success: returns PKCS8_PRIV_KEY_INFO pointer\nfailure: returns NULL\nvalid_invalid_ranges: valid: DER PKCS#8 PrivateKeyInfo\ninvalid: malformed ASN.1 sequence, algorithm, or private key field\nunsupported_conditions: - full-input validation without comparing consumed pointer to end\nmutation_hints: - trailing garbage\n- malformed second object\n- oversized length\n- truncated private key octet string\noracle_observables: - parse_success\n- consumed_len\n- trailing_len\n- caller_accept\nnotes: - 'Known pitfall: low-level DER parser success is not equivalent to stream exhaustion.'\n",
+      "metadata": {
+        "doc_type": "api_card",
+        "source_file": "knowledge_base/api_cards/openssl/d2i_PKCS8_PRIV_KEY_INFO.yaml",
+        "library": "openssl",
+        "api": "d2i_PKCS8_PRIV_KEY_INFO",
+        "family": "der_parser",
+        "layer": "api_cards"
+      }
+    },
+    {
+      "rank": 15,
+      "score": 0.8325210676749902,
+      "distance": 0.6596930027008057,
+      "base_score": 0.6025210676749903,
+      "rerank_score": 0.8325210676749902,
+      "rerank_reasons": [
+        "api_match:ossl_store",
+        "keyword_overlap:asn,der,malformed,x509"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509.md",
+      "text": "nconsumed.\n\n## Harness Generation Notes\n\n- Use `const unsigned char *p = der; X509 *x = d2i_X509(NULL, &p, len);`.\n- For `MBEDTLS-POC-0017`, feed malformed nested ASN.1 certificate bytes and observe NULL/error queue and pointer movement.\n\n## Vulnerability-Pattern Migration Notes\n\n- Strong candidate for X.509 nested-boundary parser migration.\n- Evaluate whether inner malformed substructures are rejected at child bounds rather than accepted or parsed using an outer bound.\n\n## Related Tests or Examples Found Locally\n\n- `test/x509_test.c`: `d2i_X509(NULL, &p, sizeof(certdata))`.\n- `test/ossl_store_test.c`, `test/pkcs12_format_test.c`, `crypto/store/store_result.c`: direct DER X.509 parsing.",
+      "metadata": {
+        "layer": "api_constraints",
+        "pattern_id": "",
+        "library": "openssl",
+        "oracle_type": "",
+        "doc_type": "api_constraint",
+        "family": "",
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509.md"
+      }
+    }
+  ]
+}

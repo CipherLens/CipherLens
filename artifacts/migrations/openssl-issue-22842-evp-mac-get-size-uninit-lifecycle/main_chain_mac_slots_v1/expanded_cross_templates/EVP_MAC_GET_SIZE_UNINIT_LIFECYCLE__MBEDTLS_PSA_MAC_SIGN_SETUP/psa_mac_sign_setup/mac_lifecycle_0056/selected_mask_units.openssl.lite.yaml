@@ -1,0 +1,947 @@
+template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE
+template_name: ''
+source_api: EVP_MAC_fetch
+template_file: tmpl_openssl.c
+template_library: openssl
+trigger_apis:
+- EVP_MAC_fetch
+- EVP_MAC_CTX_new
+- EVP_MAC_CTX_get_mac_size
+- EVP_MAC_init
+- EVP_MAC_CTX_free
+- EVP_MAC_free
+harness_family: object_state_lifecycle
+selection_policy:
+  method: ast_lite_high_value_mask_unit_selection
+  rules:
+  - Prefer role=mutation_point units.
+  - Prefer mask_level=value or api_argument units.
+  - Always retain trigger_call function_call/statement units.
+  - Always retain oracle statement/block units.
+  - Retain input_preparation/helper_function/block only when harness-family context
+    keywords are present.
+  - Use configured preferred_roles as scoring hints for each harness family.
+  - Use configured oracle_variables to prioritize oracle-observable units.
+  - Limit input/helper context to representative high-scoring units.
+  - Limit cleanup units to one or two representative statements.
+  - Deduplicate repeated code snippets.
+  context_keywords:
+  - state
+  - lifecycle
+  - init
+  - setup
+  - pre
+  - post
+  - update
+  - final
+  - finish
+  - free
+  - abort
+  - reuse
+  - zero
+  - stale
+  - length
+  - pointer
+  - size
+  - mac_length
+  - actual_len
+  - operation
+  - operation_pre
+  - operation_post
+  - EVP_MAC_CTX_get_mac_size
+  - EVP_MAC_init
+  - EVP_MAC_update
+  - EVP_MAC_final
+  - psa_mac_sign_setup
+  - psa_mac_update
+  - psa_mac_sign_finish
+  - psa_mac_abort
+  - mbedtls_md_hmac
+  ast_report_name: ast_mask_report.openssl.lite.yaml
+  family_rules_source: config/harness_family_ast_rules.yaml
+  family_rule:
+    context_keywords:
+    - state
+    - lifecycle
+    - init
+    - setup
+    - pre
+    - post
+    - update
+    - final
+    - finish
+    - free
+    - abort
+    - reuse
+    - zero
+    - stale
+    - length
+    - pointer
+    - size
+    - mac_length
+    - actual_len
+    - operation
+    - operation_pre
+    - operation_post
+    - EVP_MAC_CTX_get_mac_size
+    - EVP_MAC_init
+    - EVP_MAC_update
+    - EVP_MAC_final
+    - psa_mac_sign_setup
+    - psa_mac_update
+    - psa_mac_sign_finish
+    - psa_mac_abort
+    - mbedtls_md_hmac
+    oracle_variables:
+    - status
+    - ret
+    - mac_length
+    - actual_len
+    - out_len
+    - operation
+    - operation_pre
+    - operation_post
+    - ctx
+    trigger_functions:
+    - EVP_MAC_CTX_get_mac_size
+    - EVP_MAC_init
+    - EVP_MAC_update
+    - EVP_MAC_final
+    - psa_mac_sign_setup
+    - psa_mac_update
+    - psa_mac_sign_finish
+    - mbedtls_md_hmac_starts
+    - mbedtls_md_hmac_update
+    - mbedtls_md_hmac_finish
+    oracle_functions:
+    - EVP_MAC_CTX_get_mac_size
+    - psa_mac_update
+    - psa_mac_sign_finish
+    preferred_roles:
+    - mutation_point
+    - trigger_call
+    - oracle
+    - input_preparation
+    - helper_function
+    - cleanup
+    context_limit: 16
+    cleanup_limit: 4
+selected_units:
+- unit_id: ASTLITE-0005
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[EXPECTED_MAC_SIZE]'
+  code: EXPECTED_MAC_SIZE
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: EXPECTED_MAC_SIZE
+  mutation_type: int
+  default: 32
+  values:
+  - 32
+  selection_reason: Selected because [EXPECTED_MAC_SIZE] is a mutation point with
+    api_argument granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 119
+- unit_id: ASTLITE-0002
+  mask_level: value
+  role: mutation_point
+  placeholder: '[DIGEST_NAME]'
+  code: DIGEST_NAME
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: DIGEST_NAME
+  mutation_type: string
+  default: SHA256
+  values:
+  - SHA256
+  selection_reason: Selected because [DIGEST_NAME] is a mutation point with value
+    granularity.
+  suggested_use: mutate_value
+  selection_score: 113
+- unit_id: ASTLITE-0001
+  mask_level: value
+  role: mutation_point
+  placeholder: '[MAC_NAME]'
+  code: MAC_NAME
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: MAC_NAME
+  mutation_type: string
+  default: HMAC
+  values:
+  - HMAC
+  selection_reason: Selected because [MAC_NAME] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 113
+- unit_id: ASTLITE-0003
+  mask_level: value
+  role: mutation_point
+  placeholder: '[KEY_BYTES]'
+  code: KEY_BYTES
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: medium
+  mutation_name: KEY_BYTES
+  mutation_type: byte_array
+  default: '"rag-seed-hmac-key"'
+  values:
+  - '"rag-seed-hmac-key"'
+  selection_reason: Selected because [KEY_BYTES] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 111
+- unit_id: ASTLITE-0004
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[KEY_LEN]'
+  code: KEY_LEN
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: medium
+  mutation_name: KEY_LEN
+  mutation_type: int
+  default: 17
+  values:
+  - 17
+  selection_reason: Selected because [KEY_LEN] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 111
+- unit_id: ASTLITE-0038
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: ctx = EVP_MAC_CTX_new(mac);
+  source: tmpl_openssl.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 57
+  line_start: 57
+  line_end: 57
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Required trigger_call unit for preserving and migrating the source
+    API invocation.
+  suggested_use: migrate_api_call
+  selection_score: 110
+- unit_id: ASTLITE-0042
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: '/* * STATE_A: the original bug path queries the MAC size before EVP_MAC_init
+    * initializes provider algctx state. Safe behavior is no crash. */ pre_size =
+    EVP_MAC_CTX_get_mac_size(ctx);'
+  source: tmpl_openssl.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 64
+  line_start: 64
+  line_end: 68
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Required trigger_call unit for preserving and migrating the source
+    API invocation.
+  suggested_use: migrate_api_call
+  selection_score: 110
+- unit_id: ASTLITE-0056
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: init_ok = EVP_MAC_init(ctx, key, [KEY_LEN], params);
+  source: tmpl_openssl.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 79
+  line_start: 79
+  line_end: 79
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Required trigger_call unit for preserving and migrating the source
+    API invocation.
+  suggested_use: migrate_api_call
+  selection_score: 110
+- unit_id: ASTLITE-0061
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: post_size = EVP_MAC_CTX_get_mac_size(ctx);
+  source: tmpl_openssl.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 87
+  line_start: 87
+  line_end: 87
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Required trigger_call unit for preserving and migrating the source
+    API invocation.
+  suggested_use: migrate_api_call
+  selection_score: 110
+- unit_id: ASTLITE-0069
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: EVP_MAC_CTX_free(ctx);
+  source: tmpl_openssl.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 98
+  line_start: 98
+  line_end: 98
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Required trigger_call unit for preserving and migrating the source
+    API invocation.
+  suggested_use: migrate_api_call
+  selection_score: 110
+- unit_id: ASTLITE-0046
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: 'printf("[OK] mac_context_lifecycle: pre-setup operation rejected safely\n");'
+  source: tmpl_openssl.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 71
+  line_start: 71
+  line_end: 71
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 103
+- unit_id: ASTLITE-0033
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: mac = EVP_MAC_fetch(NULL, "[MAC_NAME]", NULL);
+  source: tmpl_openssl.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 50
+  line_start: 50
+  line_end: 50
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Required trigger_call unit for preserving and migrating the source
+    API invocation.
+  suggested_use: migrate_api_call
+  selection_score: 102
+- unit_id: ASTLITE-0071
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: EVP_MAC_free(mac);
+  source: tmpl_openssl.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 99
+  line_start: 99
+  line_end: 99
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Required trigger_call unit for preserving and migrating the source
+    API invocation.
+  suggested_use: migrate_api_call
+  selection_score: 102
+- unit_id: ASTLITE-0040
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'fprintf(stderr, "[TRIAGE] mac_context_lifecycle: unexpected size/state: EVP_MAC_CTX_new
+    failed\n");'
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 59
+  line_start: 59
+  line_end: 59
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected because [TRIAGE] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 88
+- unit_id: ASTLITE-0029
+  mask_level: value
+  role: mutation_point
+  placeholder: '[DIGEST_NAME]'
+  code: printf("template_mutation MAC_NAME=%s DIGEST_NAME=%s KEY_LEN=%d EXPECTED_MAC_SIZE=%d\n",
+    "[MAC_NAME]", "[DIGEST_NAME]", [KEY_LEN], EXPECTED_MAC_SIZE);
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: high
+  line: 47
+  line_start: 47
+  line_end: 48
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected because [DIGEST_NAME] is a mutation point with value
+    granularity.
+  suggested_use: mutate_value
+  selection_score: 84
+- unit_id: ASTLITE-0051
+  mask_level: value
+  role: mutation_point
+  placeholder: '[DIGEST_NAME]'
+  code: params[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST, "[DIGEST_NAME]",
+    0);
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: high
+  line: 76
+  line_start: 76
+  line_end: 76
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected because [DIGEST_NAME] is a mutation point with value
+    granularity.
+  suggested_use: mutate_value
+  selection_score: 84
+- unit_id: ASTLITE-0028
+  mask_level: value
+  role: mutation_point
+  placeholder: '[MAC_NAME]'
+  code: printf("template_mutation MAC_NAME=%s DIGEST_NAME=%s KEY_LEN=%d EXPECTED_MAC_SIZE=%d\n",
+    "[MAC_NAME]", "[DIGEST_NAME]", [KEY_LEN], EXPECTED_MAC_SIZE);
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: high
+  line: 47
+  line_start: 47
+  line_end: 48
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected because [MAC_NAME] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 84
+- unit_id: ASTLITE-0065
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: 'printf("[OK] mac_context_lifecycle: initialized size matched\n");'
+  source: tmpl_openssl.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 90
+  line_start: 90
+  line_end: 90
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 83
+- unit_id: ASTLITE-0050
+  mask_level: value
+  role: mutation_point
+  placeholder: '[0]'
+  code: params[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST, "[DIGEST_NAME]",
+    0);
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 76
+  line_start: 76
+  line_end: 76
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected because [0] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 82
+- unit_id: ASTLITE-0053
+  mask_level: value
+  role: mutation_point
+  placeholder: '[1]'
+  code: params[1] = OSSL_PARAM_construct_end();
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 77
+  line_start: 77
+  line_end: 77
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected because [1] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 82
+- unit_id: ASTLITE-0016
+  mask_level: value
+  role: mutation_point
+  placeholder: '[2]'
+  code: OSSL_PARAM params[2];
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 34
+  line_start: 34
+  line_end: 34
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected because [2] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 82
+- unit_id: ASTLITE-0017
+  mask_level: value
+  role: mutation_point
+  placeholder: '[KEY_BYTES]'
+  code: const unsigned char key[] = [KEY_BYTES];
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 35
+  line_start: 35
+  line_end: 35
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected because [KEY_BYTES] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 82
+- unit_id: ASTLITE-0030
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[KEY_LEN]'
+  code: printf("template_mutation MAC_NAME=%s DIGEST_NAME=%s KEY_LEN=%d EXPECTED_MAC_SIZE=%d\n",
+    "[MAC_NAME]", "[DIGEST_NAME]", [KEY_LEN], EXPECTED_MAC_SIZE);
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 47
+  line_start: 47
+  line_end: 48
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected because [KEY_LEN] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 82
+- unit_id: ASTLITE-0035
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'fprintf(stderr, "[TRIAGE] mac_context_lifecycle: unexpected size/state: EVP_MAC_fetch
+    failed\n");'
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 52
+  line_start: 52
+  line_end: 52
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected because [TRIAGE] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 82
+- unit_id: ASTLITE-0048
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: pre-init size=%zu\n",
+    pre_size);'
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 73
+  line_start: 73
+  line_end: 73
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected because [TRIAGE] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 82
+- unit_id: ASTLITE-0059
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'fprintf(stderr, "[TRIAGE] mac_context_lifecycle: unexpected size/state: EVP_MAC_init
+    failed\n");'
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 82
+  line_start: 82
+  line_end: 82
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected because [TRIAGE] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 82
+- unit_id: ASTLITE-0067
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: post-init
+    size=%zu expected=%d\n", post_size, EXPECTED_MAC_SIZE);'
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 93
+  line_start: 93
+  line_end: 94
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected because [TRIAGE] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 82
+- unit_id: ASTLITE-0041
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'fprintf(stderr, "[TRIAGE] mac_context_lifecycle: unexpected size/state: EVP_MAC_CTX_new
+    failed\n");'
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'fprintf' identified by AST-lite call matching.
+  priority: medium
+  function: fprintf
+  called_function: fprintf
+  line: 59
+  line_start: 59
+  line_end: 59
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected because [TRIAGE] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 73
+- unit_id: ASTLITE-0031
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[MAC_NAME]'
+  code: printf("template_mutation MAC_NAME=%s DIGEST_NAME=%s KEY_LEN=%d EXPECTED_MAC_SIZE=%d\n",
+    "[MAC_NAME]", "[DIGEST_NAME]", [KEY_LEN], EXPECTED_MAC_SIZE);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  called_function: printf
+  line: 47
+  line_start: 47
+  line_end: 48
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected because [MAC_NAME] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 67
+- unit_id: ASTLITE-0036
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'fprintf(stderr, "[TRIAGE] mac_context_lifecycle: unexpected size/state: EVP_MAC_fetch
+    failed\n");'
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'fprintf' identified by AST-lite call matching.
+  priority: medium
+  function: fprintf
+  called_function: fprintf
+  line: 52
+  line_start: 52
+  line_end: 52
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected because [TRIAGE] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 67
+- unit_id: ASTLITE-0049
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: pre-init size=%zu\n",
+    pre_size);'
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  called_function: printf
+  line: 73
+  line_start: 73
+  line_end: 73
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected because [TRIAGE] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 67
+- unit_id: ASTLITE-0060
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'fprintf(stderr, "[TRIAGE] mac_context_lifecycle: unexpected size/state: EVP_MAC_init
+    failed\n");'
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'fprintf' identified by AST-lite call matching.
+  priority: medium
+  function: fprintf
+  called_function: fprintf
+  line: 82
+  line_start: 82
+  line_end: 82
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected because [TRIAGE] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 67
+- unit_id: ASTLITE-0068
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: post-init
+    size=%zu expected=%d\n", post_size, EXPECTED_MAC_SIZE);'
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  called_function: printf
+  line: 93
+  line_start: 93
+  line_end: 94
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected because [TRIAGE] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 67
+- unit_id: ASTLITE-0011
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: 'fprintf(stderr, "[BUG] mac_context_lifecycle: crash or sanitizer signal:
+    %d\n", signo);'
+  source: tmpl_openssl.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 25
+  line_start: 25
+  line_end: 25
+  enclosing_function: bug_signal_handler
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 63
+- unit_id: ASTLITE-0052
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[0]'
+  code: params[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST, "[DIGEST_NAME]",
+    0);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'OSSL_PARAM_construct_utf8_string' identified by AST-lite
+    call matching.
+  priority: medium
+  function: OSSL_PARAM_construct_utf8_string
+  called_function: OSSL_PARAM_construct_utf8_string
+  line: 76
+  line_start: 76
+  line_end: 76
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected because [0] is a mutation point with function_call granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 61
+- unit_id: ASTLITE-0054
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[1]'
+  code: params[1] = OSSL_PARAM_construct_end();
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'OSSL_PARAM_construct_end' identified by AST-lite call matching.
+  priority: medium
+  function: OSSL_PARAM_construct_end
+  called_function: OSSL_PARAM_construct_end
+  line: 77
+  line_start: 77
+  line_end: 77
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected because [1] is a mutation point with function_call granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 61
+- unit_id: ASTLITE-0018
+  mask_level: type
+  role: mutation_point
+  placeholder: '[KEY_BYTES]'
+  code: const unsigned char key[] = [KEY_BYTES];
+  source: tmpl_openssl.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 35
+  line_start: 35
+  line_end: 35
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected because [KEY_BYTES] is a mutation point with type granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 56
+- unit_id: ASTLITE-0006
+  mask_level: block
+  role: helper_function
+  placeholder: ''
+  code: 'static void bug_signal_handler(int signo) { fprintf(stderr, "[BUG] mac_context_lifecycle:
+    crash or sanitizer signal: %d\n", signo); fflush(stderr); _Exit(128 + signo);
+    }'
+  source: tmpl_openssl.c.helper_function
+  reason: Static helper function block 'bug_signal_handler' identified by AST-lite
+    brace matching.
+  priority: medium
+  function: bug_signal_handler
+  line: 23
+  line_start: 23
+  line_end: 28
+  node_type: function_definition
+  enclosing_function: bug_signal_handler
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected as high-value input/helper context for harness_family=object_state_lifecycle.
+  suggested_use: preserve_input_preparation
+  selection_score: 41
+- unit_id: ASTLITE-0019
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: size_t pre_size = 0;
+  source: tmpl_openssl.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 36
+  line_start: 36
+  line_end: 36
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected as high-value input/helper context for harness_family=object_state_lifecycle.
+  suggested_use: preserve_input_preparation
+  selection_score: 36
+- unit_id: ASTLITE-0020
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: size_t post_size = 0;
+  source: tmpl_openssl.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 37
+  line_start: 37
+  line_end: 37
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected as high-value input/helper context for harness_family=object_state_lifecycle.
+  suggested_use: preserve_input_preparation
+  selection_score: 36
+- unit_id: ASTLITE-0021
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: int init_ok = 0;
+  source: tmpl_openssl.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 38
+  line_start: 38
+  line_end: 38
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  selection_reason: Selected as high-value input/helper context for harness_family=object_state_lifecycle.
+  suggested_use: preserve_input_preparation
+  selection_score: 36
+selection_summary:
+  selected_count: 41
+  source_unit_count: 72
+  by_role:
+    helper_function: 4
+    mutation_point: 27
+    oracle: 3
+    trigger_call: 7
+  by_mask_level:
+    api_argument: 3
+    block: 1
+    function_call: 8
+    statement: 10
+    type: 4
+    value: 15
+  by_suggested_use:
+    llm_reconstruction_context: 9
+    migrate_api_call: 7
+    mutate_api_argument: 3
+    mutate_value: 15
+    preserve_input_preparation: 4
+    preserve_oracle: 3
+rejected_summary:
+  count: 16
+  by_reason:
+    duplicate_code_or_unit: 4
+    noise_header_comment_or_log_label: 12

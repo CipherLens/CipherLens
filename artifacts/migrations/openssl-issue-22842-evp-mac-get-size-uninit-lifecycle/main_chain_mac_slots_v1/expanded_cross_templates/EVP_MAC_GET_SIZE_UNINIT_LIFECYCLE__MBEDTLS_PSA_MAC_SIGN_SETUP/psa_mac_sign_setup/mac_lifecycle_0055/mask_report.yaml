@@ -1,0 +1,74 @@
+template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE
+pattern_id: OPENSSL-ISSUE-22842
+source_library: openssl
+harness_family: object_state_lifecycle
+oracle_type: mac_context_size_lifecycle_oracle
+
+must_preserve_features:
+  - mac_context_allocated
+  - get_size_before_init
+  - init_then_get_size_control_state
+  - crash_or_safe_state_query_oracle
+  - semantic_projection_notice
+
+mask_units:
+  - slot: MAC_NAME
+    type: string
+    location: EVP_MAC_fetch MAC name
+    mutation_reason: Selects the provider MAC implementation
+    default_value: HMAC
+    variants:
+      - value: HMAC
+        label: hmac
+
+  - slot: DIGEST_NAME
+    type: string
+    location: OSSL_MAC_PARAM_DIGEST value
+    mutation_reason: Controls initialized MAC size
+    default_value: SHA256
+    variants:
+      - value: SHA256
+        label: sha256
+
+  - slot: KEY_BYTES
+    type: byte_array
+    location: HMAC key declaration
+    mutation_reason: Key bytes for post-init HMAC setup
+    default_value: '"rag-seed-hmac-key"'
+    variants:
+      - value: '"rag-seed-hmac-key"'
+        label: rag_seed_key
+
+  - slot: KEY_LEN
+    type: integer
+    location: EVP_MAC_init key length
+    mutation_reason: Length paired with KEY_BYTES
+    default_value: 17
+    variants:
+      - value: 17
+        label: rag_seed_key_len
+
+  - slot: EXPECTED_MAC_SIZE
+    type: integer
+    location: initialized size oracle
+    mutation_reason: Expected digest/MAC size for post-init state
+    default_value: 32
+    variants:
+      - value: 32
+        label: sha256_size
+
+key_vulnerability_fragments:
+  - fragment: "EVP_MAC_CTX_get_mac_size(ctx)"
+    reason: pre-init state query is the original issue_22842 trigger
+  - fragment: "EVP_MAC_init(ctx, key, [KEY_LEN], params)"
+    reason: establishes post-init control state
+  - fragment: "EVP_MAC_CTX_get_mac_size(ctx)"
+    reason: post-init size query verifies expected safe state
+
+immutable_structure:
+  - EVP_MAC_fetch
+  - EVP_MAC_CTX_new
+  - STATE_A EVP_MAC_CTX_get_mac_size before EVP_MAC_init
+  - EVP_MAC_init
+  - STATE_B EVP_MAC_CTX_get_mac_size after EVP_MAC_init
+  - EVP_MAC_CTX_free, EVP_MAC_free cleanup

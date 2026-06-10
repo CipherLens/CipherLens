@@ -1,0 +1,475 @@
+score=6 api=d2i_PKCS8_PRIV_KEY_INFO /home/wen/work/clean_sources/openssl-3.5.5/crypto/store/store_result.c:384
+376: 
+377:         /*
+378:          * If the encrypted PKCS#8 couldn't be decrypted,
+379:          * |der| is NULL
+380:          */
+381:         if (der != NULL) {
+382:             /* Try to unpack an unencrypted PKCS#8, that's easy */
+383:             derp = der;
+384:             p8info = d2i_PKCS8_PRIV_KEY_INFO(NULL, &derp, der_len);
+385: 
+386:             if (p8info != NULL) {
+387:                 pk = EVP_PKCS82PKEY_ex(p8info, libctx, propq);
+388:                 PKCS8_PRIV_KEY_INFO_free(p8info);
+389:             }
+390:         }
+391: 
+392:         if (pk != NULL)
+---
+score=6 api=d2i_PKCS8_PRIV_KEY_INFO /home/wen/work/clean_sources/openssl-3.5.5/providers/implementations/encode_decode/decode_der2key.c:140
+132: static void *der2key_decode_p8(const unsigned char **input_der,
+133:     long input_der_len, struct der2key_ctx_st *ctx,
+134:     key_from_pkcs8_t *key_from_pkcs8)
+135: {
+136:     PKCS8_PRIV_KEY_INFO *p8inf = NULL;
+137:     const X509_ALGOR *alg = NULL;
+138:     void *key = NULL;
+139: 
+140:     if ((p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, input_der, input_der_len)) != NULL
+141:         && PKCS8_pkey_get0(NULL, NULL, NULL, &alg, p8inf)
+142:         && (OBJ_obj2nid(alg->algorithm) == ctx->desc->evp_type
+143:             /* Allow decoding sm2 private key with id_ecPublicKey */
+144:             || (OBJ_obj2nid(alg->algorithm) == NID_X9_62_id_ecPublicKey
+145:                 && ctx->desc->evp_type == NID_sm2)))
+146:         key = key_from_pkcs8(p8inf, PROV_LIBCTX_OF(ctx->provctx), ctx->propq);
+147:     PKCS8_PRIV_KEY_INFO_free(p8inf);
+148: 
+---
+score=6 api=d2i_PKCS8_PRIV_KEY_INFO /home/wen/work/clean_sources/openssl-3.5.5/providers/implementations/encode_decode/decode_der2key.c:651
+643: {
+644:     SLH_DSA_KEY *key = NULL, *ret = NULL;
+645:     OSSL_LIB_CTX *libctx = PROV_LIBCTX_OF(ctx->provctx);
+646:     PKCS8_PRIV_KEY_INFO *p8inf = NULL;
+647:     const unsigned char *p;
+648:     const X509_ALGOR *alg = NULL;
+649:     int plen, ptype;
+650: 
+651:     if ((p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, der, der_len)) == NULL
+652:         || !PKCS8_pkey_get0(NULL, &p, &plen, &alg, p8inf))
+653:         goto end;
+654: 
+655:     /* Algorithm parameters must be absent. */
+656:     if ((X509_ALGOR_get0(NULL, &ptype, NULL, alg), ptype != V_ASN1_UNDEF)) {
+657:         ERR_raise_data(ERR_LIB_PROV, PROV_R_UNEXPECTED_KEY_PARAMETERS,
+658:             "unexpected parameters with a PKCS#8 %s private key",
+659:             ctx->desc->keytype_name);
+---
+score=6 api=d2i_PKCS8_PRIV_KEY_INFO /home/wen/work/clean_sources/openssl-3.5.5/providers/implementations/encode_decode/decode_epki2pki.c:161
+153:         }
+154:         X509_SIG_free(p8);
+155:     } else {
+156:         ERR_pop_to_mark();
+157:     }
+158: 
+159:     ERR_set_mark();
+160:     pder = der;
+161:     p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, &pder, der_len);
+162:     ERR_pop_to_mark();
+163: 
+164:     if (p8inf != NULL && PKCS8_pkey_get0(NULL, NULL, NULL, &alg, p8inf)) {
+165:         /*
+166:          * We have something and recognised it as PrivateKeyInfo, so let's
+167:          * pass all the applicable data to the callback.
+168:          */
+169:         char keytype[OSSL_MAX_NAME_SIZE];
+---
+score=6 api=d2i_PKCS8_PRIV_KEY_INFO /home/wen/work/clean_sources/openssl-3.5.5/providers/implementations/encode_decode/ml_dsa_codecs.c:425
+417:     const uint8_t *priv = NULL;
+418: 
+419:     /* Which ML-DSA variant? */
+420:     if ((v = ossl_ml_dsa_params_get(evp_type)) == NULL
+421:         || (codec = ml_dsa_get_codec(evp_type)) == NULL)
+422:         return 0;
+423: 
+424:     /* Extract the key OID and any parameters. */
+425:     if ((p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, &prvenc, prvlen)) == NULL)
+426:         return 0;
+427:     /* Shortest prefix is 4 bytes: seq tag/len  + octet string tag/len */
+428:     if (!PKCS8_pkey_get0(NULL, &buf, &len, &alg, p8inf))
+429:         goto end;
+430:     /* Bail out early if this is some other key type. */
+431:     if (OBJ_obj2nid(alg->algorithm) != evp_type)
+432:         goto end;
+433: 
+---
+score=6 api=d2i_PKCS8_PRIV_KEY_INFO /home/wen/work/clean_sources/openssl-3.5.5/providers/implementations/encode_decode/ml_kem_codecs.c:292
+284:     uint16_t seed_magic;
+285: 
+286:     /* Which ML-KEM variant? */
+287:     if ((v = ossl_ml_kem_get_vinfo(evp_type)) == NULL
+288:         || (codec = ml_kem_get_codec(evp_type)) == NULL)
+289:         return 0;
+290: 
+291:     /* Extract the key OID and any parameters. */
+292:     if ((p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, &prvenc, prvlen)) == NULL)
+293:         return 0;
+294:     /* Shortest prefix is 4 bytes: seq tag/len  + octet string tag/len */
+295:     if (!PKCS8_pkey_get0(NULL, &buf, &len, &alg, p8inf))
+296:         goto end;
+297:     /* Bail out early if this is some other key type. */
+298:     if (OBJ_obj2nid(alg->algorithm) != evp_type)
+299:         goto end;
+300: 
+---
+score=6 api=d2i_X509 /home/wen/work/clean_sources/openssl-3.5.5/crypto/store/store_result.c:501
+493:         if (data->data_type != NULL
+494:             && (OPENSSL_strcasecmp(data->data_type, PEM_STRING_X509_TRUSTED) == 0))
+495:             ignore_trusted = 0;
+496: 
+497:         if (d2i_X509_AUX(&cert, (const unsigned char **)&data->octet_data,
+498:                 data->octet_data_size)
+499:                 == NULL
+500:             && (!ignore_trusted
+501:                 || d2i_X509(&cert, (const unsigned char **)&data->octet_data,
+502:                        data->octet_data_size)
+503:                     == NULL)) {
+504:             X509_free(cert);
+505:             cert = NULL;
+506:         }
+507: 
+508:         if (cert != NULL) {
+509:             /* We determined the object type */
+---
+score=5 api=d2i_PKCS12 /home/wen/work/clean_sources/openssl-3.5.5/crypto/store/store_result.c:559
+551: {
+552:     int ok = 1;
+553: 
+554:     /* There is no specific object type for PKCS12 */
+555:     if (data->object_type == OSSL_OBJECT_UNKNOWN) {
+556:         /* Initial parsing */
+557:         PKCS12 *p12;
+558: 
+559:         p12 = d2i_PKCS12(NULL, (const unsigned char **)&data->octet_data,
+560:             data->octet_data_size);
+561: 
+562:         if (p12 != NULL) {
+563:             char *pass = NULL;
+564:             char tpass[PEM_BUFSIZE + 1];
+565:             size_t tpass_len;
+566:             EVP_PKEY *pkey = NULL;
+567:             X509 *cert = NULL;
+---
+score=5 api=d2i_X509_CRL /home/wen/work/clean_sources/openssl-3.5.5/crypto/store/store_result.c:527
+519: 
+520: static int try_crl(struct extracted_param_data_st *data, OSSL_STORE_INFO **v,
+521:     OSSL_LIB_CTX *libctx, const char *propq)
+522: {
+523:     if (data->object_type == OSSL_OBJECT_UNKNOWN
+524:         || data->object_type == OSSL_OBJECT_CRL) {
+525:         X509_CRL *crl;
+526: 
+527:         crl = d2i_X509_CRL(NULL, (const unsigned char **)&data->octet_data,
+528:             data->octet_data_size);
+529: 
+530:         if (crl != NULL)
+531:             /* We determined the object type */
+532:             data->object_type = OSSL_OBJECT_CRL;
+533: 
+534:         if (crl != NULL && !ossl_x509_crl_set0_libctx(crl, libctx, propq)) {
+535:             X509_CRL_free(crl);
+---
+score=3 api=d2i_PKCS8_PRIV_KEY_INFO /home/wen/work/clean_sources/openssl-3.5.5/crypto/asn1/d2i_pr.c:52
+44:     if (keytype != EVP_PKEY_NONE) {
+45:         key_name = evp_pkey_type2name(keytype);
+46:         if (key_name == NULL)
+47:             return NULL;
+48:     }
+49: 
+50:     /* This is just a probe. It might fail, so we ignore errors */
+51:     ERR_set_mark();
+52:     p8info = d2i_PKCS8_PRIV_KEY_INFO(NULL, pp, len);
+53:     ERR_pop_to_mark();
+54:     if (p8info != NULL) {
+55:         int64_t v;
+56: 
+57:         /* ascertain version is 0 or 1 as per RFC5958 */
+58:         if (!ASN1_INTEGER_get_int64(&v, p8info->version)
+59:             || (v != 0 && v != 1)) {
+60:             *pp = p;
+---
+score=3 api=d2i_PKCS8_PRIV_KEY_INFO /home/wen/work/clean_sources/openssl-3.5.5/crypto/asn1/d2i_pr.c:132
+124:     }
+125: 
+126:     ERR_set_mark();
+127:     if (!ret->ameth->old_priv_decode || !ret->ameth->old_priv_decode(ret, &p, length)) {
+128:         if (ret->ameth->priv_decode != NULL
+129:             || ret->ameth->priv_decode_ex != NULL) {
+130:             EVP_PKEY *tmp;
+131:             PKCS8_PRIV_KEY_INFO *p8 = NULL;
+132:             p8 = d2i_PKCS8_PRIV_KEY_INFO(NULL, &p, length);
+133:             if (p8 == NULL) {
+134:                 ERR_clear_last_mark();
+135:                 goto err;
+136:             }
+137:             tmp = evp_pkcs82pkey_legacy(p8, libctx, propq);
+138:             PKCS8_PRIV_KEY_INFO_free(p8);
+139:             if (tmp == NULL) {
+140:                 ERR_clear_last_mark();
+---
+score=3 api=d2i_PKCS8_PRIV_KEY_INFO /home/wen/work/clean_sources/openssl-3.5.5/crypto/asn1/d2i_pr.c:213
+205:      * can just count the elements.
+206:      */
+207:     if (sk_ASN1_TYPE_num(inkey) == 6) {
+208:         keytype = EVP_PKEY_DSA;
+209:     } else if (sk_ASN1_TYPE_num(inkey) == 4) {
+210:         keytype = EVP_PKEY_EC;
+211:     } else if (sk_ASN1_TYPE_num(inkey) == 3) { /* This seems to be PKCS8, not
+212:                                                 * traditional format */
+213:         PKCS8_PRIV_KEY_INFO *p8 = d2i_PKCS8_PRIV_KEY_INFO(NULL, &p, length);
+214:         EVP_PKEY *ret;
+215: 
+216:         sk_ASN1_TYPE_pop_free(inkey, ASN1_TYPE_free);
+217:         if (p8 == NULL) {
+218:             ERR_raise(ERR_LIB_ASN1, ASN1_R_UNSUPPORTED_PUBLIC_KEY_TYPE);
+219:             return NULL;
+220:         }
+221:         ret = evp_pkcs82pkey_legacy(p8, libctx, propq);
+---
+score=3 api=d2i_PKCS8_PRIV_KEY_INFO /home/wen/work/clean_sources/openssl-3.5.5/crypto/evp/evp_pkey.c:148
+140:         if ((ctx = OSSL_ENCODER_CTX_new_for_pkey(pkey, selection,
+141:                  "DER", "PrivateKeyInfo",
+142:                  NULL))
+143:                 == NULL
+144:             || !OSSL_ENCODER_to_data(ctx, &der, &derlen))
+145:             goto error;
+146: 
+147:         pp = der;
+148:         p8 = d2i_PKCS8_PRIV_KEY_INFO(NULL, &pp, (long)derlen);
+149:         OPENSSL_free(der);
+150:         if (p8 == NULL)
+151:             goto error;
+152:     } else {
+153:         p8 = PKCS8_PRIV_KEY_INFO_new();
+154:         if (p8 == NULL) {
+155:             ERR_raise(ERR_LIB_EVP, ERR_R_ASN1_LIB);
+156:             return NULL;
+---
+score=3 api=d2i_PKCS8_PRIV_KEY_INFO /home/wen/work/clean_sources/openssl-3.5.5/crypto/pem/pem_pkey.c:138
+130:         }
+131:     }
+132:     ERR_clear_last_mark();
+133:     p = data;
+134: 
+135:     if (strcmp(nm, PEM_STRING_PKCS8INF) == 0) {
+136:         PKCS8_PRIV_KEY_INFO *p8inf;
+137: 
+138:         if ((p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, &p, len)) == NULL)
+139:             goto p8err;
+140:         ret = evp_pkcs82pkey_legacy(p8inf, libctx, propq);
+141:         if (x != NULL) {
+142:             EVP_PKEY_free(*x);
+143:             *x = ret;
+144:         }
+145:         PKCS8_PRIV_KEY_INFO_free(p8inf);
+146:     } else if (strcmp(nm, PEM_STRING_PKCS8) == 0) {
+---
+score=3 api=d2i_PUBKEY /home/wen/work/clean_sources/openssl-3.5.5/crypto/ct/ct_b64.c:154
+146: 
+147:     pkey_der_len = ct_base64_decode(pkey_base64, &pkey_der);
+148:     if (pkey_der_len < 0) {
+149:         ERR_raise(ERR_LIB_CT, CT_R_LOG_CONF_INVALID_KEY);
+150:         return 0;
+151:     }
+152: 
+153:     p = pkey_der;
+154:     pkey = d2i_PUBKEY_ex(NULL, &p, pkey_der_len, libctx, propq);
+155:     OPENSSL_free(pkey_der);
+156:     if (pkey == NULL) {
+157:         ERR_raise(ERR_LIB_CT, CT_R_LOG_CONF_INVALID_KEY);
+158:         return 0;
+159:     }
+160: 
+161:     *ct_log = CTLOG_new_ex(pkey, name, libctx, propq);
+162:     if (*ct_log == NULL) {
+---
+score=3 api=d2i_PUBKEY /home/wen/work/clean_sources/openssl-3.5.5/ssl/ssl_asn1.c:347
+339:     EVP_PKEY_free(ret->peer_rpk);
+340:     ret->peer_rpk = NULL;
+341:     if (as->peer_rpk != NULL) {
+342:         const unsigned char *data = as->peer_rpk->data;
+343: 
+344:         /*
+345:          * |data| is incremented; we don't want to lose original ptr
+346:          */
+347:         ret->peer_rpk = d2i_PUBKEY_ex(NULL, &data, as->peer_rpk->length, libctx, propq);
+348:         if (ret->peer_rpk == NULL)
+349:             goto err;
+350:     }
+351: 
+352:     if (!ssl_session_memcpy(ret->sid_ctx, &ret->sid_ctx_length,
+353:             as->session_id_context, SSL_MAX_SID_CTX_LENGTH))
+354:         goto err;
+355: 
+---
+score=3 api=d2i_PUBKEY /home/wen/work/clean_sources/openssl-3.5.5/ssl/statem/statem_lib.c:1281
+1273:         spki_len = cert_len;
+1274:     }
+1275: 
+1276:     if (!PACKET_get_bytes(pkt, &spki, spki_len)) {
+1277:         SSLfatal(sc, SSL_AD_DECODE_ERROR, SSL_R_LENGTH_MISMATCH);
+1278:         goto err;
+1279:     }
+1280:     spkistart = spki;
+1281:     if ((pkey = d2i_PUBKEY_ex(NULL, &spki, spki_len, sctx->libctx, sctx->propq)) == NULL
+1282:         || spki != (spkistart + spki_len)) {
+1283:         SSLfatal(sc, SSL_AD_DECODE_ERROR, SSL_R_LENGTH_MISMATCH);
+1284:         goto err;
+1285:     }
+1286:     if (EVP_PKEY_missing_parameters(pkey)) {
+1287:         SSLfatal(sc, SSL_AD_INTERNAL_ERROR,
+1288:             SSL_R_UNABLE_TO_FIND_PUBLIC_KEY_PARAMETERS);
+1289:         goto err;
+---
+score=3 api=d2i_PUBKEY /home/wen/work/clean_sources/openssl-3.5.5/ssl/t1_trce.c:1351
+1343:     if (msglen < clen + 3)
+1344:         return 0;
+1345: 
+1346:     msg += 3;
+1347: 
+1348:     BIO_indent(bio, indent, 80);
+1349:     BIO_printf(bio, "raw_public_key, length=%d\n", (int)clen);
+1350: 
+1351:     pkey = d2i_PUBKEY_ex(NULL, &msg, clen, ssl->ctx->libctx, ssl->ctx->propq);
+1352:     if (pkey == NULL)
+1353:         return 0;
+1354:     EVP_PKEY_print_public(bio, pkey, indent + 2, NULL);
+1355:     EVP_PKEY_free(pkey);
+1356:     *pmsg += clen + 3;
+1357:     *pmsglen -= clen + 3;
+1358:     return 1;
+1359: }
+---
+score=3 api=d2i_X509 /home/wen/work/clean_sources/openssl-3.5.5/crypto/crmf/crmf_lib.c:880
+872:     const unsigned char *p;
+873:     int len;
+874:     X509 *cert = NULL;
+875: 
+876:     buf = OSSL_CRMF_ENCRYPTEDVALUE_decrypt(ecert, libctx, propq, pkey, &len);
+877:     if ((p = buf) == NULL || (cert = X509_new_ex(libctx, propq)) == NULL)
+878:         goto end;
+879: 
+880:     if (d2i_X509(&cert, &p, len) == NULL) {
+881:         ERR_raise(ERR_LIB_CRMF, CRMF_R_ERROR_DECODING_CERTIFICATE);
+882:         X509_free(cert);
+883:         cert = NULL;
+884:     }
+885: 
+886: end:
+887:     OPENSSL_free(buf);
+888:     return cert;
+---
+score=3 api=d2i_X509 /home/wen/work/clean_sources/openssl-3.5.5/crypto/pem/pem_info.c:107
+99:                     goto err;
+100:                 if ((xi = X509_INFO_new()) == NULL)
+101:                     goto err;
+102:                 goto start;
+103:             }
+104:             if ((strcmp(name, PEM_STRING_X509_TRUSTED) == 0))
+105:                 d2i = (D2I_OF(void))d2i_X509_AUX;
+106:             else
+107:                 d2i = (D2I_OF(void))d2i_X509;
+108:             xi->x509 = X509_new_ex(libctx, propq);
+109:             if (xi->x509 == NULL)
+110:                 goto err;
+111:             pp = &(xi->x509);
+112:         } else if (strcmp(name, PEM_STRING_X509_CRL) == 0) {
+113:             d2i = (D2I_OF(void))d2i_X509_CRL;
+114:             if (xi->crl != NULL) {
+115:                 if (!sk_X509_INFO_push(ret, xi))
+---
+score=3 api=d2i_X509 /home/wen/work/clean_sources/openssl-3.5.5/crypto/x509/x_x509.c:195
+187:     X509 *ret;
+188:     int freeret = 0;
+189: 
+190:     /* Save start position */
+191:     q = *pp;
+192: 
+193:     if (a == NULL || *a == NULL)
+194:         freeret = 1;
+195:     ret = d2i_X509(a, &q, length);
+196:     /* If certificate unreadable then forget it */
+197:     if (ret == NULL)
+198:         return NULL;
+199:     /* update length */
+200:     length -= q - *pp;
+201:     if (length > 0 && !d2i_X509_CERT_AUX(&ret->aux, &q, length))
+202:         goto err;
+203:     *pp = q;
+---
+score=3 api=d2i_X509 /home/wen/work/clean_sources/openssl-3.5.5/ssl/ssl_rsa.c:122
+114:     int ret;
+115: 
+116:     x = X509_new_ex(ssl->ctx->libctx, ssl->ctx->propq);
+117:     if (x == NULL) {
+118:         ERR_raise(ERR_LIB_SSL, ERR_R_ASN1_LIB);
+119:         return 0;
+120:     }
+121: 
+122:     if (d2i_X509(&x, &d, (long)len) == NULL) {
+123:         X509_free(x);
+124:         ERR_raise(ERR_LIB_SSL, ERR_R_ASN1_LIB);
+125:         return 0;
+126:     }
+127: 
+128:     ret = SSL_use_certificate(ssl, x);
+129:     X509_free(x);
+130:     return ret;
+---
+score=3 api=d2i_X509 /home/wen/work/clean_sources/openssl-3.5.5/ssl/ssl_rsa.c:373
+365:     int ret;
+366: 
+367:     x = X509_new_ex(ctx->libctx, ctx->propq);
+368:     if (x == NULL) {
+369:         ERR_raise(ERR_LIB_SSL, ERR_R_ASN1_LIB);
+370:         return 0;
+371:     }
+372: 
+373:     if (d2i_X509(&x, &d, (long)len) == NULL) {
+374:         X509_free(x);
+375:         ERR_raise(ERR_LIB_SSL, ERR_R_ASN1_LIB);
+376:         return 0;
+377:     }
+378: 
+379:     ret = SSL_CTX_use_certificate(ctx, x);
+380:     X509_free(x);
+381:     return ret;
+---
+score=3 api=d2i_X509 /home/wen/work/clean_sources/openssl-3.5.5/ssl/statem/statem_clnt.c:2038
+2030:         }
+2031: 
+2032:         certstart = certbytes;
+2033:         x = X509_new_ex(sctx->libctx, sctx->propq);
+2034:         if (x == NULL) {
+2035:             SSLfatal(s, SSL_AD_DECODE_ERROR, ERR_R_ASN1_LIB);
+2036:             goto err;
+2037:         }
+2038:         if (d2i_X509(&x, (const unsigned char **)&certbytes,
+2039:                 cert_len)
+2040:             == NULL) {
+2041:             SSLfatal(s, SSL_AD_BAD_CERTIFICATE, ERR_R_ASN1_LIB);
+2042:             goto err;
+2043:         }
+2044: 
+2045:         if (certbytes != (certstart + cert_len)) {
+2046:             SSLfatal(s, SSL_AD_DECODE_ERROR, SSL_R_CERT_LENGTH_MISMATCH);
+---
+score=3 api=d2i_X509 /home/wen/work/clean_sources/openssl-3.5.5/ssl/statem/statem_srvr.c:3705
+3697:         }
+3698: 
+3699:         certstart = certbytes;
+3700:         x = X509_new_ex(sctx->libctx, sctx->propq);
+3701:         if (x == NULL) {
+3702:             SSLfatal(s, SSL_AD_DECODE_ERROR, ERR_R_X509_LIB);
+3703:             goto err;
+3704:         }
+3705:         if (d2i_X509(&x, (const unsigned char **)&certbytes, l) == NULL) {
+3706:             SSLfatal(s, SSL_AD_DECODE_ERROR, ERR_R_ASN1_LIB);
+3707:             goto err;
+3708:         }
+3709: 
+3710:         if (certbytes != (certstart + l)) {
+3711:             SSLfatal(s, SSL_AD_DECODE_ERROR, SSL_R_CERT_LENGTH_MISMATCH);
+3712:             goto err;
+3713:         }
+---

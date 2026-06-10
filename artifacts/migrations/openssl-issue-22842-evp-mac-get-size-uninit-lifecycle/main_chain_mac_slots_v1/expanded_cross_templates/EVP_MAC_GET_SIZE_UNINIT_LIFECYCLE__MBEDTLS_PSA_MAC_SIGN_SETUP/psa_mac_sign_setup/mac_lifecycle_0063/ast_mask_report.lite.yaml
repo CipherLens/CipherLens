@@ -1,0 +1,1020 @@
+template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE
+template_name: ''
+source_api: ''
+source_library: openssl
+trigger_apis: []
+harness_family: object_state_lifecycle
+summary:
+  method: ast_lite_regex_template_role_aware
+  template_dir: artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/cross_templates_recipe/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup
+  unit_count: 71
+  note: Lightweight AST-like report generated from template metadata, mask_report
+    roles, and regex/template-aware analysis of tmpl_mbedtls.c.
+  backend: lite
+ast_mask_units:
+- unit_id: ASTLITE-0001
+  mask_level: value
+  role: mutation_point
+  placeholder: '[MAC_NAME]'
+  code: MAC_NAME
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: MAC_NAME
+  mutation_type: string
+  default: HMAC
+  values:
+  - HMAC
+- unit_id: ASTLITE-0002
+  mask_level: value
+  role: mutation_point
+  placeholder: '[DIGEST_NAME]'
+  code: DIGEST_NAME
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: DIGEST_NAME
+  mutation_type: string
+  default: SHA256
+  values:
+  - SHA256
+- unit_id: ASTLITE-0003
+  mask_level: value
+  role: mutation_point
+  placeholder: '[KEY_BYTES]'
+  code: KEY_BYTES
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: medium
+  mutation_name: KEY_BYTES
+  mutation_type: byte_array
+  default: '"rag-seed-hmac-key"'
+  values:
+  - '"rag-seed-hmac-key"'
+- unit_id: ASTLITE-0004
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[KEY_LEN]'
+  code: KEY_LEN
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: medium
+  mutation_name: KEY_LEN
+  mutation_type: int
+  default: 17
+  values:
+  - 17
+- unit_id: ASTLITE-0005
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[EXPECTED_MAC_SIZE]'
+  code: EXPECTED_MAC_SIZE
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: EXPECTED_MAC_SIZE
+  mutation_type: int
+  default: 32
+  values:
+  - 32
+- unit_id: ASTLITE-0006
+  mask_level: block
+  role: helper_function
+  placeholder: ''
+  code: 'static void bug_signal_handler(int signo) { fprintf(stderr, "[BUG] mac_context_lifecycle:
+    crash or sanitizer signal: %d\n", signo); fflush(stderr); _Exit(128 + signo);
+    }'
+  source: tmpl_mbedtls.c.helper_function
+  reason: Static helper function block 'bug_signal_handler' identified by AST-lite
+    brace matching.
+  priority: medium
+  function: bug_signal_handler
+  line: 21
+  line_start: 21
+  line_end: 26
+  node_type: function_definition
+  enclosing_function: bug_signal_handler
+- unit_id: ASTLITE-0007
+  mask_level: block
+  role: helper_function
+  placeholder: ''
+  code: static void print_psa_status(const char *label, psa_status_t status) { printf("%s
+    status=%d\n", label, (int) status); }
+  source: tmpl_mbedtls.c.helper_function
+  reason: Static helper function block 'print_psa_status' identified by AST-lite brace
+    matching.
+  priority: medium
+  function: print_psa_status
+  line: 28
+  line_start: 28
+  line_end: 31
+  node_type: function_definition
+  enclosing_function: print_psa_status
+- unit_id: ASTLITE-0008
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: '* it does not reproduce OpenSSL provider algctx internals. */ static void
+    bug_signal_handler(int signo) {'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'bug_signal_handler' identified by AST-lite call matching.
+  priority: medium
+  function: bug_signal_handler
+  line: 18
+  line_start: 18
+  line_end: 22
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0009
+  mask_level: value
+  role: oracle
+  placeholder: '[BUG]'
+  code: 'fprintf(stderr, "[BUG] mac_context_lifecycle: crash or sanitizer signal:
+    %d\n", signo);'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 23
+  line_start: 23
+  line_end: 23
+  enclosing_function: bug_signal_handler
+  node_type: statement
+- unit_id: ASTLITE-0010
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: 'fprintf(stderr, "[BUG] mac_context_lifecycle: crash or sanitizer signal:
+    %d\n", signo);'
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 23
+  line_start: 23
+  line_end: 23
+  enclosing_function: bug_signal_handler
+  node_type: statement
+- unit_id: ASTLITE-0011
+  mask_level: function_call
+  role: oracle
+  placeholder: '[BUG]'
+  code: 'fprintf(stderr, "[BUG] mac_context_lifecycle: crash or sanitizer signal:
+    %d\n", signo);'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'fprintf' identified by AST-lite call matching.
+  priority: medium
+  function: fprintf
+  line: 23
+  line_start: 23
+  line_end: 23
+  enclosing_function: bug_signal_handler
+  node_type: call_expression
+- unit_id: ASTLITE-0012
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: fflush(stderr);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'fflush' identified by AST-lite call matching.
+  priority: medium
+  function: fflush
+  line: 24
+  line_start: 24
+  line_end: 24
+  enclosing_function: bug_signal_handler
+  node_type: call_expression
+- unit_id: ASTLITE-0013
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: _Exit(128 + signo);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call '_Exit' identified by AST-lite call matching.
+  priority: medium
+  function: _Exit
+  line: 25
+  line_start: 25
+  line_end: 25
+  enclosing_function: bug_signal_handler
+  node_type: call_expression
+- unit_id: ASTLITE-0014
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: static void print_psa_status(const char *label, psa_status_t status) {
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'print_psa_status' identified by AST-lite call matching.
+  priority: medium
+  function: print_psa_status
+  line: 28
+  line_start: 28
+  line_end: 29
+  enclosing_function: print_psa_status
+  node_type: call_expression
+- unit_id: ASTLITE-0015
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("%s status=%d\n", label, (int) status);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 30
+  line_start: 30
+  line_end: 30
+  enclosing_function: print_psa_status
+  node_type: call_expression
+- unit_id: ASTLITE-0016
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: int main(void) {
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'main' identified by AST-lite call matching.
+  priority: medium
+  function: main
+  line: 33
+  line_start: 33
+  line_end: 34
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0017
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[MAC_LEN]'
+  code: unsigned char mac[MAC_LEN];
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 37
+  line_start: 37
+  line_end: 37
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0018
+  mask_level: type
+  role: mutation_point
+  placeholder: '[MAC_LEN]'
+  code: unsigned char mac[MAC_LEN];
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 37
+  line_start: 37
+  line_end: 37
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0019
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: size_t mac_length = 0;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 38
+  line_start: 38
+  line_end: 38
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0020
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: psa_status_t status;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 40
+  line_start: 40
+  line_end: 40
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0021
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 41
+  line_start: 41
+  line_end: 41
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0022
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: psa_key_id_t key_id = 0;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 42
+  line_start: 42
+  line_end: 42
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0023
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: psa_mac_operation_t operation_pre = PSA_MAC_OPERATION_INIT;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 43
+  line_start: 43
+  line_end: 43
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0024
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: psa_mac_operation_t operation_post = PSA_MAC_OPERATION_INIT;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 44
+  line_start: 44
+  line_end: 44
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0025
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: int ret = 1;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 45
+  line_start: 45
+  line_end: 45
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0026
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: setbuf(stdout, NULL);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'setbuf' identified by AST-lite call matching.
+  priority: medium
+  function: setbuf
+  line: 47
+  line_start: 47
+  line_end: 47
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0027
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGSEGV, bug_signal_handler);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'signal' identified by AST-lite call matching.
+  priority: medium
+  function: signal
+  line: 48
+  line_start: 48
+  line_end: 48
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0028
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGABRT, bug_signal_handler);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'signal' identified by AST-lite call matching.
+  priority: medium
+  function: signal
+  line: 49
+  line_start: 49
+  line_end: 49
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0029
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGBUS, bug_signal_handler);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'signal' identified by AST-lite call matching.
+  priority: medium
+  function: signal
+  line: 50
+  line_start: 50
+  line_end: 50
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0030
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGILL, bug_signal_handler);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'signal' identified by AST-lite call matching.
+  priority: medium
+  function: signal
+  line: 51
+  line_start: 51
+  line_end: 51
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0031
+  mask_level: function_call
+  role: input_construction
+  placeholder: ''
+  code: memset(mac, 0, sizeof(mac));
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'memset' identified by AST-lite call matching.
+  priority: medium
+  function: memset
+  line: 52
+  line_start: 52
+  line_end: 52
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0032
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("template_mutation PSA_ALG=%s KEY_LEN=%d MESSAGE_LEN=%d MAC_LEN=%d\n",
+    "PSA_ALG_HMAC(PSA_ALG_SHA_256)", KEY_LEN, MESSAGE_LEN, MAC_LEN);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 54
+  line_start: 54
+  line_end: 55
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0033
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: status = psa_crypto_init();
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'psa_crypto_init' identified by AST-lite call matching.
+  priority: medium
+  function: psa_crypto_init
+  line: 57
+  line_start: 57
+  line_end: 57
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0034
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: print_psa_status("psa_crypto_init", status);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'print_psa_status' identified by AST-lite call matching.
+  priority: medium
+  function: print_psa_status
+  line: 58
+  line_start: 58
+  line_end: 58
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0035
+  mask_level: value
+  role: input_preparation
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: psa_crypto_init
+    failed\n");'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 60
+  line_start: 60
+  line_end: 60
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0036
+  mask_level: function_call
+  role: input_preparation
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: psa_crypto_init
+    failed\n");'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 60
+  line_start: 60
+  line_end: 60
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0037
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: psa_set_key_type(&attributes, PSA_KEY_TYPE_HMAC);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'psa_set_key_type' identified by AST-lite call matching.
+  priority: medium
+  function: psa_set_key_type
+  line: 64
+  line_start: 64
+  line_end: 64
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0038
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_MESSAGE);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'psa_set_key_usage_flags' identified by AST-lite call matching.
+  priority: medium
+  function: psa_set_key_usage_flags
+  line: 65
+  line_start: 65
+  line_end: 65
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0039
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: psa_set_key_algorithm(&attributes, PSA_ALG_HMAC(PSA_ALG_SHA_256));
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'psa_set_key_algorithm' identified by AST-lite call matching.
+  priority: medium
+  function: psa_set_key_algorithm
+  line: 66
+  line_start: 66
+  line_end: 66
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0040
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: status = psa_import_key(&attributes, key_bytes, KEY_LEN, &key_id);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'psa_import_key' identified by AST-lite call matching.
+  priority: medium
+  function: psa_import_key
+  line: 68
+  line_start: 68
+  line_end: 68
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0041
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: print_psa_status("psa_import_key", status);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'print_psa_status' identified by AST-lite call matching.
+  priority: medium
+  function: print_psa_status
+  line: 69
+  line_start: 69
+  line_end: 69
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0042
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: psa_import_key
+    failed\n");'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 71
+  line_start: 71
+  line_end: 71
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0043
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: psa_import_key
+    failed\n");'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 71
+  line_start: 71
+  line_end: 71
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0044
+  mask_level: function_call
+  role: input_construction
+  placeholder: ''
+  code: '/* * STATE_A: use a fresh operation before psa_mac_sign_setup. Safe behavior
+    * is rejection without crash. This operation is aborted immediately. */ status
+    = psa_mac_update(&operation_pre, message, MESSAGE_LEN);'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'psa_mac_update' identified by AST-lite call matching.
+  priority: medium
+  function: psa_mac_update
+  line: 75
+  line_start: 75
+  line_end: 79
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0045
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: print_psa_status("pre-setup psa_mac_update", status);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'print_psa_status' identified by AST-lite call matching.
+  priority: medium
+  function: print_psa_status
+  line: 80
+  line_start: 80
+  line_end: 80
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0046
+  mask_level: value
+  role: oracle
+  placeholder: '[OK]'
+  code: 'printf("[OK] mac_context_lifecycle: pre-setup operation rejected safely\n");'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 82
+  line_start: 82
+  line_end: 82
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0047
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: 'printf("[OK] mac_context_lifecycle: pre-setup operation rejected safely\n");'
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 82
+  line_start: 82
+  line_end: 82
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0048
+  mask_level: function_call
+  role: oracle
+  placeholder: '[OK]'
+  code: 'printf("[OK] mac_context_lifecycle: pre-setup operation rejected safely\n");'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 82
+  line_start: 82
+  line_end: 82
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0049
+  mask_level: value
+  role: input_construction
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: pre-setup
+    MAC update succeeded\n");'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 84
+  line_start: 84
+  line_end: 84
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0050
+  mask_level: function_call
+  role: input_construction
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: pre-setup
+    MAC update succeeded\n");'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 84
+  line_start: 84
+  line_end: 84
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0051
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: psa_mac_abort(&operation_pre);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'psa_mac_abort' identified by AST-lite call matching.
+  priority: medium
+  function: psa_mac_abort
+  line: 86
+  line_start: 86
+  line_end: 86
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0052
+  mask_level: function_call
+  role: input_construction
+  placeholder: ''
+  code: '/* * STATE_B: independent initialized operation. */ status = psa_mac_sign_setup(&operation_post,
+    key_id, PSA_ALG_HMAC(PSA_ALG_SHA_256));'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'psa_mac_sign_setup' identified by AST-lite call matching.
+  priority: medium
+  function: psa_mac_sign_setup
+  line: 88
+  line_start: 88
+  line_end: 91
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0053
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: print_psa_status("psa_mac_sign_setup", status);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'print_psa_status' identified by AST-lite call matching.
+  priority: medium
+  function: print_psa_status
+  line: 92
+  line_start: 92
+  line_end: 92
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0054
+  mask_level: value
+  role: input_construction
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: psa_mac_sign_setup
+    failed\n");'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 94
+  line_start: 94
+  line_end: 94
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0055
+  mask_level: function_call
+  role: input_construction
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: psa_mac_sign_setup
+    failed\n");'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 94
+  line_start: 94
+  line_end: 94
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0056
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: status = psa_mac_update(&operation_post, message, MESSAGE_LEN);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'psa_mac_update' identified by AST-lite call matching.
+  priority: medium
+  function: psa_mac_update
+  line: 98
+  line_start: 98
+  line_end: 98
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0057
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: print_psa_status("post-setup psa_mac_update", status);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'print_psa_status' identified by AST-lite call matching.
+  priority: medium
+  function: print_psa_status
+  line: 99
+  line_start: 99
+  line_end: 99
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0058
+  mask_level: value
+  role: input_construction
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: post-setup
+    MAC update failed\n");'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 101
+  line_start: 101
+  line_end: 101
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0059
+  mask_level: function_call
+  role: input_construction
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: post-setup
+    MAC update failed\n");'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 101
+  line_start: 101
+  line_end: 101
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0060
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: status = psa_mac_sign_finish(&operation_post, mac, MAC_LEN, &mac_length);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'psa_mac_sign_finish' identified by AST-lite call matching.
+  priority: medium
+  function: psa_mac_sign_finish
+  line: 105
+  line_start: 105
+  line_end: 105
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0061
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: print_psa_status("psa_mac_sign_finish", status);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'print_psa_status' identified by AST-lite call matching.
+  priority: medium
+  function: print_psa_status
+  line: 106
+  line_start: 106
+  line_end: 106
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0062
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("psa_mac_sign_finish mac_length=%zu\n", mac_length);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 107
+  line_start: 107
+  line_end: 107
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0063
+  mask_level: value
+  role: oracle
+  placeholder: '[OK]'
+  code: 'printf("[OK] mac_context_lifecycle: initialized MAC operation completed\n");'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 109
+  line_start: 109
+  line_end: 109
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0064
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: 'printf("[OK] mac_context_lifecycle: initialized MAC operation completed\n");'
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 109
+  line_start: 109
+  line_end: 109
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0065
+  mask_level: function_call
+  role: oracle
+  placeholder: '[OK]'
+  code: 'printf("[OK] mac_context_lifecycle: initialized MAC operation completed\n");'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 109
+  line_start: 109
+  line_end: 109
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0066
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: finish status=%d
+    mac_length=%zu\n", (int) status, mac_length);'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 112
+  line_start: 112
+  line_end: 113
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0067
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: finish status=%d
+    mac_length=%zu\n", (int) status, mac_length);'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 112
+  line_start: 112
+  line_end: 113
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0068
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: psa_mac_abort(&operation_post);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'psa_mac_abort' identified by AST-lite call matching.
+  priority: medium
+  function: psa_mac_abort
+  line: 118
+  line_start: 118
+  line_end: 118
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0069
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: if (key_id != 0) psa_destroy_key(key_id);
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'psa_destroy_key' identified by AST-lite call matching.
+  priority: medium
+  function: psa_destroy_key
+  line: 119
+  line_start: 119
+  line_end: 120
+  enclosing_function: ''
+  node_type: call_expression
+- unit_id: ASTLITE-0070
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_psa_crypto_free();
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as cleanup by AST-lite role rules.
+  priority: medium
+  line: 121
+  line_start: 121
+  line_end: 121
+  enclosing_function: ''
+  node_type: statement
+- unit_id: ASTLITE-0071
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_psa_crypto_free();
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'mbedtls_psa_crypto_free' identified by AST-lite call matching.
+  priority: medium
+  function: mbedtls_psa_crypto_free
+  line: 121
+  line_start: 121
+  line_end: 121
+  enclosing_function: ''
+  node_type: call_expression
+role_summary:
+  cleanup: 2
+  helper_function: 29
+  input_construction: 9
+  input_preparation: 11
+  mutation_point: 11
+  oracle: 9
+mask_level_summary:
+  api_argument: 3
+  block: 2
+  function_call: 42
+  statement: 4
+  type: 8
+  value: 12

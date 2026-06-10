@@ -1,0 +1,1922 @@
+source_mutation_plan: artifacts/sprints/pkey_verify_family_v0/mutation_plan.yaml
+family: pkey_verify_semantic
+profile: pkey_verify_v0
+target_candidate:
+  target_library: openssl
+  target_api: EVP_DigestVerify
+  decision: generate
+  migration_applicability: applicable
+  final_score: ''
+feedback_sources:
+- api_cards
+- pk_verify_ext_null_deref_seed
+high_value_sequences:
+- invalid_signature
+- wrong_digest
+- wrong_hash_length
+- wrong_key
+- pss_saltlen_mismatch
+- padding_mismatch
+expected_candidate_types:
+- unexpected_success_candidate
+- behavior_divergence_candidate
+- safe_negative
+- projection_limitation
+- crash_candidate
+- harness_error
+legal_combinations: {}
+projection_limitations: {}
+case_count: 80
+supported_cases: 80
+skipped_cases: 0
+projection_limitation_cases: 0
+high_value_cases: 72
+supported_high_value_cases: 72
+projection_high_value_cases: 0
+high_value_projection_limitation_cases: 0
+render_pipeline_status:
+  render_cases_direct_support: false
+  blocking_point: template_maker/render_cases.py currently consumes cross-template
+    case metadata, not external render_matrix.yaml.
+  next_integration_step: Add a renderer-side adapter that maps render_matrix entries
+    into template_meta mutation_points or recipe slot bindings.
+mutation_dimensions:
+  key_type:
+    values:
+    - rsa
+    source: family_rule
+  digest_mutation:
+    values:
+    - matching_digest
+    - wrong_digest_algorithm
+    - wrong_hash_length
+    source: family_rule
+  key_mutation:
+    values:
+    - matching_key
+    - wrong_key
+    source: family_rule
+  padding_mutation:
+    values:
+    - rsa_pkcs1_v15
+    - rsa_pss
+    - pss_saltlen_mismatch
+    source: family_rule
+  signature_mutation:
+    values:
+    - valid_signature
+    - invalid_signature
+    - truncated_signature
+    - all_zero_signature
+    - bitflip_signature
+    source: family_rule
+  verify_api:
+    values:
+    - EVP_DigestVerify
+    - EVP_PKEY_verify
+    source: family_rule
+case_matrix:
+- case_id: pkey_verify_semantic_0000
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: matching_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: valid_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: false
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0010
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: matching_key
+    padding_mutation: rsa_pss
+    signature_mutation: valid_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: false
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0020
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: matching_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: valid_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0001
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: matching_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: valid_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: false
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0011
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: matching_key
+    padding_mutation: rsa_pss
+    signature_mutation: valid_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: false
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0021
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: matching_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: valid_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0006
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: matching_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: all_zero_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: false
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0008
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: matching_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: bitflip_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: false
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0002
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: matching_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: invalid_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0004
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: matching_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: truncated_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: false
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0060
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: matching_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: valid_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: false
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0120
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: matching_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: valid_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0030
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: wrong_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: valid_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0105
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: wrong_key
+    padding_mutation: rsa_pss
+    signature_mutation: truncated_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0177
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: wrong_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: all_zero_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0109
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: wrong_key
+    padding_mutation: rsa_pss
+    signature_mutation: bitflip_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0173
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: wrong_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: invalid_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0115
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: wrong_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: truncated_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0167
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: wrong_key
+    padding_mutation: rsa_pss
+    signature_mutation: all_zero_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0119
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: wrong_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: bitflip_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0162
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: wrong_key
+    padding_mutation: rsa_pss
+    signature_mutation: invalid_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0107
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: wrong_key
+    padding_mutation: rsa_pss
+    signature_mutation: all_zero_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0174
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: wrong_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: truncated_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0103
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: wrong_key
+    padding_mutation: rsa_pss
+    signature_mutation: invalid_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0148
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: matching_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: bitflip_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0117
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: wrong_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: all_zero_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0134
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: matching_key
+    padding_mutation: rsa_pss
+    signature_mutation: truncated_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0099
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: wrong_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: bitflip_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0132
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: matching_key
+    padding_mutation: rsa_pss
+    signature_mutation: invalid_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0113
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: wrong_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: invalid_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0124
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: matching_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: truncated_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0169
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: wrong_key
+    padding_mutation: rsa_pss
+    signature_mutation: bitflip_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0086
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: matching_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: all_zero_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0035
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: wrong_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: truncated_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0087
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: matching_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: all_zero_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0168
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: wrong_key
+    padding_mutation: rsa_pss
+    signature_mutation: bitflip_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0012
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: matching_key
+    padding_mutation: rsa_pss
+    signature_mutation: invalid_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0095
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: wrong_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: truncated_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0146
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: matching_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: all_zero_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0039
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: wrong_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: bitflip_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0072
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: matching_key
+    padding_mutation: rsa_pss
+    signature_mutation: invalid_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0175
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: wrong_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: truncated_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0026
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: matching_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: all_zero_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0093
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: wrong_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: invalid_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0138
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: matching_key
+    padding_mutation: rsa_pss
+    signature_mutation: bitflip_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0031
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: wrong_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: valid_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0084
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: matching_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: truncated_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0163
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: wrong_key
+    padding_mutation: rsa_pss
+    signature_mutation: invalid_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0027
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: matching_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: all_zero_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0098
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: wrong_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: bitflip_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0130
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: matching_key
+    padding_mutation: rsa_pss
+    signature_mutation: valid_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0045
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: wrong_key
+    padding_mutation: rsa_pss
+    signature_mutation: truncated_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0088
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: matching_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: bitflip_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0157
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: wrong_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: all_zero_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0022
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: matching_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: invalid_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0091
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: wrong_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: valid_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0135
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: matching_key
+    padding_mutation: rsa_pss
+    signature_mutation: truncated_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0036
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: wrong_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: all_zero_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0089
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: matching_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: bitflip_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0042
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: wrong_key
+    padding_mutation: rsa_pss
+    signature_mutation: invalid_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0140
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: matching_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: valid_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0097
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: wrong_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: all_zero_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0139
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: matching_key
+    padding_mutation: rsa_pss
+    signature_mutation: bitflip_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0034
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: wrong_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: truncated_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0082
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: matching_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: invalid_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0161
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: wrong_key
+    padding_mutation: rsa_pss
+    signature_mutation: valid_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0024
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: matching_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: truncated_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0159
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: wrong_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: bitflip_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0073
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: matching_key
+    padding_mutation: rsa_pss
+    signature_mutation: invalid_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0046
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: wrong_key
+    padding_mutation: rsa_pss
+    signature_mutation: all_zero_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0080
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: matching_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: valid_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0155
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: wrong_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: truncated_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0028
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: matching_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: bitflip_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0153
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: wrong_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: invalid_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0106
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: wrong_key
+    padding_mutation: rsa_pss
+    signature_mutation: all_zero_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0025
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: matching_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: truncated_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0062
+  values:
+    key_type: rsa
+    digest_mutation: wrong_digest_algorithm
+    key_mutation: matching_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: invalid_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0041
+  values:
+    key_type: rsa
+    digest_mutation: matching_digest
+    key_mutation: wrong_key
+    padding_mutation: rsa_pss
+    signature_mutation: valid_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0126
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: matching_key
+    padding_mutation: rsa_pkcs1_v15
+    signature_mutation: all_zero_signature
+    verify_api: EVP_DigestVerify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+- case_id: pkey_verify_semantic_0179
+  values:
+    key_type: rsa
+    digest_mutation: wrong_hash_length
+    key_mutation: wrong_key
+    padding_mutation: pss_saltlen_mismatch
+    signature_mutation: bitflip_signature
+    verify_api: EVP_PKEY_verify
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - behavior_divergence_candidate
+  - safe_negative
+  - projection_limitation
+  - crash_candidate
+  - harness_error
+notes:
+- This matrix is an intermediate planning artifact.
+- No C harness files are generated by this tool.
+- Unsupported MAC lifecycle combinations are counted as projection_limitation_cases.

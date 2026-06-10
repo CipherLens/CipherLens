@@ -1,0 +1,52 @@
+family: secure_heap_state_lifecycle
+seed_issue: OPENSSL-ISSUE-28669
+execution_mode: same_family_state_expansion
+claim_boundary:
+  confirmed_vulnerability: false
+  cve_claim: false
+api_group:
+  lifecycle_query:
+    - CRYPTO_secure_used
+    - CRYPTO_secure_malloc_initialized
+    - CRYPTO_secure_allocated
+  lifecycle_alloc:
+    - OPENSSL_secure_malloc
+    - OPENSSL_secure_zalloc
+  lifecycle_free:
+    - OPENSSL_secure_free
+  lifecycle_init:
+    - CRYPTO_secure_malloc_init
+  lifecycle_done:
+    - CRYPTO_secure_malloc_done
+state_sequences:
+  - pre_init_query
+  - initialized_query
+  - done_then_query
+  - done_twice
+  - reinit_after_done
+  - done_then_alloc
+  - done_then_free
+  - alloc_then_done_then_free
+  - init_failed_then_query
+  - initialized_alloc_free_control
+oracle_modes:
+  - exit_code
+  - signal
+  - gdb_if_available
+  - valgrind_if_available
+  - sanitizer_if_available
+novelty_labels:
+  - historical_reproduction
+  - affected_version_reproduction
+  - current_version_robustness_candidate
+  - new_api_candidate
+  - new_state_combination_candidate
+  - potential_regression_candidate
+  - api_precondition_misuse
+  - harness_error
+constraints:
+  max_cases: 40
+  include_initialized_control: true
+  seed_cases_are_baseline_only: true
+  no_llm_generated_c: true
+  no_aflpp: true

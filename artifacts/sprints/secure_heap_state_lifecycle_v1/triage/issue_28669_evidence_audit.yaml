@@ -1,0 +1,43 @@
+audit_name: OPENSSL-ISSUE-28669 evidence audit
+seed_issue: OPENSSL-ISSUE-28669
+sprint: secure_heap_state_lifecycle_v1
+artifact_root: datasets/openssl/poc_artifacts/issue_28669
+local_artifact_exists: true
+artifact_files:
+  - datasets/openssl/poc_artifacts/issue_28669/README.md
+  - datasets/openssl/poc_artifacts/issue_28669/metadata.json
+  - datasets/openssl/poc_artifacts/issue_28669/poc.c
+  - datasets/openssl/poc_artifacts/issue_28669/run.sh
+has_original_repro_command: true
+repro_command_type: generated_c_api_poc
+repro_command_summary: calls CRYPTO_secure_used before CRYPTO_secure_malloc_init
+version_info:
+  tested_library: OpenSSL 3.0.13 / libcrypto.so.3
+  affected_version: null
+  strict_historical_reproduction: false
+crash_evidence:
+  sigsegv: true
+  exit_139: true
+  valgrind_invalid_read: true
+  asan: false
+  ubsan: false
+  ordinary_nonzero_only: false
+evidence_sources:
+  - datasets/openssl/poc_artifacts/issue_28669/metadata.json
+  - artifacts/crash_sanitizer_audit/per_issue/openssl-issue-28669.yaml
+  - artifacts/crash_sanitizer_audit/top5_audit.yaml
+harness_misuse_risk: medium
+api_precondition_misuse_possible: true
+manual_summary: >
+  Local artifacts report a generated C API PoC that calls CRYPTO_secure_used()
+  before secure heap initialization. The artifact metadata records SIGSEGV,
+  exit code 139, and Valgrind Invalid read against system OpenSSL 3.0.13.
+  This is local validation evidence and does not establish strict historical
+  reproduction or a confirmed vulnerability.
+can_abstract_family: true
+proposed_family: secure_heap_state_lifecycle
+suitable_for_runnable_sprint: true
+limitations:
+  - Upstream affected version is not identified in local metadata.
+  - Local artifact does not include full raw Valgrind log, only summarized validation notes.
+  - API precondition semantics need local source/doc confirmation before interpretation.

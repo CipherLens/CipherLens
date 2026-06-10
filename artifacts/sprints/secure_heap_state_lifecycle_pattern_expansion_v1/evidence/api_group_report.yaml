@@ -1,0 +1,77 @@
+source_tree: ${CLEAN_SOURCES_ROOT}/openssl-3.5.5
+source_hits: artifacts/sprints/secure_heap_state_lifecycle_pattern_expansion_v1/evidence/secure_heap_api_source_hits.txt
+api_group:
+  - api: CRYPTO_secure_malloc_init
+    exists_in_headers: true
+    source_location:
+      header: include/openssl/crypto.h:377
+      implementation: crypto/mem_sec.c:107
+      docs: doc/man3/OPENSSL_secure_malloc.pod:17
+    role: lifecycle_init
+    usable_in_expansion: true
+    notes: Initializes secure heap and creates sec_malloc_lock.
+  - api: CRYPTO_secure_malloc_done
+    exists_in_headers: true
+    source_location:
+      header: include/openssl/crypto.h:378
+      implementation: crypto/mem_sec.c:130
+      docs: doc/man3/OPENSSL_secure_malloc.pod:21
+    role: lifecycle_done
+    usable_in_expansion: true
+    notes: Releases secure heap only when secure_mem_used is zero; frees sec_malloc_lock.
+  - api: CRYPTO_secure_malloc_initialized
+    exists_in_headers: true
+    source_location:
+      header: include/openssl/crypto.h:385
+      implementation: crypto/mem_sec.c:144
+      docs: doc/man3/OPENSSL_secure_malloc.pod:19
+    role: lifecycle_check
+    usable_in_expansion: true
+    notes: Query guard for secure heap availability.
+  - api: CRYPTO_secure_used
+    exists_in_headers: true
+    source_location:
+      header: include/openssl/crypto.h:387
+      implementation: crypto/mem_sec.c:260
+      docs: doc/man3/OPENSSL_secure_malloc.pod:38
+    role: lifecycle_query
+    usable_in_expansion: true
+    notes: Reads secure_mem_used under sec_malloc_lock; seed crash oracle centers on NULL lock behavior.
+  - api: CRYPTO_secure_allocated
+    exists_in_headers: true
+    source_location:
+      header: include/openssl/crypto.h:384
+      implementation: crypto/mem_sec.c:244
+      docs: doc/man3/OPENSSL_secure_malloc.pod:37
+    role: lifecycle_query
+    usable_in_expansion: true
+    notes: Has explicit !secure_mem_initialized guard and returns 0.
+  - api: OPENSSL_secure_malloc
+    exists_in_headers: true
+    source_location:
+      header_macro: include/openssl/crypto.h:126
+      implementation: crypto/mem_sec.c:151
+      docs: doc/man3/OPENSSL_secure_malloc.pod:23
+    role: lifecycle_alloc
+    usable_in_expansion: true
+    notes: Falls back to OPENSSL_malloc when secure heap is not initialized.
+  - api: OPENSSL_secure_zalloc
+    exists_in_headers: true
+    source_location:
+      header_macro: include/openssl/crypto.h:128
+      implementation: crypto/mem_sec.c:178
+      docs: doc/man3/OPENSSL_secure_malloc.pod:26
+    role: lifecycle_alloc
+    usable_in_expansion: true
+    notes: Zeroing allocation path; uses secure malloc when initialized.
+  - api: OPENSSL_secure_free
+    exists_in_headers: true
+    source_location:
+      header_macro: include/openssl/crypto.h:130
+      implementation: crypto/mem_sec.c:190
+      docs: doc/man3/OPENSSL_secure_malloc.pod:29
+    role: lifecycle_free
+    usable_in_expansion: true
+    notes: Falls back to OPENSSL_free for non-secure pointers and pre-init states.
+version_directories:
+  - ${CLEAN_SOURCES_ROOT}/openssl-3.5.5

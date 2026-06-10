@@ -1,0 +1,66 @@
+report_name: resume_rag_rebuild_report
+task: Resume framework alignment RAG rebuild and query validation
+resume_run: true
+reran_framework_alignment_audit: false
+reran_secure_heap_sprint: false
+reran_minimal_reproducer_or_gdb: false
+commit_or_push_performed: false
+previous_interruption:
+  step: knowledge.rag_builder
+  reported_reason: Failed to refresh token / session ended during embedding authorization.
+preflight_artifacts:
+  framework_alignment_reports_present: true
+  secure_heap_qualification_present: true
+  novelty_assessment_present: true
+  version_provenance_present: true
+  pattern_bank_present: true
+  raw_pattern_docs_present: true
+rag_rebuild:
+  executed: true
+  success: true
+  stdout_log: artifacts/framework_alignment_audit/rag_builder.stdout.log
+  stderr_log: artifacts/framework_alignment_audit/rag_builder.stderr.log
+  note: Initial sandbox run failed with Ollama embedding Operation not permitted; non-sandbox rerun completed successfully.
+rag_queries:
+  executed: true
+  success: true
+  outputs:
+    - path: artifacts/rag_rebuild_validation/rag_framework_alignment_secure_heap_next_stage.json
+      result_count: 15
+      recalls_openssl_issue_28669: true
+      recalls_secure_heap_state_lifecycle: true
+      recalls_framework_alignment: true
+      recalls_version_provenance: true
+      recalls_novelty_assessment: true
+      recalls_pattern_expansion: true
+      recalls_current_version_candidate_semantics: true
+    - path: artifacts/rag_rebuild_validation/rag_secure_heap_28669_current_version_candidate.json
+      result_count: 15
+      recalls_openssl_issue_28669: true
+      recalls_secure_heap_state_lifecycle: true
+      recalls_framework_alignment: false
+      recalls_version_provenance: true
+      recalls_novelty_assessment: false
+      recalls_pattern_expansion: true
+      recalls_current_version_candidate_semantics: true
+    - path: artifacts/rag_rebuild_validation/rag_project_framework_pipeline_after_alignment.json
+      result_count: 15
+      recalls_openssl_issue_28669: false
+      recalls_secure_heap_state_lifecycle: false
+      recalls_framework_alignment: false
+      recalls_version_provenance: false
+      recalls_novelty_assessment: false
+      recalls_pattern_expansion: true
+      recalls_current_version_candidate_semantics: false
+query_gap_notes:
+  - The framework/secure-heap query and the 28669-specific query recall the expected secure_heap_state_lifecycle and OPENSSL-ISSUE-28669 evidence.
+  - The broad project pipeline query mostly recalls generic pattern-bank and pipeline material; it does not specifically recall 28669, which is acceptable as a broad query gap but worth improving with more discriminative query wording.
+  - The indexed text uses current_version_robustness_candidate_with_unknown_historical_overlap rather than the exact phrase current-version robustness_hardening_candidate.
+current_conclusions:
+  secure_heap_state_lifecycle_v1: seed_validation / D_then_B_precondition_triage
+  openssl_issue_28669: current-version robustness_hardening_candidate / new affected version candidate only if historical issue did not cover OpenSSL 3.5.5
+  vulnerability_claim: not confirmed vulnerability or CVE
+  next_stage: pattern expansion
+remaining_items:
+  - Improve broad project pipeline query recall if it must surface issue-specific secure heap evidence.
+  - Continue into pattern expansion without reclassifying OPENSSL-ISSUE-28669 as a confirmed vulnerability.

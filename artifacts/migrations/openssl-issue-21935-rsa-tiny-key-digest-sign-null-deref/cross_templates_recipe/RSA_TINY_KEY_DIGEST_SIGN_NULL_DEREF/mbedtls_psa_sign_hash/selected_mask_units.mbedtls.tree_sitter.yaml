@@ -1,0 +1,1248 @@
+template_id: RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF
+template_name: ''
+source_api: EVP_PKEY_new
+template_file: tmpl_mbedtls.c
+template_library: mbedtls
+trigger_apis:
+- EVP_PKEY_new
+- RSA_new
+- RSA_set0_key
+- EVP_PKEY_assign_RSA
+- EVP_MD_CTX_new
+- EVP_DigestSignInit
+- EVP_DigestSign
+- psa_sign_hash
+harness_family: pkey_capability_mismatch_oracle
+selection_policy:
+  method: ast_lite_high_value_mask_unit_selection
+  rules:
+  - Prefer role=mutation_point units.
+  - Prefer mask_level=value or api_argument units.
+  - Always retain trigger_call function_call/statement units.
+  - Always retain oracle statement/block units.
+  - Retain input_preparation/helper_function/block only when harness-family context
+    keywords are present.
+  - Use configured preferred_roles as scoring hints for each harness family.
+  - Use configured oracle_variables to prioritize oracle-observable units.
+  - Limit input/helper context to representative high-scoring units.
+  - Limit cleanup units to one or two representative statements.
+  - Deduplicate repeated code snippets.
+  context_keywords:
+  - pkey
+  - PKEY
+  - RSA
+  - rsa
+  - digest
+  - sign
+  - verify
+  - capability
+  - mismatch
+  - key_id
+  - mdctx
+  - hash
+  - sig
+  - sig_len
+  - actual_sig_len
+  - EVP_PKEY_new_raw_public_key
+  - EVP_DigestSignInit
+  - EVP_DigestSign
+  - EVP_DigestVerify
+  - psa_import_key
+  - psa_sign_hash
+  - psa_sign_message
+  - psa_verify_hash
+  - psa_destroy_key
+  ast_report_name: ast_mask_report.mbedtls.tree_sitter.yaml
+  family_rules_source: config/harness_family_ast_rules.yaml
+  family_rule:
+    context_keywords:
+    - pkey
+    - PKEY
+    - RSA
+    - rsa
+    - digest
+    - sign
+    - verify
+    - capability
+    - mismatch
+    - key_id
+    - mdctx
+    - hash
+    - sig
+    - sig_len
+    - actual_sig_len
+    - EVP_PKEY_new_raw_public_key
+    - EVP_DigestSignInit
+    - EVP_DigestSign
+    - EVP_DigestVerify
+    - psa_import_key
+    - psa_sign_hash
+    - psa_sign_message
+    - psa_verify_hash
+    - psa_destroy_key
+    oracle_variables:
+    - ret
+    - status
+    - key_id
+    - pkey
+    - mdctx
+    - hash
+    - sig
+    - sig_len
+    - actual_sig_len
+    trigger_functions:
+    - EVP_PKEY_new
+    - RSA_new
+    - RSA_set0_key
+    - EVP_PKEY_assign_RSA
+    - EVP_PKEY_new_raw_public_key
+    - EVP_DigestSignInit
+    - EVP_DigestSign
+    - EVP_DigestVerify
+    - psa_import_key
+    - psa_sign_hash
+    - psa_sign_message
+    - psa_verify_hash
+    oracle_functions:
+    - EVP_DigestSignInit
+    - EVP_DigestSign
+    - EVP_DigestVerify
+    - psa_import_key
+    - psa_sign_hash
+    - psa_sign_message
+    - psa_verify_hash
+    preferred_roles:
+    - mutation_point
+    - trigger_call
+    - oracle
+    - input_preparation
+    - helper_function
+    - cleanup
+    context_limit: 16
+    cleanup_limit: 4
+selected_units:
+- unit_id: ASTLITE-0037
+  mask_level: function_call
+  role: trigger_call
+  placeholder: '[HASH_ALG]'
+  code: status = psa_sign_hash(key_id, PSA_ALG_RSA_PKCS1V15_SIGN([HASH_ALG]), hash,
+    HASH_LEN, sig, sizeof(sig), &sig_len);
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'psa_sign_hash' identified by tree-sitter C parser.
+  priority: high
+  line: 75
+  line_start: 75
+  line_end: 77
+  column_start: 14
+  column_end: 55
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[HASH_ALG]'
+  identifiers_read:
+  - key_id
+  - PSA_ALG_RSA_PKCS1V15_SIGN
+  - HASH_ALG
+  - hash
+  - HASH_LEN
+  - sig
+  - sig_len
+  identifiers_written:
+  - status
+  called_function: psa_sign_hash
+  function: psa_sign_hash
+  call_node_code: psa_sign_hash(key_id, PSA_ALG_RSA_PKCS1V15_SIGN([HASH_ALG]), hash,
+    HASH_LEN, sig, sizeof(sig), &sig_len)
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Required trigger_call unit for preserving and migrating the source
+    API invocation.
+  suggested_use: migrate_api_call
+  selection_score: 125
+- unit_id: ASTLITE-0002
+  mask_level: value
+  role: mutation_point
+  placeholder: '[HASH_LEN]'
+  code: '#define HASH_LEN [HASH_LEN]'
+  source: tmpl_mbedtls.c.tree_sitter.preprocessor
+  reason: Preprocessor node contains template placeholder.
+  priority: high
+  line: 8
+  line_start: 8
+  line_end: 9
+  column_start: 1
+  column_end: 1
+  node_type: preproc_def
+  enclosing_function: ''
+  placeholder_dependencies:
+  - '[HASH_LEN]'
+  identifiers_read:
+  - HASH_LEN
+  identifiers_written: []
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected because [HASH_LEN] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 98
+- unit_id: ASTLITE-0003
+  mask_level: value
+  role: mutation_point
+  placeholder: '[SIG_LEN]'
+  code: '#define SIG_LEN [SIG_LEN]'
+  source: tmpl_mbedtls.c.tree_sitter.preprocessor
+  reason: Preprocessor node contains template placeholder.
+  priority: high
+  line: 9
+  line_start: 9
+  line_end: 10
+  column_start: 1
+  column_end: 1
+  node_type: preproc_def
+  enclosing_function: ''
+  placeholder_dependencies:
+  - '[SIG_LEN]'
+  identifiers_read:
+  - SIG_LEN
+  identifiers_written: []
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected because [SIG_LEN] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 98
+- unit_id: ASTLITE-0005
+  mask_level: statement
+  role: oracle
+  placeholder: '[BUG]'
+  code: 'fprintf(stderr, "[BUG] crash or sanitizer signal: %d\n", signo);'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 22
+  line_start: 22
+  line_end: 22
+  column_start: 5
+  column_end: 69
+  node_type: expression_statement
+  enclosing_function: signo
+  placeholder_dependencies:
+  - '[BUG]'
+  identifiers_read:
+  - fprintf
+  - stderr
+  - signo
+  identifiers_written: []
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 95
+- unit_id: ASTLITE-0001
+  mask_level: value
+  role: mutation_point
+  placeholder: '[KEY_BITS]'
+  code: '#define KEY_BITS [KEY_BITS]'
+  source: tmpl_mbedtls.c.tree_sitter.preprocessor
+  reason: Preprocessor node contains template placeholder.
+  priority: high
+  line: 7
+  line_start: 7
+  line_end: 8
+  column_start: 1
+  column_end: 1
+  node_type: preproc_def
+  enclosing_function: ''
+  placeholder_dependencies:
+  - '[KEY_BITS]'
+  identifiers_read:
+  - KEY_BITS
+  identifiers_written: []
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected because [KEY_BITS] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 86
+- unit_id: ASTLITE-0029
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: psa_import_key(&attributes, rsa_key_der, sizeof(rsa_key_der), &key_id)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'psa_import_key' identified by tree-sitter C parser.
+  priority: medium
+  line: 65
+  line_start: 65
+  line_end: 65
+  column_start: 14
+  column_end: 84
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - attributes
+  - rsa_key_der
+  - key_id
+  identifiers_written: []
+  called_function: psa_import_key
+  function: psa_import_key
+  call_node_code: psa_import_key(&attributes, rsa_key_der, sizeof(rsa_key_der), &key_id)
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Required trigger_call unit for preserving and migrating the source
+    API invocation.
+  suggested_use: migrate_api_call
+  selection_score: 77
+- unit_id: ASTLITE-0010
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[HASH_LEN]'
+  code: unsigned char hash[HASH_LEN];
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 32
+  line_start: 32
+  line_end: 32
+  column_start: 5
+  column_end: 34
+  node_type: declaration
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[HASH_LEN]'
+  identifiers_read: []
+  identifiers_written: []
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected because [HASH_LEN] is a mutation point with statement
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 76
+- unit_id: ASTLITE-0011
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SIG_LEN]'
+  code: unsigned char sig[SIG_LEN];
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 33
+  line_start: 33
+  line_end: 33
+  column_start: 5
+  column_end: 32
+  node_type: declaration
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SIG_LEN]'
+  identifiers_read: []
+  identifiers_written: []
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected because [SIG_LEN] is a mutation point with statement
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 76
+- unit_id: ASTLITE-0038
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[HASH_ALG]'
+  code: PSA_ALG_RSA_PKCS1V15_SIGN([HASH_ALG])
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'PSA_ALG_RSA_PKCS1V15_SIGN' identified by tree-sitter C parser.
+  priority: medium
+  line: 75
+  line_start: 75
+  line_end: 75
+  column_start: 36
+  column_end: 73
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[HASH_ALG]'
+  identifiers_read:
+  - HASH_ALG
+  identifiers_written: []
+  called_function: PSA_ALG_RSA_PKCS1V15_SIGN
+  function: PSA_ALG_RSA_PKCS1V15_SIGN
+  call_node_code: PSA_ALG_RSA_PKCS1V15_SIGN([HASH_ALG])
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected because [HASH_ALG] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 73
+- unit_id: ASTLITE-0033
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: 'printf("[SAFE] invalid RSA key signing rejected by psa_import_key: %d\n",
+    (int) status)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 68
+  line_start: 68
+  line_end: 69
+  column_start: 9
+  column_end: 29
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - status
+  identifiers_written: []
+  called_function: printf
+  function: printf
+  call_node_code: 'printf("[SAFE] invalid RSA key signing rejected by psa_import_key:
+    %d\n", (int) status)'
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected because [SAFE] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 73
+- unit_id: ASTLITE-0045
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: 'printf("[SAFE] invalid RSA key signing rejected by psa_sign_hash: %d\n",
+    (int) status)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 83
+  line_start: 83
+  line_end: 84
+  column_start: 9
+  column_end: 29
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - status
+  identifiers_written: []
+  called_function: printf
+  function: printf
+  call_node_code: 'printf("[SAFE] invalid RSA key signing rejected by psa_sign_hash:
+    %d\n", (int) status)'
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected because [SAFE] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 73
+- unit_id: ASTLITE-0042
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: printf("[TRIAGE] signing with invalid RSA key succeeded\n")
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 81
+  line_start: 81
+  line_end: 81
+  column_start: 9
+  column_end: 68
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[TRIAGE]'
+  identifiers_read: []
+  identifiers_written: []
+  called_function: printf
+  function: printf
+  call_node_code: printf("[TRIAGE] signing with invalid RSA key succeeded\n")
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected because [TRIAGE] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 73
+- unit_id: ASTLITE-0031
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: 'if (status != PSA_SUCCESS) { printf("[SAFE] invalid RSA key signing rejected
+    by psa_import_key: %d\n", (int) status); printf("[VERDICT] safe_fixed_behavior\n");
+    ret = 0; goto end; }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 67
+  line_start: 67
+  line_end: 73
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  - '[VERDICT]'
+  identifiers_read:
+  - status
+  - PSA_SUCCESS
+  - printf
+  identifiers_written:
+  - ret
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected because [SAFE] is a mutation point with statement granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 68
+- unit_id: ASTLITE-0032
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: 'printf("[SAFE] invalid RSA key signing rejected by psa_import_key: %d\n",
+    (int) status);'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 68
+  line_start: 68
+  line_end: 69
+  column_start: 9
+  column_end: 30
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - printf
+  - status
+  identifiers_written: []
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected because [SAFE] is a mutation point with statement granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 68
+- unit_id: ASTLITE-0043
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: 'else { printf("[SAFE] invalid RSA key signing rejected by psa_sign_hash:
+    %d\n", (int) status); printf("[VERDICT] safe_fixed_behavior\n"); }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 82
+  line_start: 82
+  line_end: 86
+  column_start: 7
+  column_end: 6
+  node_type: else_clause
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  - '[VERDICT]'
+  identifiers_read:
+  - printf
+  - status
+  identifiers_written: []
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected because [SAFE] is a mutation point with statement granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 68
+- unit_id: ASTLITE-0044
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: 'printf("[SAFE] invalid RSA key signing rejected by psa_sign_hash: %d\n",
+    (int) status);'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 83
+  line_start: 83
+  line_end: 84
+  column_start: 9
+  column_end: 30
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - printf
+  - status
+  identifiers_written: []
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected because [SAFE] is a mutation point with statement granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 68
+- unit_id: ASTLITE-0040
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'if (status == PSA_SUCCESS) { printf("[TRIAGE] signing with invalid RSA key
+    succeeded\n"); } else { printf("[SAFE] invalid RSA key signing rejected by psa_sign_hash:
+    %d\n", (int) status); printf("[VERDICT] safe_fixed_behavior\n"); }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 80
+  line_start: 80
+  line_end: 86
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[TRIAGE]'
+  - '[SAFE]'
+  - '[VERDICT]'
+  identifiers_read:
+  - PSA_SUCCESS
+  - printf
+  identifiers_written:
+  - status
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected because [TRIAGE] is a mutation point with statement granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 68
+- unit_id: ASTLITE-0041
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: printf("[TRIAGE] signing with invalid RSA key succeeded\n");
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 81
+  line_start: 81
+  line_end: 81
+  column_start: 9
+  column_end: 69
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[TRIAGE]'
+  identifiers_read:
+  - printf
+  identifiers_written: []
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected because [TRIAGE] is a mutation point with statement granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 68
+- unit_id: ASTLITE-0035
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[VERDICT]'
+  code: printf("[VERDICT] safe_fixed_behavior\n")
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 70
+  line_start: 70
+  line_end: 70
+  column_start: 9
+  column_end: 50
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[VERDICT]'
+  identifiers_read: []
+  identifiers_written: []
+  called_function: printf
+  function: printf
+  call_node_code: printf("[VERDICT] safe_fixed_behavior\n")
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected because [VERDICT] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 61
+- unit_id: ASTLITE-0023
+  mask_level: function_call
+  role: input_preparation
+  placeholder: '[SAFE]'
+  code: 'fprintf(stderr, "[SAFE] invalid RSA key signing rejected during psa_crypto_init:
+    %d\n", (int) status)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'fprintf' identified by tree-sitter C parser.
+  priority: medium
+  line: 54
+  line_start: 54
+  line_end: 55
+  column_start: 9
+  column_end: 30
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - stderr
+  - status
+  identifiers_written: []
+  called_function: fprintf
+  function: fprintf
+  call_node_code: 'fprintf(stderr, "[SAFE] invalid RSA key signing rejected during
+    psa_crypto_init: %d\n", (int) status)'
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected as high-value input/helper context for harness_family=pkey_capability_mismatch_oracle.
+  suggested_use: preserve_input_preparation
+  selection_score: 59
+- unit_id: ASTLITE-0034
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[VERDICT]'
+  code: printf("[VERDICT] safe_fixed_behavior\n");
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 70
+  line_start: 70
+  line_end: 70
+  column_start: 9
+  column_end: 51
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[VERDICT]'
+  identifiers_read:
+  - printf
+  identifiers_written: []
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected because [VERDICT] is a mutation point with statement
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 56
+- unit_id: ASTLITE-0021
+  mask_level: statement
+  role: input_preparation
+  placeholder: '[SAFE]'
+  code: 'if (status != PSA_SUCCESS) { fprintf(stderr, "[SAFE] invalid RSA key signing
+    rejected during psa_crypto_init: %d\n", (int) status); ret = 0; goto end; }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 53
+  line_start: 53
+  line_end: 58
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - status
+  - PSA_SUCCESS
+  - fprintf
+  - stderr
+  identifiers_written:
+  - ret
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected as high-value input/helper context for harness_family=pkey_capability_mismatch_oracle.
+  suggested_use: preserve_input_preparation
+  selection_score: 54
+- unit_id: ASTLITE-0022
+  mask_level: statement
+  role: input_preparation
+  placeholder: '[SAFE]'
+  code: 'fprintf(stderr, "[SAFE] invalid RSA key signing rejected during psa_crypto_init:
+    %d\n", (int) status);'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 54
+  line_start: 54
+  line_end: 55
+  column_start: 9
+  column_end: 31
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - fprintf
+  - stderr
+  - status
+  identifiers_written: []
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected as high-value input/helper context for harness_family=pkey_capability_mismatch_oracle.
+  suggested_use: preserve_input_preparation
+  selection_score: 54
+- unit_id: ASTLITE-0006
+  mask_level: function_call
+  role: oracle
+  placeholder: '[BUG]'
+  code: 'fprintf(stderr, "[BUG] crash or sanitizer signal: %d\n", signo)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'fprintf' identified by tree-sitter C parser.
+  priority: medium
+  line: 22
+  line_start: 22
+  line_end: 22
+  column_start: 5
+  column_end: 68
+  node_type: call_expression
+  enclosing_function: signo
+  placeholder_dependencies:
+  - '[BUG]'
+  identifiers_read:
+  - stderr
+  - signo
+  identifiers_written: []
+  called_function: fprintf
+  function: fprintf
+  call_node_code: 'fprintf(stderr, "[BUG] crash or sanitizer signal: %d\n", signo)'
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 53
+- unit_id: ASTLITE-0007
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: fflush(stderr)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'fflush' identified by tree-sitter C parser.
+  priority: medium
+  line: 23
+  line_start: 23
+  line_end: 23
+  column_start: 5
+  column_end: 19
+  node_type: call_expression
+  enclosing_function: signo
+  placeholder_dependencies: []
+  identifiers_read:
+  - stderr
+  identifiers_written: []
+  called_function: fflush
+  function: fflush
+  call_node_code: fflush(stderr)
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected as high-value input/helper context for harness_family=pkey_capability_mismatch_oracle.
+  suggested_use: preserve_input_preparation
+  selection_score: 47
+- unit_id: ASTLITE-0008
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: _Exit(128 + signo)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call '_Exit' identified by tree-sitter C parser.
+  priority: medium
+  line: 24
+  line_start: 24
+  line_end: 24
+  column_start: 5
+  column_end: 23
+  node_type: call_expression
+  enclosing_function: signo
+  placeholder_dependencies: []
+  identifiers_read:
+  - signo
+  identifiers_written: []
+  called_function: _Exit
+  function: _Exit
+  call_node_code: _Exit(128 + signo)
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected as high-value input/helper context for harness_family=pkey_capability_mismatch_oracle.
+  suggested_use: preserve_input_preparation
+  selection_score: 47
+- unit_id: ASTLITE-0013
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGSEGV, bug_signal_handler)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'signal' identified by tree-sitter C parser.
+  priority: medium
+  line: 42
+  line_start: 42
+  line_end: 42
+  column_start: 5
+  column_end: 40
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - SIGSEGV
+  - bug_signal_handler
+  identifiers_written: []
+  called_function: signal
+  function: signal
+  call_node_code: signal(SIGSEGV, bug_signal_handler)
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected as high-value input/helper context for harness_family=pkey_capability_mismatch_oracle.
+  suggested_use: preserve_input_preparation
+  selection_score: 47
+- unit_id: ASTLITE-0014
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGABRT, bug_signal_handler)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'signal' identified by tree-sitter C parser.
+  priority: medium
+  line: 43
+  line_start: 43
+  line_end: 43
+  column_start: 5
+  column_end: 40
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - SIGABRT
+  - bug_signal_handler
+  identifiers_written: []
+  called_function: signal
+  function: signal
+  call_node_code: signal(SIGABRT, bug_signal_handler)
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected as high-value input/helper context for harness_family=pkey_capability_mismatch_oracle.
+  suggested_use: preserve_input_preparation
+  selection_score: 47
+- unit_id: ASTLITE-0015
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGBUS, bug_signal_handler)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'signal' identified by tree-sitter C parser.
+  priority: medium
+  line: 44
+  line_start: 44
+  line_end: 44
+  column_start: 5
+  column_end: 39
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - SIGBUS
+  - bug_signal_handler
+  identifiers_written: []
+  called_function: signal
+  function: signal
+  call_node_code: signal(SIGBUS, bug_signal_handler)
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected as high-value input/helper context for harness_family=pkey_capability_mismatch_oracle.
+  suggested_use: preserve_input_preparation
+  selection_score: 47
+- unit_id: ASTLITE-0016
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGILL, bug_signal_handler)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'signal' identified by tree-sitter C parser.
+  priority: medium
+  line: 45
+  line_start: 45
+  line_end: 45
+  column_start: 5
+  column_end: 39
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - SIGILL
+  - bug_signal_handler
+  identifiers_written: []
+  called_function: signal
+  function: signal
+  call_node_code: signal(SIGILL, bug_signal_handler)
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected as high-value input/helper context for harness_family=pkey_capability_mismatch_oracle.
+  suggested_use: preserve_input_preparation
+  selection_score: 47
+- unit_id: ASTLITE-0019
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("template_mutation KEY_BITS=%d HASH_LEN=%d SIG_LEN=%d\n", KEY_BITS,
+    HASH_LEN, SIG_LEN)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 49
+  line_start: 49
+  line_end: 50
+  column_start: 5
+  column_end: 40
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read: []
+  identifiers_written:
+  - KEY_BITS
+  - HASH_LEN
+  - SIG_LEN
+  called_function: printf
+  function: printf
+  call_node_code: printf("template_mutation KEY_BITS=%d HASH_LEN=%d SIG_LEN=%d\n",
+    KEY_BITS, HASH_LEN, SIG_LEN)
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected as high-value input/helper context for harness_family=pkey_capability_mismatch_oracle.
+  suggested_use: preserve_input_preparation
+  selection_score: 47
+- unit_id: ASTLITE-0026
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_HASH)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'psa_set_key_usage_flags' identified by tree-sitter C parser.
+  priority: medium
+  line: 62
+  line_start: 62
+  line_end: 62
+  column_start: 5
+  column_end: 66
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - attributes
+  - PSA_KEY_USAGE_SIGN_HASH
+  identifiers_written: []
+  called_function: psa_set_key_usage_flags
+  function: psa_set_key_usage_flags
+  call_node_code: psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_HASH)
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected as high-value input/helper context for harness_family=pkey_capability_mismatch_oracle.
+  suggested_use: preserve_input_preparation
+  selection_score: 47
+- unit_id: ASTLITE-0027
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: psa_set_key_algorithm(&attributes, PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH))
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'psa_set_key_algorithm' identified by tree-sitter C parser.
+  priority: medium
+  line: 63
+  line_start: 63
+  line_end: 63
+  column_start: 5
+  column_end: 84
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - attributes
+  - PSA_ALG_RSA_PKCS1V15_SIGN
+  - PSA_ALG_ANY_HASH
+  identifiers_written: []
+  called_function: psa_set_key_algorithm
+  function: psa_set_key_algorithm
+  call_node_code: psa_set_key_algorithm(&attributes, PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH))
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected as high-value input/helper context for harness_family=pkey_capability_mismatch_oracle.
+  suggested_use: preserve_input_preparation
+  selection_score: 47
+- unit_id: ASTLITE-0028
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'PSA_ALG_RSA_PKCS1V15_SIGN' identified by tree-sitter C parser.
+  priority: medium
+  line: 63
+  line_start: 63
+  line_end: 63
+  column_start: 40
+  column_end: 83
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - PSA_ALG_ANY_HASH
+  identifiers_written: []
+  called_function: PSA_ALG_RSA_PKCS1V15_SIGN
+  function: PSA_ALG_RSA_PKCS1V15_SIGN
+  call_node_code: PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH)
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected as high-value input/helper context for harness_family=pkey_capability_mismatch_oracle.
+  suggested_use: preserve_input_preparation
+  selection_score: 47
+- unit_id: ASTLITE-0030
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("psa_import_key returned %d\n", (int) status)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 66
+  line_start: 66
+  line_end: 66
+  column_start: 5
+  column_end: 57
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - status
+  identifiers_written: []
+  called_function: printf
+  function: printf
+  call_node_code: printf("psa_import_key returned %d\n", (int) status)
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected as high-value input/helper context for harness_family=pkey_capability_mismatch_oracle.
+  suggested_use: preserve_input_preparation
+  selection_score: 47
+- unit_id: ASTLITE-0039
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("psa_sign_hash returned %d sig_len=%zu\n", (int) status, sig_len)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 78
+  line_start: 78
+  line_end: 78
+  column_start: 5
+  column_end: 77
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - status
+  identifiers_written:
+  - sig_len
+  called_function: printf
+  function: printf
+  call_node_code: printf("psa_sign_hash returned %d sig_len=%zu\n", (int) status,
+    sig_len)
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected as high-value input/helper context for harness_family=pkey_capability_mismatch_oracle.
+  suggested_use: preserve_input_preparation
+  selection_score: 47
+- unit_id: ASTLITE-0046
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: psa_destroy_key(key_id)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'psa_destroy_key' identified by tree-sitter C parser.
+  priority: medium
+  line: 91
+  line_start: 91
+  line_end: 91
+  column_start: 9
+  column_end: 32
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - key_id
+  identifiers_written: []
+  called_function: psa_destroy_key
+  function: psa_destroy_key
+  call_node_code: psa_destroy_key(key_id)
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected as high-value input/helper context for harness_family=pkey_capability_mismatch_oracle.
+  suggested_use: preserve_input_preparation
+  selection_score: 47
+- unit_id: ASTLITE-0048
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_psa_crypto_free()
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_psa_crypto_free' identified by tree-sitter C parser.
+  priority: medium
+  line: 92
+  line_start: 92
+  line_end: 92
+  column_start: 5
+  column_end: 30
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read: []
+  identifiers_written: []
+  called_function: mbedtls_psa_crypto_free
+  function: mbedtls_psa_crypto_free
+  call_node_code: mbedtls_psa_crypto_free()
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected limited cleanup context needed to keep generated harnesses
+    well-scoped.
+  suggested_use: preserve_cleanup
+  selection_score: 19
+- unit_id: ASTLITE-0047
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_psa_crypto_free();
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 92
+  line_start: 92
+  line_end: 92
+  column_start: 5
+  column_end: 31
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - mbedtls_psa_crypto_free
+  identifiers_written: []
+  template_file: tmpl_mbedtls.c
+  template_library: mbedtls
+  selection_reason: Selected limited cleanup context needed to keep generated harnesses
+    well-scoped.
+  suggested_use: preserve_cleanup
+  selection_score: 14
+selection_summary:
+  selected_count: 39
+  source_unit_count: 48
+  by_role:
+    cleanup: 2
+    helper_function: 14
+    input_preparation: 3
+    mutation_point: 17
+    oracle: 2
+    trigger_call: 1
+  by_mask_level:
+    function_call: 23
+    statement: 13
+    value: 3
+  by_suggested_use:
+    llm_reconstruction_context: 14
+    migrate_api_call: 2
+    mutate_value: 3
+    preserve_cleanup: 2
+    preserve_input_preparation: 16
+    preserve_oracle: 2
+rejected_summary:
+  count: 8
+  by_reason:
+    context_limit_reached: 2
+    duplicate_code_or_unit: 5
+    noise_header_comment_or_log_label: 1

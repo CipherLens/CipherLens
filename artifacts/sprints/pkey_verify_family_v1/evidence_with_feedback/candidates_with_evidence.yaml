@@ -1,0 +1,1028 @@
+template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+source_template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+source:
+  library: mbedtls
+  api: mbedtls_pk_verify_ext
+  pattern_id: MBEDTLS-POC-0003
+  root_cause_summary: 'mbedtls_pk_verify_ext() enters the RSASSA-PSS verification
+    path without first checking that the supplied PK context is an RSA context. For
+    opaque PSA-wrapped keys, mbedtls_pk_rsa(*ctx) returns NULL. The RSA-PSS path dereferences
+    the NULL RSA context, causing a segmentation fault. The fix adds a type guard:
+    if (mbedtls_pk_get_type(ctx) != MBEDTLS_PK_RSA) return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE.
+
+    '
+  vulnerability_path_features:
+    must_preserve:
+    - generic_polymorphic_key_context_dispatch
+    - rsa_pss_specific_verification_path_or_rsa_dispatch_code
+    - incompatible_or_mismatched_key_type_entry
+    - missing_type_check_before_rsa_context_access
+    - observable_crash_vs_safe_error_return
+    optional:
+    - psa_opaque_key_mechanism
+    - exact_mbedtls_error_code_value
+    - exact_rsa_key_size
+    not_required:
+    - exact_psa_opaque_key_import_sequence
+    - exact_mbedtls_internal_function_name
+scoring_policy:
+  operation_family: 0.15
+  function_behavior: 0.2
+  parameter_structure: 0.2
+  vulnerability_path: 0.3
+  harness_feasibility: 0.15
+  decision_rule:
+    generate: final >= 75 and vulnerability_path >= 70
+    needs_llm_review: final >= 55 and vulnerability_path >= 50
+    skip: otherwise
+  score_notes:
+  - The key criterion is whether the target API has a polymorphic key dispatch layer
+    where an incompatible key type can reach RSA-specific code.
+  - Exact mbedTLS error codes and PSA mechanisms are not required.
+  - Oracle must be: crash (ASAN/SEGV/exit 139) or safe error return.
+required_features:
+- target has a generic or polymorphic public-key context or dispatch layer
+- target has an RSA-PSS signature verification path or RSA-specific dispatch code
+- target can receive a key object of incompatible type relative to the operation
+- target exposes observable return code or crash signal for incompatible key type
+- harness can construct incompatible key type without full TLS handshake
+- harness is a standalone compilable C program
+target_candidates:
+- target_library: openssl
+  target_api: EVP_DigestVerify
+  library: openssl
+  api: EVP_DigestVerify
+  source_template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+  source_api: mbedtls_pk_verify_ext
+  decision: generate
+  migration_applicability: applicable
+  applicability: strong_candidate
+  scores:
+    operation_family: 85
+    function_behavior: 80
+    parameter_structure: 75
+    vulnerability_path: 72
+    harness_feasibility: 85
+    final: 78
+  preserved_features:
+  - EVP_PKEY is a polymorphic key dispatch layer analogous to mbedTLS PK context
+  - EVP_DigestVerifyInit dispatches internally to RSA-specific or ECDSA-specific methods
+  - passing an EC key to a verify operation that requests RSA-PSS padding replicates
+    the incompatible key type scenario
+  - EVP_PKEY_CTX_set_rsa_padding reachable from EVP_DigestVerifyInit dispatch path
+  - return code oracle observable through all EVP_Digest* return values
+  - ASAN or UBSAN crash oracle available through sanitizer-linked compilation
+  - standalone harness constructable without TLS handshake
+  preserved_vulnerability_features:
+  - generic_polymorphic_key_context_dispatch
+  - rsa_pss_specific_verification_path_or_rsa_dispatch_code
+  - incompatible_or_mismatched_key_type_entry
+  - observable_crash_vs_safe_error_return
+  weakened_features:
+  - OpenSSL EVP dispatch uses explicit pmeth type table; type check is more robust
+    than the historical mbedTLS missing guard
+  - PSA opaque key concept has no direct OpenSSL equivalent; replaced by EC key type
+    mismatch scenario
+  - modern OpenSSL (3.x) performs type validation at EVP_DigestVerifyInit or EVP_PKEY_CTX_set_rsa_padding
+    so crash is unlikely on current version
+  lost_or_weakened_features:
+  - psa_opaque_key_mechanism
+  - exact_mbedtls_error_code_value
+  - exact_mbedtls_internal_type_guard_location
+  migration_reason: 'Strongest target candidate. EVP_DigestVerify uses EVP_PKEY which
+    is a generic key dispatch layer analogous to the mbedTLS PK context. By passing
+    an EC key (incompatible type for RSA-PSS) and requesting RSA-PSS padding via EVP_PKEY_CTX_set_rsa_padding,
+    the harness probes whether the OpenSSL dispatch safely rejects the incompatible
+    type combination or crashes. The expected result on current OpenSSL 3.x is safe
+    rejection, making this a migrated_safe result. This is a valid research outcome
+    showing that OpenSSL has stronger type checking.
+
+    '
+  required_features:
+  - generate RSA signing key and produce RSA-PSS signature with EVP_DigestSignInit
+  - generate EC key (incompatible type for RSA-PSS)
+  - call EVP_DigestVerifyInit with EC key and SHA-256 hash
+  - call EVP_PKEY_CTX_set_rsa_padding with RSA_PKCS1_PSS_PADDING (probes dispatch)
+  - observe return code at each step; process crash would be caught by ASAN
+  - cleanup EVP_MD_CTX and EVP_PKEY objects
+  notes:
+  - The harness uses RSA_KEY_BITS parameterized by [KEY_BITS] to match source mutation.
+  - Expected migration verdict is migrated_safe; both mbedTLS (fixed) and OpenSSL
+    safely reject the incompatible key type.
+  evidence:
+    top_k: 5
+    queries:
+    - query: ' '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \" \",\n  \"top_k\": 5,\n  \"results\": [],\n\
+        \  \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      raw_fallback:
+        enabled: false
+        reason: rag_query_failed
+        root: knowledge_raw
+        hits: 0
+      kind: source_pattern
+      use_for_feature_inference: source_only
+    - query: openssl EVP_DigestVerify function declaration signature parameters return
+        value
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.8413
+        distance: null
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerify.md
+        text: '# API Constraints: EVP_DigestVerify (OpenSSL 3.5.5) Source version:
+          `/home/wen/work/clean_sources/openssl-3.5.5` ## API - API/function name:
+          `EVP_DigestVerify` - Header declaration: `include/openssl/evp.h` - Implementation
+          file: `crypto/evp/m_sigver.c` - Manpage: `doc/man3/EVP_DigestVerifyInit.pod`
+          - Signature: ```c int EVP_DigestVerify(EVP_MD_CTX *ctx, const unsigned char
+          *sigret, size_t siglen, const unsigned char *tbs, size_t tbslen); ``` ##
+          Semantics - One-shot verification of `tbs` against signature `sigret`. -
+          Requires a context initialized by `EVP_DigestVerifyInit` or `EVP_DigestVerifyInit_ex`.
+          - Can be called only once before reinitializing the `EVP_MD_CTX`. ## Return
+          Value Semantics - Returns `1` on valid signature. - Returns `0` for verification
+          failure or invalid signature form. - Negative or other non-1 values indicate
+          more serious errors depending on provider/path. ## Object and Buffer Constraints
+          - `EVP_MD_CTX`, `EVP_PKEY_CTX`, and `EVP_PKEY` are opaque. Do not access
+          internal fields. - `sigret` and `tbs` are caller-owned input buffers. -
+          The API does not write to a caller output buffer. ## Adapter Generation
+          Notes - Uses caller-provided output buf'
+        metadata:
+          fallback: knowledge_raw_keyword_search
+          matched_terms:
+          - declaration
+          - evp_digestverify
+          - openssl
+          - signature
+      - rank: 2
+        score: 0.8413
+        distance: null
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerifyInit.md
+        text: '# API Constraints: EVP_DigestVerifyInit / EVP_DigestVerifyInit_ex (OpenSSL
+          3.5.5) Source version: `/home/wen/work/clean_sources/openssl-3.5.5` ## API
+          - API/function names: `EVP_DigestVerifyInit`, `EVP_DigestVerifyInit_ex`
+          - Header declaration: `include/openssl/evp.h` - Implementation file: `crypto/evp/m_sigver.c`
+          - Manpage: `doc/man3/EVP_DigestVerifyInit.pod` - Signatures: ```c int EVP_DigestVerifyInit_ex(EVP_MD_CTX
+          *ctx, EVP_PKEY_CTX **pctx, const char *mdname, OSSL_LIB_CTX *libctx, const
+          char *props, EVP_PKEY *pkey, const OSSL_PARAM params[]); int EVP_DigestVerifyInit(EVP_MD_CTX
+          *ctx, EVP_PKEY_CTX **pctx, const EVP_MD *type, ENGINE *e, EVP_PKEY *pkey);
+          ``` ## Semantics - Initializes an `EVP_MD_CTX` for signature verification.
+          - May create or reuse an `EVP_PKEY_CTX`; if created by the init call, it
+          is freed with the `EVP_MD_CTX`. - `_ex` variant supports provider/libctx/properties
+          and parameter array. ## Return Value Semantics - Returns `1` on success.
+          - Returns `0` on failure. ## Object Lifetime Constraints - `EVP_MD_CTX`,
+          `EVP_PKEY_CTX`, and `EVP_PKEY` are opaque. Harnesses must not access internal
+          fields. - The `EVP_MD_CTX` must be initialized and'
+        metadata:
+          fallback: knowledge_raw_keyword_search
+          matched_terms:
+          - declaration
+          - evp_digestverify
+          - openssl
+          - signature
+      - rank: 3
+        score: 0.8361
+        distance: null
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/3.5.5/openssl_core_api_test_evidence.md
+        text: '# Unit Test and Example Evidence: OpenSSL 3.5.5 Core APIs Source version:
+          `/home/wen/work/clean_sources/openssl-3.5.5` ## BN_bn2binpad Status: found
+          in local tests and internal callers. Searched paths: - `/home/wen/work/clean_sources/openssl-3.5.5/test`
+          - `/home/wen/work/clean_sources/openssl-3.5.5/crypto` - `/home/wen/work/clean_sources/openssl-3.5.5/doc/man3`
+          Evidence: - `test/bntest.c`: direct tests around lines 1821, 1824, 1840,
+          1843, 1846, 1850, and 1855. - Internal callers include `crypto/rsa/rsa_ossl.c`,
+          `crypto/dh/dh_key.c`, `crypto/sm2/sm2_crypt.c`, `crypto/sm2/sm2_sign.c`.
+          - Manpage: `doc/man3/BN_bn2bin.pod`. ## BN_signed_bn2bin Status: found in
+          local tests and manpage. Searched paths: - `/home/wen/work/clean_sources/openssl-3.5.5/test`
+          - `/home/wen/work/clean_sources/openssl-3.5.5/doc/man3` Evidence: - `test/bntest.c`:
+          signed conversion tests around lines 1943 and 1948. - Manpage: `doc/man3/BN_bn2bin.pod`.
+          ## BN_usub Status: found in local tests and internal callers. Searched paths:
+          - `/home/wen/work/clean_sources/openssl-3.5.5/test` - `/home/wen/work/clean_sources/openssl-3.5.5/crypto`
+          Evidence: - `test/bntest.c`: direct tests around lines 1264, 1272,'
+        metadata:
+          fallback: knowledge_raw_keyword_search
+          matched_terms:
+          - evp_digestverify
+          - openssl
+          - signature
+      - rank: 4
+        score: 0.8246
+        distance: null
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__ecdsatest.c.md
+        text: '# Official test/example call patterns: openssl Library: openssl Version:
+          3.5.5 Source file: /home/wen/work/clean_sources/openssl-3.5.5/test/ecdsatest.c
+          Knowledge type: unit_tests_or_examples ## Call pattern 1 ```c static EC_builtin_curve
+          *curves = NULL; static OSSL_PROVIDER *fake_rand = NULL; static int fbytes(unsigned
+          char *buf, size_t num, ossl_unused const char *name, EVP_RAND_CTX *ctx)
+          { int ret = 0; static int fbytes_counter = 0; BIGNUM *tmp = NULL; fake_rand_set_callback(ctx,
+          NULL); if (!TEST_ptr(tmp = BN_new()) || !TEST_int_lt(fbytes_counter, OSSL_NELEM(numbers))
+          || !TEST_true(BN_hex2bn(&tmp, numbers[fbytes_counter])) /* tmp might need
+          leading zeros so pad it out */ || !TEST_int_le(BN_num_bytes(tmp), num) ||
+          !TEST_int_gt(BN_bn2binpad(tmp, buf, num), 0)) goto err; fbytes_counter =
+          (fbytes_counter + 1) % OSSL_NELEM(numbers); ret = 1; err: BN_free(tmp);
+          return ret; } /*- * This function hijacks the RNG to feed it the chosen
+          ECDSA key and nonce. * The ECDSA KATs are from: * - the X9.62 draft (4)
+          * - NIST CAVP (720) * * It uses the low-level ECDSA_sign_setup instead of
+          EVP to con'
+        metadata:
+          fallback: knowledge_raw_keyword_search
+          matched_terms:
+          - evp_digestverify
+          - openssl
+          - signature
+      - rank: 5
+        score: 0.8182
+        distance: null
+        layer: api_knowledge_cards
+        source_file: knowledge_raw/api_knowledge_cards/high_value_candidate_sprint_2026_06_07.yaml
+        text: 'cards: - api: d2i_X509 library: openssl signature: "X509 *d2i_X509(X509
+          **a, const unsigned char **pp, long length)" parameter_semantics: - "pp
+          points to an input DER pointer and is advanced to the first byte after the
+          parsed object on success." - "length is the number of bytes available from
+          *pp." - "a may be NULL to allocate a new X509 object." return_value_semantics:
+          - "Returns a non-NULL X509 object on successful parse." - "Returns NULL
+          on parse failure." state_preconditions: - "Input should be DER-encoded X.509
+          Certificate." valid_invalid_ranges: - "Valid: exact DER object length."
+          - "Invalid: malformed ASN.1 lengths, truncated DER, oversized inner length."
+          - "High-risk semantic: valid DER prefix followed by trailing bytes." related_apis:
+          - d2i_X509_REQ - d2i_X509_CRL - i2d_X509 mutation_hints: - trailing_garbage
+          - valid_prefix_plus_second_der_object - valid_prefix_plus_partial_der_object
+          - outer_sequence_len_minus_1 - outer_sequence_len_plus_1 - inner_len_zero
+          - inner_len_oversized oracle_observables: - return_pointer'
+        metadata:
+          fallback: knowledge_raw_keyword_search
+          matched_terms:
+          - evp_digestverify
+          - openssl
+          - signature
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"openssl EVP_DigestVerify function declaration\
+        \ signature parameters return value\",\n  \"top_k\": 5,\n  \"results\": [],\n\
+        \  \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      raw_fallback:
+        enabled: true
+        reason: rag_query_failed
+        root: knowledge_raw
+        hits: 5
+      kind: target_api_signature
+      use_for_feature_inference: target
+    inferred_features:
+      observed_features_from_target_evidence:
+      - bignum_subtraction
+      - caller_provided_output_buffer
+      - generic_polymorphic_key_context_dispatch
+      - incompatible_or_mismatched_key_type_entry
+      - library_writes_to_caller_buffer
+      - observable_crash_vs_safe_error_return
+      - rsa_pss_specific_verification_path_or_rsa_dispatch_code
+      - signed_or_negative_encoding
+      negative_or_weakened_features:
+      - direct_canary_after_output_limbs
+      - exact_mbedtls_error_code_value
+      - exact_mbedtls_internal_type_guard_location
+      - psa_opaque_key_mechanism
+      effective_observed_features:
+      - bignum_subtraction
+      - caller_provided_output_buffer
+      - generic_polymorphic_key_context_dispatch
+      - incompatible_or_mismatched_key_type_entry
+      - library_writes_to_caller_buffer
+      - observable_crash_vs_safe_error_return
+      - rsa_pss_specific_verification_path_or_rsa_dispatch_code
+      - signed_or_negative_encoding
+      feature_conflicts: []
+      candidate_preserved_features:
+      - generic_polymorphic_key_context_dispatch
+      - incompatible_or_mismatched_key_type_entry
+      - observable_crash_vs_safe_error_return
+      - rsa_pss_specific_verification_path_or_rsa_dispatch_code
+      candidate_lost_or_weakened_features:
+      - exact_mbedtls_error_code_value
+      - exact_mbedtls_internal_type_guard_location
+      - psa_opaque_key_mechanism
+      bug_class_requirements:
+        required: []
+        disallowed: []
+        optional: []
+      required_present: []
+      required_missing: []
+      disallowed_present: []
+      optional_present: []
+      evidence_hits:
+        caller_provided_output_buffer:
+          positive_hits:
+          - unsigned char *buf
+          - char *buf
+          negative_hits: []
+        library_writes_to_caller_buffer:
+          positive_hits:
+          - BN_bn2binpad
+          - BN_signed_bn2bin
+          negative_hits: []
+        signed_or_negative_encoding:
+          positive_hits:
+          - signed
+          - negative
+          negative_hits: []
+        bignum_subtraction:
+          positive_hits:
+          - BN_usub
+          negative_hits: []
+        direct_canary_after_output_limbs:
+          positive_hits: []
+          negative_hits:
+          - opaque
+    api_card_evidence:
+      api_cards_root_loaded: true
+      matched_cards:
+      - path: mbedtls/mbedtls_pk_verify.yaml
+        api: mbedtls_pk_verify
+        library: mbedtls
+        family: pkey_verify
+        mutation_hints:
+        - wrong digest algorithm
+        - wrong hash length
+        - all-zero signature
+        - truncated signature
+        - wrong public key
+        - RSA-PSS versus PKCS1 v1.5 padding mismatch through mbedtls_pk_verify_ext
+        oracle_observables:
+        - return_code
+        - sanitizer_signal
+        - signature_acceptance
+        state_preconditions:
+        - ctx must contain a parsed public key with verify capability
+        - md_alg and hash_len must match the expected digest semantics for the key
+          algorithm
+        known_pitfalls: []
+        match_reason: source_trigger_api_exact_or_related
+      - path: openssl/EVP_DigestVerify.yaml
+        api: EVP_DigestVerify
+        library: openssl
+        family: pkey_verify
+        mutation_hints:
+        - invalid signature acceptance
+        - bitflip signature
+        - wrong digest algorithm
+        - wrong hash length
+        - wrong public key
+        - RSA-PSS salt length mismatch
+        - padding mismatch
+        - wrong object type
+        - public-only key path
+        - malformed signature length
+        - unsupported digest/key pairing
+        oracle_observables:
+        - return_code
+        - error_stack
+        - sanitizer_signal
+        - signature_acceptance
+        state_preconditions:
+        - EVP_DigestVerifyInit must have succeeded
+        - key type and digest must be compatible
+        known_pitfalls:
+        - 'Known pitfall: distinguish invalid signature from provider or dispatch
+          errors.'
+        match_reason: target_api_exact_or_related
+      - path: openssl/EVP_DigestVerifyInit.yaml
+        api: EVP_DigestVerifyInit
+        library: openssl
+        family: pkey_verify
+        mutation_hints:
+        - wrong digest algorithm
+        - mismatched key type
+        - public key without expected verification capability
+        - RSA-PSS setup on non-RSA key
+        - digest/key compatibility boundary
+        oracle_observables:
+        - return_code
+        - error_stack
+        - sanitizer_signal
+        state_preconditions:
+        - ctx must be non-NULL and initialized for EVP digest operations
+        - pkey must support the requested verification operation
+        - digest and key type must be algorithm-compatible
+        known_pitfalls: []
+        match_reason: target_api_exact_or_related
+      - path: openssl/EVP_PKEY_CTX_set_rsa_pss_saltlen.yaml
+        api: EVP_PKEY_CTX_set_rsa_pss_saltlen
+        library: openssl
+        family: pkey_verify
+        mutation_hints:
+        - pss_saltlen_mismatch
+        - RSA-PSS signature verified with wrong expected salt length
+        - zero salt versus digest-length salt
+        - setup error versus invalid signature distinction
+        oracle_observables:
+        - return_code
+        - error_stack
+        - signature_acceptance
+        - sanitizer_signal
+        state_preconditions:
+        - ctx must be initialized for RSA-PSS signing or verification
+        - RSA-PSS padding should be configured before salt length expectations matter
+        known_pitfalls: []
+        match_reason: target_api_exact_or_related
+      warnings: []
+      inferred_from_cards:
+        state_sensitive: false
+        lifecycle_sensitive: false
+        output_length_observable: false
+        suggested_mutation_dimensions:
+        - digest_or_cipher
+    feedback_evidence:
+      enabled: true
+      feedback_file: artifacts/feedback/mutation_feedback.jsonl
+      feedback_scores: artifacts/feedback/mutation_scores.yaml
+      matched_family: pkey_verify_semantic
+      summary:
+        total_feedback_cases: 80
+        verdict_counts:
+          normal_expected_behavior: 4
+          safe_reject_behavior: 76
+        feedback_category_counts:
+          normal_expected_behavior: 4
+          safe_negative: 76
+      high_score_mutations:
+      - dimension: digest_mutation
+        value: wrong_hash_length
+        score: 1.0
+        classification: upweighted
+        count: 27
+      - dimension: padding_mutation
+        value: pss_saltlen_mismatch
+        score: 1.0
+        classification: upweighted
+        count: 27
+      downweighted_mutations:
+      - dimension: digest_mutation
+        value: matching_digest
+        score: 0.05
+        classification: stable_safe_negative
+        count: 27
+      - dimension: key_mutation
+        value: matching_key
+        score: 0.05
+        classification: stable_safe_negative
+        count: 40
+      - dimension: key_type
+        value: rsa
+        score: 0.05
+        classification: stable_safe_negative
+        count: 80
+      - dimension: padding_mutation
+        value: rsa_pkcs1_v15
+        score: 0.05
+        classification: stable_safe_negative
+        count: 27
+      - dimension: padding_mutation
+        value: rsa_pss
+        score: 0.05
+        classification: stable_safe_negative
+        count: 26
+      - dimension: signature_mutation
+        value: all_zero_signature
+        score: 0.05
+        classification: stable_safe_negative
+        count: 16
+      - dimension: signature_mutation
+        value: bitflip_signature
+        score: 0.05
+        classification: stable_safe_negative
+        count: 16
+      - dimension: signature_mutation
+        value: truncated_signature
+        score: 0.05
+        classification: stable_safe_negative
+        count: 16
+      - dimension: signature_mutation
+        value: valid_signature
+        score: 0.05
+        classification: stable_safe_negative
+        count: 16
+      - dimension: verify_api
+        value: EVP_DigestVerify
+        score: 0.05
+        classification: stable_safe_negative
+        count: 40
+      - dimension: verify_api
+        value: EVP_PKEY_verify
+        score: 0.05
+        classification: stable_safe_negative
+        count: 40
+      notes:
+      - Feedback evidence is an auxiliary signal and does not override RAG or API-card
+        evidence.
+      - Safe-negative feedback is treated as a stable baseline, not as a vulnerability.
+      - PKEY verify v0 produced stable safe-negative results and no unexpected_success_candidate.
+      - High-value mutations are kept with prior score even if v0 rejected them safely.
+  api_card_evidence:
+    api_cards_root_loaded: true
+    matched_cards:
+    - path: mbedtls/mbedtls_pk_verify.yaml
+      api: mbedtls_pk_verify
+      library: mbedtls
+      family: pkey_verify
+      mutation_hints:
+      - wrong digest algorithm
+      - wrong hash length
+      - all-zero signature
+      - truncated signature
+      - wrong public key
+      - RSA-PSS versus PKCS1 v1.5 padding mismatch through mbedtls_pk_verify_ext
+      oracle_observables:
+      - return_code
+      - sanitizer_signal
+      - signature_acceptance
+      state_preconditions:
+      - ctx must contain a parsed public key with verify capability
+      - md_alg and hash_len must match the expected digest semantics for the key algorithm
+      known_pitfalls: []
+      match_reason: source_trigger_api_exact_or_related
+    - path: openssl/EVP_DigestVerify.yaml
+      api: EVP_DigestVerify
+      library: openssl
+      family: pkey_verify
+      mutation_hints:
+      - invalid signature acceptance
+      - bitflip signature
+      - wrong digest algorithm
+      - wrong hash length
+      - wrong public key
+      - RSA-PSS salt length mismatch
+      - padding mismatch
+      - wrong object type
+      - public-only key path
+      - malformed signature length
+      - unsupported digest/key pairing
+      oracle_observables:
+      - return_code
+      - error_stack
+      - sanitizer_signal
+      - signature_acceptance
+      state_preconditions:
+      - EVP_DigestVerifyInit must have succeeded
+      - key type and digest must be compatible
+      known_pitfalls:
+      - 'Known pitfall: distinguish invalid signature from provider or dispatch errors.'
+      match_reason: target_api_exact_or_related
+    - path: openssl/EVP_DigestVerifyInit.yaml
+      api: EVP_DigestVerifyInit
+      library: openssl
+      family: pkey_verify
+      mutation_hints:
+      - wrong digest algorithm
+      - mismatched key type
+      - public key without expected verification capability
+      - RSA-PSS setup on non-RSA key
+      - digest/key compatibility boundary
+      oracle_observables:
+      - return_code
+      - error_stack
+      - sanitizer_signal
+      state_preconditions:
+      - ctx must be non-NULL and initialized for EVP digest operations
+      - pkey must support the requested verification operation
+      - digest and key type must be algorithm-compatible
+      known_pitfalls: []
+      match_reason: target_api_exact_or_related
+    - path: openssl/EVP_PKEY_CTX_set_rsa_pss_saltlen.yaml
+      api: EVP_PKEY_CTX_set_rsa_pss_saltlen
+      library: openssl
+      family: pkey_verify
+      mutation_hints:
+      - pss_saltlen_mismatch
+      - RSA-PSS signature verified with wrong expected salt length
+      - zero salt versus digest-length salt
+      - setup error versus invalid signature distinction
+      oracle_observables:
+      - return_code
+      - error_stack
+      - signature_acceptance
+      - sanitizer_signal
+      state_preconditions:
+      - ctx must be initialized for RSA-PSS signing or verification
+      - RSA-PSS padding should be configured before salt length expectations matter
+      known_pitfalls: []
+      match_reason: target_api_exact_or_related
+    warnings: []
+    inferred_from_cards:
+      state_sensitive: false
+      lifecycle_sensitive: false
+      output_length_observable: false
+      suggested_mutation_dimensions:
+      - digest_or_cipher
+  feedback_evidence:
+    enabled: true
+    feedback_file: artifacts/feedback/mutation_feedback.jsonl
+    feedback_scores: artifacts/feedback/mutation_scores.yaml
+    matched_family: pkey_verify_semantic
+    summary:
+      total_feedback_cases: 80
+      verdict_counts:
+        normal_expected_behavior: 4
+        safe_reject_behavior: 76
+      feedback_category_counts:
+        normal_expected_behavior: 4
+        safe_negative: 76
+    high_score_mutations:
+    - dimension: digest_mutation
+      value: wrong_hash_length
+      score: 1.0
+      classification: upweighted
+      count: 27
+    - dimension: padding_mutation
+      value: pss_saltlen_mismatch
+      score: 1.0
+      classification: upweighted
+      count: 27
+    downweighted_mutations:
+    - dimension: digest_mutation
+      value: matching_digest
+      score: 0.05
+      classification: stable_safe_negative
+      count: 27
+    - dimension: key_mutation
+      value: matching_key
+      score: 0.05
+      classification: stable_safe_negative
+      count: 40
+    - dimension: key_type
+      value: rsa
+      score: 0.05
+      classification: stable_safe_negative
+      count: 80
+    - dimension: padding_mutation
+      value: rsa_pkcs1_v15
+      score: 0.05
+      classification: stable_safe_negative
+      count: 27
+    - dimension: padding_mutation
+      value: rsa_pss
+      score: 0.05
+      classification: stable_safe_negative
+      count: 26
+    - dimension: signature_mutation
+      value: all_zero_signature
+      score: 0.05
+      classification: stable_safe_negative
+      count: 16
+    - dimension: signature_mutation
+      value: bitflip_signature
+      score: 0.05
+      classification: stable_safe_negative
+      count: 16
+    - dimension: signature_mutation
+      value: truncated_signature
+      score: 0.05
+      classification: stable_safe_negative
+      count: 16
+    - dimension: signature_mutation
+      value: valid_signature
+      score: 0.05
+      classification: stable_safe_negative
+      count: 16
+    - dimension: verify_api
+      value: EVP_DigestVerify
+      score: 0.05
+      classification: stable_safe_negative
+      count: 40
+    - dimension: verify_api
+      value: EVP_PKEY_verify
+      score: 0.05
+      classification: stable_safe_negative
+      count: 40
+    notes:
+    - Feedback evidence is an auxiliary signal and does not override RAG or API-card
+      evidence.
+    - Safe-negative feedback is treated as a stable baseline, not as a vulnerability.
+    - PKEY verify v0 produced stable safe-negative results and no unexpected_success_candidate.
+    - High-value mutations are kept with prior score even if v0 rejected them safely.
+evidence_collection:
+  method: config_driven_rag_evidence_collector
+  top_k: 5
+  target_api_filter: EVP_DigestVerify
+  max_candidates: null
+  max_queries_per_candidate: 2
+  feature_rules: config/evidence_feature_rules.yaml
+  bug_classes:
+  - generic_polymorphic_key_context_dispatch
+  - rsa_pss_specific_verification_path_or_rsa_dispatch_code
+  - incompatible_or_mismatched_key_type_entry
+  - missing_type_check_before_rsa_context_access
+  - observable_crash_vs_safe_error_return
+  source_pattern:
+    pattern_id: null
+    source_library: mbedtls
+    root_cause_summary: ''
+    must_preserve_features: []
+    optional_features: []
+    not_required_features: []
+    good_target_api_features: []
+    bad_target_api_features: []
+    rag_query_context: 'template_id: PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF
+
+      api: mbedtls_pk_verify_ext
+
+      operation: pk_verify_ext_opaque_key
+
+      bug_class: null_pointer_dereference opaque_key_type_confusion missing_context_type_check
+
+      trigger_call: ret = mbedtls_pk_verify_ext([PK_VERIFY_TYPE], &pss_opts, &pk,
+      [MD_ALG], hash, sizeof(hash), sig, sizeof(sig));
+
+      oracle: pss_opts.expected_salt_len = [EXPECTED_SALT_LEN];
+
+      oracle: if (ret == MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE) { printf("[OK] fixed
+      behavior: unsupported opaque verify_ext rejected safely.\n");'
+    harness_family: null_deref_dispatch
+    oracle_type: crash_sanitizer_or_safe_error_oracle
+    trigger_apis:
+    - mbedtls_pk_verify_ext
+    selected_mask_units:
+      summary:
+        selected_count: 28
+        source_unit_count: 115
+        harness_family: null_deref_dispatch
+        trigger_apis:
+        - mbedtls_pk_verify_ext
+        by_role:
+          cleanup: 2
+          helper_function: 12
+          mutation_point: 10
+          oracle: 2
+          trigger_call: 2
+        by_mask_level:
+          api_argument: 10
+          function_call: 1
+          statement: 15
+          type: 1
+          value: 1
+        by_suggested_use:
+          migrate_api_call: 2
+          mutate_api_argument: 9
+          mutate_value: 1
+          preserve_cleanup: 2
+          preserve_input_preparation: 12
+          preserve_oracle: 2
+      selected_units_by_use:
+        migrate_api_call:
+        - unit_id: ASTLITE-0098
+          role: trigger_call
+          mask_level: function_call
+          placeholder: '[PK_VERIFY_TYPE]'
+          suggested_use: migrate_api_call
+          function: mbedtls_pk_verify_ext
+          code: '* returns MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE. */ ret = mbedtls_pk_verify_ext([PK_VERIFY_TYPE],
+            &pss_opts, &pk, [MD_ALG], hash, sizeof(hash), sig, sizeof(sig));'
+          selection_reason: Selected because [PK_VERIFY_TYPE] is a mutation point
+            with function_call granularity.
+          source: tmpl_mbedtls.c.function_call
+        - unit_id: ASTLITE-0009
+          role: trigger_call
+          mask_level: api_argument
+          placeholder: '[MD_ALG]'
+          suggested_use: migrate_api_call
+          code: ret = mbedtls_pk_verify_ext([PK_VERIFY_TYPE], &pss_opts, &pk, [MD_ALG],
+            hash, sizeof(hash), sig, sizeof(sig));
+          selection_reason: Required trigger_call unit for preserving and migrating
+            the source API invocation.
+          source: mask_report.roles.trigger_call
+        mutate_api_argument:
+        - unit_id: ASTLITE-0005
+          role: mutation_point
+          mask_level: api_argument
+          placeholder: '[PK_VERIFY_TYPE]'
+          suggested_use: mutate_api_argument
+          code: PK_VERIFY_TYPE
+          selection_reason: Selected because [PK_VERIFY_TYPE] is a mutation point
+            with api_argument granularity.
+          source: template_meta.mutation_points
+        - unit_id: ASTLITE-0002
+          role: mutation_point
+          mask_level: api_argument
+          placeholder: '[HASH_LEN]'
+          suggested_use: mutate_api_argument
+          code: HASH_LEN
+          selection_reason: Selected because [HASH_LEN] is a mutation point with api_argument
+            granularity.
+          source: template_meta.mutation_points
+        - unit_id: ASTLITE-0003
+          role: mutation_point
+          mask_level: api_argument
+          placeholder: '[SIG_LEN]'
+          suggested_use: mutate_api_argument
+          code: SIG_LEN
+          selection_reason: Selected because [SIG_LEN] is a mutation point with api_argument
+            granularity.
+          source: template_meta.mutation_points
+        - unit_id: ASTLITE-0006
+          role: mutation_point
+          mask_level: api_argument
+          placeholder: '[EXPECTED_SALT_LEN]'
+          suggested_use: mutate_api_argument
+          code: EXPECTED_SALT_LEN
+          selection_reason: Selected because [EXPECTED_SALT_LEN] is a mutation point
+            with api_argument granularity.
+          source: template_meta.mutation_points
+        - unit_id: ASTLITE-0004
+          role: mutation_point
+          mask_level: api_argument
+          placeholder: '[MD_ALG]'
+          suggested_use: mutate_api_argument
+          code: MD_ALG
+          selection_reason: Selected because [MD_ALG] is a mutation point with api_argument
+            granularity.
+          source: template_meta.mutation_points
+        - unit_id: ASTLITE-0060
+          role: mutation_point
+          mask_level: api_argument
+          placeholder: '[HASH_LEN]'
+          suggested_use: mutate_api_argument
+          code: unsigned char hash[HASH_LEN];
+          selection_reason: Selected because [HASH_LEN] is a mutation point with api_argument
+            granularity.
+          source: tmpl_mbedtls.c.placeholder_statement
+        mutate_value:
+        - unit_id: ASTLITE-0001
+          role: mutation_point
+          mask_level: value
+          placeholder: '[KEY_BITS]'
+          suggested_use: mutate_value
+          code: KEY_BITS
+          selection_reason: Selected because [KEY_BITS] is a mutation point with value
+            granularity.
+          source: template_meta.mutation_points
+        preserve_oracle:
+        - unit_id: ASTLITE-0100
+          role: oracle
+          mask_level: statement
+          suggested_use: preserve_oracle
+          code: printf("expected fixed ret=%d\n", MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE);
+          selection_reason: Required oracle unit for preserving the vulnerability
+            signal and fixed/safe behavior checks.
+          source: tmpl_mbedtls.c.role_statement
+        - unit_id: ASTLITE-0103
+          role: oracle
+          mask_level: statement
+          suggested_use: preserve_oracle
+          code: 'printf("[OK] fixed behavior: unsupported opaque verify_ext rejected
+            safely.\n");'
+          selection_reason: Required oracle unit for preserving the vulnerability
+            signal and fixed/safe behavior checks.
+          source: tmpl_mbedtls.c.role_statement
+        preserve_input_preparation:
+        - unit_id: ASTLITE-0029
+          role: helper_function
+          mask_level: statement
+          suggested_use: preserve_input_preparation
+          code: ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
+            (const unsigned char *) pers, strlen(pers));
+          selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
+          source: mask_report.roles.other_context
+        - unit_id: ASTLITE-0030
+          role: helper_function
+          mask_level: statement
+          suggested_use: preserve_input_preparation
+          code: '} ret = mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA));'
+          selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
+          source: mask_report.roles.other_context
+        - unit_id: ASTLITE-0031
+          role: helper_function
+          mask_level: statement
+          suggested_use: preserve_input_preparation
+          code: 'if (ret != 0) { printf("mbedtls_pk_setup failed: %d\n", ret);'
+          selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
+          source: mask_report.roles.other_context
+        - unit_id: ASTLITE-0032
+          role: helper_function
+          mask_level: statement
+          suggested_use: preserve_input_preparation
+          code: '} ret = mbedtls_rsa_gen_key(mbedtls_pk_rsa(pk), mbedtls_ctr_drbg_random,
+            &ctr_drbg, KEY_BITS, 65537);'
+          selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
+          source: mask_report.roles.other_context
+        - unit_id: ASTLITE-0033
+          role: helper_function
+          mask_level: statement
+          suggested_use: preserve_input_preparation
+          code: 'if (ret != 0) { printf("mbedtls_rsa_gen_key failed: %d\n", ret);'
+          selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
+          source: mask_report.roles.other_context
+        - unit_id: ASTLITE-0035
+          role: helper_function
+          mask_level: statement
+          suggested_use: preserve_input_preparation
+          code: ret = mbedtls_pk_get_psa_attributes(&pk, PSA_KEY_USAGE_SIGN_HASH,
+            &key_attr);
+          selection_reason: Selected as high-value input/helper context for harness_family=null_deref_dispatch.
+          source: mask_report.roles.other_context
+        preserve_cleanup:
+        - unit_id: ASTLITE-0013
+          role: cleanup
+          mask_level: statement
+          suggested_use: preserve_cleanup
+          code: goto cleanup;
+          selection_reason: Selected limited cleanup context needed to keep generated
+            harnesses well-scoped.
+          source: mask_report.roles.cleanup
+        - unit_id: ASTLITE-0014
+          role: cleanup
+          mask_level: statement
+          suggested_use: preserve_cleanup
+          code: '} mbedtls_pk_free(&pk);'
+          selection_reason: Selected limited cleanup context needed to keep generated
+            harnesses well-scoped.
+          source: mask_report.roles.cleanup
+      query_terms:
+        harness_family: null_deref_dispatch
+        trigger_apis: mbedtls_pk_verify_ext
+        migrate_api_call: '* returns MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE. */ ret =
+          mbedtls_pk_verify_ext([PK_VERIFY_TYPE], &pss_opts, &pk, [MD_ALG], hash,
+          sizeof(hash), sig, sizeof(sig)); ret = mbedtls_pk_verify_ext([PK_VERIFY_TYPE],
+          &pss_opts, &pk, [MD_ALG], hash, sizeof(hash), sig, sizeof(sig));'
+        preserve_oracle: 'printf("expected fixed ret=%d\n", MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE);
+          printf("[OK] fixed behavior: unsupported opaque verify_ext rejected safely.\n");'
+        mutate_value: KEY_BITS
+        mutate_api_argument: PK_VERIFY_TYPE HASH_LEN SIG_LEN EXPECTED_SALT_LEN
+        preserve_input_preparation: 'ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func,
+          &entropy, (const unsigned char *) pers, strlen(pers)); } ret = mbedtls_pk_setup(&pk,
+          mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)); if (ret != 0) { printf("mbedtls_pk_setup
+          failed: %d\n", ret); } ret = mbedtls_rsa_gen_key(mbedtls_pk_rsa(pk), mbedtls_ctr_drbg_random,
+          &ctr_drbg, KEY_BITS, 65537);'
+  selected_mask_units:
+    loaded: true
+    summary:
+      selected_count: 28
+      source_unit_count: 115
+      harness_family: null_deref_dispatch
+      trigger_apis:
+      - mbedtls_pk_verify_ext
+      by_role:
+        cleanup: 2
+        helper_function: 12
+        mutation_point: 10
+        oracle: 2
+        trigger_call: 2
+      by_mask_level:
+        api_argument: 10
+        function_call: 1
+        statement: 15
+        type: 1
+        value: 1
+      by_suggested_use:
+        migrate_api_call: 2
+        mutate_api_argument: 9
+        mutate_value: 1
+        preserve_cleanup: 2
+        preserve_input_preparation: 12
+        preserve_oracle: 2
+  api_cards:
+    root: knowledge_base/api_cards
+    loaded: true
+    count: 17
+    warnings: []
+  feedback_evidence:
+    enabled: true
+    feedback_file: artifacts/feedback/mutation_feedback.jsonl
+    feedback_scores: artifacts/feedback/mutation_scores.yaml
+    feedback_rows: 80
+    score_families:
+    - pkey_verify_semantic
+    note: Feedback evidence is attached as mutation-planning context only; safe-negative
+      feedback is a stable baseline, not a vulnerability.
+  note: Evidence is retrieved before LLM adapter filling. Source-pattern evidence
+    is kept separate from target-API evidence to avoid feature contamination.

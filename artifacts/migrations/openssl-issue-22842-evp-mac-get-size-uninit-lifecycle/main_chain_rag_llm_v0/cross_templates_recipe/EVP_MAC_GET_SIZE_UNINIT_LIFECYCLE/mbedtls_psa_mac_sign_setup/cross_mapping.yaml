@@ -1,0 +1,92 @@
+source:
+  library: null
+  api: null
+  template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE
+  semantic_operation: null
+  bug_class: []
+  poc_pattern: {}
+  harness_family: object_state_lifecycle
+  trigger_apis: []
+target:
+  library: mbedtls
+  candidate_api: psa_mac_sign_setup
+adapter:
+  adapter_recipe: adapter_recipes/mbedtls/psa_mac_sign_setup.mac_context_size_lifecycle_oracle.yaml
+  slot_bindings:
+    key_type: PSA_KEY_TYPE_HMAC
+    key_usage_flags: PSA_KEY_USAGE_SIGN_MESSAGE
+    key_algorithm: PSA_ALG_HMAC(PSA_ALG_SHA_256)
+    key_bytes: '"rag-seed-hmac-key"'
+    key_len: '17'
+    message_bytes: '"mac lifecycle message"'
+    message_len: '21'
+    mac_len: '32'
+  adapter_mode: recipe_slot_filling
+  include_headers: []
+  type_mapping: {}
+  constant_mapping: {}
+  init_block: ''
+  input_construction_block: ''
+  trigger_block: ''
+  return_value_semantics: ''
+  oracle_strategy: {}
+  cleanup_block: ''
+  llm_status: ok
+candidate:
+  library: mbedtls
+  api: psa_mac_sign_setup
+  decision: generate
+  scores:
+    operation_family: 85
+    function_behavior: 85
+    parameter_structure: 80
+    vulnerability_path: 70
+    harness_feasibility: 90
+ast_mask_selection:
+  source_file: normalized_templates/openssl/evp_mac_get_size_uninit_lifecycle/selected_mask_units.yaml
+  summary:
+    selected_count: 8
+    source_unit_count: null
+    trigger_apis:
+    - EVP_MAC_CTX_get_mac_size
+    - EVP_MAC_init
+    harness_family: object_state_lifecycle
+    by_role: {}
+    by_mask_level: {}
+    by_suggested_use: {}
+  selected_units_by_use:
+    unspecified:
+    - unit_id: mac_name_literal
+    - unit_id: digest_name_literal
+    - unit_id: key_bytes_literal
+    - unit_id: key_len_argument
+    - unit_id: expected_mac_size_macro
+    migrate_api_call:
+    - unit_id: pre_init_get_size_call
+      role: oracle
+      suggested_use: migrate_api_call
+    - unit_id: evp_mac_init_call
+      suggested_use: migrate_api_call
+    - unit_id: post_init_get_size_call
+      role: oracle
+      suggested_use: migrate_api_call
+preserved_vulnerability_features:
+- PSA MAC operation lifecycle represents uninitialized vs initialized operation state
+- pre-setup psa_mac_update can be observed as safe rejection without crash
+- initialized psa_mac_sign_setup -> psa_mac_update -> psa_mac_sign_finish provides
+  control state
+- return code and crash/sanitizer signals are observable
+lost_or_weakened_features:
+- PSA operation API does not expose an EVP_MAC_CTX_get_mac_size equivalent
+- exact OpenSSL EVP_MAC_CTX_get_mac_size internal dereference is not preserved
+- pre-setup operation is psa_mac_update, not a direct get-size call
+source_expected_behavior:
+  buggy: {}
+  fixed: {}
+  note: The target API is not expected to reproduce exact mbedTLS numeric error codes;
+    cross-library validation uses the oracle semantics defined by the migrated harness
+    family.
+notes:
+- Generated from LLM-filled structured adapter YAML.
+- The C harness skeleton is fixed; the target-specific blocks come from adapter.yaml.
+- This is vulnerability-path migration, not strict full API semantic equivalence.

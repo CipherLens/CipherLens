@@ -1,0 +1,49 @@
+report_name: Framework Alignment Audit + OPENSSL-ISSUE-28669 Version Provenance / Novelty Check
+framework_alignment:
+  current_status: partially_aligned
+  still_pattern_guided_framework: true
+  historical_reproducer_regression_risk: true
+  risk_reason: secure_heap_state_lifecycle_v1 remains seed validation unless followed by pattern expansion
+completed_representatives:
+  mac_full_a_path:
+    status: full_a_path_compliant
+    artifact: artifacts/migrations/mac_lifecycle_glm_full_a_path
+  der_c_path:
+    status: app_level_validation_gap_triage_complete
+    artifact: artifacts/triage/ossl_store_full_consumption
+  secure_heap_d_then_b:
+    status: seed_validation_oracle_calibration_complete
+    artifact: artifacts/sprints/secure_heap_state_lifecycle_v1
+secure_heap_version_provenance:
+  compile_header_version: OpenSSL 3.5.5 27 Jan 2026
+  runtime_OpenSSL_version: OpenSSL 3.5.5 27 Jan 2026
+  runtime_OpenSSL_version_num: "30500050"
+  linked_libcrypto_path: ${CLEAN_SOURCES_ROOT}/openssl-3.5.5/libcrypto.a
+  runtime_loaded_libcrypto_path: none_observed_by_ldd
+  source_tree_path: ${CLEAN_SOURCES_ROOT}/openssl-3.5.5
+  confidence: high
+historical_issue_version:
+  original_reported_version: unknown
+  affected_versions: []
+  fixed_version: unknown
+  patch_commit: unknown
+  local_artifact_tested_library: OpenSSL 3.0.13 / libcrypto.so.3
+  confidence: unknown
+novelty:
+  classification: current_version_robustness_candidate_with_unknown_historical_overlap
+  can_claim_new_vulnerability: false
+  can_claim_new_candidate: true
+  reason: >
+    Current OpenSSL 3.5.5 reproduces the crash, but local historical artifacts
+    do not identify original affected versions or fixed version.
+next_stage:
+  required: true
+  routes:
+    - openssl_same_family_api_expansion
+    - openssl_cross_version_expansion
+    - cross_library_analogous_lifecycle_oracle
+recommend_continue_other_pocs: true
+claim_boundary:
+  no_cve_claim: true
+  no_confirmed_vulnerability_claim: true
+  no_mbedtls_equivalence_claim: true

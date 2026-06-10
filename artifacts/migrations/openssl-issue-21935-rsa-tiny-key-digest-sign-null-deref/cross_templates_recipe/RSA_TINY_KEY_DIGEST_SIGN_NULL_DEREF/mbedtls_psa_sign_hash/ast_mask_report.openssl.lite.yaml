@@ -1,0 +1,1604 @@
+template_id: RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF
+template_name: ''
+source_api: EVP_PKEY_new
+source_library: openssl
+template_file: tmpl_openssl.c
+template_library: openssl
+trigger_apis:
+- EVP_PKEY_new
+- RSA_new
+- RSA_set0_key
+- EVP_PKEY_assign_RSA
+- EVP_MD_CTX_new
+- EVP_DigestSignInit
+- EVP_DigestSign
+harness_family: pkey_capability_mismatch_oracle
+summary:
+  method: ast_lite_regex_template_role_aware
+  template_dir: artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/cross_templates_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  unit_count: 96
+  note: Lightweight AST-like report generated from template metadata, mask_report
+    roles, and regex/template-aware analysis of tmpl_mbedtls.c.
+  backend: lite
+ast_mask_units:
+- unit_id: ASTLITE-0001
+  mask_level: value
+  role: mutation_point
+  placeholder: '[RSA_N_DEC]'
+  code: RSA_N_DEC
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: RSA_N_DEC
+  mutation_type: string
+  default: '3233'
+  values:
+  - '3233'
+  - '15'
+- unit_id: ASTLITE-0002
+  mask_level: value
+  role: mutation_point
+  placeholder: '[RSA_E_DEC]'
+  code: RSA_E_DEC
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: RSA_E_DEC
+  mutation_type: string
+  default: '17'
+  values:
+  - '17'
+  - '3'
+- unit_id: ASTLITE-0003
+  mask_level: value
+  role: mutation_point
+  placeholder: '[RSA_D_DEC]'
+  code: RSA_D_DEC
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: RSA_D_DEC
+  mutation_type: string
+  default: '2753'
+  values:
+  - '2753'
+  - '1'
+- unit_id: ASTLITE-0004
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[MD_ALG]'
+  code: MD_ALG
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: medium
+  mutation_name: MD_ALG
+  mutation_type: enum
+  default: EVP_sha256()
+  values:
+  - EVP_sha256()
+  - EVP_sha384()
+- unit_id: ASTLITE-0005
+  mask_level: value
+  role: mutation_point
+  placeholder: '[MESSAGE_BYTES]'
+  code: MESSAGE_BYTES
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: low
+  mutation_name: MESSAGE_BYTES
+  mutation_type: byte_array
+  default: '"Test\0"'
+  values:
+  - '"Test\0"'
+  - '"rsa-invalid-key\0"'
+- unit_id: ASTLITE-0006
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[MESSAGE_LEN]'
+  code: MESSAGE_LEN
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: low
+  mutation_name: MESSAGE_LEN
+  mutation_type: int
+  default: 5
+  values:
+  - 5
+  - 17
+- unit_id: ASTLITE-0007
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[SIG_BUF_LEN]'
+  code: SIG_BUF_LEN
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: low
+  mutation_name: SIG_BUF_LEN
+  mutation_type: int
+  default: 512
+  values:
+  - 256
+  - 512
+- unit_id: ASTLITE-0008
+  mask_level: value
+  role: mutation_point
+  placeholder: '[KEY_BITS]'
+  code: KEY_BITS
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: KEY_BITS
+  mutation_type: int
+  default: 32
+  values:
+  - 32
+  - 64
+- unit_id: ASTLITE-0009
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[HASH_ALG]'
+  code: HASH_ALG
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: medium
+  mutation_name: HASH_ALG
+  mutation_type: enum
+  default: PSA_ALG_SHA_256
+  values:
+  - PSA_ALG_SHA_256
+  - PSA_ALG_SHA_384
+- unit_id: ASTLITE-0010
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[HASH_LEN]'
+  code: HASH_LEN
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: medium
+  mutation_name: HASH_LEN
+  mutation_type: int
+  default: 32
+  values:
+  - 32
+  - 48
+- unit_id: ASTLITE-0011
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[SIG_LEN]'
+  code: SIG_LEN
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: low
+  mutation_name: SIG_LEN
+  mutation_type: int
+  default: 512
+  values:
+  - 256
+  - 512
+- unit_id: ASTLITE-0012
+  mask_level: block
+  role: helper_function
+  placeholder: ''
+  code: 'static void bug_signal_handler(int signo) { fprintf(stderr, "[BUG] crash
+    or sanitizer signal: %d\n", signo); fflush(stderr); _Exit(128 + signo); }'
+  source: tmpl_openssl.c.helper_function
+  reason: Static helper function block 'bug_signal_handler' identified by AST-lite
+    brace matching.
+  priority: medium
+  function: bug_signal_handler
+  line: 33
+  line_start: 33
+  line_end: 38
+  node_type: function_definition
+  enclosing_function: bug_signal_handler
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0013
+  mask_level: value
+  role: input_preparation
+  placeholder: '[RSA_N_DEC]'
+  code: '* [RSA_N_DEC] decimal RSA modulus * [RSA_E_DEC] decimal RSA public exponent
+    * [RSA_D_DEC] decimal RSA private exponent * [MD_ALG] EVP digest selector * [MESSAGE_BYTES]
+    message content * [MESSAGE_LEN] declared message array length * [SIG_BUF_LEN]
+    signature buffer length */ #include <stdio.h> #include <signal.h> #include <stdlib.h>
+    #include <string.h> #include <openssl/bn.h> #include <openssl/evp.h> #include
+    <openssl/rsa.h> #include <openssl/err.h> static void bug_signal_handler(int signo)
+    {'
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: high
+  line: 15
+  line_start: 15
+  line_end: 34
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0014
+  mask_level: value
+  role: input_preparation
+  placeholder: '[RSA_E_DEC]'
+  code: '* [RSA_N_DEC] decimal RSA modulus * [RSA_E_DEC] decimal RSA public exponent
+    * [RSA_D_DEC] decimal RSA private exponent * [MD_ALG] EVP digest selector * [MESSAGE_BYTES]
+    message content * [MESSAGE_LEN] declared message array length * [SIG_BUF_LEN]
+    signature buffer length */ #include <stdio.h> #include <signal.h> #include <stdlib.h>
+    #include <string.h> #include <openssl/bn.h> #include <openssl/evp.h> #include
+    <openssl/rsa.h> #include <openssl/err.h> static void bug_signal_handler(int signo)
+    {'
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: high
+  line: 15
+  line_start: 15
+  line_end: 34
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0015
+  mask_level: value
+  role: input_preparation
+  placeholder: '[RSA_D_DEC]'
+  code: '* [RSA_N_DEC] decimal RSA modulus * [RSA_E_DEC] decimal RSA public exponent
+    * [RSA_D_DEC] decimal RSA private exponent * [MD_ALG] EVP digest selector * [MESSAGE_BYTES]
+    message content * [MESSAGE_LEN] declared message array length * [SIG_BUF_LEN]
+    signature buffer length */ #include <stdio.h> #include <signal.h> #include <stdlib.h>
+    #include <string.h> #include <openssl/bn.h> #include <openssl/evp.h> #include
+    <openssl/rsa.h> #include <openssl/err.h> static void bug_signal_handler(int signo)
+    {'
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: high
+  line: 15
+  line_start: 15
+  line_end: 34
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0016
+  mask_level: api_argument
+  role: input_preparation
+  placeholder: '[MD_ALG]'
+  code: '* [RSA_N_DEC] decimal RSA modulus * [RSA_E_DEC] decimal RSA public exponent
+    * [RSA_D_DEC] decimal RSA private exponent * [MD_ALG] EVP digest selector * [MESSAGE_BYTES]
+    message content * [MESSAGE_LEN] declared message array length * [SIG_BUF_LEN]
+    signature buffer length */ #include <stdio.h> #include <signal.h> #include <stdlib.h>
+    #include <string.h> #include <openssl/bn.h> #include <openssl/evp.h> #include
+    <openssl/rsa.h> #include <openssl/err.h> static void bug_signal_handler(int signo)
+    {'
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 15
+  line_start: 15
+  line_end: 34
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0017
+  mask_level: value
+  role: input_preparation
+  placeholder: '[MESSAGE_BYTES]'
+  code: '* [RSA_N_DEC] decimal RSA modulus * [RSA_E_DEC] decimal RSA public exponent
+    * [RSA_D_DEC] decimal RSA private exponent * [MD_ALG] EVP digest selector * [MESSAGE_BYTES]
+    message content * [MESSAGE_LEN] declared message array length * [SIG_BUF_LEN]
+    signature buffer length */ #include <stdio.h> #include <signal.h> #include <stdlib.h>
+    #include <string.h> #include <openssl/bn.h> #include <openssl/evp.h> #include
+    <openssl/rsa.h> #include <openssl/err.h> static void bug_signal_handler(int signo)
+    {'
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: low
+  line: 15
+  line_start: 15
+  line_end: 34
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0018
+  mask_level: api_argument
+  role: input_preparation
+  placeholder: '[MESSAGE_LEN]'
+  code: '* [RSA_N_DEC] decimal RSA modulus * [RSA_E_DEC] decimal RSA public exponent
+    * [RSA_D_DEC] decimal RSA private exponent * [MD_ALG] EVP digest selector * [MESSAGE_BYTES]
+    message content * [MESSAGE_LEN] declared message array length * [SIG_BUF_LEN]
+    signature buffer length */ #include <stdio.h> #include <signal.h> #include <stdlib.h>
+    #include <string.h> #include <openssl/bn.h> #include <openssl/evp.h> #include
+    <openssl/rsa.h> #include <openssl/err.h> static void bug_signal_handler(int signo)
+    {'
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: low
+  line: 15
+  line_start: 15
+  line_end: 34
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0019
+  mask_level: api_argument
+  role: input_preparation
+  placeholder: '[SIG_BUF_LEN]'
+  code: '* [RSA_N_DEC] decimal RSA modulus * [RSA_E_DEC] decimal RSA public exponent
+    * [RSA_D_DEC] decimal RSA private exponent * [MD_ALG] EVP digest selector * [MESSAGE_BYTES]
+    message content * [MESSAGE_LEN] declared message array length * [SIG_BUF_LEN]
+    signature buffer length */ #include <stdio.h> #include <signal.h> #include <stdlib.h>
+    #include <string.h> #include <openssl/bn.h> #include <openssl/evp.h> #include
+    <openssl/rsa.h> #include <openssl/err.h> static void bug_signal_handler(int signo)
+    {'
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: low
+  line: 15
+  line_start: 15
+  line_end: 34
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0020
+  mask_level: function_call
+  role: input_preparation
+  placeholder: '[RSA_N_DEC]'
+  code: '* [RSA_N_DEC] decimal RSA modulus * [RSA_E_DEC] decimal RSA public exponent
+    * [RSA_D_DEC] decimal RSA private exponent * [MD_ALG] EVP digest selector * [MESSAGE_BYTES]
+    message content * [MESSAGE_LEN] declared message array length * [SIG_BUF_LEN]
+    signature buffer length */ #include <stdio.h> #include <signal.h> #include <stdlib.h>
+    #include <string.h> #include <openssl/bn.h> #include <openssl/evp.h> #include
+    <openssl/rsa.h> #include <openssl/err.h> static void bug_signal_handler(int signo)
+    {'
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'bug_signal_handler' identified by AST-lite call matching.
+  priority: medium
+  function: bug_signal_handler
+  called_function: bug_signal_handler
+  line: 15
+  line_start: 15
+  line_end: 34
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0021
+  mask_level: value
+  role: oracle
+  placeholder: '[BUG]'
+  code: 'fprintf(stderr, "[BUG] crash or sanitizer signal: %d\n", signo);'
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 35
+  line_start: 35
+  line_end: 35
+  enclosing_function: bug_signal_handler
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0022
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: 'fprintf(stderr, "[BUG] crash or sanitizer signal: %d\n", signo);'
+  source: tmpl_openssl.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 35
+  line_start: 35
+  line_end: 35
+  enclosing_function: bug_signal_handler
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0023
+  mask_level: function_call
+  role: oracle
+  placeholder: '[BUG]'
+  code: 'fprintf(stderr, "[BUG] crash or sanitizer signal: %d\n", signo);'
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'fprintf' identified by AST-lite call matching.
+  priority: medium
+  function: fprintf
+  called_function: fprintf
+  line: 35
+  line_start: 35
+  line_end: 35
+  enclosing_function: bug_signal_handler
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0024
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: fflush(stderr);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'fflush' identified by AST-lite call matching.
+  priority: medium
+  function: fflush
+  called_function: fflush
+  line: 36
+  line_start: 36
+  line_end: 36
+  enclosing_function: bug_signal_handler
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0025
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: _Exit(128 + signo);
+  source: tmpl_openssl.c.function_call
+  reason: Function call '_Exit' identified by AST-lite call matching.
+  priority: medium
+  function: _Exit
+  called_function: _Exit
+  line: 37
+  line_start: 37
+  line_end: 37
+  enclosing_function: bug_signal_handler
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0026
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: static BIGNUM *bn_from_dec_or_null(const char *dec) {
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'bn_from_dec_or_null' identified by AST-lite call matching.
+  priority: medium
+  function: bn_from_dec_or_null
+  called_function: bn_from_dec_or_null
+  line: 40
+  line_start: 40
+  line_end: 41
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0027
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: if (BN_dec2bn(&bn, dec) == 0) {
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'BN_dec2bn' identified by AST-lite call matching.
+  priority: medium
+  function: BN_dec2bn
+  called_function: BN_dec2bn
+  line: 44
+  line_start: 44
+  line_end: 44
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0028
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: BN_free(bn);
+  source: tmpl_openssl.c.role_statement
+  reason: Statement classified as cleanup by AST-lite role rules.
+  priority: medium
+  line: 45
+  line_start: 45
+  line_end: 45
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0029
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: BN_free(bn);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'BN_free' identified by AST-lite call matching.
+  priority: medium
+  function: BN_free
+  called_function: BN_free
+  line: 45
+  line_start: 45
+  line_end: 45
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0030
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: int main(void) {
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'main' identified by AST-lite call matching.
+  priority: medium
+  function: main
+  called_function: main
+  line: 52
+  line_start: 52
+  line_end: 53
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0031
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[MESSAGE_LEN]'
+  code: static const unsigned char message[[MESSAGE_LEN]] = [MESSAGE_BYTES];
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: low
+  line: 60
+  line_start: 60
+  line_end: 60
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0032
+  mask_level: value
+  role: mutation_point
+  placeholder: '[MESSAGE_BYTES]'
+  code: static const unsigned char message[[MESSAGE_LEN]] = [MESSAGE_BYTES];
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: low
+  line: 60
+  line_start: 60
+  line_end: 60
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0033
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[SIG_BUF_LEN]'
+  code: unsigned char sig[[SIG_BUF_LEN]];
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: low
+  line: 61
+  line_start: 61
+  line_end: 61
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0034
+  mask_level: type
+  role: mutation_point
+  placeholder: '[SIG_BUF_LEN]'
+  code: unsigned char sig[[SIG_BUF_LEN]];
+  source: tmpl_openssl.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 61
+  line_start: 61
+  line_end: 61
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0035
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: size_t sig_len = sizeof(sig);
+  source: tmpl_openssl.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 62
+  line_start: 62
+  line_end: 62
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0036
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: int set_key_ok = 0;
+  source: tmpl_openssl.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 63
+  line_start: 63
+  line_end: 63
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0037
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: int assign_ok = 0;
+  source: tmpl_openssl.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 64
+  line_start: 64
+  line_end: 64
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0038
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: int init_ok = 0;
+  source: tmpl_openssl.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 65
+  line_start: 65
+  line_end: 65
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0039
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: int sign_ok = 0;
+  source: tmpl_openssl.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 66
+  line_start: 66
+  line_end: 66
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0040
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: int ret = 1;
+  source: tmpl_openssl.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 67
+  line_start: 67
+  line_end: 67
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0041
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: setbuf(stdout, NULL);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'setbuf' identified by AST-lite call matching.
+  priority: medium
+  function: setbuf
+  called_function: setbuf
+  line: 69
+  line_start: 69
+  line_end: 69
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0042
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGSEGV, bug_signal_handler);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'signal' identified by AST-lite call matching.
+  priority: medium
+  function: signal
+  called_function: signal
+  line: 70
+  line_start: 70
+  line_end: 70
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0043
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGABRT, bug_signal_handler);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'signal' identified by AST-lite call matching.
+  priority: medium
+  function: signal
+  called_function: signal
+  line: 71
+  line_start: 71
+  line_end: 71
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0044
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGBUS, bug_signal_handler);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'signal' identified by AST-lite call matching.
+  priority: medium
+  function: signal
+  called_function: signal
+  line: 72
+  line_start: 72
+  line_end: 72
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0045
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGILL, bug_signal_handler);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'signal' identified by AST-lite call matching.
+  priority: medium
+  function: signal
+  called_function: signal
+  line: 73
+  line_start: 73
+  line_end: 73
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0046
+  mask_level: function_call
+  role: input_construction
+  placeholder: ''
+  code: memset(sig, 0, sizeof(sig));
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'memset' identified by AST-lite call matching.
+  priority: medium
+  function: memset
+  called_function: memset
+  line: 74
+  line_start: 74
+  line_end: 74
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0047
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: pkey = EVP_PKEY_new();
+  source: tmpl_openssl.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 76
+  line_start: 76
+  line_end: 76
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0048
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: pkey = EVP_PKEY_new();
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'EVP_PKEY_new' identified by AST-lite call matching.
+  priority: high
+  function: EVP_PKEY_new
+  called_function: EVP_PKEY_new
+  line: 76
+  line_start: 76
+  line_end: 76
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0049
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: rsa = RSA_new();
+  source: tmpl_openssl.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 77
+  line_start: 77
+  line_end: 77
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0050
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: rsa = RSA_new();
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'RSA_new' identified by AST-lite call matching.
+  priority: high
+  function: RSA_new
+  called_function: RSA_new
+  line: 77
+  line_start: 77
+  line_end: 77
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0051
+  mask_level: value
+  role: mutation_point
+  placeholder: '[RSA_N_DEC]'
+  code: n = bn_from_dec_or_null("[RSA_N_DEC]");
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: high
+  line: 78
+  line_start: 78
+  line_end: 78
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0052
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[RSA_N_DEC]'
+  code: n = bn_from_dec_or_null("[RSA_N_DEC]");
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'bn_from_dec_or_null' identified by AST-lite call matching.
+  priority: medium
+  function: bn_from_dec_or_null
+  called_function: bn_from_dec_or_null
+  line: 78
+  line_start: 78
+  line_end: 78
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0053
+  mask_level: value
+  role: mutation_point
+  placeholder: '[RSA_E_DEC]'
+  code: e = bn_from_dec_or_null("[RSA_E_DEC]");
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: high
+  line: 79
+  line_start: 79
+  line_end: 79
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0054
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[RSA_E_DEC]'
+  code: e = bn_from_dec_or_null("[RSA_E_DEC]");
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'bn_from_dec_or_null' identified by AST-lite call matching.
+  priority: medium
+  function: bn_from_dec_or_null
+  called_function: bn_from_dec_or_null
+  line: 79
+  line_start: 79
+  line_end: 79
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0055
+  mask_level: value
+  role: mutation_point
+  placeholder: '[RSA_D_DEC]'
+  code: d = bn_from_dec_or_null("[RSA_D_DEC]");
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: high
+  line: 80
+  line_start: 80
+  line_end: 80
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0056
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[RSA_D_DEC]'
+  code: d = bn_from_dec_or_null("[RSA_D_DEC]");
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'bn_from_dec_or_null' identified by AST-lite call matching.
+  priority: medium
+  function: bn_from_dec_or_null
+  called_function: bn_from_dec_or_null
+  line: 80
+  line_start: 80
+  line_end: 80
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0057
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: mdctx = EVP_MD_CTX_new();
+  source: tmpl_openssl.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 81
+  line_start: 81
+  line_end: 81
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0058
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: mdctx = EVP_MD_CTX_new();
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'EVP_MD_CTX_new' identified by AST-lite call matching.
+  priority: high
+  function: EVP_MD_CTX_new
+  called_function: EVP_MD_CTX_new
+  line: 81
+  line_start: 81
+  line_end: 81
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0059
+  mask_level: value
+  role: input_construction
+  placeholder: '[SAFE]'
+  code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected during allocation/setup\n");
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 85
+  line_start: 85
+  line_end: 85
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0060
+  mask_level: function_call
+  role: input_construction
+  placeholder: '[SAFE]'
+  code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected during allocation/setup\n");
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'fprintf' identified by AST-lite call matching.
+  priority: medium
+  function: fprintf
+  called_function: fprintf
+  line: 85
+  line_start: 85
+  line_end: 85
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0061
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: ERR_print_errors_fp(stderr);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'ERR_print_errors_fp' identified by AST-lite call matching.
+  priority: medium
+  function: ERR_print_errors_fp
+  called_function: ERR_print_errors_fp
+  line: 86
+  line_start: 86
+  line_end: 86
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0062
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: set_key_ok = RSA_set0_key(rsa, n, e, d);
+  source: tmpl_openssl.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 91
+  line_start: 91
+  line_end: 91
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0063
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: set_key_ok = RSA_set0_key(rsa, n, e, d);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'RSA_set0_key' identified by AST-lite call matching.
+  priority: high
+  function: RSA_set0_key
+  called_function: RSA_set0_key
+  line: 91
+  line_start: 91
+  line_end: 91
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0064
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("RSA_set0_key returned %d\n", set_key_ok);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  called_function: printf
+  line: 92
+  line_start: 92
+  line_end: 92
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0065
+  mask_level: value
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected by RSA_set0_key\n");
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 94
+  line_start: 94
+  line_end: 94
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0066
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected by RSA_set0_key\n");
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'fprintf' identified by AST-lite call matching.
+  priority: medium
+  function: fprintf
+  called_function: fprintf
+  line: 94
+  line_start: 94
+  line_end: 94
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0067
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: assign_ok = EVP_PKEY_assign_RSA(pkey, rsa);
+  source: tmpl_openssl.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 103
+  line_start: 103
+  line_end: 103
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0068
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: assign_ok = EVP_PKEY_assign_RSA(pkey, rsa);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'EVP_PKEY_assign_RSA' identified by AST-lite call matching.
+  priority: high
+  function: EVP_PKEY_assign_RSA
+  called_function: EVP_PKEY_assign_RSA
+  line: 103
+  line_start: 103
+  line_end: 103
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0069
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("EVP_PKEY_assign_RSA returned %d\n", assign_ok);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  called_function: printf
+  line: 104
+  line_start: 104
+  line_end: 104
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0070
+  mask_level: value
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected by EVP_PKEY_assign_RSA\n");
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 106
+  line_start: 106
+  line_end: 106
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0071
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected by EVP_PKEY_assign_RSA\n");
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'fprintf' identified by AST-lite call matching.
+  priority: medium
+  function: fprintf
+  called_function: fprintf
+  line: 106
+  line_start: 106
+  line_end: 106
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0072
+  mask_level: api_argument
+  role: trigger_call
+  placeholder: '[MD_ALG]'
+  code: init_ok = EVP_DigestSignInit(mdctx, NULL, [MD_ALG], NULL, pkey);
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 113
+  line_start: 113
+  line_end: 113
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0073
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: init_ok = EVP_DigestSignInit(mdctx, NULL, [MD_ALG], NULL, pkey);
+  source: tmpl_openssl.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 113
+  line_start: 113
+  line_end: 113
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0074
+  mask_level: function_call
+  role: trigger_call
+  placeholder: '[MD_ALG]'
+  code: init_ok = EVP_DigestSignInit(mdctx, NULL, [MD_ALG], NULL, pkey);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'EVP_DigestSignInit' identified by AST-lite call matching.
+  priority: high
+  function: EVP_DigestSignInit
+  called_function: EVP_DigestSignInit
+  line: 113
+  line_start: 113
+  line_end: 113
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0075
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("EVP_DigestSignInit returned %d\n", init_ok);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  called_function: printf
+  line: 114
+  line_start: 114
+  line_end: 114
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0076
+  mask_level: value
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected by EVP_DigestSignInit\n");
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 116
+  line_start: 116
+  line_end: 116
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0077
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected by EVP_DigestSignInit\n");
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'fprintf' identified by AST-lite call matching.
+  priority: medium
+  function: fprintf
+  called_function: fprintf
+  line: 116
+  line_start: 116
+  line_end: 116
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0078
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: sign_ok = EVP_DigestSign(mdctx, sig, &sig_len, message, sizeof(message) -
+    1);
+  source: tmpl_openssl.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 122
+  line_start: 122
+  line_end: 122
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0079
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: sign_ok = EVP_DigestSign(mdctx, sig, &sig_len, message, sizeof(message) -
+    1);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'EVP_DigestSign' identified by AST-lite call matching.
+  priority: high
+  function: EVP_DigestSign
+  called_function: EVP_DigestSign
+  line: 122
+  line_start: 122
+  line_end: 122
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0080
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("EVP_DigestSign returned %d sig_len=%zu\n", sign_ok, sig_len);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  called_function: printf
+  line: 123
+  line_start: 123
+  line_end: 123
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0081
+  mask_level: value
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected by EVP_DigestSign\n");
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 125
+  line_start: 125
+  line_end: 125
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0082
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected by EVP_DigestSign\n");
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'fprintf' identified by AST-lite call matching.
+  priority: medium
+  function: fprintf
+  called_function: fprintf
+  line: 125
+  line_start: 125
+  line_end: 125
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0083
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: fprintf(stderr, "[TRIAGE] signing with invalid RSA key succeeded\n");
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 131
+  line_start: 131
+  line_end: 131
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0084
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: fprintf(stderr, "[TRIAGE] signing with invalid RSA key succeeded\n");
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'fprintf' identified by AST-lite call matching.
+  priority: medium
+  function: fprintf
+  called_function: fprintf
+  line: 131
+  line_start: 131
+  line_end: 131
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0085
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: EVP_MD_CTX_free(mdctx);
+  source: tmpl_openssl.c.role_statement
+  reason: Statement classified as cleanup by AST-lite role rules.
+  priority: medium
+  line: 135
+  line_start: 135
+  line_end: 135
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0086
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: EVP_MD_CTX_free(mdctx);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'EVP_MD_CTX_free' identified by AST-lite call matching.
+  priority: medium
+  function: EVP_MD_CTX_free
+  called_function: EVP_MD_CTX_free
+  line: 135
+  line_start: 135
+  line_end: 135
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0087
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: EVP_PKEY_free(pkey);
+  source: tmpl_openssl.c.role_statement
+  reason: Statement classified as cleanup by AST-lite role rules.
+  priority: medium
+  line: 136
+  line_start: 136
+  line_end: 136
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0088
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: EVP_PKEY_free(pkey);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'EVP_PKEY_free' identified by AST-lite call matching.
+  priority: medium
+  function: EVP_PKEY_free
+  called_function: EVP_PKEY_free
+  line: 136
+  line_start: 136
+  line_end: 136
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0089
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: RSA_free(rsa);
+  source: tmpl_openssl.c.role_statement
+  reason: Statement classified as cleanup by AST-lite role rules.
+  priority: medium
+  line: 137
+  line_start: 137
+  line_end: 137
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0090
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: RSA_free(rsa);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'RSA_free' identified by AST-lite call matching.
+  priority: medium
+  function: RSA_free
+  called_function: RSA_free
+  line: 137
+  line_start: 137
+  line_end: 137
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0091
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: BN_free(n);
+  source: tmpl_openssl.c.role_statement
+  reason: Statement classified as cleanup by AST-lite role rules.
+  priority: medium
+  line: 138
+  line_start: 138
+  line_end: 138
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0092
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: BN_free(n);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'BN_free' identified by AST-lite call matching.
+  priority: medium
+  function: BN_free
+  called_function: BN_free
+  line: 138
+  line_start: 138
+  line_end: 138
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0093
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: BN_free(e);
+  source: tmpl_openssl.c.role_statement
+  reason: Statement classified as cleanup by AST-lite role rules.
+  priority: medium
+  line: 139
+  line_start: 139
+  line_end: 139
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0094
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: BN_free(e);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'BN_free' identified by AST-lite call matching.
+  priority: medium
+  function: BN_free
+  called_function: BN_free
+  line: 139
+  line_start: 139
+  line_end: 139
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0095
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: BN_free(d);
+  source: tmpl_openssl.c.role_statement
+  reason: Statement classified as cleanup by AST-lite role rules.
+  priority: medium
+  line: 140
+  line_start: 140
+  line_end: 140
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0096
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: BN_free(d);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'BN_free' identified by AST-lite call matching.
+  priority: medium
+  function: BN_free
+  called_function: BN_free
+  line: 140
+  line_start: 140
+  line_end: 140
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+role_summary:
+  cleanup: 14
+  helper_function: 22
+  input_construction: 3
+  input_preparation: 8
+  mutation_point: 31
+  oracle: 3
+  trigger_call: 15
+mask_level_summary:
+  api_argument: 12
+  block: 1
+  function_call: 41
+  statement: 15
+  type: 7
+  value: 20

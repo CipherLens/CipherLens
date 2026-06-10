@@ -1,0 +1,125 @@
+case_id: mac_lifecycle_0000
+mac_algorithm: HMAC
+digest_or_cipher: SHA256
+lifecycle_sequence: update_after_final
+expected_candidate_types:
+- lifecycle_semantic_divergence_candidate
+- allowed_legacy_semantics_needs_review
+- failure_path_output_state_triage
+- crash_candidate
+source_matrix_entry:
+  case_id: mac_lifecycle_0000
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: SHA256
+    lifecycle_sequence: update_after_final
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  - returned_size
+  - error_stack
+  expected_candidate_types:
+  - lifecycle_semantic_divergence_candidate
+  - allowed_legacy_semantics_needs_review
+  - failure_path_output_state_triage
+  - crash_candidate
+mapped_placeholders:
+  mac_algorithm: HMAC
+  digest_or_cipher: SHA256
+  lifecycle_sequence: update_after_final
+  source_render_slots:
+    MAC_NAME: HMAC
+    DIGEST_NAME: SHA256
+    SOURCE_MAC_SETUP_PARAMS: "params[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST,\
+      \ \"SHA256\", 0);\n    params[1] = OSSL_PARAM_construct_end();"
+    SOURCE_LIFECYCLE_SEQUENCE: "init_ok = EVP_MAC_init(ctx, key, KEY_LEN, params);\n\
+      \    printf(\"SOURCE update_after_final EVP_MAC_init returned %d\\n\", init_ok);\n\
+      \    update_ok = init_ok == 1 ? EVP_MAC_update(ctx, message, MESSAGE_LEN) :\
+      \ 0;\n    printf(\"SOURCE update_after_final first EVP_MAC_update returned %d\\\
+      n\", update_ok);\n    outl = 0;\n    final_ok = update_ok == 1 ? EVP_MAC_final(ctx,\
+      \ out, &outl, sizeof(out)) : 0;\n    printf(\"SOURCE update_after_final EVP_MAC_final\
+      \ returned %d outl=%zu\\n\", final_ok, outl);\n    update_ok = final_ok == 1\
+      \ ? EVP_MAC_update(ctx, message, MESSAGE_LEN) : 0;\n    printf(\"SOURCE update_after_final\
+      \ second EVP_MAC_update after final returned %d\\n\", update_ok);\n    if (final_ok\
+      \ == 1 && outl == EXPECTED_MAC_SIZE && update_ok != 1) {\n        printf(\"\
+      [OK] mac_context_lifecycle: update after final rejected\\n\");\n        ret\
+      \ = 0;\n    } else {\n        printf(\"[TRIAGE] mac_context_lifecycle: update\
+      \ after final accepted or unexpected state\\n\");\n        ERR_print_errors_fp(stderr);\n\
+      \    }"
+    SOURCE_ORACLE_OBSERVATION: '"lifecycle_semantic_divergence_candidate"'
+  target_render_slots:
+    TARGET_KEY_TYPE: PSA_KEY_TYPE_HMAC
+    TARGET_KEY_ALGORITHM: PSA_ALG_HMAC(PSA_ALG_SHA_256)
+    TARGET_MAC_SETUP_PARAMS: psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_MESSAGE);
+    TARGET_LIFECYCLE_SEQUENCE: "status = psa_mac_sign_setup(&operation, key_id, PSA_ALG_HMAC(PSA_ALG_SHA_256));\n\
+      \    print_psa_status(\"TARGET update_after_final psa_mac_sign_setup\", status);\n\
+      \    status2 = status == PSA_SUCCESS ? psa_mac_update(&operation, message, MESSAGE_LEN)\
+      \ : status;\n    print_psa_status(\"TARGET update_after_final first psa_mac_update\"\
+      , status2);\n    mac_length = 0;\n    status3 = status2 == PSA_SUCCESS ? psa_mac_sign_finish(&operation,\
+      \ mac, MAC_LEN, &mac_length) : status2;\n    print_psa_status(\"TARGET update_after_final\
+      \ psa_mac_sign_finish\", status3);\n    status4 = status3 == PSA_SUCCESS ? psa_mac_update(&operation,\
+      \ message, MESSAGE_LEN) : status3;\n    print_psa_status(\"TARGET update_after_final\
+      \ psa_mac_update after finish\", status4);\n    printf(\"TARGET update_after_final\
+      \ mac_length=%zu\\n\", mac_length);\n    if (status3 == PSA_SUCCESS && mac_length\
+      \ == EXPECTED_MAC_SIZE && status4 != PSA_SUCCESS) {\n        printf(\"[OK] mac_context_lifecycle:\
+      \ PSA update after finish rejected\\n\");\n        ret = 0;\n    } else {\n\
+      \        printf(\"[TRIAGE] mac_context_lifecycle: PSA update after finish unexpected\
+      \ state\\n\");\n    }"
+    TARGET_ORACLE_OBSERVATION: '"lifecycle_semantic_divergence_candidate"'
+  common_render_slots:
+    DIGEST_OR_CIPHER: SHA256
+    EXPECTED_MAC_SIZE: 32
+    EXPECTED_VERDICT_CLASS: lifecycle_semantic_divergence_candidate
+    KEY_BYTES: "{\n    0x72, 0x61, 0x67, 0x2d, 0x73, 0x65, 0x65, 0x64,\n    0x2d,\
+      \ 0x68, 0x6d, 0x61, 0x63, 0x2d, 0x6b, 0x65,\n    0x79\n}"
+    KEY_LEN: 17
+    MESSAGE_BYTES: "{\n    0x6d, 0x61, 0x63, 0x20, 0x6c, 0x69, 0x66, 0x65,\n    0x63,\
+      \ 0x79, 0x63, 0x6c, 0x65, 0x20, 0x6d, 0x73,\n    0x67\n}"
+    MESSAGE_LEN: 17
+    MAC_LEN: 64
+source_render_slots:
+  MAC_NAME: HMAC
+  DIGEST_NAME: SHA256
+  SOURCE_MAC_SETUP_PARAMS: "params[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST,\
+    \ \"SHA256\", 0);\n    params[1] = OSSL_PARAM_construct_end();"
+  SOURCE_LIFECYCLE_SEQUENCE: "init_ok = EVP_MAC_init(ctx, key, KEY_LEN, params);\n\
+    \    printf(\"SOURCE update_after_final EVP_MAC_init returned %d\\n\", init_ok);\n\
+    \    update_ok = init_ok == 1 ? EVP_MAC_update(ctx, message, MESSAGE_LEN) : 0;\n\
+    \    printf(\"SOURCE update_after_final first EVP_MAC_update returned %d\\n\"\
+    , update_ok);\n    outl = 0;\n    final_ok = update_ok == 1 ? EVP_MAC_final(ctx,\
+    \ out, &outl, sizeof(out)) : 0;\n    printf(\"SOURCE update_after_final EVP_MAC_final\
+    \ returned %d outl=%zu\\n\", final_ok, outl);\n    update_ok = final_ok == 1 ?\
+    \ EVP_MAC_update(ctx, message, MESSAGE_LEN) : 0;\n    printf(\"SOURCE update_after_final\
+    \ second EVP_MAC_update after final returned %d\\n\", update_ok);\n    if (final_ok\
+    \ == 1 && outl == EXPECTED_MAC_SIZE && update_ok != 1) {\n        printf(\"[OK]\
+    \ mac_context_lifecycle: update after final rejected\\n\");\n        ret = 0;\n\
+    \    } else {\n        printf(\"[TRIAGE] mac_context_lifecycle: update after final\
+    \ accepted or unexpected state\\n\");\n        ERR_print_errors_fp(stderr);\n\
+    \    }"
+  SOURCE_ORACLE_OBSERVATION: '"lifecycle_semantic_divergence_candidate"'
+target_render_slots:
+  TARGET_KEY_TYPE: PSA_KEY_TYPE_HMAC
+  TARGET_KEY_ALGORITHM: PSA_ALG_HMAC(PSA_ALG_SHA_256)
+  TARGET_MAC_SETUP_PARAMS: psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_MESSAGE);
+  TARGET_LIFECYCLE_SEQUENCE: "status = psa_mac_sign_setup(&operation, key_id, PSA_ALG_HMAC(PSA_ALG_SHA_256));\n\
+    \    print_psa_status(\"TARGET update_after_final psa_mac_sign_setup\", status);\n\
+    \    status2 = status == PSA_SUCCESS ? psa_mac_update(&operation, message, MESSAGE_LEN)\
+    \ : status;\n    print_psa_status(\"TARGET update_after_final first psa_mac_update\"\
+    , status2);\n    mac_length = 0;\n    status3 = status2 == PSA_SUCCESS ? psa_mac_sign_finish(&operation,\
+    \ mac, MAC_LEN, &mac_length) : status2;\n    print_psa_status(\"TARGET update_after_final\
+    \ psa_mac_sign_finish\", status3);\n    status4 = status3 == PSA_SUCCESS ? psa_mac_update(&operation,\
+    \ message, MESSAGE_LEN) : status3;\n    print_psa_status(\"TARGET update_after_final\
+    \ psa_mac_update after finish\", status4);\n    printf(\"TARGET update_after_final\
+    \ mac_length=%zu\\n\", mac_length);\n    if (status3 == PSA_SUCCESS && mac_length\
+    \ == EXPECTED_MAC_SIZE && status4 != PSA_SUCCESS) {\n        printf(\"[OK] mac_context_lifecycle:\
+    \ PSA update after finish rejected\\n\");\n        ret = 0;\n    } else {\n  \
+    \      printf(\"[TRIAGE] mac_context_lifecycle: PSA update after finish unexpected\
+    \ state\\n\");\n    }"
+  TARGET_ORACLE_OBSERVATION: '"lifecycle_semantic_divergence_candidate"'
+unsupported_dimensions: []
+skipped: false

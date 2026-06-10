@@ -1,0 +1,18 @@
+secure_heap_sprint_actual_version:
+  compile_header_version: OpenSSL 3.5.5 27 Jan 2026
+  runtime_OpenSSL_version: OpenSSL 3.5.5 27 Jan 2026
+  runtime_OpenSSL_version_num: "30500050"
+  linked_libcrypto_path: ${CLEAN_SOURCES_ROOT}/openssl-3.5.5/libcrypto.a
+  linkage_type: static_archive_linked_into_executable
+  runtime_loaded_libcrypto_path: none_observed_by_ldd
+  source_tree_path: ${CLEAN_SOURCES_ROOT}/openssl-3.5.5
+  confidence: high
+  evidence:
+    - compile_log: artifacts/sprints/secure_heap_state_lifecycle_v1/results/run.jsonl compile_cmd uses -I and -L for openssl-3.5.5 with -lcrypto -lssl
+    - ldd: runner build and version probe ldd do not list libcrypto.so, indicating static libcrypto.a linkage
+    - version_probe: artifacts/sprints/secure_heap_state_lifecycle_v1/qualification/version_provenance/logs/openssl-3.5.5/run.stdout.log
+    - source_tree: /home/wen/work/clean_sources/openssl-3.5.5/apps/openssl reports OpenSSL 3.5.5 27 Jan 2026
+actual_version_status: determined
+notes:
+  - The compile command contains -Wl,-rpath for openssl-3.5.5, but the local tree provides libcrypto.a and libssl.a, not shared libraries.
+  - ldd therefore cannot show a libcrypto.so path; the linked implementation is the local static archive.

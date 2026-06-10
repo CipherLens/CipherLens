@@ -1,0 +1,101 @@
+source:
+  library: null
+  api: null
+  template_id: MAC_LIFECYCLE_V1_SOURCE_TEMPLATE
+  semantic_operation: null
+  bug_class: []
+  poc_pattern: {}
+  harness_family: mac_lifecycle
+  trigger_apis: []
+target:
+  library: cross_library
+  candidate_api: mac_lifecycle_pair
+adapter:
+  adapter_recipe: adapter_recipes/openssl_mbedtls/mac_lifecycle.recipe_slot.yaml
+  slot_bindings:
+    openssl_MAC_FETCH_API: EVP_MAC_fetch
+    openssl_MAC_CTX_NEW_API: EVP_MAC_CTX_new
+    openssl_MAC_INIT_API: EVP_MAC_init
+    openssl_MAC_UPDATE_API: EVP_MAC_update
+    openssl_MAC_FINAL_API: EVP_MAC_final
+    openssl_MAC_FREE_API: EVP_MAC_CTX_free
+    openssl_MAC_ALGORITHM: CMAC
+    mbedtls_psa_MAC_SETUP_API: psa_mac_sign_setup
+    mbedtls_psa_MAC_UPDATE_API: psa_mac_update
+    mbedtls_psa_MAC_FINAL_API: psa_mac_sign_finish
+    mbedtls_psa_MAC_ABORT_API: psa_mac_abort
+    mbedtls_psa_MAC_ALGORITHM: PSA_ALG_CMAC
+  adapter_mode: recipe_slot_filling
+  include_headers: []
+  type_mapping: {}
+  constant_mapping: {}
+  init_block: ''
+  input_construction_block: ''
+  trigger_block: ''
+  return_value_semantics: ''
+  oracle_strategy: {}
+  cleanup_block: ''
+  llm_status: ok
+candidate:
+  library: openssl_mbedtls
+  api: mac_lifecycle
+  decision: generate
+  scores:
+    operation_family: 90
+    function_behavior: 85
+    parameter_structure: 80
+    vulnerability_path: 80
+    harness_feasibility: 85
+    oracle_observability: 85
+    final_score: 83
+ast_mask_selection:
+  source_file: artifacts/sprints/mac_lifecycle_family_v1/mask/selected_mask_units.yaml
+  summary:
+    selected_count: 6
+    source_unit_count: null
+    trigger_apis: []
+    harness_family: mac_lifecycle
+    by_role: {}
+    by_mask_level: {}
+    by_suggested_use: {}
+  selected_units_by_use:
+    migrate_api_call:
+    - role: lifecycle_init
+      placeholder: MAC_INIT_API
+      suggested_use: migrate_api_call
+    - role: lifecycle_update
+      placeholder: MAC_UPDATE_API
+      suggested_use: migrate_api_call
+    - role: lifecycle_final
+      placeholder: MAC_FINAL_API
+      suggested_use: migrate_api_call
+    unspecified:
+    - role: lifecycle_state_transition
+      placeholder: FINAL_AFTER_FINAL_ACTION
+    - role: lifecycle_state_transition
+      placeholder: UPDATE_AFTER_FINAL_ACTION
+    preserve_oracle:
+    - role: expected_behavior
+      placeholder: EXPECTED_STATE_BEHAVIOR
+      suggested_use: preserve_oracle
+preserved_vulnerability_features:
+- lifecycle state transition after terminal finalization
+- repeated_final observability
+- update_after_final observability
+- caller-visible return code or status
+- caller-visible output length
+- sanitizer signal if lifecycle misuse reaches memory-unsafe behavior
+lost_or_weakened_features:
+- OpenSSL provider semantics may allow legacy or permissive repeated final behavior
+  that needs triage rather than immediate vulnerability classification.
+- mbedTLS PSA has no direct public equivalent for OpenSSL get-size-before-setup queries.
+source_expected_behavior:
+  buggy: {}
+  fixed: {}
+  note: The target API is not expected to reproduce exact mbedTLS numeric error codes;
+    cross-library validation uses the oracle semantics defined by the migrated harness
+    family.
+notes:
+- Generated from LLM-filled structured adapter YAML.
+- The C harness skeleton is fixed; the target-specific blocks come from adapter.yaml.
+- This is vulnerability-path migration, not strict full API semantic equivalence.

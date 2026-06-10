@@ -1,0 +1,128 @@
+case_id: mac_lifecycle_0044
+mac_algorithm: CMAC
+digest_or_cipher: AES-256-CBC
+lifecycle_sequence: final_after_abort
+expected_candidate_types:
+- lifecycle_semantic_divergence_candidate
+- allowed_legacy_semantics_needs_review
+- failure_path_output_state_triage
+- crash_candidate
+source_matrix_entry:
+  case_id: mac_lifecycle_0044
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: AES-256-CBC
+    lifecycle_sequence: final_after_abort
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: true
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  - returned_size
+  - error_stack
+  expected_candidate_types:
+  - lifecycle_semantic_divergence_candidate
+  - allowed_legacy_semantics_needs_review
+  - failure_path_output_state_triage
+  - crash_candidate
+mapped_placeholders:
+  mac_algorithm: CMAC
+  digest_or_cipher: AES-256-CBC
+  lifecycle_sequence: final_after_abort
+  source_render_slots:
+    MAC_NAME: CMAC
+    DIGEST_NAME: SHA256
+    SOURCE_MAC_SETUP_PARAMS: "params[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_CIPHER,\
+      \ \"AES-256-CBC\", 0);\n    params[1] = OSSL_PARAM_construct_end();"
+    SOURCE_LIFECYCLE_SEQUENCE: "init_ok = EVP_MAC_init(ctx, key, KEY_LEN, params);\n\
+      \    printf(\"SOURCE final_after_abort EVP_MAC_init returned %d\\n\", init_ok);\n\
+      \    update_ok = init_ok == 1 ? EVP_MAC_update(ctx, message, MESSAGE_LEN) :\
+      \ 0;\n    printf(\"SOURCE final_after_abort EVP_MAC_update returned %d\\n\"\
+      , update_ok);\n    EVP_MAC_CTX_free(ctx);\n    ctx = EVP_MAC_CTX_new(mac);\n\
+      \    if (ctx == NULL) {\n        fprintf(stderr, \"[TRIAGE] mac_context_lifecycle:\
+      \ EVP_MAC_CTX_new after abort-like free failed\\n\");\n        ERR_print_errors_fp(stderr);\n\
+      \        goto end;\n    }\n    outl = 777;\n    final_ok = EVP_MAC_final(ctx,\
+      \ out, &outl, sizeof(out));\n    printf(\"SOURCE final_after_abort EVP_MAC_final\
+      \ on fresh uninitialized ctx returned %d outl=%zu\\n\", final_ok, outl);\n \
+      \   if (init_ok == 1 && update_ok == 1 && final_ok != 1) {\n        printf(\"\
+      [OK] mac_context_lifecycle: final after abort-like reset rejected\\n\");\n \
+      \       ret = 0;\n    } else {\n        printf(\"[TRIAGE] mac_context_lifecycle:\
+      \ final after abort-like reset unexpected state\\n\");\n        ERR_print_errors_fp(stderr);\n\
+      \    }"
+    SOURCE_ORACLE_OBSERVATION: '"safe_reject_projection"'
+  target_render_slots:
+    TARGET_KEY_TYPE: PSA_KEY_TYPE_AES
+    TARGET_KEY_ALGORITHM: PSA_ALG_CMAC
+    TARGET_MAC_SETUP_PARAMS: psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_MESSAGE);
+    TARGET_LIFECYCLE_SEQUENCE: "status = psa_mac_sign_setup(&operation, key_id, PSA_ALG_CMAC);\n\
+      \    print_psa_status(\"TARGET final_after_abort psa_mac_sign_setup\", status);\n\
+      \    status2 = status == PSA_SUCCESS ? psa_mac_update(&operation, message, MESSAGE_LEN)\
+      \ : status;\n    print_psa_status(\"TARGET final_after_abort psa_mac_update\"\
+      , status2);\n    status3 = psa_mac_abort(&operation);\n    print_psa_status(\"\
+      TARGET final_after_abort psa_mac_abort\", status3);\n    mac_length = 777;\n\
+      \    status4 = psa_mac_sign_finish(&operation, mac, MAC_LEN, &mac_length);\n\
+      \    print_psa_status(\"TARGET final_after_abort psa_mac_sign_finish after abort\"\
+      , status4);\n    printf(\"TARGET final_after_abort mac_length=%zu\\n\", mac_length);\n\
+      \    if (status == PSA_SUCCESS && status2 == PSA_SUCCESS && status3 == PSA_SUCCESS\
+      \ && status4 != PSA_SUCCESS) {\n        printf(\"[OK] mac_context_lifecycle:\
+      \ PSA finish after abort rejected\\n\");\n        ret = 0;\n    } else {\n \
+      \       printf(\"[TRIAGE] mac_context_lifecycle: PSA final_after_abort unexpected\
+      \ state\\n\");\n    }"
+    TARGET_ORACLE_OBSERVATION: '"safe_reject_projection"'
+  common_render_slots:
+    DIGEST_OR_CIPHER: AES-256-CBC
+    EXPECTED_MAC_SIZE: 16
+    EXPECTED_VERDICT_CLASS: safe_reject_projection
+    KEY_BYTES: "{\n    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,\n    0x08,\
+      \ 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,\n    0x10, 0x11, 0x12, 0x13, 0x14,\
+      \ 0x15, 0x16, 0x17,\n    0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f\n}"
+    KEY_LEN: 32
+    MESSAGE_BYTES: "{\n    0x6d, 0x61, 0x63, 0x20, 0x6c, 0x69, 0x66, 0x65,\n    0x63,\
+      \ 0x79, 0x63, 0x6c, 0x65, 0x20, 0x6d, 0x73,\n    0x67\n}"
+    MESSAGE_LEN: 17
+    MAC_LEN: 64
+source_render_slots:
+  MAC_NAME: CMAC
+  DIGEST_NAME: SHA256
+  SOURCE_MAC_SETUP_PARAMS: "params[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_CIPHER,\
+    \ \"AES-256-CBC\", 0);\n    params[1] = OSSL_PARAM_construct_end();"
+  SOURCE_LIFECYCLE_SEQUENCE: "init_ok = EVP_MAC_init(ctx, key, KEY_LEN, params);\n\
+    \    printf(\"SOURCE final_after_abort EVP_MAC_init returned %d\\n\", init_ok);\n\
+    \    update_ok = init_ok == 1 ? EVP_MAC_update(ctx, message, MESSAGE_LEN) : 0;\n\
+    \    printf(\"SOURCE final_after_abort EVP_MAC_update returned %d\\n\", update_ok);\n\
+    \    EVP_MAC_CTX_free(ctx);\n    ctx = EVP_MAC_CTX_new(mac);\n    if (ctx == NULL)\
+    \ {\n        fprintf(stderr, \"[TRIAGE] mac_context_lifecycle: EVP_MAC_CTX_new\
+    \ after abort-like free failed\\n\");\n        ERR_print_errors_fp(stderr);\n\
+    \        goto end;\n    }\n    outl = 777;\n    final_ok = EVP_MAC_final(ctx,\
+    \ out, &outl, sizeof(out));\n    printf(\"SOURCE final_after_abort EVP_MAC_final\
+    \ on fresh uninitialized ctx returned %d outl=%zu\\n\", final_ok, outl);\n   \
+    \ if (init_ok == 1 && update_ok == 1 && final_ok != 1) {\n        printf(\"[OK]\
+    \ mac_context_lifecycle: final after abort-like reset rejected\\n\");\n      \
+    \  ret = 0;\n    } else {\n        printf(\"[TRIAGE] mac_context_lifecycle: final\
+    \ after abort-like reset unexpected state\\n\");\n        ERR_print_errors_fp(stderr);\n\
+    \    }"
+  SOURCE_ORACLE_OBSERVATION: '"safe_reject_projection"'
+target_render_slots:
+  TARGET_KEY_TYPE: PSA_KEY_TYPE_AES
+  TARGET_KEY_ALGORITHM: PSA_ALG_CMAC
+  TARGET_MAC_SETUP_PARAMS: psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_MESSAGE);
+  TARGET_LIFECYCLE_SEQUENCE: "status = psa_mac_sign_setup(&operation, key_id, PSA_ALG_CMAC);\n\
+    \    print_psa_status(\"TARGET final_after_abort psa_mac_sign_setup\", status);\n\
+    \    status2 = status == PSA_SUCCESS ? psa_mac_update(&operation, message, MESSAGE_LEN)\
+    \ : status;\n    print_psa_status(\"TARGET final_after_abort psa_mac_update\"\
+    , status2);\n    status3 = psa_mac_abort(&operation);\n    print_psa_status(\"\
+    TARGET final_after_abort psa_mac_abort\", status3);\n    mac_length = 777;\n \
+    \   status4 = psa_mac_sign_finish(&operation, mac, MAC_LEN, &mac_length);\n  \
+    \  print_psa_status(\"TARGET final_after_abort psa_mac_sign_finish after abort\"\
+    , status4);\n    printf(\"TARGET final_after_abort mac_length=%zu\\n\", mac_length);\n\
+    \    if (status == PSA_SUCCESS && status2 == PSA_SUCCESS && status3 == PSA_SUCCESS\
+    \ && status4 != PSA_SUCCESS) {\n        printf(\"[OK] mac_context_lifecycle: PSA\
+    \ finish after abort rejected\\n\");\n        ret = 0;\n    } else {\n       \
+    \ printf(\"[TRIAGE] mac_context_lifecycle: PSA final_after_abort unexpected state\\\
+    n\");\n    }"
+  TARGET_ORACLE_OBSERVATION: '"safe_reject_projection"'
+unsupported_dimensions: []
+skipped: false

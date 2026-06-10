@@ -1,0 +1,54 @@
+source_pattern_id: null
+template_id: MAC_LIFECYCLE_V1_SOURCE_TEMPLATE
+harness_family: mac_lifecycle
+oracle_type: lifecycle_state_transition_semantic_oracle
+target_library: cross_library
+target_api: mac_lifecycle_pair
+applicability: generate
+adapter_recipe: adapter_recipes/openssl_mbedtls/mac_lifecycle.recipe_slot.yaml
+evidence_file: artifacts/sprints/mac_lifecycle_family_v1/recipe/candidates_with_evidence.yaml
+slot_bindings:
+  openssl_MAC_FETCH_API: EVP_MAC_fetch
+  openssl_MAC_CTX_NEW_API: EVP_MAC_CTX_new
+  openssl_MAC_INIT_API: EVP_MAC_init
+  openssl_MAC_UPDATE_API: EVP_MAC_update
+  openssl_MAC_FINAL_API: EVP_MAC_final
+  openssl_MAC_FREE_API: EVP_MAC_CTX_free
+  openssl_MAC_ALGORITHM: CMAC
+  mbedtls_psa_MAC_SETUP_API: psa_mac_sign_setup
+  mbedtls_psa_MAC_UPDATE_API: psa_mac_update
+  mbedtls_psa_MAC_FINAL_API: psa_mac_sign_finish
+  mbedtls_psa_MAC_ABORT_API: psa_mac_abort
+  mbedtls_psa_MAC_ALGORITHM: PSA_ALG_CMAC
+preserved_features:
+- lifecycle state transition after terminal finalization
+- repeated_final observability
+- update_after_final observability
+- caller-visible return code or status
+- caller-visible output length
+- sanitizer signal if lifecycle misuse reaches memory-unsafe behavior
+lost_or_weakened_features:
+- OpenSSL provider semantics may allow legacy or permissive repeated final behavior
+  that needs triage rather than immediate vulnerability classification.
+- mbedTLS PSA has no direct public equivalent for OpenSSL get-size-before-setup queries.
+_adapter_mode: recipe_slot_filling
+_ignored_disallowed_fields: []
+_ignored_non_slot_fields: []
+_llm_status: ok
+include_headers: []
+validation:
+  status: ok
+  errors: []
+  warnings:
+  - selected_mask_units loaded as trace context for recipe adapter
+  normalized: true
+  ast_mask_selection:
+    source_file: artifacts/sprints/mac_lifecycle_family_v1/mask/selected_mask_units.yaml
+    summary:
+      selected_count: 6
+      source_unit_count: null
+      trigger_apis: []
+      harness_family: mac_lifecycle
+      by_role: {}
+      by_mask_level: {}
+      by_suggested_use: {}

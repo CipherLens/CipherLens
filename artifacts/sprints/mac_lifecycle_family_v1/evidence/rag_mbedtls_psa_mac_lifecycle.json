@@ -1,0 +1,293 @@
+{
+  "query": "mbedTLS PSA MAC finish update after finish bad state psa_mac_sign_finish lifecycle",
+  "top_k": 12,
+  "results": [
+    {
+      "rank": 1,
+      "score": 1.5672697363780146,
+      "distance": 0.39417564868927,
+      "base_score": 0.7172697363780145,
+      "rerank_score": 1.5672697363780146,
+      "rerank_reasons": [
+        "api_match:psa_mac_sign_finish",
+        "family_match:mac_lifecycle",
+        "library_match:mbedtls",
+        "layer:api_cards",
+        "source_file_api_match",
+        "keyword_overlap:finish,lifecycle,mac,mbedtls,psa,psa_mac_sign_finish",
+        "recent_feedback_source"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/mbedtls/psa_mac_sign_finish.yaml",
+      "text": "Source: API Card\napi: psa_mac_sign_finish\nlibrary: mbedtls\nfamily: mac_lifecycle\nsignature: psa_status_t psa_mac_sign_finish(psa_mac_operation_t *operation, uint8_t *mac, size_t mac_size, size_t *mac_length)\nparameter_semantics: operation: PSA MAC operation state\nmac: output buffer\nmac_size: output buffer capacity\nmac_length: caller-visible output length\nreturn_value_semantics: success: PSA_SUCCESS and mac_length receives produced length\nfailure: PSA error status and output state should remain safe\nvalid_invalid_ranges: valid: active sign operation and sufficient output buffer\ninvalid: finish before setup, double finish, undersized output\nunsupported_conditions: - operation in verify mode\n- aborted or inactive operation\nmutation_hints: - final before setup\n- double final\n- update after final\n- third final\n- update after second final\n- abort then final\n- final after abort\n- query after final\n- query after abort\n- small mac_size\noracle_observables: - psa_status\n- mac_length\n- output_buffer_state\n- sanitizer_signal\nknown_pitfalls: - mbedTLS PSA MAC has no public query-size-before-setup equivalent; mark that projection\n  as projection_limitation.\n- Invalid algorithm projections such as HMAC+AES or CMAC+SHA should be avoided or\n  marked projection_limitation.\nnotes: - 'Known pitfall: failure return must be interpreted with mac_length and operation\n  state.'\n- 'Feedback: successful psa_mac_sign_finish() terminates the PSA MAC operation.'\n- 'Observed behavior: repeated psa_mac_sign_finish() after success returns BAD_STATE-like\n  failure, not a second successful MAC.'\n- 'MAC lifecycle v2 minimal confirmation: after successful CMAC finish, mbedTLS PSA\n  rejects update-after-finish, second finish, third finish, and update-after-second-finish\n  with status -137.'\n- MAC lifecycle v2 minimal confirmation was stable under normal and ASan/UBSan runs;\n  no sanitizer crash was observed.\n- 'Classification guidance: PSA strict lifecycle rejection is a safe negative side\n  of CMAC double-final comparison, not crash evidence.'\n",
+      "metadata": {
+        "layer": "api_cards",
+        "source_file": "knowledge_base/api_cards/mbedtls/psa_mac_sign_finish.yaml",
+        "library": "mbedtls",
+        "family": "mac_lifecycle",
+        "api": "psa_mac_sign_finish",
+        "doc_type": "api_card"
+      }
+    },
+    {
+      "rank": 2,
+      "score": 1.0881842984124803,
+      "distance": 0.7001473903656006,
+      "base_score": 0.5881842984124803,
+      "rerank_score": 1.0881842984124803,
+      "rerank_reasons": [
+        "family_match:mac_lifecycle",
+        "library_match:mbedtls",
+        "layer:api_cards",
+        "keyword_overlap:lifecycle,mac,mbedtls,psa,state",
+        "recent_feedback_source"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/openssl/EVP_MAC_CTX_get_mac_size.yaml",
+      "text": "Source: API Card\napi: EVP_MAC_CTX_get_mac_size\nlibrary: openssl\nfamily: mac_lifecycle\nsignature: size_t EVP_MAC_CTX_get_mac_size(EVP_MAC_CTX *ctx)\nparameter_semantics: ctx: MAC context\nreturn_value_semantics: success: returns MAC output size\nfailure_or_unknown: may return 0\nvalid_invalid_ranges: valid: initialized or parameterized MAC context\ninvalid: uninitialized, freed, or unsupported context state\nunsupported_conditions: - stale or NULL context\nmutation_hints: - get size before setup\n- get size after failed init\n- get size after final\n- get size after abort-like cleanup\n- query after final\n- query after abort\noracle_observables: - returned_size\n- error_stack\n- sanitizer_signal\nknown_pitfalls: - Do not treat a nonzero returned_size alone as a crash or confirmed vulnerability.\n- query_size_before_setup is a projection limitation for mbedTLS PSA MAC because there\n  is no public pre-setup size query equivalent.\nnotes: - 'Known pitfall: size query behavior depends on lifecycle state.'\n- 'Feedback: query-after-final and query-after-abort are MAC lifecycle follow-up mutations,\n  while PSA query-size-before-setup has no public equivalent.'\n- 'Classification guidance: size-query differences after CMAC final/abort should be\n  triaged as lifecycle_semantic_divergence_candidate, allowed_legacy_semantics_needs_review,\n  or projection_limitation depending on source/target observability.'\n",
+      "metadata": {
+        "family": "mac_lifecycle",
+        "layer": "api_cards",
+        "source_file": "knowledge_base/api_cards/openssl/EVP_MAC_CTX_get_mac_size.yaml",
+        "library": "openssl",
+        "doc_type": "api_card",
+        "api": "EVP_MAC_CTX_get_mac_size"
+      }
+    },
+    {
+      "rank": 3,
+      "score": 0.9633570126124339,
+      "distance": 0.6573935151100159,
+      "base_score": 0.6033570126124339,
+      "rerank_score": 0.9633570126124339,
+      "rerank_reasons": [
+        "family_match:mac_lifecycle",
+        "layer:api_cards",
+        "keyword_overlap:lifecycle,mac,state",
+        "recent_feedback_source"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/openssl/EVP_MAC_final.yaml",
+      "text": "Source: API Card\napi: EVP_MAC_final\nlibrary: openssl\nfamily: mac_lifecycle\nsignature: int EVP_MAC_final(EVP_MAC_CTX *ctx, unsigned char *out, size_t *outl, size_t outsize)\nparameter_semantics: ctx: MAC context\nout: output buffer\noutl: caller-visible output length\noutsize: output buffer capacity\nreturn_value_semantics: success: 1 and outl receives MAC length\nfailure: 0 and output state should remain safe for caller\nvalid_invalid_ranges: valid: initialized MAC context and sufficiently sized output buffer\ninvalid: final before setup, update after final for strict lifecycle APIs, undersized\n  output\nunsupported_conditions: - using ctx after invalid lifecycle transition\nmutation_hints: - final before setup\n- double final\n- update after final\n- third final\n- update after second final\n- abort then final\n- output buffer too small\noracle_observables: - return_code\n- outl\n- output_buffer_state\n- sanitizer_signal\nknown_pitfalls: - HMAC failure-path outl observations should be classified as failure_path_output_state_triage,\n  not bug_candidate, without stronger output-state evidence.\n- HMAC+AES and CMAC+SHA are invalid parameter projections; skip them or mark projection_limitation.\nnotes: - 'Known pitfall: failure paths must not expose unsafe outl or stale output state.'\n- 'Feedback: OpenSSL CMAC repeated final may be allowed legacy/provider semantics\n  rather than a vulnerability by itself.'\n- 'Observed CMAC behavior: a second EVP_MAC_final() can succeed and return outl=16.'\n- 'MAC lifecycle v2 minimal confirmation: CMAC AES-128-CBC and AES-256-CBC accepted\n  EVP_MAC_update() after EVP_MAC_final(); a follow-up EVP_MAC_final() also succeeded\n  and produced a different 16-byte output.'\n- 'MAC lifecycle v2 minimal confirmation: CMAC third-final sequences returned success\n  for final1/final2/final3, each with outl=16 and distinct output bytes.'\n- 'MAC lifecycle v2 minimal confirmation: CMAC update-after-second-final sequences\n  returned success for final1, final2, update-after-second-final, and final3.'\n- High-value follow-up mutations are update-after-final and update-after-second-final\n  because they show continuation after a terminal-looking finalization state.\n- Third-final is useful evidence but should be treated as allowed_legacy_semantics_needs_review\n  until OpenSSL documentation confirms whether repeated finalization is intentional\n  provider semantics.\n- 'Classification guidance: do not report these CMAC lifecycle observations as confirmed\n  vulnerabilities without documentation review and caller-impact evidence.'\n",
+      "metadata": {
+        "source_file": "knowledge_base/api_cards/openssl/EVP_MAC_final.yaml",
+        "api": "EVP_MAC_final",
+        "library": "openssl",
+        "family": "mac_lifecycle",
+        "doc_type": "api_card",
+        "layer": "api_cards"
+      }
+    },
+    {
+      "rank": 4,
+      "score": 0.8274168649781202,
+      "distance": 0.6738730669021606,
+      "base_score": 0.5974168649781202,
+      "rerank_score": 0.8274168649781202,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:lifecycle,mac,mbedtls,state",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+      "text": "## MBEDTLS-POC-0005\n\n- Source: data/pocs/core10/MBEDTLS-POC-0005\n- Family: api_state_machine\n- Oracle type: safe_reject_baseline\n- Root cause: Missing validation for conflicting ASN.1 named-data value pointer and nonzero length, allowing NULL pointer dereference.\n- Source API: mbedtls_asn1_store_named_data\n- Target API: ASN1_STRING_set\n- Historical verdict: migrated_safe\n- Feedback summary: none\n- Scheduler priority: 0.42 (object_state_lifecycle, safe_negative_baseline)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: NULL pointer dereference. Local metadata and artifacts describe mbedtls_asn1_store_named_data stale state, not a MAC lifecycle issue.",
+      "metadata": {
+        "family": "api_state_machine",
+        "library": "",
+        "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+        "layer": "poc_patterns",
+        "oracle_type": "safe_reject_baseline",
+        "pattern_id": "MBEDTLS-POC-0005",
+        "doc_type": "poc_pattern"
+      }
+    },
+    {
+      "rank": 5,
+      "score": 0.8274168649781202,
+      "distance": 0.6738730669021606,
+      "base_score": 0.5974168649781202,
+      "rerank_score": 0.8274168649781202,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:lifecycle,mac,mbedtls,state",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "## MBEDTLS-POC-0005\n\n- Source: data/pocs/core10/MBEDTLS-POC-0005\n- Family: api_state_machine\n- Oracle type: safe_reject_baseline\n- Root cause: Missing validation for conflicting ASN.1 named-data value pointer and nonzero length, allowing NULL pointer dereference.\n- Source API: mbedtls_asn1_store_named_data\n- Target API: ASN1_STRING_set\n- Historical verdict: migrated_safe\n- Feedback summary: none\n- Scheduler priority: 0.42 (object_state_lifecycle, safe_negative_baseline)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: NULL pointer dereference. Local metadata and artifacts describe mbedtls_asn1_store_named_data stale state, not a MAC lifecycle issue.",
+      "metadata": {
+        "library": "",
+        "doc_type": "poc_pattern",
+        "family": "api_state_machine",
+        "oracle_type": "safe_reject_baseline",
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+        "layer": "poc_patterns",
+        "pattern_id": "MBEDTLS-POC-0005"
+      }
+    },
+    {
+      "rank": 6,
+      "score": 0.7961115430302224,
+      "distance": 0.6498613357543945,
+      "base_score": 0.6061115430302224,
+      "rerank_score": 0.7961115430302224,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:mbedtls,psa",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+      "text": "## MBEDTLS-POC-0028\n\n- Source: data/pocs/core10/MBEDTLS-POC-0028\n- Family: cipher_aead_lifecycle\n- Oracle type: unexpected_success\n- Root cause: Missing validation of AEAD tag lengths from PSA drivers.\n- Source API: psa_aead_setup\n- Target API: unknown\n- Historical verdict: pending_inference\n- Feedback summary: none\n- Scheduler priority: 0.6 (invalid_parameter_acceptance, psa_aead_setup)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: invalid parameter accepted.",
+      "metadata": {
+        "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+        "library": "",
+        "layer": "poc_patterns",
+        "oracle_type": "unexpected_success",
+        "doc_type": "poc_pattern",
+        "pattern_id": "MBEDTLS-POC-0028",
+        "family": "cipher_aead_lifecycle"
+      }
+    },
+    {
+      "rank": 7,
+      "score": 0.7961115430302224,
+      "distance": 0.6498613357543945,
+      "base_score": 0.6061115430302224,
+      "rerank_score": 0.7961115430302224,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:mbedtls,psa",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "## MBEDTLS-POC-0028\n\n- Source: data/pocs/core10/MBEDTLS-POC-0028\n- Family: cipher_aead_lifecycle\n- Oracle type: unexpected_success\n- Root cause: Missing validation of AEAD tag lengths from PSA drivers.\n- Source API: psa_aead_setup\n- Target API: unknown\n- Historical verdict: pending_inference\n- Feedback summary: none\n- Scheduler priority: 0.6 (invalid_parameter_acceptance, psa_aead_setup)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: invalid parameter accepted.",
+      "metadata": {
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+        "doc_type": "poc_pattern",
+        "layer": "poc_patterns",
+        "family": "cipher_aead_lifecycle",
+        "pattern_id": "MBEDTLS-POC-0028",
+        "library": "",
+        "oracle_type": "unexpected_success"
+      }
+    },
+    {
+      "rank": 8,
+      "score": 0.778189802514809,
+      "distance": 0.566931962966919,
+      "base_score": 0.638189802514809,
+      "rerank_score": 0.778189802514809,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:mbedtls,psa"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__core__psa_crypto.c.md",
+      "text": "atus = PSA_SUCCESS;\n    }\n\nexit:\n\n    mbedtls_mpi_free(&r);\n    mbedtls_mpi_free(&s);\n    return status;\n\n #else\n\n    (void) operation;\n    (void) signature;\n    (void) signature_size;\n    (void) signature_length;\n\n    return PSA_ERROR_NOT_SUPPORTED;\n\n#endif /* defined(MBEDTLS_PSA_BUILTIN_ALG_ECDSA) ||\n        * defined(MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA) &&\n        * defined( MBEDTLS_ECP_RESTARTABLE ) */\n}\n\npsa_status_t mbedtls_psa_sign_hash_abort(\n```\n\n## Snippet 7\n\n```c\nif (!can_do_interruptible_sign_verify(alg)) {\n        return PSA_ERROR_NOT_SUPPORTED;\n    }\n\n#if (defined(MBEDTLS_PSA_BUILTIN_ALG_ECDSA) || \\\n    defined(MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA)) && \\\n    defined(MBEDTLS_ECP_RESTARTABLE)\n\n    mbedtls_ecdsa_restart_init(&operation->restart_ctx);\n    mbedtls_mpi_init(&operation->r);\n    mbedtls_mpi_init(&operation->s);\n\n    /* Ensure num_ops is zero'ed in case of context re-use. */\n    operation->num_ops = 0;\n\n    status = mbedtls_psa_ecp_load_representati",
+      "metadata": {
+        "family": "",
+        "doc_type": "api_constraint",
+        "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__core__psa_crypto.c.md",
+        "pattern_id": "",
+        "oracle_type": "",
+        "layer": "api_constraints",
+        "library": "mbedtls"
+      }
+    },
+    {
+      "rank": 9,
+      "score": 0.7668311747596042,
+      "distance": 0.5953258872032166,
+      "base_score": 0.6268311747596041,
+      "rerank_score": 0.7668311747596042,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:mbedtls,psa"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__core__psa_crypto.c.md",
+      "text": "{\n\n#if defined(MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA)\n        status = mbedtls_to_psa_error(\n            mbedtls_ecdsa_sign_det_restartable(&operation->ctx->grp,\n                                               &r,\n                                               &s,\n                                               &operation->ctx->d,\n```\n\n## Snippet 3\n\n```c\nMBEDTLS_PSA_RANDOM_STATE,\n                                           &operation->restart_ctx));\n    }\n\n    /* Hide the fact that the restart context only holds a delta of number of\n     * ops done during the last operation, not an absolute value. */\n    operation->num_ops += operation->restart_ctx.ecp.ops_done;\n\n    if (status == PSA_SUCCESS) {\n        status =  mbedtls_to_psa_error(\n            mbedtls_mpi_write_binary(&r,\n                                     signature,\n                                     operation->coordinate_bytes)\n            );\n\n        if (status != PSA_SUCCESS) {\n            goto exit;\n        }\n\n        st",
+      "metadata": {
+        "oracle_type": "",
+        "layer": "api_constraints",
+        "pattern_id": "",
+        "family": "",
+        "doc_type": "api_constraint",
+        "library": "mbedtls",
+        "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__core__psa_crypto.c.md"
+      }
+    },
+    {
+      "rank": 10,
+      "score": 0.7614511031661484,
+      "distance": 0.6091370582580566,
+      "base_score": 0.6214511031661484,
+      "rerank_score": 0.7614511031661484,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:mbedtls,psa"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__core__psa_crypto.c.md",
+      "text": "_BUILTIN_ALG_DETERMINISTIC_ECDSA)\n        status = mbedtls_to_psa_error(\n            mbedtls_ecdsa_sign_det_restartable(&operation->ctx->grp,\n                                               &r,\n                                               &s,\n```\n\n## Snippet 2\n\n```c\n{\n#if (defined(MBEDTLS_PSA_BUILTIN_ALG_ECDSA) || \\\n    defined(MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA)) && \\\n    defined(MBEDTLS_ECP_RESTARTABLE)\n\n    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;\n    mbedtls_mpi r;\n    mbedtls_mpi s;\n\n    mbedtls_mpi_init(&r);\n    mbedtls_mpi_init(&s);\n\n    /* Ensure max_ops is set to the current value (or default). */\n    mbedtls_psa_interruptible_set_max_ops(psa_interruptible_get_max_ops());\n\n    if (signature_size < 2 * operation->coordinate_bytes) {\n        status = PSA_ERROR_BUFFER_TOO_SMALL;\n        goto exit;\n    }\n\n    if (PSA_ALG_ECDSA_IS_DETERMINISTIC(operation->alg)) {\n\n#if defined(MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA)\n        status = mbedtls_to_psa_error(",
+      "metadata": {
+        "layer": "api_constraints",
+        "oracle_type": "",
+        "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__core__psa_crypto.c.md",
+        "library": "mbedtls",
+        "pattern_id": "",
+        "family": "",
+        "doc_type": "api_constraint"
+      }
+    },
+    {
+      "rank": 11,
+      "score": 0.7609432271555182,
+      "distance": 0.610453188419342,
+      "base_score": 0.6209432271555182,
+      "rerank_score": 0.7609432271555182,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:mbedtls,psa"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__psa_crypto_ffdh.c.md",
+      "text": "{\n        status = mbedtls_to_psa_error(ret);\n    }\n\n    return status;\n}\n```\n\n## Snippet 14\n\n```c\nMBEDTLS_MPI_CHK(mbedtls_mpi_exp_mod(&K, &GY, &X, &P, NULL));\n\n    MBEDTLS_MPI_CHK(mbedtls_mpi_write_binary(&K, shared_secret,\n                                             calculated_shared_secret_size));\n\n    *shared_secret_length = calculated_shared_secret_size;\n\n    ret = 0;\n\ncleanup:\n    mbedtls_mpi_free(&P);\n    mbedtls_mpi_free(&X); mbedtls_mpi_free(&GY);\n    mbedtls_mpi_free(&K);\n\n    if (status == PSA_SUCCESS && ret != 0) {\n        status = mbedtls_to_psa_error(ret);\n    }\n\n    return status;\n}\n#endif /* MBEDTLS_PSA_BUILTIN_ALG_FFDH */\n\n#endif /* MBEDTLS_PSA_CRYPTO_C */\n```\n\n## Snippet 15\n\n```c\nMBEDTLS_MPI_CHK(mbedtls_mpi_write_binary(&K, shared_secret,\n                                             calculated_shared_secret_size));\n\n    *shared_secret_length = calculated_shared_secret_size;\n\n    ret = 0;\n\ncleanup:\n    mbedtls_mpi_free(&P);\n    mbedtls_mpi_free(&X); mbedtls_mpi_free(",
+      "metadata": {
+        "doc_type": "api_constraint",
+        "layer": "api_constraints",
+        "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__psa_crypto_ffdh.c.md",
+        "family": "",
+        "library": "mbedtls",
+        "oracle_type": "",
+        "pattern_id": ""
+      }
+    },
+    {
+      "rank": 12,
+      "score": 0.7605356599613406,
+      "distance": 0.6115109324455261,
+      "base_score": 0.6205356599613406,
+      "rerank_score": 0.7605356599613406,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:mbedtls,psa"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__core__psa_crypto.c.md",
+      "text": "s)\n            );\n\n        if (status != PSA_SUCCESS) {\n            goto exit;\n        }\n\n        status =  mbedtls_to_psa_error(\n            mbedtls_mpi_write_binary(&s,\n                                     signature +\n                                     operation->coordinate_bytes,\n                                     operation->coordinate_bytes)\n            );\n\n        if (status != PSA_SUCCESS) {\n            goto exit;\n```\n\n## Snippet 4\n\n```c\nmbedtls_mpi_write_binary(&r,\n                                     signature,\n                                     operation->coordinate_bytes)\n            );\n\n        if (status != PSA_SUCCESS) {\n            goto exit;\n        }\n\n        status =  mbedtls_to_psa_error(\n            mbedtls_mpi_write_binary(&s,\n                                     signature +\n                                     operation->coordinate_bytes,\n                                     operation->coordinate_bytes)\n            );\n\n        if (status != PSA_SUCCESS) {",
+      "metadata": {
+        "pattern_id": "",
+        "doc_type": "api_constraint",
+        "family": "",
+        "library": "mbedtls",
+        "oracle_type": "",
+        "layer": "api_constraints",
+        "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__core__psa_crypto.c.md"
+      }
+    }
+  ]
+}

@@ -1,0 +1,190 @@
+{
+  "query": "EVP_DigestVerify invalid signature wrong digest wrong hash length RSA PSS saltlen",
+  "top_k": 8,
+  "results": [
+    {
+      "rank": 1,
+      "score": 1.3816200871282411,
+      "distance": 0.42527276277542114,
+      "base_score": 0.7016200871282412,
+      "rerank_score": 1.3816200871282411,
+      "rerank_reasons": [
+        "api_match:EVP_DigestVerify",
+        "family_match:pkey_verify",
+        "layer:api_cards",
+        "source_file_api_match",
+        "keyword_overlap:digest,evp_digestverify,pss,rsa"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/openssl/EVP_DigestVerify.yaml",
+      "text": "Source: API Card\napi: EVP_DigestVerify\nlibrary: openssl\nfamily: pkey_verify\nsignature: int EVP_DigestVerify(EVP_MD_CTX *ctx, const unsigned char *sigret, size_t siglen, const unsigned char *tbs, size_t tbslen)\nparameter_semantics: ctx: initialized digest verify context\nsigret: signature buffer\nsiglen: signature length\ntbs: message bytes to verify\ntbslen: message length\nreturn_value_semantics: success: 1\ninvalid_signature: 0\nerror: negative or other non-1 error depending path\nvalid_invalid_ranges: valid: signature produced by matching private key and digest\ninvalid: wrong key type, wrong digest, malformed signature\nunsupported_conditions: - public/private key role mismatch\n- unsupported provider operation\nmutation_hints: - invalid signature acceptance\n- bitflip signature\n- wrong digest algorithm\n- wrong hash length\n- wrong public key\n- RSA-PSS salt length mismatch\n- padding mismatch\n- wrong object type\n- public-only key path\n- malformed signature length\n- unsupported digest/key pairing\noracle_observables: - return_code\n- error_stack\n- sanitizer_signal\n- signature_acceptance\nknown_pitfalls: - success on intentionally invalid signature material is a high-value semantic candidate\n- initialization or padding setup failure must not be treated as invalid signature\n  acceptance\nnotes: - 'Known pitfall: distinguish invalid signature from provider or dispatch errors.'\n",
+      "metadata": {
+        "api": "EVP_DigestVerify",
+        "layer": "api_cards",
+        "library": "openssl",
+        "source_file": "knowledge_base/api_cards/openssl/EVP_DigestVerify.yaml",
+        "doc_type": "api_card",
+        "family": "pkey_verify"
+      }
+    },
+    {
+      "rank": 2,
+      "score": 1.279925831043517,
+      "distance": 0.3890319764614105,
+      "base_score": 0.719925831043517,
+      "rerank_score": 1.279925831043517,
+      "rerank_reasons": [
+        "api_match:RSA",
+        "family_match:pkey_verify",
+        "layer:api_cards",
+        "source_file_api_match",
+        "keyword_overlap:digest,pss,rsa"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/openssl/EVP_PKEY_CTX_set_rsa_pss_saltlen.yaml",
+      "text": "Source: API Card\napi: EVP_PKEY_CTX_set_rsa_pss_saltlen\nlibrary: openssl\nfamily: pkey_verify\nsignature: int EVP_PKEY_CTX_set_rsa_pss_saltlen(EVP_PKEY_CTX *ctx, int len)\nparameter_semantics: ctx: initialized EVP_PKEY_CTX configured for RSA-PSS\nlen: expected RSA-PSS salt length or special OpenSSL salt length constant\nreturn_value_semantics: success: positive value\nerror: zero or negative value depending on provider/path\nvalid_invalid_ranges: valid: compatible salt length for the signature and digest\ninvalid: mismatched salt length, non-RSA context, unsupported special salt length\n  constant\nunsupported_conditions: - non-RSA key context\n- provider does not support RSA-PSS salt length control\nmutation_hints: - pss_saltlen_mismatch\n- RSA-PSS signature verified with wrong expected salt length\n- zero salt versus digest-length salt\n- setup error versus invalid signature distinction\noracle_observables: - return_code\n- error_stack\n- signature_acceptance\n- sanitizer_signal\nknown_pitfalls: - mismatched salt length should usually reject the signature rather than succeed\n- special salt length constants may have provider-specific semantics\nnotes: - This card is specifically useful for PKEY verify behavior-divergence exploration.\n",
+      "metadata": {
+        "family": "pkey_verify",
+        "doc_type": "api_card",
+        "api": "EVP_PKEY_CTX_set_rsa_pss_saltlen",
+        "layer": "api_cards",
+        "library": "openssl",
+        "source_file": "knowledge_base/api_cards/openssl/EVP_PKEY_CTX_set_rsa_pss_saltlen.yaml"
+      }
+    },
+    {
+      "rank": 3,
+      "score": 1.2356698028841189,
+      "distance": 0.4800128638744354,
+      "base_score": 0.6756698028841188,
+      "rerank_score": 1.2356698028841189,
+      "rerank_reasons": [
+        "api_match:EVP_DigestVerify",
+        "family_match:pkey_verify",
+        "layer:api_cards",
+        "source_file_api_match",
+        "keyword_overlap:digest,pss,rsa"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/openssl/EVP_DigestVerifyInit.yaml",
+      "text": "Source: API Card\napi: EVP_DigestVerifyInit\nlibrary: openssl\nfamily: pkey_verify\nsignature: int EVP_DigestVerifyInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx, const EVP_MD *type, ENGINE *e, EVP_PKEY *pkey)\nparameter_semantics: ctx: digest verification context allocated by EVP_MD_CTX_new or equivalent\npctx: optional output pointer for the initialized EVP_PKEY_CTX\ntype: digest algorithm such as EVP_sha256\ne: legacy ENGINE parameter, normally NULL\npkey: public key or key object used for verification\nreturn_value_semantics: success: 1\nerror: 0 or provider-specific failure\nvalid_invalid_ranges: valid: compatible digest and key type with a verification-capable key\ninvalid: NULL context, unsupported digest/key pairing, wrong key type, provider dispatch\n  failure\nunsupported_conditions: - requested digest is not valid for the key algorithm\n- key does not support signature verification\n- provider does not expose the requested verify operation\nmutation_hints: - wrong digest algorithm\n- mismatched key type\n- public key without expected verification capability\n- RSA-PSS setup on non-RSA key\n- digest/key compatibility boundary\noracle_observables: - return_code\n- error_stack\n- sanitizer_signal\nknown_pitfalls: - setup failure must not be collapsed with invalid signature rejection\n- a failed initialization may leave pctx unset or unusable\n- provider behavior can differ between unsupported operation and invalid signature\nnotes: - Use this card for setup-stage evidence in signature verification migration, not\n  as proof of signature acceptance by itself.\n",
+      "metadata": {
+        "layer": "api_cards",
+        "library": "openssl",
+        "doc_type": "api_card",
+        "source_file": "knowledge_base/api_cards/openssl/EVP_DigestVerifyInit.yaml",
+        "api": "EVP_DigestVerifyInit",
+        "family": "pkey_verify"
+      }
+    },
+    {
+      "rank": 4,
+      "score": 1.1402062607604857,
+      "distance": 0.47014230489730835,
+      "base_score": 0.6802062607604857,
+      "rerank_score": 1.1402062607604857,
+      "rerank_reasons": [
+        "api_match:RSA",
+        "family_match:pkey_verify",
+        "layer:api_cards",
+        "keyword_overlap:digest,pss,rsa"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/openssl/EVP_PKEY_verify.yaml",
+      "text": "Source: API Card\napi: EVP_PKEY_verify\nlibrary: openssl\nfamily: pkey_verify\nsignature: int EVP_PKEY_verify(EVP_PKEY_CTX *ctx, const unsigned char *sig, size_t siglen, const unsigned char *tbs, size_t tbslen)\nparameter_semantics: ctx: initialized PKEY verify context\nsig: signature buffer\nsiglen: signature length\ntbs: digest or message bytes depending algorithm setup\ntbslen: input length\nreturn_value_semantics: success: 1\ninvalid_signature: 0\nerror: negative or provider-specific non-success\nvalid_invalid_ranges: valid: algorithm-compatible signature and data\ninvalid: malformed signature, wrong key, unsupported padding\nunsupported_conditions: - missing verify init\n- unsupported key operation\nmutation_hints: - invalid signature acceptance\n- bitflip signature\n- wrong digest algorithm\n- wrong hash length\n- wrong public key\n- RSA-PSS salt length mismatch\n- padding mismatch\n- wrong object type\n- tiny RSA key\n- public-only/private-only mismatch\n- malformed signature length\noracle_observables: - return_code\n- error_stack\n- sanitizer_signal\n- signature_acceptance\nknown_pitfalls: - tbs can mean digest bytes or message bytes depending on setup and algorithm\n- padding/digest setup errors must be classified separately from invalid signature\n  rejection\nnotes: - 'Known pitfall: setup errors should not be collapsed with invalid signature results.'\n",
+      "metadata": {
+        "layer": "api_cards",
+        "source_file": "knowledge_base/api_cards/openssl/EVP_PKEY_verify.yaml",
+        "api": "EVP_PKEY_verify",
+        "family": "pkey_verify",
+        "doc_type": "api_card",
+        "library": "openssl"
+      }
+    },
+    {
+      "rank": 5,
+      "score": 1.091108378612905,
+      "distance": 0.5845139026641846,
+      "base_score": 0.631108378612905,
+      "rerank_score": 1.091108378612905,
+      "rerank_reasons": [
+        "api_match:RSA",
+        "family_match:pkey_verify",
+        "layer:api_cards",
+        "keyword_overlap:digest,pss,rsa"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/mbedtls/mbedtls_pk_verify.yaml",
+      "text": "Source: API Card\napi: mbedtls_pk_verify\nlibrary: mbedtls\nfamily: pkey_verify\nsignature: int mbedtls_pk_verify(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg, const unsigned char *hash, size_t hash_len, const unsigned char *sig, size_t sig_len)\nparameter_semantics: ctx: public key context used for signature verification\nmd_alg: message digest algorithm identifier\nhash: digest bytes to verify\nhash_len: digest length\nsig: signature bytes\nsig_len: signature length\nreturn_value_semantics: success: 0\ninvalid_signature_or_error: negative mbedTLS error code\nvalid_invalid_ranges: valid: signature generated by matching private key over matching digest\ninvalid: wrong digest, wrong hash length, wrong key, malformed signature\nunsupported_conditions: - incompatible key type\n- unsupported md_alg for key algorithm\n- malformed public key context\nmutation_hints: - wrong digest algorithm\n- wrong hash length\n- all-zero signature\n- truncated signature\n- wrong public key\n- RSA-PSS versus PKCS1 v1.5 padding mismatch through mbedtls_pk_verify_ext\noracle_observables: - return_code\n- sanitizer_signal\n- signature_acceptance\nknown_pitfalls: - mbedTLS negative returns must be separated into safe rejection, unsupported feature,\n  and crash/sanitizer evidence\n- md_alg and hash_len mismatch can reject before reaching signature mathematics\nnotes: - Use this card for mbedTLS-side controlled signature verification semantics, distinct\n  from the opaque-key null-deref pattern.\n",
+      "metadata": {
+        "family": "pkey_verify",
+        "source_file": "knowledge_base/api_cards/mbedtls/mbedtls_pk_verify.yaml",
+        "layer": "api_cards",
+        "library": "mbedtls",
+        "doc_type": "api_card",
+        "api": "mbedtls_pk_verify"
+      }
+    },
+    {
+      "rank": 6,
+      "score": 0.9373999206386303,
+      "distance": 0.4983519911766052,
+      "base_score": 0.6673999206386303,
+      "rerank_score": 0.9373999206386303,
+      "rerank_reasons": [
+        "api_match:EVP_DigestVerify",
+        "source_file_api_match",
+        "keyword_overlap:evp_digestverify"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerify.md",
+      "text": "# API Constraints: EVP_DigestVerify (OpenSSL 3.5.5)\n\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function name: `EVP_DigestVerify`\n- Header declaration: `include/openssl/evp.h`\n- Implementation file: `crypto/evp/m_sigver.c`\n- Manpage: `doc/man3/EVP_DigestVerifyInit.pod`\n- Signature:\n\n```c\nint EVP_DigestVerify(EVP_MD_CTX *ctx, const unsigned char *sigret,\n    size_t siglen, const unsigned char *tbs,\n    size_t tbslen);\n```\n\n## Semantics\n\n- One-shot verification of `tbs` against signature `sigret`.\n- Requires a context initialized by `EVP_DigestVerifyInit` or `EVP_DigestVerifyInit_ex`.\n- Can be called only once before reinitializing the `EVP_MD_CTX`.\n\n## Return Value Semantics\n\n- Returns `1` on valid signature.\n- Returns `0` for verification failure or invalid signature form.\n- Negative or other non-1 values indicate more serious errors depending on provider/path.\n\n## Object and Buffer Constraints\n\n- `EVP_MD_CTX`, `EVP_PKEY_CTX`, and `EVP_PKEY` are opaque.",
+      "metadata": {
+        "doc_type": "api_constraint",
+        "library": "openssl",
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerify.md",
+        "layer": "api_constraints"
+      }
+    },
+    {
+      "rank": 7,
+      "score": 0.908857348636964,
+      "distance": 0.5177792310714722,
+      "base_score": 0.658857348636964,
+      "rerank_score": 0.908857348636964,
+      "rerank_reasons": [
+        "api_match:EVP_DigestVerify",
+        "source_file_api_match"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerifyInit.md",
+      "text": "stVerifyInit_ex` around line 154.\n- Demos: `demos/signature/EVP_*_Signature_demo.c`, `demos/signature/rsa_pss_hash.c`.",
+      "metadata": {
+        "layer": "api_constraints",
+        "library": "openssl",
+        "doc_type": "api_constraint",
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerifyInit.md"
+      }
+    },
+    {
+      "rank": 8,
+      "score": 0.9061118631882222,
+      "distance": 0.5241303443908691,
+      "base_score": 0.6561118631882222,
+      "rerank_score": 0.9061118631882222,
+      "rerank_reasons": [
+        "api_match:EVP_DigestVerify",
+        "source_file_api_match"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerifyInit.md",
+      "text": "# API Constraints: EVP_DigestVerifyInit / EVP_DigestVerifyInit_ex (OpenSSL 3.5.5)\n\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function names: `EVP_DigestVerifyInit`, `EVP_DigestVerifyInit_ex`\n- Header declaration: `include/openssl/evp.h`\n- Implementation file: `crypto/evp/m_sigver.c`\n- Manpage: `doc/man3/EVP_DigestVerifyInit.pod`\n- Signatures:\n\n```c\nint EVP_DigestVerifyInit_ex(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,\n    const char *mdname, OSSL_LIB_CTX *libctx,\n    const char *props, EVP_PKEY *pkey,\n    const OSSL_PARAM params[]);\n\nint EVP_DigestVerifyInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,\n    const EVP_MD *type, ENGINE *e,\n    EVP_PKEY *pkey);\n```\n\n## Semantics\n\n- Initializes an `EVP_MD_CTX` for signature verification.\n- May create or reuse an `EVP_PKEY_CTX`; if created by the init call, it is freed with the `EVP_MD_CTX`.\n- `_ex` variant supports provider/libctx/properties and parameter array.\n\n## Return Value Semantics\n\n- Returns `1` on success.\n- R",
+      "metadata": {
+        "doc_type": "api_constraint",
+        "library": "openssl",
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerifyInit.md",
+        "layer": "api_constraints"
+      }
+    }
+  ]
+}

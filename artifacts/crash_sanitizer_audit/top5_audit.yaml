@@ -1,0 +1,264 @@
+audit_name: Crash/Sanitizer top5 evidence audit
+top5_source: artifacts/candidate_queue/candidate_queue.yaml
+audited_issues:
+- OPENSSL-ISSUE-16196
+- OPENSSL-ISSUE-18168
+- OPENSSL-ISSUE-26106
+- OPENSSL-ISSUE-28669
+- OPENSSL-ISSUE-30581
+issues:
+- issue_id: OPENSSL-ISSUE-16196
+  family: asn1_nested_boundary
+  oracle_type: crash_or_sanitizer
+  migration_status: pending_migration
+  artifact_path: datasets/openssl/poc_artifacts/issue_16196
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_16196/README.md
+  - datasets/openssl/poc_artifacts/issue_16196/metadata.json
+  has_local_artifact: true
+  has_readme_or_metadata_or_summary: true
+  has_crash_log: false
+  has_sanitizer_signature: false
+  has_repro_command: true
+  has_version_info: true
+  crash_signal:
+    asan: false
+    ubsan: false
+    segv: false
+    exit_139: false
+    heap_buffer_overflow: false
+    stack_buffer_overflow: false
+    use_after_free: false
+    other: []
+  only_nonzero_exit: false
+  harness_misuse_risk: medium
+  version_dependency: unknown
+  reproducibility_score: 0.35
+  crash_confidence_score: 0.35
+  harness_validity_score: 0.45
+  migration_readiness_score: 0.35
+  severity_score: 0.75
+  recommended_verdict: needs_manual_confirmation
+  recommended_next_action: Do manual repro audit before promoting to runnable family.
+  notes:
+  - 'Title: openssl req segfault.'
+  - 'Component: REQ/ASN1.'
+  - 'Trigger behavior: NULL_DEREFERENCE_CRASH.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_generated_csr.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+  - The generated C harness was translated from the CLI command `openssl req -modulus
+    -in test.csr -noout`. It compiled and executed with a generated RSA CSR as placeholder
+    input. This validates the CSR parsing and RSA modulus extraction path, but does
+    not strictly reproduce the original issue.
+  - Original input artifact is missing; strict historical reproduction is not established.
+- issue_id: OPENSSL-ISSUE-18168
+  family: asn1_nested_boundary
+  oracle_type: crash_or_sanitizer
+  migration_status: pending_migration
+  artifact_path: datasets/openssl/poc_artifacts/issue_18168
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_18168/README.md
+  - datasets/openssl/poc_artifacts/issue_18168/metadata.json
+  has_local_artifact: true
+  has_readme_or_metadata_or_summary: true
+  has_crash_log: false
+  has_sanitizer_signature: false
+  has_repro_command: true
+  has_version_info: true
+  crash_signal:
+    asan: false
+    ubsan: false
+    segv: false
+    exit_139: false
+    heap_buffer_overflow: false
+    stack_buffer_overflow: false
+    use_after_free: false
+    other: []
+  only_nonzero_exit: false
+  harness_misuse_risk: medium
+  version_dependency: high
+  reproducibility_score: 0.35
+  crash_confidence_score: 0.35
+  harness_validity_score: 0.45
+  migration_readiness_score: 0.35
+  severity_score: 0.75
+  recommended_verdict: needs_manual_confirmation
+  recommended_next_action: Do manual repro audit before promoting to runnable family.
+  notes:
+  - 'Title: Assertion failure in WPACKET_put_bytes__, packet.c:387, openssl-rsa.'
+  - 'Component: WPACKET/DER_WRITER/RSA.'
+  - 'Trigger behavior: ASSERTION_FAILURE.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_generated_rsa_key.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+  - The generated C harness was translated from the original CLI command `openssl
+    rsa -in poc -out /tmp/foo`. It compiled and executed successfully using a generated
+    RSA private key as placeholder input. This validates the RSA key read/write API
+    path, but does not strictly reproduce the original issue because the original
+    `poc` key file has not been recovered.
+  - Original input artifact is missing; strict historical reproduction is not established.
+- issue_id: OPENSSL-ISSUE-26106
+  family: asn1_nested_boundary
+  oracle_type: crash_or_sanitizer
+  migration_status: pending_migration
+  artifact_path: datasets/openssl/poc_artifacts/issue_26106
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_26106/README.md
+  - datasets/openssl/poc_artifacts/issue_26106/metadata.json
+  has_local_artifact: true
+  has_readme_or_metadata_or_summary: true
+  has_crash_log: false
+  has_sanitizer_signature: false
+  has_repro_command: true
+  has_version_info: true
+  crash_signal:
+    asan: false
+    ubsan: false
+    segv: true
+    exit_139: false
+    heap_buffer_overflow: false
+    stack_buffer_overflow: false
+    use_after_free: false
+    other: []
+  only_nonzero_exit: false
+  harness_misuse_risk: medium
+  version_dependency: high
+  reproducibility_score: 0.55
+  crash_confidence_score: 0.7
+  harness_validity_score: 0.55
+  migration_readiness_score: 0.55
+  severity_score: 0.75
+  recommended_verdict: needs_manual_confirmation
+  recommended_next_action: Recover original input/environment and confirm crash under
+    the affected version.
+  notes:
+  - 'Title: Segmentation fault in X509_ALGOR_get0 during PKCS#12 processing.'
+  - 'Component: PKCS12/X509_ALGOR.'
+  - 'Trigger behavior: NULL_DEREFERENCE_CRASH.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_placeholder_input.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+  - PKCS12 parse harness compiled and executed with generated PKCS#12 placeholder
+    input. Valgrind reported 0 errors. This validates the generated C harness structure
+    and API path, but does not strictly reproduce the original issue because the original
+    PoC input artifacts have not been recovered.
+  - Original input artifact is missing; strict historical reproduction is not established.
+- issue_id: OPENSSL-ISSUE-28669
+  family: secure_heap_state_lifecycle
+  oracle_type: crash_or_sanitizer
+  migration_status: pending_migration
+  artifact_path: datasets/openssl/poc_artifacts/issue_28669
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_28669/README.md
+  - datasets/openssl/poc_artifacts/issue_28669/metadata.json
+  has_local_artifact: true
+  has_readme_or_metadata_or_summary: true
+  has_crash_log: false
+  has_sanitizer_signature: false
+  has_repro_command: true
+  has_version_info: true
+  crash_signal:
+    asan: false
+    ubsan: false
+    segv: true
+    exit_139: true
+    heap_buffer_overflow: false
+    stack_buffer_overflow: false
+    use_after_free: false
+    other:
+    - valgrind_invalid_read
+  only_nonzero_exit: false
+  harness_misuse_risk: medium
+  version_dependency: unknown
+  reproducibility_score: 0.85
+  crash_confidence_score: 0.9
+  harness_validity_score: 0.75
+  migration_readiness_score: 0.8
+  severity_score: 0.75
+  recommended_verdict: ready_for_runnable_family
+  recommended_next_action: Start a small D_then_A secure-heap lifecycle sprint that
+    reproduces CRYPTO_secure_used without secure heap init, then adds safe-control
+    cases.
+  notes:
+  - 'Title: NULL rwlock dereference in CRYPTO_secure_used when secure heap is not
+    initialized.'
+  - 'Component: CRYPTO/MEM_SEC.'
+  - 'Trigger behavior: NULL_DEREFERENCE_CRASH.'
+  - 'Artifact summary local_test_result: segmentation_fault_and_valgrind_invalid_read.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+  - 'Compiled successfully against system OpenSSL 3.0.13. Normal execution triggered
+    SIGSEGV with exit code 139. Valgrind reported Invalid read of size 4 and ERROR
+    SUMMARY: 1 errors from 1 contexts. This is local artifact validation, not strict
+    reproduction against the original affected version.'
+  - Local artifact reports SIGSEGV exit 139 and Valgrind Invalid read against system
+    OpenSSL.
+- issue_id: OPENSSL-ISSUE-30581
+  family: asn1_nested_boundary
+  oracle_type: crash_or_sanitizer
+  migration_status: pending_migration
+  artifact_path: datasets/openssl/poc_artifacts/issue_30581
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_30581/README.md
+  - datasets/openssl/poc_artifacts/issue_30581/metadata.json
+  has_local_artifact: true
+  has_readme_or_metadata_or_summary: true
+  has_crash_log: false
+  has_sanitizer_signature: false
+  has_repro_command: true
+  has_version_info: true
+  crash_signal:
+    asan: false
+    ubsan: false
+    segv: false
+    exit_139: false
+    heap_buffer_overflow: false
+    stack_buffer_overflow: false
+    use_after_free: false
+    other: []
+  only_nonzero_exit: false
+  harness_misuse_risk: medium
+  version_dependency: high
+  reproducibility_score: 0.35
+  crash_confidence_score: 0.35
+  harness_validity_score: 0.45
+  migration_readiness_score: 0.35
+  severity_score: 0.75
+  recommended_verdict: needs_manual_confirmation
+  recommended_next_action: Do manual repro audit before promoting to runnable family.
+  notes:
+  - 'Title: NULL pointer dereference in openssl pkcs12 -info when printing PBMAC1
+    salt metadata.'
+  - 'Component: PKCS12/ASN1.'
+  - 'Trigger behavior: NULL_DEREFERENCE_CRASH.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_placeholder_input.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+  - The generated C harness was translated from a CLI PoC candidate and compiled/executed
+    using placeholder local inputs. This validates the harness structure and API path,
+    but does not strictly reproduce the original issue because the original PoC input
+    artifacts or environment have not been recovered.
+  - Original input artifact is missing; strict historical reproduction is not established.
+recommended_next_family:
+  family: secure_heap_state_lifecycle
+  seed_issue: OPENSSL-ISSUE-28669
+  reason: 'This is the only top5 candidate with local crash evidence: SIGSEGV/exit
+    139 plus Valgrind Invalid read. Treat it as a sprint seed, not as a new vulnerability
+    claim.'
+  readiness_score: 0.8
+  severity_score: 0.75
+  required_before_runnable:
+  - Confirm behavior against intended OpenSSL versions
+  - Add a safe initialized secure-heap control case
+  - Decide whether CRYPTO_secure_used pre-init call is valid API usage or harness
+    misuse
+  - Create pattern knowledge and recipe-slot adapter before rendering cases
+  proposed_execution_path: D_then_A
+  proposed_sprint_name: secure_heap_state_lifecycle_v1
+  should_start_runnable_sprint_now: true
+  blocking_questions:
+  - Is CRYPTO_secure_used before secure heap initialization documented as safe or
+    undefined?
+  - Which OpenSSL versions are affected locally and upstream?
+  - Can the oracle distinguish expected precondition failure from NULL dereference?

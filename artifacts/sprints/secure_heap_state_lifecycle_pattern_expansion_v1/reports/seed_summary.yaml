@@ -1,0 +1,33 @@
+family: secure_heap_state_lifecycle
+seed_issue: OPENSSL-ISSUE-28669
+source_artifact: datasets/openssl/poc_artifacts/issue_28669
+root_cause: possible NULL lock dereference in CRYPTO_secure_used when secure heap lock is not initialized
+crash_oracle:
+  signals:
+    - SIGSEGV
+    - exit_139
+  historical_local_evidence:
+    - Valgrind Invalid read summary
+  current_sprint_evidence:
+    - signal handler crash marker
+    - nonzero exit with signal 11
+control_cases:
+  - initialized_used
+  - initialized_check_then_used
+  - done_check_then_used_precondition_guard
+current_openssl_version_conclusion:
+  actual_version: OpenSSL 3.5.5 27 Jan 2026
+  classification: current_version_robustness_candidate_with_unknown_historical_overlap
+  confidence: high_for_local_version
+claim_boundary:
+  confirmed_vulnerability: false
+  cve_claim: false
+  reason:
+    - API contract for pre-init and post-done CRYPTO_secure_used remains ambiguous.
+    - Historical affected/fixed version range is not established locally.
+    - Seed validation is not equivalent to pattern expansion or new discovery.
+why_pattern_expansion_required:
+  - Avoid historical reproducer drift.
+  - Test same-family APIs beyond CRYPTO_secure_used.
+  - Test new state combinations beyond pre_init_used_only and done_then_used.
+  - Build version and novelty classification evidence.

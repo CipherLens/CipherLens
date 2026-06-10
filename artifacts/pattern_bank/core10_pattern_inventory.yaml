@@ -1,0 +1,592 @@
+patterns:
+- pattern_id: MBEDTLS-POC-0001
+  source_path: data/pocs/core10/MBEDTLS-POC-0001
+  source_type: core10_poc
+  source_library: mbedtls
+  target_library: openssl
+  family: memory_length_boundary
+  subfamily: mpi_write_string_buffer_boundary
+  oracle_type: crash_or_sanitizer
+  root_cause: Missing boundary check in output buffer length calculation for negative
+    MPI string conversion.
+  source_api:
+  - mbedtls_mpi_write_string
+  target_api:
+  - BN_bn2binpad
+  - BN_signed_bn2bin
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: true
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.55
+  priority_reasons:
+  - caller_buffer_boundary
+  - clear_memory_oracle
+  evidence_files:
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/adapters_recipe_llm/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/adapters_recipe_llm/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/adapters_recipe_llm_validated/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/adapters_recipe_llm_validated/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/cross_templates_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/README.md
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/cross_templates_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/cross_mapping.yaml
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/cross_templates_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/llm_updates.json
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/cross_templates_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/mask_report.yaml
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/cross_templates_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/normalization_report.json
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/cross_templates_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/poc_original.c
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/cross_templates_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/rag_context.json
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/cross_templates_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/template_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/cross_templates_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/tmpl_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/cross_templates_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/tmpl_openssl.c
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/logs/.gitkeep
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/rendered_cases_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/case_0000_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/rendered_cases_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/case_0000_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/rendered_cases_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/case_0000_openssl.c
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/rendered_cases_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/case_0001_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/rendered_cases_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/case_0001_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/rendered_cases_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/case_0001_openssl.c
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/rendered_cases_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/case_0002_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/rendered_cases_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/case_0002_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/rendered_cases_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/case_0002_openssl.c
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Dataset status: accepted_reconstructable.'
+  - 'Failure signal: buffer overflow / out-of-bounds write.'
+- pattern_id: MBEDTLS-POC-0002
+  source_path: data/pocs/core10/MBEDTLS-POC-0002
+  source_type: core10_poc
+  source_library: mbedtls
+  target_library: openssl
+  family: bn_mpi_arithmetic
+  subfamily: mpi_sub_abs_limb_boundary
+  oracle_type: projection_limitation
+  root_cause: Incorrect handling of negative MPI subtraction when |B| has more limbs
+    than |A|.
+  source_api:
+  - mbedtls_mpi_sub_abs
+  target_api:
+  - BN_usub
+  migration_status: projection_limitation
+  current_verdict: expected_library_behavior
+  confidence: medium
+  has_controlled_template: true
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.25
+  priority_reasons:
+  - projection_limitation_observed
+  - likely_expected_library_behavior
+  evidence_files:
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/PLAN.md
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/adapters_recipe_llm/.gitkeep
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/adapters_recipe_llm/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/adapters_recipe_llm/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/adapters_recipe_llm_validated/.gitkeep
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/adapters_recipe_llm_validated/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/adapters_recipe_llm_validated/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/cross_templates_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/README.md
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/cross_templates_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/cross_mapping.yaml
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/cross_templates_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/mask_report.yaml
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/cross_templates_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/template_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/cross_templates_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/tmpl_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/cross_templates_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/tmpl_openssl.c
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/logs/.gitkeep
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/rendered_cases_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/case_0000_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/rendered_cases_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/case_0000_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/rendered_cases_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/case_0000_openssl.c
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/rendered_cases_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/case_0001_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/rendered_cases_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/case_0001_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/rendered_cases_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/case_0001_openssl.c
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/rendered_cases_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/case_0002_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/rendered_cases_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/case_0002_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/rendered_cases_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/case_0002_openssl.c
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/rendered_cases_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/case_0003_manifest.yaml
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Dataset status: accepted_reconstructable.'
+  - 'Failure signal: buffer overflow.'
+- pattern_id: MBEDTLS-POC-0003
+  source_path: data/pocs/core10/MBEDTLS-POC-0003
+  source_type: core10_poc
+  source_library: mbedtls
+  target_library: openssl
+  family: pkey_verify_semantic
+  subfamily: pk_verify_ext_null_deref
+  oracle_type: crash_or_sanitizer
+  root_cause: Missing NULL pointer validation before RSA key access in extended PK
+    verification.
+  source_api:
+  - mbedtls_pk_verify_ext
+  target_api:
+  - EVP_DigestVerify
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: true
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.5
+  priority_reasons:
+  - pkey_verify_dispatch
+  - crash_oracle
+  evidence_files:
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/adapters_recipe_llm/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/adapters_recipe_llm/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/adapters_recipe_llm_validated/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/adapters_recipe_llm_validated/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/cross_templates_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/README.md
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/cross_templates_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/cross_mapping.yaml
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/cross_templates_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/llm_updates.json
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/cross_templates_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/mask_report.yaml
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/cross_templates_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/normalization_report.json
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/cross_templates_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/poc_original.c
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/cross_templates_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/rag_context.json
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/cross_templates_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/template_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/cross_templates_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/tmpl_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/cross_templates_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/tmpl_openssl.c
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/rendered_cases_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/case_0000_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/rendered_cases_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/case_0000_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/rendered_cases_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/case_0000_openssl.c
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/rendered_cases_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/case_0001_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/rendered_cases_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/case_0001_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/rendered_cases_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/case_0001_openssl.c
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/rendered_cases_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/case_0002_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/rendered_cases_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/case_0002_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/rendered_cases_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/case_0002_openssl.c
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/rendered_cases_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/case_0003_manifest.yaml
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Dataset status: accepted_reconstructable.'
+  - 'Failure signal: NULL dereference crash.'
+- pattern_id: MBEDTLS-POC-0004
+  source_path: data/pocs/core10/MBEDTLS-POC-0004
+  source_type: core10_poc
+  source_library: mbedtls
+  target_library: openssl
+  family: cipher_aead_lifecycle
+  subfamily: invalid_padding_output_length
+  oracle_type: behavior_divergence
+  root_cause: Incorrect output length assignment on invalid PKCS padding error path.
+  source_api:
+  - mbedtls_cipher_finish
+  target_api:
+  - EVP_DecryptFinal_ex
+  - EVP_CipherFinal_ex
+  migration_status: pending_migration
+  current_verdict: pending_inference
+  confidence: medium
+  has_controlled_template: true
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.65
+  priority_reasons:
+  - clear_output_state_oracle
+  - return_code_outlen_semantic
+  evidence_files:
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/adapters_recipe_llm/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/adapters_recipe_llm/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/adapters_recipe_llm_validated/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/adapters_recipe_llm_validated/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/cross_templates_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/README.md
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/cross_templates_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/cross_mapping.yaml
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/cross_templates_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/mask_report.yaml
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/cross_templates_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/poc_original.c
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/cross_templates_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/template_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/cross_templates_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/tmpl_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/cross_templates_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/tmpl_openssl.c
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/logs/.gitkeep
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0000_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0000_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0000_openssl.c
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0001_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0001_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0001_openssl.c
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0002_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0002_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0002_openssl.c
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0003_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0003_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0003_openssl.c
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Dataset status: accepted_reconstructable.'
+  - 'Failure signal: wrong output length / potential caller-side overflow.'
+- pattern_id: MBEDTLS-POC-0005
+  source_path: data/pocs/core10/MBEDTLS-POC-0005
+  source_type: core10_poc
+  source_library: mbedtls
+  target_library: openssl
+  family: api_state_machine
+  subfamily: zero_length_stale_state
+  oracle_type: safe_reject_baseline
+  root_cause: Missing validation for conflicting ASN.1 named-data value pointer and
+    nonzero length, allowing NULL pointer dereference.
+  source_api:
+  - mbedtls_asn1_store_named_data
+  target_api:
+  - ASN1_STRING_set
+  migration_status: migrated_safe
+  current_verdict: migrated_safe
+  confidence: medium
+  has_controlled_template: true
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.42
+  priority_reasons:
+  - object_state_lifecycle
+  - safe_negative_baseline
+  evidence_files:
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/adapters_recipe_llm/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/adapters_recipe_llm/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/adapters_recipe_llm_validated/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/adapters_recipe_llm_validated/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/cross_templates_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/README.md
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/cross_templates_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/cross_mapping.yaml
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/cross_templates_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/mask_report.yaml
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/cross_templates_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/template_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/cross_templates_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/tmpl_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/cross_templates_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/tmpl_openssl.c
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/rendered_cases_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/case_0000_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/rendered_cases_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/case_0000_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/rendered_cases_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/case_0000_openssl.c
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/rendered_cases_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/case_0001_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/rendered_cases_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/case_0001_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/rendered_cases_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/case_0001_openssl.c
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/results/run_recipe.jsonl
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/results/run_recipe.migration_pairs.jsonl
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/results/run_recipe.migration_summary.json
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/results/run_recipe.summary.json
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/results/run_recipe.verdicts.jsonl
+  result_summary:
+    total_cases: 4
+    verdict_counts:
+      safe_reject_behavior: 4
+    raw_status_counts:
+      run_ok: 4
+    migration_verdict_counts:
+      migrated_safe: 2
+  notes:
+  - 'Dataset status: accepted_reconstructable.'
+  - 'Failure signal: NULL pointer dereference.'
+  - Local metadata and artifacts describe mbedtls_asn1_store_named_data stale state,
+    not a MAC lifecycle issue.
+  - Historical request mentioned MAC for this PoC, but no local MAC evidence was found
+    during this run.
+- pattern_id: MBEDTLS-POC-0011
+  source_path: data/pocs/core10/MBEDTLS-POC-0011
+  source_type: core10_poc
+  source_library: mbedtls
+  target_library: openssl
+  family: memory_length_boundary
+  subfamily: pem_empty_buffer_underflow
+  oracle_type: crash_or_sanitizer
+  root_cause: Missing PEM parse bounds check causing one-byte heap-based buffer underflow
+    on untrusted PEM input.
+  source_api:
+  - mbedtls_pem_read_buffer
+  - mbedtls_pk_parse
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: true
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.5
+  priority_reasons:
+  - pem_boundary
+  - underflow_oracle
+  evidence_files:
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/adapters_recipe_llm/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/adapters_recipe_llm/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/adapters_recipe_llm_validated/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/adapters_recipe_llm_validated/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/cross_templates_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/README.md
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/cross_templates_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/cross_mapping.yaml
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/cross_templates_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/mask_report.yaml
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/cross_templates_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/template_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/cross_templates_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/tmpl_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/cross_templates_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/tmpl_openssl.c
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0000_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0000_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0000_openssl.c
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0001_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0001_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0001_openssl.c
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0002_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0002_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0002_openssl.c
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0003_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0003_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0003_openssl.c
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/results/run_recipe.jsonl
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/results/run_recipe.migration_pairs.jsonl
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Dataset status: accepted_reconstructable.'
+  - 'Failure signal: one-byte heap buffer underflow.'
+- pattern_id: MBEDTLS-POC-0017
+  source_path: data/pocs/core10/MBEDTLS-POC-0017
+  source_type: core10_poc
+  source_library: mbedtls
+  target_library: openssl
+  family: asn1_nested_boundary
+  subfamily: x509_inner_boundary
+  oracle_type: safe_reject_baseline
+  root_cause: Incorrect ASN.1 length/bounds validation in parser or writer.
+  source_api:
+  - X.509 CRT ASN.1 parsing functions
+  target_api:
+  - d2i_X509
+  migration_status: migrated_safe
+  current_verdict: migrated_safe
+  confidence: medium
+  has_controlled_template: true
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.35
+  priority_reasons:
+  - safe_safe_result
+  - useful_negative_case
+  evidence_files:
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/adapters_recipe_llm/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/adapters_recipe_llm/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/adapters_recipe_llm_validated/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/adapters_recipe_llm_validated/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/cross_templates_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/README.md
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/cross_templates_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/cross_mapping.yaml
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/cross_templates_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/mask_report.yaml
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/cross_templates_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/poc_original.c
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/cross_templates_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/template_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/cross_templates_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/tmpl_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/cross_templates_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/tmpl_openssl.c
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/logs/.gitkeep
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0000_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0000_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0000_openssl.c
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0001_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0001_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0001_openssl.c
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0002_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0002_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0002_openssl.c
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0003_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0003_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0003_openssl.c
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Dataset status: accepted_reconstructable.'
+  - 'Failure signal: parser bounds violation / malformed certificate handling.'
+- pattern_id: MBEDTLS-POC-0020
+  source_path: data/pocs/core10/MBEDTLS-POC-0020
+  source_type: core10_poc
+  source_library: mbedtls
+  target_library: openssl
+  family: der_full_consumption
+  subfamily: trailing_garbage
+  oracle_type: full_consumption_semantic
+  root_cause: Incorrect edge-case handling in mbedtls_pk_parse_key.
+  source_api:
+  - mbedtls_pk_parse_key
+  - mbedtls_rsa_parse_key
+  - mbedtls_rsa_parse_pubkey
+  target_api:
+  - d2i_RSAPrivateKey
+  - d2i_PrivateKey
+  - d2i_RSA_PUBKEY
+  migration_status: migrated_candidate
+  current_verdict: app_level_validation_gap_candidate
+  confidence: medium
+  has_controlled_template: true
+  has_render_matrix: true
+  has_feedback: true
+  has_rag_evidence: false
+  priority_score: 0.9
+  priority_reasons:
+  - app_level_validation_gap_candidate
+  - clear_oracle
+  - controlled_app_level_wrapper
+  - der_v2_feedback
+  - reusable_der_family
+  - semantic_candidate_observed
+  evidence_files:
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSAPrivateKey/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSAPrivateKey/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSA_PUBKEY/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSA_PUBKEY/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm_validated/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm_validated/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm_validated/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSAPrivateKey/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm_validated/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSAPrivateKey/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm_validated/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSA_PUBKEY/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm_validated/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSA_PUBKEY/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/README.md
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/cross_mapping.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/mask_report.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/poc_original.c
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/template_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/tmpl_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/tmpl_openssl.c
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSAPrivateKey/README.md
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSAPrivateKey/cross_mapping.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSAPrivateKey/mask_report.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSAPrivateKey/poc_original.c
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSAPrivateKey/template_meta.yaml
+  - artifacts/feedback/der_full_consumption_feedback.jsonl
+  - artifacts/sprints/der_full_consumption_v2/results/run.summary.json
+  - artifacts/sprints/der_full_consumption_v2/results/behavior_summary.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Dataset status: accepted_reconstructable.'
+  - 'Failure signal: accepts malformed key / trailing garbage.'
+  - DER v2 controlled app-level sprint observed valid DER prefix plus malformed trailing
+    bytes accepted with output artifacts; this is not crash evidence and not a confirmed
+    CVE.
+  feedback_summary:
+    total_cases: 75
+    feedback_rows: 30
+    verdict_counts:
+      app_level_validation_gap_candidate: 30
+      expected_prefix_accept_behavior: 39
+      malformed_baseline_reject: 3
+      valid_baseline_success: 3
+    app_level_validation_gap_candidate: 30
+    strict_reject: 0
+    valid_baseline_success: 3
+    malformed_baseline_reject: 3
+    expected_prefix_accept_behavior: 39
+    interpretation: app_level_validation_gap_candidate
+    evidence_files:
+    - artifacts/feedback/der_full_consumption_feedback.jsonl
+    - artifacts/sprints/der_full_consumption_v2/results/run.summary.json
+    - artifacts/sprints/der_full_consumption_v2/results/behavior_summary.json
+- pattern_id: MBEDTLS-POC-0027
+  source_path: data/pocs/core10/MBEDTLS-POC-0027
+  source_type: core10_poc
+  source_library: mbedtls
+  target_library: openssl
+  family: x509_parsing
+  subfamily: tls_verify_result_semantic
+  oracle_type: behavior_divergence
+  root_cause: Incorrect return value handling on error path.
+  source_api:
+  - mbedtls_ssl_get_verify_result
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: pending_inference
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.45
+  priority_reasons:
+  - semantic_correctness
+  - x509_tls_verdict
+  evidence_files:
+  - artifacts/migrations/mbedtls-poc-0027-tls13-verify-result-propagation/README.md
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Dataset status: accepted_reconstructable.'
+  - 'Failure signal: wrong behavior / semantic validation failure.'
+- pattern_id: MBEDTLS-POC-0028
+  source_path: data/pocs/core10/MBEDTLS-POC-0028
+  source_type: core10_poc
+  source_library: mbedtls
+  target_library: openssl
+  family: cipher_aead_lifecycle
+  subfamily: invalid_aead_tag_length_setup
+  oracle_type: unexpected_success
+  root_cause: Missing validation of AEAD tag lengths from PSA drivers.
+  source_api:
+  - psa_aead_setup
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: pending_inference
+  confidence: medium
+  has_controlled_template: true
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.6
+  priority_reasons:
+  - invalid_parameter_acceptance
+  - psa_aead_setup
+  evidence_files:
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/adapters_recipe_llm/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/adapters_recipe_llm/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/adapters_recipe_llm_validated/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/adapters_recipe_llm_validated/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/cross_templates_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/README.md
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/cross_templates_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/cross_mapping.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/cross_templates_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/mask_report.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/cross_templates_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/template_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/cross_templates_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/tmpl_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/cross_templates_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/tmpl_openssl.c
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0000_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0000_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0000_openssl.c
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0001_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0001_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0001_openssl.c
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0002_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0002_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0002_openssl.c
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0003_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0003_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0003_openssl.c
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0004_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0004_mbedtls.c
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Dataset status: accepted_reconstructable.'
+  - 'Failure signal: invalid parameter accepted.'

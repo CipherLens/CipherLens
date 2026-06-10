@@ -1,0 +1,62 @@
+report_name: MAC lifecycle GLM full A-path completion report
+artifact_root: artifacts/migrations/mac_lifecycle_glm_full_a_path
+input_validated_glm_adapter: artifacts/sprints/mac_lifecycle_family_v1/llm_slot_filling_verification/adapters_recipe_llm_validated/MAC_LIFECYCLE_V1_SOURCE_TEMPLATE/openssl_mbedtls_mac_lifecycle/adapter.yaml
+input_adapter_mode: recipe_slot_filling
+input_llm_status: ok
+input_adapter_validate_status: ok
+manual_adapter_used: false
+glm_reinvoked: false
+old_controlled_renderer_used_as_main_path: false
+framework_extensions:
+  template_maker/cross_generator_from_adapters.py:
+    - Added sprint-local source_template path resolution for adapter_meta entries that provide mask_report but not template_meta.
+    - Added reusable mac_lifecycle recipe renderer that emits OpenSSL and mbedTLS PSA pair templates from slot_bindings.
+  runner/analyze_results.py:
+    - Added generic mac_lifecycle verdict patterns for lifecycle_state_transition_semantic_oracle.
+  runner/compile_run.py:
+    - Treats aggregate cross_library metadata as the detected concrete library in case metadata.
+cross_generator_executed: true
+cross_generator_status: extended_ok
+cross_templates_root: artifacts/migrations/mac_lifecycle_glm_full_a_path/cross_templates_recipe
+render_cases_executed: true
+render_cases_status: ok
+rendered_root: artifacts/migrations/mac_lifecycle_glm_full_a_path/rendered_cases_recipe
+total_rendered_source_files: 8
+lifecycle_sequences:
+  - normal_init_update_final
+  - repeated_final
+  - update_after_final
+  - abort_then_update
+compile_run_executed: true
+compile_run_status: ok
+result_jsonl: artifacts/migrations/mac_lifecycle_glm_full_a_path/results/run_recipe.jsonl
+analyze_results_executed: true
+analyze_cross_results_executed: true
+summary_json: artifacts/migrations/mac_lifecycle_glm_full_a_path/results/run_recipe.summary.json
+verdicts_jsonl: artifacts/migrations/mac_lifecycle_glm_full_a_path/results/run_recipe.verdicts.jsonl
+migration_summary_json: artifacts/migrations/mac_lifecycle_glm_full_a_path/results/run_recipe.migration_summary.json
+migration_pairs_jsonl: artifacts/migrations/mac_lifecycle_glm_full_a_path/results/run_recipe.migration_pairs.jsonl
+total_cases: 8
+raw_status_counts:
+  run_ok: 8
+library_counts:
+  mbedtls: 4
+  openssl: 4
+verdict_counts:
+  safe_reject_behavior: 6
+  normal_behavior_needs_triage: 2
+total_pairs: 4
+migration_verdict_counts:
+  migrated_safe: 2
+  migration_needs_triage: 2
+crash_evidence: none
+can_claim_glm_used_in_a_path: true
+can_claim_full_a_path_compliant: true
+remaining_gaps: []
+semantic_interpretation: >
+  MAC lifecycle has now completed the GLM-assisted full A-path. The normal and
+  abort-then-update pairs are migrated_safe. OpenSSL repeated_final and
+  update_after_final are permissive relative to mbedTLS PSA bad-state rejection
+  and are classified as migration_needs_triage, not as vulnerability candidates.
+  No sanitizer crash, SEGV, or explicit unsafe output-state evidence was observed.
+next_recommended_step: Continue to secure_heap_state_lifecycle_v1 with this A-path status recorded.

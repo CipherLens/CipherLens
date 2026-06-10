@@ -1,0 +1,29 @@
+template_id: SECURE_HEAP_STATE_LIFECYCLE_PATTERN_EXPANSION_V1
+pattern_id: OPENSSL-ISSUE-28669
+harness_family: secure_heap_state_lifecycle
+oracle_type: secure_heap_lifecycle_robustness_oracle
+execution_mode: same_family_state_expansion
+source_template: tmpl_secure_heap_state_expansion.c
+source_library: openssl
+target_library: openssl
+seed_status: seed_validation_complete
+claim_boundary:
+  confirmed_vulnerability: false
+  cve_claim: false
+  interpretation: robustness_candidate_and_pattern_expansion
+required_observables:
+  - exit_code
+  - signal
+  - stdout_state_trace
+  - stderr_crash_marker
+  - case_manifest
+mutation_points:
+  - SECURE_HEAP_INIT_API
+  - SECURE_HEAP_QUERY_API
+  - SECURE_HEAP_ALLOC_API
+  - SECURE_HEAP_FREE_API
+  - SECURE_HEAP_DONE_API
+  - SECURE_HEAP_STATE_SEQUENCE
+  - SECURE_HEAP_EXPECTED_CONTROL
+  - CRASH_ORACLE
+  - NOVELTY_CLASSIFIER

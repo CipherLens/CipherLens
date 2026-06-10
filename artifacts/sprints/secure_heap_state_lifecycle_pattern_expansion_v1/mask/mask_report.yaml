@@ -1,0 +1,53 @@
+template_id: SECURE_HEAP_STATE_LIFECYCLE_PATTERN_EXPANSION_V1
+pattern_id: OPENSSL-ISSUE-28669
+harness_family: secure_heap_state_lifecycle
+oracle_type: secure_heap_lifecycle_robustness_oracle
+mask_backend: structured_manual_ast_lite
+source_template: artifacts/sprints/secure_heap_state_lifecycle_pattern_expansion_v1/source_template/tmpl_secure_heap_state_expansion.c
+notes:
+  - This mask report preserves the AST/mask concept for B-path family expansion.
+  - Slots identify API roles, state-transition units, control expectations, crash observability, and novelty classification.
+  - The renderer fills these slots from render_matrix.yaml; no LLM-generated C block is accepted.
+mask_units:
+  - id: SECURE_HEAP_INIT_API
+    role: lifecycle_init
+    granularity: call_expr
+    placeholder_family:
+      - CRYPTO_secure_malloc_init
+  - id: SECURE_HEAP_QUERY_API
+    role: lifecycle_query
+    granularity: call_expr
+    placeholder_family:
+      - CRYPTO_secure_used
+      - CRYPTO_secure_malloc_initialized
+      - CRYPTO_secure_allocated
+  - id: SECURE_HEAP_ALLOC_API
+    role: lifecycle_alloc
+    granularity: call_expr
+    placeholder_family:
+      - OPENSSL_secure_malloc
+      - OPENSSL_secure_zalloc
+  - id: SECURE_HEAP_FREE_API
+    role: lifecycle_free
+    granularity: call_expr
+    placeholder_family:
+      - OPENSSL_secure_free
+  - id: SECURE_HEAP_DONE_API
+    role: lifecycle_done
+    granularity: call_expr
+    placeholder_family:
+      - CRYPTO_secure_malloc_done
+  - id: SECURE_HEAP_STATE_SEQUENCE
+    role: state_transition
+    granularity: call_sequence
+    placeholder: SECURE_HEAP_STATE_SEQUENCE
+  - id: SECURE_HEAP_EXPECTED_CONTROL
+    role: control_oracle
+    granularity: expected_behavior
+  - id: CRASH_ORACLE
+    role: crash_signal_oracle
+    granularity: signal_handler
+    placeholder: CRASH_ORACLE
+  - id: NOVELTY_CLASSIFIER
+    role: novelty_version_state_classification
+    granularity: analyzer_rule

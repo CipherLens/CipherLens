@@ -1,0 +1,37 @@
+family: secure_heap_state_lifecycle
+seed_issue: OPENSSL-ISSUE-28669
+target_library: openssl
+target_api: CRYPTO_secure_used
+max_cases: 5
+mutation_dimensions:
+  secure_heap_state:
+    values:
+      - pre_init
+      - initialized
+      - initialized_then_done
+      - initialized_then_done_then_used
+  call_sequence:
+    values:
+      - used_only
+      - initialized_then_used
+      - initialized_check_then_used
+      - done_then_used
+  oracle_mode:
+    values:
+      - exit_code
+      - signal
+      - valgrind_if_available
+      - sanitizer_if_available
+expected_controls:
+  pre_init:
+    expected: no_crash_or_documented_precondition_failure
+  initialized:
+    expected: safe_success_or_defined_return
+  initialized_then_done:
+    expected: safe_failure_or_defined_return
+verdicts:
+  - normal_defined_behavior
+  - safe_precondition_failure
+  - crash_candidate
+  - api_misuse_needs_triage
+  - harness_error

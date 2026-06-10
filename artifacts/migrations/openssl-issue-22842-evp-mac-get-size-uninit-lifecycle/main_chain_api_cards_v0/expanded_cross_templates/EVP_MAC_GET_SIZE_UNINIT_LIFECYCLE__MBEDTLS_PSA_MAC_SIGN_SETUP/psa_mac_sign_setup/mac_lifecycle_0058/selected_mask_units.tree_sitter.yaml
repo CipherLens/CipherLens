@@ -1,0 +1,1003 @@
+template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE
+template_name: ''
+source_api:
+- EVP_MAC_fetch
+- EVP_MAC_CTX_new
+- EVP_MAC_CTX_get_mac_size
+- EVP_MAC_init
+- EVP_MAC_CTX_free
+- EVP_MAC_free
+trigger_apis: []
+harness_family: object_state_lifecycle
+selection_policy:
+  method: ast_lite_high_value_mask_unit_selection
+  rules:
+  - Prefer role=mutation_point units.
+  - Prefer mask_level=value or api_argument units.
+  - Always retain trigger_call function_call/statement units.
+  - Always retain oracle statement/block units.
+  - Retain input_preparation/helper_function/block only when harness-family context
+    keywords are present.
+  - Use configured preferred_roles as scoring hints for each harness family.
+  - Use configured oracle_variables to prioritize oracle-observable units.
+  - Limit input/helper context to representative high-scoring units.
+  - Limit cleanup units to one or two representative statements.
+  - Deduplicate repeated code snippets.
+  context_keywords:
+  - state
+  - lifecycle
+  - init
+  - free
+  - reuse
+  - zero
+  - stale
+  - length
+  - pointer
+  ast_report_name: ast_mask_report.tree_sitter.yaml
+  family_rules_source: config/harness_family_ast_rules.yaml
+  family_rule:
+    context_keywords:
+    - state
+    - lifecycle
+    - init
+    - free
+    - reuse
+    - zero
+    - stale
+    - length
+    - pointer
+    oracle_variables:
+    - ret
+    - len
+    - data
+    preferred_roles:
+    - mutation_point
+    - trigger_call
+    - oracle
+    - input_preparation
+    - cleanup
+    context_limit: 12
+    cleanup_limit: 2
+selected_units:
+- unit_id: ASTLITE-0053
+  mask_level: statement
+  role: oracle
+  placeholder: '[OK]'
+  code: 'if (status == PSA_SUCCESS && mac_length > 0 && mac_length <= MAC_LEN) { printf("[OK]
+    mac_context_lifecycle: initialized MAC operation completed\n"); ret = 0; } else
+    { printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: finish status=%d
+    mac_length=%zu\n", (int) status, mac_length); }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 108
+  line_start: 108
+  line_end: 114
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[OK]'
+  - '[TRIAGE]'
+  identifiers_read:
+  - PSA_SUCCESS
+  - MAC_LEN
+  - OK
+  - mac_context_lifecycle
+  - initialized
+  - MAC
+  - operation
+  - completed
+  - n
+  - else
+  - TRIAGE
+  - unexpected
+  - size
+  - state
+  - finish
+  - d
+  - zu
+  - int
+  identifiers_written:
+  - status
+  - ret
+  - mac_length
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 113
+- unit_id: ASTLITE-0033
+  mask_level: statement
+  role: oracle
+  placeholder: '[OK]'
+  code: 'if (status != PSA_SUCCESS) { printf("[OK] mac_context_lifecycle: pre-setup
+    operation rejected safely\n"); } else { printf("[TRIAGE] mac_context_lifecycle:
+    unexpected size/state: pre-setup MAC update succeeded\n"); }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 81
+  line_start: 81
+  line_end: 85
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[OK]'
+  - '[TRIAGE]'
+  identifiers_read:
+  - status
+  - PSA_SUCCESS
+  - OK
+  - mac_context_lifecycle
+  - pre
+  - setup
+  - operation
+  - rejected
+  - safely
+  - n
+  - else
+  - TRIAGE
+  - unexpected
+  - size
+  - state
+  - MAC
+  - update
+  - succeeded
+  identifiers_written: []
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 93
+- unit_id: ASTLITE-0034
+  mask_level: statement
+  role: oracle
+  placeholder: '[OK]'
+  code: 'printf("[OK] mac_context_lifecycle: pre-setup operation rejected safely\n");'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 82
+  line_start: 82
+  line_end: 82
+  column_start: 9
+  column_end: 85
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[OK]'
+  identifiers_read:
+  - OK
+  - mac_context_lifecycle
+  - pre
+  - setup
+  - operation
+  - rejected
+  - safely
+  - n
+  identifiers_written: []
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 93
+- unit_id: ASTLITE-0054
+  mask_level: statement
+  role: oracle
+  placeholder: '[OK]'
+  code: 'printf("[OK] mac_context_lifecycle: initialized MAC operation completed\n");'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 109
+  line_start: 109
+  line_end: 109
+  column_start: 9
+  column_end: 85
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[OK]'
+  identifiers_read:
+  - OK
+  - mac_context_lifecycle
+  - initialized
+  - MAC
+  - operation
+  - completed
+  - n
+  identifiers_written: []
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 93
+- unit_id: ASTLITE-0002
+  mask_level: statement
+  role: oracle
+  placeholder: '[BUG]'
+  code: 'fprintf(stderr, "[BUG] mac_context_lifecycle: crash or sanitizer signal:
+    %d\n", signo);'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 23
+  line_start: 23
+  line_end: 23
+  column_start: 5
+  column_end: 92
+  node_type: expression_statement
+  enclosing_function: signo
+  placeholder_dependencies:
+  - '[BUG]'
+  identifiers_read:
+  - stderr
+  - BUG
+  - mac_context_lifecycle
+  - crash
+  - or
+  - sanitizer
+  - signal
+  - d
+  - n
+  - signo
+  identifiers_written: []
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 73
+- unit_id: ASTLITE-0009
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[MAC_LEN]'
+  code: unsigned char mac[MAC_LEN];
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 37
+  line_start: 37
+  line_end: 37
+  column_start: 5
+  column_end: 32
+  node_type: declaration
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[MAC_LEN]'
+  identifiers_read:
+  - unsigned
+  - char
+  - mac
+  - MAC_LEN
+  identifiers_written: []
+  selection_reason: Selected because [MAC_LEN] is a mutation point with statement
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 66
+- unit_id: ASTLITE-0056
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'else { printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: finish
+    status=%d mac_length=%zu\n", (int) status, mac_length); }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 111
+  line_start: 111
+  line_end: 114
+  column_start: 7
+  column_end: 6
+  node_type: else_clause
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[TRIAGE]'
+  identifiers_read:
+  - else
+  - TRIAGE
+  - mac_context_lifecycle
+  - unexpected
+  - size
+  - state
+  - finish
+  - d
+  - zu
+  - n
+  - int
+  identifiers_written:
+  - status
+  - mac_length
+  selection_reason: Selected because [TRIAGE] is a mutation point with statement granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 66
+- unit_id: ASTLITE-0057
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: finish status=%d
+    mac_length=%zu\n", (int) status, mac_length);'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 112
+  line_start: 112
+  line_end: 113
+  column_start: 9
+  column_end: 42
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[TRIAGE]'
+  identifiers_read:
+  - TRIAGE
+  - mac_context_lifecycle
+  - unexpected
+  - size
+  - state
+  - finish
+  - d
+  - zu
+  - n
+  - int
+  identifiers_written:
+  - status
+  - mac_length
+  selection_reason: Selected because [TRIAGE] is a mutation point with statement granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 66
+- unit_id: ASTLITE-0058
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: finish status=%d
+    mac_length=%zu\n", (int) status, mac_length)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 112
+  line_start: 112
+  line_end: 113
+  column_start: 9
+  column_end: 41
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[TRIAGE]'
+  identifiers_read:
+  - TRIAGE
+  - mac_context_lifecycle
+  - unexpected
+  - size
+  - state
+  - finish
+  - d
+  - zu
+  - n
+  - int
+  identifiers_written:
+  - status
+  - mac_length
+  called_function: printf
+  call_node_code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state:
+    finish status=%d mac_length=%zu\n", (int) status, mac_length)'
+  selection_reason: Selected because [TRIAGE] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 66
+- unit_id: ASTLITE-0028
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'if (status != PSA_SUCCESS) { printf("[TRIAGE] mac_context_lifecycle: unexpected
+    size/state: psa_import_key failed\n"); goto end; }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 70
+  line_start: 70
+  line_end: 73
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[TRIAGE]'
+  identifiers_read:
+  - status
+  - PSA_SUCCESS
+  - TRIAGE
+  - mac_context_lifecycle
+  - unexpected
+  - size
+  - state
+  - psa_import_key
+  - failed
+  - n
+  - goto
+  - end
+  identifiers_written: []
+  selection_reason: Selected because [TRIAGE] is a mutation point with statement granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 60
+- unit_id: ASTLITE-0029
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: psa_import_key
+    failed\n");'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 71
+  line_start: 71
+  line_end: 71
+  column_start: 9
+  column_end: 98
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[TRIAGE]'
+  identifiers_read:
+  - TRIAGE
+  - mac_context_lifecycle
+  - unexpected
+  - size
+  - state
+  - psa_import_key
+  - failed
+  - n
+  identifiers_written: []
+  selection_reason: Selected because [TRIAGE] is a mutation point with statement granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 60
+- unit_id: ASTLITE-0030
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: psa_import_key
+    failed\n")'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 71
+  line_start: 71
+  line_end: 71
+  column_start: 9
+  column_end: 97
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[TRIAGE]'
+  identifiers_read:
+  - TRIAGE
+  - mac_context_lifecycle
+  - unexpected
+  - size
+  - state
+  - psa_import_key
+  - failed
+  - n
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state:
+    psa_import_key failed\n")'
+  selection_reason: Selected because [TRIAGE] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 60
+- unit_id: ASTLITE-0019
+  mask_level: statement
+  role: input_preparation
+  placeholder: '[TRIAGE]'
+  code: 'if (status != PSA_SUCCESS) { printf("[TRIAGE] mac_context_lifecycle: unexpected
+    size/state: psa_crypto_init failed\n"); goto end; }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 59
+  line_start: 59
+  line_end: 62
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[TRIAGE]'
+  identifiers_read:
+  - status
+  - PSA_SUCCESS
+  - TRIAGE
+  - mac_context_lifecycle
+  - unexpected
+  - size
+  - state
+  - psa_crypto_init
+  - failed
+  - n
+  - goto
+  - end
+  identifiers_written: []
+  selection_reason: Selected as high-value input/helper context for harness_family=object_state_lifecycle.
+  suggested_use: preserve_input_preparation
+  selection_score: 46
+- unit_id: ASTLITE-0020
+  mask_level: statement
+  role: input_preparation
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: psa_crypto_init
+    failed\n");'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 60
+  line_start: 60
+  line_end: 60
+  column_start: 9
+  column_end: 99
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[TRIAGE]'
+  identifiers_read:
+  - TRIAGE
+  - mac_context_lifecycle
+  - unexpected
+  - size
+  - state
+  - psa_crypto_init
+  - failed
+  - n
+  identifiers_written: []
+  selection_reason: Selected as high-value input/helper context for harness_family=object_state_lifecycle.
+  suggested_use: preserve_input_preparation
+  selection_score: 46
+- unit_id: ASTLITE-0021
+  mask_level: function_call
+  role: input_preparation
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: psa_crypto_init
+    failed\n")'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 60
+  line_start: 60
+  line_end: 60
+  column_start: 9
+  column_end: 98
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[TRIAGE]'
+  identifiers_read:
+  - TRIAGE
+  - mac_context_lifecycle
+  - unexpected
+  - size
+  - state
+  - psa_crypto_init
+  - failed
+  - n
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state:
+    psa_crypto_init failed\n")'
+  selection_reason: Selected as high-value input/helper context for harness_family=object_state_lifecycle.
+  suggested_use: preserve_input_preparation
+  selection_score: 46
+- unit_id: ASTLITE-0035
+  mask_level: function_call
+  role: oracle
+  placeholder: '[OK]'
+  code: 'printf("[OK] mac_context_lifecycle: pre-setup operation rejected safely\n")'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 82
+  line_start: 82
+  line_end: 82
+  column_start: 9
+  column_end: 84
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[OK]'
+  identifiers_read:
+  - OK
+  - mac_context_lifecycle
+  - pre
+  - setup
+  - operation
+  - rejected
+  - safely
+  - n
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("[OK] mac_context_lifecycle: pre-setup operation rejected
+    safely\n")'
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 46
+- unit_id: ASTLITE-0055
+  mask_level: function_call
+  role: oracle
+  placeholder: '[OK]'
+  code: 'printf("[OK] mac_context_lifecycle: initialized MAC operation completed\n")'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 109
+  line_start: 109
+  line_end: 109
+  column_start: 9
+  column_end: 84
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[OK]'
+  identifiers_read:
+  - OK
+  - mac_context_lifecycle
+  - initialized
+  - MAC
+  - operation
+  - completed
+  - n
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("[OK] mac_context_lifecycle: initialized MAC operation completed\n")'
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 46
+- unit_id: ASTLITE-0050
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: psa_mac_sign_finish(&operation_post, mac, MAC_LEN, &mac_length)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'psa_mac_sign_finish' identified by tree-sitter C parser.
+  priority: medium
+  line: 105
+  line_start: 105
+  line_end: 105
+  column_start: 14
+  column_end: 77
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - operation_post
+  - mac
+  - MAC_LEN
+  - mac_length
+  identifiers_written: []
+  called_function: psa_mac_sign_finish
+  call_node_code: psa_mac_sign_finish(&operation_post, mac, MAC_LEN, &mac_length)
+  selection_reason: Selected as high-value input/helper context for harness_family=object_state_lifecycle.
+  suggested_use: preserve_input_preparation
+  selection_score: 38
+- unit_id: ASTLITE-0052
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("psa_mac_sign_finish mac_length=%zu\n", mac_length)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 107
+  line_start: 107
+  line_end: 107
+  column_start: 5
+  column_end: 63
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - psa_mac_sign_finish
+  - zu
+  - n
+  identifiers_written:
+  - mac_length
+  called_function: printf
+  call_node_code: printf("psa_mac_sign_finish mac_length=%zu\n", mac_length)
+  selection_reason: Selected as high-value input/helper context for harness_family=object_state_lifecycle.
+  suggested_use: preserve_input_preparation
+  selection_score: 38
+- unit_id: ASTLITE-0006
+  mask_level: block
+  role: helper_function
+  placeholder: ''
+  code: static void print_psa_status(const char *label, psa_status_t status) { printf("%s
+    status=%d\n", label, (int) status); }
+  source: tmpl_mbedtls.c.tree_sitter.function_definition
+  reason: Function definition identified by tree-sitter C parser.
+  priority: medium
+  line: 28
+  line_start: 28
+  line_end: 31
+  column_start: 1
+  column_end: 2
+  node_type: function_definition
+  enclosing_function: status
+  placeholder_dependencies: []
+  identifiers_read:
+  - static
+  - void
+  - const
+  - char
+  - label
+  - psa_status_t
+  - s
+  - d
+  - n
+  - int
+  identifiers_written:
+  - status
+  function: status
+  selection_reason: Selected as high-value input/helper context for harness_family=object_state_lifecycle.
+  suggested_use: preserve_input_preparation
+  selection_score: 37
+- unit_id: ASTLITE-0017
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: psa_crypto_init()
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'psa_crypto_init' identified by tree-sitter C parser.
+  priority: medium
+  line: 57
+  line_start: 57
+  line_end: 57
+  column_start: 14
+  column_end: 31
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read: []
+  identifiers_written: []
+  called_function: psa_crypto_init
+  call_node_code: psa_crypto_init()
+  selection_reason: Selected as high-value input/helper context for harness_family=object_state_lifecycle.
+  suggested_use: preserve_input_preparation
+  selection_score: 36
+- unit_id: ASTLITE-0018
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: print_psa_status("psa_crypto_init", status)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'print_psa_status' identified by tree-sitter C parser.
+  priority: medium
+  line: 58
+  line_start: 58
+  line_end: 58
+  column_start: 5
+  column_end: 48
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - psa_crypto_init
+  - status
+  identifiers_written: []
+  called_function: print_psa_status
+  call_node_code: print_psa_status("psa_crypto_init", status)
+  selection_reason: Selected as high-value input/helper context for harness_family=object_state_lifecycle.
+  suggested_use: preserve_input_preparation
+  selection_score: 36
+- unit_id: ASTLITE-0008
+  mask_level: block
+  role: entrypoint
+  placeholder: '[MAC_LEN]'
+  code: 'int main(void) { static const unsigned char key_bytes[] = "rag-seed-hmac-key";
+    static const unsigned char message[] = "mac lifecycle message"; unsigned char
+    mac[MAC_LEN]; size_t mac_length = 0; psa_status_t status; psa_key_attributes_t
+    attributes = PSA_KEY_ATTRIBUTES_INIT; psa_key_id_t key_id = 0; psa_mac_operation_t
+    operation_pre = PSA_MAC_OPERATION_INIT; psa_mac_operation_t operation_post = PSA_MAC_OPERATION_INIT;
+    int ret = 1; setbuf(stdout, NULL); signal(SIGSEGV, bug_signal_handler); signal(SIGABRT,
+    bug_signal_handler); signal(SIGBUS, bug_signal_handler); signal(SIGILL, bug_signal_handler);
+    memset(mac, 0, sizeof(mac)); printf("template_mutation PSA_ALG=%s KEY_LEN=%d MESSAGE_LEN=%d
+    MAC_LEN=%d\n", "PSA_ALG_HMAC(PSA_ALG_SHA_256)", KEY_LEN, MESSAGE_LEN, MAC_LEN);
+    status = psa_crypto_init(); print_psa_status("psa_crypto_init", status); if (status
+    != PSA_SUCCESS) { printf("[TRIAGE] mac_context_lifecycle: unexpected size/state:
+    psa_crypto_init failed\n"); goto end; } psa_set_key_type(&attributes, PSA_KEY_TYPE_HMAC);
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_MESSAGE); psa_set_key_algorithm(&attributes,
+    PSA_ALG_HMAC(PSA_ALG_SHA_256)); status = psa_import_key(&attributes, key_bytes,
+    KEY_LEN, &key_id); print_psa_status("psa_import_key", status); if (status != PSA_SUCCESS)
+    { printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: psa_import_key
+    failed\n"); goto end; } /* * STATE_A: use a fresh operation before psa_mac_sign_setup.
+    Safe behavior * is rejection without crash. This operation is aborted immediately.
+    */ status = psa_mac_update(&operation_pre, message, MESSAGE_LEN); print_psa_status("pre-setup
+    psa_mac_update", status); if (status != PSA_SUCCESS) { printf("[OK] mac_context_lifecycle:
+    pre-setup operation rejected safely\n"); } else { printf("[TRIAGE] mac_context_lifecycle:
+    unexpected size/state: pre-setup MAC update succeeded\n"); } psa_mac_abort(&operation_pre);
+    /* * STATE_B: independent initialized operation. */ status = psa_mac_sign_setup(&operation_post,
+    key_id, PSA_ALG_HMAC(PSA_ALG_SHA_256)); print_psa_status("psa_mac_sign_setup",
+    status); if (status != PSA_SUCCESS) { printf("[TRIAGE] mac_context_lifecycle:
+    unexpected size/state: psa_mac_sign_setup failed\n"); goto end; } status = psa_mac_update(&operation_post,
+    message, MESSAGE_LEN); print_psa_status("post-setup psa_mac_update", status);
+    if (status != PSA_SUCCESS) { printf("[TRIAGE] mac_context_lifecycle: unexpected
+    size/state: post-setup MAC update failed\n"); goto end; } status = psa_mac_sign_finish(&operation_post,
+    mac, MAC_LEN, &mac_length); print_psa_status("psa_mac_sign_finish", status); printf("psa_mac_sign_finish
+    mac_length=%zu\n", mac_length); if (status == PSA_SUCCESS && mac_length > 0 &&
+    mac_length <= MAC_LEN) { printf("[OK] mac_context_lifecycle: initialized MAC operation
+    completed\n"); ret = 0; } else { printf("[TRIAGE] mac_context_lifecycle: unexpected
+    size/state: finish status=%d mac_length=%zu\n", (int) status, mac_length); } end:
+    psa_mac_abort(&operation_pre); psa_mac_abort(&operation_post); if (key_id != 0)
+    psa_destroy_key(key_id); mbedtls_psa_crypto_free(); return ret; }'
+  source: tmpl_mbedtls.c.tree_sitter.function_definition
+  reason: Function definition identified by tree-sitter C parser.
+  priority: high
+  line: 33
+  line_start: 33
+  line_end: 123
+  column_start: 1
+  column_end: 2
+  node_type: function_definition
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[MAC_LEN]'
+  - '[TRIAGE]'
+  - '[OK]'
+  identifiers_read:
+  - int
+  - void
+  - static
+  - const
+  - unsigned
+  - char
+  - key_bytes
+  - rag
+  - seed
+  - hmac
+  - key
+  - message
+  - mac
+  - lifecycle
+  - size_t
+  - psa_status_t
+  - psa_key_attributes_t
+  - PSA_KEY_ATTRIBUTES_INIT
+  - psa_key_id_t
+  - psa_mac_operation_t
+  - PSA_MAC_OPERATION_INIT
+  - stdout
+  - 'NULL'
+  - SIGSEGV
+  - bug_signal_handler
+  - SIGABRT
+  - SIGBUS
+  - SIGILL
+  - template_mutation
+  - s
+  - d
+  - n
+  - PSA_ALG_SHA_256
+  - PSA_SUCCESS
+  - TRIAGE
+  - mac_context_lifecycle
+  - unexpected
+  - size
+  - state
+  - failed
+  - goto
+  - end
+  - PSA_KEY_TYPE_HMAC
+  - PSA_KEY_USAGE_SIGN_MESSAGE
+  - STATE_A
+  - use
+  - a
+  - fresh
+  - operation
+  - before
+  - Safe
+  - behavior
+  - is
+  - rejection
+  - without
+  - crash
+  - This
+  - aborted
+  - immediately
+  - pre
+  - setup
+  - OK
+  - rejected
+  - safely
+  - else
+  - MAC
+  - update
+  - succeeded
+  - STATE_B
+  - independent
+  - initialized
+  - post
+  - zu
+  - completed
+  - finish
+  identifiers_written:
+  - mac_length
+  - attributes
+  - key_id
+  - operation_pre
+  - operation_post
+  - ret
+  - PSA_ALG
+  - KEY_LEN
+  - MESSAGE_LEN
+  - MAC_LEN
+  - status
+  function: main
+  selection_reason: Selected as high-value input/helper context for harness_family=object_state_lifecycle.
+  suggested_use: llm_reconstruction_context
+  selection_score: 33
+- unit_id: ASTLITE-0061
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_psa_crypto_free();
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 121
+  line_start: 121
+  line_end: 121
+  column_start: 5
+  column_end: 31
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read: []
+  identifiers_written: []
+  selection_reason: Selected limited cleanup context needed to keep generated harnesses
+    well-scoped.
+  suggested_use: preserve_cleanup
+  selection_score: 20
+- unit_id: ASTLITE-0062
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_psa_crypto_free()
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_psa_crypto_free' identified by tree-sitter C parser.
+  priority: medium
+  line: 121
+  line_start: 121
+  line_end: 121
+  column_start: 5
+  column_end: 30
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read: []
+  identifiers_written: []
+  called_function: mbedtls_psa_crypto_free
+  call_node_code: mbedtls_psa_crypto_free()
+  selection_reason: Selected limited cleanup context needed to keep generated harnesses
+    well-scoped.
+  suggested_use: preserve_cleanup
+  selection_score: 20
+selection_summary:
+  selected_count: 25
+  source_unit_count: 62
+  by_role:
+    cleanup: 2
+    entrypoint: 1
+    helper_function: 3
+    input_preparation: 5
+    mutation_point: 7
+    oracle: 7
+  by_mask_level:
+    block: 2
+    function_call: 10
+    statement: 13
+  by_suggested_use:
+    llm_reconstruction_context: 8
+    preserve_cleanup: 2
+    preserve_input_preparation: 8
+    preserve_oracle: 7
+rejected_summary:
+  count: 1
+  by_reason:
+    noise_header_comment_or_log_label: 1

@@ -1,0 +1,15 @@
+seed_issue: OPENSSL-ISSUE-28669
+family: secure_heap_state_lifecycle
+proposed_execution_path: D_then_B_precondition_triage
+why_not_d_then_a: >
+  No clear cross-library equivalent API or target migration object was identified
+  for CRYPTO_secure_used secure-heap internal state. Forcing mbedTLS equivalence
+  would risk inventing an API mapping.
+why_d_then_b: >
+  The useful question is OpenSSL secure heap state-machine behavior before init,
+  after init, and after done. A controlled family mutation sprint can compare
+  pre-init trigger behavior against initialized safe controls.
+llm_or_glm_used: false
+recipe_slot_adapter_required: false
+manual_c_generated_by_llm: false
+next_action: run small controlled precondition triage matrix

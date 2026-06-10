@@ -1,0 +1,115 @@
+case_id: mac_lifecycle_0011
+mac_algorithm: HMAC
+digest_or_cipher: SHA512
+lifecycle_sequence: query_after_abort
+expected_candidate_types:
+- projection_limitation
+- safe_negative
+source_matrix_entry:
+  case_id: mac_lifecycle_0011
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: SHA512
+    lifecycle_sequence: query_after_abort
+  matrix_status: supported
+  unsupported_dimensions: []
+  high_value: false
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  - returned_size
+  - error_stack
+  expected_candidate_types:
+  - projection_limitation
+  - safe_negative
+mapped_placeholders:
+  mac_algorithm: HMAC
+  digest_or_cipher: SHA512
+  lifecycle_sequence: query_after_abort
+  source_render_slots:
+    MAC_NAME: HMAC
+    DIGEST_NAME: SHA512
+    SOURCE_MAC_SETUP_PARAMS: "params[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST,\
+      \ \"SHA512\", 0);\n    params[1] = OSSL_PARAM_construct_end();"
+    SOURCE_LIFECYCLE_SEQUENCE: "init_ok = EVP_MAC_init(ctx, key, KEY_LEN, params);\n\
+      \    printf(\"SOURCE query_after_abort EVP_MAC_init returned %d\\n\", init_ok);\n\
+      \    update_ok = init_ok == 1 ? EVP_MAC_update(ctx, message, MESSAGE_LEN) :\
+      \ 0;\n    printf(\"SOURCE query_after_abort EVP_MAC_update returned %d\\n\"\
+      , update_ok);\n    EVP_MAC_CTX_free(ctx);\n    ctx = EVP_MAC_CTX_new(mac);\n\
+      \    if (ctx == NULL) {\n        fprintf(stderr, \"[TRIAGE] mac_context_lifecycle:\
+      \ EVP_MAC_CTX_new after abort-like free failed\\n\");\n        ERR_print_errors_fp(stderr);\n\
+      \        goto end;\n    }\n    pre_size = EVP_MAC_CTX_get_mac_size(ctx);\n \
+      \   printf(\"SOURCE query_after_abort EVP_MAC_CTX_get_mac_size on fresh ctx\
+      \ returned %zu\\n\", pre_size);\n    if (init_ok == 1 && update_ok == 1) {\n\
+      \        printf(\"[OK] mac_context_lifecycle: query after abort-like reset observed\
+      \ without crash\\n\");\n        ret = 0;\n    } else {\n        printf(\"[TRIAGE]\
+      \ mac_context_lifecycle: query after abort-like reset unexpected setup state\\\
+      n\");\n        ERR_print_errors_fp(stderr);\n    }"
+    SOURCE_ORACLE_OBSERVATION: '"projection_limitation"'
+  target_render_slots:
+    TARGET_KEY_TYPE: PSA_KEY_TYPE_HMAC
+    TARGET_KEY_ALGORITHM: PSA_ALG_HMAC(PSA_ALG_SHA_512)
+    TARGET_MAC_SETUP_PARAMS: psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_MESSAGE);
+    TARGET_LIFECYCLE_SEQUENCE: "status = psa_mac_sign_setup(&operation, key_id, PSA_ALG_HMAC(PSA_ALG_SHA_512));\n\
+      \    print_psa_status(\"TARGET query_after_abort psa_mac_sign_setup\", status);\n\
+      \    status2 = status == PSA_SUCCESS ? psa_mac_update(&operation, message, MESSAGE_LEN)\
+      \ : status;\n    print_psa_status(\"TARGET query_after_abort psa_mac_update\"\
+      , status2);\n    status3 = psa_mac_abort(&operation);\n    print_psa_status(\"\
+      TARGET query_after_abort psa_mac_abort\", status3);\n    printf(\"TARGET query_after_abort\
+      \ public operation-state size query unsupported\\n\");\n    if (status == PSA_SUCCESS\
+      \ && status2 == PSA_SUCCESS && status3 == PSA_SUCCESS) {\n        printf(\"\
+      [OK] mac_context_lifecycle: PSA abort succeeded; post-abort size query is projection-limited\\\
+      n\");\n        ret = 0;\n    } else {\n        printf(\"[TRIAGE] mac_context_lifecycle:\
+      \ PSA query_after_abort unexpected state\\n\");\n    }"
+    TARGET_ORACLE_OBSERVATION: '"projection_limitation"'
+  common_render_slots:
+    DIGEST_OR_CIPHER: SHA512
+    EXPECTED_MAC_SIZE: 64
+    EXPECTED_VERDICT_CLASS: projection_limitation
+    KEY_BYTES: "{\n    0x72, 0x61, 0x67, 0x2d, 0x73, 0x65, 0x65, 0x64,\n    0x2d,\
+      \ 0x68, 0x6d, 0x61, 0x63, 0x2d, 0x6b, 0x65,\n    0x79\n}"
+    KEY_LEN: 17
+    MESSAGE_BYTES: "{\n    0x6d, 0x61, 0x63, 0x20, 0x6c, 0x69, 0x66, 0x65,\n    0x63,\
+      \ 0x79, 0x63, 0x6c, 0x65, 0x20, 0x6d, 0x73,\n    0x67\n}"
+    MESSAGE_LEN: 17
+    MAC_LEN: 64
+source_render_slots:
+  MAC_NAME: HMAC
+  DIGEST_NAME: SHA512
+  SOURCE_MAC_SETUP_PARAMS: "params[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST,\
+    \ \"SHA512\", 0);\n    params[1] = OSSL_PARAM_construct_end();"
+  SOURCE_LIFECYCLE_SEQUENCE: "init_ok = EVP_MAC_init(ctx, key, KEY_LEN, params);\n\
+    \    printf(\"SOURCE query_after_abort EVP_MAC_init returned %d\\n\", init_ok);\n\
+    \    update_ok = init_ok == 1 ? EVP_MAC_update(ctx, message, MESSAGE_LEN) : 0;\n\
+    \    printf(\"SOURCE query_after_abort EVP_MAC_update returned %d\\n\", update_ok);\n\
+    \    EVP_MAC_CTX_free(ctx);\n    ctx = EVP_MAC_CTX_new(mac);\n    if (ctx == NULL)\
+    \ {\n        fprintf(stderr, \"[TRIAGE] mac_context_lifecycle: EVP_MAC_CTX_new\
+    \ after abort-like free failed\\n\");\n        ERR_print_errors_fp(stderr);\n\
+    \        goto end;\n    }\n    pre_size = EVP_MAC_CTX_get_mac_size(ctx);\n   \
+    \ printf(\"SOURCE query_after_abort EVP_MAC_CTX_get_mac_size on fresh ctx returned\
+    \ %zu\\n\", pre_size);\n    if (init_ok == 1 && update_ok == 1) {\n        printf(\"\
+    [OK] mac_context_lifecycle: query after abort-like reset observed without crash\\\
+    n\");\n        ret = 0;\n    } else {\n        printf(\"[TRIAGE] mac_context_lifecycle:\
+    \ query after abort-like reset unexpected setup state\\n\");\n        ERR_print_errors_fp(stderr);\n\
+    \    }"
+  SOURCE_ORACLE_OBSERVATION: '"projection_limitation"'
+target_render_slots:
+  TARGET_KEY_TYPE: PSA_KEY_TYPE_HMAC
+  TARGET_KEY_ALGORITHM: PSA_ALG_HMAC(PSA_ALG_SHA_512)
+  TARGET_MAC_SETUP_PARAMS: psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_MESSAGE);
+  TARGET_LIFECYCLE_SEQUENCE: "status = psa_mac_sign_setup(&operation, key_id, PSA_ALG_HMAC(PSA_ALG_SHA_512));\n\
+    \    print_psa_status(\"TARGET query_after_abort psa_mac_sign_setup\", status);\n\
+    \    status2 = status == PSA_SUCCESS ? psa_mac_update(&operation, message, MESSAGE_LEN)\
+    \ : status;\n    print_psa_status(\"TARGET query_after_abort psa_mac_update\"\
+    , status2);\n    status3 = psa_mac_abort(&operation);\n    print_psa_status(\"\
+    TARGET query_after_abort psa_mac_abort\", status3);\n    printf(\"TARGET query_after_abort\
+    \ public operation-state size query unsupported\\n\");\n    if (status == PSA_SUCCESS\
+    \ && status2 == PSA_SUCCESS && status3 == PSA_SUCCESS) {\n        printf(\"[OK]\
+    \ mac_context_lifecycle: PSA abort succeeded; post-abort size query is projection-limited\\\
+    n\");\n        ret = 0;\n    } else {\n        printf(\"[TRIAGE] mac_context_lifecycle:\
+    \ PSA query_after_abort unexpected state\\n\");\n    }"
+  TARGET_ORACLE_OBSERVATION: '"projection_limitation"'
+unsupported_dimensions: []
+skipped: false

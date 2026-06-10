@@ -1,0 +1,40 @@
+family: secure_heap_state_lifecycle
+seed_issue: OPENSSL-ISSUE-28669
+matrix_scope: limited_single_version
+tested_versions:
+  - version_dir: ${CLEAN_SOURCES_ROOT}/openssl-3.5.5
+    version_text: OpenSSL 3.5.5 27 Jan 2026
+    build_status: available
+    cases_from_expansion_run:
+      pre_init_used_only:
+        case_id: secure_heap_exp_0000_seed_pre_init_used
+        verdict: crash_candidate
+        novelty_label: non_novel_seed_reproduction
+        crash_signal: SIGSEGV_exit_139
+      done_then_used:
+        case_id: secure_heap_exp_0002_seed_done_then_used
+        verdict: crash_candidate
+        novelty_label: non_novel_seed_reproduction
+        crash_signal: SIGSEGV_exit_139
+      initialized_control:
+        case_id: secure_heap_exp_0001_control_initialized_used
+        verdict: normal_defined_behavior
+      done_twice:
+        case_id: secure_heap_exp_0017_done_twice
+        verdict: normal_defined_behavior
+      reinit_after_done:
+        case_id: secure_heap_exp_0018_reinit_after_done
+        verdict: normal_defined_behavior
+      init_failed_then_query:
+        case_id: secure_heap_exp_0003_new_state_init_failed_then_used
+        verdict: crash_candidate
+        novelty_label: new_state_combination_candidate
+        crash_signal: SIGSEGV_exit_139
+    version_classification:
+      - current_version_robustness_candidate
+      - limited_single_version
+regression_candidate: false
+reason_no_regression_candidate: No fixed version or multi-version comparison is available locally.
+claim_boundary:
+  confirmed_vulnerability: false
+  cve_claim: false

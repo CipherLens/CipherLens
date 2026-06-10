@@ -1,0 +1,36 @@
+pattern_id: MBEDTLS-POC-0020
+family: der_full_consumption
+sprint: der_full_consumption_v2
+mode: controlled_app_level_wrapper
+mutation_dimensions:
+  parser_target:
+  - openssl_app_x509
+  - openssl_app_pkey
+  - openssl_app_pkcs8
+  input_shape:
+  - valid_der_only
+  - malformed_only
+  - valid_der_plus_malformed_tail
+  - valid_der_plus_valid_der_object
+  - valid_der_plus_duplicate_object
+  trailing_length:
+  - 0
+  - 1
+  - 16
+  - 255
+  - 1024
+  trailing_content:
+  - all_zero
+  - random
+  - malformed_asn1_tag
+  - malformed_asn1_length
+  - valid_der_null
+  - valid_der_sequence
+  - duplicate_prefix_object
+oracle:
+  valid_der_only: must succeed
+  malformed_only: must reject
+  valid_der_plus_malformed_tail: success with output artifact is app_level_validation_gap_candidate
+  valid_der_plus_valid_der_object: manual triage / expected prefix ambiguity
+  valid_der_plus_duplicate_object: manual triage / expected prefix ambiguity
+total_cases: 75

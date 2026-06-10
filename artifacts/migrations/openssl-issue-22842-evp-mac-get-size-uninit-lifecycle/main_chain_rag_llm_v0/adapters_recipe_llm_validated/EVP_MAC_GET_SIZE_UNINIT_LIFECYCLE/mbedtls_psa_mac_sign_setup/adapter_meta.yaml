@@ -1,0 +1,30 @@
+template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE
+candidate:
+  library: mbedtls
+  api: psa_mac_sign_setup
+  decision: generate
+  scores:
+    operation_family: 85
+    function_behavior: 85
+    parameter_structure: 80
+    vulnerability_path: 70
+    harness_feasibility: 90
+source_files:
+  mask_report: normalized_templates/openssl/evp_mac_get_size_uninit_lifecycle/mask_report.yaml
+  candidates_with_evidence: artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_rag_llm_v0/candidates_with_evidence.yaml
+  selected_mask_units: normalized_templates/openssl/evp_mac_get_size_uninit_lifecycle/selected_mask_units.yaml
+ast_mask_selection:
+  available: true
+  source_file: normalized_templates/openssl/evp_mac_get_size_uninit_lifecycle/selected_mask_units.yaml
+  template_id: ''
+  harness_family: object_state_lifecycle
+  trigger_apis:
+  - EVP_MAC_CTX_get_mac_size
+  - EVP_MAC_init
+  selected_count: 8
+  by_suggested_use:
+    unspecified: 5
+    migrate_api_call: 3
+  by_role:
+    unspecified: 6
+    oracle: 2

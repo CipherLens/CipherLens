@@ -1,0 +1,111 @@
+case_id: mac_lifecycle_0052
+mac_algorithm: CMAC
+digest_or_cipher: AES-128-CBC
+lifecycle_sequence: setup_update_final
+expected_candidate_types:
+- allowed_legacy_semantics
+- failure_path_output_state_triage
+- safe_negative
+source_matrix_entry:
+  case_id: mac_lifecycle_0052
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: AES-128-CBC
+    lifecycle_sequence: setup_update_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+mapped_placeholders:
+  mac_algorithm: CMAC
+  digest_or_cipher: AES-128-CBC
+  lifecycle_sequence: setup_update_final
+  source_render_slots:
+    MAC_NAME: CMAC
+    DIGEST_NAME: SHA256
+    SOURCE_MAC_SETUP_PARAMS: "params[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_CIPHER,\
+      \ \"AES-128-CBC\", 0);\n    params[1] = OSSL_PARAM_construct_end();"
+    SOURCE_LIFECYCLE_SEQUENCE: "init_ok = EVP_MAC_init(ctx, key, KEY_LEN, params);\n\
+      \    printf(\"SOURCE setup_update_final EVP_MAC_init returned %d\\n\", init_ok);\n\
+      \    update_ok = init_ok == 1 ? EVP_MAC_update(ctx, message, MESSAGE_LEN) :\
+      \ 0;\n    printf(\"SOURCE setup_update_final EVP_MAC_update returned %d\\n\"\
+      , update_ok);\n    outl = 0;\n    final_ok = update_ok == 1 ? EVP_MAC_final(ctx,\
+      \ out, &outl, sizeof(out)) : 0;\n    printf(\"SOURCE setup_update_final EVP_MAC_final\
+      \ returned %d outl=%zu\\n\", final_ok, outl);\n    if (init_ok == 1 && update_ok\
+      \ == 1 && final_ok == 1 && outl == EXPECTED_MAC_SIZE) {\n        printf(\"[OK]\
+      \ mac_context_lifecycle: setup/update/final completed with expected output length\\\
+      n\");\n        ret = 0;\n    } else {\n        printf(\"[TRIAGE] mac_context_lifecycle:\
+      \ setup/update/final unexpected state\\n\");\n        ERR_print_errors_fp(stderr);\n\
+      \    }"
+    SOURCE_ORACLE_OBSERVATION: '"allowed_legacy_semantics"'
+  target_render_slots:
+    TARGET_KEY_TYPE: PSA_KEY_TYPE_AES
+    TARGET_KEY_ALGORITHM: PSA_ALG_CMAC
+    TARGET_MAC_SETUP_PARAMS: psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_MESSAGE);
+    TARGET_LIFECYCLE_SEQUENCE: "status = psa_mac_sign_setup(&operation, key_id, PSA_ALG_CMAC);\n\
+      \    print_psa_status(\"TARGET setup_update_final psa_mac_sign_setup\", status);\n\
+      \    status2 = status == PSA_SUCCESS ? psa_mac_update(&operation, message, MESSAGE_LEN)\
+      \ : status;\n    print_psa_status(\"TARGET setup_update_final psa_mac_update\"\
+      , status2);\n    mac_length = 0;\n    status3 = status2 == PSA_SUCCESS ? psa_mac_sign_finish(&operation,\
+      \ mac, MAC_LEN, &mac_length) : status2;\n    print_psa_status(\"TARGET setup_update_final\
+      \ psa_mac_sign_finish\", status3);\n    printf(\"TARGET setup_update_final mac_length=%zu\\\
+      n\", mac_length);\n    if (status == PSA_SUCCESS && status2 == PSA_SUCCESS &&\
+      \ status3 == PSA_SUCCESS && mac_length == EXPECTED_MAC_SIZE) {\n        printf(\"\
+      [OK] mac_context_lifecycle: PSA setup/update/final completed with expected output\
+      \ length\\n\");\n        ret = 0;\n    } else {\n        printf(\"[TRIAGE] mac_context_lifecycle:\
+      \ PSA setup/update/final unexpected state\\n\");\n    }"
+    TARGET_ORACLE_OBSERVATION: '"allowed_legacy_semantics"'
+  common_render_slots:
+    DIGEST_OR_CIPHER: AES-128-CBC
+    EXPECTED_MAC_SIZE: 16
+    EXPECTED_VERDICT_CLASS: allowed_legacy_semantics
+    KEY_BYTES: "{\n    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,\n    0x08,\
+      \ 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f\n}"
+    KEY_LEN: 16
+    MESSAGE_BYTES: "{\n    0x6d, 0x61, 0x63, 0x20, 0x6c, 0x69, 0x66, 0x65,\n    0x63,\
+      \ 0x79, 0x63, 0x6c, 0x65, 0x20, 0x6d, 0x73,\n    0x67\n}"
+    MESSAGE_LEN: 17
+    MAC_LEN: 64
+source_render_slots:
+  MAC_NAME: CMAC
+  DIGEST_NAME: SHA256
+  SOURCE_MAC_SETUP_PARAMS: "params[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_CIPHER,\
+    \ \"AES-128-CBC\", 0);\n    params[1] = OSSL_PARAM_construct_end();"
+  SOURCE_LIFECYCLE_SEQUENCE: "init_ok = EVP_MAC_init(ctx, key, KEY_LEN, params);\n\
+    \    printf(\"SOURCE setup_update_final EVP_MAC_init returned %d\\n\", init_ok);\n\
+    \    update_ok = init_ok == 1 ? EVP_MAC_update(ctx, message, MESSAGE_LEN) : 0;\n\
+    \    printf(\"SOURCE setup_update_final EVP_MAC_update returned %d\\n\", update_ok);\n\
+    \    outl = 0;\n    final_ok = update_ok == 1 ? EVP_MAC_final(ctx, out, &outl,\
+    \ sizeof(out)) : 0;\n    printf(\"SOURCE setup_update_final EVP_MAC_final returned\
+    \ %d outl=%zu\\n\", final_ok, outl);\n    if (init_ok == 1 && update_ok == 1 &&\
+    \ final_ok == 1 && outl == EXPECTED_MAC_SIZE) {\n        printf(\"[OK] mac_context_lifecycle:\
+    \ setup/update/final completed with expected output length\\n\");\n        ret\
+    \ = 0;\n    } else {\n        printf(\"[TRIAGE] mac_context_lifecycle: setup/update/final\
+    \ unexpected state\\n\");\n        ERR_print_errors_fp(stderr);\n    }"
+  SOURCE_ORACLE_OBSERVATION: '"allowed_legacy_semantics"'
+target_render_slots:
+  TARGET_KEY_TYPE: PSA_KEY_TYPE_AES
+  TARGET_KEY_ALGORITHM: PSA_ALG_CMAC
+  TARGET_MAC_SETUP_PARAMS: psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_MESSAGE);
+  TARGET_LIFECYCLE_SEQUENCE: "status = psa_mac_sign_setup(&operation, key_id, PSA_ALG_CMAC);\n\
+    \    print_psa_status(\"TARGET setup_update_final psa_mac_sign_setup\", status);\n\
+    \    status2 = status == PSA_SUCCESS ? psa_mac_update(&operation, message, MESSAGE_LEN)\
+    \ : status;\n    print_psa_status(\"TARGET setup_update_final psa_mac_update\"\
+    , status2);\n    mac_length = 0;\n    status3 = status2 == PSA_SUCCESS ? psa_mac_sign_finish(&operation,\
+    \ mac, MAC_LEN, &mac_length) : status2;\n    print_psa_status(\"TARGET setup_update_final\
+    \ psa_mac_sign_finish\", status3);\n    printf(\"TARGET setup_update_final mac_length=%zu\\\
+    n\", mac_length);\n    if (status == PSA_SUCCESS && status2 == PSA_SUCCESS &&\
+    \ status3 == PSA_SUCCESS && mac_length == EXPECTED_MAC_SIZE) {\n        printf(\"\
+    [OK] mac_context_lifecycle: PSA setup/update/final completed with expected output\
+    \ length\\n\");\n        ret = 0;\n    } else {\n        printf(\"[TRIAGE] mac_context_lifecycle:\
+    \ PSA setup/update/final unexpected state\\n\");\n    }"
+  TARGET_ORACLE_OBSERVATION: '"allowed_legacy_semantics"'
+unsupported_dimensions: []
+skipped: false

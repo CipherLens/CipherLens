@@ -1,0 +1,100 @@
+family: mac_lifecycle
+source:
+  pattern_id: OPENSSL-ISSUE-22842
+  template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE
+  source_library: openssl
+  source_api: EVP_MAC_CTX_get_mac_size
+  oracle_type: mac_context_size_lifecycle_oracle
+target_candidate:
+  target_library: mbedtls
+  target_api: psa_mac_sign_setup
+  decision: generate
+  migration_applicability: applicable_with_semantic_projection
+  final_score: 82
+evidence_sources:
+  candidates_with_evidence: artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/candidates_with_evidence.yaml
+  api_cards_root: knowledge_base/api_cards
+  api_cards:
+  - path: mbedtls/psa_mac_sign_finish.yaml
+    library: mbedtls
+    api: psa_mac_sign_finish
+    family: mac_lifecycle
+    match_reason: target_api_exact_or_related
+    mutation_hints:
+    - final before setup
+    - double final
+    - abort then final
+    - small mac_size
+    oracle_observables:
+    - psa_status
+    - mac_length
+    - output_buffer_state
+    - sanitizer_signal
+  - path: openssl/EVP_MAC_CTX_get_mac_size.yaml
+    library: openssl
+    api: EVP_MAC_CTX_get_mac_size
+    family: mac_lifecycle
+    match_reason: source_trigger_api_exact_or_related
+    mutation_hints:
+    - get size before setup
+    - get size after failed init
+    - get size after final
+    - get size after abort-like cleanup
+    oracle_observables:
+    - returned_size
+    - error_stack
+    - sanitizer_signal
+  - path: openssl/EVP_MAC_final.yaml
+    library: openssl
+    api: EVP_MAC_final
+    family: mac_lifecycle
+    match_reason: source_trigger_api_exact_or_related
+    mutation_hints:
+    - final before setup
+    - double final
+    - abort then final
+    - output buffer too small
+    oracle_observables:
+    - return_code
+    - outl
+    - output_buffer_state
+    - sanitizer_signal
+mutation_dimensions:
+  mac_algorithm:
+    values:
+    - HMAC
+    - CMAC
+    source: family_rule
+  digest_or_cipher:
+    values:
+    - SHA256
+    - SHA512
+    - AES-128-CBC
+    - AES-256-CBC
+    source: family_rule
+  lifecycle_sequence:
+    values:
+    - abort_then_final
+    - final_before_setup
+    - query_size_before_setup
+    - setup_final_final
+    - setup_update_final
+    - setup_update_final_final
+    - update_before_setup
+    - wrong_digest_combo
+    source: family_rule+api_cards
+oracle_observables:
+- return_code
+- output_length
+- operation_state
+- sanitizer_signal
+expected_candidate_types:
+- unexpected_success_candidate
+- failure_path_output_state_triage
+- allowed_legacy_semantics
+- safe_negative
+- crash_candidate
+notes:
+- This file is a family-level mutation plan only.
+- It does not generate C harness code.
+- render_cases.py does not consume this plan directly in the current pipeline.

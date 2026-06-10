@@ -1,0 +1,25 @@
+framework_drift_assessment:
+  risk_level: medium
+  current_drift_points:
+    - secure_heap stops at seed validation unless pattern expansion follows
+    - some family-specific renderers/analyzers are not yet generalized
+    - version novelty classification needs to be integrated into scheduler
+    - generated artifacts and logs can obscure the intended research chain
+  required_corrections:
+    - pattern_expansion_must_follow_seed_validation
+    - novelty_analyzer_should_distinguish_historical_repro_vs_new_candidate
+    - family_renderer_analyzer_interfaces_should_be_unified
+    - commit_strategy_should_separate_reports_from_logs_and_build_outputs
+why_secure_heap_looks_like_reproduction:
+  - It starts from a single historical OpenSSL issue.
+  - It validates CRYPTO_secure_used pre-init/post-done crash behavior.
+  - It does not yet migrate across libraries.
+why_secure_heap_is_still_valid_seed_validation:
+  - It extracts a reusable state-lifecycle oracle.
+  - It confirms initialized controls and crash states.
+  - It adds version provenance and novelty boundaries.
+when_it_returns_to_discovery_framework:
+  - Same-family secure heap API/state expansion runs.
+  - Cross-version matrix distinguishes historical overlap from new affected versions.
+  - Analogous lifecycle oracles are tested in other libraries.
+most_needed_design_fix: integrate seed-validation outputs into mandatory pattern-expansion planning and scheduler states

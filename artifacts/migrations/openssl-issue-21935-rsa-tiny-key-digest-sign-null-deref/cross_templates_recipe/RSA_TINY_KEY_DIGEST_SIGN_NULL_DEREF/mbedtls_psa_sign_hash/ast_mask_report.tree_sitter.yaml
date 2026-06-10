@@ -1,0 +1,1357 @@
+template_id: RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF
+template_name: ''
+source_api: ''
+source_library: openssl
+trigger_apis: []
+harness_family: pkey_capability_mismatch_oracle
+summary:
+  method: tree_sitter_c_role_aware
+  backend: tree-sitter
+  template_dir: artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/cross_templates_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash
+  unit_count: 48
+  parse_has_error: true
+  note: Tree-sitter C report generated from concrete syntax nodes. This backend is
+    optional and is intended to complement AST-lite.
+ast_mask_units:
+- unit_id: ASTLITE-0001
+  mask_level: value
+  role: mutation_point
+  placeholder: '[KEY_BITS]'
+  code: '#define KEY_BITS [KEY_BITS]'
+  source: tmpl_mbedtls.c.tree_sitter.preprocessor
+  reason: Preprocessor node contains template placeholder.
+  priority: high
+  line: 7
+  line_start: 7
+  line_end: 8
+  column_start: 1
+  column_end: 1
+  node_type: preproc_def
+  enclosing_function: ''
+  placeholder_dependencies:
+  - '[KEY_BITS]'
+  identifiers_read:
+  - define
+  - KEY_BITS
+  identifiers_written: []
+- unit_id: ASTLITE-0002
+  mask_level: value
+  role: mutation_point
+  placeholder: '[HASH_LEN]'
+  code: '#define HASH_LEN [HASH_LEN]'
+  source: tmpl_mbedtls.c.tree_sitter.preprocessor
+  reason: Preprocessor node contains template placeholder.
+  priority: high
+  line: 8
+  line_start: 8
+  line_end: 9
+  column_start: 1
+  column_end: 1
+  node_type: preproc_def
+  enclosing_function: ''
+  placeholder_dependencies:
+  - '[HASH_LEN]'
+  identifiers_read:
+  - define
+  - HASH_LEN
+  identifiers_written: []
+- unit_id: ASTLITE-0003
+  mask_level: value
+  role: mutation_point
+  placeholder: '[SIG_LEN]'
+  code: '#define SIG_LEN [SIG_LEN]'
+  source: tmpl_mbedtls.c.tree_sitter.preprocessor
+  reason: Preprocessor node contains template placeholder.
+  priority: high
+  line: 9
+  line_start: 9
+  line_end: 10
+  column_start: 1
+  column_end: 1
+  node_type: preproc_def
+  enclosing_function: ''
+  placeholder_dependencies:
+  - '[SIG_LEN]'
+  identifiers_read:
+  - define
+  - SIG_LEN
+  identifiers_written: []
+- unit_id: ASTLITE-0004
+  mask_level: block
+  role: helper_function
+  placeholder: '[BUG]'
+  code: 'static void bug_signal_handler(int signo) { fprintf(stderr, "[BUG] crash
+    or sanitizer signal: %d\n", signo); fflush(stderr); _Exit(128 + signo); }'
+  source: tmpl_mbedtls.c.tree_sitter.function_definition
+  reason: Function definition identified by tree-sitter C parser.
+  priority: medium
+  line: 20
+  line_start: 20
+  line_end: 25
+  column_start: 1
+  column_end: 2
+  node_type: function_definition
+  enclosing_function: signo
+  placeholder_dependencies:
+  - '[BUG]'
+  identifiers_read:
+  - static
+  - void
+  - int
+  - signo
+  - stderr
+  - BUG
+  - crash
+  - or
+  - sanitizer
+  - signal
+  - d
+  - n
+  identifiers_written: []
+  function: signo
+- unit_id: ASTLITE-0005
+  mask_level: statement
+  role: oracle
+  placeholder: '[BUG]'
+  code: 'fprintf(stderr, "[BUG] crash or sanitizer signal: %d\n", signo);'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 22
+  line_start: 22
+  line_end: 22
+  column_start: 5
+  column_end: 69
+  node_type: expression_statement
+  enclosing_function: signo
+  placeholder_dependencies:
+  - '[BUG]'
+  identifiers_read:
+  - stderr
+  - BUG
+  - crash
+  - or
+  - sanitizer
+  - signal
+  - d
+  - n
+  - signo
+  identifiers_written: []
+- unit_id: ASTLITE-0006
+  mask_level: function_call
+  role: oracle
+  placeholder: '[BUG]'
+  code: 'fprintf(stderr, "[BUG] crash or sanitizer signal: %d\n", signo)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'fprintf' identified by tree-sitter C parser.
+  priority: medium
+  line: 22
+  line_start: 22
+  line_end: 22
+  column_start: 5
+  column_end: 68
+  node_type: call_expression
+  enclosing_function: signo
+  placeholder_dependencies:
+  - '[BUG]'
+  identifiers_read:
+  - stderr
+  - BUG
+  - crash
+  - or
+  - sanitizer
+  - signal
+  - d
+  - n
+  - signo
+  identifiers_written: []
+  called_function: fprintf
+  call_node_code: 'fprintf(stderr, "[BUG] crash or sanitizer signal: %d\n", signo)'
+- unit_id: ASTLITE-0007
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: fflush(stderr)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'fflush' identified by tree-sitter C parser.
+  priority: medium
+  line: 23
+  line_start: 23
+  line_end: 23
+  column_start: 5
+  column_end: 19
+  node_type: call_expression
+  enclosing_function: signo
+  placeholder_dependencies: []
+  identifiers_read:
+  - stderr
+  identifiers_written: []
+  called_function: fflush
+  call_node_code: fflush(stderr)
+- unit_id: ASTLITE-0008
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: _Exit(128 + signo)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call '_Exit' identified by tree-sitter C parser.
+  priority: medium
+  line: 24
+  line_start: 24
+  line_end: 24
+  column_start: 5
+  column_end: 23
+  node_type: call_expression
+  enclosing_function: signo
+  placeholder_dependencies: []
+  identifiers_read:
+  - signo
+  identifiers_written: []
+  called_function: _Exit
+  call_node_code: _Exit(128 + signo)
+- unit_id: ASTLITE-0009
+  mask_level: block
+  role: entrypoint
+  placeholder: '[HASH_LEN]'
+  code: 'int main(void) { static const unsigned char rsa_key_der[] = { 0x30,0x1b,0x02,0x01,0x00,0x02,0x02,0x0c,0xa1,0x02,0x01,0x11,0x02,0x02,0x0a,0xc1,0x02,0x01,0x3d,0x02,0x01,0x35,0x02,0x01,0x31,0x02,0x01,0x26,0x02,0x01,0x26
+    }; unsigned char hash[HASH_LEN]; unsigned char sig[SIG_LEN]; size_t sig_len =
+    0; psa_status_t status; psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key_id = 0; int ret = 1; setbuf(stdout, NULL); signal(SIGSEGV, bug_signal_handler);
+    signal(SIGABRT, bug_signal_handler); signal(SIGBUS, bug_signal_handler); signal(SIGILL,
+    bug_signal_handler); memset(hash, 0x2a, sizeof(hash)); memset(sig, 0, sizeof(sig));
+    printf("template_mutation KEY_BITS=%d HASH_LEN=%d SIG_LEN=%d\n", KEY_BITS, HASH_LEN,
+    SIG_LEN); status = psa_crypto_init(); if (status != PSA_SUCCESS) { fprintf(stderr,
+    "[SAFE] invalid RSA key signing rejected during psa_crypto_init: %d\n", (int)
+    status); ret = 0; goto end; } psa_set_key_type(&attributes, PSA_KEY_TYPE_RSA_KEY_PAIR);
+    psa_set_key_bits(&attributes, KEY_BITS); psa_set_key_usage_flags(&attributes,
+    PSA_KEY_USAGE_SIGN_HASH); psa_set_key_algorithm(&attributes, PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH));
+    status = psa_import_key(&attributes, rsa_key_der, sizeof(rsa_key_der), &key_id);
+    printf("psa_import_key returned %d\n", (int) status); if (status != PSA_SUCCESS)
+    { printf("[SAFE] invalid RSA key signing rejected by psa_import_key: %d\n", (int)
+    status); printf("[VERDICT] safe_fixed_behavior\n"); ret = 0; goto end; } status
+    = psa_sign_hash(key_id, PSA_ALG_RSA_PKCS1V15_SIGN([HASH_ALG]), hash, HASH_LEN,
+    sig, sizeof(sig), &sig_len); printf("psa_sign_hash returned %d sig_len=%zu\n",
+    (int) status, sig_len); if (status == PSA_SUCCESS) { printf("[TRIAGE] signing
+    with invalid RSA key succeeded\n"); } else { printf("[SAFE] invalid RSA key signing
+    rejected by psa_sign_hash: %d\n", (int) status); printf("[VERDICT] safe_fixed_behavior\n");
+    } ret = 0; end: if (key_id != 0) psa_destroy_key(key_id); mbedtls_psa_crypto_free();
+    return ret; }'
+  source: tmpl_mbedtls.c.tree_sitter.function_definition
+  reason: Function definition identified by tree-sitter C parser.
+  priority: high
+  line: 27
+  line_start: 27
+  line_end: 94
+  column_start: 1
+  column_end: 2
+  node_type: function_definition
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[HASH_LEN]'
+  - '[SIG_LEN]'
+  - '[SAFE]'
+  - '[VERDICT]'
+  - '[HASH_ALG]'
+  - '[TRIAGE]'
+  identifiers_read:
+  - int
+  - void
+  - static
+  - const
+  - unsigned
+  - char
+  - rsa_key_der
+  - hash
+  - sig
+  - size_t
+  - psa_status_t
+  - psa_key_attributes_t
+  - PSA_KEY_ATTRIBUTES_INIT
+  - psa_key_id_t
+  - stdout
+  - 'NULL'
+  - SIGSEGV
+  - bug_signal_handler
+  - SIGABRT
+  - SIGBUS
+  - SIGILL
+  - template_mutation
+  - d
+  - n
+  - PSA_SUCCESS
+  - stderr
+  - SAFE
+  - invalid
+  - RSA
+  - key
+  - signing
+  - rejected
+  - during
+  - goto
+  - end
+  - PSA_KEY_TYPE_RSA_KEY_PAIR
+  - PSA_KEY_USAGE_SIGN_HASH
+  - PSA_ALG_ANY_HASH
+  - returned
+  - by
+  - VERDICT
+  - safe_fixed_behavior
+  - HASH_ALG
+  - zu
+  - TRIAGE
+  - with
+  - succeeded
+  - else
+  identifiers_written:
+  - sig_len
+  - attributes
+  - key_id
+  - ret
+  - KEY_BITS
+  - HASH_LEN
+  - SIG_LEN
+  - status
+  function: main
+- unit_id: ASTLITE-0010
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[HASH_LEN]'
+  code: unsigned char hash[HASH_LEN];
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 32
+  line_start: 32
+  line_end: 32
+  column_start: 5
+  column_end: 34
+  node_type: declaration
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[HASH_LEN]'
+  identifiers_read:
+  - unsigned
+  - char
+  - hash
+  - HASH_LEN
+  identifiers_written: []
+- unit_id: ASTLITE-0011
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SIG_LEN]'
+  code: unsigned char sig[SIG_LEN];
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 33
+  line_start: 33
+  line_end: 33
+  column_start: 5
+  column_end: 32
+  node_type: declaration
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SIG_LEN]'
+  identifiers_read:
+  - unsigned
+  - char
+  - sig
+  - SIG_LEN
+  identifiers_written: []
+- unit_id: ASTLITE-0012
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: setbuf(stdout, NULL)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'setbuf' identified by tree-sitter C parser.
+  priority: medium
+  line: 41
+  line_start: 41
+  line_end: 41
+  column_start: 5
+  column_end: 25
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - stdout
+  - 'NULL'
+  identifiers_written: []
+  called_function: setbuf
+  call_node_code: setbuf(stdout, NULL)
+- unit_id: ASTLITE-0013
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGSEGV, bug_signal_handler)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'signal' identified by tree-sitter C parser.
+  priority: medium
+  line: 42
+  line_start: 42
+  line_end: 42
+  column_start: 5
+  column_end: 40
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - SIGSEGV
+  - bug_signal_handler
+  identifiers_written: []
+  called_function: signal
+  call_node_code: signal(SIGSEGV, bug_signal_handler)
+- unit_id: ASTLITE-0014
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGABRT, bug_signal_handler)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'signal' identified by tree-sitter C parser.
+  priority: medium
+  line: 43
+  line_start: 43
+  line_end: 43
+  column_start: 5
+  column_end: 40
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - SIGABRT
+  - bug_signal_handler
+  identifiers_written: []
+  called_function: signal
+  call_node_code: signal(SIGABRT, bug_signal_handler)
+- unit_id: ASTLITE-0015
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGBUS, bug_signal_handler)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'signal' identified by tree-sitter C parser.
+  priority: medium
+  line: 44
+  line_start: 44
+  line_end: 44
+  column_start: 5
+  column_end: 39
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - SIGBUS
+  - bug_signal_handler
+  identifiers_written: []
+  called_function: signal
+  call_node_code: signal(SIGBUS, bug_signal_handler)
+- unit_id: ASTLITE-0016
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGILL, bug_signal_handler)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'signal' identified by tree-sitter C parser.
+  priority: medium
+  line: 45
+  line_start: 45
+  line_end: 45
+  column_start: 5
+  column_end: 39
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - SIGILL
+  - bug_signal_handler
+  identifiers_written: []
+  called_function: signal
+  call_node_code: signal(SIGILL, bug_signal_handler)
+- unit_id: ASTLITE-0017
+  mask_level: function_call
+  role: input_construction
+  placeholder: ''
+  code: memset(hash, 0x2a, sizeof(hash))
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'memset' identified by tree-sitter C parser.
+  priority: medium
+  line: 46
+  line_start: 46
+  line_end: 46
+  column_start: 5
+  column_end: 37
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - hash
+  identifiers_written: []
+  called_function: memset
+  call_node_code: memset(hash, 0x2a, sizeof(hash))
+- unit_id: ASTLITE-0018
+  mask_level: function_call
+  role: input_construction
+  placeholder: ''
+  code: memset(sig, 0, sizeof(sig))
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'memset' identified by tree-sitter C parser.
+  priority: medium
+  line: 47
+  line_start: 47
+  line_end: 47
+  column_start: 5
+  column_end: 32
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - sig
+  identifiers_written: []
+  called_function: memset
+  call_node_code: memset(sig, 0, sizeof(sig))
+- unit_id: ASTLITE-0019
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("template_mutation KEY_BITS=%d HASH_LEN=%d SIG_LEN=%d\n", KEY_BITS,
+    HASH_LEN, SIG_LEN)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 49
+  line_start: 49
+  line_end: 50
+  column_start: 5
+  column_end: 40
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - template_mutation
+  - d
+  - n
+  identifiers_written:
+  - KEY_BITS
+  - HASH_LEN
+  - SIG_LEN
+  called_function: printf
+  call_node_code: printf("template_mutation KEY_BITS=%d HASH_LEN=%d SIG_LEN=%d\n",
+    KEY_BITS, HASH_LEN, SIG_LEN)
+- unit_id: ASTLITE-0020
+  mask_level: function_call
+  role: input_preparation
+  placeholder: ''
+  code: psa_crypto_init()
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'psa_crypto_init' identified by tree-sitter C parser.
+  priority: medium
+  line: 52
+  line_start: 52
+  line_end: 52
+  column_start: 14
+  column_end: 31
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read: []
+  identifiers_written: []
+  called_function: psa_crypto_init
+  call_node_code: psa_crypto_init()
+- unit_id: ASTLITE-0021
+  mask_level: statement
+  role: input_preparation
+  placeholder: '[SAFE]'
+  code: 'if (status != PSA_SUCCESS) { fprintf(stderr, "[SAFE] invalid RSA key signing
+    rejected during psa_crypto_init: %d\n", (int) status); ret = 0; goto end; }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 53
+  line_start: 53
+  line_end: 58
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - status
+  - PSA_SUCCESS
+  - stderr
+  - SAFE
+  - invalid
+  - RSA
+  - key
+  - signing
+  - rejected
+  - during
+  - psa_crypto_init
+  - d
+  - n
+  - int
+  - goto
+  - end
+  identifiers_written:
+  - ret
+- unit_id: ASTLITE-0022
+  mask_level: statement
+  role: input_preparation
+  placeholder: '[SAFE]'
+  code: 'fprintf(stderr, "[SAFE] invalid RSA key signing rejected during psa_crypto_init:
+    %d\n", (int) status);'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 54
+  line_start: 54
+  line_end: 55
+  column_start: 9
+  column_end: 31
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - stderr
+  - SAFE
+  - invalid
+  - RSA
+  - key
+  - signing
+  - rejected
+  - during
+  - psa_crypto_init
+  - d
+  - n
+  - int
+  - status
+  identifiers_written: []
+- unit_id: ASTLITE-0023
+  mask_level: function_call
+  role: input_preparation
+  placeholder: '[SAFE]'
+  code: 'fprintf(stderr, "[SAFE] invalid RSA key signing rejected during psa_crypto_init:
+    %d\n", (int) status)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'fprintf' identified by tree-sitter C parser.
+  priority: medium
+  line: 54
+  line_start: 54
+  line_end: 55
+  column_start: 9
+  column_end: 30
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - stderr
+  - SAFE
+  - invalid
+  - RSA
+  - key
+  - signing
+  - rejected
+  - during
+  - psa_crypto_init
+  - d
+  - n
+  - int
+  - status
+  identifiers_written: []
+  called_function: fprintf
+  call_node_code: 'fprintf(stderr, "[SAFE] invalid RSA key signing rejected during
+    psa_crypto_init: %d\n", (int) status)'
+- unit_id: ASTLITE-0024
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: psa_set_key_type(&attributes, PSA_KEY_TYPE_RSA_KEY_PAIR)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'psa_set_key_type' identified by tree-sitter C parser.
+  priority: medium
+  line: 60
+  line_start: 60
+  line_end: 60
+  column_start: 5
+  column_end: 61
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - attributes
+  - PSA_KEY_TYPE_RSA_KEY_PAIR
+  identifiers_written: []
+  called_function: psa_set_key_type
+  call_node_code: psa_set_key_type(&attributes, PSA_KEY_TYPE_RSA_KEY_PAIR)
+- unit_id: ASTLITE-0025
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: psa_set_key_bits(&attributes, KEY_BITS)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'psa_set_key_bits' identified by tree-sitter C parser.
+  priority: medium
+  line: 61
+  line_start: 61
+  line_end: 61
+  column_start: 5
+  column_end: 44
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - attributes
+  - KEY_BITS
+  identifiers_written: []
+  called_function: psa_set_key_bits
+  call_node_code: psa_set_key_bits(&attributes, KEY_BITS)
+- unit_id: ASTLITE-0026
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_HASH)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'psa_set_key_usage_flags' identified by tree-sitter C parser.
+  priority: medium
+  line: 62
+  line_start: 62
+  line_end: 62
+  column_start: 5
+  column_end: 66
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - attributes
+  - PSA_KEY_USAGE_SIGN_HASH
+  identifiers_written: []
+  called_function: psa_set_key_usage_flags
+  call_node_code: psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_HASH)
+- unit_id: ASTLITE-0027
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: psa_set_key_algorithm(&attributes, PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH))
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'psa_set_key_algorithm' identified by tree-sitter C parser.
+  priority: medium
+  line: 63
+  line_start: 63
+  line_end: 63
+  column_start: 5
+  column_end: 84
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - attributes
+  - PSA_ALG_ANY_HASH
+  identifiers_written: []
+  called_function: psa_set_key_algorithm
+  call_node_code: psa_set_key_algorithm(&attributes, PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH))
+- unit_id: ASTLITE-0028
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'PSA_ALG_RSA_PKCS1V15_SIGN' identified by tree-sitter C parser.
+  priority: medium
+  line: 63
+  line_start: 63
+  line_end: 63
+  column_start: 40
+  column_end: 83
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - PSA_ALG_ANY_HASH
+  identifiers_written: []
+  called_function: PSA_ALG_RSA_PKCS1V15_SIGN
+  call_node_code: PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH)
+- unit_id: ASTLITE-0029
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: psa_import_key(&attributes, rsa_key_der, sizeof(rsa_key_der), &key_id)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'psa_import_key' identified by tree-sitter C parser.
+  priority: medium
+  line: 65
+  line_start: 65
+  line_end: 65
+  column_start: 14
+  column_end: 84
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - attributes
+  - rsa_key_der
+  - key_id
+  identifiers_written: []
+  called_function: psa_import_key
+  call_node_code: psa_import_key(&attributes, rsa_key_der, sizeof(rsa_key_der), &key_id)
+- unit_id: ASTLITE-0030
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("psa_import_key returned %d\n", (int) status)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 66
+  line_start: 66
+  line_end: 66
+  column_start: 5
+  column_end: 57
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - psa_import_key
+  - returned
+  - d
+  - n
+  - int
+  - status
+  identifiers_written: []
+  called_function: printf
+  call_node_code: printf("psa_import_key returned %d\n", (int) status)
+- unit_id: ASTLITE-0031
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: 'if (status != PSA_SUCCESS) { printf("[SAFE] invalid RSA key signing rejected
+    by psa_import_key: %d\n", (int) status); printf("[VERDICT] safe_fixed_behavior\n");
+    ret = 0; goto end; }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 67
+  line_start: 67
+  line_end: 73
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  - '[VERDICT]'
+  identifiers_read:
+  - status
+  - PSA_SUCCESS
+  - SAFE
+  - invalid
+  - RSA
+  - key
+  - signing
+  - rejected
+  - by
+  - psa_import_key
+  - d
+  - n
+  - int
+  - VERDICT
+  - safe_fixed_behavior
+  - goto
+  - end
+  identifiers_written:
+  - ret
+- unit_id: ASTLITE-0032
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: 'printf("[SAFE] invalid RSA key signing rejected by psa_import_key: %d\n",
+    (int) status);'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 68
+  line_start: 68
+  line_end: 69
+  column_start: 9
+  column_end: 30
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - SAFE
+  - invalid
+  - RSA
+  - key
+  - signing
+  - rejected
+  - by
+  - psa_import_key
+  - d
+  - n
+  - int
+  - status
+  identifiers_written: []
+- unit_id: ASTLITE-0033
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: 'printf("[SAFE] invalid RSA key signing rejected by psa_import_key: %d\n",
+    (int) status)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 68
+  line_start: 68
+  line_end: 69
+  column_start: 9
+  column_end: 29
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - SAFE
+  - invalid
+  - RSA
+  - key
+  - signing
+  - rejected
+  - by
+  - psa_import_key
+  - d
+  - n
+  - int
+  - status
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("[SAFE] invalid RSA key signing rejected by psa_import_key:
+    %d\n", (int) status)'
+- unit_id: ASTLITE-0034
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[VERDICT]'
+  code: printf("[VERDICT] safe_fixed_behavior\n");
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 70
+  line_start: 70
+  line_end: 70
+  column_start: 9
+  column_end: 51
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[VERDICT]'
+  identifiers_read:
+  - VERDICT
+  - safe_fixed_behavior
+  - n
+  identifiers_written: []
+- unit_id: ASTLITE-0035
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[VERDICT]'
+  code: printf("[VERDICT] safe_fixed_behavior\n")
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 70
+  line_start: 70
+  line_end: 70
+  column_start: 9
+  column_end: 50
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[VERDICT]'
+  identifiers_read:
+  - VERDICT
+  - safe_fixed_behavior
+  - n
+  identifiers_written: []
+  called_function: printf
+  call_node_code: printf("[VERDICT] safe_fixed_behavior\n")
+- unit_id: ASTLITE-0036
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[HASH_ALG]'
+  code: status = psa_sign_hash(key_id, PSA_ALG_RSA_PKCS1V15_SIGN([HASH_ALG]), hash,
+    HASH_LEN, sig, sizeof(sig), &sig_len);
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 75
+  line_start: 75
+  line_end: 77
+  column_start: 5
+  column_end: 56
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[HASH_ALG]'
+  identifiers_read:
+  - key_id
+  - HASH_ALG
+  - hash
+  - HASH_LEN
+  - sig
+  - sig_len
+  identifiers_written:
+  - status
+- unit_id: ASTLITE-0037
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[HASH_ALG]'
+  code: psa_sign_hash(key_id, PSA_ALG_RSA_PKCS1V15_SIGN([HASH_ALG]), hash, HASH_LEN,
+    sig, sizeof(sig), &sig_len)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'psa_sign_hash' identified by tree-sitter C parser.
+  priority: medium
+  line: 75
+  line_start: 75
+  line_end: 77
+  column_start: 14
+  column_end: 55
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[HASH_ALG]'
+  identifiers_read:
+  - key_id
+  - HASH_ALG
+  - hash
+  - HASH_LEN
+  - sig
+  - sig_len
+  identifiers_written: []
+  called_function: psa_sign_hash
+  call_node_code: psa_sign_hash(key_id, PSA_ALG_RSA_PKCS1V15_SIGN([HASH_ALG]), hash,
+    HASH_LEN, sig, sizeof(sig), &sig_len)
+- unit_id: ASTLITE-0038
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[HASH_ALG]'
+  code: PSA_ALG_RSA_PKCS1V15_SIGN([HASH_ALG])
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'PSA_ALG_RSA_PKCS1V15_SIGN' identified by tree-sitter C parser.
+  priority: medium
+  line: 75
+  line_start: 75
+  line_end: 75
+  column_start: 36
+  column_end: 73
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[HASH_ALG]'
+  identifiers_read:
+  - HASH_ALG
+  identifiers_written: []
+  called_function: PSA_ALG_RSA_PKCS1V15_SIGN
+  call_node_code: PSA_ALG_RSA_PKCS1V15_SIGN([HASH_ALG])
+- unit_id: ASTLITE-0039
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("psa_sign_hash returned %d sig_len=%zu\n", (int) status, sig_len)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 78
+  line_start: 78
+  line_end: 78
+  column_start: 5
+  column_end: 77
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - psa_sign_hash
+  - returned
+  - d
+  - zu
+  - n
+  - int
+  - status
+  identifiers_written:
+  - sig_len
+  called_function: printf
+  call_node_code: printf("psa_sign_hash returned %d sig_len=%zu\n", (int) status,
+    sig_len)
+- unit_id: ASTLITE-0040
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'if (status == PSA_SUCCESS) { printf("[TRIAGE] signing with invalid RSA key
+    succeeded\n"); } else { printf("[SAFE] invalid RSA key signing rejected by psa_sign_hash:
+    %d\n", (int) status); printf("[VERDICT] safe_fixed_behavior\n"); }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 80
+  line_start: 80
+  line_end: 86
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[TRIAGE]'
+  - '[SAFE]'
+  - '[VERDICT]'
+  identifiers_read:
+  - PSA_SUCCESS
+  - TRIAGE
+  - signing
+  - with
+  - invalid
+  - RSA
+  - key
+  - succeeded
+  - n
+  - else
+  - SAFE
+  - rejected
+  - by
+  - psa_sign_hash
+  - d
+  - int
+  - VERDICT
+  - safe_fixed_behavior
+  identifiers_written:
+  - status
+- unit_id: ASTLITE-0041
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: printf("[TRIAGE] signing with invalid RSA key succeeded\n");
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 81
+  line_start: 81
+  line_end: 81
+  column_start: 9
+  column_end: 69
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[TRIAGE]'
+  identifiers_read:
+  - TRIAGE
+  - signing
+  - with
+  - invalid
+  - RSA
+  - key
+  - succeeded
+  - n
+  identifiers_written: []
+- unit_id: ASTLITE-0042
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: printf("[TRIAGE] signing with invalid RSA key succeeded\n")
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 81
+  line_start: 81
+  line_end: 81
+  column_start: 9
+  column_end: 68
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[TRIAGE]'
+  identifiers_read:
+  - TRIAGE
+  - signing
+  - with
+  - invalid
+  - RSA
+  - key
+  - succeeded
+  - n
+  identifiers_written: []
+  called_function: printf
+  call_node_code: printf("[TRIAGE] signing with invalid RSA key succeeded\n")
+- unit_id: ASTLITE-0043
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: 'else { printf("[SAFE] invalid RSA key signing rejected by psa_sign_hash:
+    %d\n", (int) status); printf("[VERDICT] safe_fixed_behavior\n"); }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 82
+  line_start: 82
+  line_end: 86
+  column_start: 7
+  column_end: 6
+  node_type: else_clause
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  - '[VERDICT]'
+  identifiers_read:
+  - else
+  - SAFE
+  - invalid
+  - RSA
+  - key
+  - signing
+  - rejected
+  - by
+  - psa_sign_hash
+  - d
+  - n
+  - int
+  - status
+  - VERDICT
+  - safe_fixed_behavior
+  identifiers_written: []
+- unit_id: ASTLITE-0044
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: 'printf("[SAFE] invalid RSA key signing rejected by psa_sign_hash: %d\n",
+    (int) status);'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 83
+  line_start: 83
+  line_end: 84
+  column_start: 9
+  column_end: 30
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - SAFE
+  - invalid
+  - RSA
+  - key
+  - signing
+  - rejected
+  - by
+  - psa_sign_hash
+  - d
+  - n
+  - int
+  - status
+  identifiers_written: []
+- unit_id: ASTLITE-0045
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: 'printf("[SAFE] invalid RSA key signing rejected by psa_sign_hash: %d\n",
+    (int) status)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 83
+  line_start: 83
+  line_end: 84
+  column_start: 9
+  column_end: 29
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - SAFE
+  - invalid
+  - RSA
+  - key
+  - signing
+  - rejected
+  - by
+  - psa_sign_hash
+  - d
+  - n
+  - int
+  - status
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("[SAFE] invalid RSA key signing rejected by psa_sign_hash:
+    %d\n", (int) status)'
+- unit_id: ASTLITE-0046
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: psa_destroy_key(key_id)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'psa_destroy_key' identified by tree-sitter C parser.
+  priority: medium
+  line: 91
+  line_start: 91
+  line_end: 91
+  column_start: 9
+  column_end: 32
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - key_id
+  identifiers_written: []
+  called_function: psa_destroy_key
+  call_node_code: psa_destroy_key(key_id)
+- unit_id: ASTLITE-0047
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_psa_crypto_free();
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 92
+  line_start: 92
+  line_end: 92
+  column_start: 5
+  column_end: 31
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read: []
+  identifiers_written: []
+- unit_id: ASTLITE-0048
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_psa_crypto_free()
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_psa_crypto_free' identified by tree-sitter C parser.
+  priority: medium
+  line: 92
+  line_start: 92
+  line_end: 92
+  column_start: 5
+  column_end: 30
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read: []
+  identifiers_written: []
+  called_function: mbedtls_psa_crypto_free
+  call_node_code: mbedtls_psa_crypto_free()
+role_summary:
+  cleanup: 2
+  entrypoint: 1
+  helper_function: 18
+  input_construction: 2
+  input_preparation: 4
+  mutation_point: 19
+  oracle: 2
+mask_level_summary:
+  block: 2
+  function_call: 29
+  statement: 14
+  value: 3

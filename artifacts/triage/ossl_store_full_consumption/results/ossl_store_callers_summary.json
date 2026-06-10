@@ -1,0 +1,80 @@
+{
+  "artifact": "artifacts/triage/ossl_store_full_consumption",
+  "classification_counts": {
+    "reads_all_objects_and_checks_error": 3,
+    "takes_first_object_only": 5,
+    "unknown_needs_review": 1
+  },
+  "code_call_sites_reviewed": 9,
+  "note": "Counts include test call sites where OSSL_STORE_load appears in source. Production-relevant reviewed sites are apps/lib/apps.c, apps/storeutl.c, ssl/ssl_cert.c, and crypto/x509/by_store.c.",
+  "raw_scan_file": "artifacts/triage/ossl_store_full_consumption/results/ossl_store_callers_scan.txt",
+  "raw_textual_matches_in_scan": 49,
+  "reads_all_objects_and_checks_error": 3,
+  "records": [
+    {
+      "file": "apps/lib/apps.c",
+      "line": 1006,
+      "pattern": "takes_first_object_only",
+      "reason": "loop stops once requested output pointer such as pcert/ppkey/ppubkey is filled; malformed tail after first object may not be read by this helper in single-object use",
+      "representative": "while requested outputs remain and !OSSL_STORE_eof(ctx), load next info; sets pointer NULL once found"
+    },
+    {
+      "file": "apps/storeutl.c",
+      "line": 403,
+      "pattern": "reads_all_objects_and_checks_error",
+      "reason": "for(;;) continues until EOF and checks OSSL_STORE_error when load returns NULL",
+      "representative": "CLI storeutl full loop"
+    },
+    {
+      "file": "ssl/ssl_cert.c",
+      "line": 1012,
+      "pattern": "reads_all_objects_and_checks_error",
+      "reason": "loop condition checks both !OSSL_STORE_eof(ctx) and !OSSL_STORE_error(ctx)",
+      "representative": "add_uris_recursive scans store entries"
+    },
+    {
+      "file": "crypto/x509/by_store.c",
+      "line": 59,
+      "pattern": "unknown_needs_review",
+      "reason": "loops over objects, but NULL means error or EOF and breaks without distinguishing OSSL_STORE_error",
+      "representative": "cache_objects for X509_LOOKUP store cache"
+    },
+    {
+      "file": "test/provider_pkey_test.c",
+      "line": 342,
+      "pattern": "takes_first_object_only",
+      "reason": "test helper stops once pkey is found",
+      "representative": "test_pkey_with_provider"
+    },
+    {
+      "file": "test/provider_pkey_test.c",
+      "line": 393,
+      "pattern": "takes_first_object_only",
+      "reason": "test helper stops once pkey is found",
+      "representative": "test_pkey_delete first iteration"
+    },
+    {
+      "file": "test/provider_pkey_test.c",
+      "line": 419,
+      "pattern": "reads_all_objects_and_checks_error",
+      "reason": "test loop continues until EOF and expects NULL objects after deletion",
+      "representative": "test_pkey_delete second iteration"
+    },
+    {
+      "file": "test/ossl_store_test.c",
+      "line": 120,
+      "pattern": "takes_first_object_only",
+      "reason": "test expression loads one object and does not continue to EOF",
+      "representative": "winstore search test"
+    },
+    {
+      "file": "test/ossl_store_test.c",
+      "line": 153,
+      "pattern": "takes_first_object_only",
+      "reason": "test helper stops once params pkey is found",
+      "representative": "get_params"
+    }
+  ],
+  "takes_first_object_only": 5,
+  "unknown_needs_review": 1
+}

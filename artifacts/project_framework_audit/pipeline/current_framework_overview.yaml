@@ -1,0 +1,86 @@
+audit_name: current_framework_overview
+one_sentence_definition: >
+  The project is a historical PoC/root-cause driven vulnerability-pattern
+  migration and new-candidate discovery framework for cryptographic libraries.
+input_sources:
+  - historical PoC / issue / patch / regression test
+  - extracted root cause, mutation point, failure signal, and oracle
+  - API constraints, unit-test evidence, raw pattern notes, and Wycheproof vectors
+core_components:
+  pattern_bank:
+    role: Normalizes historical cases, family labels, verdicts, feedback, and scheduling signals.
+    key_paths:
+      - artifacts/pattern_bank/unified_pattern_bank.yaml
+      - artifacts/pattern_bank/scheduler_seed.yaml
+      - knowledge_raw/poc_patterns/unified_patterns.md
+  rag:
+    role: Indexes API constraints, pattern knowledge, feedback, and evidence for candidate evaluation and adapter context.
+    key_paths:
+      - knowledge/rag_builder.py
+      - knowledge/rag_query.py
+      - knowledge_base/chroma
+  scheduler:
+    role: Prioritizes families and routes candidates into A/B/C/D execution paths.
+    key_paths:
+      - analysis/build_candidate_queue.py
+      - analysis/plan_execution_paths.py
+      - artifacts/execution_plan/execution_paths.md
+  feedback:
+    role: Stores observed verdicts and promotes reusable dimensions back into pattern bank and scheduling.
+    key_paths:
+      - artifacts/feedback/
+      - mutation/collect_mutation_feedback.py
+      - mutation/score_mutation_feedback.py
+execution_paths:
+  A_recipe_slot_cross_library_migration: GLM/LLM slot-bindings, adapter_validate, template render, compile/run/analyze.
+  B_controlled_family_mutation: Family matrix expansion with controlled renderer/analyzer.
+  C_app_level_validation_gap: CLI/app-level behavior triage with output/stderr/exit oracles.
+  D_crash_sanitizer_evidence_audit: Crash/sanitizer evidence qualification before runnable family promotion.
+llm_usage:
+  allowed: strict recipe-slot filling only
+  forbidden:
+    - init_block
+    - input_construction_block
+    - trigger_block
+    - cleanup_block
+    - oracle_strategy
+mask_usage:
+  path_a: required for source-template traceability and selected mutation units
+  other_paths: optional or family-specific; not globally required
+oracle_definition_and_validation:
+  definition_sites:
+    - pattern bank entries
+    - adapter recipes
+    - family analyzers
+    - runner/analyze_results.py
+    - runner/analyze_cross_results.py
+  validation_sites:
+    - compile_run outputs
+    - analyzer verdicts
+    - migration pair summaries
+    - feedback artifacts
+final_outputs:
+  - migration verdicts
+  - safe/bug/triage classifications
+  - pattern feedback
+  - scheduler seeds
+  - next-stage expansion plans
+still_matches_original_goal: true
+mermaid: |
+  flowchart TD
+    A[Historical PoC / Issue / Patch] --> B[Root cause / mutation point / oracle]
+    B --> C[Pattern Bank]
+    C --> D[RAG Knowledge Index]
+    D --> E[Candidate Triage / Scheduler]
+    E --> F[Execution Path Planner]
+    F --> G[A: Recipe-slot cross-library migration]
+    F --> H[B: Controlled family mutation]
+    F --> I[C: App-level validation gap]
+    F --> J[D: Crash/sanitizer evidence audit]
+    G --> K[Render / Compile / Run / Analyze]
+    H --> K
+    I --> K
+    J --> K
+    K --> L[Feedback Store]
+    L --> M[Pattern Expansion]
+    M --> C

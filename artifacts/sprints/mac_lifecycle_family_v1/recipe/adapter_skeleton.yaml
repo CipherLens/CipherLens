@@ -1,0 +1,52 @@
+schema_version: 1
+family: mac_lifecycle
+status: skeleton_needs_validation
+llm_freeform_c_allowed: false
+adapter_mode: recipe_slot_filling_preparation
+
+source_library: openssl
+target_library: mbedtls_psa
+
+source_candidate_apis:
+  - EVP_MAC_init
+  - EVP_MAC_update
+  - EVP_MAC_final
+  - EVP_MAC_CTX_free
+  - EVP_MAC_CTX_get_mac_size
+
+target_candidate_apis:
+  - psa_mac_sign_setup
+  - psa_mac_update
+  - psa_mac_sign_finish
+  - psa_mac_abort
+
+slot_bindings:
+  OPENSSL:
+    MAC_INIT_API: EVP_MAC_init
+    MAC_UPDATE_API: EVP_MAC_update
+    MAC_FINAL_API: EVP_MAC_final
+    MAC_FREE_API: EVP_MAC_CTX_free
+    MAC_ALGORITHM: CMAC
+
+  MBEDTLS_PSA:
+    MAC_INIT_API: psa_mac_sign_setup
+    MAC_UPDATE_API: psa_mac_update
+    MAC_FINAL_API: psa_mac_sign_finish
+    MAC_ABORT_API: psa_mac_abort
+    MAC_ALGORITHM: PSA_ALG_CMAC
+
+semantic_oracle:
+  repeated_final:
+    openssl_observed: permissive_or_legacy_behavior
+    psa_expected: bad_state_after_finish
+    status: needs_validation
+
+  update_after_final:
+    openssl_observed: permissive_or_legacy_behavior
+    psa_expected: bad_state_after_finish
+    status: needs_validation
+
+validation_notes:
+  - This skeleton is not a validated adapter.
+  - The next step must run through adapter_validate after concrete recipe-slot adapter generation.
+  - Free-form init_block, trigger_block, cleanup_block, and oracle_strategy should not be accepted from LLM output in recipe-slot mode.

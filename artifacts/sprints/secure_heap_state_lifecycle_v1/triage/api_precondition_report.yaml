@@ -1,0 +1,29 @@
+report_name: CRYPTO_secure_used precondition report
+api:
+  - CRYPTO_secure_used
+  - CRYPTO_secure_malloc_init
+  - CRYPTO_secure_malloc_done
+  - CRYPTO_secure_malloc_initialized
+local_source_version: openssl-3.5.5
+source_evidence:
+  mem_sec_c: ${CLEAN_SOURCES_ROOT}/openssl-3.5.5/crypto/mem_sec.c
+  manpage: ${CLEAN_SOURCES_ROOT}/openssl-3.5.5/doc/man3/OPENSSL_secure_malloc.pod
+findings:
+  crypto_secure_used_source_guard: no secure_mem_initialized guard before CRYPTO_THREAD_read_lock(sec_malloc_lock)
+  crypto_secure_allocated_source_guard: has secure_mem_initialized guard and returns 0 before init
+  initialized_check_api_exists: true
+  manpage_mentions_preinit_secure_used: false
+  manpage_secure_used_text: returns the number of bytes allocated in the secure heap
+precondition_status: needs_manual_doc_confirmation
+interpretation: >
+  Local OpenSSL 3.5.5 source suggests CRYPTO_secure_used() assumes secure heap
+  lock state is initialized, because it calls CRYPTO_THREAD_read_lock(sec_malloc_lock)
+  without an explicit secure_mem_initialized check. The manpage documents return
+  semantics but does not clearly state pre-init behavior for CRYPTO_secure_used().
+safe_behavior: initialized and initialized_check_then_used return a defined value without crash
+crash_behavior: pre-init or done-then-used path produces SIGSEGV, exit 139, ASAN/UBSAN, or Valgrind Invalid read
+oracle_distinction: >
+  A documented precondition failure without crash is safe_precondition_failure or
+  api_misuse_needs_triage. A NULL dereference is crash_candidate only when an
+  explicit signal/sanitizer/Valgrind crash signal is observed. Ordinary nonzero
+  exit without crash evidence is not a crash.

@@ -1,0 +1,133 @@
+template_id: MAC_LIFECYCLE_V1_SOURCE_TEMPLATE
+pattern_id: OPENSSL-ISSUE-22842
+harness_family: mac_lifecycle
+oracle_type: lifecycle_state_transition_semantic_oracle
+evidence_mode: manual_structured_evidence_for_llm_verification
+evidence_collection:
+  mode: manual_structured_evidence_for_llm_verification
+  source_note: Sprint-local evidence assembled to verify GLM strict recipe-slot filling; not automatic RAG/candidate_mapper output.
+  selected_mask_context:
+    available: true
+    source_file: artifacts/sprints/mac_lifecycle_family_v1/mask/selected_mask_units.yaml
+    template_id: MAC_LIFECYCLE_V1_SOURCE_TEMPLATE
+    harness_family: mac_lifecycle
+    trigger_apis:
+      - EVP_MAC_final
+      - EVP_MAC_update
+      - psa_mac_sign_finish
+      - psa_mac_update
+target_candidates:
+  - target_library: openssl_mbedtls
+    target_api: mac_lifecycle
+    decision: generate
+    migration_applicability: applicable_for_recipe_slot_verification
+    operation_family: MAC lifecycle
+    function_behavior: Compare OpenSSL EVP_MAC CMAC lifecycle transitions with mbedTLS PSA MAC lifecycle transitions.
+    parameter_structure: Both sides expose operation/context state, update input, final output buffer, output length, and return-code/status observability.
+    vulnerability_path: repeated_final and update_after_final exercise terminal-state handling after successful MAC finalization.
+    harness_feasibility: Recipe provides fixed OpenSSL EVP_MAC and mbedTLS PSA MAC setup/update/final/abort/free slots.
+    oracle_observability: return_code, output_length, output_buffer_state, operation_state, sanitizer_signal
+    scores:
+      operation_family: 90
+      function_behavior: 85
+      parameter_structure: 80
+      vulnerability_path: 80
+      harness_feasibility: 85
+      oracle_observability: 85
+      final_score: 83
+    reason: OpenSSL EVP_MAC CMAC and mbedTLS PSA MAC preserve the lifecycle state-transition oracle needed for repeated-final and update-after-final comparison.
+    parameter_mapping:
+      openssl_context: EVP_MAC_CTX
+      openssl_algorithm: CMAC
+      openssl_fetch_api: EVP_MAC_fetch
+      openssl_ctx_new_api: EVP_MAC_CTX_new
+      openssl_init_api: EVP_MAC_init
+      openssl_update_api: EVP_MAC_update
+      openssl_final_api: EVP_MAC_final
+      openssl_free_api: EVP_MAC_CTX_free
+      mbedtls_operation: psa_mac_operation_t
+      mbedtls_algorithm: PSA_ALG_CMAC
+      mbedtls_setup_api: psa_mac_sign_setup
+      mbedtls_update_api: psa_mac_update
+      mbedtls_final_api: psa_mac_sign_finish
+      mbedtls_abort_api: psa_mac_abort
+    preserved_vulnerability_features:
+      - lifecycle state transition after terminal finalization
+      - repeated_final observability
+      - update_after_final observability
+      - caller-visible return code or status
+      - caller-visible output length
+      - sanitizer signal if lifecycle misuse reaches memory-unsafe behavior
+    lost_or_weakened_features:
+      - OpenSSL provider semantics may allow legacy or permissive repeated final behavior that needs triage rather than immediate vulnerability classification.
+      - mbedTLS PSA has no direct public equivalent for OpenSSL get-size-before-setup queries.
+    evidence:
+      inferred_features:
+        operation_family: mac_lifecycle
+        target_api_features:
+          - openssl EVP_MAC CMAC context lifecycle
+          - mbedTLS PSA MAC operation lifecycle
+          - repeated_final
+          - update_after_final
+          - lifecycle_state_transition_oracle
+        oracle_observables:
+          - return_code
+          - output_length
+          - output_buffer_state
+          - operation_state
+          - sanitizer_signal
+      queries:
+        - kind: manual_api_semantics
+          use_for_feature_inference: true
+          query: OpenSSL EVP_MAC CMAC repeated final update after final lifecycle state transition oracle
+          json_mode: true
+          top_k_requested: 5
+          returncode: 0
+          results:
+            - rank: 1
+              score: 1.0
+              distance: 0.0
+              layer: api_constraints
+              source_file: knowledge_base/api_cards/openssl/EVP_MAC_final.yaml
+              text: EVP_MAC_final exposes success/failure return code, output buffer, and output length for MAC finalization; lifecycle behavior after final is oracle-relevant.
+              metadata:
+                library: openssl
+                api: EVP_MAC_final
+                family: mac_lifecycle
+            - rank: 2
+              score: 0.95
+              distance: 0.05
+              layer: api_constraints
+              source_file: knowledge_base/api_cards/openssl/EVP_MAC_CTX_get_mac_size.yaml
+              text: OpenSSL MAC context queries and operations are lifecycle-sensitive; differences after final or abort should be treated as semantic divergence candidates or projection limitations.
+              metadata:
+                library: openssl
+                api: EVP_MAC_CTX_get_mac_size
+                family: mac_lifecycle
+        - kind: manual_api_semantics
+          use_for_feature_inference: true
+          query: mbedTLS PSA MAC repeated final update after finish bad state lifecycle oracle
+          json_mode: true
+          top_k_requested: 5
+          returncode: 0
+          results:
+            - rank: 1
+              score: 1.0
+              distance: 0.0
+              layer: api_constraints
+              source_file: knowledge_base/api_cards/mbedtls/psa_mac_sign_finish.yaml
+              text: psa_mac_sign_finish terminates a PSA MAC sign operation; repeated finish or update after finish should expose BAD_STATE-like safe rejection.
+              metadata:
+                library: mbedtls
+                api: psa_mac_sign_finish
+                family: mac_lifecycle
+            - rank: 2
+              score: 0.95
+              distance: 0.05
+              layer: api_constraints
+              source_file: artifacts/sprints/mac_lifecycle_family_v1/evidence/rag_mbedtls_psa_mac_lifecycle.json
+              text: Local MAC lifecycle evidence records repeated finish, third finish, and update-after-finish as stable PSA bad-state safe rejection signals.
+              metadata:
+                library: mbedtls
+                api: psa_mac_update
+                family: mac_lifecycle

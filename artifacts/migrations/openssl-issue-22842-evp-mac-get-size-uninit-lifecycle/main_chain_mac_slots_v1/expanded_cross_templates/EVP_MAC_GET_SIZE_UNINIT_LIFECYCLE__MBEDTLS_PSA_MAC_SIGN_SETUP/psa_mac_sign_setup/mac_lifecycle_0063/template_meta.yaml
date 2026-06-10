@@ -1,0 +1,351 @@
+template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP__mac_lifecycle_0063
+pattern_id: OPENSSL-ISSUE-22842
+source_library: openssl
+source_component: EVP/MAC
+harness_family: object_state_lifecycle
+oracle_type: mac_context_size_lifecycle_oracle
+source_api:
+- EVP_MAC_fetch
+- EVP_MAC_CTX_new
+- EVP_MAC_CTX_get_mac_size
+- EVP_MAC_init
+- EVP_MAC_CTX_free
+- EVP_MAC_free
+vulnerability_class: mac_context_uninitialized_state_query
+description: 'Cross-library template for MAC context lifecycle size behavior. Source:
+  OpenSSL EVP_MAC_CTX_get_mac_size before and after EVP_MAC_init. Target: mbedTLS
+  md/HMAC pre-setup safe rejection and post-setup size query. This is an object lifecycle
+  semantic projection, not a strict provider algctx NULL dereference reproduction.'
+mask_slots:
+- name: MAC_NAME
+  type: string
+  default: HMAC
+  variants:
+  - HMAC
+- name: DIGEST_NAME
+  type: string
+  default: SHA256
+  variants:
+  - SHA256
+- name: KEY_BYTES
+  type: byte_array
+  default: '"rag-seed-hmac-key"'
+  variants:
+  - '"rag-seed-hmac-key"'
+- name: KEY_LEN
+  type: integer
+  default: 17
+  variants:
+  - 17
+- name: EXPECTED_MAC_SIZE
+  type: integer
+  default: 32
+  variants:
+  - 32
+required_observables:
+- pre_setup_size_query_result
+- init_return_code
+- post_setup_size_query_result
+- crash_or_sanitizer_signal
+- process_exit_code
+safe_behavior:
+  condition: pre-init size query does not crash and post-init size equals expected
+    MAC size
+  description: MAC context lifecycle safely handles pre-init state query and initialized
+    size query
+bug_behavior:
+  condition: ASAN/UBSAN crash or SEGV during pre-init EVP_MAC_CTX_get_mac_size
+  description: Uninitialized MAC context state query reaches unsafe NULL provider
+    algctx dereference
+triage_behavior:
+  condition: pre-init size is nonzero, post-init size mismatch, or init fails before
+    observation
+  description: MAC context lifecycle behavior differs from expected projection and
+    needs manual review
+semantic_projection:
+  kind: object_lifecycle_semantic_projection
+  strict_equivalence: false
+  note: mbedTLS public md/HMAC APIs do not expose OpenSSL provider algctx internals.
+    The harness validates safe context lifecycle behavior.
+status: cross_generated_from_llm_adapter
+source_template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE
+cross_library:
+  mbedtls:
+    target_api: psa_mac_sign_setup
+    target_template: tmpl_mbedtls.c
+    adapter_source: recipe_slot_bindings
+    applicability: generate
+    preserved_features:
+    - PSA MAC operation lifecycle represents pre-setup and initialized operation states
+    - pre-setup psa_mac_update return code observes safe rejection
+    - psa_mac_sign_setup plus psa_mac_update plus psa_mac_sign_finish observes initialized
+      behavior
+    - crash/sanitizer signals remain observable
+    lost_or_weakened_features:
+    - PSA MAC operation does not expose EVP_MAC_CTX_get_mac_size
+    - exact OpenSSL EVP_MAC_CTX_get_mac_size NULL dereference path is not preserved
+    - this validates lifecycle safety rather than provider-internal structure
+    llm_status: ok
+    adapter_recipe: adapter_recipes/mbedtls/psa_mac_sign_setup.mac_context_size_lifecycle_oracle.yaml
+    slot_bindings:
+      key_type: PSA_KEY_TYPE_HMAC
+      key_usage_flags: PSA_KEY_USAGE_SIGN_MESSAGE
+      key_algorithm: PSA_ALG_HMAC(PSA_ALG_SHA_256)
+      key_bytes: '"rag-seed-hmac-key"'
+      key_len: '17'
+      message_bytes: '"mac lifecycle message"'
+      message_len: '21'
+      mac_len: '32'
+mutation_points:
+- name: DIGEST_OR_CIPHER
+  placeholder: '[DIGEST_OR_CIPHER]'
+  type: string
+  default: AES-256-CBC
+  values:
+  - AES-256-CBC
+  priority: high
+- name: EXPECTED_MAC_SIZE
+  placeholder: '[EXPECTED_MAC_SIZE]'
+  type: int
+  default: 16
+  values:
+  - 16
+  priority: high
+- name: EXPECTED_VERDICT_CLASS
+  placeholder: '[EXPECTED_VERDICT_CLASS]'
+  type: string
+  default: safe_reject_projection
+  values:
+  - safe_reject_projection
+  priority: high
+- name: KEY_BYTES
+  placeholder: '[KEY_BYTES]'
+  type: c_code
+  default: "{\n    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,\n    0x08, 0x09,\
+    \ 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,\n    0x10, 0x11, 0x12, 0x13, 0x14, 0x15,\
+    \ 0x16, 0x17,\n    0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f\n}"
+  values:
+  - "{\n    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,\n    0x08, 0x09, 0x0a,\
+    \ 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,\n    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16,\
+    \ 0x17,\n    0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f\n}"
+  priority: high
+- name: KEY_LEN
+  placeholder: '[KEY_LEN]'
+  type: int
+  default: 32
+  values:
+  - 32
+  priority: high
+- name: MAC_LEN
+  placeholder: '[MAC_LEN]'
+  type: int
+  default: 64
+  values:
+  - 64
+  priority: high
+- name: MAC_NAME
+  placeholder: '[MAC_NAME]'
+  type: string
+  default: CMAC
+  values:
+  - CMAC
+  priority: high
+- name: MESSAGE_BYTES
+  placeholder: '[MESSAGE_BYTES]'
+  type: c_code
+  default: "{\n    0x6d, 0x61, 0x63, 0x20, 0x6c, 0x69, 0x66, 0x65,\n    0x63, 0x79,\
+    \ 0x63, 0x6c, 0x65, 0x20, 0x6d, 0x73,\n    0x67\n}"
+  values:
+  - "{\n    0x6d, 0x61, 0x63, 0x20, 0x6c, 0x69, 0x66, 0x65,\n    0x63, 0x79, 0x63,\
+    \ 0x6c, 0x65, 0x20, 0x6d, 0x73,\n    0x67\n}"
+  priority: high
+- name: MESSAGE_LEN
+  placeholder: '[MESSAGE_LEN]'
+  type: int
+  default: 17
+  values:
+  - 17
+  priority: high
+- name: SOURCE_LIFECYCLE_SEQUENCE
+  placeholder: '[SOURCE_LIFECYCLE_SEQUENCE]'
+  type: c_code
+  default: "init_ok = EVP_MAC_init(ctx, key, KEY_LEN, params);\n    printf(\"SOURCE\
+    \ wrong_digest_combo EVP_MAC_init returned %d\\n\", init_ok);\n    if (init_ok\
+    \ != 1) {\n        printf(\"[OK] mac_context_lifecycle: incompatible source MAC\
+    \ parameters rejected safely\\n\");\n        ret = 0;\n    } else {\n        printf(\"\
+    [TRIAGE] mac_context_lifecycle: incompatible source MAC parameters unexpectedly\
+    \ initialized\\n\");\n    }"
+  values:
+  - "init_ok = EVP_MAC_init(ctx, key, KEY_LEN, params);\n    printf(\"SOURCE wrong_digest_combo\
+    \ EVP_MAC_init returned %d\\n\", init_ok);\n    if (init_ok != 1) {\n        printf(\"\
+    [OK] mac_context_lifecycle: incompatible source MAC parameters rejected safely\\\
+    n\");\n        ret = 0;\n    } else {\n        printf(\"[TRIAGE] mac_context_lifecycle:\
+    \ incompatible source MAC parameters unexpectedly initialized\\n\");\n    }"
+  priority: high
+- name: SOURCE_MAC_SETUP_PARAMS
+  placeholder: '[SOURCE_MAC_SETUP_PARAMS]'
+  type: c_code
+  default: "params[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST, \"\
+    SHA256\", 0);\n    params[1] = OSSL_PARAM_construct_end();"
+  values:
+  - "params[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST, \"SHA256\"\
+    , 0);\n    params[1] = OSSL_PARAM_construct_end();"
+  priority: high
+- name: SOURCE_ORACLE_OBSERVATION
+  placeholder: '[SOURCE_ORACLE_OBSERVATION]'
+  type: string
+  default: '"safe_reject_projection"'
+  values:
+  - '"safe_reject_projection"'
+  priority: high
+- name: TARGET_KEY_ALGORITHM
+  placeholder: '[TARGET_KEY_ALGORITHM]'
+  type: string
+  default: PSA_ALG_HMAC(PSA_ALG_SHA_256)
+  values:
+  - PSA_ALG_HMAC(PSA_ALG_SHA_256)
+  priority: high
+- name: TARGET_KEY_TYPE
+  placeholder: '[TARGET_KEY_TYPE]'
+  type: string
+  default: PSA_KEY_TYPE_AES
+  values:
+  - PSA_KEY_TYPE_AES
+  priority: high
+- name: TARGET_LIFECYCLE_SEQUENCE
+  placeholder: '[TARGET_LIFECYCLE_SEQUENCE]'
+  type: c_code
+  default: "status = psa_mac_sign_setup(&operation, key_id, PSA_ALG_HMAC(PSA_ALG_SHA_256));\n\
+    \    print_psa_status(\"TARGET wrong_digest_combo psa_mac_sign_setup\", status);\n\
+    \    if (status != PSA_SUCCESS) {\n        printf(\"[OK] mac_context_lifecycle:\
+    \ incompatible PSA key type / algorithm rejected safely\\n\");\n        ret =\
+    \ 0;\n    } else {\n        printf(\"[TRIAGE] mac_context_lifecycle: incompatible\
+    \ PSA key type / algorithm unexpectedly initialized\\n\");\n    }"
+  values:
+  - "status = psa_mac_sign_setup(&operation, key_id, PSA_ALG_HMAC(PSA_ALG_SHA_256));\n\
+    \    print_psa_status(\"TARGET wrong_digest_combo psa_mac_sign_setup\", status);\n\
+    \    if (status != PSA_SUCCESS) {\n        printf(\"[OK] mac_context_lifecycle:\
+    \ incompatible PSA key type / algorithm rejected safely\\n\");\n        ret =\
+    \ 0;\n    } else {\n        printf(\"[TRIAGE] mac_context_lifecycle: incompatible\
+    \ PSA key type / algorithm unexpectedly initialized\\n\");\n    }"
+  priority: high
+- name: TARGET_MAC_SETUP_PARAMS
+  placeholder: '[TARGET_MAC_SETUP_PARAMS]'
+  type: c_code
+  default: psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_MESSAGE);
+  values:
+  - psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_MESSAGE);
+  priority: high
+- name: TARGET_ORACLE_OBSERVATION
+  placeholder: '[TARGET_ORACLE_OBSERVATION]'
+  type: string
+  default: '"safe_reject_projection"'
+  values:
+  - '"safe_reject_projection"'
+  priority: high
+generation_policy:
+  max_cases: 1
+  priority:
+  - DIGEST_OR_CIPHER
+  - EXPECTED_MAC_SIZE
+  - EXPECTED_VERDICT_CLASS
+  - KEY_BYTES
+  - KEY_LEN
+  - MAC_LEN
+  - MAC_NAME
+  - MESSAGE_BYTES
+  - MESSAGE_LEN
+  - SOURCE_LIFECYCLE_SEQUENCE
+  - SOURCE_MAC_SETUP_PARAMS
+  - SOURCE_ORACLE_OBSERVATION
+  - TARGET_KEY_ALGORITHM
+  - TARGET_KEY_TYPE
+  - TARGET_LIFECYCLE_SEQUENCE
+  - TARGET_MAC_SETUP_PARAMS
+  - TARGET_ORACLE_OBSERVATION
+render_matrix_case:
+  case_id: mac_lifecycle_0063
+  source_matrix_entry:
+    case_id: mac_lifecycle_0063
+    values:
+      mac_algorithm: CMAC
+      digest_or_cipher: AES-256-CBC
+      lifecycle_sequence: wrong_digest_combo
+    oracle_observables:
+    - return_code
+    - output_length
+    - operation_state
+    - sanitizer_signal
+    expected_candidate_types:
+    - unexpected_success_candidate
+    - failure_path_output_state_triage
+    - allowed_legacy_semantics
+    - safe_negative
+    - crash_candidate
+  mapped_values:
+    mac_algorithm: CMAC
+    digest_or_cipher: AES-256-CBC
+    lifecycle_sequence: wrong_digest_combo
+    source_render_slots:
+      MAC_NAME: CMAC
+      DIGEST_NAME: SHA256
+      SOURCE_MAC_SETUP_PARAMS: "params[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST,\
+        \ \"SHA256\", 0);\n    params[1] = OSSL_PARAM_construct_end();"
+      SOURCE_LIFECYCLE_SEQUENCE: "init_ok = EVP_MAC_init(ctx, key, KEY_LEN, params);\n\
+        \    printf(\"SOURCE wrong_digest_combo EVP_MAC_init returned %d\\n\", init_ok);\n\
+        \    if (init_ok != 1) {\n        printf(\"[OK] mac_context_lifecycle: incompatible\
+        \ source MAC parameters rejected safely\\n\");\n        ret = 0;\n    } else\
+        \ {\n        printf(\"[TRIAGE] mac_context_lifecycle: incompatible source\
+        \ MAC parameters unexpectedly initialized\\n\");\n    }"
+      SOURCE_ORACLE_OBSERVATION: '"safe_reject_projection"'
+    target_render_slots:
+      TARGET_KEY_TYPE: PSA_KEY_TYPE_AES
+      TARGET_KEY_ALGORITHM: PSA_ALG_HMAC(PSA_ALG_SHA_256)
+      TARGET_MAC_SETUP_PARAMS: psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_MESSAGE);
+      TARGET_LIFECYCLE_SEQUENCE: "status = psa_mac_sign_setup(&operation, key_id,\
+        \ PSA_ALG_HMAC(PSA_ALG_SHA_256));\n    print_psa_status(\"TARGET wrong_digest_combo\
+        \ psa_mac_sign_setup\", status);\n    if (status != PSA_SUCCESS) {\n     \
+        \   printf(\"[OK] mac_context_lifecycle: incompatible PSA key type / algorithm\
+        \ rejected safely\\n\");\n        ret = 0;\n    } else {\n        printf(\"\
+        [TRIAGE] mac_context_lifecycle: incompatible PSA key type / algorithm unexpectedly\
+        \ initialized\\n\");\n    }"
+      TARGET_ORACLE_OBSERVATION: '"safe_reject_projection"'
+    common_render_slots:
+      DIGEST_OR_CIPHER: AES-256-CBC
+      EXPECTED_MAC_SIZE: 16
+      EXPECTED_VERDICT_CLASS: safe_reject_projection
+      KEY_BYTES: "{\n    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,\n    0x08,\
+        \ 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,\n    0x10, 0x11, 0x12, 0x13, 0x14,\
+        \ 0x15, 0x16, 0x17,\n    0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f\n}"
+      KEY_LEN: 32
+      MESSAGE_BYTES: "{\n    0x6d, 0x61, 0x63, 0x20, 0x6c, 0x69, 0x66, 0x65,\n   \
+        \ 0x63, 0x79, 0x63, 0x6c, 0x65, 0x20, 0x6d, 0x73,\n    0x67\n}"
+      MESSAGE_LEN: 17
+      MAC_LEN: 64
+  unsupported_dimensions: []
+  source_render_slots:
+    MAC_NAME: CMAC
+    DIGEST_NAME: SHA256
+    SOURCE_MAC_SETUP_PARAMS: "params[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST,\
+      \ \"SHA256\", 0);\n    params[1] = OSSL_PARAM_construct_end();"
+    SOURCE_LIFECYCLE_SEQUENCE: "init_ok = EVP_MAC_init(ctx, key, KEY_LEN, params);\n\
+      \    printf(\"SOURCE wrong_digest_combo EVP_MAC_init returned %d\\n\", init_ok);\n\
+      \    if (init_ok != 1) {\n        printf(\"[OK] mac_context_lifecycle: incompatible\
+      \ source MAC parameters rejected safely\\n\");\n        ret = 0;\n    } else\
+      \ {\n        printf(\"[TRIAGE] mac_context_lifecycle: incompatible source MAC\
+      \ parameters unexpectedly initialized\\n\");\n    }"
+    SOURCE_ORACLE_OBSERVATION: '"safe_reject_projection"'
+  target_render_slots:
+    TARGET_KEY_TYPE: PSA_KEY_TYPE_AES
+    TARGET_KEY_ALGORITHM: PSA_ALG_HMAC(PSA_ALG_SHA_256)
+    TARGET_MAC_SETUP_PARAMS: psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_MESSAGE);
+    TARGET_LIFECYCLE_SEQUENCE: "status = psa_mac_sign_setup(&operation, key_id, PSA_ALG_HMAC(PSA_ALG_SHA_256));\n\
+      \    print_psa_status(\"TARGET wrong_digest_combo psa_mac_sign_setup\", status);\n\
+      \    if (status != PSA_SUCCESS) {\n        printf(\"[OK] mac_context_lifecycle:\
+      \ incompatible PSA key type / algorithm rejected safely\\n\");\n        ret\
+      \ = 0;\n    } else {\n        printf(\"[TRIAGE] mac_context_lifecycle: incompatible\
+      \ PSA key type / algorithm unexpectedly initialized\\n\");\n    }"
+    TARGET_ORACLE_OBSERVATION: '"safe_reject_projection"'
+  expected_candidate_types:
+  - safe_negative
+  - projection_limitation

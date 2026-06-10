@@ -1,0 +1,58 @@
+{
+  "commands_reviewed": [
+    {
+      "command": "openssl x509 -inform DER -in <x509_der> -noout",
+      "source": "apps/x509.c:848 -> load_cert_pass -> load_key_certs_crls"
+    },
+    {
+      "command": "openssl pkey -inform DER -in <pkcs8_der> -noout",
+      "source": "apps/pkey.c:228 -> load_key -> load_key_certs_crls"
+    },
+    {
+      "command": "openssl pkey -pubin -inform DER -in <pubkey_der> -noout",
+      "source": "apps/pkey.c:226 -> load_pubkey -> load_key_certs_crls"
+    },
+    {
+      "command": "openssl pkcs8 -inform DER -in <pkcs8_der> -nocrypt -out /dev/null",
+      "source": "apps/pkcs8.c:247 -> load_key -> load_key_certs_crls"
+    },
+    {
+      "command": "openssl storeutl <file>",
+      "source": "apps/storeutl.c:403 -> direct full OSSL_STORE_load loop"
+    }
+  ],
+  "crl_req_applicability": "No CRL or CSR DER inputs were generated in this OSSL_STORE malformed-tail artifact. Also, load_csr uses d2i_X509_REQ_bio/PEM_read_bio_X509_REQ rather than OSSL_STORE according to apps/lib/apps.c:479-505.",
+  "helper": {
+    "definition_line": 891,
+    "error_handling": "if OSSL_STORE_load(ctx) returns NULL, the loop continues; the code does not check OSSL_STORE_error at that point",
+    "file": "apps/lib/apps.c",
+    "function": "load_key_certs_crls",
+    "loop_condition": "while requested output pointers remain and !OSSL_STORE_eof(ctx)",
+    "stop_condition": "for single-object loads, once ppkey/ppubkey/pcert/pcrl is filled, that pointer is set to NULL and the loop exits before reading remaining bytes/objects",
+    "store_load_line": 1006,
+    "takes_first_object_only": "yes for single-object wrapper use such as load_cert_pass/load_key/load_pubkey"
+  },
+  "wrappers": [
+    {
+      "calls": "load_key_certs_crls(..., &cert, ...)",
+      "file": "apps/lib/apps.c",
+      "function": "load_cert_pass",
+      "line": 435,
+      "used_by": "apps/x509.c:848 openssl x509"
+    },
+    {
+      "calls": "load_key_certs_crls(..., &pkey, ...)",
+      "file": "apps/lib/apps.c",
+      "function": "load_key",
+      "line": 556,
+      "used_by": "apps/pkey.c:228 openssl pkey; apps/pkcs8.c:247 openssl pkcs8"
+    },
+    {
+      "calls": "load_key_certs_crls(..., &pkey as ppubkey, ...) then fallback to load_key",
+      "file": "apps/lib/apps.c",
+      "function": "load_pubkey",
+      "line": 575,
+      "used_by": "apps/pkey.c:226 openssl pkey -pubin"
+    }
+  ]
+}

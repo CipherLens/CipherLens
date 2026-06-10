@@ -1,0 +1,1900 @@
+template_id: RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF
+template_name: ''
+source_api: EVP_PKEY_new
+source_library: openssl
+template_file: tmpl_openssl.c
+template_library: openssl
+trigger_apis:
+- EVP_PKEY_new
+- RSA_new
+- RSA_set0_key
+- EVP_PKEY_assign_RSA
+- EVP_MD_CTX_new
+- EVP_DigestSignInit
+- EVP_DigestSign
+harness_family: pkey_capability_mismatch_oracle
+summary:
+  method: tree_sitter_c_role_aware
+  backend: tree-sitter
+  template_dir: artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/cross_templates_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  unit_count: 73
+  parse_has_error: true
+  note: Tree-sitter C report generated from concrete syntax nodes. This backend is
+    optional and is intended to complement AST-lite.
+ast_mask_units:
+- unit_id: ASTLITE-0001
+  mask_level: block
+  role: helper_function
+  placeholder: '[BUG]'
+  code: 'static void bug_signal_handler(int signo) { fprintf(stderr, "[BUG] crash
+    or sanitizer signal: %d\n", signo); fflush(stderr); _Exit(128 + signo); }'
+  source: tmpl_openssl.c.tree_sitter.function_definition
+  reason: Function definition identified by tree-sitter C parser.
+  priority: medium
+  line: 33
+  line_start: 33
+  line_end: 38
+  column_start: 1
+  column_end: 2
+  node_type: function_definition
+  enclosing_function: signo
+  placeholder_dependencies:
+  - '[BUG]'
+  identifiers_read:
+  - signo
+  - fprintf
+  - stderr
+  - fflush
+  - _Exit
+  identifiers_written: []
+  function: signo
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0002
+  mask_level: statement
+  role: oracle
+  placeholder: '[BUG]'
+  code: 'fprintf(stderr, "[BUG] crash or sanitizer signal: %d\n", signo);'
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 35
+  line_start: 35
+  line_end: 35
+  column_start: 5
+  column_end: 69
+  node_type: expression_statement
+  enclosing_function: signo
+  placeholder_dependencies:
+  - '[BUG]'
+  identifiers_read:
+  - fprintf
+  - stderr
+  - signo
+  identifiers_written: []
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0003
+  mask_level: function_call
+  role: oracle
+  placeholder: '[BUG]'
+  code: 'fprintf(stderr, "[BUG] crash or sanitizer signal: %d\n", signo)'
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'fprintf' identified by tree-sitter C parser.
+  priority: medium
+  line: 35
+  line_start: 35
+  line_end: 35
+  column_start: 5
+  column_end: 68
+  node_type: call_expression
+  enclosing_function: signo
+  placeholder_dependencies:
+  - '[BUG]'
+  identifiers_read:
+  - stderr
+  - signo
+  identifiers_written: []
+  called_function: fprintf
+  function: fprintf
+  call_node_code: 'fprintf(stderr, "[BUG] crash or sanitizer signal: %d\n", signo)'
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0004
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: fflush(stderr)
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'fflush' identified by tree-sitter C parser.
+  priority: medium
+  line: 36
+  line_start: 36
+  line_end: 36
+  column_start: 5
+  column_end: 19
+  node_type: call_expression
+  enclosing_function: signo
+  placeholder_dependencies: []
+  identifiers_read:
+  - stderr
+  identifiers_written: []
+  called_function: fflush
+  function: fflush
+  call_node_code: fflush(stderr)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0005
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: _Exit(128 + signo)
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call '_Exit' identified by tree-sitter C parser.
+  priority: medium
+  line: 37
+  line_start: 37
+  line_end: 37
+  column_start: 5
+  column_end: 23
+  node_type: call_expression
+  enclosing_function: signo
+  placeholder_dependencies: []
+  identifiers_read:
+  - signo
+  identifiers_written: []
+  called_function: _Exit
+  function: _Exit
+  call_node_code: _Exit(128 + signo)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0006
+  mask_level: block
+  role: helper_function
+  placeholder: ''
+  code: static BIGNUM *bn_from_dec_or_null(const char *dec) { BIGNUM *bn = NULL; if
+    (BN_dec2bn(&bn, dec) == 0) { BN_free(bn); return NULL; } return bn; }
+  source: tmpl_openssl.c.tree_sitter.function_definition
+  reason: Function definition identified by tree-sitter C parser.
+  priority: medium
+  line: 40
+  line_start: 40
+  line_end: 50
+  column_start: 1
+  column_end: 2
+  node_type: function_definition
+  enclosing_function: dec
+  placeholder_dependencies: []
+  identifiers_read:
+  - BN_dec2bn
+  - dec
+  - BN_free
+  identifiers_written:
+  - bn
+  function: dec
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0007
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: if (BN_dec2bn(&bn, dec) == 0) { BN_free(bn); return NULL; }
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 44
+  line_start: 44
+  line_end: 47
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: dec
+  placeholder_dependencies: []
+  identifiers_read:
+  - BN_dec2bn
+  - bn
+  - dec
+  - BN_free
+  identifiers_written: []
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0008
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: BN_dec2bn(&bn, dec)
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'BN_dec2bn' identified by tree-sitter C parser.
+  priority: medium
+  line: 44
+  line_start: 44
+  line_end: 44
+  column_start: 9
+  column_end: 28
+  node_type: call_expression
+  enclosing_function: dec
+  placeholder_dependencies: []
+  identifiers_read:
+  - bn
+  - dec
+  identifiers_written: []
+  called_function: BN_dec2bn
+  function: BN_dec2bn
+  call_node_code: BN_dec2bn(&bn, dec)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0009
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: BN_free(bn);
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 45
+  line_start: 45
+  line_end: 45
+  column_start: 9
+  column_end: 21
+  node_type: expression_statement
+  enclosing_function: dec
+  placeholder_dependencies: []
+  identifiers_read:
+  - BN_free
+  - bn
+  identifiers_written: []
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0010
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: BN_free(bn)
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'BN_free' identified by tree-sitter C parser.
+  priority: medium
+  line: 45
+  line_start: 45
+  line_end: 45
+  column_start: 9
+  column_end: 20
+  node_type: call_expression
+  enclosing_function: dec
+  placeholder_dependencies: []
+  identifiers_read:
+  - bn
+  identifiers_written: []
+  called_function: BN_free
+  function: BN_free
+  call_node_code: BN_free(bn)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0011
+  mask_level: block
+  role: entrypoint
+  placeholder: '[MESSAGE_LEN]'
+  code: 'int main(void) { EVP_PKEY *pkey = NULL; RSA *rsa = NULL; BIGNUM *n = NULL;
+    BIGNUM *e = NULL; BIGNUM *d = NULL; EVP_MD_CTX *mdctx = NULL; static const unsigned
+    char message[[MESSAGE_LEN]] = [MESSAGE_BYTES]; unsigned char sig[[SIG_BUF_LEN]];
+    size_t sig_len = sizeof(sig); int set_key_ok = 0; int assign_ok = 0; int init_ok
+    = 0; int sign_ok = 0; int ret = 1; setbuf(stdout, NULL); signal(SIGSEGV, bug_signal_handler);
+    signal(SIGABRT, bug_signal_handler); signal(SIGBUS, bug_signal_handler); signal(SIGILL,
+    bug_signal_handler); memset(sig, 0, sizeof(sig)); pkey = EVP_PKEY_new(); rsa =
+    RSA_new(); n = bn_from_dec_or_null("[RSA_N_DEC]"); e = bn_from_dec_or_null("[RSA_E_DEC]");
+    d = bn_from_dec_or_null("[RSA_D_DEC]"); mdctx = EVP_MD_CTX_new(); if (pkey ==
+    NULL || rsa == NULL || n == NULL || e == NULL || d == NULL || mdctx == NULL) {
+    fprintf(stderr, "[SAFE] invalid RSA key signing rejected during allocation/setup\n");
+    ERR_print_errors_fp(stderr); ret = 0; goto end; } set_key_ok = RSA_set0_key(rsa,
+    n, e, d); printf("RSA_set0_key returned %d\n", set_key_ok); if (set_key_ok !=
+    1) { fprintf(stderr, "[SAFE] invalid RSA key signing rejected by RSA_set0_key\n");
+    ERR_print_errors_fp(stderr); ret = 0; goto end; } n = NULL; e = NULL; d = NULL;
+    assign_ok = EVP_PKEY_assign_RSA(pkey, rsa); printf("EVP_PKEY_assign_RSA returned
+    %d\n", assign_ok); if (assign_ok != 1) { fprintf(stderr, "[SAFE] invalid RSA key
+    signing rejected by EVP_PKEY_assign_RSA\n"); ERR_print_errors_fp(stderr); ret
+    = 0; goto end; } rsa = NULL; init_ok = EVP_DigestSignInit(mdctx, NULL, [MD_ALG],
+    NULL, pkey); printf("EVP_DigestSignInit returned %d\n", init_ok); if (init_ok
+    != 1) { fprintf(stderr, "[SAFE] invalid RSA key signing rejected by EVP_DigestSignInit\n");
+    ERR_print_errors_fp(stderr); ret = 0; goto end; } sign_ok = EVP_DigestSign(mdctx,
+    sig, &sig_len, message, sizeof(message) - 1); printf("EVP_DigestSign returned
+    %d sig_len=%zu\n", sign_ok, sig_len); if (sign_ok != 1) { fprintf(stderr, "[SAFE]
+    invalid RSA key signing rejected by EVP_DigestSign\n"); ERR_print_errors_fp(stderr);
+    ret = 0; goto end; } fprintf(stderr, "[TRIAGE] signing with invalid RSA key succeeded\n");
+    ret = 0; end: EVP_MD_CTX_free(mdctx); EVP_PKEY_free(pkey); RSA_free(rsa); BN_free(n);
+    BN_free(e); BN_free(d); return ret; }'
+  source: tmpl_openssl.c.tree_sitter.function_definition
+  reason: Function definition identified by tree-sitter C parser.
+  priority: high
+  line: 52
+  line_start: 52
+  line_end: 142
+  column_start: 1
+  column_end: 2
+  node_type: function_definition
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[MESSAGE_LEN]'
+  - '[MESSAGE_BYTES]'
+  - '[SIG_BUF_LEN]'
+  - '[RSA_N_DEC]'
+  - '[RSA_E_DEC]'
+  - '[RSA_D_DEC]'
+  - '[SAFE]'
+  - '[MD_ALG]'
+  - '[TRIAGE]'
+  identifiers_read:
+  - message
+  - MESSAGE_LEN
+  - sig
+  - SIG_BUF_LEN
+  - setbuf
+  - stdout
+  - signal
+  - SIGSEGV
+  - bug_signal_handler
+  - SIGABRT
+  - SIGBUS
+  - SIGILL
+  - memset
+  - EVP_PKEY_new
+  - RSA_new
+  - bn_from_dec_or_null
+  - EVP_MD_CTX_new
+  - fprintf
+  - stderr
+  - ERR_print_errors_fp
+  - RSA_set0_key
+  - printf
+  - EVP_PKEY_assign_RSA
+  - EVP_DigestSignInit
+  - MD_ALG
+  - EVP_DigestSign
+  - EVP_MD_CTX_free
+  - EVP_PKEY_free
+  - RSA_free
+  - BN_free
+  identifiers_written:
+  - pkey
+  - rsa
+  - n
+  - e
+  - d
+  - mdctx
+  - sig_len
+  - set_key_ok
+  - assign_ok
+  - init_ok
+  - sign_ok
+  - ret
+  function: main
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0012
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[MESSAGE_LEN]'
+  code: static const unsigned char message[[MESSAGE_LEN]] = [MESSAGE_BYTES];
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 60
+  line_start: 60
+  line_end: 60
+  column_start: 5
+  column_end: 73
+  node_type: declaration
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[MESSAGE_LEN]'
+  - '[MESSAGE_BYTES]'
+  identifiers_read:
+  - message
+  - MESSAGE_LEN
+  identifiers_written: []
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0013
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SIG_BUF_LEN]'
+  code: unsigned char sig[[SIG_BUF_LEN]];
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 61
+  line_start: 61
+  line_end: 61
+  column_start: 5
+  column_end: 38
+  node_type: declaration
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SIG_BUF_LEN]'
+  identifiers_read:
+  - sig
+  - SIG_BUF_LEN
+  identifiers_written: []
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0014
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: setbuf(stdout, NULL)
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'setbuf' identified by tree-sitter C parser.
+  priority: medium
+  line: 69
+  line_start: 69
+  line_end: 69
+  column_start: 5
+  column_end: 25
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - stdout
+  identifiers_written: []
+  called_function: setbuf
+  function: setbuf
+  call_node_code: setbuf(stdout, NULL)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0015
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGSEGV, bug_signal_handler)
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'signal' identified by tree-sitter C parser.
+  priority: medium
+  line: 70
+  line_start: 70
+  line_end: 70
+  column_start: 5
+  column_end: 40
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - SIGSEGV
+  - bug_signal_handler
+  identifiers_written: []
+  called_function: signal
+  function: signal
+  call_node_code: signal(SIGSEGV, bug_signal_handler)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0016
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGABRT, bug_signal_handler)
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'signal' identified by tree-sitter C parser.
+  priority: medium
+  line: 71
+  line_start: 71
+  line_end: 71
+  column_start: 5
+  column_end: 40
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - SIGABRT
+  - bug_signal_handler
+  identifiers_written: []
+  called_function: signal
+  function: signal
+  call_node_code: signal(SIGABRT, bug_signal_handler)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0017
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGBUS, bug_signal_handler)
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'signal' identified by tree-sitter C parser.
+  priority: medium
+  line: 72
+  line_start: 72
+  line_end: 72
+  column_start: 5
+  column_end: 39
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - SIGBUS
+  - bug_signal_handler
+  identifiers_written: []
+  called_function: signal
+  function: signal
+  call_node_code: signal(SIGBUS, bug_signal_handler)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0018
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGILL, bug_signal_handler)
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'signal' identified by tree-sitter C parser.
+  priority: medium
+  line: 73
+  line_start: 73
+  line_end: 73
+  column_start: 5
+  column_end: 39
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - SIGILL
+  - bug_signal_handler
+  identifiers_written: []
+  called_function: signal
+  function: signal
+  call_node_code: signal(SIGILL, bug_signal_handler)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0019
+  mask_level: function_call
+  role: input_construction
+  placeholder: ''
+  code: memset(sig, 0, sizeof(sig))
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'memset' identified by tree-sitter C parser.
+  priority: medium
+  line: 74
+  line_start: 74
+  line_end: 74
+  column_start: 5
+  column_end: 32
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - sig
+  identifiers_written: []
+  called_function: memset
+  function: memset
+  call_node_code: memset(sig, 0, sizeof(sig))
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0020
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: pkey = EVP_PKEY_new();
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 76
+  line_start: 76
+  line_end: 76
+  column_start: 5
+  column_end: 27
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - EVP_PKEY_new
+  identifiers_written:
+  - pkey
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0021
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: pkey = EVP_PKEY_new();
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'EVP_PKEY_new' identified by tree-sitter C parser.
+  priority: high
+  line: 76
+  line_start: 76
+  line_end: 76
+  column_start: 12
+  column_end: 26
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read: []
+  identifiers_written:
+  - pkey
+  called_function: EVP_PKEY_new
+  function: EVP_PKEY_new
+  call_node_code: EVP_PKEY_new()
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0022
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: rsa = RSA_new();
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 77
+  line_start: 77
+  line_end: 77
+  column_start: 5
+  column_end: 21
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - RSA_new
+  identifiers_written:
+  - rsa
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0023
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: rsa = RSA_new();
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'RSA_new' identified by tree-sitter C parser.
+  priority: high
+  line: 77
+  line_start: 77
+  line_end: 77
+  column_start: 11
+  column_end: 20
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read: []
+  identifiers_written:
+  - rsa
+  called_function: RSA_new
+  function: RSA_new
+  call_node_code: RSA_new()
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0024
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[RSA_N_DEC]'
+  code: n = bn_from_dec_or_null("[RSA_N_DEC]");
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 78
+  line_start: 78
+  line_end: 78
+  column_start: 5
+  column_end: 44
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[RSA_N_DEC]'
+  identifiers_read:
+  - bn_from_dec_or_null
+  identifiers_written:
+  - n
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0025
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[RSA_N_DEC]'
+  code: bn_from_dec_or_null("[RSA_N_DEC]")
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'bn_from_dec_or_null' identified by tree-sitter C parser.
+  priority: medium
+  line: 78
+  line_start: 78
+  line_end: 78
+  column_start: 9
+  column_end: 43
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[RSA_N_DEC]'
+  identifiers_read: []
+  identifiers_written: []
+  called_function: bn_from_dec_or_null
+  function: bn_from_dec_or_null
+  call_node_code: bn_from_dec_or_null("[RSA_N_DEC]")
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0026
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[RSA_E_DEC]'
+  code: e = bn_from_dec_or_null("[RSA_E_DEC]");
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 79
+  line_start: 79
+  line_end: 79
+  column_start: 5
+  column_end: 44
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[RSA_E_DEC]'
+  identifiers_read:
+  - bn_from_dec_or_null
+  identifiers_written:
+  - e
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0027
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[RSA_E_DEC]'
+  code: bn_from_dec_or_null("[RSA_E_DEC]")
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'bn_from_dec_or_null' identified by tree-sitter C parser.
+  priority: medium
+  line: 79
+  line_start: 79
+  line_end: 79
+  column_start: 9
+  column_end: 43
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[RSA_E_DEC]'
+  identifiers_read: []
+  identifiers_written: []
+  called_function: bn_from_dec_or_null
+  function: bn_from_dec_or_null
+  call_node_code: bn_from_dec_or_null("[RSA_E_DEC]")
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0028
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[RSA_D_DEC]'
+  code: d = bn_from_dec_or_null("[RSA_D_DEC]");
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 80
+  line_start: 80
+  line_end: 80
+  column_start: 5
+  column_end: 44
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[RSA_D_DEC]'
+  identifiers_read:
+  - bn_from_dec_or_null
+  identifiers_written:
+  - d
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0029
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[RSA_D_DEC]'
+  code: bn_from_dec_or_null("[RSA_D_DEC]")
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'bn_from_dec_or_null' identified by tree-sitter C parser.
+  priority: medium
+  line: 80
+  line_start: 80
+  line_end: 80
+  column_start: 9
+  column_end: 43
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[RSA_D_DEC]'
+  identifiers_read: []
+  identifiers_written: []
+  called_function: bn_from_dec_or_null
+  function: bn_from_dec_or_null
+  call_node_code: bn_from_dec_or_null("[RSA_D_DEC]")
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0030
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: mdctx = EVP_MD_CTX_new();
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 81
+  line_start: 81
+  line_end: 81
+  column_start: 5
+  column_end: 30
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - EVP_MD_CTX_new
+  identifiers_written:
+  - mdctx
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0031
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: mdctx = EVP_MD_CTX_new();
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'EVP_MD_CTX_new' identified by tree-sitter C parser.
+  priority: high
+  line: 81
+  line_start: 81
+  line_end: 81
+  column_start: 13
+  column_end: 29
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read: []
+  identifiers_written:
+  - mdctx
+  called_function: EVP_MD_CTX_new
+  function: EVP_MD_CTX_new
+  call_node_code: EVP_MD_CTX_new()
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0032
+  mask_level: statement
+  role: input_construction
+  placeholder: '[SAFE]'
+  code: if (pkey == NULL || rsa == NULL || n == NULL || e == NULL || d == NULL ||
+    mdctx == NULL) { fprintf(stderr, "[SAFE] invalid RSA key signing rejected during
+    allocation/setup\n"); ERR_print_errors_fp(stderr); ret = 0; goto end; }
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 83
+  line_start: 83
+  line_end: 89
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - pkey
+  - rsa
+  - n
+  - e
+  - d
+  - mdctx
+  - fprintf
+  - stderr
+  - ERR_print_errors_fp
+  identifiers_written:
+  - ret
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0033
+  mask_level: statement
+  role: input_construction
+  placeholder: '[SAFE]'
+  code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected during allocation/setup\n");
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 85
+  line_start: 85
+  line_end: 85
+  column_start: 9
+  column_end: 94
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - fprintf
+  - stderr
+  identifiers_written: []
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0034
+  mask_level: function_call
+  role: input_construction
+  placeholder: '[SAFE]'
+  code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected during allocation/setup\n")
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'fprintf' identified by tree-sitter C parser.
+  priority: medium
+  line: 85
+  line_start: 85
+  line_end: 85
+  column_start: 9
+  column_end: 93
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - stderr
+  identifiers_written: []
+  called_function: fprintf
+  function: fprintf
+  call_node_code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected during
+    allocation/setup\n")
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0035
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: ERR_print_errors_fp(stderr)
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'ERR_print_errors_fp' identified by tree-sitter C parser.
+  priority: medium
+  line: 86
+  line_start: 86
+  line_end: 86
+  column_start: 9
+  column_end: 36
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - stderr
+  identifiers_written: []
+  called_function: ERR_print_errors_fp
+  function: ERR_print_errors_fp
+  call_node_code: ERR_print_errors_fp(stderr)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0036
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: set_key_ok = RSA_set0_key(rsa, n, e, d);
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 91
+  line_start: 91
+  line_end: 91
+  column_start: 5
+  column_end: 45
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - RSA_set0_key
+  - rsa
+  - n
+  - e
+  - d
+  identifiers_written:
+  - set_key_ok
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0037
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: set_key_ok = RSA_set0_key(rsa, n, e, d);
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'RSA_set0_key' identified by tree-sitter C parser.
+  priority: high
+  line: 91
+  line_start: 91
+  line_end: 91
+  column_start: 18
+  column_end: 44
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - rsa
+  - n
+  - e
+  - d
+  identifiers_written:
+  - set_key_ok
+  called_function: RSA_set0_key
+  function: RSA_set0_key
+  call_node_code: RSA_set0_key(rsa, n, e, d)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0038
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("RSA_set0_key returned %d\n", set_key_ok)
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 92
+  line_start: 92
+  line_end: 92
+  column_start: 5
+  column_end: 53
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - set_key_ok
+  identifiers_written: []
+  called_function: printf
+  function: printf
+  call_node_code: printf("RSA_set0_key returned %d\n", set_key_ok)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0039
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: if (set_key_ok != 1) { fprintf(stderr, "[SAFE] invalid RSA key signing rejected
+    by RSA_set0_key\n"); ERR_print_errors_fp(stderr); ret = 0; goto end; }
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 93
+  line_start: 93
+  line_end: 98
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - set_key_ok
+  - fprintf
+  - stderr
+  - ERR_print_errors_fp
+  identifiers_written:
+  - ret
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0040
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected by RSA_set0_key\n");
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 94
+  line_start: 94
+  line_end: 94
+  column_start: 9
+  column_end: 86
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - fprintf
+  - stderr
+  identifiers_written: []
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0041
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected by RSA_set0_key\n")
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'fprintf' identified by tree-sitter C parser.
+  priority: medium
+  line: 94
+  line_start: 94
+  line_end: 94
+  column_start: 9
+  column_end: 85
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - stderr
+  identifiers_written: []
+  called_function: fprintf
+  function: fprintf
+  call_node_code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected by RSA_set0_key\n")
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0042
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: assign_ok = EVP_PKEY_assign_RSA(pkey, rsa);
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 103
+  line_start: 103
+  line_end: 103
+  column_start: 5
+  column_end: 48
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - EVP_PKEY_assign_RSA
+  - pkey
+  - rsa
+  identifiers_written:
+  - assign_ok
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0043
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: assign_ok = EVP_PKEY_assign_RSA(pkey, rsa);
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'EVP_PKEY_assign_RSA' identified by tree-sitter C parser.
+  priority: high
+  line: 103
+  line_start: 103
+  line_end: 103
+  column_start: 17
+  column_end: 47
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - pkey
+  - rsa
+  identifiers_written:
+  - assign_ok
+  called_function: EVP_PKEY_assign_RSA
+  function: EVP_PKEY_assign_RSA
+  call_node_code: EVP_PKEY_assign_RSA(pkey, rsa)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0044
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("EVP_PKEY_assign_RSA returned %d\n", assign_ok)
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 104
+  line_start: 104
+  line_end: 104
+  column_start: 5
+  column_end: 59
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - assign_ok
+  identifiers_written: []
+  called_function: printf
+  function: printf
+  call_node_code: printf("EVP_PKEY_assign_RSA returned %d\n", assign_ok)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0045
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: if (assign_ok != 1) { fprintf(stderr, "[SAFE] invalid RSA key signing rejected
+    by EVP_PKEY_assign_RSA\n"); ERR_print_errors_fp(stderr); ret = 0; goto end; }
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 105
+  line_start: 105
+  line_end: 110
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - assign_ok
+  - fprintf
+  - stderr
+  - ERR_print_errors_fp
+  identifiers_written:
+  - ret
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0046
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected by EVP_PKEY_assign_RSA\n");
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 106
+  line_start: 106
+  line_end: 106
+  column_start: 9
+  column_end: 93
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - fprintf
+  - stderr
+  identifiers_written: []
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0047
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected by EVP_PKEY_assign_RSA\n")
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'fprintf' identified by tree-sitter C parser.
+  priority: medium
+  line: 106
+  line_start: 106
+  line_end: 106
+  column_start: 9
+  column_end: 92
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - stderr
+  identifiers_written: []
+  called_function: fprintf
+  function: fprintf
+  call_node_code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected by EVP_PKEY_assign_RSA\n")
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0048
+  mask_level: statement
+  role: trigger_call
+  placeholder: '[MD_ALG]'
+  code: init_ok = EVP_DigestSignInit(mdctx, NULL, [MD_ALG], NULL, pkey);
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 113
+  line_start: 113
+  line_end: 113
+  column_start: 5
+  column_end: 69
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[MD_ALG]'
+  identifiers_read:
+  - EVP_DigestSignInit
+  - mdctx
+  - MD_ALG
+  - pkey
+  identifiers_written:
+  - init_ok
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0049
+  mask_level: function_call
+  role: trigger_call
+  placeholder: '[MD_ALG]'
+  code: init_ok = EVP_DigestSignInit(mdctx, NULL, [MD_ALG], NULL, pkey);
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'EVP_DigestSignInit' identified by tree-sitter C parser.
+  priority: high
+  line: 113
+  line_start: 113
+  line_end: 113
+  column_start: 15
+  column_end: 68
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[MD_ALG]'
+  identifiers_read:
+  - mdctx
+  - MD_ALG
+  - pkey
+  identifiers_written:
+  - init_ok
+  called_function: EVP_DigestSignInit
+  function: EVP_DigestSignInit
+  call_node_code: EVP_DigestSignInit(mdctx, NULL, [MD_ALG], NULL, pkey)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0050
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("EVP_DigestSignInit returned %d\n", init_ok)
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 114
+  line_start: 114
+  line_end: 114
+  column_start: 5
+  column_end: 56
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - init_ok
+  identifiers_written: []
+  called_function: printf
+  function: printf
+  call_node_code: printf("EVP_DigestSignInit returned %d\n", init_ok)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0051
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: if (init_ok != 1) { fprintf(stderr, "[SAFE] invalid RSA key signing rejected
+    by EVP_DigestSignInit\n"); ERR_print_errors_fp(stderr); ret = 0; goto end; }
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 115
+  line_start: 115
+  line_end: 120
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - init_ok
+  - fprintf
+  - stderr
+  - ERR_print_errors_fp
+  identifiers_written:
+  - ret
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0052
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected by EVP_DigestSignInit\n");
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 116
+  line_start: 116
+  line_end: 116
+  column_start: 9
+  column_end: 92
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - fprintf
+  - stderr
+  identifiers_written: []
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0053
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected by EVP_DigestSignInit\n")
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'fprintf' identified by tree-sitter C parser.
+  priority: medium
+  line: 116
+  line_start: 116
+  line_end: 116
+  column_start: 9
+  column_end: 91
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - stderr
+  identifiers_written: []
+  called_function: fprintf
+  function: fprintf
+  call_node_code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected by EVP_DigestSignInit\n")
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0054
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: sign_ok = EVP_DigestSign(mdctx, sig, &sig_len, message, sizeof(message) -
+    1);
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 122
+  line_start: 122
+  line_end: 122
+  column_start: 5
+  column_end: 82
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - EVP_DigestSign
+  - mdctx
+  - sig
+  - sig_len
+  - message
+  identifiers_written:
+  - sign_ok
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0055
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: sign_ok = EVP_DigestSign(mdctx, sig, &sig_len, message, sizeof(message) -
+    1);
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'EVP_DigestSign' identified by tree-sitter C parser.
+  priority: high
+  line: 122
+  line_start: 122
+  line_end: 122
+  column_start: 15
+  column_end: 81
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - mdctx
+  - sig
+  - sig_len
+  - message
+  identifiers_written:
+  - sign_ok
+  called_function: EVP_DigestSign
+  function: EVP_DigestSign
+  call_node_code: EVP_DigestSign(mdctx, sig, &sig_len, message, sizeof(message) -
+    1)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0056
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("EVP_DigestSign returned %d sig_len=%zu\n", sign_ok, sig_len)
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 123
+  line_start: 123
+  line_end: 123
+  column_start: 5
+  column_end: 73
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - sign_ok
+  identifiers_written:
+  - sig_len
+  called_function: printf
+  function: printf
+  call_node_code: printf("EVP_DigestSign returned %d sig_len=%zu\n", sign_ok, sig_len)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0057
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: if (sign_ok != 1) { fprintf(stderr, "[SAFE] invalid RSA key signing rejected
+    by EVP_DigestSign\n"); ERR_print_errors_fp(stderr); ret = 0; goto end; }
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 124
+  line_start: 124
+  line_end: 129
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - sign_ok
+  - fprintf
+  - stderr
+  - ERR_print_errors_fp
+  identifiers_written:
+  - ret
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0058
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected by EVP_DigestSign\n");
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 125
+  line_start: 125
+  line_end: 125
+  column_start: 9
+  column_end: 88
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - fprintf
+  - stderr
+  identifiers_written: []
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0059
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected by EVP_DigestSign\n")
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'fprintf' identified by tree-sitter C parser.
+  priority: medium
+  line: 125
+  line_start: 125
+  line_end: 125
+  column_start: 9
+  column_end: 87
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - stderr
+  identifiers_written: []
+  called_function: fprintf
+  function: fprintf
+  call_node_code: fprintf(stderr, "[SAFE] invalid RSA key signing rejected by EVP_DigestSign\n")
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0060
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: fprintf(stderr, "[TRIAGE] signing with invalid RSA key succeeded\n");
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 131
+  line_start: 131
+  line_end: 131
+  column_start: 5
+  column_end: 74
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[TRIAGE]'
+  identifiers_read:
+  - fprintf
+  - stderr
+  identifiers_written: []
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0061
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: fprintf(stderr, "[TRIAGE] signing with invalid RSA key succeeded\n")
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'fprintf' identified by tree-sitter C parser.
+  priority: medium
+  line: 131
+  line_start: 131
+  line_end: 131
+  column_start: 5
+  column_end: 73
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[TRIAGE]'
+  identifiers_read:
+  - stderr
+  identifiers_written: []
+  called_function: fprintf
+  function: fprintf
+  call_node_code: fprintf(stderr, "[TRIAGE] signing with invalid RSA key succeeded\n")
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0062
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: EVP_MD_CTX_free(mdctx);
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 135
+  line_start: 135
+  line_end: 135
+  column_start: 5
+  column_end: 28
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - EVP_MD_CTX_free
+  - mdctx
+  identifiers_written: []
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0063
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: EVP_MD_CTX_free(mdctx)
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'EVP_MD_CTX_free' identified by tree-sitter C parser.
+  priority: medium
+  line: 135
+  line_start: 135
+  line_end: 135
+  column_start: 5
+  column_end: 27
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - mdctx
+  identifiers_written: []
+  called_function: EVP_MD_CTX_free
+  function: EVP_MD_CTX_free
+  call_node_code: EVP_MD_CTX_free(mdctx)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0064
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: EVP_PKEY_free(pkey);
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 136
+  line_start: 136
+  line_end: 136
+  column_start: 5
+  column_end: 25
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - EVP_PKEY_free
+  - pkey
+  identifiers_written: []
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0065
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: EVP_PKEY_free(pkey)
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'EVP_PKEY_free' identified by tree-sitter C parser.
+  priority: medium
+  line: 136
+  line_start: 136
+  line_end: 136
+  column_start: 5
+  column_end: 24
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - pkey
+  identifiers_written: []
+  called_function: EVP_PKEY_free
+  function: EVP_PKEY_free
+  call_node_code: EVP_PKEY_free(pkey)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0066
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: RSA_free(rsa);
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 137
+  line_start: 137
+  line_end: 137
+  column_start: 5
+  column_end: 19
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - RSA_free
+  - rsa
+  identifiers_written: []
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0067
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: RSA_free(rsa)
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'RSA_free' identified by tree-sitter C parser.
+  priority: medium
+  line: 137
+  line_start: 137
+  line_end: 137
+  column_start: 5
+  column_end: 18
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - rsa
+  identifiers_written: []
+  called_function: RSA_free
+  function: RSA_free
+  call_node_code: RSA_free(rsa)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0068
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: BN_free(n);
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 138
+  line_start: 138
+  line_end: 138
+  column_start: 5
+  column_end: 16
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - BN_free
+  - n
+  identifiers_written: []
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0069
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: BN_free(n)
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'BN_free' identified by tree-sitter C parser.
+  priority: medium
+  line: 138
+  line_start: 138
+  line_end: 138
+  column_start: 5
+  column_end: 15
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - n
+  identifiers_written: []
+  called_function: BN_free
+  function: BN_free
+  call_node_code: BN_free(n)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0070
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: BN_free(e);
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 139
+  line_start: 139
+  line_end: 139
+  column_start: 5
+  column_end: 16
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - BN_free
+  - e
+  identifiers_written: []
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0071
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: BN_free(e)
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'BN_free' identified by tree-sitter C parser.
+  priority: medium
+  line: 139
+  line_start: 139
+  line_end: 139
+  column_start: 5
+  column_end: 15
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - e
+  identifiers_written: []
+  called_function: BN_free
+  function: BN_free
+  call_node_code: BN_free(e)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0072
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: BN_free(d);
+  source: tmpl_openssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 140
+  line_start: 140
+  line_end: 140
+  column_start: 5
+  column_end: 16
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - BN_free
+  - d
+  identifiers_written: []
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0073
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: BN_free(d)
+  source: tmpl_openssl.c.tree_sitter.call_expression
+  reason: Function call 'BN_free' identified by tree-sitter C parser.
+  priority: medium
+  line: 140
+  line_start: 140
+  line_end: 140
+  column_start: 5
+  column_end: 15
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - d
+  identifiers_written: []
+  called_function: BN_free
+  function: BN_free
+  call_node_code: BN_free(d)
+  template_file: tmpl_openssl.c
+  template_library: openssl
+role_summary:
+  cleanup: 15
+  entrypoint: 1
+  helper_function: 15
+  input_construction: 4
+  mutation_point: 22
+  oracle: 2
+  trigger_call: 14
+mask_level_summary:
+  block: 3
+  function_call: 38
+  statement: 32

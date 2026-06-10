@@ -1,0 +1,1066 @@
+source_mutation_plan: artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/mutation_plan.yaml
+family: mac_lifecycle
+target_candidate:
+  target_library: mbedtls
+  target_api: psa_mac_sign_setup
+  decision: generate
+  migration_applicability: applicable_with_semantic_projection
+  final_score: 82
+render_pipeline_status:
+  render_cases_direct_support: false
+  blocking_point: template_maker/render_cases.py currently consumes cross-template
+    case metadata, not external render_matrix.yaml.
+  next_integration_step: Add a renderer-side adapter that maps render_matrix entries
+    into template_meta mutation_points or recipe slot bindings.
+mutation_dimensions:
+  mac_algorithm:
+    values:
+    - HMAC
+    - CMAC
+    source: family_rule
+  digest_or_cipher:
+    values:
+    - SHA256
+    - SHA512
+    - AES-128-CBC
+    - AES-256-CBC
+    source: family_rule
+  lifecycle_sequence:
+    values:
+    - abort_then_final
+    - final_before_setup
+    - query_size_before_setup
+    - setup_final_final
+    - setup_update_final
+    - setup_update_final_final
+    - update_before_setup
+    - wrong_digest_combo
+    source: family_rule+api_cards
+case_matrix:
+- case_id: mac_lifecycle_0000
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: SHA256
+    lifecycle_sequence: abort_then_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0001
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: SHA256
+    lifecycle_sequence: final_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0002
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: SHA256
+    lifecycle_sequence: query_size_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0003
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: SHA256
+    lifecycle_sequence: setup_final_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0004
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: SHA256
+    lifecycle_sequence: setup_update_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0005
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: SHA256
+    lifecycle_sequence: setup_update_final_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0006
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: SHA256
+    lifecycle_sequence: update_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0007
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: SHA256
+    lifecycle_sequence: wrong_digest_combo
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0008
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: SHA512
+    lifecycle_sequence: abort_then_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0009
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: SHA512
+    lifecycle_sequence: final_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0010
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: SHA512
+    lifecycle_sequence: query_size_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0011
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: SHA512
+    lifecycle_sequence: setup_final_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0012
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: SHA512
+    lifecycle_sequence: setup_update_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0013
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: SHA512
+    lifecycle_sequence: setup_update_final_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0014
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: SHA512
+    lifecycle_sequence: update_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0015
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: SHA512
+    lifecycle_sequence: wrong_digest_combo
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0016
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: AES-128-CBC
+    lifecycle_sequence: abort_then_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0017
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: AES-128-CBC
+    lifecycle_sequence: final_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0018
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: AES-128-CBC
+    lifecycle_sequence: query_size_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0019
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: AES-128-CBC
+    lifecycle_sequence: setup_final_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0020
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: AES-128-CBC
+    lifecycle_sequence: setup_update_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0021
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: AES-128-CBC
+    lifecycle_sequence: setup_update_final_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0022
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: AES-128-CBC
+    lifecycle_sequence: update_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0023
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: AES-128-CBC
+    lifecycle_sequence: wrong_digest_combo
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0024
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: AES-256-CBC
+    lifecycle_sequence: abort_then_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0025
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: AES-256-CBC
+    lifecycle_sequence: final_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0026
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: AES-256-CBC
+    lifecycle_sequence: query_size_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0027
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: AES-256-CBC
+    lifecycle_sequence: setup_final_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0028
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: AES-256-CBC
+    lifecycle_sequence: setup_update_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0029
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: AES-256-CBC
+    lifecycle_sequence: setup_update_final_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0030
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: AES-256-CBC
+    lifecycle_sequence: update_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0031
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: AES-256-CBC
+    lifecycle_sequence: wrong_digest_combo
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0032
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: SHA256
+    lifecycle_sequence: abort_then_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0033
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: SHA256
+    lifecycle_sequence: final_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0034
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: SHA256
+    lifecycle_sequence: query_size_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0035
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: SHA256
+    lifecycle_sequence: setup_final_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0036
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: SHA256
+    lifecycle_sequence: setup_update_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0037
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: SHA256
+    lifecycle_sequence: setup_update_final_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0038
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: SHA256
+    lifecycle_sequence: update_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0039
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: SHA256
+    lifecycle_sequence: wrong_digest_combo
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0040
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: SHA512
+    lifecycle_sequence: abort_then_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0041
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: SHA512
+    lifecycle_sequence: final_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0042
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: SHA512
+    lifecycle_sequence: query_size_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0043
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: SHA512
+    lifecycle_sequence: setup_final_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0044
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: SHA512
+    lifecycle_sequence: setup_update_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0045
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: SHA512
+    lifecycle_sequence: setup_update_final_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0046
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: SHA512
+    lifecycle_sequence: update_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0047
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: SHA512
+    lifecycle_sequence: wrong_digest_combo
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0048
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: AES-128-CBC
+    lifecycle_sequence: abort_then_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0049
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: AES-128-CBC
+    lifecycle_sequence: final_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0050
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: AES-128-CBC
+    lifecycle_sequence: query_size_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0051
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: AES-128-CBC
+    lifecycle_sequence: setup_final_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0052
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: AES-128-CBC
+    lifecycle_sequence: setup_update_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0053
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: AES-128-CBC
+    lifecycle_sequence: setup_update_final_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0054
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: AES-128-CBC
+    lifecycle_sequence: update_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0055
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: AES-128-CBC
+    lifecycle_sequence: wrong_digest_combo
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0056
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: AES-256-CBC
+    lifecycle_sequence: abort_then_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0057
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: AES-256-CBC
+    lifecycle_sequence: final_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0058
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: AES-256-CBC
+    lifecycle_sequence: query_size_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0059
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: AES-256-CBC
+    lifecycle_sequence: setup_final_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0060
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: AES-256-CBC
+    lifecycle_sequence: setup_update_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0061
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: AES-256-CBC
+    lifecycle_sequence: setup_update_final_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0062
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: AES-256-CBC
+    lifecycle_sequence: update_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+- case_id: mac_lifecycle_0063
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: AES-256-CBC
+    lifecycle_sequence: wrong_digest_combo
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+notes:
+- This matrix is an intermediate planning artifact.
+- No C harness files are generated by this tool.

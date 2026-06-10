@@ -1,0 +1,38 @@
+template_id: SECURE_HEAP_STATE_LIFECYCLE_V1_SOURCE_TEMPLATE
+pattern_id: OPENSSL-ISSUE-28669
+harness_family: secure_heap_state_lifecycle
+oracle_type: secure_heap_preinit_crash_oracle
+source_library: openssl
+target_api: CRYPTO_secure_used
+mutation_points:
+  - id: SECURE_HEAP_INIT_API
+    granularity: call_expr
+    role: lifecycle_init
+    placeholder: SECURE_HEAP_INIT_API
+  - id: SECURE_HEAP_USED_API
+    granularity: call_expr
+    role: lifecycle_query
+    placeholder: SECURE_HEAP_USED_API
+  - id: SECURE_HEAP_DONE_API
+    granularity: call_expr
+    role: lifecycle_teardown
+    placeholder: SECURE_HEAP_DONE_API
+  - id: SECURE_HEAP_INITIALIZED_CHECK_API
+    granularity: call_expr
+    role: lifecycle_state_check
+    placeholder: SECURE_HEAP_INITIALIZED_CHECK_API
+  - id: SECURE_HEAP_STATE_SEQUENCE
+    granularity: call_sequence
+    role: state_transition
+    placeholder: SECURE_HEAP_STATE_SEQUENCE
+  - id: CRASH_ORACLE
+    granularity: oracle
+    role: sanitizer_or_signal_observability
+    placeholder: CRASH_ORACLE
+safe_behavior:
+  - initialized controls do not crash
+bug_behavior:
+  - SIGSEGV or sanitizer/Valgrind invalid read on pre-init or post-done query
+triage_behavior:
+  - ordinary nonzero exit without crash evidence
+  - documented API precondition misuse

@@ -1,0 +1,45 @@
+case_id: mac_lifecycle_0032
+mac_algorithm: CMAC
+digest_or_cipher: SHA256
+lifecycle_sequence: abort_then_final
+expected_candidate_types:
+- unexpected_success_candidate
+- failure_path_output_state_triage
+- allowed_legacy_semantics
+- safe_negative
+- crash_candidate
+source_matrix_entry:
+  case_id: mac_lifecycle_0032
+  values:
+    mac_algorithm: CMAC
+    digest_or_cipher: SHA256
+    lifecycle_sequence: abort_then_final
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+mapped_placeholders:
+  MAC_NAME: CMAC
+  DIGEST_NAME: SHA256
+  EXPECTED_MAC_SIZE: 32
+  KEY_BYTES: '"rag-seed-hmac-key"'
+  KEY_BYTES_mapping_note: base_default_used_because_render_matrix_dimension_is_unsupported_or_unmapped
+  KEY_LEN: 17
+  KEY_LEN_mapping_note: base_default_used_because_render_matrix_dimension_is_unsupported_or_unmapped
+unsupported_dimensions:
+- dimension: mac_algorithm
+  value: CMAC
+  reason: target template is fixed to PSA_KEY_TYPE_HMAC and PSA_ALG_HMAC(PSA_ALG_SHA_256)
+  requires_template_or_recipe_extension: true
+- dimension: lifecycle_sequence
+  value: abort_then_final
+  reason: current templates have fixed STATE_A/STATE_B lifecycle code and no lifecycle_sequence
+    placeholder
+  requires_template_or_recipe_extension: true

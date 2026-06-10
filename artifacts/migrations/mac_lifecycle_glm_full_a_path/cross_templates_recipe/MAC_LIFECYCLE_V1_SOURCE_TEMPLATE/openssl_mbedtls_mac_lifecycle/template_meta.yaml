@@ -1,0 +1,128 @@
+schema_version: 1
+template_id: MAC_LIFECYCLE_V1_SOURCE_TEMPLATE__CROSS_LIBRARY_MAC_LIFECYCLE_PAIR
+pattern_id: OPENSSL-ISSUE-22842
+status: cross_generated_from_llm_adapter
+description: Cross-library MAC lifecycle state-transition template generated from
+  a strict recipe-slot adapter. The harness compares OpenSSL EVP_MAC and mbedTLS PSA
+  MAC behavior for normal finalization, repeated finalization, update after finalization,
+  and abort-then-update state transitions.
+harness_family: mac_lifecycle
+oracle_type: lifecycle_state_transition_semantic_oracle
+is_final_harness: false
+llm_freeform_c_allowed: false
+slot_placeholders:
+- MAC_INIT_API
+- MAC_UPDATE_API
+- MAC_FINAL_API
+- MAC_RESET_API
+- MAC_FREE_API
+- MAC_ALGORITHM
+- KEY_BUFFER
+- INPUT_BUFFER
+- FINAL_AFTER_FINAL_ACTION
+- UPDATE_AFTER_FINAL_ACTION
+- EXPECTED_STATE_BEHAVIOR
+required_observables:
+- return_code
+- output_length
+- operation_state
+- sanitizer_signal
+notes:
+- This is preparation for recipe-slot adapter generation, not a validated adapter
+  or concrete case.
+- LLM output must be limited to slot_bindings in the normal recipe-slot workflow.
+source_template_id: MAC_LIFECYCLE_V1_SOURCE_TEMPLATE
+ast_mask_selection_trace:
+  source_file: artifacts/sprints/mac_lifecycle_family_v1/mask/selected_mask_units.yaml
+  summary:
+    selected_count: 6
+    source_unit_count: null
+    trigger_apis: []
+    harness_family: mac_lifecycle
+    by_role: {}
+    by_mask_level: {}
+    by_suggested_use: {}
+  selected_units_by_use:
+    migrate_api_call:
+    - role: lifecycle_init
+      placeholder: MAC_INIT_API
+      suggested_use: migrate_api_call
+    - role: lifecycle_update
+      placeholder: MAC_UPDATE_API
+      suggested_use: migrate_api_call
+    - role: lifecycle_final
+      placeholder: MAC_FINAL_API
+      suggested_use: migrate_api_call
+    unspecified:
+    - role: lifecycle_state_transition
+      placeholder: FINAL_AFTER_FINAL_ACTION
+    - role: lifecycle_state_transition
+      placeholder: UPDATE_AFTER_FINAL_ACTION
+    preserve_oracle:
+    - role: expected_behavior
+      placeholder: EXPECTED_STATE_BEHAVIOR
+      suggested_use: preserve_oracle
+cross_library:
+  cross_library:
+    target_api: mac_lifecycle_pair
+    target_template: tmpl_cross_library.c
+    adapter_source: recipe_slot_bindings
+    applicability: generate
+    preserved_features:
+    - lifecycle state transition after terminal finalization
+    - repeated_final observability
+    - update_after_final observability
+    - caller-visible return code or status
+    - caller-visible output length
+    - sanitizer signal if lifecycle misuse reaches memory-unsafe behavior
+    lost_or_weakened_features:
+    - OpenSSL provider semantics may allow legacy or permissive repeated final behavior
+      that needs triage rather than immediate vulnerability classification.
+    - mbedTLS PSA has no direct public equivalent for OpenSSL get-size-before-setup
+      queries.
+    llm_status: ok
+    ast_mask_selection_summary:
+      selected_count: 6
+      source_unit_count: null
+      trigger_apis: []
+      harness_family: mac_lifecycle
+      by_role: {}
+      by_mask_level: {}
+      by_suggested_use: {}
+    adapter_recipe: adapter_recipes/openssl_mbedtls/mac_lifecycle.recipe_slot.yaml
+    slot_bindings:
+      openssl_MAC_FETCH_API: EVP_MAC_fetch
+      openssl_MAC_CTX_NEW_API: EVP_MAC_CTX_new
+      openssl_MAC_INIT_API: EVP_MAC_init
+      openssl_MAC_UPDATE_API: EVP_MAC_update
+      openssl_MAC_FINAL_API: EVP_MAC_final
+      openssl_MAC_FREE_API: EVP_MAC_CTX_free
+      openssl_MAC_ALGORITHM: CMAC
+      mbedtls_psa_MAC_SETUP_API: psa_mac_sign_setup
+      mbedtls_psa_MAC_UPDATE_API: psa_mac_update
+      mbedtls_psa_MAC_FINAL_API: psa_mac_sign_finish
+      mbedtls_psa_MAC_ABORT_API: psa_mac_abort
+      mbedtls_psa_MAC_ALGORITHM: PSA_ALG_CMAC
+mutation_points:
+- name: LIFECYCLE_SEQUENCE_ID
+  placeholder: '[LIFECYCLE_SEQUENCE_ID]'
+  type: int
+  default: 0
+  values:
+  - 0
+  - 1
+  - 2
+  - 3
+  priority: high
+generation_policy:
+  max_cases: 4
+  priority:
+  - LIFECYCLE_SEQUENCE_ID
+safe_behavior:
+  normal_init_update_final: valid lifecycle completes successfully
+  terminal_state_reuse: repeated final/update after final or abort is rejected without
+    crash
+triage_behavior:
+  permissive_terminal_state_reuse: API accepts repeated final/update after final or
+    abort. This is recorded as semantic divergence or API-specific permissive behavior,
+    not a confirmed vulnerability.

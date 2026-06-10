@@ -1,0 +1,165 @@
+{
+  "query": "EVP_MAC_final CMAC repeated final update after final lifecycle",
+  "top_k": 8,
+  "results": [
+    {
+      "rank": 1,
+      "score": 1.3650976538614301,
+      "distance": 0.5264899730682373,
+      "base_score": 0.6550976538614302,
+      "rerank_score": 1.3650976538614301,
+      "rerank_reasons": [
+        "api_match:EVP_MAC_final",
+        "family_match:mac_lifecycle",
+        "layer:api_cards",
+        "source_file_api_match",
+        "keyword_overlap:cmac,evp_mac_final,lifecycle",
+        "recent_feedback_source"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/openssl/EVP_MAC_final.yaml",
+      "text": "Source: API Card\napi: EVP_MAC_final\nlibrary: openssl\nfamily: mac_lifecycle\nsignature: int EVP_MAC_final(EVP_MAC_CTX *ctx, unsigned char *out, size_t *outl, size_t outsize)\nparameter_semantics: ctx: MAC context\nout: output buffer\noutl: caller-visible output length\noutsize: output buffer capacity\nreturn_value_semantics: success: 1 and outl receives MAC length\nfailure: 0 and output state should remain safe for caller\nvalid_invalid_ranges: valid: initialized MAC context and sufficiently sized output buffer\ninvalid: final before setup, update after final for strict lifecycle APIs, undersized\n  output\nunsupported_conditions: - using ctx after invalid lifecycle transition\nmutation_hints: - final before setup\n- double final\n- update after final\n- third final\n- update after second final\n- abort then final\n- output buffer too small\noracle_observables: - return_code\n- outl\n- output_buffer_state\n- sanitizer_signal\nknown_pitfalls: - HMAC failure-path outl observations should be classified as failure_path_output_state_triage,\n  not bug_candidate, without stronger output-state evidence.\n- HMAC+AES and CMAC+SHA are invalid parameter projections; skip them or mark projection_limitation.\nnotes: - 'Known pitfall: failure paths must not expose unsafe outl or stale output state.'\n- 'Feedback: OpenSSL CMAC repeated final may be allowed legacy/provider semantics\n  rather than a vulnerability by itself.'\n- 'Observed CMAC behavior: a second EVP_MAC_final() can succeed and return outl=16.'\n- 'MAC lifecycle v2 minimal confirmation: CMAC AES-128-CBC and AES-256-CBC accepted\n  EVP_MAC_update() after EVP_MAC_final(); a follow-up EVP_MAC_final() also succeeded\n  and produced a different 16-byte output.'\n- 'MAC lifecycle v2 minimal confirmation: CMAC third-final sequences returned success\n  for final1/final2/final3, each with outl=16 and distinct output bytes.'\n- 'MAC lifecycle v2 minimal confirmation: CMAC update-after-second-final sequences\n  returned success for final1, final2, update-after-second-final, and final3.'\n- High-value follow-up mutations are update-after-final and update-after-second-final\n  because they show continuation after a terminal-looking finalization state.\n- Third-final is useful evidence but should be treated as allowed_legacy_semantics_needs_review\n  until OpenSSL documentation confirms whether repeated finalization is intentional\n  provider semantics.\n- 'Classification guidance: do not report these CMAC lifecycle observations as confirmed\n  vulnerabilities without documentation review and caller-impact evidence.'\n",
+      "metadata": {
+        "family": "mac_lifecycle",
+        "library": "openssl",
+        "doc_type": "api_card",
+        "api": "EVP_MAC_final",
+        "layer": "api_cards",
+        "source_file": "knowledge_base/api_cards/openssl/EVP_MAC_final.yaml"
+      }
+    },
+    {
+      "rank": 2,
+      "score": 0.9280669478452989,
+      "distance": 0.7004866600036621,
+      "base_score": 0.5880669478452989,
+      "rerank_score": 0.9280669478452989,
+      "rerank_reasons": [
+        "family_match:mac_lifecycle",
+        "layer:api_cards",
+        "keyword_overlap:cmac,lifecycle",
+        "recent_feedback_source"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/mbedtls/psa_mac_sign_finish.yaml",
+      "text": "Source: API Card\napi: psa_mac_sign_finish\nlibrary: mbedtls\nfamily: mac_lifecycle\nsignature: psa_status_t psa_mac_sign_finish(psa_mac_operation_t *operation, uint8_t *mac, size_t mac_size, size_t *mac_length)\nparameter_semantics: operation: PSA MAC operation state\nmac: output buffer\nmac_size: output buffer capacity\nmac_length: caller-visible output length\nreturn_value_semantics: success: PSA_SUCCESS and mac_length receives produced length\nfailure: PSA error status and output state should remain safe\nvalid_invalid_ranges: valid: active sign operation and sufficient output buffer\ninvalid: finish before setup, double finish, undersized output\nunsupported_conditions: - operation in verify mode\n- aborted or inactive operation\nmutation_hints: - final before setup\n- double final\n- update after final\n- third final\n- update after second final\n- abort then final\n- final after abort\n- query after final\n- query after abort\n- small mac_size\noracle_observables: - psa_status\n- mac_length\n- output_buffer_state\n- sanitizer_signal\nknown_pitfalls: - mbedTLS PSA MAC has no public query-size-before-setup equivalent; mark that projection\n  as projection_limitation.\n- Invalid algorithm projections such as HMAC+AES or CMAC+SHA should be avoided or\n  marked projection_limitation.\nnotes: - 'Known pitfall: failure return must be interpreted with mac_length and operation\n  state.'\n- 'Feedback: successful psa_mac_sign_finish() terminates the PSA MAC operation.'\n- 'Observed behavior: repeated psa_mac_sign_finish() after success returns BAD_STATE-like\n  failure, not a second successful MAC.'\n- 'MAC lifecycle v2 minimal confirmation: after successful CMAC finish, mbedTLS PSA\n  rejects update-after-finish, second finish, third finish, and update-after-second-finish\n  with status -137.'\n- MAC lifecycle v2 minimal confirmation was stable under normal and ASan/UBSan runs;\n  no sanitizer crash was observed.\n- 'Classification guidance: PSA strict lifecycle rejection is a safe negative side\n  of CMAC double-final comparison, not crash evidence.'\n",
+      "metadata": {
+        "api": "psa_mac_sign_finish",
+        "source_file": "knowledge_base/api_cards/mbedtls/psa_mac_sign_finish.yaml",
+        "doc_type": "api_card",
+        "library": "mbedtls",
+        "family": "mac_lifecycle",
+        "layer": "api_cards"
+      }
+    },
+    {
+      "rank": 3,
+      "score": 0.9203194375764606,
+      "distance": 0.7231888771057129,
+      "base_score": 0.5803194375764607,
+      "rerank_score": 0.9203194375764606,
+      "rerank_reasons": [
+        "family_match:mac_lifecycle",
+        "layer:api_cards",
+        "keyword_overlap:cmac,lifecycle",
+        "recent_feedback_source"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/openssl/EVP_MAC_CTX_get_mac_size.yaml",
+      "text": "Source: API Card\napi: EVP_MAC_CTX_get_mac_size\nlibrary: openssl\nfamily: mac_lifecycle\nsignature: size_t EVP_MAC_CTX_get_mac_size(EVP_MAC_CTX *ctx)\nparameter_semantics: ctx: MAC context\nreturn_value_semantics: success: returns MAC output size\nfailure_or_unknown: may return 0\nvalid_invalid_ranges: valid: initialized or parameterized MAC context\ninvalid: uninitialized, freed, or unsupported context state\nunsupported_conditions: - stale or NULL context\nmutation_hints: - get size before setup\n- get size after failed init\n- get size after final\n- get size after abort-like cleanup\n- query after final\n- query after abort\noracle_observables: - returned_size\n- error_stack\n- sanitizer_signal\nknown_pitfalls: - Do not treat a nonzero returned_size alone as a crash or confirmed vulnerability.\n- query_size_before_setup is a projection limitation for mbedTLS PSA MAC because there\n  is no public pre-setup size query equivalent.\nnotes: - 'Known pitfall: size query behavior depends on lifecycle state.'\n- 'Feedback: query-after-final and query-after-abort are MAC lifecycle follow-up mutations,\n  while PSA query-size-before-setup has no public equivalent.'\n- 'Classification guidance: size-query differences after CMAC final/abort should be\n  triaged as lifecycle_semantic_divergence_candidate, allowed_legacy_semantics_needs_review,\n  or projection_limitation depending on source/target observability.'\n",
+      "metadata": {
+        "api": "EVP_MAC_CTX_get_mac_size",
+        "layer": "api_cards",
+        "family": "mac_lifecycle",
+        "library": "openssl",
+        "doc_type": "api_card",
+        "source_file": "knowledge_base/api_cards/openssl/EVP_MAC_CTX_get_mac_size.yaml"
+      }
+    },
+    {
+      "rank": 4,
+      "score": 0.6094298215741627,
+      "distance": 0.6408780217170715,
+      "base_score": 0.6094298215741627,
+      "rerank_score": 0.6094298215741627,
+      "rerank_reasons": [],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0005.md",
+      "text": "ed behavior:\n\n- after zero-length update, `val.p == NULL` and `val.len == 0`,\n- later nonzero update reallocates successfully,\n- no crash.\n\n## Evidence Files\n\n- Metadata: `data/pocs/core10/MBEDTLS-POC-0005/metadata.json`\n- Notes: `data/pocs/core10/MBEDTLS-POC-0005/notes.md`\n- Reproduction result: `data/pocs/core10/MBEDTLS-POC-0005/reproduction_result.md`\n- PoC source: `data/pocs/core10/MBEDTLS-POC-0005/poc/poc_asn1_store_named_data_null_deref.c`\n- Buggy log: `data/pocs/core10/MBEDTLS-POC-0005/poc/run_buggy.log`\n- Fixed log: `data/pocs/core10/MBEDTLS-POC-0005/poc/run_fixed.log`\n- Library files: `data/pocs/core10/MBEDTLS-POC-0005/library_files.txt`\n- Test files: `data/pocs/core10/MBEDTLS-POC-0005/test_files.txt`\n- Commits: `data/pocs/core10/MBEDTLS-POC-0005/commits.txt`\n- Fix commits: `data/pocs/core10/MBEDTLS-POC-0005/fix_commits.txt`\n\n## Notes\n\nNo local `fix.patch` file is present for this PoC. The original metadata\ncontains broad CVE-search evidence, so this pattern uses the narrowed",
+      "metadata": {
+        "source_file": "knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0005.md",
+        "layer": "poc_patterns",
+        "doc_type": "poc_pattern",
+        "library": "mbedtls"
+      }
+    },
+    {
+      "rank": 5,
+      "score": 0.5929754607385106,
+      "distance": 0.6864104270935059,
+      "base_score": 0.5929754607385106,
+      "rerank_score": 0.5929754607385106,
+      "rerank_reasons": [],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__core__psa_crypto.c.md",
+      "text": "{\n\n#if defined(MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA)\n        status = mbedtls_to_psa_error(\n            mbedtls_ecdsa_sign_det_restartable(&operation->ctx->grp,\n                                               &r,\n                                               &s,\n                                               &operation->ctx->d,\n```\n\n## Snippet 3\n\n```c\nMBEDTLS_PSA_RANDOM_STATE,\n                                           &operation->restart_ctx));\n    }\n\n    /* Hide the fact that the restart context only holds a delta of number of\n     * ops done during the last operation, not an absolute value. */\n    operation->num_ops += operation->restart_ctx.ecp.ops_done;\n\n    if (status == PSA_SUCCESS) {\n        status =  mbedtls_to_psa_error(\n            mbedtls_mpi_write_binary(&r,\n                                     signature,\n                                     operation->coordinate_bytes)\n            );\n\n        if (status != PSA_SUCCESS) {\n            goto exit;\n        }\n\n        st",
+      "metadata": {
+        "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__core__psa_crypto.c.md",
+        "layer": "api_constraints",
+        "library": "mbedtls",
+        "doc_type": "api_constraint"
+      }
+    },
+    {
+      "rank": 6,
+      "score": 0.5791259621929541,
+      "distance": 0.7267400622367859,
+      "base_score": 0.5791259621929541,
+      "rerank_score": 0.5791259621929541,
+      "rerank_reasons": [],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__psa_crypto_ecp.c.md",
+      "text": "endif /* MBEDTLS_ECP_RESTARTABLE && MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_GENERATE */\n\n#if defined(MBEDTLS_ECP_RESTARTABLE) && \\\n    (defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_IMPORT) || \\\n    defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_EXPORT) || \\\n```",
+      "metadata": {
+        "library": "mbedtls",
+        "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__psa_crypto_ecp.c.md",
+        "layer": "api_constraints",
+        "doc_type": "api_constraint"
+      }
+    },
+    {
+      "rank": 7,
+      "score": 0.579055343959347,
+      "distance": 0.7269506454467773,
+      "base_score": 0.579055343959347,
+      "rerank_score": 0.579055343959347,
+      "rerank_reasons": [],
+      "layer": "unit_tests",
+      "source_file": "knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecp.function.md",
+      "text": "ecp_set_max_ops((unsigned) max_ops);\n\n    /* Base point case */\n    cnt_restarts = 0;\n    do {\n        ECP_PT_RESET(&R);\n        ret = mbedtls_ecp_mul_restartable(&grp, &R, &dA, &grp.G,\n                                          &mbedtls_test_rnd_pseudo_rand, &rnd_info, &ctx);\n    } while (ret == MBEDTLS_ERR_ECP_IN_PROGRESS && ++cnt_restarts);\n\n    TEST_ASSERT(ret == 0);\n    TEST_ASSERT(mbedtls_mpi_cmp_mpi(&R.X, &xA) == 0);\n    TEST_ASSERT(mbedtls_mpi_cmp_mpi(&R.Y, &yA) == 0);\n\n    TEST_ASSERT(cnt_restarts >= min_restarts);\n```\n\n## Call pattern 3\n\n```c\n/* Do we leak memory when aborting an operation?\n     * This test only makes sense when we actually restart */\n    if (min_restarts > 0) {\n        ret = mbedtls_ecp_mul_restartable(&grp, &R, &dB, &P,\n                                          &mbedtls_test_rnd_pseudo_rand, &rnd_info, &ctx);\n        TEST_ASSERT(ret == MBEDTLS_ERR_ECP_IN_PROGRESS);\n    }\n\nexit:\n    mbedtls_ecp_restart_free(&ctx);\n    mbedtls_ecp_group_free(&grp);\n    mbedtls",
+      "metadata": {
+        "layer": "unit_tests",
+        "library": "mbedtls",
+        "source_file": "knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecp.function.md",
+        "doc_type": "unit_test_call_pattern"
+      }
+    },
+    {
+      "rank": 8,
+      "score": 0.577398245409232,
+      "distance": 0.7319068908691406,
+      "base_score": 0.577398245409232,
+      "rerank_score": 0.577398245409232,
+      "rerank_reasons": [],
+      "layer": "unit_tests",
+      "source_file": "knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__keymgmt_internal_test.c.md",
+      "text": "t test_evp_pkey_export_to_provider(int n)\n{\n    OSSL_LIB_CTX *libctx = NULL;\n    OSSL_PROVIDER *prov = NULL;\n    X509 *cert = NULL;\n    BIO *bio = NULL;\n    X509_PUBKEY *pubkey = NULL;\n    EVP_KEYMGMT *keymgmt = NULL;\n```",
+      "metadata": {
+        "library": "openssl",
+        "doc_type": "unit_test_call_pattern",
+        "source_file": "knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__keymgmt_internal_test.c.md",
+        "layer": "unit_tests"
+      }
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+task: secure_heap_milestone_closure_and_scheduler_rerank
+created_from_existing_evidence_only: true
+no_new_experiments_run: true
+seed_issue: OPENSSL-ISSUE-28669
+family: secure_heap_state_lifecycle
+seed_validation_result:
+  cases:
+    - pre_init_used_only
+    - done_then_used
+  verdict: crash_candidate
+  safe_controls:
+    - initialized_used
+    - initialized_check_used
+    - done_check_then_used
+pattern_expansion_result:
+  total_cases: 19
+  expansion_cases: 17
+  verdict_counts:
+    normal_defined_behavior: 16
+    crash_candidate: 3
+  novelty_counts:
+    non_novel_seed_reproduction: 2
+    normal_defined_behavior: 16
+    new_state_combination_candidate: 1
+validated_new_candidate:
+  candidate_id: secure_heap_exp_0003_new_state_init_failed_then_used
+  api: CRYPTO_secure_used
+  state_sequence: init_failed_then_query
+  is_seed_case: false
+technical_evidence:
+  minimal_reproducer:
+    init_failed_then_used: "CRYPTO_secure_malloc_init(16,16)=0 then CRYPTO_secure_used() exits with SIGSEGV / 139"
+    initialized_then_used_safe_control: "CRYPTO_secure_malloc_init(4096,32)=1 then CRYPTO_secure_used()=0 and exits 0"
+  gdb:
+    - "pthread_rwlock_rdlock(rwlock=0x0)"
+    - "CRYPTO_THREAD_read_lock(lock=0x0)"
+    - "CRYPTO_secure_used()"
+    - "main()"
+current_classification:
+  - validated_new_state_candidate
+  - current_version_robustness_candidate
+cannot_claim:
+  - confirmed_vulnerability
+  - CVE
+remaining_gaps:
+  - api_contract_manual_confirmation
+  - multi_version_matrix
+  - asan_ubsan_or_valgrind_validation
+external_validation_track:
+  status: pending
+  owner_note: "ASAN/UBSAN rebuild should be performed separately by teammate, not in the current exploration workflow."
+  tasks:
+    - asan_ubsan_validation
+    - multi_version_matrix
+    - api_contract_confirmation
+main_exploration_decision:
+  secure_heap_state_lifecycle: milestone_closed_pending_external_validation
+  continue_as_top_exploration_family: false

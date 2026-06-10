@@ -1,0 +1,2086 @@
+schema_version: 1
+core10_count: 10
+openssl_issue_count: 30
+feedback_pattern_count: 2
+feedback_summary:
+  pkey_verify_semantic: &id002
+    total_cases: 160
+    verdict_counts:
+      normal_expected_behavior: 8
+      safe_reject_behavior: 152
+    unexpected_success_candidate: 0
+    crash_candidate: 0
+    behavior_divergence_candidate: 0
+    interpretation: stable_safe_negative_baseline
+  der_full_consumption: &id001
+    total_cases: 75
+    feedback_rows: 30
+    verdict_counts:
+      app_level_validation_gap_candidate: 30
+      expected_prefix_accept_behavior: 39
+      malformed_baseline_reject: 3
+      valid_baseline_success: 3
+    app_level_validation_gap_candidate: 30
+    strict_reject: 0
+    valid_baseline_success: 3
+    malformed_baseline_reject: 3
+    expected_prefix_accept_behavior: 39
+    interpretation: app_level_validation_gap_candidate
+    evidence_files:
+    - artifacts/feedback/der_full_consumption_feedback.jsonl
+    - artifacts/sprints/der_full_consumption_v2/results/run.summary.json
+    - artifacts/sprints/der_full_consumption_v2/results/behavior_summary.json
+patterns:
+- pattern_id: MBEDTLS-POC-0001
+  source_path: data/pocs/core10/MBEDTLS-POC-0001
+  source_type: core10_poc
+  source_library: mbedtls
+  target_library: openssl
+  family: memory_length_boundary
+  subfamily: mpi_write_string_buffer_boundary
+  oracle_type: crash_or_sanitizer
+  root_cause: Missing boundary check in output buffer length calculation for negative
+    MPI string conversion.
+  source_api:
+  - mbedtls_mpi_write_string
+  target_api:
+  - BN_bn2binpad
+  - BN_signed_bn2bin
+  migration_status: runnable_recipe_slot_family_v1
+  current_verdict: behavior_divergence_candidate
+  confidence: medium
+  has_controlled_template: true
+  has_render_matrix: true
+  has_feedback: true
+  has_rag_evidence: false
+  priority_score: 0.55
+  priority_reasons:
+  - caller_buffer_boundary
+  - clear_memory_oracle
+  evidence_files:
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/adapters_recipe_llm/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/adapters_recipe_llm/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/adapters_recipe_llm_validated/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/adapters_recipe_llm_validated/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/cross_templates_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/README.md
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/cross_templates_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/cross_mapping.yaml
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/cross_templates_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/llm_updates.json
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/cross_templates_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/mask_report.yaml
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/cross_templates_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/normalization_report.json
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/cross_templates_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/poc_original.c
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/cross_templates_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/rag_context.json
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/cross_templates_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/template_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/cross_templates_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/tmpl_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/cross_templates_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/tmpl_openssl.c
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/logs/.gitkeep
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/rendered_cases_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/case_0000_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/rendered_cases_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/case_0000_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/rendered_cases_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/case_0000_openssl.c
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/rendered_cases_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/case_0001_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/rendered_cases_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/case_0001_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/rendered_cases_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/case_0001_openssl.c
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/rendered_cases_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/case_0002_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/rendered_cases_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/case_0002_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0001-mpi-write-string/rendered_cases_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/case_0002_openssl.c
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts:
+      run_nonzero: 2
+      run_ok: 3
+    raw_status_counts:
+      run_nonzero: 2
+      run_ok: 3
+    migration_verdict_counts: {}
+  notes:
+  - 'Dataset status: accepted_reconstructable.'
+  - 'Failure signal: buffer overflow / out-of-bounds write.'
+- pattern_id: MBEDTLS-POC-0002
+  source_path: data/pocs/core10/MBEDTLS-POC-0002
+  source_type: core10_poc
+  source_library: mbedtls
+  target_library: openssl
+  family: bn_mpi_arithmetic
+  subfamily: mpi_sub_abs_limb_boundary
+  oracle_type: projection_limitation
+  root_cause: Incorrect handling of negative MPI subtraction when |B| has more limbs
+    than |A|.
+  source_api:
+  - mbedtls_mpi_sub_abs
+  target_api:
+  - BN_usub
+  migration_status: projection_limitation
+  current_verdict: expected_library_behavior
+  confidence: medium
+  has_controlled_template: true
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.25
+  priority_reasons:
+  - projection_limitation_observed
+  - likely_expected_library_behavior
+  evidence_files:
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/PLAN.md
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/adapters_recipe_llm/.gitkeep
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/adapters_recipe_llm/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/adapters_recipe_llm/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/adapters_recipe_llm_validated/.gitkeep
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/adapters_recipe_llm_validated/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/adapters_recipe_llm_validated/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/cross_templates_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/README.md
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/cross_templates_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/cross_mapping.yaml
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/cross_templates_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/mask_report.yaml
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/cross_templates_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/template_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/cross_templates_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/tmpl_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/cross_templates_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/tmpl_openssl.c
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/logs/.gitkeep
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/rendered_cases_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/case_0000_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/rendered_cases_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/case_0000_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/rendered_cases_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/case_0000_openssl.c
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/rendered_cases_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/case_0001_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/rendered_cases_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/case_0001_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/rendered_cases_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/case_0001_openssl.c
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/rendered_cases_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/case_0002_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/rendered_cases_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/case_0002_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/rendered_cases_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/case_0002_openssl.c
+  - artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/rendered_cases_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/case_0003_manifest.yaml
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Dataset status: accepted_reconstructable.'
+  - 'Failure signal: buffer overflow.'
+- pattern_id: MBEDTLS-POC-0003
+  source_path: data/pocs/core10/MBEDTLS-POC-0003
+  source_type: core10_poc
+  source_library: mbedtls
+  target_library: openssl
+  family: pkey_verify_semantic
+  subfamily: pk_verify_ext_null_deref
+  oracle_type: crash_or_sanitizer
+  root_cause: Missing NULL pointer validation before RSA key access in extended PK
+    verification.
+  source_api:
+  - mbedtls_pk_verify_ext
+  target_api:
+  - EVP_DigestVerify
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: true
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.5
+  priority_reasons:
+  - pkey_verify_dispatch
+  - crash_oracle
+  evidence_files:
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/adapters_recipe_llm/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/adapters_recipe_llm/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/adapters_recipe_llm_validated/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/adapters_recipe_llm_validated/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/cross_templates_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/README.md
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/cross_templates_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/cross_mapping.yaml
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/cross_templates_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/llm_updates.json
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/cross_templates_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/mask_report.yaml
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/cross_templates_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/normalization_report.json
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/cross_templates_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/poc_original.c
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/cross_templates_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/rag_context.json
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/cross_templates_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/template_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/cross_templates_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/tmpl_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/cross_templates_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/tmpl_openssl.c
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/rendered_cases_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/case_0000_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/rendered_cases_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/case_0000_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/rendered_cases_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/case_0000_openssl.c
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/rendered_cases_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/case_0001_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/rendered_cases_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/case_0001_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/rendered_cases_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/case_0001_openssl.c
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/rendered_cases_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/case_0002_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/rendered_cases_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/case_0002_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/rendered_cases_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/case_0002_openssl.c
+  - artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/rendered_cases_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/case_0003_manifest.yaml
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Dataset status: accepted_reconstructable.'
+  - 'Failure signal: NULL dereference crash.'
+- pattern_id: MBEDTLS-POC-0004
+  source_path: data/pocs/core10/MBEDTLS-POC-0004
+  source_type: core10_poc
+  source_library: mbedtls
+  target_library: openssl
+  family: cipher_aead_lifecycle
+  subfamily: invalid_padding_output_length
+  oracle_type: behavior_divergence
+  root_cause: Incorrect output length assignment on invalid PKCS padding error path.
+  source_api:
+  - mbedtls_cipher_finish
+  target_api:
+  - EVP_DecryptFinal_ex
+  - EVP_CipherFinal_ex
+  migration_status: pending_migration
+  current_verdict: pending_inference
+  confidence: medium
+  has_controlled_template: true
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.65
+  priority_reasons:
+  - clear_output_state_oracle
+  - return_code_outlen_semantic
+  evidence_files:
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/adapters_recipe_llm/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/adapters_recipe_llm/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/adapters_recipe_llm_validated/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/adapters_recipe_llm_validated/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/cross_templates_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/README.md
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/cross_templates_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/cross_mapping.yaml
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/cross_templates_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/mask_report.yaml
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/cross_templates_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/poc_original.c
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/cross_templates_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/template_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/cross_templates_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/tmpl_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/cross_templates_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/tmpl_openssl.c
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/logs/.gitkeep
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0000_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0000_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0000_openssl.c
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0001_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0001_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0001_openssl.c
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0002_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0002_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0002_openssl.c
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0003_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0003_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/rendered_cases_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/case_0003_openssl.c
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Dataset status: accepted_reconstructable.'
+  - 'Failure signal: wrong output length / potential caller-side overflow.'
+- pattern_id: MBEDTLS-POC-0005
+  source_path: data/pocs/core10/MBEDTLS-POC-0005
+  source_type: core10_poc
+  source_library: mbedtls
+  target_library: openssl
+  family: api_state_machine
+  subfamily: zero_length_stale_state
+  oracle_type: safe_reject_baseline
+  root_cause: Missing validation for conflicting ASN.1 named-data value pointer and
+    nonzero length, allowing NULL pointer dereference.
+  source_api:
+  - mbedtls_asn1_store_named_data
+  target_api:
+  - ASN1_STRING_set
+  migration_status: migrated_safe
+  current_verdict: migrated_safe
+  confidence: medium
+  has_controlled_template: true
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.42
+  priority_reasons:
+  - object_state_lifecycle
+  - safe_negative_baseline
+  evidence_files:
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/adapters_recipe_llm/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/adapters_recipe_llm/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/adapters_recipe_llm_validated/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/adapters_recipe_llm_validated/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/cross_templates_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/README.md
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/cross_templates_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/cross_mapping.yaml
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/cross_templates_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/mask_report.yaml
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/cross_templates_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/template_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/cross_templates_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/tmpl_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/cross_templates_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/tmpl_openssl.c
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/rendered_cases_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/case_0000_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/rendered_cases_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/case_0000_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/rendered_cases_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/case_0000_openssl.c
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/rendered_cases_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/case_0001_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/rendered_cases_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/case_0001_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/rendered_cases_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/case_0001_openssl.c
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/results/run_recipe.jsonl
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/results/run_recipe.migration_pairs.jsonl
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/results/run_recipe.migration_summary.json
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/results/run_recipe.summary.json
+  - artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/results/run_recipe.verdicts.jsonl
+  result_summary:
+    total_cases: 4
+    verdict_counts:
+      safe_reject_behavior: 4
+    raw_status_counts:
+      run_ok: 4
+    migration_verdict_counts:
+      migrated_safe: 2
+  notes:
+  - 'Dataset status: accepted_reconstructable.'
+  - 'Failure signal: NULL pointer dereference.'
+  - Local metadata and artifacts describe mbedtls_asn1_store_named_data stale state,
+    not a MAC lifecycle issue.
+  - Historical request mentioned MAC for this PoC, but no local MAC evidence was found
+    during this run.
+- pattern_id: MBEDTLS-POC-0011
+  source_path: data/pocs/core10/MBEDTLS-POC-0011
+  source_type: core10_poc
+  source_library: mbedtls
+  target_library: openssl
+  family: memory_length_boundary
+  subfamily: pem_empty_buffer_underflow
+  oracle_type: crash_or_sanitizer
+  root_cause: Missing PEM parse bounds check causing one-byte heap-based buffer underflow
+    on untrusted PEM input.
+  source_api:
+  - mbedtls_pem_read_buffer
+  - mbedtls_pk_parse
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: true
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.5
+  priority_reasons:
+  - pem_boundary
+  - underflow_oracle
+  evidence_files:
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/adapters_recipe_llm/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/adapters_recipe_llm/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/adapters_recipe_llm_validated/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/adapters_recipe_llm_validated/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/cross_templates_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/README.md
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/cross_templates_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/cross_mapping.yaml
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/cross_templates_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/mask_report.yaml
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/cross_templates_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/template_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/cross_templates_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/tmpl_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/cross_templates_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/tmpl_openssl.c
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0000_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0000_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0000_openssl.c
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0001_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0001_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0001_openssl.c
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0002_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0002_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0002_openssl.c
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0003_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0003_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/rendered_cases_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/case_0003_openssl.c
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/results/run_recipe.jsonl
+  - artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/results/run_recipe.migration_pairs.jsonl
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Dataset status: accepted_reconstructable.'
+  - 'Failure signal: one-byte heap buffer underflow.'
+- pattern_id: MBEDTLS-POC-0017
+  source_path: data/pocs/core10/MBEDTLS-POC-0017
+  source_type: core10_poc
+  source_library: mbedtls
+  target_library: openssl
+  family: asn1_nested_boundary
+  subfamily: x509_inner_boundary
+  oracle_type: safe_reject_baseline
+  root_cause: Incorrect ASN.1 length/bounds validation in parser or writer.
+  source_api:
+  - X.509 CRT ASN.1 parsing functions
+  target_api:
+  - d2i_X509
+  migration_status: migrated_safe
+  current_verdict: migrated_safe
+  confidence: medium
+  has_controlled_template: true
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.35
+  priority_reasons:
+  - safe_safe_result
+  - useful_negative_case
+  evidence_files:
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/adapters_recipe_llm/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/adapters_recipe_llm/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/adapters_recipe_llm_validated/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/adapters_recipe_llm_validated/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/cross_templates_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/README.md
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/cross_templates_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/cross_mapping.yaml
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/cross_templates_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/mask_report.yaml
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/cross_templates_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/poc_original.c
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/cross_templates_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/template_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/cross_templates_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/tmpl_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/cross_templates_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/tmpl_openssl.c
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/logs/.gitkeep
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0000_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0000_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0000_openssl.c
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0001_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0001_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0001_openssl.c
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0002_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0002_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0002_openssl.c
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0003_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0003_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/rendered_cases_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/case_0003_openssl.c
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Dataset status: accepted_reconstructable.'
+  - 'Failure signal: parser bounds violation / malformed certificate handling.'
+- pattern_id: MBEDTLS-POC-0020
+  source_path: data/pocs/core10/MBEDTLS-POC-0020
+  source_type: core10_poc
+  source_library: mbedtls
+  target_library: openssl
+  family: der_full_consumption
+  subfamily: trailing_garbage
+  oracle_type: full_consumption_semantic
+  root_cause: Incorrect edge-case handling in mbedtls_pk_parse_key.
+  source_api:
+  - mbedtls_pk_parse_key
+  - mbedtls_rsa_parse_key
+  - mbedtls_rsa_parse_pubkey
+  target_api:
+  - d2i_RSAPrivateKey
+  - d2i_PrivateKey
+  - d2i_RSA_PUBKEY
+  migration_status: migrated_candidate
+  current_verdict: app_level_validation_gap_candidate
+  confidence: medium
+  has_controlled_template: true
+  has_render_matrix: true
+  has_feedback: true
+  has_rag_evidence: false
+  priority_score: 0.9
+  priority_reasons:
+  - app_level_validation_gap_candidate
+  - clear_oracle
+  - controlled_app_level_wrapper
+  - der_v2_feedback
+  - reusable_der_family
+  - semantic_candidate_observed
+  evidence_files:
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSAPrivateKey/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSAPrivateKey/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSA_PUBKEY/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSA_PUBKEY/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm_validated/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm_validated/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm_validated/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSAPrivateKey/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm_validated/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSAPrivateKey/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm_validated/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSA_PUBKEY/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/adapters_recipe_llm_validated/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSA_PUBKEY/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/README.md
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/cross_mapping.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/mask_report.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/poc_original.c
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/template_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/tmpl_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/tmpl_openssl.c
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSAPrivateKey/README.md
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSAPrivateKey/cross_mapping.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSAPrivateKey/mask_report.yaml
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSAPrivateKey/poc_original.c
+  - artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSAPrivateKey/template_meta.yaml
+  - artifacts/feedback/der_full_consumption_feedback.jsonl
+  - artifacts/sprints/der_full_consumption_v2/results/run.summary.json
+  - artifacts/sprints/der_full_consumption_v2/results/behavior_summary.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Dataset status: accepted_reconstructable.'
+  - 'Failure signal: accepts malformed key / trailing garbage.'
+  - DER v2 controlled app-level sprint observed valid DER prefix plus malformed trailing
+    bytes accepted with output artifacts; this is not crash evidence and not a confirmed
+    CVE.
+  feedback_summary: *id001
+- pattern_id: MBEDTLS-POC-0027
+  source_path: data/pocs/core10/MBEDTLS-POC-0027
+  source_type: core10_poc
+  source_library: mbedtls
+  target_library: openssl
+  family: x509_parsing
+  subfamily: tls_verify_result_semantic
+  oracle_type: behavior_divergence
+  root_cause: Incorrect return value handling on error path.
+  source_api:
+  - mbedtls_ssl_get_verify_result
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: pending_inference
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.45
+  priority_reasons:
+  - semantic_correctness
+  - x509_tls_verdict
+  evidence_files:
+  - artifacts/migrations/mbedtls-poc-0027-tls13-verify-result-propagation/README.md
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Dataset status: accepted_reconstructable.'
+  - 'Failure signal: wrong behavior / semantic validation failure.'
+- pattern_id: MBEDTLS-POC-0028
+  source_path: data/pocs/core10/MBEDTLS-POC-0028
+  source_type: core10_poc
+  source_library: mbedtls
+  target_library: openssl
+  family: cipher_aead_lifecycle
+  subfamily: invalid_aead_tag_length_setup
+  oracle_type: unexpected_success
+  root_cause: Missing validation of AEAD tag lengths from PSA drivers.
+  source_api:
+  - psa_aead_setup
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: pending_inference
+  confidence: medium
+  has_controlled_template: true
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.75
+  priority_reasons:
+  - invalid_parameter_acceptance
+  - psa_aead_setup
+  evidence_files:
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/adapters_recipe_llm/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/adapters_recipe_llm/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/adapters_recipe_llm_validated/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/adapter.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/adapters_recipe_llm_validated/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/adapter_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/cross_templates_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/README.md
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/cross_templates_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/cross_mapping.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/cross_templates_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/mask_report.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/cross_templates_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/template_meta.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/cross_templates_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/tmpl_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/cross_templates_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/tmpl_openssl.c
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0000_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0000_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0000_openssl.c
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0001_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0001_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0001_openssl.c
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0002_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0002_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0002_openssl.c
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0003_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0003_mbedtls.c
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0003_openssl.c
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0004_manifest.yaml
+  - artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/rendered_cases_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/case_0004_mbedtls.c
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Dataset status: accepted_reconstructable.'
+  - 'Failure signal: invalid parameter accepted.'
+- pattern_id: OPENSSL-ISSUE-11567
+  source_path: datasets/openssl/poc_artifacts/issue_11567
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: x509_parsing
+  subfamily: x509_asn1_semantic
+  oracle_type: behavior_divergence
+  root_cause: Newer OpenSSL versions do not support zero serial numbers, which is
+    non-conforming with RFC 5280.
+  source_api:
+  - X509v3 Subject Key Identifier
+  - X509v3 Authority Key Identifier
+  - X509v3 Basic Constraints
+  - md5WithRSAEncryption
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.3
+  priority_reasons:
+  - clear_oracle
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_11567/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: semantic bug when verifying certificate file.'
+  - 'Component: X509/ASN1.'
+  - 'Trigger behavior: WRONG_RESULT.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_non_buggy_sample_input.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-11772
+  source_path: datasets/openssl/poc_artifacts/issue_11772
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: x509_parsing
+  subfamily: x509_asn1_semantic
+  oracle_type: behavior_divergence
+  root_cause: The function calling X509_cmp_time() doesn't check that it returned
+    an error.
+  source_api:
+  - X509_cmp_time
+  - X509_get0_notAfter
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.3
+  priority_reasons:
+  - clear_oracle
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_11772/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: openssl x509 returns 0 even though the date of certificate is invalid.'
+  - 'Component: X509/X509V3/ASN1.'
+  - 'Trigger behavior: WRONG_RESULT.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_non_buggy_sample_input.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-13860
+  source_path: datasets/openssl/poc_artifacts/issue_13860
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: x509_parsing
+  subfamily: x509_asn1_semantic
+  oracle_type: pending_inference
+  root_cause: Change in behavior of public key output in OpenSSL x509 command between
+    versions 1.0.2 and 1.1.1
+  source_api:
+  - X509_parse
+  - X509_get_pubkey
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.1
+  priority_reasons:
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_13860/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: openssl-x509: change of behaviour for public key output between versions
+    1.0.2 and 1.1.1.'
+  - 'Component: X509/X509V3/ASN1.'
+  - 'Trigger behavior: UNKNOWN.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_non_buggy_sample_input.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-14457
+  source_path: datasets/openssl/poc_artifacts/issue_14457
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: x509_parsing
+  subfamily: x509_asn1_semantic
+  oracle_type: behavior_divergence
+  root_cause: CONFIGURATION_FILE_EXTENSION_OVERRIDE
+  source_api:
+  - X509v3 extensions
+  - basicConstraints
+  - subjectKeyIdentifier
+  - authorityKeyIdentifier
+  - subjectAltName
+  - keyUsage
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.3
+  priority_reasons:
+  - clear_oracle
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_14457/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: Self-signed certificates generated with a single `openssl req` command
+    fail to verify (error 20 at 0 depth lookup: unable to get local issuer certificate).'
+  - 'Component: X509/X509V3/ASN1.'
+  - 'Trigger behavior: WRONG_OUTPUT.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_placeholder_input.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-14675
+  source_path: datasets/openssl/poc_artifacts/issue_14675
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: x509_parsing
+  subfamily: x509_verify_semantic
+  oracle_type: unknown
+  root_cause: openssl verify does not process multiple certificates in the input file
+  source_api:
+  - X509_verify_cert
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.1
+  priority_reasons:
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_14675/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: openssl verify silently ignores any but the first certificate in the certificates
+    argument.'
+  - 'Component: X509/VERIFY.'
+  - 'Trigger behavior: WRONG_ALERT_OR_PROTOCOL_BEHAVIOR.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_placeholder_cert_bundle.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-15899
+  source_path: datasets/openssl/poc_artifacts/issue_15899
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: pkey_verify_semantic
+  subfamily: pkey_sign_verify_or_encoding
+  oracle_type: crash_or_sanitizer
+  root_cause: Uninitialized BIGNUM variable 'n' passed to EVP_PKEY_get_bn_param
+  source_api:
+  - bn_expand_internal
+  - EVP_PKEY_get_bn_param
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.3
+  priority_reasons:
+  - clear_oracle
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_15899/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: openssl rsa -modulus segfaults: bn_expand_internal: Assertion `b->top
+    <= words'' failed.'
+  - 'Component: BN/ASN1.'
+  - 'Trigger behavior: NULL_DEREFERENCE_CRASH.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_non_buggy_sample_input.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-16196
+  source_path: datasets/openssl/poc_artifacts/issue_16196
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: asn1_nested_boundary
+  subfamily: asn1_or_der_boundary
+  oracle_type: crash_or_sanitizer
+  root_cause: unknown
+  source_api:
+  - BN_print
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.3
+  priority_reasons:
+  - clear_oracle
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_16196/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: openssl req segfault.'
+  - 'Component: REQ/ASN1.'
+  - 'Trigger behavior: NULL_DEREFERENCE_CRASH.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_generated_csr.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-17715
+  source_path: datasets/openssl/poc_artifacts/issue_17715
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: cipher_aead_lifecycle
+  subfamily: cipher_context_state
+  oracle_type: crash_or_sanitizer
+  root_cause: ctx->cipher_data is not being initialized prior to EVP_EncryptUpdate
+  source_api:
+  - RAND_DRBG_generate
+  - EVP_EncryptUpdate
+  - EVP_CipherUpdate
+  - drbg_ctr_generate
+  - aesni_ecb_encrypt
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.3
+  priority_reasons:
+  - clear_oracle
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_17715/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: DRBG fails to initialize cipher_data prior to EVP_EncryptUpdate leading
+    to segfault.'
+  - 'Component: RAND_DRBG/EVP_CIPHER_CTX.'
+  - 'Trigger behavior: NULL_DEREFERENCE_CRASH.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_placeholder_input.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-18168
+  source_path: datasets/openssl/poc_artifacts/issue_18168
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: asn1_nested_boundary
+  subfamily: asn1_or_der_boundary
+  oracle_type: crash_or_sanitizer
+  root_cause: unknown
+  source_api:
+  - WPACKET_put_bytes__
+  - int_der_w_integer
+  - ossl_DER_w_ulong
+  - ossl_DER_w_RSASSA_PSS_params
+  - prepare_rsa_params
+  - key_to_pki_pem_priv_bio
+  - key2any_encode
+  - rsapss_to_PrivateKeyInfo_pem_encode
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.3
+  priority_reasons:
+  - clear_oracle
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_18168/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: Assertion failure in WPACKET_put_bytes__, packet.c:387, openssl-rsa.'
+  - 'Component: WPACKET/DER_WRITER/RSA.'
+  - 'Trigger behavior: ASSERTION_FAILURE.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_generated_rsa_key.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-18659
+  source_path: datasets/openssl/poc_artifacts/issue_18659
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: api_state_machine
+  subfamily: library_state_or_lifecycle
+  oracle_type: crash_or_sanitizer
+  root_cause: unknown
+  source_api:
+  - OPENSSL_cleanup
+  - CONF_modules_unload
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.3
+  priority_reasons:
+  - clear_oracle
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_18659/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: CONF_modules_unload after OPENSSL_cleanup causes segfault.'
+  - 'Component: CONF/OPENSSL.'
+  - 'Trigger behavior: SEGV.'
+  - 'Artifact summary local_test_result: compiled_and_executed_no_valgrind_error.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-19524
+  source_path: datasets/openssl/poc_artifacts/issue_19524
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: pkey_verify_semantic
+  subfamily: pkey_sign_verify_or_encoding
+  oracle_type: crash_or_sanitizer
+  root_cause: EVP_DigestUpdate() allows NULL to get passed to it, and digests don't
+    check for NULL.
+  source_api:
+  - EVP_PKEY_new_raw_public_key
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit
+  - EVP_DigestSign
+  - OPENSSL_hexstr2buf
+  - OPENSSL_zalloc
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: true
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: true
+  priority_score: 0.6
+  priority_reasons:
+  - clear_oracle
+  - has_controlled_template_or_artifact
+  - has_rag_evidence
+  - mac_lifecycle_v1_feedback
+  - behavior_divergence_candidate
+  - recipe_slot_runnable_family
+  - reusable_family
+  evidence_files:
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/README.md
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/adapters_recipe_llm/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/adapter.yaml
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/adapters_recipe_llm/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/adapter_meta.yaml
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/adapters_recipe_llm_validated/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/adapter.yaml
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/adapters_recipe_llm_validated/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/adapter_meta.yaml
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/cross_templates_recipe/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/README.md
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/cross_templates_recipe/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/cross_mapping.yaml
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/cross_templates_recipe/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/mask_report.yaml
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/cross_templates_recipe/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/template_meta.yaml
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/cross_templates_recipe/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/tmpl_mbedtls.c
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/cross_templates_recipe/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/tmpl_openssl.c
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/rendered_cases_recipe/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/case_0000_manifest.yaml
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/rendered_cases_recipe/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/case_0000_mbedtls.c
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/rendered_cases_recipe/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/case_0000_openssl.c
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/rendered_cases_recipe/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/case_0001_manifest.yaml
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/rendered_cases_recipe/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/case_0001_mbedtls.c
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/rendered_cases_recipe/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/case_0001_openssl.c
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/rendered_cases_recipe/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/case_0002_manifest.yaml
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/rendered_cases_recipe/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/case_0002_mbedtls.c
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/rendered_cases_recipe/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/case_0002_openssl.c
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/rendered_cases_recipe/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/case_0003_manifest.yaml
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/rendered_cases_recipe/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/case_0003_mbedtls.c
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/rendered_cases_recipe/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/case_0003_openssl.c
+  - artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/rendered_cases_recipe/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/case_0004_manifest.yaml
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: ED25519_sign and ED448_sign missing check for private_key leading to segfault.'
+  - 'Component: PKEY/ED25519/ED448.'
+  - 'Trigger behavior: NULL_DEREFERENCE_CRASH.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_controlled_openssl_error.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+- pattern_id: OPENSSL-ISSUE-21935
+  source_path: datasets/openssl/poc_artifacts/issue_21935
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: pkey_verify_semantic
+  subfamily: pkey_sign_verify_or_encoding
+  oracle_type: crash_or_sanitizer
+  root_cause: NULL pointer dereference in BN_is_negative function when handling invalid
+    BIGNUM pointers.
+  source_api:
+  - EVP_PKEY_new
+  - RSA_new
+  - RSA_set0_factors
+  - RSA_set0_key
+  - EVP_PKEY_assign
+  - EVP_DigestSignInit
+  - EVP_DigestSign
+  - EVP_MD_CTX_free
+  - EVP_PKEY_free
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: true
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: true
+  priority_score: 0.6
+  priority_reasons:
+  - clear_oracle
+  - has_controlled_template_or_artifact
+  - has_rag_evidence
+  - reusable_family
+  evidence_files:
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/adapters_recipe_llm/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/adapter.yaml
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/adapters_recipe_llm/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/adapter_meta.yaml
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/adapters_recipe_llm_validated/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/adapter.yaml
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/adapters_recipe_llm_validated/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/adapter_meta.yaml
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/cross_templates_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/README.md
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/cross_templates_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/ast_mask_report.lite.yaml
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/cross_templates_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/ast_mask_report.mbedtls.lite.yaml
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/cross_templates_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/ast_mask_report.mbedtls.tree_sitter.yaml
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/cross_templates_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/ast_mask_report.openssl.lite.yaml
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/cross_templates_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/ast_mask_report.openssl.tree_sitter.yaml
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/cross_templates_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/ast_mask_report.tree_sitter.yaml
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/cross_templates_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/cross_mapping.yaml
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/cross_templates_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/mask_report.yaml
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/cross_templates_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/selected_mask_units.lite.yaml
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/cross_templates_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/selected_mask_units.mbedtls.lite.yaml
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/cross_templates_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/selected_mask_units.mbedtls.tree_sitter.yaml
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/cross_templates_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/selected_mask_units.openssl.lite.yaml
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/cross_templates_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/selected_mask_units.openssl.tree_sitter.yaml
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/cross_templates_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/selected_mask_units.tree_sitter.yaml
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/cross_templates_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/template_meta.yaml
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/cross_templates_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/tmpl_mbedtls.c
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/cross_templates_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/tmpl_openssl.c
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/rendered_cases_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/README.md
+  - artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/rendered_cases_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/case_0000_manifest.yaml
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: RSA 1.1.1 API broken in openssl-SNAP-20230831.'
+  - 'Component: PKEY/RSA.'
+  - 'Trigger behavior: NULL_DEREFERENCE_CRASH.'
+  - 'Artifact summary local_test_result: compiled_and_executed_as_rag_seed_candidate.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+- pattern_id: OPENSSL-ISSUE-22388
+  source_path: datasets/openssl/poc_artifacts/issue_22388
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: pkey_verify_semantic
+  subfamily: pkey_sign_verify_or_encoding
+  oracle_type: behavior_divergence
+  root_cause: operation not supported for this keytype
+  source_api:
+  - evp_pkey_asym_cipher_init
+  - ossl_cms_pkey_get_ri_type
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.3
+  priority_reasons:
+  - clear_oracle
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_22388/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: Support X25519 and X448 in CMS.'
+  - 'Component: CMS/X509.'
+  - 'Trigger behavior: WRONG_RESULT.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_placeholder_input.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-22842
+  source_path: datasets/openssl/poc_artifacts/issue_22842
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: mac_lifecycle
+  subfamily: mac_context_state
+  oracle_type: crash_or_sanitizer
+  root_cause: NULL pointer dereference in EVP_MAC_CTX_get_mac_size() due to uninitialized
+    algctx cipher struct
+  source_api:
+  - EVP_MAC_CTX_new()
+  - EVP_MAC_CTX_get_mac_size()
+  - EVP_MAC_init()
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: true
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: true
+  priority_score: 0.6
+  priority_reasons:
+  - clear_oracle
+  - has_controlled_template_or_artifact
+  - has_rag_evidence
+  - reusable_family
+  evidence_files:
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/adapters_recipe_llm/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/adapter.yaml
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/adapters_recipe_llm/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/adapter_meta.yaml
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/adapters_recipe_llm_validated/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/adapter.yaml
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/adapters_recipe_llm_validated/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/adapter_meta.yaml
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/cross_templates_recipe/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/README.md
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/cross_templates_recipe/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/ast_mask_report.lite.yaml
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/cross_templates_recipe/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/ast_mask_report.mbedtls.lite.yaml
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/cross_templates_recipe/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/ast_mask_report.mbedtls.tree_sitter.yaml
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/cross_templates_recipe/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/ast_mask_report.openssl.lite.yaml
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/cross_templates_recipe/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/ast_mask_report.openssl.tree_sitter.yaml
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/cross_templates_recipe/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/ast_mask_report.tree_sitter.yaml
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/cross_templates_recipe/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/cross_mapping.yaml
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/cross_templates_recipe/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/mask_report.yaml
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/cross_templates_recipe/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/selected_mask_units.lite.yaml
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/cross_templates_recipe/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/selected_mask_units.mbedtls.lite.yaml
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/cross_templates_recipe/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/selected_mask_units.mbedtls.tree_sitter.yaml
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/cross_templates_recipe/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/selected_mask_units.openssl.lite.yaml
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/cross_templates_recipe/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/selected_mask_units.openssl.tree_sitter.yaml
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/cross_templates_recipe/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/selected_mask_units.tree_sitter.yaml
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/cross_templates_recipe/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/template_meta.yaml
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/cross_templates_recipe/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/tmpl_mbedtls.c
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/cross_templates_recipe/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/tmpl_openssl.c
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/candidates_with_evidence.yaml
+  - artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0000/README.md
+  - artifacts/sprints/mac_lifecycle_family_v1/recipe/adapter.yaml
+  - artifacts/sprints/mac_lifecycle_family_v1/recipe/adapter_validate_report.json
+  - artifacts/sprints/mac_lifecycle_family_v1/render_matrix.yaml
+  - artifacts/sprints/mac_lifecycle_family_v1/results/run.summary.json
+  - artifacts/sprints/mac_lifecycle_family_v1/results/behavior_summary.json
+  - artifacts/feedback/mac_lifecycle_feedback.jsonl
+  result_summary:
+    total_cases: 48
+    verdict_counts:
+      behavior_divergence_candidate: 8
+      needs_manual_triage: 32
+      normal_success: 4
+      strict_bad_state: 4
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  feedback_summary:
+    total_cases: 48
+    result_rows: 96
+    verdict_counts:
+      behavior_divergence_candidate: 8
+      needs_manual_triage: 32
+      normal_success: 4
+      strict_bad_state: 4
+    interpretation: lifecycle_semantic_divergence_candidate_not_confirmed_vulnerability
+  notes:
+  - 'Title: SIGSEGV from EVP_MAC_CTX_get_mac_size().'
+  - 'Component: EVP/MAC.'
+  - 'Trigger behavior: NULL_DEREFERENCE_CRASH.'
+  - 'Artifact summary local_test_result: compiled_and_executed_as_rag_seed_candidate.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - 'MAC lifecycle v1 runnable sprint: 48 recipe-slot controlled cases, 8 behavior_divergence_candidate, 4 normal_success, 4 strict_bad_state, 32 needs_manual_triage.'
+  - 'Divergence candidate is repeated-final/update-after-final OpenSSL CMAC permissive behavior versus PSA bad-state rejection; not a confirmed vulnerability or CVE.'
+- pattern_id: OPENSSL-ISSUE-23325
+  source_path: datasets/openssl/poc_artifacts/issue_23325
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: x509_parsing
+  subfamily: x509_verify_semantic
+  oracle_type: behavior_divergence
+  root_cause: Incomplete implementation of CRL scope checks in case an IDP is present
+    in a CRL but no CDPs are present in the target cert.
+  source_api:
+  - X509_V_ERR_DIFFERENT_CRL_SCOPE
+  - crl_crldp_check
+  - get_crl_score
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.3
+  priority_reasons:
+  - clear_oracle
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_23325/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: X509: wrongly rejects cert without CDP if CRL contains IDP with name matching
+    cert issuer.'
+  - 'Component: X509/CRL.'
+  - 'Trigger behavior: WRONG_RESULT.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_placeholder_crl_validation_inputs.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-26106
+  source_path: datasets/openssl/poc_artifacts/issue_26106
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: asn1_nested_boundary
+  subfamily: asn1_or_der_boundary
+  oracle_type: crash_or_sanitizer
+  root_cause: NULL pointer dereference in X509_ALGOR_get0 during PKCS#12 processing
+  source_api:
+  - X509_ALGOR_get0
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.3
+  priority_reasons:
+  - clear_oracle
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_26106/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: Segmentation fault in X509_ALGOR_get0 during PKCS#12 processing.'
+  - 'Component: PKCS12/X509_ALGOR.'
+  - 'Trigger behavior: NULL_DEREFERENCE_CRASH.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_placeholder_input.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-2630
+  source_path: datasets/openssl/poc_artifacts/issue_2630
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: api_state_machine
+  subfamily: library_state_or_lifecycle
+  oracle_type: crash_or_sanitizer
+  root_cause: unknown
+  source_api:
+  - CRYPTO_secure_malloc_init
+  - BIO_new
+  - BIO_write
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.3
+  priority_reasons:
+  - clear_oracle
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_2630/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: Secure heap impl.: segmentation fault in sh_add_to_list for small allocations.'
+  - 'Component: BIO/SECURE_HEAP.'
+  - 'Trigger behavior: SEGV.'
+  - 'Artifact summary local_test_result: compiled_and_executed_no_valgrind_error.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-27572
+  source_path: datasets/openssl/poc_artifacts/issue_27572
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: asn1_nested_boundary
+  subfamily: asn1_or_der_boundary
+  oracle_type: behavior_divergence
+  root_cause: Hardcoded use of MBSTRING_ASC when calling parse_name
+  source_api:
+  - parse_name
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.3
+  priority_reasons:
+  - clear_oracle
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_27572/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: openssl cmp -cmd cr corrupts UTF-8 subject names.'
+  - 'Component: CMP/ASN1.'
+  - 'Trigger behavior: WRONG_OUTPUT.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_non_buggy_sample_input.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-28669
+  source_path: datasets/openssl/poc_artifacts/issue_28669
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: secure_heap_state_lifecycle
+  subfamily: secure_heap_preinit_or_post_done_query
+  oracle_type: secure_heap_preinit_crash_oracle
+  root_cause: possible NULL lock dereference in CRYPTO_secure_used when secure heap lock is not initialized
+  source_api:
+  - CRYPTO_secure_used
+  target_api:
+  - unknown
+  migration_status: milestone_closed_pending_external_validation
+  current_verdict: current_version_robustness_candidate_with_unknown_historical_overlap
+  confidence: medium_high
+  has_controlled_template: true
+  has_render_matrix: true
+  has_feedback: true
+  has_rag_evidence: true
+  priority_score: 0.35
+  milestone_status: milestone_closed_pending_external_validation
+  validated_new_state_candidate: secure_heap_exp_0003_new_state_init_failed_then_used
+  external_validation_pending:
+  - asan_ubsan_validation
+  - multi_version_matrix
+  - api_contract_confirmation
+  main_exploration_status: paused_pending_external_validation
+  priority_reasons:
+  - crash_candidate_reproduced
+  - initialized_control_ok
+  - secure_heap_precondition_triage
+  - reusable_family_candidate
+  - robustness_hardening_candidate
+  - gdb_null_lock_backtrace
+  - current_version_robustness_candidate_with_unknown_historical_overlap
+  - seed_validation_not_final_discovery
+  - needs_manual_doc_confirmation
+  - pattern_expansion_v1_observed_new_state_combination_candidate
+  - init_failed_then_query_minimal_reproducer_validated
+  - init_failed_then_query_gdb_null_rwlock_confirmed
+  - milestone_closed_pending_external_validation
+  - external_validation_pending
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_28669/metadata.json
+  - artifacts/sprints/secure_heap_state_lifecycle_v1/results/run.summary.json
+  - artifacts/sprints/secure_heap_state_lifecycle_v1/results/behavior_summary.json
+  - artifacts/sprints/secure_heap_state_lifecycle_v1/qualification/vulnerability_assessment.yaml
+  - artifacts/sprints/secure_heap_state_lifecycle_v1/qualification/version_provenance/openssl_version_provenance.yaml
+  - artifacts/sprints/secure_heap_state_lifecycle_v1/qualification/novelty/openssl_28669_novelty_assessment.yaml
+  - artifacts/sprints/secure_heap_state_lifecycle_v1/qualification/debug/gdb_summary.md
+  - artifacts/feedback/secure_heap_state_lifecycle_feedback.jsonl
+  - artifacts/sprints/secure_heap_state_lifecycle_pattern_expansion_v1/results/run.summary.json
+  - artifacts/sprints/secure_heap_state_lifecycle_pattern_expansion_v1/results/behavior_summary.json
+  - artifacts/sprints/secure_heap_state_lifecycle_pattern_expansion_v1/results/novel_candidates.jsonl
+  - artifacts/feedback/secure_heap_state_lifecycle_pattern_expansion_feedback.jsonl
+  - artifacts/sprints/secure_heap_init_failed_then_query_candidate_validation/results/minimal_reproducer_results.yaml
+  - artifacts/sprints/secure_heap_init_failed_then_query_candidate_validation/debug/gdb_summary.yaml
+  - artifacts/sprints/secure_heap_init_failed_then_query_candidate_validation/reports/candidate_validation_report.yaml
+  - artifacts/feedback/secure_heap_init_failed_then_query_candidate_feedback.jsonl
+  - artifacts/sprints/secure_heap_milestone_closure/reports/secure_heap_milestone_closure.yaml
+  - artifacts/sprints/secure_heap_milestone_closure/reports/teammate_validation_handoff.md
+  result_summary:
+    total_cases: 5
+    verdict_counts:
+      crash_candidate: 2
+      normal_defined_behavior: 2
+      safe_precondition_failure: 1
+    raw_status_counts:
+      run_nonzero: 2
+      run_ok: 3
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: NULL rwlock dereference in CRYPTO_secure_used when secure heap is not
+    initialized.'
+  - 'Component: CRYPTO/MEM_SEC.'
+  - 'Trigger behavior: NULL_DEREFERENCE_CRASH.'
+  - 'Artifact summary local_test_result: segmentation_fault_and_valgrind_invalid_read.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - secure_heap_state_lifecycle_v1 reproduced SIGSEGV/exit 139 for pre_init used_only and done_then_used on the local configured OpenSSL.
+  - Initialized controls returned defined behavior without crash.
+  - CRYPTO_secure_malloc_initialized prevented post-done used call.
+  - Current interpretation is crash_candidate / precondition triage, not confirmed vulnerability or CVE.
+  - API documentation still needs manual confirmation for CRYPTO_secure_used before initialization.
+  - Qualification sprint classification: robustness_hardening_candidate.
+  - Version provenance confirms current sprint used OpenSSL 3.5.5 from clean_sources via static libcrypto.a linkage.
+  - Novelty classification: current_version_robustness_candidate_with_unknown_historical_overlap.
+  - secure_heap_state_lifecycle_v1 is D_then_B seed validation / oracle calibration, not full cross-library migration.
+  - Next stage must run same-family API, cross-version, or cross-library analogous lifecycle pattern expansion.
+  - Minimal reproducers show SIGSEGV / exit 139 for pre-init and post-done calls; initialized control exits 0.
+  - gdb shows pthread_rwlock_rdlock(rwlock=0x0) via CRYPTO_THREAD_read_lock(lock=0x0) inside CRYPTO_secure_used().
+  - Local docs are ambiguous rather than clearly documenting the call as misuse.
+  - secure_heap_state_lifecycle_pattern_expansion_v1 rendered 19 same-family cases across secure heap query/alloc/free/init/done APIs and 10 lifecycle state sequences.
+  - Expansion v1 preserved the two original CRYPTO_secure_used seed crashes as non_novel_seed_reproduction baselines.
+  - Expansion v1 observed one non-seed crash candidate for CRYPTO_secure_used after failed init followed by query; this is a new_state_combination_candidate and current-version robustness candidate, not a confirmed vulnerability.
+  - No new API crash candidate was observed in expansion v1; other secure heap APIs returned normal defined behavior in the tested states.
+  - secure_heap_init_failed_then_query_candidate_validation extracted a minimal reproducer where CRYPTO_secure_malloc_init(16, 16) returns 0 and the following CRYPTO_secure_used() call exits with SIGSEGV / 139.
+  - gdb validation confirms the init_failed_then_query candidate reaches pthread_rwlock_rdlock(rwlock=0x0) via CRYPTO_THREAD_read_lock(lock=0x0) inside CRYPTO_secure_used(), matching the seed crash path through a different lifecycle state.
+  - initialized_then_used_safe_control exits normally, supporting harness/linkage validity.
+  - The validated init_failed_then_query candidate remains a current-version robustness candidate / new_state_combination_candidate; API contract and multi-version evidence are still required before any stronger claim.
+  - secure_heap_state_lifecycle milestone is now closed for the main exploration track and moved to external validation pending ASAN/UBSAN, multi-version matrix, and API contract confirmation.
+  - Scheduler should not keep secure_heap as the immediate top-1 exploration family unless the task is specifically external validation.
+- pattern_id: OPENSSL-ISSUE-29418
+  source_path: datasets/openssl/poc_artifacts/issue_29418
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: x509_parsing
+  subfamily: x509_asn1_semantic
+  oracle_type: behavior_divergence
+  root_cause: Inconsistent handling of extensions when using the -ext option with
+    openssl x509 command.
+  source_api:
+  - X509_get_ext_count
+  - X509_get_ext
+  - OBJ_nid2sn
+  - X509_EXTENSION_free
+  - X509_delete_ext
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.3
+  priority_reasons:
+  - clear_oracle
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_29418/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: openssl x509 -purpose produces inconsistent results depending on parsing
+    options.'
+  - 'Component: X509/X509V3/ASN1.'
+  - 'Trigger behavior: WRONG_RESULT.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_non_buggy_sample_input.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-29574
+  source_path: datasets/openssl/poc_artifacts/issue_29574
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: x509_parsing
+  subfamily: x509_asn1_semantic
+  oracle_type: behavior_divergence
+  root_cause: unknown
+  source_api:
+  - SSL_CTX_use_PrivateKey_ASN1
+  - SSL_CTX_use_certificate_ASN1
+  - X509_Object::choose_sig_format
+  - X509_CA::make_cert
+  - PKCS8::PEM_encode
+  - PEM_encode
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.3
+  priority_reasons:
+  - clear_oracle
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_29574/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: Loading "short" certificate is accepted but corrupts openssl.'
+  - 'Component: X509/X509V3/ASN1.'
+  - 'Trigger behavior: CORRUPTED_STATE.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_placeholder_input.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-29645
+  source_path: datasets/openssl/poc_artifacts/issue_29645
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: api_state_machine
+  subfamily: library_state_or_lifecycle
+  oracle_type: crash_or_sanitizer
+  root_cause: NULL pointer dereference in BIO_free when called with a BIO that was
+    not properly initialized
+  source_api:
+  - BIO_set_data
+  - BIO_free
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: true
+  priority_score: 0.45
+  priority_reasons:
+  - clear_oracle
+  - has_rag_evidence
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_29645/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: BIO_set_data() causes crash.'
+  - 'Component: BIO/CONF/ERR.'
+  - 'Trigger behavior: NULL_DEREFERENCE_CRASH.'
+  - 'Artifact summary local_test_result: compiled_and_executed_as_rag_seed_candidate.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-30291
+  source_path: datasets/openssl/poc_artifacts/issue_30291
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: pkey_verify_semantic
+  subfamily: pkey_sign_verify_or_encoding
+  oracle_type: behavior_divergence
+  root_cause: REGRESSION
+  source_api:
+  - CMS_sign
+  - CMS_verify
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.3
+  priority_reasons:
+  - clear_oracle
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_30291/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: CMS regression: signed attributes with ED448.'
+  - 'Component: CMS/ED448.'
+  - 'Trigger behavior: REGRESSION_TEST.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_placeholder_input.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-30432
+  source_path: datasets/openssl/poc_artifacts/issue_30432
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: pkey_verify_semantic
+  subfamily: pkey_sign_verify_or_encoding
+  oracle_type: behavior_divergence
+  root_cause: OID of dsa_with_SHA384-512 is incorrect
+  source_api:
+  - openssl dsaparam
+  - openssl gendsa
+  - openssl req
+  - openssl x509
+  - openssl verify
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.3
+  priority_reasons:
+  - clear_oracle
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_30432/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: dsa_with_SHA384 and dsa_with_SHA512 verify error.'
+  - 'Component: PKEY/DSA/RSA.'
+  - 'Trigger behavior: VERIFY_ERROR.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_placeholder_input.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-30581
+  source_path: datasets/openssl/poc_artifacts/issue_30581
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: asn1_nested_boundary
+  subfamily: asn1_or_der_boundary
+  oracle_type: crash_or_sanitizer
+  root_cause: Dereferencing a NULL pointer when decoding PBKDF2 salt as ASN.1 NULL
+    in the CLI info path.
+  source_api:
+  - ASN1_STRING_length
+  - pkcs12_main
+  - do_cmd
+  - main
+  - BIO_puts
+  - BIO_printf
+  - ASN1_INTEGER_get
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.3
+  priority_reasons:
+  - clear_oracle
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_30581/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: NULL pointer dereference in openssl pkcs12 -info when printing PBMAC1
+    salt metadata.'
+  - 'Component: PKCS12/ASN1.'
+  - 'Trigger behavior: NULL_DEREFERENCE_CRASH.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_placeholder_input.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-30889
+  source_path: datasets/openssl/poc_artifacts/issue_30889
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: pkey_verify_semantic
+  subfamily: pkey_sign_verify_or_encoding
+  oracle_type: crash_or_sanitizer
+  root_cause: NULL_DEREFERENCE_CRASH
+  source_api:
+  - pkey_main
+  - encode_private_key
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.3
+  priority_reasons:
+  - clear_oracle
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_30889/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: Segfault in ''openssl pkey'' for interactive encryption (v4.0.0).'
+  - 'Component: PKEY/ML-DSA/RSA.'
+  - 'Trigger behavior: SEGV.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_placeholder_input.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-6788
+  source_path: datasets/openssl/poc_artifacts/issue_6788
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: x509_parsing
+  subfamily: x509_verify_semantic
+  oracle_type: behavior_divergence
+  root_cause: The crl application's use of X509_STORE_CTX_get_obj_by_subject, which
+    matches the first certificate with an identical subject, relies on the unstable
+    qsort function to sort certificates before the lookup, resulting in inconsistent
+    verification behavior.
+  source_api:
+  - X509_STORE_CTX_get_obj_by_subject
+  - X509_verify_cert
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.3
+  priority_reasons:
+  - clear_oracle
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_6788/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: openssl crl does not work properly if -CAfile contains multiple CA certs
+    with the same subject.'
+  - 'Component: CRL/X509.'
+  - 'Trigger behavior: WRONG_RESULT.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_placeholder_input.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-8435
+  source_path: datasets/openssl/poc_artifacts/issue_8435
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: pkey_verify_semantic
+  subfamily: pkey_sign_verify_or_encoding
+  oracle_type: behavior_divergence
+  root_cause: OpenSSL treats SM2 keys like normal ECC keys, leading to invalid private
+    keys.
+  source_api:
+  - pkey
+  - pkeyutl
+  - sm2_id
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.3
+  priority_reasons:
+  - clear_oracle
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_8435/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: SM2 private key cannot produce valid signatures.'
+  - 'Component: PKEY/ECC/SM2.'
+  - 'Trigger behavior: WRONG_RESULT.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_generated_sm2_key.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: OPENSSL-ISSUE-8980
+  source_path: datasets/openssl/poc_artifacts/issue_8980
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: cipher_aead_lifecycle
+  subfamily: cipher_context_state
+  oracle_type: crash_or_sanitizer
+  root_cause: Uninitialized memory access in EVP_CIPHER_CTX_copy
+  source_api:
+  - EVP_CIPHER_CTX_new
+  - EVP_aes_128_gcm
+  - EVP_EncryptInit_ex
+  - EVP_CIPHER_CTX_copy
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.45
+  priority_reasons:
+  - clear_oracle
+  - has_controlled_template_or_artifact
+  - reusable_family
+  evidence_files:
+  - artifacts/migrations/openssl-issue-8980-evp-cipher-ctx-copy-uninit-state/README.md
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: OpenSSL 1.0.2 branch on uninitialized memory in EVP_CIPHER_CTX_copy.'
+  - 'Component: EVP/AES_GCM.'
+  - 'Trigger behavior: NULL_DEREFERENCE_CRASH.'
+  - 'Artifact summary local_test_result: compiled_and_executed_with_local_openssl.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+- pattern_id: OPENSSL-ISSUE-9043
+  source_path: datasets/openssl/poc_artifacts/issue_9043
+  source_type: openssl_issue_artifact
+  source_library: openssl
+  target_library: unknown
+  family: x509_parsing
+  subfamily: x509_asn1_semantic
+  oracle_type: crash_or_sanitizer
+  root_cause: NULL pointer dereference in CSR text output code
+  source_api:
+  - X509_ATTRIBUTE_get0_type
+  target_api:
+  - unknown
+  migration_status: pending_migration
+  current_verdict: unknown
+  confidence: medium
+  has_controlled_template: false
+  has_render_matrix: false
+  has_feedback: false
+  has_rag_evidence: true
+  priority_score: 0.45
+  priority_reasons:
+  - clear_oracle
+  - has_rag_evidence
+  - reusable_family
+  evidence_files:
+  - datasets/openssl/poc_artifacts/issue_9043/metadata.json
+  result_summary:
+    total_cases: 0
+    verdict_counts: {}
+    raw_status_counts: {}
+    migration_verdict_counts: {}
+  notes:
+  - 'Title: NULL pointer dereference in CSR text output code.'
+  - 'Component: X509/CSR/ASN1.'
+  - 'Trigger behavior: NULL_DEREFERENCE_CRASH.'
+  - 'Artifact summary local_test_result: compiled_and_executed_as_rag_seed_candidate.'
+  - Local harness validation exists, but strict historical reproduction is not confirmed.
+  - Need to inspect README / metadata / crash / repro files.
+- pattern_id: PKEY_VERIFY_FAMILY_V0
+  source_path: artifacts/sprints/pkey_verify_family_v0
+  source_type: feedback_sprint
+  source_library: synthetic_framework_controlled
+  target_library: openssl
+  family: pkey_verify_semantic
+  subfamily: wrong_hash_length_pss_saltlen
+  oracle_type: safe_reject_baseline
+  root_cause: PKEY verification should reject invalid signature, digest, key, padding,
+    or saltlen combinations.
+  source_api:
+  - pkey_verify_semantic
+  target_api:
+  - EVP_DigestVerify
+  - EVP_PKEY_verify
+  migration_status: stable_safe_negative
+  current_verdict: stable_safe_negative
+  confidence: high
+  has_controlled_template: true
+  has_render_matrix: true
+  has_feedback: false
+  has_rag_evidence: false
+  priority_score: 0.4
+  priority_reasons:
+  - stable_safe_negative_baseline
+  - controlled_template_available
+  feedback_summary: *id002
+  scheduler_hint:
+    action: deprioritize_repeated_safe_negative
+    keep_for_boundary_deepening:
+    - wrong_hash_length
+    - pss_saltlen_mismatch
+    - padding_mismatch
+  evidence_files:
+  - artifacts/sprints/pkey_verify_family_v0/results/run.summary.json
+  - artifacts/sprints/pkey_verify_family_v0/results/behavior_summary.json
+  notes:
+  - PKEY v0/v1 form a stable safe-negative regression baseline.
+  - Feedback-guided v1 changed mutation coverage without producing a vulnerability
+    candidate.
+- pattern_id: PKEY_VERIFY_FAMILY_V1
+  source_path: artifacts/sprints/pkey_verify_family_v1
+  source_type: feedback_sprint
+  source_library: synthetic_framework_controlled
+  target_library: openssl
+  family: pkey_verify_semantic
+  subfamily: wrong_hash_length_pss_saltlen
+  oracle_type: safe_reject_baseline
+  root_cause: PKEY verification should reject invalid signature, digest, key, padding,
+    or saltlen combinations.
+  source_api:
+  - pkey_verify_semantic
+  target_api:
+  - EVP_DigestVerify
+  - EVP_PKEY_verify
+  migration_status: stable_safe_negative
+  current_verdict: stable_safe_negative
+  confidence: high
+  has_controlled_template: true
+  has_render_matrix: true
+  has_feedback: true
+  has_rag_evidence: true
+  priority_score: 0.45
+  priority_reasons:
+  - stable_safe_negative_baseline
+  - controlled_template_available
+  feedback_summary: *id002
+  scheduler_hint:
+    action: deprioritize_repeated_safe_negative
+    keep_for_boundary_deepening:
+    - wrong_hash_length
+    - pss_saltlen_mismatch
+    - padding_mismatch
+  evidence_files:
+  - artifacts/sprints/pkey_verify_family_v1/results/run.summary.json
+  - artifacts/sprints/pkey_verify_family_v1/results/behavior_summary.json
+  notes:
+  - PKEY v0/v1 form a stable safe-negative regression baseline.
+  - Feedback-guided v1 changed mutation coverage without producing a vulnerability
+    candidate.

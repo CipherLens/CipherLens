@@ -1,0 +1,682 @@
+source_pattern_id: OPENSSL-ISSUE-22842
+template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE
+source_library: openssl
+source_api: EVP_MAC_CTX_get_mac_size
+source_component: EVP/MAC
+vulnerability_class: mac_context_uninitialized_state_query
+oracle_type: mac_context_size_lifecycle_oracle
+migration_summary:
+  overall_decision: generate
+  primary_candidate: psa_mac_sign_setup
+  primary_score: 82
+  primary_harness_family: object_state_lifecycle
+  primary_oracle: mac_context_size_lifecycle_oracle
+target_candidates:
+- target_library: mbedtls
+  target_api: psa_mac_sign_setup
+  target_version: PSA Crypto
+  decision: generate
+  migration_applicability: applicable_with_semantic_projection
+  scores:
+    operation_family: 85
+    function_behavior: 85
+    parameter_structure: 80
+    vulnerability_path: 70
+    harness_feasibility: 90
+  final_score: 82
+  preserved_features:
+  - PSA MAC operation lifecycle represents uninitialized vs initialized operation
+    state
+  - pre-setup psa_mac_update can be observed as safe rejection without crash
+  - initialized psa_mac_sign_setup -> psa_mac_update -> psa_mac_sign_finish provides
+    control state
+  - return code and crash/sanitizer signals are observable
+  lost_or_weakened_features:
+  - PSA operation API does not expose an EVP_MAC_CTX_get_mac_size equivalent
+  - exact OpenSSL EVP_MAC_CTX_get_mac_size internal dereference is not preserved
+  - pre-setup operation is psa_mac_update, not a direct get-size call
+  reason: 'PSA MAC is the valid mbedTLS 4.1.0 MAC lifecycle path. The migrated harness
+    uses one operation for pre-setup safe rejection and a separate initialized operation
+    for setup/update/finish success. This preserves the object lifecycle oracle without
+    relying on legacy md/HMAC setup.
+
+    '
+  evidence:
+    top_k: 5
+    queries:
+    - query: ' '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results: []
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \" \",\n  \"top_k\": 5,\n  \"results\": [],\n\
+        \  \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      raw_fallback:
+        enabled: false
+        reason: rag_query_failed
+        root: knowledge_raw
+        hits: 0
+      kind: source_pattern
+      use_for_feature_inference: source_only
+    - query: mbedtls psa_mac_sign_setup function declaration signature parameters
+        return value
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7917
+        distance: null
+        layer: api_knowledge_cards
+        source_file: knowledge_raw/api_knowledge_cards/high_value_candidate_sprint_2026_06_07.yaml
+        text: 'cards: - api: d2i_X509 library: openssl signature: "X509 *d2i_X509(X509
+          **a, const unsigned char **pp, long length)" parameter_semantics: - "pp
+          points to an input DER pointer and is advanced to the first byte after the
+          parsed object on success." - "length is the number of bytes available from
+          *pp." - "a may be NULL to allocate a new X509 object." return_value_semantics:
+          - "Returns a non-NULL X509 object on successful parse." - "Returns NULL
+          on parse failure." state_preconditions: - "Input should be DER-encoded X.509
+          Certificate." valid_invalid_ranges: - "Valid: exact DER object length."
+          - "Invalid: malformed ASN.1 lengths, truncated DER, oversized inner length."
+          - "High-risk semantic: valid DER prefix followed by trailing bytes." related_apis:
+          - d2i_X509_REQ - d2i_X509_CRL - i2d_X509 mutation_hints: - trailing_garbage
+          - valid_prefix_plus_second_der_object - valid_prefix_plus_partial_der_object
+          - outer_sequence_len_minus_1 - outer_sequence_len_plus_1 - inner_len_zero
+          - inner_len_oversized oracle_observables: - return_pointer'
+        metadata:
+          fallback: knowledge_raw_keyword_search
+          matched_terms:
+          - mbedtls
+          - psa_mac_sign_setup
+          - signature
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"mbedtls psa_mac_sign_setup function declaration\
+        \ signature parameters return value\",\n  \"top_k\": 5,\n  \"results\": [],\n\
+        \  \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      raw_fallback:
+        enabled: true
+        reason: rag_query_failed
+        root: knowledge_raw
+        hits: 1
+      kind: target_api_signature
+      use_for_feature_inference: target
+    - query: mbedtls psa_mac_sign_setup implementation source code parameters return
+        error
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7561
+        distance: null
+        layer: api_knowledge_cards
+        source_file: knowledge_raw/api_knowledge_cards/high_value_candidate_sprint_2026_06_07.yaml
+        text: 'tion_hints: - wrong_hash_length - wrong_digest_algorithm - wrong_key_usage
+          - rsa_pss_salt_length_mismatch - pkcs1_v15_pss_confusion - truncated_signature
+          - oversized_signature - all_zero_signature oracle_observables: - return_code
+          - error_stack - sanitizer_signal - unexpected_success - api: psa_verify_hash
+          library: mbedtls signature: "psa_status_t psa_verify_hash(psa_key_id_t key,
+          psa_algorithm_t alg, const uint8_t *hash, size_t hash_length, const uint8_t
+          *signature, size_t signature_length)" parameter_semantics: - "key identifies
+          a PSA key with verify permission." - "alg selects the signature algorithm."
+          - "hash/hash_length provide the already-computed hash input." - "signature/signature_length
+          provide the signature to verify." return_value_semantics: - "Returns PSA_SUCCESS
+          only if the signature is valid." - "Returns PSA_ERROR_INVALID_SIGNATURE
+          for invalid signatures." - "Returns other PSA errors for unsupported algorithms,
+          bad state, or invalid arguments." state_preconditions: - "Key must exist,
+          permit verify, and be compatible with al'
+        metadata:
+          fallback: knowledge_raw_keyword_search
+          matched_terms:
+          - implementation
+          - mbedtls
+          - psa_mac_sign_setup
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"mbedtls psa_mac_sign_setup implementation\
+        \ source code parameters return error\",\n  \"top_k\": 5,\n  \"results\":\
+        \ [],\n  \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      raw_fallback:
+        enabled: true
+        reason: rag_query_failed
+        root: knowledge_raw
+        hits: 1
+      kind: target_api_implementation
+      use_for_feature_inference: target
+    - query: mbedtls psa_mac_sign_setup usage example unit test API call pattern
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.7619
+        distance: null
+        layer: api_knowledge_cards
+        source_file: knowledge_raw/api_knowledge_cards/high_value_candidate_sprint_2026_06_07.yaml
+        text: 'vables: - return_pointer - consumed_pointer - consumed_len - sanitizer_signal
+          - api: d2i_PKCS8_PRIV_KEY_INFO library: openssl signature: "PKCS8_PRIV_KEY_INFO
+          *d2i_PKCS8_PRIV_KEY_INFO(PKCS8_PRIV_KEY_INFO **a, const unsigned char **pp,
+          long length)" parameter_semantics: - "pp points to an input DER pointer
+          and advances on success." - "length is the caller-supplied input length."
+          return_value_semantics: - "Returns non-NULL on successful PKCS#8 PrivateKeyInfo
+          parse." - "Returns NULL on parse failure." state_preconditions: - "Input
+          should be DER-encoded PKCS#8 PrivateKeyInfo." valid_invalid_ranges: - "Valid:
+          exact DER PrivateKeyInfo." - "Invalid: malformed outer or inner ASN.1 lengths."
+          - "High-risk semantic: accepted prefix with unconsumed trailing bytes."
+          related_apis: - EVP_PKEY2PKCS8 - i2d_PKCS8_PRIV_KEY_INFO - d2i_PrivateKey
+          mutation_hints: - trailing_garbage - valid_prefix_plus_second_der_object
+          - valid_prefix_plus_partial_der_object - inner_len_zero - inner_len_oversized
+          oracle_observables: - return_pointer - co'
+        metadata:
+          fallback: knowledge_raw_keyword_search
+          matched_terms:
+          - call
+          - mbedtls
+          - psa_mac_sign_setup
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"mbedtls psa_mac_sign_setup usage example\
+        \ unit test API call pattern\",\n  \"top_k\": 5,\n  \"results\": [],\n  \"\
+        error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation not\
+        \ permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      raw_fallback:
+        enabled: true
+        reason: rag_query_failed
+        root: knowledge_raw
+        hits: 1
+      kind: target_api_usage
+      use_for_feature_inference: target
+    - query: 'mbedtls psa_mac_sign_setup    PSA operation API does not expose an EVP_MAC_CTX_get_mac_size
+        equivalent exact OpenSSL EVP_MAC_CTX_get_mac_size internal dereference is
+        not preserved pre-setup operation is psa_mac_update, not a direct get-size
+        call '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.9099
+        distance: null
+        layer: api_knowledge_cards
+        source_file: knowledge_raw/api_knowledge_cards/high_value_candidate_sprint_2026_06_07.yaml
+        text: 'cards: - api: d2i_X509 library: openssl signature: "X509 *d2i_X509(X509
+          **a, const unsigned char **pp, long length)" parameter_semantics: - "pp
+          points to an input DER pointer and is advanced to the first byte after the
+          parsed object on success." - "length is the number of bytes available from
+          *pp." - "a may be NULL to allocate a new X509 object." return_value_semantics:
+          - "Returns a non-NULL X509 object on successful parse." - "Returns NULL
+          on parse failure." state_preconditions: - "Input should be DER-encoded X.509
+          Certificate." valid_invalid_ranges: - "Valid: exact DER object length."
+          - "Invalid: malformed ASN.1 lengths, truncated DER, oversized inner length."
+          - "High-risk semantic: valid DER prefix followed by trailing bytes." related_apis:
+          - d2i_X509_REQ - d2i_X509_CRL - i2d_X509 mutation_hints: - trailing_garbage
+          - valid_prefix_plus_second_der_object - valid_prefix_plus_partial_der_object
+          - outer_sequence_len_minus_1 - outer_sequence_len_plus_1 - inner_len_zero
+          - inner_len_oversized oracle_observables: - return_pointer'
+        metadata:
+          fallback: knowledge_raw_keyword_search
+          matched_terms:
+          - call
+          - evp_mac_ctx_get_mac_size
+          - exact
+          - get
+          - mbedtls
+          - openssl
+          - operation
+          - pre
+          - psa
+          - psa_mac_sign_setup
+          - psa_mac_update
+          - setup
+          - size
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"mbedtls psa_mac_sign_setup    PSA operation\
+        \ API does not expose an EVP_MAC_CTX_get_mac_size equivalent exact OpenSSL\
+        \ EVP_MAC_CTX_get_mac_size internal dereference is not preserved pre-setup\
+        \ operation is psa_mac_update, not a direct get-size call \",\n  \"top_k\"\
+        : 5,\n  \"results\": [],\n  \"error\": \"Ollama embedding failed after 3 retries:\
+        \ [Errno 1] Operation not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      raw_fallback:
+        enabled: true
+        reason: rag_query_failed
+        root: knowledge_raw
+        hits: 1
+      kind: vulnerability_path_compatibility
+      use_for_feature_inference: target
+    - query: 'mbedtls psa_mac_sign_setup object_state_lifecycle selected mask units
+        trigger APIs EVP_MAC_CTX_get_mac_size EVP_MAC_init migrate API call    mutation
+        points '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.8276
+        distance: null
+        layer: api_knowledge_cards
+        source_file: knowledge_raw/api_knowledge_cards/high_value_candidate_sprint_2026_06_07.yaml
+        text: 'NULL X509 object on successful parse." - "Returns NULL on parse failure."
+          state_preconditions: - "Input should be DER-encoded X.509 Certificate."
+          valid_invalid_ranges: - "Valid: exact DER object length." - "Invalid: malformed
+          ASN.1 lengths, truncated DER, oversized inner length." - "High-risk semantic:
+          valid DER prefix followed by trailing bytes." related_apis: - d2i_X509_REQ
+          - d2i_X509_CRL - i2d_X509 mutation_hints: - trailing_garbage - valid_prefix_plus_second_der_object
+          - valid_prefix_plus_partial_der_object - outer_sequence_len_minus_1 - outer_sequence_len_plus_1
+          - inner_len_zero - inner_len_oversized oracle_observables: - return_pointer
+          - consumed_pointer - consumed_len - sanitizer_signal - api: d2i_PKCS8_PRIV_KEY_INFO
+          library: openssl signature: "PKCS8_PRIV_KEY_INFO *d2i_PKCS8_PRIV_KEY_INFO(PKCS8_PRIV_KEY_INFO
+          **a, const unsigned char **pp, long length)" parameter_semantics: - "pp
+          points to an input DER pointer and advances on success." - "length is the
+          caller-supplied input length." return_value_semantics:'
+        metadata:
+          fallback: knowledge_raw_keyword_search
+          matched_terms:
+          - apis
+          - call
+          - evp_mac_ctx_get_mac_size
+          - evp_mac_init
+          - mbedtls
+          - psa_mac_sign_setup
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"mbedtls psa_mac_sign_setup object_state_lifecycle\
+        \ selected mask units trigger APIs EVP_MAC_CTX_get_mac_size EVP_MAC_init migrate\
+        \ API call    mutation points \",\n  \"top_k\": 5,\n  \"results\": [],\n \
+        \ \"error\": \"Ollama embedding failed after 3 retries: [Errno 1] Operation\
+        \ not permitted\"\n}\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      raw_fallback:
+        enabled: true
+        reason: rag_query_failed
+        root: knowledge_raw
+        hits: 1
+      kind: selected_mask_migration_constraints
+      use_for_feature_inference: target
+    - query: 'mbedtls psa_mac_sign_setup object_state_lifecycle oracle observability
+        return value output state pointer consumption sanitizer  input setup '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 1
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.901
+        distance: null
+        layer: api_knowledge_cards
+        source_file: knowledge_raw/api_knowledge_cards/high_value_candidate_sprint_2026_06_07.yaml
+        text: 'cards: - api: d2i_X509 library: openssl signature: "X509 *d2i_X509(X509
+          **a, const unsigned char **pp, long length)" parameter_semantics: - "pp
+          points to an input DER pointer and is advanced to the first byte after the
+          parsed object on success." - "length is the number of bytes available from
+          *pp." - "a may be NULL to allocate a new X509 object." return_value_semantics:
+          - "Returns a non-NULL X509 object on successful parse." - "Returns NULL
+          on parse failure." state_preconditions: - "Input should be DER-encoded X.509
+          Certificate." valid_invalid_ranges: - "Valid: exact DER object length."
+          - "Invalid: malformed ASN.1 lengths, truncated DER, oversized inner length."
+          - "High-risk semantic: valid DER prefix followed by trailing bytes." related_apis:
+          - d2i_X509_REQ - d2i_X509_CRL - i2d_X509 mutation_hints: - trailing_garbage
+          - valid_prefix_plus_second_der_object - valid_prefix_plus_partial_der_object
+          - outer_sequence_len_minus_1 - outer_sequence_len_plus_1 - inner_len_zero
+          - inner_len_oversized oracle_observables: - return_pointer'
+        metadata:
+          fallback: knowledge_raw_keyword_search
+          matched_terms:
+          - input
+          - mbedtls
+          - oracle
+          - output
+          - pointer
+          - psa_mac_sign_setup
+          - sanitizer
+          - setup
+          - state
+      error: 'Ollama embedding failed after 3 retries: [Errno 1] Operation not permitted'
+      stdout_preview: "{\n  \"query\": \"mbedtls psa_mac_sign_setup object_state_lifecycle\
+        \ oracle observability return value output state pointer consumption sanitizer\
+        \  input setup \",\n  \"top_k\": 5,\n  \"results\": [],\n  \"error\": \"Ollama\
+        \ embedding failed after 3 retries: [Errno 1] Operation not permitted\"\n\
+        }\n"
+      stderr_preview: '[WARN] Ollama embed failed, attempt 1/3: [Errno 1] Operation
+        not permitted
+
+        [WARN] Ollama embed failed, attempt 2/3: [Errno 1] Operation not permitted
+
+        [WARN] Ollama embed failed, attempt 3/3: [Errno 1] Operation not permitted
+
+        '
+      truncated: false
+      raw_fallback:
+        enabled: true
+        reason: rag_query_failed
+        root: knowledge_raw
+        hits: 1
+      kind: selected_mask_oracle_observability
+      use_for_feature_inference: target
+    inferred_features:
+      observed_features_from_target_evidence:
+      - PSA MAC operation lifecycle represents uninitialized vs initialized operation
+        state
+      - initialized psa_mac_sign_setup -> psa_mac_update -> psa_mac_sign_finish provides
+        control state
+      - pre-setup psa_mac_update can be observed as safe rejection without crash
+      - return code and crash/sanitizer signals are observable
+      negative_or_weakened_features:
+      - PSA operation API does not expose an EVP_MAC_CTX_get_mac_size equivalent
+      - exact OpenSSL EVP_MAC_CTX_get_mac_size internal dereference is not preserved
+      - pre-setup operation is psa_mac_update, not a direct get-size call
+      effective_observed_features:
+      - PSA MAC operation lifecycle represents uninitialized vs initialized operation
+        state
+      - initialized psa_mac_sign_setup -> psa_mac_update -> psa_mac_sign_finish provides
+        control state
+      - pre-setup psa_mac_update can be observed as safe rejection without crash
+      - return code and crash/sanitizer signals are observable
+      feature_conflicts: []
+      candidate_preserved_features:
+      - PSA MAC operation lifecycle represents uninitialized vs initialized operation
+        state
+      - initialized psa_mac_sign_setup -> psa_mac_update -> psa_mac_sign_finish provides
+        control state
+      - pre-setup psa_mac_update can be observed as safe rejection without crash
+      - return code and crash/sanitizer signals are observable
+      candidate_lost_or_weakened_features:
+      - PSA operation API does not expose an EVP_MAC_CTX_get_mac_size equivalent
+      - exact OpenSSL EVP_MAC_CTX_get_mac_size internal dereference is not preserved
+      - pre-setup operation is psa_mac_update, not a direct get-size call
+      bug_class_requirements:
+        required: []
+        disallowed: []
+        optional: []
+      required_present: []
+      required_missing: []
+      disallowed_present: []
+      optional_present: []
+      evidence_hits: {}
+    api_card_evidence:
+      api_cards_root_loaded: true
+      matched_cards:
+      - path: mbedtls/psa_mac_sign_finish.yaml
+        api: psa_mac_sign_finish
+        library: mbedtls
+        family: mac_lifecycle
+        mutation_hints:
+        - final before setup
+        - double final
+        - abort then final
+        - small mac_size
+        oracle_observables:
+        - psa_status
+        - mac_length
+        - output_buffer_state
+        - sanitizer_signal
+        state_preconditions:
+        - operation must be set up for MAC sign
+        - updates may have been applied before finish
+        known_pitfalls:
+        - 'Known pitfall: failure return must be interpreted with mac_length and operation
+          state.'
+        match_reason: target_api_exact_or_related
+      - path: openssl/EVP_MAC_CTX_get_mac_size.yaml
+        api: EVP_MAC_CTX_get_mac_size
+        library: openssl
+        family: mac_lifecycle
+        mutation_hints:
+        - get size before setup
+        - get size after failed init
+        - get size after final
+        - get size after abort-like cleanup
+        oracle_observables:
+        - returned_size
+        - error_stack
+        - sanitizer_signal
+        state_preconditions:
+        - context should have selected MAC implementation and parameters
+        known_pitfalls:
+        - 'Known pitfall: size query behavior depends on lifecycle state.'
+        match_reason: source_trigger_api_exact_or_related
+      - path: openssl/EVP_MAC_final.yaml
+        api: EVP_MAC_final
+        library: openssl
+        family: mac_lifecycle
+        mutation_hints:
+        - final before setup
+        - double final
+        - abort then final
+        - output buffer too small
+        oracle_observables:
+        - return_code
+        - outl
+        - output_buffer_state
+        - sanitizer_signal
+        state_preconditions:
+        - context must be initialized with key and parameters
+        - update sequence must be valid for the selected MAC
+        known_pitfalls:
+        - 'Known pitfall: failure paths must not expose unsafe outl or stale output
+          state.'
+        match_reason: source_trigger_api_exact_or_related
+      warnings: []
+      inferred_from_cards:
+        state_sensitive: true
+        lifecycle_sensitive: true
+        output_length_observable: true
+        suggested_mutation_dimensions:
+        - lifecycle_sequence
+        - mac_algorithm
+        - output_length
+  api_card_evidence:
+    api_cards_root_loaded: true
+    matched_cards:
+    - path: mbedtls/psa_mac_sign_finish.yaml
+      api: psa_mac_sign_finish
+      library: mbedtls
+      family: mac_lifecycle
+      mutation_hints:
+      - final before setup
+      - double final
+      - abort then final
+      - small mac_size
+      oracle_observables:
+      - psa_status
+      - mac_length
+      - output_buffer_state
+      - sanitizer_signal
+      state_preconditions:
+      - operation must be set up for MAC sign
+      - updates may have been applied before finish
+      known_pitfalls:
+      - 'Known pitfall: failure return must be interpreted with mac_length and operation
+        state.'
+      match_reason: target_api_exact_or_related
+    - path: openssl/EVP_MAC_CTX_get_mac_size.yaml
+      api: EVP_MAC_CTX_get_mac_size
+      library: openssl
+      family: mac_lifecycle
+      mutation_hints:
+      - get size before setup
+      - get size after failed init
+      - get size after final
+      - get size after abort-like cleanup
+      oracle_observables:
+      - returned_size
+      - error_stack
+      - sanitizer_signal
+      state_preconditions:
+      - context should have selected MAC implementation and parameters
+      known_pitfalls:
+      - 'Known pitfall: size query behavior depends on lifecycle state.'
+      match_reason: source_trigger_api_exact_or_related
+    - path: openssl/EVP_MAC_final.yaml
+      api: EVP_MAC_final
+      library: openssl
+      family: mac_lifecycle
+      mutation_hints:
+      - final before setup
+      - double final
+      - abort then final
+      - output buffer too small
+      oracle_observables:
+      - return_code
+      - outl
+      - output_buffer_state
+      - sanitizer_signal
+      state_preconditions:
+      - context must be initialized with key and parameters
+      - update sequence must be valid for the selected MAC
+      known_pitfalls:
+      - 'Known pitfall: failure paths must not expose unsafe outl or stale output
+        state.'
+      match_reason: source_trigger_api_exact_or_related
+    warnings: []
+    inferred_from_cards:
+      state_sensitive: true
+      lifecycle_sensitive: true
+      output_length_observable: true
+      suggested_mutation_dimensions:
+      - lifecycle_sequence
+      - mac_algorithm
+      - output_length
+evidence_collection:
+  method: config_driven_rag_evidence_collector
+  top_k: 5
+  target_api_filter: psa_mac_sign_setup
+  max_candidates: null
+  max_queries_per_candidate: 8
+  feature_rules: config/evidence_feature_rules.yaml
+  bug_classes: []
+  source_pattern:
+    pattern_id: null
+    source_library: openssl
+    root_cause_summary: ''
+    must_preserve_features: []
+    optional_features: []
+    not_required_features: []
+    good_target_api_features: []
+    bad_target_api_features: []
+    rag_query_context: ''
+    harness_family: object_state_lifecycle
+    oracle_type: mac_context_size_lifecycle_oracle
+    trigger_apis:
+    - EVP_MAC_CTX_get_mac_size
+    - EVP_MAC_init
+    selected_mask_units:
+      summary:
+        selected_count: 8
+        source_unit_count: null
+        harness_family: object_state_lifecycle
+        trigger_apis:
+        - EVP_MAC_CTX_get_mac_size
+        - EVP_MAC_init
+        by_role: {}
+        by_mask_level: {}
+        by_suggested_use: {}
+      selected_units_by_use:
+        unspecified:
+        - unit_id: mac_name_literal
+        - unit_id: digest_name_literal
+        - unit_id: key_bytes_literal
+        - unit_id: key_len_argument
+        - unit_id: expected_mac_size_macro
+        migrate_api_call:
+        - unit_id: pre_init_get_size_call
+          role: oracle
+          suggested_use: migrate_api_call
+        - unit_id: evp_mac_init_call
+          suggested_use: migrate_api_call
+        - unit_id: post_init_get_size_call
+          role: oracle
+          suggested_use: migrate_api_call
+      query_terms:
+        harness_family: object_state_lifecycle
+        trigger_apis: EVP_MAC_CTX_get_mac_size EVP_MAC_init
+        migrate_api_call: '  '
+        preserve_oracle: ''
+        mutate_value: ''
+        mutate_api_argument: ''
+        preserve_input_preparation: ''
+  selected_mask_units:
+    loaded: true
+    summary:
+      selected_count: 8
+      source_unit_count: null
+      harness_family: object_state_lifecycle
+      trigger_apis:
+      - EVP_MAC_CTX_get_mac_size
+      - EVP_MAC_init
+      by_role: {}
+      by_mask_level: {}
+      by_suggested_use: {}
+  api_cards:
+    root: knowledge_base/api_cards
+    loaded: true
+    count: 13
+    warnings: []
+  note: Evidence is retrieved before LLM adapter filling. Source-pattern evidence
+    is kept separate from target-API evidence to avoid feature contamination.

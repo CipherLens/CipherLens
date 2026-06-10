@@ -1,0 +1,1218 @@
+template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE
+template_name: ''
+source_api: EVP_MAC_fetch
+source_library: openssl
+template_file: tmpl_openssl.c
+template_library: openssl
+trigger_apis:
+- EVP_MAC_fetch
+- EVP_MAC_CTX_new
+- EVP_MAC_CTX_get_mac_size
+- EVP_MAC_init
+- EVP_MAC_CTX_free
+- EVP_MAC_free
+harness_family: object_state_lifecycle
+summary:
+  method: ast_lite_regex_template_role_aware
+  template_dir: artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/cross_templates_recipe/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup
+  template_file: tmpl_openssl.c
+  template_library: openssl
+  unit_count: 72
+  note: Lightweight AST-like report generated from template metadata, mask_report
+    roles, and regex/template-aware analysis of tmpl_mbedtls.c.
+  backend: lite
+ast_mask_units:
+- unit_id: ASTLITE-0001
+  mask_level: value
+  role: mutation_point
+  placeholder: '[MAC_NAME]'
+  code: MAC_NAME
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: MAC_NAME
+  mutation_type: string
+  default: HMAC
+  values:
+  - HMAC
+- unit_id: ASTLITE-0002
+  mask_level: value
+  role: mutation_point
+  placeholder: '[DIGEST_NAME]'
+  code: DIGEST_NAME
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: DIGEST_NAME
+  mutation_type: string
+  default: SHA256
+  values:
+  - SHA256
+- unit_id: ASTLITE-0003
+  mask_level: value
+  role: mutation_point
+  placeholder: '[KEY_BYTES]'
+  code: KEY_BYTES
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: medium
+  mutation_name: KEY_BYTES
+  mutation_type: byte_array
+  default: '"rag-seed-hmac-key"'
+  values:
+  - '"rag-seed-hmac-key"'
+- unit_id: ASTLITE-0004
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[KEY_LEN]'
+  code: KEY_LEN
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: medium
+  mutation_name: KEY_LEN
+  mutation_type: int
+  default: 17
+  values:
+  - 17
+- unit_id: ASTLITE-0005
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[EXPECTED_MAC_SIZE]'
+  code: EXPECTED_MAC_SIZE
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: EXPECTED_MAC_SIZE
+  mutation_type: int
+  default: 32
+  values:
+  - 32
+- unit_id: ASTLITE-0006
+  mask_level: block
+  role: helper_function
+  placeholder: ''
+  code: 'static void bug_signal_handler(int signo) { fprintf(stderr, "[BUG] mac_context_lifecycle:
+    crash or sanitizer signal: %d\n", signo); fflush(stderr); _Exit(128 + signo);
+    }'
+  source: tmpl_openssl.c.helper_function
+  reason: Static helper function block 'bug_signal_handler' identified by AST-lite
+    brace matching.
+  priority: medium
+  function: bug_signal_handler
+  line: 23
+  line_start: 23
+  line_end: 28
+  node_type: function_definition
+  enclosing_function: bug_signal_handler
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0007
+  mask_level: api_argument
+  role: trigger_call
+  placeholder: '[EXPECTED_MAC_SIZE]'
+  code: '/* * Template: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE * Source pattern: OPENSSL-ISSUE-22842
+    * Source library: OpenSSL * Vulnerability class: mac_context_uninitialized_state_query
+    * Oracle type: mac_context_size_lifecycle_oracle * * STATE_A: EVP_MAC_CTX_get_mac_size(ctx)
+    before EVP_MAC_init. * STATE_B: EVP_MAC_init(ctx, key, ..., digest=SHA256), then
+    get_mac_size. */ #include <stdio.h> #include <signal.h> #include <stdlib.h> #include
+    <string.h> #include <openssl/core_names.h> #include <openssl/evp.h> #include <openssl/params.h>
+    #include <openssl/err.h> #define EXPECTED_MAC_SIZE [EXPECTED_MAC_SIZE] static
+    void bug_signal_handler(int signo) {'
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: high
+  line: 1
+  line_start: 1
+  line_end: 24
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0008
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: '/* * Template: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE * Source pattern: OPENSSL-ISSUE-22842
+    * Source library: OpenSSL * Vulnerability class: mac_context_uninitialized_state_query
+    * Oracle type: mac_context_size_lifecycle_oracle * * STATE_A: EVP_MAC_CTX_get_mac_size(ctx)
+    before EVP_MAC_init. * STATE_B: EVP_MAC_init(ctx, key, ..., digest=SHA256), then
+    get_mac_size. */ #include <stdio.h> #include <signal.h> #include <stdlib.h> #include
+    <string.h> #include <openssl/core_names.h> #include <openssl/evp.h> #include <openssl/params.h>
+    #include <openssl/err.h> #define EXPECTED_MAC_SIZE [EXPECTED_MAC_SIZE] static
+    void bug_signal_handler(int signo) {'
+  source: tmpl_openssl.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 1
+  line_start: 1
+  line_end: 24
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0009
+  mask_level: function_call
+  role: trigger_call
+  placeholder: '[EXPECTED_MAC_SIZE]'
+  code: '/* * Template: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE * Source pattern: OPENSSL-ISSUE-22842
+    * Source library: OpenSSL * Vulnerability class: mac_context_uninitialized_state_query
+    * Oracle type: mac_context_size_lifecycle_oracle * * STATE_A: EVP_MAC_CTX_get_mac_size(ctx)
+    before EVP_MAC_init. * STATE_B: EVP_MAC_init(ctx, key, ..., digest=SHA256), then
+    get_mac_size. */ #include <stdio.h> #include <signal.h> #include <stdlib.h> #include
+    <string.h> #include <openssl/core_names.h> #include <openssl/evp.h> #include <openssl/params.h>
+    #include <openssl/err.h> #define EXPECTED_MAC_SIZE [EXPECTED_MAC_SIZE] static
+    void bug_signal_handler(int signo) {'
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'EVP_MAC_CTX_get_mac_size' identified by AST-lite call matching.
+  priority: high
+  function: EVP_MAC_CTX_get_mac_size
+  called_function: EVP_MAC_CTX_get_mac_size
+  line: 1
+  line_start: 1
+  line_end: 24
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0010
+  mask_level: value
+  role: oracle
+  placeholder: '[BUG]'
+  code: 'fprintf(stderr, "[BUG] mac_context_lifecycle: crash or sanitizer signal:
+    %d\n", signo);'
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 25
+  line_start: 25
+  line_end: 25
+  enclosing_function: bug_signal_handler
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0011
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: 'fprintf(stderr, "[BUG] mac_context_lifecycle: crash or sanitizer signal:
+    %d\n", signo);'
+  source: tmpl_openssl.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 25
+  line_start: 25
+  line_end: 25
+  enclosing_function: bug_signal_handler
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0012
+  mask_level: function_call
+  role: oracle
+  placeholder: '[BUG]'
+  code: 'fprintf(stderr, "[BUG] mac_context_lifecycle: crash or sanitizer signal:
+    %d\n", signo);'
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'fprintf' identified by AST-lite call matching.
+  priority: medium
+  function: fprintf
+  called_function: fprintf
+  line: 25
+  line_start: 25
+  line_end: 25
+  enclosing_function: bug_signal_handler
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0013
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: fflush(stderr);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'fflush' identified by AST-lite call matching.
+  priority: medium
+  function: fflush
+  called_function: fflush
+  line: 26
+  line_start: 26
+  line_end: 26
+  enclosing_function: bug_signal_handler
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0014
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: _Exit(128 + signo);
+  source: tmpl_openssl.c.function_call
+  reason: Function call '_Exit' identified by AST-lite call matching.
+  priority: medium
+  function: _Exit
+  called_function: _Exit
+  line: 27
+  line_start: 27
+  line_end: 27
+  enclosing_function: bug_signal_handler
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0015
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: int main(void) {
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'main' identified by AST-lite call matching.
+  priority: medium
+  function: main
+  called_function: main
+  line: 30
+  line_start: 30
+  line_end: 31
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0016
+  mask_level: value
+  role: mutation_point
+  placeholder: '[2]'
+  code: OSSL_PARAM params[2];
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 34
+  line_start: 34
+  line_end: 34
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0017
+  mask_level: value
+  role: mutation_point
+  placeholder: '[KEY_BYTES]'
+  code: const unsigned char key[] = [KEY_BYTES];
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 35
+  line_start: 35
+  line_end: 35
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0018
+  mask_level: type
+  role: mutation_point
+  placeholder: '[KEY_BYTES]'
+  code: const unsigned char key[] = [KEY_BYTES];
+  source: tmpl_openssl.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 35
+  line_start: 35
+  line_end: 35
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0019
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: size_t pre_size = 0;
+  source: tmpl_openssl.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 36
+  line_start: 36
+  line_end: 36
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0020
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: size_t post_size = 0;
+  source: tmpl_openssl.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 37
+  line_start: 37
+  line_end: 37
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0021
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: int init_ok = 0;
+  source: tmpl_openssl.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 38
+  line_start: 38
+  line_end: 38
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0022
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: int ret = 1;
+  source: tmpl_openssl.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 39
+  line_start: 39
+  line_end: 39
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0023
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: setbuf(stdout, NULL);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'setbuf' identified by AST-lite call matching.
+  priority: medium
+  function: setbuf
+  called_function: setbuf
+  line: 41
+  line_start: 41
+  line_end: 41
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0024
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGSEGV, bug_signal_handler);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'signal' identified by AST-lite call matching.
+  priority: medium
+  function: signal
+  called_function: signal
+  line: 42
+  line_start: 42
+  line_end: 42
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0025
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGABRT, bug_signal_handler);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'signal' identified by AST-lite call matching.
+  priority: medium
+  function: signal
+  called_function: signal
+  line: 43
+  line_start: 43
+  line_end: 43
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0026
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGBUS, bug_signal_handler);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'signal' identified by AST-lite call matching.
+  priority: medium
+  function: signal
+  called_function: signal
+  line: 44
+  line_start: 44
+  line_end: 44
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0027
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: signal(SIGILL, bug_signal_handler);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'signal' identified by AST-lite call matching.
+  priority: medium
+  function: signal
+  called_function: signal
+  line: 45
+  line_start: 45
+  line_end: 45
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0028
+  mask_level: value
+  role: mutation_point
+  placeholder: '[MAC_NAME]'
+  code: printf("template_mutation MAC_NAME=%s DIGEST_NAME=%s KEY_LEN=%d EXPECTED_MAC_SIZE=%d\n",
+    "[MAC_NAME]", "[DIGEST_NAME]", [KEY_LEN], EXPECTED_MAC_SIZE);
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: high
+  line: 47
+  line_start: 47
+  line_end: 48
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0029
+  mask_level: value
+  role: mutation_point
+  placeholder: '[DIGEST_NAME]'
+  code: printf("template_mutation MAC_NAME=%s DIGEST_NAME=%s KEY_LEN=%d EXPECTED_MAC_SIZE=%d\n",
+    "[MAC_NAME]", "[DIGEST_NAME]", [KEY_LEN], EXPECTED_MAC_SIZE);
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: high
+  line: 47
+  line_start: 47
+  line_end: 48
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0030
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[KEY_LEN]'
+  code: printf("template_mutation MAC_NAME=%s DIGEST_NAME=%s KEY_LEN=%d EXPECTED_MAC_SIZE=%d\n",
+    "[MAC_NAME]", "[DIGEST_NAME]", [KEY_LEN], EXPECTED_MAC_SIZE);
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 47
+  line_start: 47
+  line_end: 48
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0031
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[MAC_NAME]'
+  code: printf("template_mutation MAC_NAME=%s DIGEST_NAME=%s KEY_LEN=%d EXPECTED_MAC_SIZE=%d\n",
+    "[MAC_NAME]", "[DIGEST_NAME]", [KEY_LEN], EXPECTED_MAC_SIZE);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  called_function: printf
+  line: 47
+  line_start: 47
+  line_end: 48
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0032
+  mask_level: value
+  role: trigger_call
+  placeholder: '[MAC_NAME]'
+  code: mac = EVP_MAC_fetch(NULL, "[MAC_NAME]", NULL);
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: high
+  line: 50
+  line_start: 50
+  line_end: 50
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0033
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: mac = EVP_MAC_fetch(NULL, "[MAC_NAME]", NULL);
+  source: tmpl_openssl.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 50
+  line_start: 50
+  line_end: 50
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0034
+  mask_level: function_call
+  role: trigger_call
+  placeholder: '[MAC_NAME]'
+  code: mac = EVP_MAC_fetch(NULL, "[MAC_NAME]", NULL);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'EVP_MAC_fetch' identified by AST-lite call matching.
+  priority: high
+  function: EVP_MAC_fetch
+  called_function: EVP_MAC_fetch
+  line: 50
+  line_start: 50
+  line_end: 50
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0035
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'fprintf(stderr, "[TRIAGE] mac_context_lifecycle: unexpected size/state: EVP_MAC_fetch
+    failed\n");'
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 52
+  line_start: 52
+  line_end: 52
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0036
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'fprintf(stderr, "[TRIAGE] mac_context_lifecycle: unexpected size/state: EVP_MAC_fetch
+    failed\n");'
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'fprintf' identified by AST-lite call matching.
+  priority: medium
+  function: fprintf
+  called_function: fprintf
+  line: 52
+  line_start: 52
+  line_end: 52
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0037
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: ERR_print_errors_fp(stderr);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'ERR_print_errors_fp' identified by AST-lite call matching.
+  priority: medium
+  function: ERR_print_errors_fp
+  called_function: ERR_print_errors_fp
+  line: 53
+  line_start: 53
+  line_end: 53
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0038
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: ctx = EVP_MAC_CTX_new(mac);
+  source: tmpl_openssl.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 57
+  line_start: 57
+  line_end: 57
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0039
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: ctx = EVP_MAC_CTX_new(mac);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'EVP_MAC_CTX_new' identified by AST-lite call matching.
+  priority: high
+  function: EVP_MAC_CTX_new
+  called_function: EVP_MAC_CTX_new
+  line: 57
+  line_start: 57
+  line_end: 57
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0040
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'fprintf(stderr, "[TRIAGE] mac_context_lifecycle: unexpected size/state: EVP_MAC_CTX_new
+    failed\n");'
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 59
+  line_start: 59
+  line_end: 59
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0041
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'fprintf(stderr, "[TRIAGE] mac_context_lifecycle: unexpected size/state: EVP_MAC_CTX_new
+    failed\n");'
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'fprintf' identified by AST-lite call matching.
+  priority: medium
+  function: fprintf
+  called_function: fprintf
+  line: 59
+  line_start: 59
+  line_end: 59
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0042
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: '/* * STATE_A: the original bug path queries the MAC size before EVP_MAC_init
+    * initializes provider algctx state. Safe behavior is no crash. */ pre_size =
+    EVP_MAC_CTX_get_mac_size(ctx);'
+  source: tmpl_openssl.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 64
+  line_start: 64
+  line_end: 68
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0043
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: '/* * STATE_A: the original bug path queries the MAC size before EVP_MAC_init
+    * initializes provider algctx state. Safe behavior is no crash. */ pre_size =
+    EVP_MAC_CTX_get_mac_size(ctx);'
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'EVP_MAC_CTX_get_mac_size' identified by AST-lite call matching.
+  priority: high
+  function: EVP_MAC_CTX_get_mac_size
+  called_function: EVP_MAC_CTX_get_mac_size
+  line: 64
+  line_start: 64
+  line_end: 68
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0044
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("STATE_A pre-init EVP_MAC_CTX_get_mac_size returned %zu\n", pre_size);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  called_function: printf
+  line: 69
+  line_start: 69
+  line_end: 69
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0045
+  mask_level: value
+  role: oracle
+  placeholder: '[OK]'
+  code: 'printf("[OK] mac_context_lifecycle: pre-setup operation rejected safely\n");'
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 71
+  line_start: 71
+  line_end: 71
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0046
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: 'printf("[OK] mac_context_lifecycle: pre-setup operation rejected safely\n");'
+  source: tmpl_openssl.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 71
+  line_start: 71
+  line_end: 71
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0047
+  mask_level: function_call
+  role: oracle
+  placeholder: '[OK]'
+  code: 'printf("[OK] mac_context_lifecycle: pre-setup operation rejected safely\n");'
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  called_function: printf
+  line: 71
+  line_start: 71
+  line_end: 71
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0048
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: pre-init size=%zu\n",
+    pre_size);'
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 73
+  line_start: 73
+  line_end: 73
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0049
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: pre-init size=%zu\n",
+    pre_size);'
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  called_function: printf
+  line: 73
+  line_start: 73
+  line_end: 73
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0050
+  mask_level: value
+  role: mutation_point
+  placeholder: '[0]'
+  code: params[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST, "[DIGEST_NAME]",
+    0);
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 76
+  line_start: 76
+  line_end: 76
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0051
+  mask_level: value
+  role: mutation_point
+  placeholder: '[DIGEST_NAME]'
+  code: params[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST, "[DIGEST_NAME]",
+    0);
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: high
+  line: 76
+  line_start: 76
+  line_end: 76
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0052
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[0]'
+  code: params[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST, "[DIGEST_NAME]",
+    0);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'OSSL_PARAM_construct_utf8_string' identified by AST-lite
+    call matching.
+  priority: medium
+  function: OSSL_PARAM_construct_utf8_string
+  called_function: OSSL_PARAM_construct_utf8_string
+  line: 76
+  line_start: 76
+  line_end: 76
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0053
+  mask_level: value
+  role: mutation_point
+  placeholder: '[1]'
+  code: params[1] = OSSL_PARAM_construct_end();
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 77
+  line_start: 77
+  line_end: 77
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0054
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[1]'
+  code: params[1] = OSSL_PARAM_construct_end();
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'OSSL_PARAM_construct_end' identified by AST-lite call matching.
+  priority: medium
+  function: OSSL_PARAM_construct_end
+  called_function: OSSL_PARAM_construct_end
+  line: 77
+  line_start: 77
+  line_end: 77
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0055
+  mask_level: api_argument
+  role: trigger_call
+  placeholder: '[KEY_LEN]'
+  code: init_ok = EVP_MAC_init(ctx, key, [KEY_LEN], params);
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 79
+  line_start: 79
+  line_end: 79
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0056
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: init_ok = EVP_MAC_init(ctx, key, [KEY_LEN], params);
+  source: tmpl_openssl.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 79
+  line_start: 79
+  line_end: 79
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0057
+  mask_level: function_call
+  role: trigger_call
+  placeholder: '[KEY_LEN]'
+  code: init_ok = EVP_MAC_init(ctx, key, [KEY_LEN], params);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'EVP_MAC_init' identified by AST-lite call matching.
+  priority: high
+  function: EVP_MAC_init
+  called_function: EVP_MAC_init
+  line: 79
+  line_start: 79
+  line_end: 79
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0058
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("STATE_B EVP_MAC_init returned %d\n", init_ok);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  called_function: printf
+  line: 80
+  line_start: 80
+  line_end: 80
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0059
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'fprintf(stderr, "[TRIAGE] mac_context_lifecycle: unexpected size/state: EVP_MAC_init
+    failed\n");'
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 82
+  line_start: 82
+  line_end: 82
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0060
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'fprintf(stderr, "[TRIAGE] mac_context_lifecycle: unexpected size/state: EVP_MAC_init
+    failed\n");'
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'fprintf' identified by AST-lite call matching.
+  priority: medium
+  function: fprintf
+  called_function: fprintf
+  line: 82
+  line_start: 82
+  line_end: 82
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0061
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: post_size = EVP_MAC_CTX_get_mac_size(ctx);
+  source: tmpl_openssl.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 87
+  line_start: 87
+  line_end: 87
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0062
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: post_size = EVP_MAC_CTX_get_mac_size(ctx);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'EVP_MAC_CTX_get_mac_size' identified by AST-lite call matching.
+  priority: high
+  function: EVP_MAC_CTX_get_mac_size
+  called_function: EVP_MAC_CTX_get_mac_size
+  line: 87
+  line_start: 87
+  line_end: 87
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0063
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: printf("STATE_B post-init EVP_MAC_CTX_get_mac_size returned %zu\n", post_size);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  called_function: printf
+  line: 88
+  line_start: 88
+  line_end: 88
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0064
+  mask_level: value
+  role: oracle
+  placeholder: '[OK]'
+  code: 'printf("[OK] mac_context_lifecycle: initialized size matched\n");'
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 90
+  line_start: 90
+  line_end: 90
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0065
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: 'printf("[OK] mac_context_lifecycle: initialized size matched\n");'
+  source: tmpl_openssl.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 90
+  line_start: 90
+  line_end: 90
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0066
+  mask_level: function_call
+  role: oracle
+  placeholder: '[OK]'
+  code: 'printf("[OK] mac_context_lifecycle: initialized size matched\n");'
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  called_function: printf
+  line: 90
+  line_start: 90
+  line_end: 90
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0067
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: post-init
+    size=%zu expected=%d\n", post_size, EXPECTED_MAC_SIZE);'
+  source: tmpl_openssl.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 93
+  line_start: 93
+  line_end: 94
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0068
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: post-init
+    size=%zu expected=%d\n", post_size, EXPECTED_MAC_SIZE);'
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  called_function: printf
+  line: 93
+  line_start: 93
+  line_end: 94
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0069
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: EVP_MAC_CTX_free(ctx);
+  source: tmpl_openssl.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 98
+  line_start: 98
+  line_end: 98
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0070
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: EVP_MAC_CTX_free(ctx);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'EVP_MAC_CTX_free' identified by AST-lite call matching.
+  priority: high
+  function: EVP_MAC_CTX_free
+  called_function: EVP_MAC_CTX_free
+  line: 98
+  line_start: 98
+  line_end: 98
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0071
+  mask_level: statement
+  role: trigger_call
+  placeholder: ''
+  code: EVP_MAC_free(mac);
+  source: tmpl_openssl.c.source_api_statement
+  reason: Statement invokes the source API trigger.
+  priority: high
+  line: 99
+  line_start: 99
+  line_end: 99
+  enclosing_function: ''
+  node_type: statement
+  template_file: tmpl_openssl.c
+  template_library: openssl
+- unit_id: ASTLITE-0072
+  mask_level: function_call
+  role: trigger_call
+  placeholder: ''
+  code: EVP_MAC_free(mac);
+  source: tmpl_openssl.c.function_call
+  reason: Function call 'EVP_MAC_free' identified by AST-lite call matching.
+  priority: high
+  function: EVP_MAC_free
+  called_function: EVP_MAC_free
+  line: 99
+  line_start: 99
+  line_end: 99
+  enclosing_function: ''
+  node_type: call_expression
+  template_file: tmpl_openssl.c
+  template_library: openssl
+role_summary:
+  helper_function: 17
+  mutation_point: 27
+  oracle: 9
+  trigger_call: 19
+mask_level_summary:
+  api_argument: 5
+  block: 1
+  function_call: 31
+  statement: 11
+  type: 5
+  value: 19

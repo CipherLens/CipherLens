@@ -1,0 +1,24 @@
+candidate_id: secure_heap_exp_0003_new_state_init_failed_then_used
+source_sprint: artifacts/sprints/secure_heap_state_lifecycle_pattern_expansion_v1
+family: secure_heap_state_lifecycle
+api: CRYPTO_secure_used
+state_sequence: init_failed_then_query
+is_seed_case: false
+why_new_state_combination_candidate:
+  - Original seed cases covered pre-init query and post-done query.
+  - This candidate first attempts CRYPTO_secure_malloc_init with invalid parameters and observes init_ret=0.
+  - The subsequent CRYPTO_secure_used call crashes, so the state is failed-init-then-query, not plain pre-init.
+previous_crash_signal:
+  exit_code: 139
+  signal: 11
+  marker: SIGSEGV
+validation_gaps:
+  - Extract minimal reproducer outside the generated template.
+  - Confirm the failed init is stable and not renderer-specific.
+  - Confirm backtrace reaches CRYPTO_secure_used and NULL rwlock path.
+  - Check safe initialized control.
+  - Check API contract for init failure followed by CRYPTO_secure_used.
+  - Check available local OpenSSL versions without downloading new versions.
+claim_boundary:
+  confirmed_vulnerability: false
+  cve_claim: false

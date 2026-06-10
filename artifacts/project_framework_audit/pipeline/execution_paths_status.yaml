@@ -1,0 +1,67 @@
+execution_paths:
+  A_recipe_slot_cross_library_migration:
+    purpose: Cross-library API-level semantic migration through strict recipe-slot adapters.
+    completed_examples:
+      - MAC lifecycle / OPENSSL-ISSUE-22842
+    current_status: full_a_path_compliant for MAC lifecycle
+    reusable_components:
+      - migration/adapter_filler.py
+      - migration/adapter_validate.py
+      - template_maker/cross_generator_from_adapters.py
+      - template_maker/render_cases.py
+      - runner/compile_run.py
+      - runner/analyze_results.py
+      - runner/analyze_cross_results.py
+    remaining_gaps:
+      - Broaden family coverage for recipe renderers.
+      - Keep validators strict against family-mixing and free-form C.
+    representative_artifacts:
+      - artifacts/migrations/mac_lifecycle_glm_full_a_path/
+  B_controlled_family_mutation:
+    purpose: Expand known family dimensions with deterministic mutation matrices.
+    completed_examples:
+      - secure_heap_state_lifecycle_v1 seed validation / oracle calibration
+      - pkey and DER controlled family examples
+    current_status: useful but partly family-specific
+    reusable_components:
+      - mutation/apply_secure_heap_state_matrix.py
+      - mutation/apply_der_full_consumption_matrix.py
+      - mutation/family_mutation_plan.py
+      - runner/analyze_secure_heap_state.py
+    remaining_gaps:
+      - Renderer/analyzer interface unification.
+      - Version novelty integration into scheduler.
+    representative_artifacts:
+      - artifacts/sprints/secure_heap_state_lifecycle_v1/
+  C_app_level_validation_gap:
+    purpose: Triage application/CLI-level validation gaps with output/stderr/exit oracles.
+    completed_examples:
+      - DER full-consumption v2
+    current_status: complete for current DER app-level triage
+    reusable_components:
+      - runner/run_app_cases.py
+      - runner/analyze_der_full_consumption.py
+      - mutation/apply_der_full_consumption_matrix.py
+    remaining_gaps:
+      - General app-level oracle schema.
+      - Better separation of expected prefix acceptance from validation gaps.
+    representative_artifacts:
+      - artifacts/sprints/der_full_consumption_v2/
+  D_crash_sanitizer_evidence_audit:
+    purpose: Validate crash/sanitizer candidates before promotion into runnable families.
+    completed_examples:
+      - crash/sanitizer top5 audit
+      - OPENSSL-ISSUE-28669 promotion to secure_heap_state_lifecycle_v1 seed
+    current_status: evidence audit complete for top5; only 28669 ready as runnable seed
+    reusable_components:
+      - analysis/audit_crash_sanitizer_candidates.py
+      - artifacts/crash_sanitizer_audit/
+    remaining_gaps:
+      - More affected-version provenance.
+      - More sanitizer logs and harness validity checks.
+    representative_artifacts:
+      - artifacts/crash_sanitizer_audit/
+notes:
+  mac_lifecycle: full A-path example
+  der_full_consumption: C-path example
+  secure_heap_state_lifecycle_v1: D_then_B seed validation / robustness qualification, not cross-library migration and not final discovery

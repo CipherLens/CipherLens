@@ -1,0 +1,45 @@
+plan_name: secure_heap_state_lifecycle next-stage pattern expansion
+seed_validation_status: >
+  secure_heap_state_lifecycle_v1 is seed validation, not final discovery. The
+  next stage must perform same-family, cross-version, or cross-library
+  analogous lifecycle expansion.
+routes:
+  openssl_same_family_api_expansion:
+    target_apis:
+      - CRYPTO_secure_malloc_initialized
+      - CRYPTO_secure_allocated
+      - OPENSSL_secure_malloc
+      - OPENSSL_secure_zalloc
+      - OPENSSL_secure_free
+      - CRYPTO_secure_malloc_done
+    state_combinations:
+      - pre_init
+      - initialized
+      - init_failed
+      - done
+      - done_twice
+      - done_then_query
+      - done_then_free
+      - done_then_alloc
+      - reinit_after_done
+      - query_after_failed_init
+    goal: find new crash candidates or robustness hardening candidates not covered by the original issue
+  openssl_cross_version_expansion:
+    core_matrix:
+      - pre_init_used_only
+      - done_then_used
+      - initialized_then_used_control
+      - done_twice
+      - reinit_after_done
+    goal: classify historical reproduction, new affected version, regression, or current-version hardening
+  cross_library_analogous_lifecycle_oracle:
+    direct_mapping_warning: do not force CRYPTO_secure_used to mbedTLS
+    abstract_oracle: state_lifecycle_robustness_oracle
+    candidates:
+      - mbedTLS PSA crypto lifecycle before psa_crypto_init
+      - mbedTLS PSA finish-after-finish or update-after-finish
+      - mbedTLS PSA free-after-failure or reuse-after-free
+      - Botan secure memory or context lifecycle APIs
+      - wolfSSL secure memory or context lifecycle APIs
+      - LibreSSL secure memory or context lifecycle APIs
+    goal: compare safe reject, defined return, permissive behavior, and crash across libraries

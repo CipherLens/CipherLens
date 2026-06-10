@@ -1,0 +1,882 @@
+template_id: RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF
+template_name: ''
+source_api:
+- EVP_PKEY_new
+- RSA_new
+- RSA_set0_key
+- EVP_PKEY_assign_RSA
+- EVP_MD_CTX_new
+- EVP_DigestSignInit
+- EVP_DigestSign
+trigger_apis: []
+harness_family: pkey_capability_mismatch_oracle
+selection_policy:
+  method: ast_lite_high_value_mask_unit_selection
+  rules:
+  - Prefer role=mutation_point units.
+  - Prefer mask_level=value or api_argument units.
+  - Always retain trigger_call function_call/statement units.
+  - Always retain oracle statement/block units.
+  - Retain input_preparation/helper_function/block only when harness-family context
+    keywords are present.
+  - Use configured preferred_roles as scoring hints for each harness family.
+  - Use configured oracle_variables to prioritize oracle-observable units.
+  - Limit input/helper context to representative high-scoring units.
+  - Limit cleanup units to one or two representative statements.
+  - Deduplicate repeated code snippets.
+  context_keywords:
+  - canary
+  - prepare_output_with_canary
+  - buffer
+  - buf
+  - limb
+  - X->p
+  - X->n
+  - raw
+  - CANARY_SIZE
+  - BUFLEN
+  ast_report_name: ast_mask_report.tree_sitter.yaml
+  family_rules_source: config/harness_family_ast_rules.yaml
+  family_rule: {}
+selected_units:
+- unit_id: ASTLITE-0002
+  mask_level: value
+  role: mutation_point
+  placeholder: '[HASH_LEN]'
+  code: '#define HASH_LEN [HASH_LEN]'
+  source: tmpl_mbedtls.c.tree_sitter.preprocessor
+  reason: Preprocessor node contains template placeholder.
+  priority: high
+  line: 8
+  line_start: 8
+  line_end: 9
+  column_start: 1
+  column_end: 1
+  node_type: preproc_def
+  enclosing_function: ''
+  placeholder_dependencies:
+  - '[HASH_LEN]'
+  identifiers_read:
+  - define
+  - HASH_LEN
+  identifiers_written: []
+  selection_reason: Selected because [HASH_LEN] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 74
+- unit_id: ASTLITE-0001
+  mask_level: value
+  role: mutation_point
+  placeholder: '[KEY_BITS]'
+  code: '#define KEY_BITS [KEY_BITS]'
+  source: tmpl_mbedtls.c.tree_sitter.preprocessor
+  reason: Preprocessor node contains template placeholder.
+  priority: high
+  line: 7
+  line_start: 7
+  line_end: 8
+  column_start: 1
+  column_end: 1
+  node_type: preproc_def
+  enclosing_function: ''
+  placeholder_dependencies:
+  - '[KEY_BITS]'
+  identifiers_read:
+  - define
+  - KEY_BITS
+  identifiers_written: []
+  selection_reason: Selected because [KEY_BITS] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 74
+- unit_id: ASTLITE-0003
+  mask_level: value
+  role: mutation_point
+  placeholder: '[SIG_LEN]'
+  code: '#define SIG_LEN [SIG_LEN]'
+  source: tmpl_mbedtls.c.tree_sitter.preprocessor
+  reason: Preprocessor node contains template placeholder.
+  priority: high
+  line: 9
+  line_start: 9
+  line_end: 10
+  column_start: 1
+  column_end: 1
+  node_type: preproc_def
+  enclosing_function: ''
+  placeholder_dependencies:
+  - '[SIG_LEN]'
+  identifiers_read:
+  - define
+  - SIG_LEN
+  identifiers_written: []
+  selection_reason: Selected because [SIG_LEN] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 74
+- unit_id: ASTLITE-0005
+  mask_level: statement
+  role: oracle
+  placeholder: '[BUG]'
+  code: 'fprintf(stderr, "[BUG] crash or sanitizer signal: %d\n", signo);'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: high
+  line: 22
+  line_start: 22
+  line_end: 22
+  column_start: 5
+  column_end: 69
+  node_type: expression_statement
+  enclosing_function: signo
+  placeholder_dependencies:
+  - '[BUG]'
+  identifiers_read:
+  - stderr
+  - BUG
+  - crash
+  - or
+  - sanitizer
+  - signal
+  - d
+  - n
+  - signo
+  identifiers_written: []
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 61
+- unit_id: ASTLITE-0010
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[HASH_LEN]'
+  code: unsigned char hash[HASH_LEN];
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 32
+  line_start: 32
+  line_end: 32
+  column_start: 5
+  column_end: 34
+  node_type: declaration
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[HASH_LEN]'
+  identifiers_read:
+  - unsigned
+  - char
+  - hash
+  - HASH_LEN
+  identifiers_written: []
+  selection_reason: Selected because [HASH_LEN] is a mutation point with statement
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 52
+- unit_id: ASTLITE-0011
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SIG_LEN]'
+  code: unsigned char sig[SIG_LEN];
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 33
+  line_start: 33
+  line_end: 33
+  column_start: 5
+  column_end: 32
+  node_type: declaration
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SIG_LEN]'
+  identifiers_read:
+  - unsigned
+  - char
+  - sig
+  - SIG_LEN
+  identifiers_written: []
+  selection_reason: Selected because [SIG_LEN] is a mutation point with statement
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 52
+- unit_id: ASTLITE-0036
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[HASH_ALG]'
+  code: status = psa_sign_hash(key_id, PSA_ALG_RSA_PKCS1V15_SIGN([HASH_ALG]), hash,
+    HASH_LEN, sig, sizeof(sig), &sig_len);
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 75
+  line_start: 75
+  line_end: 77
+  column_start: 5
+  column_end: 56
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[HASH_ALG]'
+  identifiers_read:
+  - key_id
+  - HASH_ALG
+  - hash
+  - HASH_LEN
+  - sig
+  - sig_len
+  identifiers_written:
+  - status
+  selection_reason: Selected because [HASH_ALG] is a mutation point with statement
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 44
+- unit_id: ASTLITE-0037
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[HASH_ALG]'
+  code: psa_sign_hash(key_id, PSA_ALG_RSA_PKCS1V15_SIGN([HASH_ALG]), hash, HASH_LEN,
+    sig, sizeof(sig), &sig_len)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'psa_sign_hash' identified by tree-sitter C parser.
+  priority: medium
+  line: 75
+  line_start: 75
+  line_end: 77
+  column_start: 14
+  column_end: 55
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[HASH_ALG]'
+  identifiers_read:
+  - key_id
+  - HASH_ALG
+  - hash
+  - HASH_LEN
+  - sig
+  - sig_len
+  identifiers_written: []
+  called_function: psa_sign_hash
+  call_node_code: psa_sign_hash(key_id, PSA_ALG_RSA_PKCS1V15_SIGN([HASH_ALG]), hash,
+    HASH_LEN, sig, sizeof(sig), &sig_len)
+  selection_reason: Selected because [HASH_ALG] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 44
+- unit_id: ASTLITE-0038
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[HASH_ALG]'
+  code: PSA_ALG_RSA_PKCS1V15_SIGN([HASH_ALG])
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'PSA_ALG_RSA_PKCS1V15_SIGN' identified by tree-sitter C parser.
+  priority: medium
+  line: 75
+  line_start: 75
+  line_end: 75
+  column_start: 36
+  column_end: 73
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[HASH_ALG]'
+  identifiers_read:
+  - HASH_ALG
+  identifiers_written: []
+  called_function: PSA_ALG_RSA_PKCS1V15_SIGN
+  call_node_code: PSA_ALG_RSA_PKCS1V15_SIGN([HASH_ALG])
+  selection_reason: Selected because [HASH_ALG] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 44
+- unit_id: ASTLITE-0031
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: 'if (status != PSA_SUCCESS) { printf("[SAFE] invalid RSA key signing rejected
+    by psa_import_key: %d\n", (int) status); printf("[VERDICT] safe_fixed_behavior\n");
+    ret = 0; goto end; }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 67
+  line_start: 67
+  line_end: 73
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  - '[VERDICT]'
+  identifiers_read:
+  - status
+  - PSA_SUCCESS
+  - SAFE
+  - invalid
+  - RSA
+  - key
+  - signing
+  - rejected
+  - by
+  - psa_import_key
+  - d
+  - n
+  - int
+  - VERDICT
+  - safe_fixed_behavior
+  - goto
+  - end
+  identifiers_written:
+  - ret
+  selection_reason: Selected because [SAFE] is a mutation point with statement granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 44
+- unit_id: ASTLITE-0032
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: 'printf("[SAFE] invalid RSA key signing rejected by psa_import_key: %d\n",
+    (int) status);'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 68
+  line_start: 68
+  line_end: 69
+  column_start: 9
+  column_end: 30
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - SAFE
+  - invalid
+  - RSA
+  - key
+  - signing
+  - rejected
+  - by
+  - psa_import_key
+  - d
+  - n
+  - int
+  - status
+  identifiers_written: []
+  selection_reason: Selected because [SAFE] is a mutation point with statement granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 44
+- unit_id: ASTLITE-0033
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: 'printf("[SAFE] invalid RSA key signing rejected by psa_import_key: %d\n",
+    (int) status)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 68
+  line_start: 68
+  line_end: 69
+  column_start: 9
+  column_end: 29
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - SAFE
+  - invalid
+  - RSA
+  - key
+  - signing
+  - rejected
+  - by
+  - psa_import_key
+  - d
+  - n
+  - int
+  - status
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("[SAFE] invalid RSA key signing rejected by psa_import_key:
+    %d\n", (int) status)'
+  selection_reason: Selected because [SAFE] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 44
+- unit_id: ASTLITE-0043
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: 'else { printf("[SAFE] invalid RSA key signing rejected by psa_sign_hash:
+    %d\n", (int) status); printf("[VERDICT] safe_fixed_behavior\n"); }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 82
+  line_start: 82
+  line_end: 86
+  column_start: 7
+  column_end: 6
+  node_type: else_clause
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  - '[VERDICT]'
+  identifiers_read:
+  - else
+  - SAFE
+  - invalid
+  - RSA
+  - key
+  - signing
+  - rejected
+  - by
+  - psa_sign_hash
+  - d
+  - n
+  - int
+  - status
+  - VERDICT
+  - safe_fixed_behavior
+  identifiers_written: []
+  selection_reason: Selected because [SAFE] is a mutation point with statement granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 44
+- unit_id: ASTLITE-0044
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: 'printf("[SAFE] invalid RSA key signing rejected by psa_sign_hash: %d\n",
+    (int) status);'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 83
+  line_start: 83
+  line_end: 84
+  column_start: 9
+  column_end: 30
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - SAFE
+  - invalid
+  - RSA
+  - key
+  - signing
+  - rejected
+  - by
+  - psa_sign_hash
+  - d
+  - n
+  - int
+  - status
+  identifiers_written: []
+  selection_reason: Selected because [SAFE] is a mutation point with statement granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 44
+- unit_id: ASTLITE-0045
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[SAFE]'
+  code: 'printf("[SAFE] invalid RSA key signing rejected by psa_sign_hash: %d\n",
+    (int) status)'
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 83
+  line_start: 83
+  line_end: 84
+  column_start: 9
+  column_end: 29
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[SAFE]'
+  identifiers_read:
+  - SAFE
+  - invalid
+  - RSA
+  - key
+  - signing
+  - rejected
+  - by
+  - psa_sign_hash
+  - d
+  - n
+  - int
+  - status
+  identifiers_written: []
+  called_function: printf
+  call_node_code: 'printf("[SAFE] invalid RSA key signing rejected by psa_sign_hash:
+    %d\n", (int) status)'
+  selection_reason: Selected because [SAFE] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 44
+- unit_id: ASTLITE-0040
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'if (status == PSA_SUCCESS) { printf("[TRIAGE] signing with invalid RSA key
+    succeeded\n"); } else { printf("[SAFE] invalid RSA key signing rejected by psa_sign_hash:
+    %d\n", (int) status); printf("[VERDICT] safe_fixed_behavior\n"); }'
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 80
+  line_start: 80
+  line_end: 86
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[TRIAGE]'
+  - '[SAFE]'
+  - '[VERDICT]'
+  identifiers_read:
+  - PSA_SUCCESS
+  - TRIAGE
+  - signing
+  - with
+  - invalid
+  - RSA
+  - key
+  - succeeded
+  - n
+  - else
+  - SAFE
+  - rejected
+  - by
+  - psa_sign_hash
+  - d
+  - int
+  - VERDICT
+  - safe_fixed_behavior
+  identifiers_written:
+  - status
+  selection_reason: Selected because [TRIAGE] is a mutation point with statement granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 44
+- unit_id: ASTLITE-0041
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: printf("[TRIAGE] signing with invalid RSA key succeeded\n");
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 81
+  line_start: 81
+  line_end: 81
+  column_start: 9
+  column_end: 69
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[TRIAGE]'
+  identifiers_read:
+  - TRIAGE
+  - signing
+  - with
+  - invalid
+  - RSA
+  - key
+  - succeeded
+  - n
+  identifiers_written: []
+  selection_reason: Selected because [TRIAGE] is a mutation point with statement granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 44
+- unit_id: ASTLITE-0042
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: printf("[TRIAGE] signing with invalid RSA key succeeded\n")
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 81
+  line_start: 81
+  line_end: 81
+  column_start: 9
+  column_end: 68
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[TRIAGE]'
+  identifiers_read:
+  - TRIAGE
+  - signing
+  - with
+  - invalid
+  - RSA
+  - key
+  - succeeded
+  - n
+  identifiers_written: []
+  called_function: printf
+  call_node_code: printf("[TRIAGE] signing with invalid RSA key succeeded\n")
+  selection_reason: Selected because [TRIAGE] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 44
+- unit_id: ASTLITE-0034
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[VERDICT]'
+  code: printf("[VERDICT] safe_fixed_behavior\n");
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 70
+  line_start: 70
+  line_end: 70
+  column_start: 9
+  column_end: 51
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[VERDICT]'
+  identifiers_read:
+  - VERDICT
+  - safe_fixed_behavior
+  - n
+  identifiers_written: []
+  selection_reason: Selected because [VERDICT] is a mutation point with statement
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 44
+- unit_id: ASTLITE-0035
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[VERDICT]'
+  code: printf("[VERDICT] safe_fixed_behavior\n")
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'printf' identified by tree-sitter C parser.
+  priority: medium
+  line: 70
+  line_start: 70
+  line_end: 70
+  column_start: 9
+  column_end: 50
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[VERDICT]'
+  identifiers_read:
+  - VERDICT
+  - safe_fixed_behavior
+  - n
+  identifiers_written: []
+  called_function: printf
+  call_node_code: printf("[VERDICT] safe_fixed_behavior\n")
+  selection_reason: Selected because [VERDICT] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 44
+- unit_id: ASTLITE-0009
+  mask_level: block
+  role: entrypoint
+  placeholder: '[HASH_LEN]'
+  code: 'int main(void) { static const unsigned char rsa_key_der[] = { 0x30,0x1b,0x02,0x01,0x00,0x02,0x02,0x0c,0xa1,0x02,0x01,0x11,0x02,0x02,0x0a,0xc1,0x02,0x01,0x3d,0x02,0x01,0x35,0x02,0x01,0x31,0x02,0x01,0x26,0x02,0x01,0x26
+    }; unsigned char hash[HASH_LEN]; unsigned char sig[SIG_LEN]; size_t sig_len =
+    0; psa_status_t status; psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key_id = 0; int ret = 1; setbuf(stdout, NULL); signal(SIGSEGV, bug_signal_handler);
+    signal(SIGABRT, bug_signal_handler); signal(SIGBUS, bug_signal_handler); signal(SIGILL,
+    bug_signal_handler); memset(hash, 0x2a, sizeof(hash)); memset(sig, 0, sizeof(sig));
+    printf("template_mutation KEY_BITS=%d HASH_LEN=%d SIG_LEN=%d\n", KEY_BITS, HASH_LEN,
+    SIG_LEN); status = psa_crypto_init(); if (status != PSA_SUCCESS) { fprintf(stderr,
+    "[SAFE] invalid RSA key signing rejected during psa_crypto_init: %d\n", (int)
+    status); ret = 0; goto end; } psa_set_key_type(&attributes, PSA_KEY_TYPE_RSA_KEY_PAIR);
+    psa_set_key_bits(&attributes, KEY_BITS); psa_set_key_usage_flags(&attributes,
+    PSA_KEY_USAGE_SIGN_HASH); psa_set_key_algorithm(&attributes, PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH));
+    status = psa_import_key(&attributes, rsa_key_der, sizeof(rsa_key_der), &key_id);
+    printf("psa_import_key returned %d\n", (int) status); if (status != PSA_SUCCESS)
+    { printf("[SAFE] invalid RSA key signing rejected by psa_import_key: %d\n", (int)
+    status); printf("[VERDICT] safe_fixed_behavior\n"); ret = 0; goto end; } status
+    = psa_sign_hash(key_id, PSA_ALG_RSA_PKCS1V15_SIGN([HASH_ALG]), hash, HASH_LEN,
+    sig, sizeof(sig), &sig_len); printf("psa_sign_hash returned %d sig_len=%zu\n",
+    (int) status, sig_len); if (status == PSA_SUCCESS) { printf("[TRIAGE] signing
+    with invalid RSA key succeeded\n"); } else { printf("[SAFE] invalid RSA key signing
+    rejected by psa_sign_hash: %d\n", (int) status); printf("[VERDICT] safe_fixed_behavior\n");
+    } ret = 0; end: if (key_id != 0) psa_destroy_key(key_id); mbedtls_psa_crypto_free();
+    return ret; }'
+  source: tmpl_mbedtls.c.tree_sitter.function_definition
+  reason: Function definition identified by tree-sitter C parser.
+  priority: high
+  line: 27
+  line_start: 27
+  line_end: 94
+  column_start: 1
+  column_end: 2
+  node_type: function_definition
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[HASH_LEN]'
+  - '[SIG_LEN]'
+  - '[SAFE]'
+  - '[VERDICT]'
+  - '[HASH_ALG]'
+  - '[TRIAGE]'
+  identifiers_read:
+  - int
+  - void
+  - static
+  - const
+  - unsigned
+  - char
+  - rsa_key_der
+  - hash
+  - sig
+  - size_t
+  - psa_status_t
+  - psa_key_attributes_t
+  - PSA_KEY_ATTRIBUTES_INIT
+  - psa_key_id_t
+  - stdout
+  - 'NULL'
+  - SIGSEGV
+  - bug_signal_handler
+  - SIGABRT
+  - SIGBUS
+  - SIGILL
+  - template_mutation
+  - d
+  - n
+  - PSA_SUCCESS
+  - stderr
+  - SAFE
+  - invalid
+  - RSA
+  - key
+  - signing
+  - rejected
+  - during
+  - goto
+  - end
+  - PSA_KEY_TYPE_RSA_KEY_PAIR
+  - PSA_KEY_USAGE_SIGN_HASH
+  - PSA_ALG_ANY_HASH
+  - returned
+  - by
+  - VERDICT
+  - safe_fixed_behavior
+  - HASH_ALG
+  - zu
+  - TRIAGE
+  - with
+  - succeeded
+  - else
+  identifiers_written:
+  - sig_len
+  - attributes
+  - key_id
+  - ret
+  - KEY_BITS
+  - HASH_LEN
+  - SIG_LEN
+  - status
+  function: main
+  selection_reason: Selected as high-value input/helper context for harness_family=pkey_capability_mismatch_oracle.
+  suggested_use: llm_reconstruction_context
+  selection_score: 35
+- unit_id: ASTLITE-0012
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: setbuf(stdout, NULL)
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'setbuf' identified by tree-sitter C parser.
+  priority: medium
+  line: 41
+  line_start: 41
+  line_end: 41
+  column_start: 5
+  column_end: 25
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - stdout
+  - 'NULL'
+  identifiers_written: []
+  called_function: setbuf
+  call_node_code: setbuf(stdout, NULL)
+  selection_reason: Selected as high-value input/helper context for harness_family=pkey_capability_mismatch_oracle.
+  suggested_use: preserve_input_preparation
+  selection_score: 32
+- unit_id: ASTLITE-0047
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_psa_crypto_free();
+  source: tmpl_mbedtls.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 92
+  line_start: 92
+  line_end: 92
+  column_start: 5
+  column_end: 31
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read: []
+  identifiers_written: []
+  selection_reason: Selected limited cleanup context needed to keep generated harnesses
+    well-scoped.
+  suggested_use: preserve_cleanup
+  selection_score: 12
+- unit_id: ASTLITE-0048
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_psa_crypto_free()
+  source: tmpl_mbedtls.c.tree_sitter.call_expression
+  reason: Function call 'mbedtls_psa_crypto_free' identified by tree-sitter C parser.
+  priority: medium
+  line: 92
+  line_start: 92
+  line_end: 92
+  column_start: 5
+  column_end: 30
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read: []
+  identifiers_written: []
+  called_function: mbedtls_psa_crypto_free
+  call_node_code: mbedtls_psa_crypto_free()
+  selection_reason: Selected limited cleanup context needed to keep generated harnesses
+    well-scoped.
+  suggested_use: preserve_cleanup
+  selection_score: 12
+selection_summary:
+  selected_count: 24
+  source_unit_count: 48
+  by_role:
+    cleanup: 2
+    entrypoint: 1
+    helper_function: 1
+    mutation_point: 19
+    oracle: 1
+  by_mask_level:
+    block: 1
+    function_call: 8
+    statement: 12
+    value: 3
+  by_suggested_use:
+    llm_reconstruction_context: 17
+    mutate_value: 3
+    preserve_cleanup: 2
+    preserve_input_preparation: 1
+    preserve_oracle: 1
+rejected_summary:
+  count: 3
+  by_reason:
+    duplicate_code_or_unit: 3

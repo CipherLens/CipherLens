@@ -1,0 +1,1619 @@
+source_pattern_id: OPENSSL-ISSUE-22842
+template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE
+source_library: openssl
+source_api: EVP_MAC_CTX_get_mac_size
+source_component: EVP/MAC
+vulnerability_class: mac_context_uninitialized_state_query
+oracle_type: mac_context_size_lifecycle_oracle
+migration_summary:
+  overall_decision: generate
+  primary_candidate: psa_mac_sign_setup
+  primary_score: 82
+  primary_harness_family: object_state_lifecycle
+  primary_oracle: mac_context_size_lifecycle_oracle
+target_candidates:
+- target_library: mbedtls
+  target_api: psa_mac_sign_setup
+  target_version: PSA Crypto
+  decision: generate
+  migration_applicability: applicable_with_semantic_projection
+  scores:
+    operation_family: 85
+    function_behavior: 85
+    parameter_structure: 80
+    vulnerability_path: 70
+    harness_feasibility: 90
+  final_score: 82
+  preserved_features:
+  - PSA MAC operation lifecycle represents uninitialized vs initialized operation
+    state
+  - pre-setup psa_mac_update can be observed as safe rejection without crash
+  - initialized psa_mac_sign_setup -> psa_mac_update -> psa_mac_sign_finish provides
+    control state
+  - return code and crash/sanitizer signals are observable
+  lost_or_weakened_features:
+  - PSA operation API does not expose an EVP_MAC_CTX_get_mac_size equivalent
+  - exact OpenSSL EVP_MAC_CTX_get_mac_size internal dereference is not preserved
+  - pre-setup operation is psa_mac_update, not a direct get-size call
+  reason: 'PSA MAC is the valid mbedTLS 4.1.0 MAC lifecycle path. The migrated harness
+    uses one operation for pre-setup safe rejection and a separate initialized operation
+    for setup/update/finish success. This preserves the object lifecycle oracle without
+    relying on legacy md/HMAC setup.
+
+    '
+  evidence:
+    top_k: 5
+    queries:
+    - query: ' '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.5070700252966565
+        distance: 0.9721142053604126
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+        text: "FF\",\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000FFFFFFFF00\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"000000000000000000000000000000000000000000000000000000"
+        metadata:
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          library: openssl
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+      - rank: 2
+        score: 0.5064631252680277
+        distance: 0.9744774103164673
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md
+        text: "E0EC65228B3937E498\",\n        \"63E4C6D3B23B0C849CF84241484BFE48F61D59A5B16BA06E6E12D1DA27C5249A\"\
+          ,\n        \"421DEBD61B62EAB6746434EBC3CC315E32220B3BADD50BDC4C4E6C147FEDD43D\"\
+          ,\n        \"0680512BCBB42C07D47349D2153B70C4E5D7FDFCBFA36EA1A85841B9E46E09A2\"\
+          ,\n        \"8542D69E4C044F18E8B92435BF6FF7DD297720630485628D5AE74EE7C32E79B7\"\
+          ,\n        \"1\");\n\n    if (!TEST_ptr(test_group))\n        goto done;\n\
+          \n    if (!TEST_true(test_sm2_sign(\n            test_group,\n         \
+          \   \"ALICE123@YAHOO.COM\",\n            \"128B2FA8BD433C6C068C8D803DFF79792A519A55171B1B650C23661D15897263\"\
+          ,\n            \"message digest\",\n            \"006CB28D99385C175C94F94E934817663FC176D925DD72B727260DBAAE1FB2F96F\"\
+          \n            \"007c47811054c6f99613a578eb8453706ccb96384fe7df5c171671e760bfa8be3a\"\
+          ,\n```"
+        metadata:
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md
+          library: openssl
+          doc_type: unit_test_call_pattern
+      - rank: 3
+        score: 0.4993900358310789
+        distance: 1.0024428367614746
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+        text: "8787878787878787878787878787878\"\n              \"7878787878787878787878787878787878787878787878787878787878787878\"\
+          \n              \"7878787878787878787878787878787878787878787878787878787878787878\"\
+          \n              \"7878787878787878787878787878787878787878787878787878787878787878\"\
+          ))\n            && TEST_true(BN_hex2bn(&b,\n                \"095D72C08C097BA488C5E439C655A192EAFB6380073D8C2664668EDDB4060744\"\
+          \n                \"E16E57FB4EDB9AE10A0CEFCDC28A894F689A128379DB279D48A2E20849D68593\"\
+          \n                \"9B7803BCF46CEBF5C533FB0DD35B080593DE5472E3FE5DB951B8BFF9B4CB8F03\"\
+          \n                \"9CC638A5EE8CDD703719F8000E6A9F63BEED5F2FCD52FF293EA05A251BB4AB81\"\
+          ))\n            && TEST_true(BN_hex2bn(&n,\n```\n\n## Call pattern 62\n\n\
+          ```c\ngoto err;\n\n    if (!(TEST_true(BN_MONT_CTX_set(mont, n, ctx))\n\
+          \            && TEST_true(BN_mod_mul_montgomery(c, a, b, mont, ctx))\n \
+          \           && TEST_true(BN_mod_mul_montgomery(d, b, a, mont, ctx))\n  \
+          \          && TEST_BN_eq(c, d)))\n        goto err;\n\n    /* Regression\
+          \ test for ca"
+        metadata:
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+          library: openssl
+      - rank: 4
+        score: 0.49467344660620705
+        distance: 1.0215356349945068
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md
+        text: "D_BOTTOM_ODD);\n    BN_rand(a2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY);\n\
+          \    BN_rand(b2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY);\n  \
+          \  BN_rand(m2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ODD);\n\n  \
+          \  if (!TEST_true(BN_mod(a1, a1, m1, ctx))\n        || !TEST_true(BN_mod(b1,\
+          \ b1, m1, ctx))\n        || !TEST_true(BN_mod(a2, a2, m2, ctx))\n      \
+          \  || !TEST_true(BN_mod(b2, b2, m2, ctx))\n        || !TEST_true(BN_mod_exp_simple(r_simple1,\
+          \ a1, b1, m1, ctx))\n        || !TEST_true(BN_mod_exp_simple(r_simple2,\
+          \ a2, b2, m2, ctx))\n        || !TEST_true(BN_mod_exp_mont_consttime_x2(r_mont_const_x2_1,\
+          \ a1, b1, m1, NULL,\n            r_mont_const_x2_2, a2, b2, m2, NULL,\n\
+          \            ctx)))\n        goto err;\n\n    if (!TEST_BN_eq(r_simple1,\
+          \ r_mont_const_x2_1)\n        || !TEST_BN_eq(r_simple2, r_mont_const_x2_2))\
+          \ {\n        if (BN_cmp(r_simple1, r_mont_const_x2_1) != 0)\n          \
+          \  TEST_info(\"simple and mont const time x2 (#1) results differ\");\n```\n\
+          \n## Call pattern 29\n\n```c\nfactor_size = 2048"
+        metadata:
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md
+          library: openssl
+      - rank: 5
+        score: 0.4944104082232621
+        distance: 1.022611141204834
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+        text: "FFFFFFFFFFFFFFFFFFFFFF\",\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\"\
+          ,\n    \"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000FFFFFFFF00\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"0000000000000000000000000000000000000000000000000000000000000000\"\
+          ,\n    \"00000000000000000000000000000000000000000000000000FFFFFFFFFFFFFF\"\
+          ,\n    NULL\n};\n\nstatic const char *bn2stri"
+        metadata:
+          library: openssl
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md
+      error: ''
+      stdout_preview: "{\n  \"query\": \" \",\n  \"top_k\": 5,\n  \"results\": [\n\
+        \    {\n      \"rank\": 1,\n      \"score\": 0.5070700252966565,\n      \"\
+        distance\": 0.9721142053604126,\n      \"layer\": \"unit_tests\",\n      \"\
+        source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n      \"text\": \"FF\\\",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\\\
+        \",\\n    \\\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000FFFFFFFF00\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"0000000000000000000000000000000000000000000000000000000000000000\\\
+        \",\\n    \\\"000000000000000000000000000000000000000000000000000000\",\n\
+        \      \"metadata\": {\n        \"layer\": \"unit_tests\",\n        \"doc_type\"\
+        : \"unit_test_call_pattern\",\n        \"library\": \"openssl\",\n       \
+        \ \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 2,\n      \"score\": 0.5064631252680277,\n\
+        \      \"distance\": 0.9744774103164673,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md\"\
+        ,\n      \"text\": \"E0EC65228B3937E498\\\",\\n        \\\"63E4C6D3B23B0C849CF84241484BFE48F61D59A5B16BA06E6E12D1DA27C5249A\\\
+        \",\\n        \\\"421DEBD61B62EAB6746434EBC3CC315E32220B3BADD50BDC4C4E6C147FEDD43D\\\
+        \",\\n        \\\"0680512BCBB42C07D47349D2153B70C4E5D7FDFCBFA36EA1A85841B9E46E09A2\\\
+        \",\\n        \\\"8542D69E4C044F18E8B92435BF6FF7DD297720630485628D5AE74EE7C32E79B7\\\
+        \",\\n        \\\"1\\\");\\n\\n    if (!TEST_ptr(test_group))\\n        goto\
+        \ done;\\n\\n    if (!TEST_true(test_sm2_sign(\\n            test_group,\\\
+        n            \\\"ALICE123@YAHOO.COM\\\",\\n            \\\"128B2FA8BD433C6C068C8D803DFF79792A519A55171B1B650C23661D15897263\\\
+        \",\\n            \\\"message digest\\\",\\n            \\\"006CB28D99385C175C94F94E934817663FC176D925DD72B727260DBAAE1FB2F96F\\\
+        \"\\n            \\\"007c47811054c6f99613a578eb8453706ccb96384fe7df5c171671e760bfa8be3a\\\
+        \",\\n```\",\n      \"metadata\": {\n        \"layer\": \"unit_tests\",\n\
+        \        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__sm2_internal_test.c.md\"\
+        ,\n        \"library\": \"openssl\",\n        \"doc_type\": \"unit_test_call_pattern\"\
+        \n      }\n    },\n    {\n      \"rank\": 3,\n      \"score\": 0.4993900358310789,\n\
+        \      \"distance\": 1.0024428367614746,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n      \"text\": \"8787878787878787878787878787878\\\"\\n              \\\
+        \"7878787878787878787878787878787878787878787878787878787878787878\\\"\\n\
+        \              \\\"7878787878787878787878787878787878787878787878787878787878787878\\\
+        \"\\n              \\\"7878787878787878787878787878787878787878787878787878787878787878\\\
+        \"))\\n            && TEST_true(BN_hex2bn(&b,\\n                \\\"095D72C08C097BA488C5E439C655A192EAFB6380073D8C2664668EDDB4060744\\\
+        \"\\n                \\\"E16E57FB4EDB9AE10A0CEFCDC28A894F689A128379DB279D48A2E20849D68593\\\
+        \"\\n                \\\"9B7803BCF46CEBF5C533FB0DD35B080593DE5472E3FE5DB951B8BFF9B4CB8F03\\\
+        \"\\n                \\\"9CC638A5EE8CDD703719F8000E6A9F63BEED5F2FCD52FF293EA05A251BB4AB81\\\
+        \"))\\n            && TEST_true(BN_hex2bn(&n,\\n```\\n\\n## Call pattern 62\\\
+        n\\n```c\\ngoto err;\\n\\n    if (!(TEST_true(BN_MONT_CTX_set(mont, n, ctx))\\\
+        n            && TEST_true(BN_mod_mul_montgomery(c, a, b, mont, ctx))\\n  \
+        \          && TEST_true(BN_mod_mul_montgomery(d, b, a, mont, ctx))\\n    \
+        \        && TEST_BN_eq(c, d)))\\n        goto err;\\n\\n    /* Regression\
+        \ test for ca\",\n      \"metadata\": {\n        \"doc_type\": \"unit_test_call_pattern\"\
+        ,\n        \"layer\": \"unit_tests\",\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__bntest.c.md\"\
+        ,\n        \"library\": \"openssl\"\n      }\n    },\n    {\n      \"rank\"\
+        : 4,\n      \"score\": 0.49467344660620705,\n      \"distance\": 1.0215356349945068,\n\
+        \      \"layer\": \"unit_tests\",\n      \"source_file\": \"knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__exptest.c.md\"\
+        ,\n      \"text\": \"D_BOTTOM_ODD);\\n    BN_rand(a2, factor_size, BN_RAND_TOP_ONE,\
+        \ BN_RAND_BOTTOM_ANY);\\n    BN_rand(b2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY);\\\
+        n    BN_rand(m2, factor_size, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ODD);\\n\\n\
+        \    if (!TEST_true(BN_mod(a1, a1, m1, ctx))\\n        || !TEST_true(BN_mod(b1,\
+        \ b1, m1, ctx))\\n        || !TEST_true(BN_mod(a2, a2, m2, ctx))\\n      \
+        \  || !TEST_true(BN_mod(b2, b2, m2, ctx))\\n        || !TEST_true(BN_mod_exp_simple(r_simple1,\
+        \ a1, b1, m1, ctx))\\n        || !TEST_true(BN_mod_exp_simple(r_simple2, a2,\
+        \ b2, m2, ctx))\\n        || !TEST_true(BN_mod_exp_mont_consttime_x2(r_mont_const_x2_1,\
+        \ a1, b1, m1, NULL,\\n            r_mont_const_x2_2, a2, b2, m2, NULL,\\n\
+        \            ctx)))\\n        goto err;\\n\\n    if (!TEST_BN_eq(r_simple1,\
+        \ r_mont_const_x2_1)\\n        || !TEST_BN_eq(r_simple2, r_mont_const_x2_2))\
+        \ {\\n        if (BN_cmp(r_simple1, r_mont_const_x2_1) != 0)\\n          \
+        \  TEST_info(\\\"simple and mont const time x2 (#1) results differ\\\");\\\
+        n```\\n\\n## Call pattern 29\\n\\n```c\\nfactor_size = 2048\",\n      \"metadata\"\
+        : {\n        \"layer\": \"unit_tests\",\n        \"doc_type\": \"unit_test_call_pattern\"\
+        ,\n        \"source_file\": \"knowledge_raw/unit_tests/openssl/__"
+      stderr_preview: ''
+      truncated: true
+      raw_fallback:
+        enabled: false
+      kind: source_pattern
+      use_for_feature_inference: source_only
+    - query: mbedtls psa_mac_sign_setup function declaration signature parameters
+        return value
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.6844986531131395
+        distance: 0.4609232544898987
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md
+        text: "ee(&s);\n    mbedtls_mpi_free(&r_check); mbedtls_mpi_free(&s_check);\n\
+          \    MD_PSA_DONE();\n}\n/* END_CASE */\n\n/* BEGIN_CASE depends_on:PSA_WANT_ALG_SHA_256\
+          \ */\nvoid ecdsa_write_read_zero(int id)\n{\n    mbedtls_ecdsa_context ctx;\n\
+          \    mbedtls_test_rnd_pseudo_info rnd_info;\n    unsigned char hash[32];\n\
+          \    unsigned char sig[200];\n    size_t sig_len, i;\n\n    mbedtls_ecdsa_init(&ctx);\n\
+          \    memset(&rnd_info, 0x00, sizeof(mbedtls_test_rnd_pseudo_info));\n  \
+          \  memset(hash, 0, sizeof(hash));\n    memset(sig, 0x2a, sizeof(sig));\n\
+          \n    MD_PSA_INIT();\n\n    /* generate signing key */\n    TEST_ASSERT(mbedtls_ecdsa_genkey(&ctx,\
+          \ id,\n                                     &mbedtls_test_rnd_pseudo_rand,\n\
+          \                                     &rnd_info) == 0);\n\n    /* generate\
+          \ and write signature, then read and verify it */\n```\n\n## Call pattern\
+          \ 15\n\n```c\nmbedtls_ecdsa_sign_det_ext(&grp, &r, &s, &d,\n           \
+          \                        hash->x, hash->len, md_alg,\n                 \
+          \                  mbedtls_test_rnd_std_rand,"
+        metadata:
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md
+          layer: unit_tests
+          library: mbedtls
+      - rank: 2
+        score: 0.6803876338696229
+        distance: 0.46975040435791016
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_verify_ext.md
+        text: 'Return Value Semantics
+
+
+          - `0`: signature is valid.
+
+          - `MBEDTLS_ERR_PK_BAD_INPUT_DATA`: invalid inputs or uninitialized `ctx->pk_info`.
+
+          - `MBEDTLS_ERR_PK_TYPE_MISMATCH`: context cannot be used for requested signature
+          type.
+
+          - `MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE`: unsupported feature, including non-RSA
+          context for RSA-PSS path.
+
+          - `PSA_ERROR_INVALID_SIGNATURE` mapped through the PSA-to-mbedTLS error
+          path can indicate invalid signature.
+
+
+          ## Object Lifetime Constraints
+
+
+          - `ctx` must be initialized and populated before verification.
+
+          - Caller retains ownership of `hash` and `sig`; they are input buffers.
+
+          - No caller-provided output buffer is used.
+
+
+          ## Harness Generation Notes
+
+
+          - Build or parse a key into `mbedtls_pk_context`, prepare digest and signature,
+          then call `mbedtls_pk_verify_ext`.
+
+          - For RSA-PSS migration, ensure the selected mbedTLS 4.1.0 enum name is
+          `MBEDTLS_PK_SIGALG_RSA_PSS`.
+
+          - Good oracles: return code, safe type rejection, no NULL dereference.
+
+
+          ## Vulnerability-Pattern Migration'
+        metadata:
+          source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_verify_ext.md
+          doc_type: api_constraint
+          library: mbedtls
+          layer: api_constraints
+      - rank: 3
+        score: 0.6715254269987371
+        distance: 0.489146888256073
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_verify_ext.md
+        text: "# API Constraints: mbedtls_pk_verify_ext (mbedTLS 4.1.0)\n\nSource\
+          \ version: `/home/wen/work/clean_sources/mbedtls-4.1.0`\n\n## API\n\n- API/function\
+          \ name: `mbedtls_pk_verify_ext`\n- Source file: `tf-psa-crypto/extras/pk.c`\n\
+          - Declaration: `tf-psa-crypto/include/mbedtls/pk.h`\n- Signature:\n\n```c\n\
+          int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,\n                  \
+          \        mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,\n          \
+          \                const unsigned char *hash, size_t hash_len,\n         \
+          \                 const unsigned char *sig, size_t sig_len);\n```\n\n##\
+          \ Parameter Semantics\n\n- `type`: signature algorithm to verify, for example\
+          \ `MBEDTLS_PK_SIGALG_RSA_PSS`.\n- `ctx`: populated public-key context.\n\
+          - `md_alg`: hash algorithm.\n- `hash`/`hash_len`: digest to verify. If `md_alg\
+          \ != MBEDTLS_MD_NONE` or `hash_len != 0`, `hash` must not be NULL.\n- `sig`/`sig_len`:\
+          \ signature buffer and length.\n\n## Return Value Semantics\n\n- `0`: signature\
+          \ is valid.\n- `MBEDTLS_ERR_PK_BAD_INPUT_DATA`: invalid inputs"
+        metadata:
+          source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_verify_ext.md
+          doc_type: api_constraint
+          layer: api_constraints
+          library: mbedtls
+      - rank: 4
+        score: 0.6687286164650609
+        distance: 0.4953749179840088
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_parse_key.md
+        text: "# API Constraints: mbedtls_pk_parse_key (mbedTLS 4.1.0)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/mbedtls-4.1.0`\n\n## API\n\n- API/function\
+          \ name: `mbedtls_pk_parse_key`\n- Header declaration: `tf-psa-crypto/include/mbedtls/pk.h`\n\
+          - Implementation file: `tf-psa-crypto/extras/pkparse.c`\n- Signature:\n\n\
+          ```c\nint mbedtls_pk_parse_key(mbedtls_pk_context *ctx,\n              \
+          \           const unsigned char *key,\n                         size_t keylen,\n\
+          \                         const unsigned char *pwd,\n                  \
+          \       size_t pwdlen);\n```\n\n## Parameter Semantics\n\n- `ctx`: empty\
+          \ `mbedtls_pk_context` to populate.\n- `key`: PEM or DER private key input.\
+          \ The documented contract says the buffer must contain the input exactly\
+          \ with no trailing material.\n- `keylen`: input length; for PEM this includes\
+          \ the terminating null byte.\n- `pwd`, `pwdlen`: optional password for encrypted\
+          \ private keys.\n\n## Return Value Semantics\n\n- `0`: private key parsed\
+          \ and checked.\n- `MBEDTLS_ERR_PK_KEY_INVALID_FORMAT`: e"
+        metadata:
+          layer: api_constraints
+          source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_parse_key.md
+          library: mbedtls
+          doc_type: api_constraint
+      - rank: 5
+        score: 0.6678899813015506
+        distance: 0.49725258350372314
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__psa_crypto_ecp.c.md
+        text: "signature + curve_bytes,\n                                        \
+          \                  curve_bytes));\n    if (status != PSA_SUCCESS) {\n```\n\
+          \n## Snippet 9\n\n```c\nstatus = mbedtls_psa_ecp_load_public_part(ecp);\n\
+          \    if (status != PSA_SUCCESS) {\n        goto cleanup;\n    }\n\n    status\
+          \ = mbedtls_to_psa_error(mbedtls_ecdsa_verify(&ecp->grp, hash,\n       \
+          \                                                hash_length, &ecp->Q,\n\
+          \                                                       &r, &s));\ncleanup:\n\
+          \    mbedtls_mpi_free(&r);\n    mbedtls_mpi_free(&s);\n    mbedtls_ecp_keypair_free(ecp);\n\
+          \    mbedtls_free(ecp);\n\n    return status;\n}\n\n#endif /* defined(MBEDTLS_PSA_BUILTIN_ALG_ECDSA)\
+          \ || \\\n        * defined(MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA)\
+          \ */\n\n/****************************************************************/\n\
+          /* ECDH Key Agreement */\n/****************************************************************/\n\
+          \n#if defined(MBEDTLS_PSA_BUILTIN_ALG_ECDH)\nstatic psa_status_t ecdh_write_secret(const\
+          \ mbedtls_ecp"
+        metadata:
+          library: mbedtls
+          layer: api_constraints
+          source_file: knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__psa_crypto_ecp.c.md
+          doc_type: api_constraint
+      error: ''
+      stdout_preview: "{\n  \"query\": \"mbedtls psa_mac_sign_setup function declaration\
+        \ signature parameters return value\",\n  \"top_k\": 5,\n  \"results\": [\n\
+        \    {\n      \"rank\": 1,\n      \"score\": 0.6844986531131395,\n      \"\
+        distance\": 0.4609232544898987,\n      \"layer\": \"unit_tests\",\n      \"\
+        source_file\": \"knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md\"\
+        ,\n      \"text\": \"ee(&s);\\n    mbedtls_mpi_free(&r_check); mbedtls_mpi_free(&s_check);\\\
+        n    MD_PSA_DONE();\\n}\\n/* END_CASE */\\n\\n/* BEGIN_CASE depends_on:PSA_WANT_ALG_SHA_256\
+        \ */\\nvoid ecdsa_write_read_zero(int id)\\n{\\n    mbedtls_ecdsa_context\
+        \ ctx;\\n    mbedtls_test_rnd_pseudo_info rnd_info;\\n    unsigned char hash[32];\\\
+        n    unsigned char sig[200];\\n    size_t sig_len, i;\\n\\n    mbedtls_ecdsa_init(&ctx);\\\
+        n    memset(&rnd_info, 0x00, sizeof(mbedtls_test_rnd_pseudo_info));\\n   \
+        \ memset(hash, 0, sizeof(hash));\\n    memset(sig, 0x2a, sizeof(sig));\\n\\\
+        n    MD_PSA_INIT();\\n\\n    /* generate signing key */\\n    TEST_ASSERT(mbedtls_ecdsa_genkey(&ctx,\
+        \ id,\\n                                     &mbedtls_test_rnd_pseudo_rand,\\\
+        n                                     &rnd_info) == 0);\\n\\n    /* generate\
+        \ and write signature, then read and verify it */\\n```\\n\\n## Call pattern\
+        \ 15\\n\\n```c\\nmbedtls_ecdsa_sign_det_ext(&grp, &r, &s, &d,\\n         \
+        \                          hash->x, hash->len, md_alg,\\n                \
+        \                   mbedtls_test_rnd_std_rand,\",\n      \"metadata\": {\n\
+        \        \"doc_type\": \"unit_test_call_pattern\",\n        \"source_file\"\
+        : \"knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md\"\
+        ,\n        \"layer\": \"unit_tests\",\n        \"library\": \"mbedtls\"\n\
+        \      }\n    },\n    {\n      \"rank\": 2,\n      \"score\": 0.6803876338696229,\n\
+        \      \"distance\": 0.46975040435791016,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_verify_ext.md\"\
+        ,\n      \"text\": \"Return Value Semantics\\n\\n- `0`: signature is valid.\\\
+        n- `MBEDTLS_ERR_PK_BAD_INPUT_DATA`: invalid inputs or uninitialized `ctx->pk_info`.\\\
+        n- `MBEDTLS_ERR_PK_TYPE_MISMATCH`: context cannot be used for requested signature\
+        \ type.\\n- `MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE`: unsupported feature, including\
+        \ non-RSA context for RSA-PSS path.\\n- `PSA_ERROR_INVALID_SIGNATURE` mapped\
+        \ through the PSA-to-mbedTLS error path can indicate invalid signature.\\\
+        n\\n## Object Lifetime Constraints\\n\\n- `ctx` must be initialized and populated\
+        \ before verification.\\n- Caller retains ownership of `hash` and `sig`; they\
+        \ are input buffers.\\n- No caller-provided output buffer is used.\\n\\n##\
+        \ Harness Generation Notes\\n\\n- Build or parse a key into `mbedtls_pk_context`,\
+        \ prepare digest and signature, then call `mbedtls_pk_verify_ext`.\\n- For\
+        \ RSA-PSS migration, ensure the selected mbedTLS 4.1.0 enum name is `MBEDTLS_PK_SIGALG_RSA_PSS`.\\\
+        n- Good oracles: return code, safe type rejection, no NULL dereference.\\\
+        n\\n## Vulnerability-Pattern Migration\",\n      \"metadata\": {\n       \
+        \ \"source_file\": \"knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_verify_ext.md\"\
+        ,\n        \"doc_type\": \"api_constraint\",\n        \"library\": \"mbedtls\"\
+        ,\n        \"layer\": \"api_constraints\"\n      }\n    },\n    {\n      \"\
+        rank\": 3,\n      \"score\": 0.6715254269987371,\n      \"distance\": 0.489146888256073,\n\
+        \      \"layer\": \"api_constraints\",\n      \"source_file\": \"knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_verify_ext.md\"\
+        ,\n      \"text\": \"# API Constraints: mbedtls_pk_verify_ext (mbedTLS 4.1.0)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/mbedtls-4.1.0`\\n\\n## API\\\
+        n\\n- API/function name: `mbedtls_pk_verify_ext`\\n- Source file: `tf-psa-crypto/extras/pk.c`\\\
+        n- Declaration: `tf-psa-crypto/include/mbedtls/pk.h`\\n- Signature:\\n\\n```c\\\
+        nint mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,\\n                  \
+        \        mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,\\n           \
+        \               const unsigned char *hash, size_t hash_len,\\n           \
+        \               const unsigned char *sig, size_t sig_len);\\n```\\n\\n## Parameter\
+        \ Semantics\\n\\n- `type`: signature algorithm to verify, for example `MBEDTLS_PK_SIGALG_RSA_PSS`.\\\
+        n- `ctx`: populated public-key context.\\n- `md_alg`: hash algorithm.\\n-\
+        \ `hash`/`hash_len`: digest to verify. If `md_alg != MBEDTLS_MD_NONE` or `hash_len\
+        \ != 0`, `hash` must not be NULL.\\n- `sig`/`sig_len`: signature buffer and\
+        \ length.\\n\\n## Return Value Semantics\\n\\n- `0`: signature is valid.\\\
+        n- `MBEDTLS_ERR_PK_BAD_INPUT_DATA`: invalid inputs\",\n      \"metadata\"\
+        : {\n        \"source_file\": \"knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_verify_ext.md\"\
+        ,\n        \"doc_type\": \"api_constraint\",\n        \"layer\": \"api_constraints\"\
+        ,\n        \"library\": \"mbedtls\"\n      }\n    },\n    {\n      \"rank\"\
+        : 4,\n      \"score\": 0.6687286164650609,\n      \"distance\": 0.4953749179840088,\n\
+        \      \"layer\": \"api_constraints\",\n      \"source_file\": \"knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_parse_key.md\"\
+        ,\n      \"text\": \"# API Constraints: mbedtls_pk_parse_key (mbedTLS 4.1.0)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/mbedtls-4.1.0`\\n\\n## API\\\
+        n\\n- API/function name: `mbedtls_pk_parse_key`\\n- Header declaration: `tf-psa-crypto/include/mbedtls/pk.h`\\\
+        n- Implementation file: `tf-psa-crypto/extras/pkparse.c`\\n- Signature:\\\
+        n\\n```c\\nint mbedtls_pk_parse_key(mbedtls_pk_context *ctx,\\n          \
+        \               const unsigned char *key,\\n                         size_t\
+        \ keylen,\\n                         const unsigned char *pwd,\\n        \
+        \                 size_t pwdlen);\\n```\\n\\n## Parameter Semantics\\n\\n-\
+        \ `ctx`: empty `mbedtls_pk_context` to populate.\\n- `key`: PEM or DER private\
+        \ key input. The documented contract says the buffer must contain the input\
+        \ exactly with no trailing material.\\n- `keylen`: input length; for PEM this\
+        \ includes the terminating null byte.\\n- `pwd`, `pwdlen`: optional password\
+        \ for encrypted private keys.\\n\\n## Return Value Semantics\\n\\n- `0`: private\
+        \ key parsed and checked.\\n-"
+      stderr_preview: ''
+      truncated: true
+      raw_fallback:
+        enabled: false
+      kind: target_api_signature
+      use_for_feature_inference: target
+    - query: mbedtls psa_mac_sign_setup implementation source code parameters return
+        error
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.6842990607395393
+        distance: 0.46134936809539795
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md
+        text: "ee(&s);\n    mbedtls_mpi_free(&r_check); mbedtls_mpi_free(&s_check);\n\
+          \    MD_PSA_DONE();\n}\n/* END_CASE */\n\n/* BEGIN_CASE depends_on:PSA_WANT_ALG_SHA_256\
+          \ */\nvoid ecdsa_write_read_zero(int id)\n{\n    mbedtls_ecdsa_context ctx;\n\
+          \    mbedtls_test_rnd_pseudo_info rnd_info;\n    unsigned char hash[32];\n\
+          \    unsigned char sig[200];\n    size_t sig_len, i;\n\n    mbedtls_ecdsa_init(&ctx);\n\
+          \    memset(&rnd_info, 0x00, sizeof(mbedtls_test_rnd_pseudo_info));\n  \
+          \  memset(hash, 0, sizeof(hash));\n    memset(sig, 0x2a, sizeof(sig));\n\
+          \n    MD_PSA_INIT();\n\n    /* generate signing key */\n    TEST_ASSERT(mbedtls_ecdsa_genkey(&ctx,\
+          \ id,\n                                     &mbedtls_test_rnd_pseudo_rand,\n\
+          \                                     &rnd_info) == 0);\n\n    /* generate\
+          \ and write signature, then read and verify it */\n```\n\n## Call pattern\
+          \ 15\n\n```c\nmbedtls_ecdsa_sign_det_ext(&grp, &r, &s, &d,\n           \
+          \                        hash->x, hash->len, md_alg,\n                 \
+          \                  mbedtls_test_rnd_std_rand,"
+        metadata:
+          source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          library: mbedtls
+      - rank: 2
+        score: 0.681172402913425
+        distance: 0.46805712580680847
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__rsa.c.md
+        text: "/* MBEDTLS_PKCS1_V15 */\n    return ret;\n}\n\n#endif /* MBEDTLS_SELF_TEST\
+          \ */\n\n#endif /* MBEDTLS_RSA_C */\n```"
+        metadata:
+          layer: api_constraints
+          source_file: knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__rsa.c.md
+          library: mbedtls
+          doc_type: api_constraint
+      - rank: 3
+        score: 0.6739420161444735
+        distance: 0.48380717635154724
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_verify_ext.md
+        text: "# API Constraints: mbedtls_pk_verify_ext (mbedTLS 4.1.0)\n\nSource\
+          \ version: `/home/wen/work/clean_sources/mbedtls-4.1.0`\n\n## API\n\n- API/function\
+          \ name: `mbedtls_pk_verify_ext`\n- Source file: `tf-psa-crypto/extras/pk.c`\n\
+          - Declaration: `tf-psa-crypto/include/mbedtls/pk.h`\n- Signature:\n\n```c\n\
+          int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,\n                  \
+          \        mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,\n          \
+          \                const unsigned char *hash, size_t hash_len,\n         \
+          \                 const unsigned char *sig, size_t sig_len);\n```\n\n##\
+          \ Parameter Semantics\n\n- `type`: signature algorithm to verify, for example\
+          \ `MBEDTLS_PK_SIGALG_RSA_PSS`.\n- `ctx`: populated public-key context.\n\
+          - `md_alg`: hash algorithm.\n- `hash`/`hash_len`: digest to verify. If `md_alg\
+          \ != MBEDTLS_MD_NONE` or `hash_len != 0`, `hash` must not be NULL.\n- `sig`/`sig_len`:\
+          \ signature buffer and length.\n\n## Return Value Semantics\n\n- `0`: signature\
+          \ is valid.\n- `MBEDTLS_ERR_PK_BAD_INPUT_DATA`: invalid inputs"
+        metadata:
+          layer: api_constraints
+          source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_verify_ext.md
+          doc_type: api_constraint
+          library: mbedtls
+      - rank: 4
+        score: 0.6733386144469468
+        distance: 0.48513686656951904
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_parse_key.md
+        text: "# API Constraints: mbedtls_pk_parse_key (mbedTLS 4.1.0)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/mbedtls-4.1.0`\n\n## API\n\n- API/function\
+          \ name: `mbedtls_pk_parse_key`\n- Header declaration: `tf-psa-crypto/include/mbedtls/pk.h`\n\
+          - Implementation file: `tf-psa-crypto/extras/pkparse.c`\n- Signature:\n\n\
+          ```c\nint mbedtls_pk_parse_key(mbedtls_pk_context *ctx,\n              \
+          \           const unsigned char *key,\n                         size_t keylen,\n\
+          \                         const unsigned char *pwd,\n                  \
+          \       size_t pwdlen);\n```\n\n## Parameter Semantics\n\n- `ctx`: empty\
+          \ `mbedtls_pk_context` to populate.\n- `key`: PEM or DER private key input.\
+          \ The documented contract says the buffer must contain the input exactly\
+          \ with no trailing material.\n- `keylen`: input length; for PEM this includes\
+          \ the terminating null byte.\n- `pwd`, `pwdlen`: optional password for encrypted\
+          \ private keys.\n\n## Return Value Semantics\n\n- `0`: private key parsed\
+          \ and checked.\n- `MBEDTLS_ERR_PK_KEY_INVALID_FORMAT`: e"
+        metadata:
+          library: mbedtls
+          doc_type: api_constraint
+          source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_parse_key.md
+          layer: api_constraints
+      - rank: 5
+        score: 0.6699892412542411
+        distance: 0.4925612807273865
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__core__psa_crypto.c.md
+        text: "atus = PSA_SUCCESS;\n    }\n\nexit:\n\n    mbedtls_mpi_free(&r);\n\
+          \    mbedtls_mpi_free(&s);\n    return status;\n\n #else\n\n    (void) operation;\n\
+          \    (void) signature;\n    (void) signature_size;\n    (void) signature_length;\n\
+          \n    return PSA_ERROR_NOT_SUPPORTED;\n\n#endif /* defined(MBEDTLS_PSA_BUILTIN_ALG_ECDSA)\
+          \ ||\n        * defined(MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA) &&\n\
+          \        * defined( MBEDTLS_ECP_RESTARTABLE ) */\n}\n\npsa_status_t mbedtls_psa_sign_hash_abort(\n\
+          ```\n\n## Snippet 7\n\n```c\nif (!can_do_interruptible_sign_verify(alg))\
+          \ {\n        return PSA_ERROR_NOT_SUPPORTED;\n    }\n\n#if (defined(MBEDTLS_PSA_BUILTIN_ALG_ECDSA)\
+          \ || \\\n    defined(MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA)) && \\\
+          \n    defined(MBEDTLS_ECP_RESTARTABLE)\n\n    mbedtls_ecdsa_restart_init(&operation->restart_ctx);\n\
+          \    mbedtls_mpi_init(&operation->r);\n    mbedtls_mpi_init(&operation->s);\n\
+          \n    /* Ensure num_ops is zero'ed in case of context re-use. */\n    operation->num_ops\
+          \ = 0;\n\n    status = mbedtls_psa_ecp_load_representati"
+        metadata:
+          layer: api_constraints
+          doc_type: api_constraint
+          source_file: knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__core__psa_crypto.c.md
+          library: mbedtls
+      error: ''
+      stdout_preview: "{\n  \"query\": \"mbedtls psa_mac_sign_setup implementation\
+        \ source code parameters return error\",\n  \"top_k\": 5,\n  \"results\":\
+        \ [\n    {\n      \"rank\": 1,\n      \"score\": 0.6842990607395393,\n   \
+        \   \"distance\": 0.46134936809539795,\n      \"layer\": \"unit_tests\",\n\
+        \      \"source_file\": \"knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md\"\
+        ,\n      \"text\": \"ee(&s);\\n    mbedtls_mpi_free(&r_check); mbedtls_mpi_free(&s_check);\\\
+        n    MD_PSA_DONE();\\n}\\n/* END_CASE */\\n\\n/* BEGIN_CASE depends_on:PSA_WANT_ALG_SHA_256\
+        \ */\\nvoid ecdsa_write_read_zero(int id)\\n{\\n    mbedtls_ecdsa_context\
+        \ ctx;\\n    mbedtls_test_rnd_pseudo_info rnd_info;\\n    unsigned char hash[32];\\\
+        n    unsigned char sig[200];\\n    size_t sig_len, i;\\n\\n    mbedtls_ecdsa_init(&ctx);\\\
+        n    memset(&rnd_info, 0x00, sizeof(mbedtls_test_rnd_pseudo_info));\\n   \
+        \ memset(hash, 0, sizeof(hash));\\n    memset(sig, 0x2a, sizeof(sig));\\n\\\
+        n    MD_PSA_INIT();\\n\\n    /* generate signing key */\\n    TEST_ASSERT(mbedtls_ecdsa_genkey(&ctx,\
+        \ id,\\n                                     &mbedtls_test_rnd_pseudo_rand,\\\
+        n                                     &rnd_info) == 0);\\n\\n    /* generate\
+        \ and write signature, then read and verify it */\\n```\\n\\n## Call pattern\
+        \ 15\\n\\n```c\\nmbedtls_ecdsa_sign_det_ext(&grp, &r, &s, &d,\\n         \
+        \                          hash->x, hash->len, md_alg,\\n                \
+        \                   mbedtls_test_rnd_std_rand,\",\n      \"metadata\": {\n\
+        \        \"source_file\": \"knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md\"\
+        ,\n        \"layer\": \"unit_tests\",\n        \"doc_type\": \"unit_test_call_pattern\"\
+        ,\n        \"library\": \"mbedtls\"\n      }\n    },\n    {\n      \"rank\"\
+        : 2,\n      \"score\": 0.681172402913425,\n      \"distance\": 0.46805712580680847,\n\
+        \      \"layer\": \"api_constraints\",\n      \"source_file\": \"knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__rsa.c.md\"\
+        ,\n      \"text\": \"/* MBEDTLS_PKCS1_V15 */\\n    return ret;\\n}\\n\\n#endif\
+        \ /* MBEDTLS_SELF_TEST */\\n\\n#endif /* MBEDTLS_RSA_C */\\n```\",\n     \
+        \ \"metadata\": {\n        \"layer\": \"api_constraints\",\n        \"source_file\"\
+        : \"knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__rsa.c.md\"\
+        ,\n        \"library\": \"mbedtls\",\n        \"doc_type\": \"api_constraint\"\
+        \n      }\n    },\n    {\n      \"rank\": 3,\n      \"score\": 0.6739420161444735,\n\
+        \      \"distance\": 0.48380717635154724,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_verify_ext.md\"\
+        ,\n      \"text\": \"# API Constraints: mbedtls_pk_verify_ext (mbedTLS 4.1.0)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/mbedtls-4.1.0`\\n\\n## API\\\
+        n\\n- API/function name: `mbedtls_pk_verify_ext`\\n- Source file: `tf-psa-crypto/extras/pk.c`\\\
+        n- Declaration: `tf-psa-crypto/include/mbedtls/pk.h`\\n- Signature:\\n\\n```c\\\
+        nint mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,\\n                  \
+        \        mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,\\n           \
+        \               const unsigned char *hash, size_t hash_len,\\n           \
+        \               const unsigned char *sig, size_t sig_len);\\n```\\n\\n## Parameter\
+        \ Semantics\\n\\n- `type`: signature algorithm to verify, for example `MBEDTLS_PK_SIGALG_RSA_PSS`.\\\
+        n- `ctx`: populated public-key context.\\n- `md_alg`: hash algorithm.\\n-\
+        \ `hash`/`hash_len`: digest to verify. If `md_alg != MBEDTLS_MD_NONE` or `hash_len\
+        \ != 0`, `hash` must not be NULL.\\n- `sig`/`sig_len`: signature buffer and\
+        \ length.\\n\\n## Return Value Semantics\\n\\n- `0`: signature is valid.\\\
+        n- `MBEDTLS_ERR_PK_BAD_INPUT_DATA`: invalid inputs\",\n      \"metadata\"\
+        : {\n        \"layer\": \"api_constraints\",\n        \"source_file\": \"\
+        knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_verify_ext.md\",\n\
+        \        \"doc_type\": \"api_constraint\",\n        \"library\": \"mbedtls\"\
+        \n      }\n    },\n    {\n      \"rank\": 4,\n      \"score\": 0.6733386144469468,\n\
+        \      \"distance\": 0.48513686656951904,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_parse_key.md\"\
+        ,\n      \"text\": \"# API Constraints: mbedtls_pk_parse_key (mbedTLS 4.1.0)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/mbedtls-4.1.0`\\n\\n## API\\\
+        n\\n- API/function name: `mbedtls_pk_parse_key`\\n- Header declaration: `tf-psa-crypto/include/mbedtls/pk.h`\\\
+        n- Implementation file: `tf-psa-crypto/extras/pkparse.c`\\n- Signature:\\\
+        n\\n```c\\nint mbedtls_pk_parse_key(mbedtls_pk_context *ctx,\\n          \
+        \               const unsigned char *key,\\n                         size_t\
+        \ keylen,\\n                         const unsigned char *pwd,\\n        \
+        \                 size_t pwdlen);\\n```\\n\\n## Parameter Semantics\\n\\n-\
+        \ `ctx`: empty `mbedtls_pk_context` to populate.\\n- `key`: PEM or DER private\
+        \ key input. The documented contract says the buffer must contain the input\
+        \ exactly with no trailing material.\\n- `keylen`: input length; for PEM this\
+        \ includes the terminating null byte.\\n- `pwd`, `pwdlen`: optional password\
+        \ for encrypted private keys.\\n\\n## Return Value Semantics\\n\\n- `0`: private\
+        \ key parsed and checked.\\n- `MBEDTLS_ERR_PK_KEY_INVALID_FORMAT`: e\",\n\
+        \      \"metadata\": {\n        \"library\": \"mbedtls\",\n        \"doc_type\"\
+        : \"api_constraint\",\n        \"source_file\": \"knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_parse_key.md\"\
+        ,\n        \"layer\": \"api_constraints\"\n      }\n    },\n    {\n      \"\
+        rank\": 5,\n      \"score\": 0.6699892412542411,\n      \"distance\": 0.4925612807273865,\n\
+        \      \"layer\": \"api_constraints\",\n      \"source_file\": \"knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__core__psa_crypto.c.md\"\
+        ,\n      \"text\": \"atus = PSA_SUCCESS;\\n    }\\n\\nexit:\\n\\n    mbedtls_mpi_free(&r);\\\
+        n    mbedtls_mpi_free(&s);\\n    return status;\\n\\n #else\\n\\n    (void)\
+        \ operation;\\n    (void) signature;\\n    (void) signature_size;\\n    (void)\
+        \ s"
+      stderr_preview: ''
+      truncated: true
+      raw_fallback:
+        enabled: false
+      kind: target_api_implementation
+      use_for_feature_inference: target
+    - query: mbedtls psa_mac_sign_setup usage example unit test API call pattern
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.728632493155505
+        distance: 0.37243399024009705
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_random.function.md
+        text: "# Official test/example call patterns: mbedtls\n\nLibrary: mbedtls\n\
+          Version: 4.1.0\nSource file: /home/wen/work/clean_sources/mbedtls-4.1.0/tf-psa-crypto/tests/suites/test_suite_random.function\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\nPSA_DONE();\n\
+          }\n/* END_CASE */\n\n/* BEGIN_CASE depends_on:MBEDTLS_PSA_CRYPTO_C:MBEDTLS_ECDSA_C\
+          \ */\nvoid mbedtls_psa_get_random_ecdsa_sign(int curve)\n{\n    mbedtls_ecp_group\
+          \ grp;\n    mbedtls_mpi d, r, s;\n    unsigned char buf[] = \"This is not\
+          \ a hash.\";\n\n    mbedtls_ecp_group_init(&grp);\n    mbedtls_mpi_init(&d);\n\
+          \    mbedtls_mpi_init(&r);\n    mbedtls_mpi_init(&s);\n\n    TEST_EQUAL(0,\
+          \ mbedtls_mpi_lset(&d, 123456789));\n    TEST_EQUAL(0, mbedtls_ecp_group_load(&grp,\
+          \ curve));\n    PSA_ASSERT(psa_crypto_init());\n    TEST_EQUAL(0, mbedtls_ecdsa_sign(&grp,\
+          \ &r, &s, &d,\n                                     buf, sizeof(buf),\n\
+          \                                     mbedtls_psa_get_random,\n        \
+          \                             MBEDTLS_PSA_RANDOM_STATE));\nexit:"
+        metadata:
+          library: mbedtls
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_random.function.md
+      - rank: 2
+        score: 0.7115601611344711
+        distance: 0.4053625464439392
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md
+        text: "# Official test/example call patterns: mbedtls\n\nLibrary: mbedtls\n\
+          Version: 4.1.0\nSource file: /home/wen/work/clean_sources/mbedtls-4.1.0/tf-psa-crypto/tests/suites/test_suite_ecdsa.function\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\n/*\
+          \ BEGIN_CASE */\nvoid ecdsa_prim_zero(int id)\n{\n    mbedtls_ecp_group\
+          \ grp;\n    mbedtls_ecp_point Q;\n    mbedtls_mpi d, r, s;\n    mbedtls_test_rnd_pseudo_info\
+          \ rnd_info;\n    unsigned char buf[MBEDTLS_MD_MAX_SIZE];\n\n    mbedtls_ecp_group_init(&grp);\n\
+          \    mbedtls_ecp_point_init(&Q);\n    mbedtls_mpi_init(&d); mbedtls_mpi_init(&r);\
+          \ mbedtls_mpi_init(&s);\n    memset(&rnd_info, 0x00, sizeof(mbedtls_test_rnd_pseudo_info));\n\
+          \    memset(buf, 0, sizeof(buf));\n\n    TEST_ASSERT(mbedtls_ecp_group_load(&grp,\
+          \ id) == 0);\n    TEST_ASSERT(mbedtls_ecp_gen_keypair(&grp, &d, &Q,\n  \
+          \                                      &mbedtls_test_rnd_pseudo_rand,\n\
+          \                                        &rnd_info) == 0);\n\n    TEST_ASSERT(mbedtls_ecdsa_sign(&grp,\
+          \ &r, &s, &d, buf,"
+        metadata:
+          library: mbedtls
+          layer: unit_tests
+          source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md
+          doc_type: unit_test_call_pattern
+      - rank: 3
+        score: 0.6988106106633494
+        distance: 0.4310028851032257
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_psa_crypto_driver_wrappers.function.md
+        text: "# Official test/example call patterns: mbedtls\n\nLibrary: mbedtls\n\
+          Version: 4.1.0\nSource file: /home/wen/work/clean_sources/mbedtls-4.1.0/tf-psa-crypto/tests/suites/test_suite_psa_crypto_driver_wrappers.function\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\n* \\\
+          param input_data            The input plaintext.\n * \\param buf       \
+          \            The ciphertext produced by the driver.\n * \\param length \
+          \               Length of \\p buf in bytes.\n */\nstatic int sanity_check_rsa_encryption_result(\n\
+          \    psa_algorithm_t alg,\n    const data_t *modulus, const data_t *private_exponent,\n\
+          \    const data_t *input_data,\n    uint8_t *buf, size_t length)\n{\n#if\
+          \ defined(MBEDTLS_BIGNUM_C)\n    mbedtls_mpi N, D, C, X;\n    mbedtls_mpi_init(&N);\n\
+          \    mbedtls_mpi_init(&D);\n    mbedtls_mpi_init(&C);\n    mbedtls_mpi_init(&X);\n\
+          #else /* MBEDTLS_BIGNUM_C */\n    (void) alg;\n    (void) private_exponent;\n\
+          \    (void) input_data;\n    (void) buf;\n#endif /* MBEDTLS_BIGNUM_C */\n\
+          \n    int ok = 0;\n\n    TEST_ASSERT(lengt"
+        metadata:
+          layer: unit_tests
+          library: mbedtls
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_psa_crypto_driver_wrappers.function.md
+      - rank: 4
+        score: 0.6922730253018675
+        distance: 0.44451677799224854
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_rsa.function.md
+        text: "# Official test/example call patterns: mbedtls\n\nLibrary: mbedtls\n\
+          Version: 4.1.0\nSource file: /home/wen/work/clean_sources/mbedtls-4.1.0/tf-psa-crypto/tests/suites/test_suite_rsa.function\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\n#include\
+          \ \"rsa_internal.h\"\n#include \"test/bignum_codepath_check.h\"\n\n#if defined(MBEDTLS_RSA_C)\
+          \ && defined(MBEDTLS_BIGNUM_C)\n\nstatic int mbedtls_rsa_test_fill_context(mbedtls_rsa_context\
+          \ *rsa,\n                                         data_t *N_data, data_t\
+          \ *E_data,\n                                         data_t *D_data, data_t\
+          \ *P_data,\n                                         data_t *Q_data)\n{\n\
+          \    int ret = MBEDTLS_ERR_RSA_BAD_INPUT_DATA;\n\n    mbedtls_mpi_init(&rsa->N);\
+          \ mbedtls_mpi_init(&rsa->P); mbedtls_mpi_init(&rsa->Q);\n    mbedtls_mpi_init(&rsa->E);\
+          \ mbedtls_mpi_init(&rsa->D);\n\n    if (P_data != NULL) {\n        MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&rsa->P,\
+          \ P_data->x, P_data->len));\n    }\n    if (Q_data != NULL) {\n        MBEDTLS_MPI_C"
+        metadata:
+          layer: unit_tests
+          library: mbedtls
+          source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_rsa.function.md
+          doc_type: unit_test_call_pattern
+      - rank: 5
+        score: 0.6839187366454733
+        distance: 0.4621620178222656
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecp.function.md
+        text: "# Official test/example call patterns: mbedtls\n\nLibrary: mbedtls\n\
+          Version: 4.1.0\nSource file: /home/wen/work/clean_sources/mbedtls-4.1.0/tf-psa-crypto/tests/suites/test_suite_ecp.function\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\n*/\n\
+          \    mbedtls_ecp_restart_ctx ctx;\n    mbedtls_ecp_group grp;\n    mbedtls_ecp_point\
+          \ R, P;\n    mbedtls_mpi dA, xA, yA, dB, xZ, yZ;\n    int cnt_restarts;\n\
+          \    int ret;\n    mbedtls_test_rnd_pseudo_info rnd_info;\n\n    mbedtls_ecp_restart_init(&ctx);\n\
+          \    mbedtls_ecp_group_init(&grp);\n    mbedtls_ecp_point_init(&R); mbedtls_ecp_point_init(&P);\n\
+          \    mbedtls_mpi_init(&dA); mbedtls_mpi_init(&xA); mbedtls_mpi_init(&yA);\n\
+          \    mbedtls_mpi_init(&dB); mbedtls_mpi_init(&xZ); mbedtls_mpi_init(&yZ);\n\
+          \    memset(&rnd_info, 0x00, sizeof(mbedtls_test_rnd_pseudo_info));\n\n\
+          \    TEST_ASSERT(mbedtls_ecp_group_load(&grp, id) == 0);\n\n    TEST_ASSERT(mbedtls_test_read_mpi(&dA,\
+          \ dA_str) == 0);\n    TEST_ASSERT(mbedtls_test_read_mpi(&xA, xA_str) ==\
+          \ 0);\n    TEST_ASSERT(mbedtl"
+        metadata:
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecp.function.md
+          layer: unit_tests
+          library: mbedtls
+      error: ''
+      stdout_preview: "{\n  \"query\": \"mbedtls psa_mac_sign_setup usage example\
+        \ unit test API call pattern\",\n  \"top_k\": 5,\n  \"results\": [\n    {\n\
+        \      \"rank\": 1,\n      \"score\": 0.728632493155505,\n      \"distance\"\
+        : 0.37243399024009705,\n      \"layer\": \"unit_tests\",\n      \"source_file\"\
+        : \"knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_random.function.md\"\
+        ,\n      \"text\": \"# Official test/example call patterns: mbedtls\\n\\nLibrary:\
+        \ mbedtls\\nVersion: 4.1.0\\nSource file: /home/wen/work/clean_sources/mbedtls-4.1.0/tf-psa-crypto/tests/suites/test_suite_random.function\\\
+        nKnowledge type: unit_tests_or_examples\\n\\n## Call pattern 1\\n\\n```c\\\
+        nPSA_DONE();\\n}\\n/* END_CASE */\\n\\n/* BEGIN_CASE depends_on:MBEDTLS_PSA_CRYPTO_C:MBEDTLS_ECDSA_C\
+        \ */\\nvoid mbedtls_psa_get_random_ecdsa_sign(int curve)\\n{\\n    mbedtls_ecp_group\
+        \ grp;\\n    mbedtls_mpi d, r, s;\\n    unsigned char buf[] = \\\"This is\
+        \ not a hash.\\\";\\n\\n    mbedtls_ecp_group_init(&grp);\\n    mbedtls_mpi_init(&d);\\\
+        n    mbedtls_mpi_init(&r);\\n    mbedtls_mpi_init(&s);\\n\\n    TEST_EQUAL(0,\
+        \ mbedtls_mpi_lset(&d, 123456789));\\n    TEST_EQUAL(0, mbedtls_ecp_group_load(&grp,\
+        \ curve));\\n    PSA_ASSERT(psa_crypto_init());\\n    TEST_EQUAL(0, mbedtls_ecdsa_sign(&grp,\
+        \ &r, &s, &d,\\n                                     buf, sizeof(buf),\\n\
+        \                                     mbedtls_psa_get_random,\\n         \
+        \                            MBEDTLS_PSA_RANDOM_STATE));\\nexit:\",\n    \
+        \  \"metadata\": {\n        \"library\": \"mbedtls\",\n        \"layer\":\
+        \ \"unit_tests\",\n        \"doc_type\": \"unit_test_call_pattern\",\n   \
+        \     \"source_file\": \"knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_random.function.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 2,\n      \"score\": 0.7115601611344711,\n\
+        \      \"distance\": 0.4053625464439392,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md\"\
+        ,\n      \"text\": \"# Official test/example call patterns: mbedtls\\n\\nLibrary:\
+        \ mbedtls\\nVersion: 4.1.0\\nSource file: /home/wen/work/clean_sources/mbedtls-4.1.0/tf-psa-crypto/tests/suites/test_suite_ecdsa.function\\\
+        nKnowledge type: unit_tests_or_examples\\n\\n## Call pattern 1\\n\\n```c\\\
+        n/* BEGIN_CASE */\\nvoid ecdsa_prim_zero(int id)\\n{\\n    mbedtls_ecp_group\
+        \ grp;\\n    mbedtls_ecp_point Q;\\n    mbedtls_mpi d, r, s;\\n    mbedtls_test_rnd_pseudo_info\
+        \ rnd_info;\\n    unsigned char buf[MBEDTLS_MD_MAX_SIZE];\\n\\n    mbedtls_ecp_group_init(&grp);\\\
+        n    mbedtls_ecp_point_init(&Q);\\n    mbedtls_mpi_init(&d); mbedtls_mpi_init(&r);\
+        \ mbedtls_mpi_init(&s);\\n    memset(&rnd_info, 0x00, sizeof(mbedtls_test_rnd_pseudo_info));\\\
+        n    memset(buf, 0, sizeof(buf));\\n\\n    TEST_ASSERT(mbedtls_ecp_group_load(&grp,\
+        \ id) == 0);\\n    TEST_ASSERT(mbedtls_ecp_gen_keypair(&grp, &d, &Q,\\n  \
+        \                                      &mbedtls_test_rnd_pseudo_rand,\\n \
+        \                                       &rnd_info) == 0);\\n\\n    TEST_ASSERT(mbedtls_ecdsa_sign(&grp,\
+        \ &r, &s, &d, buf,\",\n      \"metadata\": {\n        \"library\": \"mbedtls\"\
+        ,\n        \"layer\": \"unit_tests\",\n        \"source_file\": \"knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md\"\
+        ,\n        \"doc_type\": \"unit_test_call_pattern\"\n      }\n    },\n   \
+        \ {\n      \"rank\": 3,\n      \"score\": 0.6988106106633494,\n      \"distance\"\
+        : 0.4310028851032257,\n      \"layer\": \"unit_tests\",\n      \"source_file\"\
+        : \"knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_psa_crypto_driver_wrappers.function.md\"\
+        ,\n      \"text\": \"# Official test/example call patterns: mbedtls\\n\\nLibrary:\
+        \ mbedtls\\nVersion: 4.1.0\\nSource file: /home/wen/work/clean_sources/mbedtls-4.1.0/tf-psa-crypto/tests/suites/test_suite_psa_crypto_driver_wrappers.function\\\
+        nKnowledge type: unit_tests_or_examples\\n\\n## Call pattern 1\\n\\n```c\\\
+        n* \\\\param input_data            The input plaintext.\\n * \\\\param buf\
+        \                   The ciphertext produced by the driver.\\n * \\\\param\
+        \ length                Length of \\\\p buf in bytes.\\n */\\nstatic int sanity_check_rsa_encryption_result(\\\
+        n    psa_algorithm_t alg,\\n    const data_t *modulus, const data_t *private_exponent,\\\
+        n    const data_t *input_data,\\n    uint8_t *buf, size_t length)\\n{\\n#if\
+        \ defined(MBEDTLS_BIGNUM_C)\\n    mbedtls_mpi N, D, C, X;\\n    mbedtls_mpi_init(&N);\\\
+        n    mbedtls_mpi_init(&D);\\n    mbedtls_mpi_init(&C);\\n    mbedtls_mpi_init(&X);\\\
+        n#else /* MBEDTLS_BIGNUM_C */\\n    (void) alg;\\n    (void) private_exponent;\\\
+        n    (void) input_data;\\n    (void) buf;\\n#endif /* MBEDTLS_BIGNUM_C */\\\
+        n\\n    int ok = 0;\\n\\n    TEST_ASSERT(lengt\",\n      \"metadata\": {\n\
+        \        \"layer\": \"unit_tests\",\n        \"library\": \"mbedtls\",\n \
+        \       \"doc_type\": \"unit_test_call_pattern\",\n        \"source_file\"\
+        : \"knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_psa_crypto_driver_wrappers.function.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 4,\n      \"score\": 0.6922730253018675,\n\
+        \      \"distance\": 0.44451677799224854,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_rsa.function.md\"\
+        ,\n      \"text\": \"# Official test/example call patterns: mbedtls\\n\\nLibrary:\
+        \ mbedtls\\nVersion: 4.1.0\\nSource file: /home/wen/work/clean_sources/mbedtls-4.1.0/tf-psa-crypto/tests/suites/test_suite_rsa.function\\\
+        nKnowledge type: unit_tests_or_examples\\n\\n## Call pattern 1\\n\\n```c\\\
+        n#include \\\"rsa_internal.h\\\"\\n#include \\\"test/bignum_codepath_check.h\\\
+        \"\\n\\n#if defined(MBEDTLS_RSA_C) && defined(MBEDTLS_BIGNUM_C)\\n\\nstatic\
+        \ int mbedtls_rsa_test_fill_context(mbedtls_rsa_context *rsa,\\n         \
+        \                                data_t *N_data, data_t *E_data,\\n      \
+        \                                   data_t *D_"
+      stderr_preview: ''
+      truncated: true
+      raw_fallback:
+        enabled: false
+      kind: target_api_usage
+      use_for_feature_inference: target
+    - query: 'mbedtls psa_mac_sign_setup    PSA operation API does not expose an EVP_MAC_CTX_get_mac_size
+        equivalent exact OpenSSL EVP_MAC_CTX_get_mac_size internal dereference is
+        not preserved pre-setup operation is psa_mac_update, not a direct get-size
+        call '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.6869222528827271
+        distance: 0.4557688236236572
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/psa_aead_setup.md
+        text: "# API Constraints: psa_aead_setup (mbedTLS 4.1.0 internal)\n\nSource\
+          \ version: `/home/wen/work/clean_sources/mbedtls-4.1.0`\n\n## API\n\n- API/function\
+          \ name: `psa_aead_setup`\n- Visibility: `static` internal core helper\n\
+          - Implementation file: `tf-psa-crypto/core/psa_crypto.c`\n- Signature:\n\
+          \n```c\nstatic psa_status_t psa_aead_setup(psa_aead_operation_t *operation,\n\
+          \                                   int is_encrypt,\n                  \
+          \                 mbedtls_svc_key_id_t key,\n                          \
+          \         psa_algorithm_t alg);\n```\n\n## Parameter Semantics\n\n- `operation`:\
+          \ caller-owned PSA AEAD operation.\n- `is_encrypt`: nonzero for encrypt\
+          \ setup, zero for decrypt setup.\n- `key`: PSA key identifier.\n- `alg`:\
+          \ AEAD algorithm with optional shortened tag encoding.\n\n## Return Value\
+          \ Semantics\n\n- `PSA_SUCCESS`: setup succeeded and operation records base\
+          \ algorithm and direction.\n- `PSA_ERROR_BAD_STATE`: operation already active\
+          \ or partially started.\n- `PSA_ERROR_INVALID_ARGUMENT`: invalid key/algorithm\
+          \ c"
+        metadata:
+          doc_type: api_constraint
+          library: mbedtls
+          layer: api_constraints
+          source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/psa_aead_setup.md
+      - rank: 2
+        score: 0.6763444586808522
+        distance: 0.47853654623031616
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/psa_aead_decrypt_setup.md
+        text: "# API Constraints: psa_aead_decrypt_setup (mbedTLS 4.1.0)\n\nSource\
+          \ version: `/home/wen/work/clean_sources/mbedtls-4.1.0`\n\n## API\n\n- API/function\
+          \ name: `psa_aead_decrypt_setup`\n- Header declaration: `tf-psa-crypto/include/psa/crypto.h`\n\
+          - Implementation file: `tf-psa-crypto/core/psa_crypto.c`\n- Signature:\n\
+          \n```c\npsa_status_t psa_aead_decrypt_setup(psa_aead_operation_t *operation,\n\
+          \                                    mbedtls_svc_key_id_t key,\n       \
+          \                             psa_algorithm_t alg);\n```\n\n## Parameter\
+          \ Semantics\n\n- `operation`: initialized inactive AEAD operation object.\n\
+          - `key`: key identifier that must remain valid until the operation terminates\
+          \ and must allow `PSA_KEY_USAGE_DECRYPT`.\n- `alg`: AEAD algorithm; may\
+          \ include `PSA_ALG_AEAD_WITH_SHORTENED_TAG(...)`.\n\n## Return Value Semantics\n\
+          \n- `PSA_SUCCESS`: operation set up for authenticated decryption.\n- `PSA_ERROR_BAD_STATE`:\
+          \ crypto subsystem not initialized or operation already active.\n- `PSA_ERROR_INVALID_HANDLE`,\
+          \ `PSA_ERRO"
+        metadata:
+          doc_type: api_constraint
+          layer: api_constraints
+          source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/psa_aead_decrypt_setup.md
+          library: mbedtls
+      - rank: 3
+        score: 0.675090685598739
+        distance: 0.48128247261047363
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__core__psa_crypto.c.md
+        text: "# Official API knowledge snippets: mbedtls\n\nLibrary: mbedtls\nVersion:\
+          \ 4.1.0\nSource file: /home/wen/work/clean_sources/mbedtls-4.1.0/tf-psa-crypto/core/psa_crypto.c\n\
+          Knowledge type: api_constraints\n\n## Snippet 1\n\n```c\nsize_t *signature_length)\n\
+          {\n#if (defined(MBEDTLS_PSA_BUILTIN_ALG_ECDSA) || \\\n    defined(MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA))\
+          \ && \\\n    defined(MBEDTLS_ECP_RESTARTABLE)\n\n    psa_status_t status\
+          \ = PSA_ERROR_CORRUPTION_DETECTED;\n    mbedtls_mpi r;\n    mbedtls_mpi\
+          \ s;\n\n    mbedtls_mpi_init(&r);\n    mbedtls_mpi_init(&s);\n\n    /* Ensure\
+          \ max_ops is set to the current value (or default). */\n    mbedtls_psa_interruptible_set_max_ops(psa_interruptible_get_max_ops());\n\
+          \n    if (signature_size < 2 * operation->coordinate_bytes) {\n        status\
+          \ = PSA_ERROR_BUFFER_TOO_SMALL;\n        goto exit;\n    }\n\n    if (PSA_ALG_ECDSA_IS_DETERMINISTIC(operation->alg))\
+          \ {\n\n#if defined(MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA)\n      \
+          \  status = mbedtls_to_psa_error(\n            mbedtls_ecdsa_s"
+        metadata:
+          source_file: knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__core__psa_crypto.c.md
+          doc_type: api_constraint
+          library: mbedtls
+          layer: api_constraints
+      - rank: 4
+        score: 0.6716572381515296
+        distance: 0.48885464668273926
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_verify_ext.md
+        text: "# API Constraints: mbedtls_pk_verify_ext (mbedTLS 4.1.0)\n\nSource\
+          \ version: `/home/wen/work/clean_sources/mbedtls-4.1.0`\n\n## API\n\n- API/function\
+          \ name: `mbedtls_pk_verify_ext`\n- Source file: `tf-psa-crypto/extras/pk.c`\n\
+          - Declaration: `tf-psa-crypto/include/mbedtls/pk.h`\n- Signature:\n\n```c\n\
+          int mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,\n                  \
+          \        mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,\n          \
+          \                const unsigned char *hash, size_t hash_len,\n         \
+          \                 const unsigned char *sig, size_t sig_len);\n```\n\n##\
+          \ Parameter Semantics\n\n- `type`: signature algorithm to verify, for example\
+          \ `MBEDTLS_PK_SIGALG_RSA_PSS`.\n- `ctx`: populated public-key context.\n\
+          - `md_alg`: hash algorithm.\n- `hash`/`hash_len`: digest to verify. If `md_alg\
+          \ != MBEDTLS_MD_NONE` or `hash_len != 0`, `hash` must not be NULL.\n- `sig`/`sig_len`:\
+          \ signature buffer and length.\n\n## Return Value Semantics\n\n- `0`: signature\
+          \ is valid.\n- `MBEDTLS_ERR_PK_BAD_INPUT_DATA`: invalid inputs"
+        metadata:
+          source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_verify_ext.md
+          doc_type: api_constraint
+          layer: api_constraints
+          library: mbedtls
+      - rank: 5
+        score: 0.6700742012652205
+        distance: 0.4923720359802246
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_parse_key.md
+        text: "# API Constraints: mbedtls_pk_parse_key (mbedTLS 4.1.0)\n\nSource version:\
+          \ `/home/wen/work/clean_sources/mbedtls-4.1.0`\n\n## API\n\n- API/function\
+          \ name: `mbedtls_pk_parse_key`\n- Header declaration: `tf-psa-crypto/include/mbedtls/pk.h`\n\
+          - Implementation file: `tf-psa-crypto/extras/pkparse.c`\n- Signature:\n\n\
+          ```c\nint mbedtls_pk_parse_key(mbedtls_pk_context *ctx,\n              \
+          \           const unsigned char *key,\n                         size_t keylen,\n\
+          \                         const unsigned char *pwd,\n                  \
+          \       size_t pwdlen);\n```\n\n## Parameter Semantics\n\n- `ctx`: empty\
+          \ `mbedtls_pk_context` to populate.\n- `key`: PEM or DER private key input.\
+          \ The documented contract says the buffer must contain the input exactly\
+          \ with no trailing material.\n- `keylen`: input length; for PEM this includes\
+          \ the terminating null byte.\n- `pwd`, `pwdlen`: optional password for encrypted\
+          \ private keys.\n\n## Return Value Semantics\n\n- `0`: private key parsed\
+          \ and checked.\n- `MBEDTLS_ERR_PK_KEY_INVALID_FORMAT`: e"
+        metadata:
+          doc_type: api_constraint
+          library: mbedtls
+          source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_parse_key.md
+          layer: api_constraints
+      error: ''
+      stdout_preview: "{\n  \"query\": \"mbedtls psa_mac_sign_setup    PSA operation\
+        \ API does not expose an EVP_MAC_CTX_get_mac_size equivalent exact OpenSSL\
+        \ EVP_MAC_CTX_get_mac_size internal dereference is not preserved pre-setup\
+        \ operation is psa_mac_update, not a direct get-size call \",\n  \"top_k\"\
+        : 5,\n  \"results\": [\n    {\n      \"rank\": 1,\n      \"score\": 0.6869222528827271,\n\
+        \      \"distance\": 0.4557688236236572,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/mbedtls/4.1.0/psa_aead_setup.md\"\
+        ,\n      \"text\": \"# API Constraints: psa_aead_setup (mbedTLS 4.1.0 internal)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/mbedtls-4.1.0`\\n\\n## API\\\
+        n\\n- API/function name: `psa_aead_setup`\\n- Visibility: `static` internal\
+        \ core helper\\n- Implementation file: `tf-psa-crypto/core/psa_crypto.c`\\\
+        n- Signature:\\n\\n```c\\nstatic psa_status_t psa_aead_setup(psa_aead_operation_t\
+        \ *operation,\\n                                   int is_encrypt,\\n    \
+        \                               mbedtls_svc_key_id_t key,\\n             \
+        \                      psa_algorithm_t alg);\\n```\\n\\n## Parameter Semantics\\\
+        n\\n- `operation`: caller-owned PSA AEAD operation.\\n- `is_encrypt`: nonzero\
+        \ for encrypt setup, zero for decrypt setup.\\n- `key`: PSA key identifier.\\\
+        n- `alg`: AEAD algorithm with optional shortened tag encoding.\\n\\n## Return\
+        \ Value Semantics\\n\\n- `PSA_SUCCESS`: setup succeeded and operation records\
+        \ base algorithm and direction.\\n- `PSA_ERROR_BAD_STATE`: operation already\
+        \ active or partially started.\\n- `PSA_ERROR_INVALID_ARGUMENT`: invalid key/algorithm\
+        \ c\",\n      \"metadata\": {\n        \"doc_type\": \"api_constraint\",\n\
+        \        \"library\": \"mbedtls\",\n        \"layer\": \"api_constraints\"\
+        ,\n        \"source_file\": \"knowledge_raw/api_constraints/mbedtls/4.1.0/psa_aead_setup.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 2,\n      \"score\": 0.6763444586808522,\n\
+        \      \"distance\": 0.47853654623031616,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/mbedtls/4.1.0/psa_aead_decrypt_setup.md\"\
+        ,\n      \"text\": \"# API Constraints: psa_aead_decrypt_setup (mbedTLS 4.1.0)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/mbedtls-4.1.0`\\n\\n## API\\\
+        n\\n- API/function name: `psa_aead_decrypt_setup`\\n- Header declaration:\
+        \ `tf-psa-crypto/include/psa/crypto.h`\\n- Implementation file: `tf-psa-crypto/core/psa_crypto.c`\\\
+        n- Signature:\\n\\n```c\\npsa_status_t psa_aead_decrypt_setup(psa_aead_operation_t\
+        \ *operation,\\n                                    mbedtls_svc_key_id_t key,\\\
+        n                                    psa_algorithm_t alg);\\n```\\n\\n## Parameter\
+        \ Semantics\\n\\n- `operation`: initialized inactive AEAD operation object.\\\
+        n- `key`: key identifier that must remain valid until the operation terminates\
+        \ and must allow `PSA_KEY_USAGE_DECRYPT`.\\n- `alg`: AEAD algorithm; may include\
+        \ `PSA_ALG_AEAD_WITH_SHORTENED_TAG(...)`.\\n\\n## Return Value Semantics\\\
+        n\\n- `PSA_SUCCESS`: operation set up for authenticated decryption.\\n- `PSA_ERROR_BAD_STATE`:\
+        \ crypto subsystem not initialized or operation already active.\\n- `PSA_ERROR_INVALID_HANDLE`,\
+        \ `PSA_ERRO\",\n      \"metadata\": {\n        \"doc_type\": \"api_constraint\"\
+        ,\n        \"layer\": \"api_constraints\",\n        \"source_file\": \"knowledge_raw/api_constraints/mbedtls/4.1.0/psa_aead_decrypt_setup.md\"\
+        ,\n        \"library\": \"mbedtls\"\n      }\n    },\n    {\n      \"rank\"\
+        : 3,\n      \"score\": 0.675090685598739,\n      \"distance\": 0.48128247261047363,\n\
+        \      \"layer\": \"api_constraints\",\n      \"source_file\": \"knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__core__psa_crypto.c.md\"\
+        ,\n      \"text\": \"# Official API knowledge snippets: mbedtls\\n\\nLibrary:\
+        \ mbedtls\\nVersion: 4.1.0\\nSource file: /home/wen/work/clean_sources/mbedtls-4.1.0/tf-psa-crypto/core/psa_crypto.c\\\
+        nKnowledge type: api_constraints\\n\\n## Snippet 1\\n\\n```c\\nsize_t *signature_length)\\\
+        n{\\n#if (defined(MBEDTLS_PSA_BUILTIN_ALG_ECDSA) || \\\\\\n    defined(MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA))\
+        \ && \\\\\\n    defined(MBEDTLS_ECP_RESTARTABLE)\\n\\n    psa_status_t status\
+        \ = PSA_ERROR_CORRUPTION_DETECTED;\\n    mbedtls_mpi r;\\n    mbedtls_mpi\
+        \ s;\\n\\n    mbedtls_mpi_init(&r);\\n    mbedtls_mpi_init(&s);\\n\\n    /*\
+        \ Ensure max_ops is set to the current value (or default). */\\n    mbedtls_psa_interruptible_set_max_ops(psa_interruptible_get_max_ops());\\\
+        n\\n    if (signature_size < 2 * operation->coordinate_bytes) {\\n       \
+        \ status = PSA_ERROR_BUFFER_TOO_SMALL;\\n        goto exit;\\n    }\\n\\n\
+        \    if (PSA_ALG_ECDSA_IS_DETERMINISTIC(operation->alg)) {\\n\\n#if defined(MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA)\\\
+        n        status = mbedtls_to_psa_error(\\n            mbedtls_ecdsa_s\",\n\
+        \      \"metadata\": {\n        \"source_file\": \"knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__core__psa_crypto.c.md\"\
+        ,\n        \"doc_type\": \"api_constraint\",\n        \"library\": \"mbedtls\"\
+        ,\n        \"layer\": \"api_constraints\"\n      }\n    },\n    {\n      \"\
+        rank\": 4,\n      \"score\": 0.6716572381515296,\n      \"distance\": 0.48885464668273926,\n\
+        \      \"layer\": \"api_constraints\",\n      \"source_file\": \"knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_pk_verify_ext.md\"\
+        ,\n      \"text\": \"# API Constraints: mbedtls_pk_verify_ext (mbedTLS 4.1.0)\\\
+        n\\nSource version: `/home/wen/work/clean_sources/mbedtls-4.1.0`\\n\\n## API\\\
+        n\\n- API/function name: `mbedtls_pk_verify_ext`\\n- Source file: `tf-psa-crypto/extras/pk.c`\\\
+        n- Declaration: `tf-psa-crypto/include/mbedtls/pk.h`\\n- Signature:\\n\\n```c\\\
+        nint mbedtls_pk_verify_ext(mbedtls_pk_sigalg_t type,\\n                  \
+        \        mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,\\n           \
+        \               const unsigned char *hash, size_t hash_len,\\n           \
+        \               const unsigned char *sig, size_t sig_len);\\n```\\n\\n## Parameter\
+        \ Semantics\\n\\n- `type`: signature algorithm to verify, for example `MBEDTLS_PK_SIGALG_RSA_PSS`.\\\
+        n- `ctx`: populated public-key context.\\n- `md_alg`: hash algorithm.\\n-\
+        \ `hash`/`hash_len`: digest to verify. If `md_alg != MBEDTLS_MD_NONE` or `hash_len\
+        \ != 0`, `hash` mu"
+      stderr_preview: ''
+      truncated: true
+      raw_fallback:
+        enabled: false
+      kind: vulnerability_path_compatibility
+      use_for_feature_inference: target
+    - query: 'mbedtls psa_mac_sign_setup object_state_lifecycle selected mask units
+        trigger APIs EVP_MAC_CTX_get_mac_size EVP_MAC_init migrate API call    mutation
+        points '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.6591828226326764
+        distance: 0.5170298218727112
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_random.function.md
+        text: "# Official test/example call patterns: mbedtls\n\nLibrary: mbedtls\n\
+          Version: 4.1.0\nSource file: /home/wen/work/clean_sources/mbedtls-4.1.0/tf-psa-crypto/tests/suites/test_suite_random.function\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\nPSA_DONE();\n\
+          }\n/* END_CASE */\n\n/* BEGIN_CASE depends_on:MBEDTLS_PSA_CRYPTO_C:MBEDTLS_ECDSA_C\
+          \ */\nvoid mbedtls_psa_get_random_ecdsa_sign(int curve)\n{\n    mbedtls_ecp_group\
+          \ grp;\n    mbedtls_mpi d, r, s;\n    unsigned char buf[] = \"This is not\
+          \ a hash.\";\n\n    mbedtls_ecp_group_init(&grp);\n    mbedtls_mpi_init(&d);\n\
+          \    mbedtls_mpi_init(&r);\n    mbedtls_mpi_init(&s);\n\n    TEST_EQUAL(0,\
+          \ mbedtls_mpi_lset(&d, 123456789));\n    TEST_EQUAL(0, mbedtls_ecp_group_load(&grp,\
+          \ curve));\n    PSA_ASSERT(psa_crypto_init());\n    TEST_EQUAL(0, mbedtls_ecdsa_sign(&grp,\
+          \ &r, &s, &d,\n                                     buf, sizeof(buf),\n\
+          \                                     mbedtls_psa_get_random,\n        \
+          \                             MBEDTLS_PSA_RANDOM_STATE));\nexit:"
+        metadata:
+          library: mbedtls
+          source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_random.function.md
+          layer: unit_tests
+          doc_type: unit_test_call_pattern
+      - rank: 2
+        score: 0.6533134954754233
+        distance: 0.5306587219238281
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md
+        text: "ee(&s);\n    mbedtls_mpi_free(&r_check); mbedtls_mpi_free(&s_check);\n\
+          \    MD_PSA_DONE();\n}\n/* END_CASE */\n\n/* BEGIN_CASE depends_on:PSA_WANT_ALG_SHA_256\
+          \ */\nvoid ecdsa_write_read_zero(int id)\n{\n    mbedtls_ecdsa_context ctx;\n\
+          \    mbedtls_test_rnd_pseudo_info rnd_info;\n    unsigned char hash[32];\n\
+          \    unsigned char sig[200];\n    size_t sig_len, i;\n\n    mbedtls_ecdsa_init(&ctx);\n\
+          \    memset(&rnd_info, 0x00, sizeof(mbedtls_test_rnd_pseudo_info));\n  \
+          \  memset(hash, 0, sizeof(hash));\n    memset(sig, 0x2a, sizeof(sig));\n\
+          \n    MD_PSA_INIT();\n\n    /* generate signing key */\n    TEST_ASSERT(mbedtls_ecdsa_genkey(&ctx,\
+          \ id,\n                                     &mbedtls_test_rnd_pseudo_rand,\n\
+          \                                     &rnd_info) == 0);\n\n    /* generate\
+          \ and write signature, then read and verify it */\n```\n\n## Call pattern\
+          \ 15\n\n```c\nmbedtls_ecdsa_sign_det_ext(&grp, &r, &s, &d,\n           \
+          \                        hash->x, hash->len, md_alg,\n                 \
+          \                  mbedtls_test_rnd_std_rand,"
+        metadata:
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+          library: mbedtls
+          source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md
+      - rank: 3
+        score: 0.651159108060514
+        distance: 0.5357229709625244
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md
+        text: "# Official test/example call patterns: mbedtls\n\nLibrary: mbedtls\n\
+          Version: 4.1.0\nSource file: /home/wen/work/clean_sources/mbedtls-4.1.0/tf-psa-crypto/tests/suites/test_suite_ecdsa.function\n\
+          Knowledge type: unit_tests_or_examples\n\n## Call pattern 1\n\n```c\n/*\
+          \ BEGIN_CASE */\nvoid ecdsa_prim_zero(int id)\n{\n    mbedtls_ecp_group\
+          \ grp;\n    mbedtls_ecp_point Q;\n    mbedtls_mpi d, r, s;\n    mbedtls_test_rnd_pseudo_info\
+          \ rnd_info;\n    unsigned char buf[MBEDTLS_MD_MAX_SIZE];\n\n    mbedtls_ecp_group_init(&grp);\n\
+          \    mbedtls_ecp_point_init(&Q);\n    mbedtls_mpi_init(&d); mbedtls_mpi_init(&r);\
+          \ mbedtls_mpi_init(&s);\n    memset(&rnd_info, 0x00, sizeof(mbedtls_test_rnd_pseudo_info));\n\
+          \    memset(buf, 0, sizeof(buf));\n\n    TEST_ASSERT(mbedtls_ecp_group_load(&grp,\
+          \ id) == 0);\n    TEST_ASSERT(mbedtls_ecp_gen_keypair(&grp, &d, &Q,\n  \
+          \                                      &mbedtls_test_rnd_pseudo_rand,\n\
+          \                                        &rnd_info) == 0);\n\n    TEST_ASSERT(mbedtls_ecdsa_sign(&grp,\
+          \ &r, &s, &d, buf,"
+        metadata:
+          source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md
+          doc_type: unit_test_call_pattern
+          layer: unit_tests
+          library: mbedtls
+      - rank: 4
+        score: 0.6511428832904768
+        distance: 0.5357612371444702
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__ecdsa.c.md
+        text: "```\n\n## Snippet 13\n\n```c\n/* jump to current step */\n        if\
+          \ (rs_ctx->det->state == ecdsa_det_sign) {\n            goto sign;\n   \
+          \     }\n    }\n#endif /* MBEDTLS_ECP_RESTARTABLE */\n\n    /* Use private\
+          \ key and message hash (reduced) to initialize HMAC_DRBG */\n    MBEDTLS_MPI_CHK(mbedtls_mpi_write_binary(d,\
+          \ data, grp_len));\n    MBEDTLS_MPI_CHK(derive_mpi(grp, &h, buf, blen));\n\
+          \    MBEDTLS_MPI_CHK(mbedtls_mpi_write_binary(&h, data + grp_len, grp_len));\n\
+          \    MBEDTLS_MPI_CHK(mbedtls_hmac_drbg_seed_buf(p_rng, md_info, data, 2\
+          \ * grp_len));\n\n#if defined(MBEDTLS_ECP_RESTARTABLE)\n    if (rs_ctx !=\
+          \ NULL && rs_ctx->det != NULL) {\n        rs_ctx->det->state = ecdsa_det_sign;\n\
+          \    }\n\nsign:\n#endif\n    ret = mbedtls_ecdsa_sign_restartable(grp, r,\
+          \ s, d, buf, blen,\n                                         mbedtls_hmac_drbg_random,\
+          \ p_rng,\n                                         f_rng_blind, p_rng_blind,\
+          \ rs_ctx);\n\ncleanup:\n    mbedtls_hmac_drbg_free(&rng_ctx);\n    mbedtls_mpi_free(&h);\n\
+          ```\n\n## Snippet 14\n\n`"
+        metadata:
+          doc_type: api_constraint
+          source_file: knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__ecdsa.c.md
+          layer: api_constraints
+          library: mbedtls
+      - rank: 5
+        score: 0.6495217886261012
+        distance: 0.5395942330360413
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__ecjpake.c.md
+        text: "*olen = mbedtls_md_get_size_from_type(ctx->md_type);\n    if (len <\
+          \ *olen) {\n        return MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL;\n```\n\n##\
+          \ Snippet 28\n\n```c\nmbedtls_ecp_point_init(&K);\n\n    ret = mbedtls_ecjpake_derive_k(ctx,\
+          \ &K, f_rng, p_rng);\n    if (ret) {\n        goto cleanup;\n    }\n\n \
+          \   /* PMS = SHA-256( K.X ) */\n    x_bytes = (ctx->grp.pbits + 7) / 8;\n\
+          \    MBEDTLS_MPI_CHK(mbedtls_mpi_write_binary(&K.X, kx, x_bytes));\n   \
+          \ MBEDTLS_MPI_CHK(mbedtls_ecjpake_compute_hash(ctx->md_type,\n         \
+          \                                        kx, x_bytes, buf));\n\ncleanup:\n\
+          \    mbedtls_ecp_point_free(&K);\n\n    return ret;\n}\n\nint mbedtls_ecjpake_write_shared_key(mbedtls_ecjpake_context\
+          \ *ctx,\n                                     unsigned char *buf, size_t\
+          \ len, size_t *olen,\n                                     int (*f_rng)(void\
+          \ *, unsigned char *, size_t),\n                                     void\
+          \ *p_rng)\n{\n    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;\n   \
+          \ mbedtls_ecp_point K;\n```"
+        metadata:
+          layer: api_constraints
+          doc_type: api_constraint
+          library: mbedtls
+          source_file: knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__ecjpake.c.md
+      error: ''
+      stdout_preview: "{\n  \"query\": \"mbedtls psa_mac_sign_setup object_state_lifecycle\
+        \ selected mask units trigger APIs EVP_MAC_CTX_get_mac_size EVP_MAC_init migrate\
+        \ API call    mutation points \",\n  \"top_k\": 5,\n  \"results\": [\n   \
+        \ {\n      \"rank\": 1,\n      \"score\": 0.6591828226326764,\n      \"distance\"\
+        : 0.5170298218727112,\n      \"layer\": \"unit_tests\",\n      \"source_file\"\
+        : \"knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_random.function.md\"\
+        ,\n      \"text\": \"# Official test/example call patterns: mbedtls\\n\\nLibrary:\
+        \ mbedtls\\nVersion: 4.1.0\\nSource file: /home/wen/work/clean_sources/mbedtls-4.1.0/tf-psa-crypto/tests/suites/test_suite_random.function\\\
+        nKnowledge type: unit_tests_or_examples\\n\\n## Call pattern 1\\n\\n```c\\\
+        nPSA_DONE();\\n}\\n/* END_CASE */\\n\\n/* BEGIN_CASE depends_on:MBEDTLS_PSA_CRYPTO_C:MBEDTLS_ECDSA_C\
+        \ */\\nvoid mbedtls_psa_get_random_ecdsa_sign(int curve)\\n{\\n    mbedtls_ecp_group\
+        \ grp;\\n    mbedtls_mpi d, r, s;\\n    unsigned char buf[] = \\\"This is\
+        \ not a hash.\\\";\\n\\n    mbedtls_ecp_group_init(&grp);\\n    mbedtls_mpi_init(&d);\\\
+        n    mbedtls_mpi_init(&r);\\n    mbedtls_mpi_init(&s);\\n\\n    TEST_EQUAL(0,\
+        \ mbedtls_mpi_lset(&d, 123456789));\\n    TEST_EQUAL(0, mbedtls_ecp_group_load(&grp,\
+        \ curve));\\n    PSA_ASSERT(psa_crypto_init());\\n    TEST_EQUAL(0, mbedtls_ecdsa_sign(&grp,\
+        \ &r, &s, &d,\\n                                     buf, sizeof(buf),\\n\
+        \                                     mbedtls_psa_get_random,\\n         \
+        \                            MBEDTLS_PSA_RANDOM_STATE));\\nexit:\",\n    \
+        \  \"metadata\": {\n        \"library\": \"mbedtls\",\n        \"source_file\"\
+        : \"knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_random.function.md\"\
+        ,\n        \"layer\": \"unit_tests\",\n        \"doc_type\": \"unit_test_call_pattern\"\
+        \n      }\n    },\n    {\n      \"rank\": 2,\n      \"score\": 0.6533134954754233,\n\
+        \      \"distance\": 0.5306587219238281,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md\"\
+        ,\n      \"text\": \"ee(&s);\\n    mbedtls_mpi_free(&r_check); mbedtls_mpi_free(&s_check);\\\
+        n    MD_PSA_DONE();\\n}\\n/* END_CASE */\\n\\n/* BEGIN_CASE depends_on:PSA_WANT_ALG_SHA_256\
+        \ */\\nvoid ecdsa_write_read_zero(int id)\\n{\\n    mbedtls_ecdsa_context\
+        \ ctx;\\n    mbedtls_test_rnd_pseudo_info rnd_info;\\n    unsigned char hash[32];\\\
+        n    unsigned char sig[200];\\n    size_t sig_len, i;\\n\\n    mbedtls_ecdsa_init(&ctx);\\\
+        n    memset(&rnd_info, 0x00, sizeof(mbedtls_test_rnd_pseudo_info));\\n   \
+        \ memset(hash, 0, sizeof(hash));\\n    memset(sig, 0x2a, sizeof(sig));\\n\\\
+        n    MD_PSA_INIT();\\n\\n    /* generate signing key */\\n    TEST_ASSERT(mbedtls_ecdsa_genkey(&ctx,\
+        \ id,\\n                                     &mbedtls_test_rnd_pseudo_rand,\\\
+        n                                     &rnd_info) == 0);\\n\\n    /* generate\
+        \ and write signature, then read and verify it */\\n```\\n\\n## Call pattern\
+        \ 15\\n\\n```c\\nmbedtls_ecdsa_sign_det_ext(&grp, &r, &s, &d,\\n         \
+        \                          hash->x, hash->len, md_alg,\\n                \
+        \                   mbedtls_test_rnd_std_rand,\",\n      \"metadata\": {\n\
+        \        \"doc_type\": \"unit_test_call_pattern\",\n        \"layer\": \"\
+        unit_tests\",\n        \"library\": \"mbedtls\",\n        \"source_file\"\
+        : \"knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 3,\n      \"score\": 0.651159108060514,\n\
+        \      \"distance\": 0.5357229709625244,\n      \"layer\": \"unit_tests\"\
+        ,\n      \"source_file\": \"knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md\"\
+        ,\n      \"text\": \"# Official test/example call patterns: mbedtls\\n\\nLibrary:\
+        \ mbedtls\\nVersion: 4.1.0\\nSource file: /home/wen/work/clean_sources/mbedtls-4.1.0/tf-psa-crypto/tests/suites/test_suite_ecdsa.function\\\
+        nKnowledge type: unit_tests_or_examples\\n\\n## Call pattern 1\\n\\n```c\\\
+        n/* BEGIN_CASE */\\nvoid ecdsa_prim_zero(int id)\\n{\\n    mbedtls_ecp_group\
+        \ grp;\\n    mbedtls_ecp_point Q;\\n    mbedtls_mpi d, r, s;\\n    mbedtls_test_rnd_pseudo_info\
+        \ rnd_info;\\n    unsigned char buf[MBEDTLS_MD_MAX_SIZE];\\n\\n    mbedtls_ecp_group_init(&grp);\\\
+        n    mbedtls_ecp_point_init(&Q);\\n    mbedtls_mpi_init(&d); mbedtls_mpi_init(&r);\
+        \ mbedtls_mpi_init(&s);\\n    memset(&rnd_info, 0x00, sizeof(mbedtls_test_rnd_pseudo_info));\\\
+        n    memset(buf, 0, sizeof(buf));\\n\\n    TEST_ASSERT(mbedtls_ecp_group_load(&grp,\
+        \ id) == 0);\\n    TEST_ASSERT(mbedtls_ecp_gen_keypair(&grp, &d, &Q,\\n  \
+        \                                      &mbedtls_test_rnd_pseudo_rand,\\n \
+        \                                       &rnd_info) == 0);\\n\\n    TEST_ASSERT(mbedtls_ecdsa_sign(&grp,\
+        \ &r, &s, &d, buf,\",\n      \"metadata\": {\n        \"source_file\": \"\
+        knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md\"\
+        ,\n        \"doc_type\": \"unit_test_call_pattern\",\n        \"layer\": \"\
+        unit_tests\",\n        \"library\": \"mbedtls\"\n      }\n    },\n    {\n\
+        \      \"rank\": 4,\n      \"score\": 0.6511428832904768,\n      \"distance\"\
+        : 0.5357612371444702,\n      \"layer\": \"api_constraints\",\n      \"source_file\"\
+        : \"knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__ecdsa.c.md\"\
+        ,\n      \"text\": \"```\\n\\n## Snippet 13\\n\\n```c\\n/* jump to current\
+        \ step */\\n        if (rs_ctx->det->state == ecdsa_det_sign) {\\n       \
+        \     goto sign;\\n        }\\n    }\\n#endif /* MBEDTLS_ECP_RESTARTABLE */\\\
+        n\\n    /* Use private key and message hash (reduced) to initialize HMAC_DRBG\
+        \ */\\n    MBEDTLS_MPI_CHK(mbedtls_mpi_write_binary(d, data, grp_len));\\\
+        n    MBEDTLS_MPI_CHK(derive_mpi(grp, &h, buf, blen));\\n    MBEDTLS_MPI_CHK(mbedtls_mpi_write_binary(&h,\
+        \ data + grp_len, grp_len));\\n    MBEDTLS_MPI_CHK(mbedtls_hmac_drbg_seed_buf(p_rng,\
+        \ md_info, data, 2 * grp"
+      stderr_preview: ''
+      truncated: true
+      raw_fallback:
+        enabled: false
+      kind: selected_mask_migration_constraints
+      use_for_feature_inference: target
+    - query: 'mbedtls psa_mac_sign_setup object_state_lifecycle oracle observability
+        return value output state pointer consumption sanitizer  input setup '
+      top_k_requested: 5
+      top_k_returned: 5
+      top_k_mode: --top-k
+      returncode: 0
+      json_mode: true
+      results:
+      - rank: 1
+        score: 0.6410523623413467
+        distance: 0.5599349737167358
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__core__psa_crypto.c.md
+        text: "atus = PSA_SUCCESS;\n    }\n\nexit:\n\n    mbedtls_mpi_free(&r);\n\
+          \    mbedtls_mpi_free(&s);\n    return status;\n\n #else\n\n    (void) operation;\n\
+          \    (void) signature;\n    (void) signature_size;\n    (void) signature_length;\n\
+          \n    return PSA_ERROR_NOT_SUPPORTED;\n\n#endif /* defined(MBEDTLS_PSA_BUILTIN_ALG_ECDSA)\
+          \ ||\n        * defined(MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA) &&\n\
+          \        * defined( MBEDTLS_ECP_RESTARTABLE ) */\n}\n\npsa_status_t mbedtls_psa_sign_hash_abort(\n\
+          ```\n\n## Snippet 7\n\n```c\nif (!can_do_interruptible_sign_verify(alg))\
+          \ {\n        return PSA_ERROR_NOT_SUPPORTED;\n    }\n\n#if (defined(MBEDTLS_PSA_BUILTIN_ALG_ECDSA)\
+          \ || \\\n    defined(MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA)) && \\\
+          \n    defined(MBEDTLS_ECP_RESTARTABLE)\n\n    mbedtls_ecdsa_restart_init(&operation->restart_ctx);\n\
+          \    mbedtls_mpi_init(&operation->r);\n    mbedtls_mpi_init(&operation->s);\n\
+          \n    /* Ensure num_ops is zero'ed in case of context re-use. */\n    operation->num_ops\
+          \ = 0;\n\n    status = mbedtls_psa_ecp_load_representati"
+        metadata:
+          library: mbedtls
+          doc_type: api_constraint
+          layer: api_constraints
+          source_file: knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__core__psa_crypto.c.md
+      - rank: 2
+        score: 0.6406237518555589
+        distance: 0.5609786510467529
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__ecdsa.c.md
+        text: "```\n\n## Snippet 13\n\n```c\n/* jump to current step */\n        if\
+          \ (rs_ctx->det->state == ecdsa_det_sign) {\n            goto sign;\n   \
+          \     }\n    }\n#endif /* MBEDTLS_ECP_RESTARTABLE */\n\n    /* Use private\
+          \ key and message hash (reduced) to initialize HMAC_DRBG */\n    MBEDTLS_MPI_CHK(mbedtls_mpi_write_binary(d,\
+          \ data, grp_len));\n    MBEDTLS_MPI_CHK(derive_mpi(grp, &h, buf, blen));\n\
+          \    MBEDTLS_MPI_CHK(mbedtls_mpi_write_binary(&h, data + grp_len, grp_len));\n\
+          \    MBEDTLS_MPI_CHK(mbedtls_hmac_drbg_seed_buf(p_rng, md_info, data, 2\
+          \ * grp_len));\n\n#if defined(MBEDTLS_ECP_RESTARTABLE)\n    if (rs_ctx !=\
+          \ NULL && rs_ctx->det != NULL) {\n        rs_ctx->det->state = ecdsa_det_sign;\n\
+          \    }\n\nsign:\n#endif\n    ret = mbedtls_ecdsa_sign_restartable(grp, r,\
+          \ s, d, buf, blen,\n                                         mbedtls_hmac_drbg_random,\
+          \ p_rng,\n                                         f_rng_blind, p_rng_blind,\
+          \ rs_ctx);\n\ncleanup:\n    mbedtls_hmac_drbg_free(&rng_ctx);\n    mbedtls_mpi_free(&h);\n\
+          ```\n\n## Snippet 14\n\n`"
+        metadata:
+          doc_type: api_constraint
+          layer: api_constraints
+          library: mbedtls
+          source_file: knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__ecdsa.c.md
+      - rank: 3
+        score: 0.6406180278749449
+        distance: 0.5609925985336304
+        layer: poc_patterns
+        source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md
+        text: "URE_UNAVAILABLE;\n}\n```\n\n## Trigger Condition\n\nThe v2 minimal\
+          \ PoC creates a legacy RSA key, imports it into PSA, replaces the\nPK context\
+          \ with an opaque key via `mbedtls_pk_setup_opaque()`, and calls:\n\n```c\n\
+          mbedtls_pk_verify_ext(MBEDTLS_PK_RSASSA_PSS,\n                      &pss_opts,\n\
+          \                      &pk,\n                      MBEDTLS_MD_SHA256,\n\
+          \                      hash,\n                      sizeof(hash),\n    \
+          \                  sig,\n                      sizeof(sig));\n```\n\nThe\
+          \ important mismatch is that the call requests RSA-PSS verification while\
+          \ the\nPK context is opaque rather than a direct `MBEDTLS_PK_RSA` context.\n\
+          \n## Buggy and Fixed Behavior\n\nBuggy output:\n\n```text\nopaque pk type\
+          \ = 7\ncalling mbedtls_pk_verify_ext...\nexit_code=139\n```\n\nFixed output:\n\
+          \n```text\nopaque pk type = 7\ncalling mbedtls_pk_verify_ext...\nverify_ext\
+          \ ret=-14720\nexpected fixed ret=-14720\n[OK] fixed behavior: unsupported\
+          \ opaque verify_ext rejected safely.\n```\n\nThe oracle is crash versus\
+          \ safe `MBEDTLS_ERR_PK_F"
+        metadata:
+          layer: poc_patterns
+          doc_type: poc_pattern
+          source_file: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md
+          library: mbedtls
+      - rank: 4
+        score: 0.6400791846006645
+        distance: 0.5623067021369934
+        layer: unit_tests
+        source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md
+        text: "ee(&s);\n    mbedtls_mpi_free(&r_check); mbedtls_mpi_free(&s_check);\n\
+          \    MD_PSA_DONE();\n}\n/* END_CASE */\n\n/* BEGIN_CASE depends_on:PSA_WANT_ALG_SHA_256\
+          \ */\nvoid ecdsa_write_read_zero(int id)\n{\n    mbedtls_ecdsa_context ctx;\n\
+          \    mbedtls_test_rnd_pseudo_info rnd_info;\n    unsigned char hash[32];\n\
+          \    unsigned char sig[200];\n    size_t sig_len, i;\n\n    mbedtls_ecdsa_init(&ctx);\n\
+          \    memset(&rnd_info, 0x00, sizeof(mbedtls_test_rnd_pseudo_info));\n  \
+          \  memset(hash, 0, sizeof(hash));\n    memset(sig, 0x2a, sizeof(sig));\n\
+          \n    MD_PSA_INIT();\n\n    /* generate signing key */\n    TEST_ASSERT(mbedtls_ecdsa_genkey(&ctx,\
+          \ id,\n                                     &mbedtls_test_rnd_pseudo_rand,\n\
+          \                                     &rnd_info) == 0);\n\n    /* generate\
+          \ and write signature, then read and verify it */\n```\n\n## Call pattern\
+          \ 15\n\n```c\nmbedtls_ecdsa_sign_det_ext(&grp, &r, &s, &d,\n           \
+          \                        hash->x, hash->len, md_alg,\n                 \
+          \                  mbedtls_test_rnd_std_rand,"
+        metadata:
+          doc_type: unit_test_call_pattern
+          source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md
+          library: mbedtls
+          layer: unit_tests
+      - rank: 5
+        score: 0.6370480295071289
+        distance: 0.569740355014801
+        layer: api_constraints
+        source_file: knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__ecdsa.c.md
+        text: "if (rs_ctx->det->state == ecdsa_det_sign) {\n            goto sign;\n\
+          \        }\n    }\n#endif /* MBEDTLS_ECP_RESTARTABLE */\n\n    /* Use private\
+          \ key and message hash (reduced) to initialize HMAC_DRBG */\n    MBEDTLS_MPI_CHK(mbedtls_mpi_write_binary(d,\
+          \ data, grp_len));\n    MBEDTLS_MPI_CHK(derive_mpi(grp, &h, buf, blen));\n\
+          \    MBEDTLS_MPI_CHK(mbedtls_mpi_write_binary(&h, data + grp_len, grp_len));\n\
+          \    MBEDTLS_MPI_CHK(mbedtls_hmac_drbg_seed_buf(p_rng, md_info, data, 2\
+          \ * grp_len));\n\n#if defined(MBEDTLS_ECP_RESTARTABLE)\n    if (rs_ctx !=\
+          \ NULL && rs_ctx->det != NULL) {\n        rs_ctx->det->state = ecdsa_det_sign;\n\
+          \    }\n\nsign:\n#endif\n    ret = mbedtls_ecdsa_sign_restartable(grp, r,\
+          \ s, d, buf, blen,\n                                         mbedtls_hmac_drbg_random,\
+          \ p_rng,\n                                         f_rng_blind, p_rng_blind,\
+          \ rs_ctx);\n\ncleanup:\n    mbedtls_hmac_drbg_free(&rng_ctx);\n```\n\n##\
+          \ Snippet 13\n\n```c\n/* jump to current step */\n        if (rs_ctx->det->state\
+          \ == ecdsa_det_sig"
+        metadata:
+          doc_type: api_constraint
+          layer: api_constraints
+          source_file: knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__ecdsa.c.md
+          library: mbedtls
+      error: ''
+      stdout_preview: "{\n  \"query\": \"mbedtls psa_mac_sign_setup object_state_lifecycle\
+        \ oracle observability return value output state pointer consumption sanitizer\
+        \  input setup \",\n  \"top_k\": 5,\n  \"results\": [\n    {\n      \"rank\"\
+        : 1,\n      \"score\": 0.6410523623413467,\n      \"distance\": 0.5599349737167358,\n\
+        \      \"layer\": \"api_constraints\",\n      \"source_file\": \"knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__core__psa_crypto.c.md\"\
+        ,\n      \"text\": \"atus = PSA_SUCCESS;\\n    }\\n\\nexit:\\n\\n    mbedtls_mpi_free(&r);\\\
+        n    mbedtls_mpi_free(&s);\\n    return status;\\n\\n #else\\n\\n    (void)\
+        \ operation;\\n    (void) signature;\\n    (void) signature_size;\\n    (void)\
+        \ signature_length;\\n\\n    return PSA_ERROR_NOT_SUPPORTED;\\n\\n#endif /*\
+        \ defined(MBEDTLS_PSA_BUILTIN_ALG_ECDSA) ||\\n        * defined(MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA)\
+        \ &&\\n        * defined( MBEDTLS_ECP_RESTARTABLE ) */\\n}\\n\\npsa_status_t\
+        \ mbedtls_psa_sign_hash_abort(\\n```\\n\\n## Snippet 7\\n\\n```c\\nif (!can_do_interruptible_sign_verify(alg))\
+        \ {\\n        return PSA_ERROR_NOT_SUPPORTED;\\n    }\\n\\n#if (defined(MBEDTLS_PSA_BUILTIN_ALG_ECDSA)\
+        \ || \\\\\\n    defined(MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA)) && \\\
+        \\\\n    defined(MBEDTLS_ECP_RESTARTABLE)\\n\\n    mbedtls_ecdsa_restart_init(&operation->restart_ctx);\\\
+        n    mbedtls_mpi_init(&operation->r);\\n    mbedtls_mpi_init(&operation->s);\\\
+        n\\n    /* Ensure num_ops is zero'ed in case of context re-use. */\\n    operation->num_ops\
+        \ = 0;\\n\\n    status = mbedtls_psa_ecp_load_representati\",\n      \"metadata\"\
+        : {\n        \"library\": \"mbedtls\",\n        \"doc_type\": \"api_constraint\"\
+        ,\n        \"layer\": \"api_constraints\",\n        \"source_file\": \"knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__core__psa_crypto.c.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 2,\n      \"score\": 0.6406237518555589,\n\
+        \      \"distance\": 0.5609786510467529,\n      \"layer\": \"api_constraints\"\
+        ,\n      \"source_file\": \"knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__ecdsa.c.md\"\
+        ,\n      \"text\": \"```\\n\\n## Snippet 13\\n\\n```c\\n/* jump to current\
+        \ step */\\n        if (rs_ctx->det->state == ecdsa_det_sign) {\\n       \
+        \     goto sign;\\n        }\\n    }\\n#endif /* MBEDTLS_ECP_RESTARTABLE */\\\
+        n\\n    /* Use private key and message hash (reduced) to initialize HMAC_DRBG\
+        \ */\\n    MBEDTLS_MPI_CHK(mbedtls_mpi_write_binary(d, data, grp_len));\\\
+        n    MBEDTLS_MPI_CHK(derive_mpi(grp, &h, buf, blen));\\n    MBEDTLS_MPI_CHK(mbedtls_mpi_write_binary(&h,\
+        \ data + grp_len, grp_len));\\n    MBEDTLS_MPI_CHK(mbedtls_hmac_drbg_seed_buf(p_rng,\
+        \ md_info, data, 2 * grp_len));\\n\\n#if defined(MBEDTLS_ECP_RESTARTABLE)\\\
+        n    if (rs_ctx != NULL && rs_ctx->det != NULL) {\\n        rs_ctx->det->state\
+        \ = ecdsa_det_sign;\\n    }\\n\\nsign:\\n#endif\\n    ret = mbedtls_ecdsa_sign_restartable(grp,\
+        \ r, s, d, buf, blen,\\n                                         mbedtls_hmac_drbg_random,\
+        \ p_rng,\\n                                         f_rng_blind, p_rng_blind,\
+        \ rs_ctx);\\n\\ncleanup:\\n    mbedtls_hmac_drbg_free(&rng_ctx);\\n    mbedtls_mpi_free(&h);\\\
+        n```\\n\\n## Snippet 14\\n\\n`\",\n      \"metadata\": {\n        \"doc_type\"\
+        : \"api_constraint\",\n        \"layer\": \"api_constraints\",\n        \"\
+        library\": \"mbedtls\",\n        \"source_file\": \"knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__ecdsa.c.md\"\
+        \n      }\n    },\n    {\n      \"rank\": 3,\n      \"score\": 0.6406180278749449,\n\
+        \      \"distance\": 0.5609925985336304,\n      \"layer\": \"poc_patterns\"\
+        ,\n      \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md\"\
+        ,\n      \"text\": \"URE_UNAVAILABLE;\\n}\\n```\\n\\n## Trigger Condition\\\
+        n\\nThe v2 minimal PoC creates a legacy RSA key, imports it into PSA, replaces\
+        \ the\\nPK context with an opaque key via `mbedtls_pk_setup_opaque()`, and\
+        \ calls:\\n\\n```c\\nmbedtls_pk_verify_ext(MBEDTLS_PK_RSASSA_PSS,\\n     \
+        \                 &pss_opts,\\n                      &pk,\\n             \
+        \         MBEDTLS_MD_SHA256,\\n                      hash,\\n            \
+        \          sizeof(hash),\\n                      sig,\\n                 \
+        \     sizeof(sig));\\n```\\n\\nThe important mismatch is that the call requests\
+        \ RSA-PSS verification while the\\nPK context is opaque rather than a direct\
+        \ `MBEDTLS_PK_RSA` context.\\n\\n## Buggy and Fixed Behavior\\n\\nBuggy output:\\\
+        n\\n```text\\nopaque pk type = 7\\ncalling mbedtls_pk_verify_ext...\\nexit_code=139\\\
+        n```\\n\\nFixed output:\\n\\n```text\\nopaque pk type = 7\\ncalling mbedtls_pk_verify_ext...\\\
+        nverify_ext ret=-14720\\nexpected fixed ret=-14720\\n[OK] fixed behavior:\
+        \ unsupported opaque verify_ext rejected safely.\\n```\\n\\nThe oracle is\
+        \ crash versus safe `MBEDTLS_ERR_PK_F\",\n      \"metadata\": {\n        \"\
+        layer\": \"poc_patterns\",\n        \"doc_type\": \"poc_pattern\",\n     \
+        \   \"source_file\": \"knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0003.md\"\
+        ,\n        \"library\": \"mbedtls\"\n      }\n    },\n    {\n      \"rank\"\
+        : 4,\n      \"score\": 0.6400791846006645,\n      \"distance\": 0.5623067021369934,\n\
+        \      \"layer\": \"unit_tests\",\n      \"source_file\": \"knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecdsa.function.md\"\
+        ,\n      \"text\": \"ee(&s);\\n    mbedtls_mpi_free(&r_check); mbedtls_mpi_free(&s_check);\\\
+        n    MD_PSA_DONE();\\n}\\n/* END_CASE */\\n\\n/* BEGIN_CASE depends_on:PSA_WANT_ALG_SHA_256\
+        \ */\\nvoid ecdsa_write_read_zero(int id)\\n{\\n    mbedtls_ecdsa_context\
+        \ ctx;\\n    mbedtls_test_rnd_pseudo_info rnd_info;\\n    unsigned char hash[32];\\\
+        n    unsigned char sig[200];\\n    size_t sig_len, i;\\n\\n    mbedtls_ecdsa_init(&ctx);\\\
+        n    memset(&rnd_info, 0x00, sizeof(mbedtls_test_rnd_pseudo_info));\\n   \
+        \ memset(hash, 0, sizeof(hash));\\n    memset(sig, 0x2a, sizeof(sig));\\n\\\
+        n    MD_PSA_INIT();\\n\\n    /* generate signing key */\\n    TEST_ASSERT(mbedtls_ecdsa_genkey(&ctx,\
+        \ id,\\n                                     &mbedtls_test_rnd_pseudo_rand,\\\
+        n                                     &rnd_info) == "
+      stderr_preview: ''
+      truncated: true
+      raw_fallback:
+        enabled: false
+      kind: selected_mask_oracle_observability
+      use_for_feature_inference: target
+    inferred_features:
+      observed_features_from_target_evidence:
+      - caller_provided_output_buffer
+      - explicit_tag_input
+      - radix_or_textual_base_context
+      negative_or_weakened_features:
+      - PSA operation API does not expose an EVP_MAC_CTX_get_mac_size equivalent
+      - direct_canary_after_output_limbs
+      - exact OpenSSL EVP_MAC_CTX_get_mac_size internal dereference is not preserved
+      - pre-setup operation is psa_mac_update, not a direct get-size call
+      effective_observed_features:
+      - caller_provided_output_buffer
+      - explicit_tag_input
+      - radix_or_textual_base_context
+      feature_conflicts: []
+      candidate_preserved_features: []
+      candidate_lost_or_weakened_features:
+      - PSA operation API does not expose an EVP_MAC_CTX_get_mac_size equivalent
+      - exact OpenSSL EVP_MAC_CTX_get_mac_size internal dereference is not preserved
+      - pre-setup operation is psa_mac_update, not a direct get-size call
+      bug_class_requirements:
+        required: []
+        disallowed: []
+        optional: []
+      required_present: []
+      required_missing: []
+      disallowed_present: []
+      optional_present: []
+      evidence_hits:
+        caller_provided_output_buffer:
+          positive_hits:
+          - unsigned char *buf
+          - char *buf
+          negative_hits: []
+        radix_or_textual_base_context:
+          positive_hits:
+          - base
+          negative_hits: []
+        direct_canary_after_output_limbs:
+          positive_hits: []
+          negative_hits:
+          - opaque
+        explicit_tag_input:
+          positive_hits:
+          - tag
+          negative_hits: []
+evidence_collection:
+  method: config_driven_rag_evidence_collector
+  top_k: 5
+  target_api_filter: psa_mac_sign_setup
+  max_candidates: null
+  max_queries_per_candidate: 8
+  feature_rules: config/evidence_feature_rules.yaml
+  bug_classes: []
+  source_pattern:
+    pattern_id: null
+    root_cause_summary: ''
+    must_preserve_features: []
+    optional_features: []
+    not_required_features: []
+    good_target_api_features: []
+    bad_target_api_features: []
+    rag_query_context: ''
+    harness_family: object_state_lifecycle
+    trigger_apis:
+    - EVP_MAC_CTX_get_mac_size
+    - EVP_MAC_init
+    selected_mask_units:
+      summary:
+        selected_count: 8
+        source_unit_count: null
+        harness_family: object_state_lifecycle
+        trigger_apis:
+        - EVP_MAC_CTX_get_mac_size
+        - EVP_MAC_init
+        by_role: {}
+        by_mask_level: {}
+        by_suggested_use: {}
+      selected_units_by_use:
+        unspecified:
+        - unit_id: mac_name_literal
+        - unit_id: digest_name_literal
+        - unit_id: key_bytes_literal
+        - unit_id: key_len_argument
+        - unit_id: expected_mac_size_macro
+        migrate_api_call:
+        - unit_id: pre_init_get_size_call
+          role: oracle
+          suggested_use: migrate_api_call
+        - unit_id: evp_mac_init_call
+          suggested_use: migrate_api_call
+        - unit_id: post_init_get_size_call
+          role: oracle
+          suggested_use: migrate_api_call
+      query_terms:
+        harness_family: object_state_lifecycle
+        trigger_apis: EVP_MAC_CTX_get_mac_size EVP_MAC_init
+        migrate_api_call: '  '
+        preserve_oracle: ''
+        mutate_value: ''
+        mutate_api_argument: ''
+        preserve_input_preparation: ''
+  selected_mask_units:
+    loaded: true
+    summary:
+      selected_count: 8
+      source_unit_count: null
+      harness_family: object_state_lifecycle
+      trigger_apis:
+      - EVP_MAC_CTX_get_mac_size
+      - EVP_MAC_init
+      by_role: {}
+      by_mask_level: {}
+      by_suggested_use: {}
+  note: Evidence is retrieved before LLM adapter filling. Source-pattern evidence
+    is kept separate from target-API evidence to avoid feature contamination.

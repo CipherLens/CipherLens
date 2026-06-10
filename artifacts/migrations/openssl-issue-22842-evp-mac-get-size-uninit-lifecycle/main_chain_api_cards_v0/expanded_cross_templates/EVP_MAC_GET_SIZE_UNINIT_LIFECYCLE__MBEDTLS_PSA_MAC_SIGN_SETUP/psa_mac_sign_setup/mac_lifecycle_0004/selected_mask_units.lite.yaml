@@ -1,0 +1,447 @@
+template_id: EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE
+template_name: ''
+source_api:
+- EVP_MAC_fetch
+- EVP_MAC_CTX_new
+- EVP_MAC_CTX_get_mac_size
+- EVP_MAC_init
+- EVP_MAC_CTX_free
+- EVP_MAC_free
+trigger_apis: []
+harness_family: object_state_lifecycle
+selection_policy:
+  method: ast_lite_high_value_mask_unit_selection
+  rules:
+  - Prefer role=mutation_point units.
+  - Prefer mask_level=value or api_argument units.
+  - Always retain trigger_call function_call/statement units.
+  - Always retain oracle statement/block units.
+  - Retain input_preparation/helper_function/block only when harness-family context
+    keywords are present.
+  - Use configured preferred_roles as scoring hints for each harness family.
+  - Use configured oracle_variables to prioritize oracle-observable units.
+  - Limit input/helper context to representative high-scoring units.
+  - Limit cleanup units to one or two representative statements.
+  - Deduplicate repeated code snippets.
+  context_keywords:
+  - state
+  - lifecycle
+  - init
+  - free
+  - reuse
+  - zero
+  - stale
+  - length
+  - pointer
+  ast_report_name: ast_mask_report.lite.yaml
+  family_rules_source: config/harness_family_ast_rules.yaml
+  family_rule:
+    context_keywords:
+    - state
+    - lifecycle
+    - init
+    - free
+    - reuse
+    - zero
+    - stale
+    - length
+    - pointer
+    oracle_variables:
+    - ret
+    - len
+    - data
+    preferred_roles:
+    - mutation_point
+    - trigger_call
+    - oracle
+    - input_preparation
+    - cleanup
+    context_limit: 12
+    cleanup_limit: 2
+selected_units:
+- unit_id: ASTLITE-0004
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[KEY_LEN]'
+  code: KEY_LEN
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: medium
+  mutation_name: KEY_LEN
+  mutation_type: int
+  default: 17
+  values:
+  - 17
+  selection_reason: Selected because [KEY_LEN] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 115
+- unit_id: ASTLITE-0002
+  mask_level: value
+  role: mutation_point
+  placeholder: '[DIGEST_NAME]'
+  code: DIGEST_NAME
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: DIGEST_NAME
+  mutation_type: string
+  default: SHA256
+  values:
+  - SHA256
+  selection_reason: Selected because [DIGEST_NAME] is a mutation point with value
+    granularity.
+  suggested_use: mutate_value
+  selection_score: 111
+- unit_id: ASTLITE-0005
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[EXPECTED_MAC_SIZE]'
+  code: EXPECTED_MAC_SIZE
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: EXPECTED_MAC_SIZE
+  mutation_type: int
+  default: 32
+  values:
+  - 32
+  selection_reason: Selected because [EXPECTED_MAC_SIZE] is a mutation point with
+    api_argument granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 111
+- unit_id: ASTLITE-0001
+  mask_level: value
+  role: mutation_point
+  placeholder: '[MAC_NAME]'
+  code: MAC_NAME
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: high
+  mutation_name: MAC_NAME
+  mutation_type: string
+  default: HMAC
+  values:
+  - HMAC
+  selection_reason: Selected because [MAC_NAME] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 111
+- unit_id: ASTLITE-0003
+  mask_level: value
+  role: mutation_point
+  placeholder: '[KEY_BYTES]'
+  code: KEY_BYTES
+  source: template_meta.mutation_points
+  reason: Template mutation point.
+  priority: medium
+  mutation_name: KEY_BYTES
+  mutation_type: byte_array
+  default: '"rag-seed-hmac-key"'
+  values:
+  - '"rag-seed-hmac-key"'
+  selection_reason: Selected because [KEY_BYTES] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 109
+- unit_id: ASTLITE-0017
+  mask_level: api_argument
+  role: mutation_point
+  placeholder: '[MAC_LEN]'
+  code: unsigned char mac[MAC_LEN];
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 37
+  line_start: 37
+  line_end: 37
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected because [MAC_LEN] is a mutation point with api_argument
+    granularity.
+  suggested_use: mutate_api_argument
+  selection_score: 86
+- unit_id: ASTLITE-0066
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: finish status=%d
+    mac_length=%zu\n", (int) status, mac_length);'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 112
+  line_start: 112
+  line_end: 113
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected because [TRIAGE] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 86
+- unit_id: ASTLITE-0047
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: 'printf("[OK] mac_context_lifecycle: pre-setup operation rejected safely\n");'
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 82
+  line_start: 82
+  line_end: 82
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 81
+- unit_id: ASTLITE-0064
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: 'printf("[OK] mac_context_lifecycle: initialized MAC operation completed\n");'
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 109
+  line_start: 109
+  line_end: 109
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 81
+- unit_id: ASTLITE-0042
+  mask_level: value
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: psa_import_key
+    failed\n");'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 71
+  line_start: 71
+  line_end: 71
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected because [TRIAGE] is a mutation point with value granularity.
+  suggested_use: mutate_value
+  selection_score: 80
+- unit_id: ASTLITE-0067
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: finish status=%d
+    mac_length=%zu\n", (int) status, mac_length);'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 112
+  line_start: 112
+  line_end: 113
+  enclosing_function: ''
+  node_type: call_expression
+  selection_reason: Selected because [TRIAGE] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 71
+- unit_id: ASTLITE-0035
+  mask_level: value
+  role: input_preparation
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: psa_crypto_init
+    failed\n");'
+  source: tmpl_mbedtls.c.placeholder_statement
+  reason: Statement contains a template placeholder.
+  priority: medium
+  line: 60
+  line_start: 60
+  line_end: 60
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected as high-value input/helper context for harness_family=object_state_lifecycle.
+  suggested_use: preserve_input_preparation
+  selection_score: 66
+- unit_id: ASTLITE-0043
+  mask_level: function_call
+  role: mutation_point
+  placeholder: '[TRIAGE]'
+  code: 'printf("[TRIAGE] mac_context_lifecycle: unexpected size/state: psa_import_key
+    failed\n");'
+  source: tmpl_mbedtls.c.function_call
+  reason: Function call 'printf' identified by AST-lite call matching.
+  priority: medium
+  function: printf
+  line: 71
+  line_start: 71
+  line_end: 71
+  enclosing_function: ''
+  node_type: call_expression
+  selection_reason: Selected because [TRIAGE] is a mutation point with function_call
+    granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 65
+- unit_id: ASTLITE-0010
+  mask_level: statement
+  role: oracle
+  placeholder: ''
+  code: 'fprintf(stderr, "[BUG] mac_context_lifecycle: crash or sanitizer signal:
+    %d\n", signo);'
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as oracle by AST-lite role rules.
+  priority: medium
+  line: 23
+  line_start: 23
+  line_end: 23
+  enclosing_function: bug_signal_handler
+  node_type: statement
+  selection_reason: Required oracle unit for preserving the vulnerability signal and
+    fixed/safe behavior checks.
+  suggested_use: preserve_oracle
+  selection_score: 61
+- unit_id: ASTLITE-0018
+  mask_level: type
+  role: mutation_point
+  placeholder: '[MAC_LEN]'
+  code: unsigned char mac[MAC_LEN];
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 37
+  line_start: 37
+  line_end: 37
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected because [MAC_LEN] is a mutation point with type granularity.
+  suggested_use: llm_reconstruction_context
+  selection_score: 60
+- unit_id: ASTLITE-0019
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: size_t mac_length = 0;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 38
+  line_start: 38
+  line_end: 38
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected as high-value input/helper context for harness_family=object_state_lifecycle.
+  suggested_use: preserve_input_preparation
+  selection_score: 38
+- unit_id: ASTLITE-0006
+  mask_level: block
+  role: helper_function
+  placeholder: ''
+  code: 'static void bug_signal_handler(int signo) { fprintf(stderr, "[BUG] mac_context_lifecycle:
+    crash or sanitizer signal: %d\n", signo); fflush(stderr); _Exit(128 + signo);
+    }'
+  source: tmpl_mbedtls.c.helper_function
+  reason: Static helper function block 'bug_signal_handler' identified by AST-lite
+    brace matching.
+  priority: medium
+  function: bug_signal_handler
+  line: 21
+  line_start: 21
+  line_end: 26
+  node_type: function_definition
+  enclosing_function: bug_signal_handler
+  selection_reason: Selected as high-value input/helper context for harness_family=object_state_lifecycle.
+  suggested_use: preserve_input_preparation
+  selection_score: 37
+- unit_id: ASTLITE-0021
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 41
+  line_start: 41
+  line_end: 41
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected as high-value input/helper context for harness_family=object_state_lifecycle.
+  suggested_use: preserve_input_preparation
+  selection_score: 32
+- unit_id: ASTLITE-0023
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: psa_mac_operation_t operation_pre = PSA_MAC_OPERATION_INIT;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 43
+  line_start: 43
+  line_end: 43
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected as high-value input/helper context for harness_family=object_state_lifecycle.
+  suggested_use: preserve_input_preparation
+  selection_score: 32
+- unit_id: ASTLITE-0024
+  mask_level: type
+  role: helper_function
+  placeholder: ''
+  code: psa_mac_operation_t operation_post = PSA_MAC_OPERATION_INIT;
+  source: tmpl_mbedtls.c.type_declaration
+  reason: Type declaration identified by AST-lite declaration matching.
+  priority: medium
+  line: 44
+  line_start: 44
+  line_end: 44
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected as high-value input/helper context for harness_family=object_state_lifecycle.
+  suggested_use: preserve_input_preparation
+  selection_score: 32
+- unit_id: ASTLITE-0070
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: mbedtls_psa_crypto_free();
+  source: tmpl_mbedtls.c.role_statement
+  reason: Statement classified as cleanup by AST-lite role rules.
+  priority: medium
+  line: 121
+  line_start: 121
+  line_end: 121
+  enclosing_function: ''
+  node_type: statement
+  selection_reason: Selected limited cleanup context needed to keep generated harnesses
+    well-scoped.
+  suggested_use: preserve_cleanup
+  selection_score: 20
+selection_summary:
+  selected_count: 21
+  source_unit_count: 71
+  by_role:
+    cleanup: 1
+    helper_function: 5
+    input_preparation: 1
+    mutation_point: 11
+    oracle: 3
+  by_mask_level:
+    api_argument: 3
+    block: 1
+    function_call: 2
+    statement: 4
+    type: 5
+    value: 6
+  by_suggested_use:
+    llm_reconstruction_context: 3
+    mutate_api_argument: 3
+    mutate_value: 5
+    preserve_cleanup: 1
+    preserve_input_preparation: 6
+    preserve_oracle: 3
+rejected_summary:
+  count: 10
+  by_reason:
+    duplicate_code_or_unit: 4
+    noise_header_comment_or_log_label: 6

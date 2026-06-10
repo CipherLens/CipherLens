@@ -1,0 +1,109 @@
+task: secure_heap_milestone_closure_and_scheduler_rerank
+score_dimensions:
+  readiness_score: "artifact/template maturity and immediate executable path"
+  severity_score: "bug impact if reproduced"
+  novelty_potential: "chance of finding a non-seed state or semantic candidate"
+  migration_potential: "fit for cross-library or reusable family migration"
+  oracle_quality: "strength and explicitness of observable oracle"
+  prior_safe_negative_penalty: "penalty for families already showing mostly safe-safe results"
+  reproduction_only_penalty: "penalty when the next step is only confirming old evidence"
+  external_validation_blocker_penalty: "penalty when sanitizer/version/contract work blocks claims"
+  hardcode_cost: "penalty when progress requires one-off framework logic"
+families:
+  cipher_aead_lifecycle:
+    readiness_score: 0.78
+    severity_score: 0.72
+    novelty_potential: 0.78
+    migration_potential: 0.82
+    oracle_quality: 0.76
+    prior_safe_negative_penalty: 0.05
+    reproduction_only_penalty: 0.05
+    external_validation_blocker_penalty: 0.10
+    hardcode_cost: 0.18
+    final_score: 0.76
+    recommended_path: B_controlled_family_mutation
+    reason: "Lifecycle/state-machine experience from secure_heap can transfer to AEAD/cipher init/update/final/free/reuse patterns, with possible later A-path migration if equivalent target APIs are strong."
+  mac_lifecycle:
+    readiness_score: 0.74
+    severity_score: 0.60
+    novelty_potential: 0.66
+    migration_potential: 0.74
+    oracle_quality: 0.62
+    prior_safe_negative_penalty: 0.10
+    reproduction_only_penalty: 0.10
+    external_validation_blocker_penalty: 0.08
+    hardcode_cost: 0.20
+    final_score: 0.66
+    recommended_path: D_then_A
+    reason: "Has runnable family artifacts and API-card work, but needs tighter caller-impact or semantic-oracle framing before expanding aggressively."
+  asn1_nested_boundary:
+    readiness_score: 0.68
+    severity_score: 0.58
+    novelty_potential: 0.64
+    migration_potential: 0.70
+    oracle_quality: 0.66
+    prior_safe_negative_penalty: 0.18
+    reproduction_only_penalty: 0.08
+    external_validation_blocker_penalty: 0.08
+    hardcode_cost: 0.16
+    final_score: 0.62
+    recommended_path: A_recipe_slot_cross_library_migration
+    reason: "Useful boundary family, but existing safe/safe results lower immediate novelty priority."
+  der_full_consumption:
+    readiness_score: 0.72
+    severity_score: 0.54
+    novelty_potential: 0.58
+    migration_potential: 0.78
+    oracle_quality: 0.70
+    prior_safe_negative_penalty: 0.12
+    reproduction_only_penalty: 0.15
+    external_validation_blocker_penalty: 0.08
+    hardcode_cost: 0.16
+    final_score: 0.61
+    recommended_path: C_app_level_validation_gap
+    reason: "Strong semantic gap framing, but currently better treated as app-level validation-gap follow-up than top exploration family."
+  x509_parsing:
+    readiness_score: 0.58
+    severity_score: 0.55
+    novelty_potential: 0.58
+    migration_potential: 0.64
+    oracle_quality: 0.56
+    prior_safe_negative_penalty: 0.14
+    reproduction_only_penalty: 0.10
+    external_validation_blocker_penalty: 0.10
+    hardcode_cost: 0.20
+    final_score: 0.54
+    recommended_path: A_recipe_slot_cross_library_migration
+    reason: "Promising but needs sharper triage and oracle selection."
+  pkey_verify_semantic:
+    readiness_score: 0.66
+    severity_score: 0.58
+    novelty_potential: 0.50
+    migration_potential: 0.70
+    oracle_quality: 0.62
+    prior_safe_negative_penalty: 0.25
+    reproduction_only_penalty: 0.10
+    external_validation_blocker_penalty: 0.08
+    hardcode_cost: 0.18
+    final_score: 0.52
+    recommended_path: A_recipe_slot_cross_library_migration
+    reason: "Existing results provide a stable safe-negative baseline, so deepening should wait behind higher novelty families."
+  secure_heap_state_lifecycle:
+    readiness_score: 0.82
+    severity_score: 0.72
+    novelty_potential: 0.30
+    migration_potential: 0.20
+    oracle_quality: 0.78
+    prior_safe_negative_penalty: 0.00
+    reproduction_only_penalty: 0.30
+    external_validation_blocker_penalty: 0.45
+    hardcode_cost: 0.12
+    final_score: 0.35
+    recommended_path: D_crash_sanitizer_evidence_audit
+    reason: "Milestone is closed for main exploration; remaining work is external validation, not new family exploration."
+recommended_next_family:
+  family: cipher_aead_lifecycle
+  reason: "Highest balance of readiness, lifecycle novelty, migration potential, and oracle quality after secure_heap moved to external validation."
+  proposed_execution_path:
+    one_of: B_controlled_family_mutation
+  fallback_path: D_then_A

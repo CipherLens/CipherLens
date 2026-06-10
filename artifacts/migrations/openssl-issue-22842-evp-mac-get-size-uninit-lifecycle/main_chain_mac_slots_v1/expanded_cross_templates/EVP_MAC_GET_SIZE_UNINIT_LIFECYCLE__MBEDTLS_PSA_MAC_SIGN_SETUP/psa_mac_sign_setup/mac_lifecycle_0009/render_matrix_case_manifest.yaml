@@ -1,0 +1,90 @@
+case_id: mac_lifecycle_0009
+mac_algorithm: HMAC
+digest_or_cipher: SHA512
+lifecycle_sequence: final_before_setup
+expected_candidate_types:
+- allowed_legacy_semantics
+- failure_path_output_state_triage
+- safe_negative
+source_matrix_entry:
+  case_id: mac_lifecycle_0009
+  values:
+    mac_algorithm: HMAC
+    digest_or_cipher: SHA512
+    lifecycle_sequence: final_before_setup
+  oracle_observables:
+  - return_code
+  - output_length
+  - operation_state
+  - sanitizer_signal
+  expected_candidate_types:
+  - unexpected_success_candidate
+  - failure_path_output_state_triage
+  - allowed_legacy_semantics
+  - safe_negative
+  - crash_candidate
+mapped_placeholders:
+  mac_algorithm: HMAC
+  digest_or_cipher: SHA512
+  lifecycle_sequence: final_before_setup
+  source_render_slots:
+    MAC_NAME: HMAC
+    DIGEST_NAME: SHA512
+    SOURCE_MAC_SETUP_PARAMS: "params[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST,\
+      \ \"SHA512\", 0);\n    params[1] = OSSL_PARAM_construct_end();"
+    SOURCE_LIFECYCLE_SEQUENCE: "outl = 777;\n    final_ok = EVP_MAC_final(ctx, out,\
+      \ &outl, sizeof(out));\n    printf(\"SOURCE final_before_setup EVP_MAC_final\
+      \ returned %d outl=%zu\\n\", final_ok, outl);\n    if (final_ok != 1) {\n  \
+      \      printf(\"[OK] mac_context_lifecycle: pre-setup final rejected safely\\\
+      n\");\n        ret = 0;\n    } else {\n        printf(\"[TRIAGE] mac_context_lifecycle:\
+      \ pre-setup final unexpectedly succeeded outl=%zu\\n\", outl);\n    }"
+    SOURCE_ORACLE_OBSERVATION: '"safe_reject_projection"'
+  target_render_slots:
+    TARGET_KEY_TYPE: PSA_KEY_TYPE_HMAC
+    TARGET_KEY_ALGORITHM: PSA_ALG_HMAC(PSA_ALG_SHA_512)
+    TARGET_MAC_SETUP_PARAMS: psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_MESSAGE);
+    TARGET_LIFECYCLE_SEQUENCE: "mac_length = 777;\n    status = psa_mac_sign_finish(&operation,\
+      \ mac, MAC_LEN, &mac_length);\n    print_psa_status(\"TARGET final_before_setup\
+      \ psa_mac_sign_finish\", status);\n    printf(\"TARGET final_before_setup mac_length=%zu\\\
+      n\", mac_length);\n    if (status != PSA_SUCCESS) {\n        printf(\"[OK] mac_context_lifecycle:\
+      \ pre-setup finish rejected safely\\n\");\n        ret = 0;\n    } else {\n\
+      \        printf(\"[TRIAGE] mac_context_lifecycle: pre-setup finish unexpectedly\
+      \ succeeded\\n\");\n    }"
+    TARGET_ORACLE_OBSERVATION: '"safe_reject_projection"'
+  common_render_slots:
+    DIGEST_OR_CIPHER: SHA512
+    EXPECTED_MAC_SIZE: 64
+    EXPECTED_VERDICT_CLASS: safe_reject_projection
+    KEY_BYTES: "{\n    0x72, 0x61, 0x67, 0x2d, 0x73, 0x65, 0x65, 0x64,\n    0x2d,\
+      \ 0x68, 0x6d, 0x61, 0x63, 0x2d, 0x6b, 0x65,\n    0x79\n}"
+    KEY_LEN: 17
+    MESSAGE_BYTES: "{\n    0x6d, 0x61, 0x63, 0x20, 0x6c, 0x69, 0x66, 0x65,\n    0x63,\
+      \ 0x79, 0x63, 0x6c, 0x65, 0x20, 0x6d, 0x73,\n    0x67\n}"
+    MESSAGE_LEN: 17
+    MAC_LEN: 64
+source_render_slots:
+  MAC_NAME: HMAC
+  DIGEST_NAME: SHA512
+  SOURCE_MAC_SETUP_PARAMS: "params[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST,\
+    \ \"SHA512\", 0);\n    params[1] = OSSL_PARAM_construct_end();"
+  SOURCE_LIFECYCLE_SEQUENCE: "outl = 777;\n    final_ok = EVP_MAC_final(ctx, out,\
+    \ &outl, sizeof(out));\n    printf(\"SOURCE final_before_setup EVP_MAC_final returned\
+    \ %d outl=%zu\\n\", final_ok, outl);\n    if (final_ok != 1) {\n        printf(\"\
+    [OK] mac_context_lifecycle: pre-setup final rejected safely\\n\");\n        ret\
+    \ = 0;\n    } else {\n        printf(\"[TRIAGE] mac_context_lifecycle: pre-setup\
+    \ final unexpectedly succeeded outl=%zu\\n\", outl);\n    }"
+  SOURCE_ORACLE_OBSERVATION: '"safe_reject_projection"'
+target_render_slots:
+  TARGET_KEY_TYPE: PSA_KEY_TYPE_HMAC
+  TARGET_KEY_ALGORITHM: PSA_ALG_HMAC(PSA_ALG_SHA_512)
+  TARGET_MAC_SETUP_PARAMS: psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_MESSAGE);
+  TARGET_LIFECYCLE_SEQUENCE: "mac_length = 777;\n    status = psa_mac_sign_finish(&operation,\
+    \ mac, MAC_LEN, &mac_length);\n    print_psa_status(\"TARGET final_before_setup\
+    \ psa_mac_sign_finish\", status);\n    printf(\"TARGET final_before_setup mac_length=%zu\\\
+    n\", mac_length);\n    if (status != PSA_SUCCESS) {\n        printf(\"[OK] mac_context_lifecycle:\
+    \ pre-setup finish rejected safely\\n\");\n        ret = 0;\n    } else {\n  \
+    \      printf(\"[TRIAGE] mac_context_lifecycle: pre-setup finish unexpectedly\
+    \ succeeded\\n\");\n    }"
+  TARGET_ORACLE_OBSERVATION: '"safe_reject_projection"'
+unsupported_dimensions: []
+skipped: false

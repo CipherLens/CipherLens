@@ -1,0 +1,172 @@
+template_id: PKEY_VERIFY_SEMANTIC__OPENSSL_PKEY_VERIFY
+template_name: OpenSSL controlled PKEY verify semantic template
+backend: api_harness
+language: c
+status: controlled_template
+poc_source:
+  library: synthetic_framework_controlled
+  api: pkey_verify_semantic
+operation:
+  abstract: signature_verification
+  api_family: PKEYVerify
+  bug_class:
+    - invalid_signature_acceptance
+    - wrong_digest_acceptance
+    - wrong_hash_length_acceptance
+    - wrong_key_acceptance
+    - padding_mismatch_acceptance
+source_api:
+  library: openssl
+  function: EVP_DigestVerify
+mutation_points:
+  - name: VERIFY_API
+    placeholder: '[VERIFY_API]'
+    type: string
+    default: EVP_DigestVerify
+    values:
+      - EVP_DigestVerify
+    priority: high
+  - name: KEY_TYPE
+    placeholder: '[KEY_TYPE]'
+    type: string
+    default: rsa
+    values:
+      - rsa
+    priority: high
+  - name: KEY_BITS
+    placeholder: '[KEY_BITS]'
+    type: int
+    default: 2048
+    values:
+      - 2048
+    priority: medium
+  - name: PADDING_MODE
+    placeholder: '[PADDING_MODE]'
+    type: c_code
+    default: RSA_PKCS1_PADDING
+    values:
+      - RSA_PKCS1_PADDING
+    priority: high
+  - name: DIGEST_ALG
+    placeholder: '[DIGEST_ALG]'
+    type: c_code
+    default: EVP_sha256()
+    values:
+      - EVP_sha256()
+    priority: high
+  - name: HASH_BYTES
+    placeholder: '[HASH_BYTES]'
+    type: c_code
+    default: '{ 0x01 }'
+    values:
+      - '{ 0x01 }'
+    priority: high
+  - name: HASH_LEN
+    placeholder: '[HASH_LEN]'
+    type: int
+    default: 32
+    values:
+      - 32
+    priority: high
+  - name: SIGNATURE_BYTES
+    placeholder: '[SIGNATURE_BYTES]'
+    type: c_code
+    default: '{ 0x42 }'
+    values:
+      - '{ 0x42 }'
+    priority: medium
+  - name: SIGNATURE_LEN
+    placeholder: '[SIGNATURE_LEN]'
+    type: int
+    default: 256
+    values:
+      - 256
+    priority: medium
+  - name: VERIFY_SETUP
+    placeholder: '[VERIFY_SETUP]'
+    type: c_code
+    default: ''
+    values:
+      - ''
+    priority: high
+  - name: VERIFY_CALL
+    placeholder: '[VERIFY_CALL]'
+    type: c_code
+    default: ''
+    values:
+      - ''
+    priority: high
+  - name: VERIFY_ORACLE_OBSERVATION
+    placeholder: '[VERIFY_ORACLE_OBSERVATION]'
+    type: c_code
+    default: ''
+    values:
+      - ''
+    priority: high
+  - name: EXPECTED_VERDICT_CLASS
+    placeholder: '[EXPECTED_VERDICT_CLASS]'
+    type: string
+    default: safe_behavior
+    values:
+      - safe_behavior
+    priority: high
+  - name: SIGNATURE_MUTATION
+    placeholder: '[SIGNATURE_MUTATION]'
+    type: string
+    default: valid_signature
+    values:
+      - valid_signature
+    priority: high
+  - name: DIGEST_MUTATION
+    placeholder: '[DIGEST_MUTATION]'
+    type: string
+    default: matching_digest
+    values:
+      - matching_digest
+    priority: high
+  - name: KEY_MUTATION
+    placeholder: '[KEY_MUTATION]'
+    type: string
+    default: matching_key
+    values:
+      - matching_key
+    priority: high
+  - name: PADDING_MUTATION
+    placeholder: '[PADDING_MUTATION]'
+    type: string
+    default: rsa_pkcs1_v15
+    values:
+      - rsa_pkcs1_v15
+    priority: high
+oracle:
+  behavior:
+    - baseline valid signature must verify
+    - invalid signature material must reject
+    - unexpected verification success is a semantic bug candidate
+  memory_safety:
+    - no_asan
+    - no_ubsan
+    - no_segv
+generation_policy:
+  max_cases: 1
+  priority:
+    - VERIFY_API
+    - SIGNATURE_MUTATION
+    - DIGEST_MUTATION
+    - KEY_MUTATION
+    - PADDING_MUTATION
+harness_family: pkey_verify_semantic
+oracle_type: signature_acceptance_semantic_oracle
+cross_library:
+  openssl:
+    target_api: EVP_DigestVerify
+    target_template: tmpl_openssl.c
+    applicability: controlled_template
+    preserved_features:
+      - return_code
+      - signature_acceptance
+      - digest_algorithm_control
+      - signature_buffer_control
+      - key_selection_control
+    lost_or_weakened_features:
+      - cross_library_pairing_not_enabled_in_v0

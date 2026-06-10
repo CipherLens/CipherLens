@@ -1,0 +1,101 @@
+family: secure_heap_state_lifecycle
+seed_issue: OPENSSL-ISSUE-28669
+execution_mode: same_family_state_expansion
+case_matrix:
+  - case_id: secure_heap_exp_0000_seed_pre_init_used
+    api_under_test: CRYPTO_secure_used
+    state_sequence: pre_init_query
+    is_seed_case: true
+    expected_control: no_crash_or_documented_precondition_failure
+    novelty_scope: historical_reproduction
+  - case_id: secure_heap_exp_0001_control_initialized_used
+    api_under_test: CRYPTO_secure_used
+    state_sequence: initialized_query
+    expected_control: safe_success_or_defined_return
+    novelty_scope: initialized_control
+  - case_id: secure_heap_exp_0002_seed_done_then_used
+    api_under_test: CRYPTO_secure_used
+    state_sequence: done_then_query
+    is_seed_case: true
+    expected_control: safe_failure_or_defined_return
+    novelty_scope: historical_reproduction
+  - case_id: secure_heap_exp_0003_new_state_init_failed_then_used
+    api_under_test: CRYPTO_secure_used
+    state_sequence: init_failed_then_query
+    expected_control: safe_failure_or_defined_return
+    novelty_scope: new_state_combination_candidate
+  - case_id: secure_heap_exp_0004_pre_init_initialized_check
+    api_under_test: CRYPTO_secure_malloc_initialized
+    state_sequence: pre_init_query
+    expected_control: returns_zero_without_crash
+    novelty_scope: new_api_candidate
+  - case_id: secure_heap_exp_0005_done_then_initialized_check
+    api_under_test: CRYPTO_secure_malloc_initialized
+    state_sequence: done_then_query
+    expected_control: returns_zero_without_crash
+    novelty_scope: new_api_candidate
+  - case_id: secure_heap_exp_0006_init_failed_then_initialized_check
+    api_under_test: CRYPTO_secure_malloc_initialized
+    state_sequence: init_failed_then_query
+    expected_control: returns_zero_without_crash
+    novelty_scope: new_api_candidate
+  - case_id: secure_heap_exp_0007_pre_init_allocated_null
+    api_under_test: CRYPTO_secure_allocated
+    state_sequence: pre_init_query
+    expected_control: returns_zero_without_crash
+    novelty_scope: new_api_candidate
+  - case_id: secure_heap_exp_0008_initialized_allocated
+    api_under_test: CRYPTO_secure_allocated
+    state_sequence: initialized_query
+    expected_control: returns_true_for_secure_pointer
+    novelty_scope: new_api_candidate
+  - case_id: secure_heap_exp_0009_done_then_allocated_null
+    api_under_test: CRYPTO_secure_allocated
+    state_sequence: done_then_query
+    expected_control: returns_zero_without_crash
+    novelty_scope: new_api_candidate
+  - case_id: secure_heap_exp_0010_init_failed_then_allocated_null
+    api_under_test: CRYPTO_secure_allocated
+    state_sequence: init_failed_then_query
+    expected_control: returns_zero_without_crash
+    novelty_scope: new_api_candidate
+  - case_id: secure_heap_exp_0011_done_then_secure_malloc
+    api_under_test: OPENSSL_secure_malloc
+    state_sequence: done_then_alloc
+    expected_control: falls_back_or_defined_return
+    novelty_scope: new_api_candidate
+  - case_id: secure_heap_exp_0012_done_then_secure_zalloc
+    api_under_test: OPENSSL_secure_zalloc
+    state_sequence: done_then_alloc
+    expected_control: falls_back_or_defined_return
+    novelty_scope: new_api_candidate
+  - case_id: secure_heap_exp_0013_initialized_secure_malloc_free_control
+    api_under_test: OPENSSL_secure_malloc
+    state_sequence: initialized_alloc_free_control
+    expected_control: alloc_free_done_without_crash
+    novelty_scope: initialized_control
+  - case_id: secure_heap_exp_0014_initialized_secure_zalloc_free_control
+    api_under_test: OPENSSL_secure_zalloc
+    state_sequence: initialized_alloc_free_control
+    expected_control: alloc_free_done_without_crash
+    novelty_scope: initialized_control
+  - case_id: secure_heap_exp_0015_done_then_secure_free_plain_ptr
+    api_under_test: OPENSSL_secure_free
+    state_sequence: done_then_free
+    expected_control: equivalent_to_openssl_free_without_crash
+    novelty_scope: new_api_candidate
+  - case_id: secure_heap_exp_0016_alloc_then_done_then_free
+    api_under_test: OPENSSL_secure_free
+    state_sequence: alloc_then_done_then_free
+    expected_control: live_alloc_prevents_done_then_free_allows_done
+    novelty_scope: new_state_combination_candidate
+  - case_id: secure_heap_exp_0017_done_twice
+    api_under_test: CRYPTO_secure_malloc_done
+    state_sequence: done_twice
+    expected_control: second_done_defined_failure_without_crash
+    novelty_scope: new_state_combination_candidate
+  - case_id: secure_heap_exp_0018_reinit_after_done
+    api_under_test: CRYPTO_secure_malloc_init
+    state_sequence: reinit_after_done
+    expected_control: reinit_defined_without_crash
+    novelty_scope: new_state_combination_candidate

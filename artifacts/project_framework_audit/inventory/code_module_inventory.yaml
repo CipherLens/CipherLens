@@ -1,0 +1,120 @@
+modules:
+  analysis:
+    role: Queue building, path planning, compliance checks, and crash/sanitizer audits.
+    key_files:
+      - analysis/build_candidate_queue.py
+      - analysis/plan_execution_paths.py
+      - analysis/audit_crash_sanitizer_candidates.py
+      - analysis/check_a_path_compliance.py
+    used_by_paths: [A, B, C, D]
+    reusable_or_one_off: mostly reusable
+    problems:
+      - Some audit scripts are still report-specific.
+    next_refactor_suggestion: Extract common path-status and artifact-check helpers.
+  template_maker:
+    role: Template validation, AST masking, cross-template generation, and case rendering.
+    key_files:
+      - template_maker/cross_generator_from_adapters.py
+      - template_maker/render_cases.py
+      - template_maker/ast_mask_lite.py
+      - template_maker/ast_mask_select.py
+    used_by_paths: [A]
+    reusable_or_one_off: reusable with family-specific render branches
+    problems:
+      - Family renderers can accumulate hard-coded recipe behavior.
+    next_refactor_suggestion: Formalize renderer plugin interface by harness_family.
+  migration:
+    role: Candidate mapping, evidence collection, adapter filling, and adapter validation.
+    key_files:
+      - migration/adapter_filler.py
+      - migration/adapter_validate.py
+      - migration/evidence_collector.py
+      - migration/candidate_mapper.py
+    used_by_paths: [A]
+    reusable_or_one_off: reusable
+    problems:
+      - Candidate mapper still lags some newer families.
+    next_refactor_suggestion: Make family feature registries data-driven.
+  mutation:
+    role: Controlled matrix generation, rendering, feedback collection, and score updates.
+    key_files:
+      - mutation/apply_secure_heap_state_matrix.py
+      - mutation/apply_der_full_consumption_matrix.py
+      - mutation/apply_mac_lifecycle_matrix_to_template.py
+      - mutation/collect_mutation_feedback.py
+      - mutation/score_mutation_feedback.py
+    used_by_paths: [B, C]
+    reusable_or_one_off: mixed
+    problems:
+      - Several scripts are family-specific.
+    next_refactor_suggestion: Introduce common mutation matrix schema and renderer contract.
+  runner:
+    role: Compile/run execution and verdict analysis.
+    key_files:
+      - runner/compile_run.py
+      - runner/analyze_results.py
+      - runner/analyze_cross_results.py
+      - runner/analyze_secure_heap_state.py
+      - runner/analyze_der_full_consumption.py
+      - runner/run_app_cases.py
+    used_by_paths: [A, B, C]
+    reusable_or_one_off: reusable core plus family-specific analyzers
+    problems:
+      - Generic and family-specific analyzers are not fully unified.
+    next_refactor_suggestion: Add family analyzer registration and normalized verdict schema.
+  knowledge:
+    role: Pattern-bank build, RAG build, and RAG query.
+    key_files:
+      - knowledge/build_pattern_bank.py
+      - knowledge/rag_builder.py
+      - knowledge/rag_query.py
+      - knowledge/ollama_embedder.py
+    used_by_paths: [A, B, C, D]
+    reusable_or_one_off: reusable
+    problems:
+      - Embedding requires external/local service availability.
+    next_refactor_suggestion: Add explicit offline/skip mode and better rebuild status reports.
+  artifacts_pattern_bank:
+    role: Canonical pattern inventory, scheduler seed, and priority state.
+    key_files:
+      - artifacts/pattern_bank/unified_pattern_bank.yaml
+      - artifacts/pattern_bank/scheduler_seed.yaml
+    used_by_paths: [A, B, C, D]
+    reusable_or_one_off: reusable data layer
+    problems:
+      - Large generated YAML can be noisy in commits.
+    next_refactor_suggestion: Split stable schema from generated snapshots.
+  artifacts_feedback:
+    role: Stores observed feedback for DER, MAC, secure heap, and mutation scores.
+    key_files:
+      - artifacts/feedback/der_full_consumption_feedback.jsonl
+      - artifacts/feedback/mac_lifecycle_feedback.jsonl
+      - artifacts/feedback/secure_heap_state_lifecycle_feedback.jsonl
+      - artifacts/feedback/mutation_scores.yaml
+    used_by_paths: [B, C]
+    reusable_or_one_off: reusable evidence layer
+    problems:
+      - Needs deduplication and provenance metadata for repeated runs.
+    next_refactor_suggestion: Add feedback run_id and source artifact reference.
+  knowledge_raw_poc_patterns:
+    role: Human-readable source pattern knowledge indexed by RAG.
+    key_files:
+      - knowledge_raw/poc_patterns/unified_patterns.md
+      - knowledge_raw/poc_patterns/openssl_issue_patterns.md
+      - knowledge_raw/poc_patterns/core10_patterns.md
+    used_by_paths: [A, B, C, D]
+    reusable_or_one_off: reusable raw knowledge
+    problems:
+      - Must stay aligned with pattern bank YAML.
+    next_refactor_suggestion: Generate markdown from canonical YAML or validate both directions.
+  docs:
+    role: Human-facing framework and family documentation.
+    key_files:
+      - docs/current_pipeline_v2.md
+      - docs/full_migration_pipeline.md
+      - docs/harness_family_design.md
+    used_by_paths: [A, B, C, D]
+    reusable_or_one_off: reusable documentation
+    problems:
+      - Can drift from generated artifacts.
+    next_refactor_suggestion: Link docs to latest audit artifacts and avoid duplicating volatile counts.
