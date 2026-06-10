@@ -1,0 +1,31 @@
+2065-        esd->signedAttribsCount += cannedAttribsCount;
+2066-        esd->signedAttribsSz += (word32)EncodeAttributes(
+2067-            &esd->signedAttribs[atrIdx], (int)idx, cannedAttribs,
+2068-            (int)cannedAttribsCount);
+2069-        atrIdx += idx;
+2070-    } else {
+2071-        esd->signedAttribsCount = 0;
+2072-        esd->signedAttribsSz = 0;
+2073-    }
+2074-
+2075:    /* add custom signed attributes if set */
+2076-    if (pkcs7->signedAttribsSz > 0 && pkcs7->signedAttribs != NULL) {
+2077-        esd->signedAttribsCount += pkcs7->signedAttribsSz;
+2078-        esd->signedAttribsSz += (word32)EncodeAttributes(
+2079-            &esd->signedAttribs[atrIdx], (int)esd->signedAttribsCount,
+2080-            pkcs7->signedAttribs, (int)pkcs7->signedAttribsSz);
+2081-    }
+2082-
+2083-#ifdef NO_ASN_TIME
+2084-    (void)signingTimeOidSz;
+2085-    (void)signingTime;
+2086-    (void)signingTimeSz;
+2087-#endif
+2088-
+2089-    return 0;
+2090-}
+2091-
+2092-
+2093-/* gets correct encryption algo ID for SignedData, either CTC_<hash>wRSA or
+2094- * CTC_<hash>wECDSA, from pkcs7->publicKeyOID and pkcs7->hashOID.
+2095- *

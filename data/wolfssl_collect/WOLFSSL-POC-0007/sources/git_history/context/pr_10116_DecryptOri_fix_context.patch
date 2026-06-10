@@ -1,0 +1,37 @@
+511-+        /* Must return error (ASN_PARSE_E), not overflow the stack */
+512-+        ExpectIntLT(wc_PKCS7_DecodeEnvelopedData(p7, (byte*)poc, sizeof(poc),
+513-+                                                  out, sizeof(out)), 0);
+514-+
+515-+        wc_PKCS7_Free(p7);
+516-+    }
+517-+#endif
+518-+    return EXPECT_RESULT();
+519-+}
+520-+
+521- TEST_CASE testCases[] = {
+522-     TEST_DECL(test_fileAccess),
+523- 
+524-@@ -35694,6 +35753,7 @@ TEST_CASE testCases[] = {
+525-     TEST_DECL(test_DhAgree_rejects_p_minus_1),
+526-     TEST_DECL(test_ed448_rejects_identity_key),
+527-     TEST_DECL(test_pkcs7_decode_encrypted_outputsz),
+528-+    TEST_DECL(test_pkcs7_ori_oversized_oid),
+529- 
+530- #if defined(WOLFSSL_SNIFFER) && defined(WOLFSSL_SNIFFER_CHAIN_INPUT)
+531-     TEST_DECL(test_sniffer_chain_input_overflow),
+532-diff --git a/wolfcrypt/src/pkcs7.c b/wolfcrypt/src/pkcs7.c
+533-index 6e336d2c577..52dadfa7487 100644
+534---- a/wolfcrypt/src/pkcs7.c
+535-+++ b/wolfcrypt/src/pkcs7.c
+536:@@ -11507,6 +11507,11 @@ static int wc_PKCS7_DecryptOri(wc_PKCS7* pkcs7, byte* in, word32 inSz,
+537-             if (GetASNObjectId(pkiMsg, idx, &oriOIDSz, pkiMsgSz) != 0)
+538-                 return ASN_PARSE_E;
+539- 
+540-+            if (oriOIDSz <= 0 || (word32)oriOIDSz > MAX_OID_SZ) {
+541-+                WOLFSSL_MSG("ORI oriType OID too large");
+542-+                return ASN_PARSE_E;
+543-+            }
+544-+
+545-             XMEMCPY(oriOID, pkiMsg + *idx, (word32)oriOIDSz);
+546-             *idx += (word32)oriOIDSz;
+547- 

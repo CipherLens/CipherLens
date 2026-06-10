@@ -1,0 +1,147 @@
+14:@@ -737,6 +737,9 @@ int Dtls13RtxAddAck(WOLFSSL* ssl, w64wrapper epoch, w64wrapper seq)
+24:@@ -747,8 +750,12 @@ int Dtls13RtxAddAck(WOLFSSL* ssl, w64wrapper epoch, w64wrapper seq)
+27:         rn = Dtls13NewRecordNumber(epoch, seq, ssl->heap);
+52:@@ -837,6 +837,11 @@ static void Dtls13RtxRemoveCurAck(WOLFSSL* ssl)
+54:     Dtls13RecordNumber *rn, **prevNext;
+61:     prevNext = &ssl->dtls13Rtx.seenRecords;
+62:     rn = ssl->dtls13Rtx.seenRecords;
+64:@@ -845,12 +850,19 @@ static void Dtls13RtxRemoveCurAck(WOLFSSL* ssl)
+67:             XFREE(rn, ssl->heap, DYNAMIC_TYPE_DTLS_MSG);
+83: static void Dtls13MaybeSaveClientHello(WOLFSSL* ssl)
+88:Subject: [PATCH 3/8] dtls13: keep a counter for seenRecords list
+100:@@ -734,6 +734,13 @@ int Dtls13RtxAddAck(WOLFSSL* ssl, w64wrapper epoch, w64wrapper seq)
+101:         Dtls13RecordNumber** prevNext = &ssl->dtls13Rtx.seenRecords;
+102:         Dtls13RecordNumber* cur = ssl->dtls13Rtx.seenRecords;
+104:+        if (ssl->dtls13Rtx.seenRecordsCount >= DTLS13_ACK_MAX_RECORDS) {
+114:@@ -759,6 +766,7 @@ int Dtls13RtxAddAck(WOLFSSL* ssl, w64wrapper epoch, w64wrapper seq)
+118:+        ssl->dtls13Rtx.seenRecordsCount++;
+122:@@ -788,6 +796,7 @@ static void Dtls13RtxFlushAcks(WOLFSSL* ssl)
+125:         ssl->dtls13Rtx.seenRecords = NULL;
+126:+        ssl->dtls13Rtx.seenRecordsCount = 0;
+130:@@ -850,6 +859,8 @@ static void Dtls13RtxRemoveCurAck(WOLFSSL* ssl)
+133:             XFREE(rn, ssl->heap, DYNAMIC_TYPE_DTLS_MSG);
+134:+            if (ssl->dtls13Rtx.seenRecordsCount > 0)
+135:+                ssl->dtls13Rtx.seenRecordsCount--;
+139:@@ -2563,39 +2574,26 @@ int Dtls13SetRecordNumberKeys(WOLFSSL* ssl, enum encrypt_side side)
+146:-static int Dtls13GetAckListLength(Dtls13RecordNumber* list, word16* length)
+163: int Dtls13WriteAckMessage(WOLFSSL* ssl,
+164:-    Dtls13RecordNumber* recordNumberList, word32* length)
+165:+    Dtls13RecordNumber* recordNumberList, word16 recordsCount, word32* length)
+179:+    if (recordsCount > DTLS13_ACK_MAX_RECORDS)
+181:+    msgSz = (word16)(DTLS13_RN_SIZE * recordsCount);
+184:         /* unprotected ACK */
+186:@@ -2605,10 +2603,6 @@ int Dtls13WriteAckMessage(WOLFSSL* ssl,
+190:-    ret = Dtls13GetAckListLength(recordNumberList, &msgSz);
+196:     /* ACK list 2 bytes length field */
+197:@@ -2631,6 +2625,8 @@ int Dtls13WriteAckMessage(WOLFSSL* ssl,
+198:     WOLFSSL_MSG("write ack records");
+200:     while (recordNumberList != NULL) {
+203:         WOLFSSL_MSG_EX("epoch %d seq %d", recordNumberList->epoch,
+204:                 recordNumberList->seq);
+205:         c64toa(&recordNumberList->epoch, ackMessage);
+206:@@ -2638,8 +2634,12 @@ int Dtls13WriteAckMessage(WOLFSSL* ssl,
+207:         c64toa(&recordNumberList->seq, ackMessage);
+209:         recordNumberList = recordNumberList->next;
+219:@@ -2750,6 +2750,7 @@ int Dtls13DoScheduledWork(WOLFSSL* ssl)
+221:             *tail = ssl->dtls13Rtx.seenRecords;
+222:             ssl->dtls13Rtx.seenRecords = NULL;
+223:+            ssl->dtls13Rtx.seenRecordsCount = 0;
+227:@@ -2963,12 +2964,13 @@ int SendDtls13Ack(WOLFSSL* ssl)
+231:-    ret = Dtls13WriteAckMessage(ssl, ssl->dtls13Rtx.seenRecords, &length);
+232:+    ret = Dtls13WriteAckMessage(ssl, ssl->dtls13Rtx.seenRecords,
+233:+        ssl->dtls13Rtx.seenRecordsCount, &length);
+249:     ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 2), w64From32(0, 2)), 0);
+250:     ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 2), w64From32(0, 2)), 0);
+251:     ExpectIntEQ(Dtls13WriteAckMessage(ssl_c, ssl_c->dtls13Rtx.seenRecords,
+253:+            ssl_c->dtls13Rtx.seenRecordsCount, &length), 0);
+267:+/* Maximum number of ACK records encodable in the word16 length field */
+268:+#define DTLS13_ACK_MAX_RECORDS ((int)(WOLFSSL_MAX_16BIT / DTLS13_RN_SIZE))
+270: typedef struct Dtls13Epoch {
+273:@@ -5925,6 +5930,7 @@ typedef struct Dtls13Rtx {
+274:     Dtls13RtxRecord *rtxRecords;
+275:     Dtls13RtxRecord **rtxRecordTailPtr;
+276:     Dtls13RecordNumber *seenRecords;
+277:+    word16 seenRecordsCount;
+281:@@ -7279,7 +7285,7 @@ WOLFSSL_LOCAL int Dtls13ReconstructEpochNumber(WOLFSSL* ssl, byte epochBits,
+282: WOLFSSL_LOCAL int Dtls13ReconstructSeqNumber(WOLFSSL* ssl,
+283:     Dtls13UnifiedHdrInfo* hdrInfo, w64wrapper* out);
+284: WOLFSSL_TEST_VIS int Dtls13WriteAckMessage(WOLFSSL* ssl,
+285:-    Dtls13RecordNumber* recordNumberList, word32* length);
+286:+    Dtls13RecordNumber* recordNumberList, word16 recordsCount, word32* length);
+287: WOLFSSL_LOCAL int SendDtls13Ack(WOLFSSL* ssl);
+288: WOLFSSL_TEST_VIS int Dtls13RtxAddAck(WOLFSSL* ssl, w64wrapper epoch, w64wrapper seq);
+289: WOLFSSL_LOCAL int Dtls13RtxProcessingCertificate(WOLFSSL* ssl, byte* input,
+310:+int test_dtls13_ack_overflow(void)
+332:+    for (i = 0; i < DTLS13_ACK_MAX_RECORDS - 1; i++) {
+333:+        ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 0),
+336:+    ExpectIntEQ(ssl_c->dtls13Rtx.seenRecordsCount, DTLS13_ACK_MAX_RECORDS - 1);
+338:+    /* Edge case 2: insert the last allowed record - must succeed */
+339:+    ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 0),
+340:+                    w64From32(0, (word32)(DTLS13_ACK_MAX_RECORDS - 1))), 0);
+341:+    ExpectIntEQ(ssl_c->dtls13Rtx.seenRecordsCount, DTLS13_ACK_MAX_RECORDS);
+344:+    ExpectIntEQ(Dtls13WriteAckMessage(ssl_c, ssl_c->dtls13Rtx.seenRecords,
+345:+                    ssl_c->dtls13Rtx.seenRecordsCount, &length), 0);
+348:+    ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 0),
+349:+                    w64From32(0, (word32)DTLS13_ACK_MAX_RECORDS)), 0);
+350:+    ExpectIntEQ(ssl_c->dtls13Rtx.seenRecordsCount, DTLS13_ACK_MAX_RECORDS);
+353:+     * then verify Dtls13WriteAckMessage errors out instead of overflowing */
+354:+    ssl_c->dtls13Rtx.seenRecordsCount = 0;
+355:+    ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 1),
+356:+                    w64From32(0, (word32)DTLS13_ACK_MAX_RECORDS)), 0);
+357:+    ssl_c->dtls13Rtx.seenRecordsCount = (word16)(DTLS13_ACK_MAX_RECORDS + 1);
+358:+    ExpectIntEQ(Dtls13WriteAckMessage(ssl_c, ssl_c->dtls13Rtx.seenRecords,
+359:+                    ssl_c->dtls13Rtx.seenRecordsCount, &length), BUFFER_E);
+369:+int test_dtls13_ack_dup_write_counter(void)
+395:+    /* Cycle 1: add records, trigger handoff, verify counter is reset to 0 */
+397:+        ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 3),
+399:+    ExpectIntEQ(ssl_c->dtls13Rtx.seenRecordsCount, 5);
+401:+    ExpectIntEQ(Dtls13DoScheduledWork(ssl_c), 0);
+402:+    /* seenRecords ownership was transferred to dupWrite->sendAckList;
+403:+     * seenRecordsCount must be reset to 0 — not left at 5. */
+404:+    ExpectNull(ssl_c->dtls13Rtx.seenRecords);
+405:+    ExpectIntEQ(ssl_c->dtls13Rtx.seenRecordsCount, 0);
+407:+    /* Cycle 2 (different epoch to avoid the dup-filter): verify the counter
+409:+     * seenRecordsCount would now be 10 after this second batch. */
+411:+        ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 4),
+413:+    ExpectIntEQ(ssl_c->dtls13Rtx.seenRecordsCount, 5);
+415:+    ExpectIntEQ(Dtls13DoScheduledWork(ssl_c), 0);
+416:+    ExpectNull(ssl_c->dtls13Rtx.seenRecords);
+417:+    ExpectIntEQ(ssl_c->dtls13Rtx.seenRecordsCount, 0);
+439:+int test_dtls13_ack_overflow(void);
+440:+int test_dtls13_ack_dup_write_counter(void);
+443: int test_dtls12_record_length_mismatch(void);
+448:+        TEST_DECL_GROUP("dtls", test_dtls13_ack_overflow),                     \
+449:+        TEST_DECL_GROUP("dtls", test_dtls13_ack_dup_write_counter),            \
+452:         TEST_DECL_GROUP("dtls", test_dtls12_record_length_mismatch),           \
+457:@@ -7244,7 +7244,7 @@ WOLFSSL_LOCAL int Dtls13GetSeq(WOLFSSL* ssl, int order, word32* seq,
+459: WOLFSSL_LOCAL void Dtls13RtxRemoveRecord(WOLFSSL* ssl, w64wrapper epoch,
+461:-WOLFSSL_LOCAL int Dtls13DoScheduledWork(WOLFSSL* ssl);
+462:+WOLFSSL_TEST_VIS int Dtls13DoScheduledWork(WOLFSSL* ssl);
+463: WOLFSSL_LOCAL int Dtls13DeriveSnKeys(WOLFSSL* ssl, int provision);
+464: WOLFSSL_LOCAL int Dtls13SetRecordNumberKeys(WOLFSSL* ssl,
+482:         #define Dtls13CheckEpoch wolfSSL_Dtls13CheckEpoch
+483:         #define Dtls13WriteAckMessage wolfSSL_Dtls13WriteAckMessage
+484:         #define Dtls13RtxAddAck wolfSSL_Dtls13RtxAddAck
+485:+        #define Dtls13DoScheduledWork wolfSSL_Dtls13DoScheduledWork
+488: WOLFSSL_TEST_VIS struct Dtls13Epoch* Dtls13GetEpoch(WOLFSSL* ssl,
+493:Subject: [PATCH 6/8] dtls13: limit max number of ack records to 128
+507:-/* Maximum number of ACK records encodable in the word16 length field */
+508:-#define DTLS13_ACK_MAX_RECORDS ((int)(WOLFSSL_MAX_16BIT / DTLS13_RN_SIZE))
+509:+/* Maximum number of ACK records allowed in a ACK record */
+510:+#ifndef DTLS13_ACK_MAX_RECORDS
+511:+#define DTLS13_ACK_MAX_RECORDS 128
+516:+#if DTLS13_ACK_MAX_RECORDS > 0xffff / 16
+517:+#error "DTLS13_ACK_MAX_RECORDS exceeds the maximum encodable in the word16 length field"
+521: typedef struct Dtls13Epoch {
+537:@@ -1032,7 +1032,7 @@ int test_dtls13_ack_dup_write_counter(void)
+539:     ExpectIntEQ(Dtls13DoScheduledWork(ssl_c), 0);
+540:     /* seenRecords ownership was transferred to dupWrite->sendAckList;
+541:-     * seenRecordsCount must be reset to 0 — not left at 5. */
+542:+     * seenRecordsCount must be reset to 0,  not left at 5. */
+543:     ExpectNull(ssl_c->dtls13Rtx.seenRecords);
+544:     ExpectIntEQ(ssl_c->dtls13Rtx.seenRecordsCount, 0);
+550:Subject: [PATCH 8/8] internal.h: clarify DTLS13_ACK_MAX_RECORDS comment
+564:-/* Maximum number of ACK records allowed in a ACK record */
+565:+/* Maximum number of ACK records allowed in an ACK message */
+566: #ifndef DTLS13_ACK_MAX_RECORDS
+567: #define DTLS13_ACK_MAX_RECORDS 128

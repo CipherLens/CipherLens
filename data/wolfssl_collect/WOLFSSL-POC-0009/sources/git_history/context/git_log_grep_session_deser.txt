@@ -1,0 +1,64 @@
+061311d6c zd/21661: harden X.509 chain validation, session ticket identity binding, and peer cert restore
+c950a6aa4 zephyr: changes needed for Zephyr 4.3 default TLS support
+985cceaa9 Fix session cache restore dangling pointer (ZD 21423)
+fb4600bf5 Core: Unconditionally expose WOLFSSL_SESSION::version
+67abcc6f2 Merge pull request #9949 from philljj/fix_d2i_SSL_SESSION
+0a99a08b0 ssl_sess: check fields in wolfSSL_d2i_SSL_SESSION.
+211124950 Merge pull request #9759 from gasbytes/test_wolfSSL_d2i_SSL_SESSION
+7245ad02b Merge pull request #9748 from gasbytes/wolfSSL_d2i_SSL_SESSION-fix
+f94eb68ea add missing checks in wolfSSL_d2i_SSL_SESSION
+f834b9b08 add null sanity check to wolfSSL_SESSION_get_max_early_data, CID 516264
+02e942334 Define WOLFSSL_MAX_SSL_SESSION_ID_LENGTH
+3444d5c52 Fixes from compatibility header decoupling PR #8182. Fixes issue with wolfEngine and wolfProvider.  Change behavior for openssl compatibility headers to be installed unless `--enable-opensslextra=noinstall` is used. Removed dependency on X509 small with SESSION_CERTS, KEEP_PEER_CERTS and KEEP_OUR_CERT.
+a540c6ade configure.ac: activate opensslextra for --enable-curl even if ENABLED_OPENSSLCOEXIST; tests/api.c: in test_wolfSSL_SESSION(), use WOLFSSL_SUCCESS, not SSL_SUCCESS, in HAVE_SESSION_TICKET span reachable in non-OPENSSL_EXTRA builds.
+1e3f623ff Regression testing: fix compilation for unusual configs
+24f581fe1 Merge pull request #7557 from cconlon/jniSessionCerts
+8f1029f86 Update --enable-jni to define SESSION_CERTS for wolfJSSE
+ca61034d2 Add memcached support.
+0abaa8978 Add support for nginx-1.25.0
+1106e5ff0 TLS v1.3: Support a stateful ticket and test HAVE_EXT_CACHE (#5960)
+0cedc4e1a stunnel 5.67 support (#6020)
+53dfcd00e Ref count: change to use wolfSSL_Ref
+9d73c197e Move X509_V errors from enums to defines for HAProxy CLI (#5901)
+b9d9dc02b Merge pull request #5476 from julek-wolfssl/session-buffers
+68f71d0d9 Remove WOLFSSL_SESSION_TYPE_REF buffers from WOLFSSL_SESSION
+afca455cd stunnel 5.61 support
+355b5821b WOLFSSL_SESSION_EXPORT: fixes for scan-build complaints (deadcode.DeadStores) building --enable-all --enable-sessionexport.
+56c28ff30 src/ssl.c: in wolfSSL_SESSION_has_ticket(), add (void)sess if !defined(HAVE_SESSION_TICKET), to fix -Wunused-parameter.
+569c066fa Improve TLS client side session cache references to provide option for not returning an internal session cache pointer. Now use `wolfSSL_get1_sesson` for reference logic, that requires calling `wolfSSL_SESSION_free`. To disable this feature use `NO_SESSION_CACHE_REF`.
+cf1ce3f07 Add get_default_cert_file/env() stubs, SSL_get/set_read_ahead(), SSL_SESSION_has_ticket/lifetime_hint() (#4349)
+4f055653c Restore TLS v1.3 `hello_retry` behavior with session id. Fix for SNI with default (no name) putting newline due to fgets.
+69cf5ef26 Chage to use WOLFSSL_SESSION.bornON instead of WOLFSSL_SESSION.timestamp to hold the ticket creation time.
+6fad8c4a5 Merge pull request #3975 from TakayukiMatsuo/resumable
+2b6f62377 Add implementation for wolfSSL_SESSION_is_resumable.
+a22defec5 Fix for availability of `wolfSSL_SESSION_print`.
+95ff75c43 Fix for `wolfSSL_SESSION_print`
+52f63ca44 SESSION mutex: copying a session overwrote mutex
+5b43977b9 Merge pull request #3277 from julek-wolfssl/failing-nightly-532c2f5
+64084bcba Add a void to the empty parameter list for the function wolfSSL_SESSION_new().
+e194a11cb add wolfSSL_SESSION_new and change to peek error
+e6746639a add SSL_SESSION_up_ref and fix for get lib
+eddf4abf8 Merge pull request #2775 from embhorn/api_port
+c2c3e0d4a add initial implementation for wolfSSL_SESSION_get0_peer
+dd0734449 SSL_SESSION_dup
+2dafd2102 Add Apache HTTP Server compatibility and --enable-apachehttpd option (#2466)
+b70f22e21 1. Use the session deallocator on the deserialized session in the client. 2. Free the flatten session if the size check fails.
+c27a4b386 TLS Maintenance When serializing the WOLFSSL_SESSION, serialize everything.
+852d50adc DTLS Maintenance To go with the fix for the functions wolfSSL_(i2d|d2i)_SSL_SESSION, modify the example client to use a serialized session record for resumption instead of the direct reference into the session cache. This change only happens when OPENSSL_EXTRA and HAVE_EXT_CACHE are defined.
+ebd68e6af Fix to return the internal cipher suite name instead of NULL if `NO_ERROR_STRINGS` is defined. Fix for stray "if" in `wolfSSL_SESSION_CIPHER_get_name`.
+ffc0f0fb2 Fix for building with `SESSION_CERTS` using pointer after free. Documented `store->discardSessionCerts`.
+ae5dac899 Fixes for GCC 7 build errors with evp.c and switch fall through. General EVP code formatting cleanup. Fix for wolfCrypt test un-used var when `HAVE_AES_CBC` not defined. Fix for async in `test_wolfSSL_SESSION` with `err` not being initialized.
+82850422f Merge pull request #1338 from JacobBarthelmeh/Testing
+ca5b1dbbc set have session id flag
+f393eb917 implement ssl set session id context
+4c8d22808 Added `WOLFSSL_ALT_CERT_CHAINS` option to enable checking cert aginst multiple CA's. Added new API's for `wolfSSL_get_peer_alt_chain` and `wolfSSL_is_peer_alt_cert_chain`, which allow a way to know if alternate cert chain is used and provides a way to get it (when `SESSION_CERTS` is defined). Cleanup of the defines to enable debugging certs (just use `SHOW_CERTS` now).
+039aedcfb Added "wolfSSL_use_certificate_chain_buffer_format". Added  "wolfSSL_SESSION_CIPHER_get_name" to get cipher suite name using WOLFSSL_SESSION*. Moved the "wolfSSL_get_cipher_name_from_suite" function to internal.c. Added new server-cert-chain.der, which is combination of ca-cert.der and server-cert.der. Enhanced load_buffer to detect format using file extension. Can test use of DER cert chain with NO_FILESYSTEM defined using "./examples/server/server -c ./certs/server-cert-chain.der -k ./certs/server-key.der".
+c47f5f404 Merge pull request #480 from toddouska/noecho
+c7b969b5b don't echo session id on blank ticket if we're going to create a new ticket
+05b8e1274 add WOLFSSL_SESSION_STATS and optionally WOLFSSL_PEAK_SESSIONS which will slow down servers under load
+1f8701540 change SESSION_STATS to PRINT_SESSION_STATS, will add WOLFSSL_SESSION_STATS
+09d290f55 allow user to set session timeout at compile time w/ CYASSL_SESSION_TIMEOUT
+e98eb1ba4 Adds sessionIDSz to CYASSL_SESSION and Arrays.
+831d9cf64 SEP Profile 1. Changed session index shift values to constants. 2. Added bounds checking when retrieving a session. 3. Added function to retrieve the peer cert chain from    a CYASSL_SESSION record.
+eedc2f3e4 fix SESSION_CERTS and SHOW_CERTS example with CyaSSL API
+7b2d62f4f don't compare session id if server rejects

@@ -1,0 +1,160 @@
+15-+++ b/src/tls.c
+16-@@ -10222,15 +10222,24 @@ static int TLSX_KeyShare_ProcessPqcHybridClient(WOLFSSL* ssl,
+17-             ecc_kse->key = NULL;
+18-             pqc_kse->privKey = NULL;
+19-         }
+20-+        else
+21-     #endif
+22-+        {
+23-+            /* Re-sync keyShareEntry->key with ecc_kse->key. ecc_kse->key was
+24-+             * aliased to keyShareEntry->key above. The inner Process*_ex
+25-+             * either ran its end-of-function cleanup and set ecc_kse->key
+26-+             * to NULL (so the outer pointer must also become NULL to avoid
+27-+             * UAF/double-free in TLSX_KeyShare_FreeAll), or returned early
+28-+             * before cleanup with ecc_kse->key still pointing at the live
+29-+             * key (so the outer pointer must keep that pointer for later
+30-+             * freeing). Mirroring whatever the inner left in ecc_kse->key
+31-+             * handles both cases correctly. */
+32-+            keyShareEntry->key = ecc_kse->key;
+33-+        }
+34-     }
+35- 
+36-     if (ret == 0) {
+37--        keyShareEntry->key = ecc_kse->key;
+38--        ecc_kse->key = NULL;
+39--
+40--        if ((ret == 0) &&
+41--            ((ssl->arrays->preMasterSz + ssSzPqc) > ENCRYPT_LEN)) {
+42-+        if ((ssl->arrays->preMasterSz + ssSzPqc) > ENCRYPT_LEN) {
+43-             WOLFSSL_MSG("shared secret is too long.");
+44-             ret = LENGTH_ERROR;
+45-         }
+46-diff --git a/tests/api/test_tls13.c b/tests/api/test_tls13.c
+47-index ba12b7e36..08b9a5f23 100644
+48---- a/tests/api/test_tls13.c
+49-+++ b/tests/api/test_tls13.c
+50-@@ -4579,6 +4579,104 @@ int test_tls13_pqc_hybrid_truncated_keyshare(void)
+51-     return EXPECT_RESULT();
+52- }
+53- 
+54-+/* Test that a malformed ECDH portion in a correctly-sized PQC hybrid
+55:+ * KeyShare does not leave a dangling pointer in keyShareEntry->key.
+56-+ *
+57-+ * The earlier truncated-keyshare test is rejected by the keLen <= ctSz
+58-+ * check before TLSX_KeyShare_ProcessPqcHybridClient sets up the
+59-+ * ecc_kse->key = keyShareEntry->key alias, so it does not exercise the
+60-+ * dangling-pointer path. This test sends a SECP256R1MLKEM768 key_share
+61-+ * whose total length is correct (65-byte ECDH point + 1088-byte ML-KEM
+62-+ * ciphertext = 1153 bytes) but whose ECDH leading byte (0x05) is not a
+63-+ * valid X9.63 marker. ProcessEcc_ex then fails at wc_ecc_import_x963
+64-+ * AFTER its unconditional cleanup at the end of the function frees the
+65-+ * aliased key. Without the fix, the outer keyShareEntry->key still
+66-+ * holds the freed pointer; wolfSSL_free -> TLSX_KeyShare_FreeAll calls
+67-+ * wc_ecc_free + XFREE on it, producing a use-after-free and a double
+68-+ * free that ASAN flags. */
+69-+int test_tls13_pqc_hybrid_malformed_ecdh(void)
+70-+{
+71-+    EXPECT_DECLS;
+72-+#if defined(WOLFSSL_TLS13) && !defined(NO_WOLFSSL_CLIENT) && \
+73-+    defined(WOLFSSL_HAVE_MLKEM) && defined(WOLFSSL_PQC_HYBRIDS) && \
+74-+    !defined(WOLFSSL_NO_ML_KEM_768) && defined(HAVE_ECC) && \
+75-+    !defined(WOLFSSL_MLKEM_NO_DECAPSULATE) && \
+76-+    !defined(WOLFSSL_MLKEM_NO_MAKE_KEY) && \
+77-+    (!defined(NO_ECC256) || defined(HAVE_ALL_CURVES)) && \
+78-+    !defined(NO_ECC_SECP)
+79-+    WOLFSSL_CTX *ctx = NULL;
+80-+    WOLFSSL *ssl = NULL;
+81-+    /* 5 (record) + 4 (HS) + 1207 (ServerHello body) = 1216 bytes. */
+82-+    static byte serverHello[1216];
+83-+    word32 i = 0;
+84-+    WOLFSSL_BUFFER_INFO msg;
+85-+
+86-+    XMEMSET(serverHello, 0, sizeof(serverHello));
+87-+
+88-+    /* Record: handshake, TLS 1.2 compat, length 1211 (0x04bb). */
+89-+    serverHello[i++] = 0x16; serverHello[i++] = 0x03; serverHello[i++] = 0x03;
+90-+    serverHello[i++] = 0x04; serverHello[i++] = 0xbb;
+91-+    /* Handshake: ServerHello (0x02), length 1207 (0x0004b7). */
+92-+    serverHello[i++] = 0x02;
+93-+    serverHello[i++] = 0x00; serverHello[i++] = 0x04; serverHello[i++] = 0xb7;
+94-+    /* legacy_version */
+95-+    serverHello[i++] = 0x03; serverHello[i++] = 0x03;
+96-+    /* random (32 bytes) */
+97-+    XMEMSET(&serverHello[i], 0x42, 32); i += 32;
+98-+    /* legacy_session_id_echo length: 0 */
+99-+    serverHello[i++] = 0x00;
+100-+    /* cipher_suite: TLS_AES_128_GCM_SHA256 */
+101-+    serverHello[i++] = 0x13; serverHello[i++] = 0x01;
+102-+    /* legacy_compression_method: null */
+103-+    serverHello[i++] = 0x00;
+104-+    /* extensions length: 1167 (0x048f) */
+105-+    serverHello[i++] = 0x04; serverHello[i++] = 0x8f;
+106-+    /* extension: supported_versions -> TLS 1.3 */
+107-+    serverHello[i++] = 0x00; serverHello[i++] = 0x2b;
+108-+    serverHello[i++] = 0x00; serverHello[i++] = 0x02;
+109-+    serverHello[i++] = 0x03; serverHello[i++] = 0x04;
+110-+    /* extension: key_share, extension_data length 1157 (0x0485) */
+111-+    serverHello[i++] = 0x00; serverHello[i++] = 0x33;
+112-+    serverHello[i++] = 0x04; serverHello[i++] = 0x85;
+113-+    /* server_share.group: SECP256R1MLKEM768 (0x11eb) */
+114-+    serverHello[i++] = 0x11; serverHello[i++] = 0xeb;
+115-+    /* key_exchange length: 1153 (0x0481) */
+116-+    serverHello[i++] = 0x04; serverHello[i++] = 0x81;
+117-+    /* ECDH portion (65 bytes): leading 0x05 is not a valid X9.63 marker
+118-+     * (valid markers: 0x04, 0x06, 0x07). The remaining 64 bytes stay zero
+119-+     * from the initial XMEMSET. */
+120-+    serverHello[i++] = 0x05;
+121-+    i += 64;
+122-+    /* PQC portion (1088 bytes): all zero from the initial XMEMSET. */
+123-+    i += 1088;
+124-+    AssertIntEQ((int)i, (int)sizeof(serverHello));
+125-+
+126-+    ExpectNotNull(ctx = wolfSSL_CTX_new(wolfTLSv1_3_client_method()));
+127-+    wolfSSL_SetIORecv(ctx, PqcHybridUafRecv);
+128-+    wolfSSL_SetIOSend(ctx, PqcHybridUafSend);
+129-+
+130-+    ExpectNotNull(ssl = wolfSSL_new(ctx));
+131-+
+132-+    /* Match the server's offered group so this key_share is processed. */
+133-+    ExpectIntEQ(wolfSSL_UseKeyShare(ssl, WOLFSSL_SECP256R1MLKEM768),
+134-+        WOLFSSL_SUCCESS);
+135-+
+136-+    msg.buffer = serverHello;
+137-+    msg.length = (unsigned int)sizeof(serverHello);
+138-+    wolfSSL_SetIOReadCtx(ssl, &msg);
+139-+
+140-+    /* Connect should fail gracefully on the malformed ECDH point. */
+141-+    ExpectIntEQ(wolfSSL_connect_TLSv13(ssl),
+142-+        WC_NO_ERR_TRACE(WOLFSSL_FATAL_ERROR));
+143-+
+144-+    /* Without the fix, this triggers UAF + double-free in
+145-+     * TLSX_KeyShare_FreeAll. */
+146-+    wolfSSL_free(ssl);
+147-+    wolfSSL_CTX_free(ctx);
+148-+#endif
+149-+    return EXPECT_RESULT();
+150-+}
+151-+
+152- /* Test that a TLS 1.3 NewSessionTicket with a ticket shorter than ID_LEN
+153-  * (32 bytes) does not cause an unsigned integer underflow / OOB read in
+154-  * SetTicket. Uses a full memio handshake, then injects a crafted
+155-diff --git a/tests/api/test_tls13.h b/tests/api/test_tls13.h
+156-index c8b42fc56..5d24f1674 100644
+157---- a/tests/api/test_tls13.h
+158-+++ b/tests/api/test_tls13.h
+159-@@ -45,6 +45,7 @@ int test_tls13_unknown_ext_rejected(void);
+160- int test_tls13_cert_req_sigalgs(void);
+161- int test_tls13_derive_keys_no_key(void);
+162- int test_tls13_pqc_hybrid_truncated_keyshare(void);
+163-+int test_tls13_pqc_hybrid_malformed_ecdh(void);
+164- int test_tls13_empty_record_limit(void);
+165- int test_tls13_short_session_ticket(void);
+166- int test_tls13_early_data_0rtt_replay(void);
+167-@@ -82,6 +83,7 @@ int test_tls13_cert_with_extern_psk_sh_confirms_resumption(void);
+168-     TEST_DECL_GROUP("tls13", test_tls13_cert_req_sigalgs),       \
+169-     TEST_DECL_GROUP("tls13", test_tls13_derive_keys_no_key),    \
+170-     TEST_DECL_GROUP("tls13", test_tls13_pqc_hybrid_truncated_keyshare), \
+171-+    TEST_DECL_GROUP("tls13", test_tls13_pqc_hybrid_malformed_ecdh), \
+172-     TEST_DECL_GROUP("tls13", test_tls13_empty_record_limit),    \
+173-     TEST_DECL_GROUP("tls13", test_tls13_short_session_ticket),  \
+174-     TEST_DECL_GROUP("tls13", test_tls13_early_data_0rtt_replay), \

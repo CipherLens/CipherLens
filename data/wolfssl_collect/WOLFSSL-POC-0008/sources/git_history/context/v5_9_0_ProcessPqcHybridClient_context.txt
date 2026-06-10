@@ -1,0 +1,241 @@
+9767-        ret = wc_KyberKey_CipherTextSize(kem, &ctSz);
+9768-    }
+9769-
+9770-#ifndef WOLFSSL_TLSX_PQC_MLKEM_STORE_OBJ
+9771-    if (ret == 0) {
+9772-        ret = wc_KyberKey_PrivateKeySize(kem, &privSz);
+9773-    }
+9774-    if (ret == 0 && privSz != keyShareEntry->privKeyLen) {
+9775-        WOLFSSL_MSG("Invalid private key size.");
+9776-        ret = BAD_FUNC_ARG;
+9777-    }
+9778-    if (ret == 0) {
+9779-        ret = wc_KyberKey_DecodePrivateKey(kem, keyShareEntry->privKey, privSz);
+9780-    }
+9781-#endif
+9782-
+9783-    if (ret == 0) {
+9784-        ret = wc_KyberKey_Decapsulate(kem, ssOutput,
+9785-                                      keyShareEntry->ke, ctSz);
+9786-        if (ret != 0) {
+9787-            WOLFSSL_MSG("wc_KyberKey decapsulation failure.");
+9788-            ret = BAD_FUNC_ARG;
+9789-        }
+9790-    }
+9791-    if (ret == 0) {
+9792-        *ssOutSz = ssSz;
+9793-    }
+9794-
+9795-    wc_KyberKey_Free(kem);
+9796-
+9797-    XFREE(kem, ssl->heap, DYNAMIC_TYPE_PRIVATE_KEY);
+9798-    keyShareEntry->key = NULL;
+9799-
+9800-    XFREE(keyShareEntry->ke, ssl->heap, DYNAMIC_TYPE_PUBLIC_KEY);
+9801-    keyShareEntry->ke = NULL;
+9802-
+9803-    return ret;
+9804-}
+9805-
+9806-/* Process the Kyber key share extension on the client side.
+9807- *
+9808- * ssl            The SSL/TLS object.
+9809- * keyShareEntry  The key share entry object to use to calculate shared secret.
+9810- *
+9811- * returns 0 on success and other values indicate failure.
+9812- */
+9813-static int TLSX_KeyShare_ProcessPqcClient(WOLFSSL* ssl,
+9814-                                          KeyShareEntry* keyShareEntry)
+9815-{
+9816-    return TLSX_KeyShare_ProcessPqcClient_ex(ssl, keyShareEntry,
+9817-                                             ssl->arrays->preMasterSecret,
+9818-                                             &ssl->arrays->preMasterSz);
+9819-}
+9820-
+9821-/* Process the hybrid key share extension on the client side.
+9822- *
+9823- * ssl            The SSL/TLS object.
+9824- * keyShareEntry  The key share entry object to use to calculate shared secret.
+9825- * returns 0 on success and other values indicate failure.
+9826- */
+9827:static int TLSX_KeyShare_ProcessPqcHybridClient(WOLFSSL* ssl,
+9828-                                                KeyShareEntry* keyShareEntry)
+9829-{
+9830-    int      ret = 0;
+9831-    int      pqc_group = 0;
+9832-    int      ecc_group = 0;
+9833-    int      pqc_first = 0;
+9834-    KeyShareEntry* pqc_kse = NULL;
+9835-    KeyShareEntry *ecc_kse = NULL;
+9836-    word32   ctSz = 0;
+9837-    word32   ssSzPqc = 0;
+9838-    word32   ssSzEcc = 0;
+9839-
+9840-    if (ssl->options.side == WOLFSSL_SERVER_END) {
+9841-        /* I am the server, the shared secret has already been generated and
+9842-         * is in ssl->arrays->preMasterSecret, so nothing really to do here. */
+9843-        return 0;
+9844-    }
+9845-
+9846-    if (keyShareEntry->ke == NULL) {
+9847-        WOLFSSL_MSG("Invalid PQC algorithm specified.");
+9848-        return BAD_FUNC_ARG;
+9849-    }
+9850-
+9851-    /* I am the client, both the PQC ciphertext and the ECHD public key are in
+9852-     * keyShareEntry->ke */
+9853-
+9854-    /* Determine the ECC and PQC group of the hybrid combination */
+9855-    findEccPqc(&ecc_group, &pqc_group, &pqc_first, keyShareEntry->group);
+9856-    if (ecc_group == 0 || pqc_group == 0) {
+9857-        WOLFSSL_MSG("Invalid hybrid group");
+9858-        ret = BAD_FUNC_ARG;
+9859-    }
+9860-
+9861-    if (ret == 0) {
+9862-        ecc_kse = (KeyShareEntry*)XMALLOC(sizeof(*ecc_kse), ssl->heap,
+9863-                   DYNAMIC_TYPE_TLSX);
+9864-        if (ecc_kse == NULL) {
+9865-            WOLFSSL_MSG("kse memory allocation failure");
+9866-            ret = MEMORY_ERROR;
+9867-        }
+9868-        else {
+9869-            XMEMSET(ecc_kse, 0, sizeof(*ecc_kse));
+9870-        }
+9871-    }
+9872-    if (ret == 0) {
+9873-        pqc_kse = (KeyShareEntry*)XMALLOC(sizeof(*pqc_kse), ssl->heap,
+9874-                   DYNAMIC_TYPE_TLSX);
+9875-        if (pqc_kse == NULL) {
+9876-            WOLFSSL_MSG("kse memory allocation failure");
+9877-            ret = MEMORY_ERROR;
+9878-        }
+9879-        else {
+9880-            XMEMSET(pqc_kse, 0, sizeof(*pqc_kse));
+9881-        }
+9882-    }
+9883-
+9884-    /* The ciphertext and shared secret sizes of a KEM are fixed. Hence, we
+9885-     * decode these sizes to separate the KEM ciphertext from the ECDH public
+9886-     * key. */
+9887-    if (ret == 0) {
+9888-    #ifndef WOLFSSL_TLSX_PQC_MLKEM_STORE_OBJ
+9889-        int type;
+9890-
+9891-        pqc_kse->privKey = keyShareEntry->privKey;
+9892-
+9893-        ret = mlkem_id2type(pqc_group, &type);
+9894-        if (ret != 0) {
+9895-            WOLFSSL_MSG("Invalid Kyber algorithm specified.");
+9896-            ret = BAD_FUNC_ARG;
+9897-        }
+9898-        if (ret == 0) {
+9899-            pqc_kse->key = XMALLOC(sizeof(KyberKey), ssl->heap,
+9900-                                DYNAMIC_TYPE_PRIVATE_KEY);
+9901-            if (pqc_kse->key == NULL) {
+9902-                WOLFSSL_MSG("GenPqcKey memory error");
+9903-                ret = MEMORY_E;
+9904-            }
+9905-        }
+9906-        if (ret == 0) {
+9907-            ret = wc_KyberKey_Init(type, (KyberKey*)pqc_kse->key,
+9908-                                   ssl->heap, ssl->devId);
+9909-            if (ret != 0) {
+9910-                WOLFSSL_MSG("Error creating Kyber KEM");
+9911-            }
+9912-        }
+9913-    #else
+9914-        pqc_kse->key = keyShareEntry->privKey;
+9915-    #endif
+9916-
+9917-        pqc_kse->group = pqc_group;
+9918-        pqc_kse->privKeyLen = keyShareEntry->privKeyLen;
+9919-
+9920-        if (ret == 0) {
+9921-            ret = wc_KyberKey_SharedSecretSize((KyberKey*)pqc_kse->key,
+9922-                                               &ssSzPqc);
+9923-        }
+9924-        if (ret == 0) {
+9925-            ret = wc_KyberKey_CipherTextSize((KyberKey*)pqc_kse->key,
+9926-                                             &ctSz);
+9927-            if (ret == 0 && keyShareEntry->keLen <= ctSz) {
+9928-                WOLFSSL_MSG("Invalid ciphertext size.");
+9929-                ret = BAD_FUNC_ARG;
+9930-            }
+9931-        }
+9932-        if (ret == 0) {
+9933-            pqc_kse->keLen = ctSz;
+9934-            pqc_kse->ke = (byte*)XMALLOC(pqc_kse->keLen, ssl->heap,
+9935-                                         DYNAMIC_TYPE_PUBLIC_KEY);
+9936-            if (pqc_kse->ke == NULL) {
+9937-                WOLFSSL_MSG("pqc_kse memory allocation failure");
+9938-                ret = MEMORY_ERROR;
+9939-            }
+9940-            /* Copy the PQC KEM ciphertext. Depending on the pqc_first flag,
+9941-             * the KEM ciphertext comes before or after the ECDH public key. */
+9942-            if (ret == 0) {
+9943-                int offset = keyShareEntry->keLen - ctSz;
+9944-
+9945-                if (pqc_first)
+9946-                    offset = 0;
+9947-
+9948-                XMEMCPY(pqc_kse->ke, keyShareEntry->ke + offset, ctSz);
+9949-            }
+9950-        }
+9951-    }
+9952-
+9953-    if (ret == 0) {
+9954-        ecc_kse->group = ecc_group;
+9955-        ecc_kse->keLen = keyShareEntry->keLen - ctSz;
+9956-        ecc_kse->key = keyShareEntry->key;
+9957-        ecc_kse->ke = (byte*)XMALLOC(ecc_kse->keLen, ssl->heap,
+9958-                                        DYNAMIC_TYPE_PUBLIC_KEY);
+9959-        if (ecc_kse->ke == NULL) {
+9960-            WOLFSSL_MSG("ecc_kse memory allocation failure");
+9961-            ret = MEMORY_ERROR;
+9962-        }
+9963-        /* Copy the ECDH public key. Depending on the pqc_first flag, the
+9964-         * KEM ciphertext comes before or after the ECDH public key. */
+9965-        if (ret == 0) {
+9966-            int offset = 0;
+9967-
+9968-            if (pqc_first)
+9969-                offset = ctSz;
+9970-
+9971-            XMEMCPY(ecc_kse->ke, keyShareEntry->ke + offset, ecc_kse->keLen);
+9972-        }
+9973-    }
+9974-
+9975-    /* Process ECDH key share part. The generated shared secret is directly
+9976-     * stored in the ssl->arrays->preMasterSecret buffer. Depending on the
+9977-     * pqc_first flag, the ECDH shared secret part goes before or after the
+9978-     * KEM part. */
+9979-    if (ret == 0) {
+9980-        int offset = 0;
+9981-
+9982-        /* Set the ECC size variable to the initial buffer size */
+9983-        ssSzEcc = ssl->arrays->preMasterSz;
+9984-
+9985-        if (pqc_first)
+9986-            offset = ssSzPqc;
+9987-
+9988-    #ifdef HAVE_CURVE25519
+9989-        if (ecc_group == WOLFSSL_ECC_X25519) {
+9990-            ret = TLSX_KeyShare_ProcessX25519_ex(ssl, ecc_kse,
+9991-                    ssl->arrays->preMasterSecret + offset, &ssSzEcc);
+9992-        }
+9993-        else
+9994-    #endif
+9995-    #ifdef HAVE_CURVE448
+9996-        if (ecc_group == WOLFSSL_ECC_X448) {
+9997-            ret = TLSX_KeyShare_ProcessX448_ex(ssl, ecc_kse,
+9998-                    ssl->arrays->preMasterSecret + offset, &ssSzEcc);
+9999-        }
+10000-        else
+10001-    #endif
+10002-        {
+10003-            ret = TLSX_KeyShare_ProcessEcc_ex(ssl, ecc_kse,
+10004-                    ssl->arrays->preMasterSecret + offset, &ssSzEcc);
+10005-        }
+10006-    }
+10007-

@@ -1,0 +1,26 @@
+commit 9467d82ae690a4e0d17b04131131e51350800982
+Author: Kareem <kareem@wolfssl.com>
+Date:   Mon May 18 10:25:02 2026 -0700
+
+    NULL the correct key in TLSX_KeyShare_ProcessPqcHybridClient when using WOLFSSL_TLSX_PQC_MLKEM_STORE_OBJ.
+    Thanks to Haiyang Huang for the report.
+---
+ src/tls.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/tls.c b/src/tls.c
+index ae3d4c576..f847868af 100644
+--- a/src/tls.c
++++ b/src/tls.c
+@@ -10215,7 +10215,11 @@ static int TLSX_KeyShare_ProcessPqcHybridClient(WOLFSSL* ssl,
+             keyShareEntry->lastRet = WC_PENDING_E;
+             /* Prevent freeing of the ECC and ML-KEM private keys */
+             ecc_kse->key = NULL;
++        #ifndef WOLFSSL_TLSX_PQC_MLKEM_STORE_OBJ
+             pqc_kse->privKey = NULL;
++        #else
++            pqc_kse->key = NULL;
++        #endif
+         }
+         else
+     #endif

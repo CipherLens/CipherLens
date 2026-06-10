@@ -1,0 +1,1194 @@
+{
+    "schema_version": "wolfssl-pattern-recipes-v1",
+    "library": "wolfSSL",
+    "scope": [
+        "X.509",
+        "ASN.1",
+        "OpenSSL compatibility API",
+        "memory safety"
+    ],
+    "summary": {
+        "total_patterns": 10,
+        "total_related_pocs": 10,
+        "quality_level": "Q1_strict_reproduction_candidate",
+        "primary_oracle": "sanitizer_oracle"
+    },
+    "patterns": [
+        {
+            "pattern_id": "Pattern-01",
+            "name": "X.509 name field repetition / loc array overflow",
+            "related_pocs": [
+                "WOLFSSL-POC-0001"
+            ],
+            "bug_class": "X.509 certificate parsing heap-buffer-overflow",
+            "trigger_surface": "x509_name_parser",
+            "input_type": "malformed_x509_certificate",
+            "input_provenance": "original_issue_attachment",
+            "quality_level": "Q1_strict_reproduction_candidate",
+            "bug_mechanism": {
+                "core_issue": "Repeated or unusually structured X.509 name fields cause the parser to record more name locations than a fixed-size internal array can safely hold.",
+                "trust_boundary": "ASN.1 encoded certificate name fields -> parser-internal fixed-size location array",
+                "vulnerable_operation": "fixed-size array write indexed by parsed name-field count",
+                "failure_mode": [
+                    "out_of_bounds_write",
+                    "corrupted_parse_state",
+                    "sanitizer_visible_crash"
+                ]
+            },
+            "recipe_slots": {
+                "name_sequence_count": {
+                    "type": "integer",
+                    "role": "controls the number of parsed name elements",
+                    "mutation": "increase RDN / AttributeTypeAndValue count"
+                },
+                "name_field_type": {
+                    "type": "enum",
+                    "role": "selects name OID stored by parser",
+                    "values": [
+                        "commonName",
+                        "organizationName",
+                        "organizationalUnitName",
+                        "emailAddress",
+                        "userId",
+                        "domainComponent"
+                    ]
+                },
+                "nesting_shape": {
+                    "type": "asn1_structure",
+                    "role": "controls SET / SEQUENCE nesting",
+                    "mutation": "duplicate nested name structures"
+                },
+                "parser_state_capacity": {
+                    "type": "implicit_constant",
+                    "role": "internal fixed array capacity to exceed"
+                },
+                "terminal_malformed_length": {
+                    "type": "integer",
+                    "role": "optional malformed terminal length",
+                    "mutation": "truncate final field or overstate length"
+                }
+            },
+            "mutation_strategy": [
+                "Start from a valid or semi-valid X.509 certificate.",
+                "Locate subject or issuer Name.",
+                "Repeat one or more AttributeTypeAndValue entries.",
+                "Prefer fields stored in an internal location table.",
+                "Increase repetition until the parser exceeds its expected internal field count.",
+                "Optionally add malformed terminal length to force error cleanup paths."
+            ],
+            "oracle": {
+                "primary": "sanitizer_crash",
+                "signals": [
+                    "AddressSanitizer error",
+                    "out-of-bounds write",
+                    "heap-buffer-overflow",
+                    "different vulnerable/fixed/current behavior"
+                ],
+                "fixed_behavior": [
+                    "safe rejection",
+                    "bounded name-field count",
+                    "no sanitizer crash"
+                ]
+            },
+            "ast_masking_targets": [
+                "fixed-size array write indexed by count",
+                "name-field parser loop",
+                "missing upper-bound check before count increment",
+                "error cleanup after malformed ASN.1 name"
+            ],
+            "rag_keywords": [
+                "GetName",
+                "DecodedName",
+                "loc",
+                "locSz",
+                "subject name",
+                "issuer name",
+                "RDN",
+                "AttributeTypeAndValue",
+                "ASN.1 name parser"
+            ],
+            "dataset_tags": [
+                "x509",
+                "asn1",
+                "name-parser",
+                "count-overflow",
+                "fixed-array",
+                "sanitizer-oracle"
+            ]
+        },
+        {
+            "pattern_id": "Pattern-02",
+            "name": "X.509 text field fixed-size buffer off-by-one",
+            "related_pocs": [
+                "WOLFSSL-POC-0002"
+            ],
+            "bug_class": "X.509 certificate text parsing off-by-one out-of-bounds byte overwrite",
+            "trigger_surface": "openssl_compat_x509_text_extraction",
+            "input_type": "reconstructed_x509_certificate",
+            "input_provenance": "reconstructed_from_exploitdb_talos_poc_command",
+            "quality_level": "Q1_strict_reproduction_candidate",
+            "bug_mechanism": {
+                "core_issue": "A text extraction API copies an X.509 text field into a caller-provided fixed-size buffer and appends a terminator without correctly accounting for the terminator position.",
+                "trust_boundary": "certificate text field length -> caller-provided output buffer",
+                "vulnerable_operation": "string copy followed by terminator write",
+                "failure_mode": [
+                    "stack_buffer_overflow",
+                    "off_by_one_write",
+                    "out_of_bounds_null_termination"
+                ]
+            },
+            "recipe_slots": {
+                "target_text_field": {
+                    "type": "enum",
+                    "role": "selected X.509 text field",
+                    "values": [
+                        "commonName",
+                        "countryName",
+                        "localityName",
+                        "stateOrProvinceName",
+                        "organizationName",
+                        "organizationalUnitName"
+                    ],
+                    "observed_value": "localityName"
+                },
+                "output_buffer_size": {
+                    "type": "integer",
+                    "role": "caller-provided buffer size",
+                    "observed_value": 80
+                },
+                "field_text_length": {
+                    "type": "integer",
+                    "role": "length of certificate text field",
+                    "mutation": "set equal to output_buffer_size or output_buffer_size - 1"
+                },
+                "terminator_policy": {
+                    "type": "boolean",
+                    "role": "whether API appends a string terminator",
+                    "mutation": "force terminator write at boundary"
+                },
+                "nid_selector": {
+                    "type": "enum",
+                    "role": "OpenSSL-compatible NID used to select field",
+                    "observed_value": "NID_localityName"
+                }
+            },
+            "mutation_strategy": [
+                "Build or modify an X.509 certificate subject field.",
+                "Select a text field consumed by get_text_by_NID-style APIs.",
+                "Set field length equal to the expected output buffer size.",
+                "Use a harness that provides a fixed-size stack buffer.",
+                "Call the text extraction API.",
+                "Detect whether the implementation writes a terminator out of bounds."
+            ],
+            "oracle": {
+                "primary": "asan_stack_buffer_overflow",
+                "signals": [
+                    "WRITE of size 1",
+                    "stack-buffer-overflow",
+                    "overflow immediately after fixed-size stack buffer"
+                ],
+                "fixed_behavior": [
+                    "safe truncation",
+                    "safe rejection",
+                    "no sanitizer crash"
+                ]
+            },
+            "ast_masking_targets": [
+                "copy into caller-provided buffer",
+                "manual null terminator write",
+                "condition using len without len - 1",
+                "OpenSSL compatibility text extraction wrapper"
+            ],
+            "rag_keywords": [
+                "wolfSSL_X509_NAME_get_text_by_NID",
+                "X509_NAME_get_text_by_NID",
+                "NID_localityName",
+                "localityName",
+                "textSz",
+                "buffer length",
+                "null terminator"
+            ],
+            "dataset_tags": [
+                "x509",
+                "openssl-compat-api",
+                "text-field",
+                "off-by-one",
+                "stack-buffer-overflow",
+                "sanitizer-oracle"
+            ]
+        },
+        {
+            "pattern_id": "Pattern-03",
+            "name": "ASN1_TIME length trust boundary error",
+            "related_pocs": [
+                "WOLFSSL-POC-0003"
+            ],
+            "bug_class": "X.509 date parsing buffer overflow",
+            "trigger_surface": "x509_time_setter_getter_api",
+            "input_type": "crafted_WOLFSSL_ASN1_TIME_object",
+            "input_provenance": "reconstructed_from_pr_10071_official_test_pattern",
+            "quality_level": "Q1_strict_reproduction_candidate",
+            "bug_mechanism": {
+                "core_issue": "An oversized ASN1_TIME declared length is accepted or stored, and later trusted by an accessor or serializer that writes into a smaller internal buffer.",
+                "trust_boundary": "ASN1_TIME type/length/data object -> internal X.509 date buffer",
+                "vulnerable_operation": "copy or serialize using untrusted stored length",
+                "failure_mode": [
+                    "heap_buffer_overflow",
+                    "oversized_memcpy",
+                    "invalid_length_trust"
+                ]
+            },
+            "recipe_slots": {
+                "time_object_type": {
+                    "type": "enum",
+                    "role": "ASN.1 time tag",
+                    "values": [
+                        "ASN_UTC_TIME",
+                        "ASN_GENERALIZED_TIME"
+                    ],
+                    "observed_value": "ASN_UTC_TIME"
+                },
+                "declared_time_length": {
+                    "type": "integer",
+                    "role": "length stored in ASN1_TIME",
+                    "observed_value": 255
+                },
+                "actual_data_capacity": {
+                    "type": "implicit_constant",
+                    "role": "actual capacity of internal date data buffer"
+                },
+                "target_date_field": {
+                    "type": "enum",
+                    "role": "selected X.509 validity field",
+                    "values": [
+                        "notBefore",
+                        "notAfter"
+                    ]
+                },
+                "accessor_path": {
+                    "type": "api",
+                    "role": "API that serializes or returns raw date data",
+                    "values": [
+                        "wolfSSL_X509_notBefore",
+                        "wolfSSL_X509_notAfter"
+                    ]
+                }
+            },
+            "mutation_strategy": [
+                "Create an X.509 object.",
+                "Create a crafted ASN1_TIME object.",
+                "Set a valid time type such as UTC time.",
+                "Set an oversized declared length.",
+                "Call notBefore or notAfter setter.",
+                "Call notBefore or notAfter accessor.",
+                "Compare vulnerable crash with fixed safe rejection."
+            ],
+            "oracle": {
+                "primary": "asan_heap_buffer_overflow",
+                "signals": [
+                    "heap-buffer-overflow",
+                    "WRITE of oversized date length",
+                    "crash in notBefore or notAfter path"
+                ],
+                "fixed_behavior": [
+                    "setter rejects oversized length",
+                    "accessor refuses invalid internal length",
+                    "harness exits nonzero without sanitizer crash"
+                ]
+            },
+            "ast_masking_targets": [
+                "setter storing length without capacity check",
+                "getter trusting stored length",
+                "copy into fixed-size date buffer",
+                "bounds check added around ASN1_TIME length"
+            ],
+            "rag_keywords": [
+                "wolfSSL_X509_set_notAfter",
+                "wolfSSL_X509_notAfter",
+                "wolfSSL_X509_set_notBefore",
+                "wolfSSL_X509_notBefore",
+                "WOLFSSL_ASN1_TIME",
+                "ASN_UTC_TIME",
+                "CTC_DATE_SIZE",
+                "notAfterData",
+                "notBeforeData"
+            ],
+            "dataset_tags": [
+                "x509",
+                "asn1-time",
+                "date-parser",
+                "length-trust",
+                "heap-buffer-overflow",
+                "safe-rejection"
+            ]
+        },
+        {
+            "pattern_id": "Pattern-04",
+            "name": "AuthorityKeyIdentifier subfield/full-extension length confusion",
+            "related_pocs": [
+                "WOLFSSL-POC-0004"
+            ],
+            "bug_class": "X.509 AuthorityKeyIdentifier heap buffer overflow",
+            "trigger_surface": "x509_authority_key_identifier_reencode",
+            "input_type": "reconstructed_DER_x509_certificate",
+            "input_provenance": "reconstructed_from_pr_10112_official_test_pattern",
+            "quality_level": "Q1_strict_reproduction_candidate",
+            "bug_mechanism": {
+                "core_issue": "The implementation checks the small keyIdentifier subfield length but copies the much larger full AuthorityKeyIdentifier extension source buffer into a fixed-size destination.",
+                "trust_boundary": "parsed AKID subfield and raw AKID extension encoding -> CertFromX509 fixed-size akid buffer",
+                "vulnerable_operation": "memcpy guarded by a different length variable than the copied length",
+                "failure_mode": [
+                    "heap_buffer_overflow",
+                    "length_confusion",
+                    "oversized_memcpy"
+                ]
+            },
+            "recipe_slots": {
+                "checked_length": {
+                    "type": "integer_or_variable",
+                    "role": "length used in guard",
+                    "observed_variable": "authKeyIdSz",
+                    "observed_value": 20
+                },
+                "copied_length": {
+                    "type": "integer_or_variable",
+                    "role": "length used in memcpy",
+                    "observed_variable": "authKeyIdSrcSz",
+                    "observed_value": 20046
+                },
+                "destination_capacity": {
+                    "type": "implicit_constant",
+                    "role": "size of destination buffer",
+                    "observed_expression": "sizeof(cert->akid)"
+                },
+                "oversized_substructure": {
+                    "type": "asn1_field",
+                    "role": "field used to inflate full extension size",
+                    "observed_value": "authorityCertIssuer URI"
+                },
+                "conversion_path": {
+                    "type": "api_path",
+                    "role": "path that converts WOLFSSL_X509 back into Cert / DER",
+                    "values": [
+                        "wolfSSL_X509_d2i",
+                        "wolfSSL_i2d_X509_bio",
+                        "CertFromX509"
+                    ]
+                }
+            },
+            "mutation_strategy": [
+                "Build a DER X.509 certificate.",
+                "Add an AuthorityKeyIdentifier extension.",
+                "Keep keyIdentifier small enough to pass the old guard.",
+                "Add a large authorityCertIssuer URI to inflate the full extension source size.",
+                "Parse the certificate using X.509 DER parser.",
+                "Trigger internal certificate conversion or re-encoding path.",
+                "Observe whether the full extension length is copied into a smaller destination."
+            ],
+            "oracle": {
+                "primary": "asan_heap_buffer_overflow",
+                "signals": [
+                    "WRITE of size 20046",
+                    "heap-buffer-overflow",
+                    "crash in CertFromX509",
+                    "crash during wolfSSL_i2d_X509_bio"
+                ],
+                "fixed_behavior": [
+                    "wolfSSL_i2d_X509_bio returns 0",
+                    "harness exits nonzero",
+                    "NO_CRASH_SIGNAL",
+                    "no sanitizer crash"
+                ]
+            },
+            "ast_masking_targets": [
+                "memcpy where guard length differs from copy length",
+                "raw extension copy into fixed-size parsed structure",
+                "AuthorityKeyIdentifier conversion code",
+                "X509 to internal Cert conversion",
+                "re-encoding path from parsed certificate"
+            ],
+            "rag_keywords": [
+                "CertFromX509",
+                "AuthorityKeyIdentifier",
+                "authKeyId",
+                "authKeyIdSz",
+                "authKeyIdSrc",
+                "authKeyIdSrcSz",
+                "cert->akid",
+                "WOLFSSL_AKID_NAME",
+                "wolfSSL_i2d_X509_bio"
+            ],
+            "dataset_tags": [
+                "x509",
+                "authority-key-identifier",
+                "length-confusion",
+                "checked-length-vs-copied-length",
+                "der-reencode",
+                "heap-buffer-overflow",
+                "sanitizer-oracle"
+            ]
+        },
+        {
+            "pattern_id": "Pattern-05",
+            "name": "DTLS 1.3 ACK record count / 16-bit length truncation overflow",
+            "related_pocs": [
+                "WOLFSSL-POC-0005"
+            ],
+            "bug_class": "DTLS 1.3 ACK record processing heap buffer overflow",
+            "trigger_surface": "dtls13_ack_record_serialization",
+            "input_type": "reconstructed_dtls13_ack_record_stress_pattern",
+            "input_provenance": "reconstructed_from_official_pr_10076_test_pattern",
+            "quality_level": "Q1_strict_reproduction_candidate",
+            "bug_mechanism": {
+                "core_issue": "The vulnerable implementation counts an unbounded DTLS 1.3 ACK record linked list and stores the computed serialized ACK list length into a 16-bit length field. The truncated length is used for output buffer sizing, while the serialization loop still writes every record in the full linked list.",
+                "trust_boundary": "DTLS 1.3 ACK/retransmission record tracking state -> ACK message serialization buffer",
+                "vulnerable_operation": "unbounded linked-list serialization after 16-bit length truncation",
+                "failure_mode": [
+                    "out_of_bounds_heap_write",
+                    "length_truncation",
+                    "record_count_overflow",
+                    "sanitizer_visible_crash"
+                ]
+            },
+            "recipe_slots": {
+                "ack_record_count": {
+                    "type": "integer",
+                    "role": "controls the number of ACK records serialized",
+                    "observed_value": 4097,
+                    "mutation": "increase ACK record insertions beyond the 16-bit encoded length boundary"
+                },
+                "record_number_encoding_size": {
+                    "type": "integer",
+                    "role": "bytes written per ACK record during serialization",
+                    "observed_expression": "DTLS13_RN_SIZE",
+                    "observed_value": 16
+                },
+                "encoded_length_type": {
+                    "type": "integer_type",
+                    "role": "narrow integer type used to store the computed ACK list byte length",
+                    "observed_value": "word16"
+                },
+                "truncated_length_expression": {
+                    "type": "expression",
+                    "role": "computed length that can wrap or truncate before buffer sizing",
+                    "observed_expression": "(word16)(DTLS13_RN_SIZE * numberElements)"
+                },
+                "serialization_loop": {
+                    "type": "loop",
+                    "role": "writes all ACK records from the linked list regardless of truncated length",
+                    "observed_expression": "while (recordNumberList != NULL)"
+                },
+                "output_buffer_path": {
+                    "type": "api_path",
+                    "role": "buffer sizing and output buffer retrieval path",
+                    "values": [
+                        "Dtls13WriteAckMessage",
+                        "CheckAvailableSize",
+                        "GetOutputBuffer",
+                        "c64toa"
+                    ]
+                },
+                "fixed_record_bound": {
+                    "type": "integer",
+                    "role": "maximum ACK records allowed in fixed versions",
+                    "observed_variable": "seenRecordsCount",
+                    "observed_value": 128
+                }
+            },
+            "mutation_strategy": [
+                "Create or reuse a DTLS 1.3 client/server context.",
+                "Complete a DTLS 1.3 handshake so that ACK message serialization state is initialized.",
+                "Insert many ACK records through the retransmission ACK tracking path.",
+                "Use a record count that exceeds the maximum encodable 16-bit ACK list length.",
+                "Trigger ACK message serialization through Dtls13WriteAckMessage or an equivalent ACK send path.",
+                "Compare vulnerable, fixed, and current behavior under the same ACK record stress pattern."
+            ],
+            "oracle": {
+                "primary": "asan_out_of_bounds_heap_write",
+                "signals": [
+                    "ERROR: AddressSanitizer",
+                    "unknown-crash or heap-buffer-overflow",
+                    "WRITE of size 8",
+                    "c64toa",
+                    "Dtls13WriteAckMessage",
+                    "0 bytes after heap region",
+                    "exit code 134"
+                ],
+                "fixed_behavior": [
+                    "seenRecordsCount is bounded",
+                    "Dtls13WriteAckMessage returns 0",
+                    "encoded ACK length remains bounded",
+                    "exit code 0",
+                    "no ASan crash"
+                ]
+            },
+            "ast_masking_targets": [
+                "unbounded linked-list count used for message length",
+                "integer narrowing from record count expression to word16",
+                "buffer size check using truncated length",
+                "serialization loop over full list",
+                "missing maximum record-count guard before insertion",
+                "protocol ACK / retransmission record serializer"
+            ],
+            "rag_keywords": [
+                "Dtls13WriteAckMessage",
+                "Dtls13RtxAddAck",
+                "DTLS13_RN_SIZE",
+                "DTLS13_ACK_MAX_RECORDS",
+                "seenRecords",
+                "seenRecordsCount",
+                "ACK records",
+                "word16",
+                "c16toa",
+                "c64toa",
+                "CheckAvailableSize",
+                "GetOutputBuffer",
+                "DTLS 1.3 ACK"
+            ],
+            "dataset_tags": [
+                "dtls13",
+                "ack-record",
+                "record-count-overflow",
+                "length-truncation",
+                "word16-length-field",
+                "linked-list-serialization",
+                "heap-buffer-overflow",
+                "sanitizer-oracle"
+            ]
+        },
+        {
+            "pattern_id": "Pattern-06",
+            "name": "PKCS7 custom signed attributes / fixed attribute array overflow",
+            "related_pocs": [
+                "WOLFSSL-POC-0006"
+            ],
+            "bug_class": "PKCS7 SignedData encoding out-of-bounds write",
+            "trigger_surface": "pkcs7_signeddata_attribute_encoding",
+            "input_type": "crafted_pkcs7_signeddata_encoding_request",
+            "input_provenance": "reconstructed_from_official_security_advisory_and_source_patch",
+            "quality_level": "Q1_strict_reproduction_candidate",
+            "bug_mechanism": {
+                "core_issue": "Caller-controlled custom signed attributes exceed the capacity of a fixed internal PKCS7 SignedData signed attribute array.",
+                "trust_boundary": "caller-supplied PKCS7Attrib array and signedAttribsSz -> ESD fixed signedAttribs array",
+                "vulnerable_operation": "EncodeAttributes writes custom attributes into esd->signedAttribs without validating remaining fixed-array capacity",
+                "failure_mode": [
+                    "stack_buffer_overflow",
+                    "out_of_bounds_write",
+                    "fixed_array_capacity_overflow",
+                    "sanitizer_visible_crash"
+                ]
+            },
+            "recipe_slots": {
+                "custom_attribute_count": {
+                    "type": "integer",
+                    "role": "controls number of caller-supplied custom signed attributes",
+                    "observed_value": 8,
+                    "mutation": "increase pkcs7->signedAttribsSz above the fixed internal attribute capacity"
+                },
+                "internal_attribute_capacity": {
+                    "type": "implicit_constant",
+                    "role": "maximum internal signed attribute descriptor slots",
+                    "observed_expression": "signedAttribs[7] / MAX_SIGNED_ATTRIBS_SZ"
+                },
+                "existing_attribute_index": {
+                    "type": "integer_or_variable",
+                    "role": "current insertion index after default/canned attributes",
+                    "observed_variable": "atrIdx"
+                },
+                "remaining_capacity": {
+                    "type": "integer_or_variable",
+                    "role": "fixed-version capacity check before custom attribute encoding",
+                    "observed_expression": "MAX_SIGNED_ATTRIBS_SZ - atrIdx"
+                },
+                "destination_array": {
+                    "type": "fixed_array",
+                    "role": "internal encoded attribute destination",
+                    "observed_expression": "esd->signedAttribs"
+                },
+                "encoder_function": {
+                    "type": "function",
+                    "role": "writes encoded attribute descriptors into destination array",
+                    "observed_value": "EncodeAttributes"
+                },
+                "api_entrypoint": {
+                    "type": "api_path",
+                    "role": "public API path that triggers signed attribute construction",
+                    "values": [
+                        "wc_PKCS7_EncodeSignedData",
+                        "wc_PKCS7_EncodeSignedData_ex",
+                        "wc_PKCS7_BuildSignedAttributes"
+                    ]
+                }
+            },
+            "mutation_strategy": [
+                "Create a valid PKCS7 SignedData encoding request.",
+                "Initialize signing certificate and private key material.",
+                "Provide a custom PKCS7Attrib array.",
+                "Set signedAttribsSz above the internal signed attribute slot capacity.",
+                "Call wc_PKCS7_EncodeSignedData or wc_PKCS7_EncodeSignedData_ex.",
+                "Observe whether custom attributes are rejected before EncodeAttributes writes into the fixed array."
+            ],
+            "oracle": {
+                "primary": "asan_stack_buffer_overflow",
+                "signals": [
+                    "ERROR: AddressSanitizer: stack-buffer-overflow",
+                    "WRITE of size 8",
+                    "crash in EncodeAttributes",
+                    "crash path includes wc_PKCS7_BuildSignedAttributes and wc_PKCS7_EncodeSignedData"
+                ],
+                "fixed_behavior": [
+                    "wc_PKCS7_EncodeSignedData returns -132",
+                    "safe rejection",
+                    "NO_ASAN_CRASH_OBSERVED",
+                    "no sanitizer crash"
+                ]
+            },
+            "ast_masking_targets": [
+                "fixed-size signed attribute array",
+                "custom attribute count addition",
+                "EncodeAttributes call using caller-controlled count",
+                "missing remaining-capacity check before fixed-array write",
+                "availableSpace / BUFFER_E guard in fixed version"
+            ],
+            "rag_keywords": [
+                "wc_PKCS7_EncodeSignedData",
+                "wc_PKCS7_EncodeSignedData_ex",
+                "wc_PKCS7_BuildSignedAttributes",
+                "EncodeAttributes",
+                "PKCS7Attrib",
+                "signedAttribs",
+                "signedAttribsSz",
+                "signedAttribsCount",
+                "MAX_SIGNED_ATTRIBS_SZ",
+                "availableSpace",
+                "BUFFER_E"
+            ],
+            "dataset_tags": [
+                "pkcs7",
+                "signeddata",
+                "custom-signed-attributes",
+                "fixed-array-overflow",
+                "stack-buffer-overflow",
+                "attribute-count-overflow",
+                "encoder-path",
+                "sanitizer-oracle"
+            ]
+        },
+        {
+            "pattern_id": "Pattern-07",
+            "name": "PKCS7 ORI OID / fixed stack OID buffer overflow",
+            "related_pocs": [
+                "WOLFSSL-POC-0007"
+            ],
+            "bug_class": "PKCS7 ORI OID processing stack buffer overflow",
+            "trigger_surface": "pkcs7_ori_recipient_decryption",
+            "input_type": "reconstructed_pkcs7_envelopeddata_ori_oversized_oid",
+            "input_provenance": "reconstructed_from_official_pr_10116_test_pattern",
+            "quality_level": "Q1_strict_reproduction_candidate",
+            "bug_mechanism": {
+                "core_issue": "An ASN.1 parsed ORI OBJECT IDENTIFIER length is trusted and copied into a fixed stack OID buffer before validating capacity.",
+                "trust_boundary": "ASN.1 PKCS7/CMS EnvelopedData OtherRecipientInfo oriType OID -> wc_PKCS7_DecryptOri stack buffer",
+                "vulnerable_operation": "XMEMCPY copies oriOIDSz bytes into oriOID[MAX_OID_SZ] without checking oriOIDSz <= MAX_OID_SZ first",
+                "failure_mode": [
+                    "stack_buffer_overflow",
+                    "out_of_bounds_write",
+                    "oid_length_trust_boundary_error",
+                    "sanitizer_visible_crash"
+                ]
+            },
+            "recipe_slots": {
+                "ori_oid_length": {
+                    "type": "integer",
+                    "role": "controls the number of bytes copied into the fixed ORI OID stack buffer",
+                    "observed_value": 80,
+                    "mutation": "encode oriType OBJECT IDENTIFIER with length greater than MAX_OID_SZ"
+                },
+                "destination_capacity": {
+                    "type": "implicit_constant",
+                    "role": "capacity of fixed stack OID buffer",
+                    "observed_expression": "MAX_OID_SZ / sizeof(oriOID)"
+                },
+                "destination_buffer": {
+                    "type": "fixed_stack_buffer",
+                    "role": "local ORI OID destination",
+                    "observed_expression": "byte oriOID[MAX_OID_SZ]"
+                },
+                "parsed_length_variable": {
+                    "type": "integer_or_variable",
+                    "role": "ASN.1 OID length returned by GetASNObjectId",
+                    "observed_variable": "oriOIDSz"
+                },
+                "copy_operation": {
+                    "type": "copy",
+                    "role": "copies ASN.1 OID bytes into fixed stack buffer",
+                    "observed_expression": "XMEMCPY(oriOID, pkiMsg + *idx, (word32)oriOIDSz)"
+                },
+                "callback_reachability": {
+                    "type": "api_condition",
+                    "role": "ORI decrypt path requires registered callback",
+                    "observed_value": "wc_PKCS7_SetOriDecryptCb"
+                },
+                "api_entrypoint": {
+                    "type": "api_path",
+                    "role": "public API path that reaches ORI OID parsing",
+                    "values": [
+                        "wc_PKCS7_DecodeEnvelopedData",
+                        "wc_PKCS7_DecryptOri",
+                        "wc_PKCS7_SetOriDecryptCb"
+                    ]
+                }
+            },
+            "mutation_strategy": [
+                "Construct a PKCS7/CMS EnvelopedData input.",
+                "Include RecipientInfo with ORI / OtherRecipientInfo encoding.",
+                "Encode oriType as an ASN.1 OBJECT IDENTIFIER with length greater than MAX_OID_SZ.",
+                "Include a minimal oriValue so parsing reaches the ORI callback path.",
+                "Register an ORI decrypt callback with wc_PKCS7_SetOriDecryptCb.",
+                "Call wc_PKCS7_DecodeEnvelopedData.",
+                "Observe whether wc_PKCS7_DecryptOri rejects the oversized OID before copying."
+            ],
+            "oracle": {
+                "primary": "asan_stack_buffer_overflow",
+                "signals": [
+                    "ERROR: AddressSanitizer: stack-buffer-overflow",
+                    "WRITE of size 80",
+                    "crash in wc_PKCS7_DecryptOri",
+                    "crash path includes wc_PKCS7_DecodeEnvelopedData",
+                    "sanitizer report shows oriOID overflow"
+                ],
+                "fixed_behavior": [
+                    "wc_PKCS7_DecodeEnvelopedData returns -140",
+                    "safe rejection",
+                    "NO_ASAN_CRASH_OBSERVED",
+                    "no sanitizer crash"
+                ]
+            },
+            "ast_masking_targets": [
+                "fixed stack OID buffer declaration",
+                "ASN.1 OID length extraction",
+                "missing OID length upper-bound check",
+                "XMEMCPY from ASN.1 input into stack buffer",
+                "fixed-version oriOIDSz <= MAX_OID_SZ guard"
+            ],
+            "rag_keywords": [
+                "wc_PKCS7_DecodeEnvelopedData",
+                "wc_PKCS7_DecryptOri",
+                "wc_PKCS7_SetOriDecryptCb",
+                "OtherRecipientInfo",
+                "ORI",
+                "oriType",
+                "oriValue",
+                "oriOID",
+                "oriOIDSz",
+                "MAX_OID_SZ",
+                "GetASNObjectId",
+                "XMEMCPY",
+                "ASN_PARSE_E"
+            ],
+            "dataset_tags": [
+                "pkcs7",
+                "cms",
+                "envelopeddata",
+                "otherrecipientinfo",
+                "ori",
+                "oid-length-overflow",
+                "fixed-stack-buffer",
+                "stack-buffer-overflow",
+                "asn1-parser",
+                "sanitizer-oracle"
+            ]
+        },
+        {
+            "pattern_id": "Pattern-08",
+            "name": "TLS 1.3 PQC hybrid KeyShare cleanup UAF / double-free",
+            "related_pocs": [
+                "WOLFSSL-POC-0008"
+            ],
+            "bug_class": "TLS 1.3 PQC hybrid KeyShare error cleanup heap-use-after-free / double-free",
+            "trigger_surface": "tls13_pqc_hybrid_keyshare_processing",
+            "input_type": "malicious_tls13_serverhello_truncated_pqc_hybrid_keyshare",
+            "input_provenance": "reconstructed_from_official_46f632038_test_pattern",
+            "quality_level": "Q1_strict_reproduction_candidate",
+            "bug_mechanism": {
+                "core_issue": "A truncated TLS 1.3 PQC hybrid KeyShare triggers an error cleanup path that leaves a KeyShare entry pointing to already-freed key material.",
+                "trust_boundary": "malicious TLS 1.3 ServerHello KeyShare extension -> client-side hybrid KeyShare ownership and cleanup state",
+                "vulnerable_operation": "cleanup frees or wipes key material through TLSX_KeyShare_FreeAll after the same key material was already released during hybrid KeyShare processing",
+                "failure_mode": [
+                    "heap_use_after_free",
+                    "double_free",
+                    "cleanup_path_ownership_error",
+                    "sanitizer_visible_crash"
+                ]
+            },
+            "recipe_slots": {
+                "hybrid_group": {
+                    "type": "enum",
+                    "role": "selects PQC hybrid KeyShare processing path",
+                    "observed_value": "WOLFSSL_SECP256R1MLKEM768",
+                    "wire_value": "0x11eb"
+                },
+                "key_exchange_length": {
+                    "type": "integer",
+                    "role": "controls length of server key_exchange bytes",
+                    "observed_value": 10,
+                    "mutation": "truncate key_exchange far below expected hybrid key share length"
+                },
+                "expected_keyshare_size": {
+                    "type": "implicit_constant_or_group_property",
+                    "role": "expected ECC plus ML-KEM hybrid key share size",
+                    "observed_value": "1120+ bytes for SECP256R1MLKEM768-like hybrid key share"
+                },
+                "ownership_transfer": {
+                    "type": "pointer_state",
+                    "role": "tracks key object ownership between temporary ECC/PQC split entries and final hybrid keyShareEntry",
+                    "observed_variables": [
+                        "keyShareEntry->key",
+                        "ecc_kse->key",
+                        "pqc_kse->key",
+                        "pqc_kse->privKey"
+                    ]
+                },
+                "cleanup_path": {
+                    "type": "api_path",
+                    "role": "later cleanup path that revisits key material",
+                    "values": [
+                        "wolfSSL_free",
+                        "TLSX_FreeAll",
+                        "TLSX_KeyShare_FreeAll",
+                        "ForceZero"
+                    ]
+                },
+                "processing_path": {
+                    "type": "api_path",
+                    "role": "path that processes truncated hybrid key share and creates stale ownership state",
+                    "values": [
+                        "wolfSSL_UseKeyShare",
+                        "wolfSSL_connect_TLSv13",
+                        "TLSX_KeyShare_ProcessPqcHybridClient"
+                    ]
+                },
+                "fixed_pointer_sanitization": {
+                    "type": "pointer_nulling",
+                    "role": "fixed-version action to detach transferred key pointers before cleanup",
+                    "observed_value": "set transferred key pointers to NULL before TLSX_KeyShare_FreeAll"
+                }
+            },
+            "mutation_strategy": [
+                "Enable TLS 1.3, ECC, ML-KEM, and PQC hybrid support.",
+                "Create a TLS 1.3 client and offer WOLFSSL_SECP256R1MLKEM768 as a KeyShare.",
+                "Inject a malicious ServerHello containing a key_share extension for the same hybrid group.",
+                "Set key_exchange length to 10 bytes instead of the expected full hybrid key share length.",
+                "Run wolfSSL_connect_TLSv13 and allow it to fail during KeyShare processing.",
+                "Call wolfSSL_free to trigger cleanup of TLS extensions and KeyShare entries.",
+                "Observe whether cleanup touches already-freed key material."
+            ],
+            "oracle": {
+                "primary": "asan_heap_use_after_free",
+                "signals": [
+                    "ERROR: AddressSanitizer: heap-use-after-free",
+                    "WRITE of size 8",
+                    "crash in ForceZero",
+                    "crash path includes TLSX_KeyShare_FreeAll, TLSX_FreeAll, and wolfSSL_free",
+                    "earlier free path includes TLSX_KeyShare_ProcessPqcHybridClient"
+                ],
+                "fixed_behavior": [
+                    "wolfSSL_UseKeyShare returns 1",
+                    "wolfSSL_connect_TLSv13 returns -1",
+                    "wolfSSL_free completes",
+                    "cleanup completes",
+                    "NO_ASAN_CRASH_OBSERVED"
+                ]
+            },
+            "ast_masking_targets": [
+                "PQC hybrid KeyShare split/merge ownership transfer",
+                "temporary KeyShareEntry cleanup",
+                "missing pointer nulling after ownership transfer",
+                "TLSX_KeyShare_FreeAll cleanup of key objects",
+                "error path after truncated ServerHello KeyShare"
+            ],
+            "rag_keywords": [
+                "wolfSSL_connect_TLSv13",
+                "wolfSSL_UseKeyShare",
+                "wolfSSL_free",
+                "TLSX_KeyShare_ProcessPqcHybridClient",
+                "TLSX_KeyShare_FreeAll",
+                "TLSX_FreeAll",
+                "ForceZero",
+                "WOLFSSL_SECP256R1MLKEM768",
+                "WOLFSSL_PQC_HYBRIDS",
+                "WOLFSSL_HAVE_MLKEM",
+                "ML-KEM",
+                "KyberKey",
+                "MlKemKey",
+                "truncated KeyShare",
+                "ServerHello",
+                "key_exchange",
+                "ecc_kse",
+                "pqc_kse",
+                "keyShareEntry"
+            ],
+            "dataset_tags": [
+                "tls13",
+                "pqc",
+                "ml-kem",
+                "hybrid-keyshare",
+                "serverhello",
+                "cleanup-path",
+                "heap-use-after-free",
+                "double-free",
+                "ownership-transfer",
+                "sanitizer-oracle"
+            ]
+        },
+        {
+            "pattern_id": "Pattern-09",
+            "name": "SSL_SESSION deserialization chain.count fixed array overflow",
+            "related_pocs": [
+                "WOLFSSL-POC-0009"
+            ],
+            "bug_class": "SSL_SESSION deserialization heap-buffer-overflow",
+            "trigger_surface": "ssl_session_deserialization",
+            "input_type": "mutated_serialized_ssl_session_chain_count",
+            "input_provenance": "reconstructed_from_official_session_deserialization_test_pattern",
+            "quality_level": "Q1_strict_reproduction_candidate",
+            "bug_mechanism": {
+                "core_issue": "A deserialized SESSION_CERTS chain.count value is trusted and used to index a fixed certificate-chain array without validating it against MAX_CHAIN_DEPTH.",
+                "trust_boundary": "external serialized SSL_SESSION data -> wolfSSL_d2i_SSL_SESSION internal certificate-chain state",
+                "vulnerable_operation": "wolfSSL_d2i_SSL_SESSION iterates over untrusted chain.count and writes past the fixed x509_buffer array",
+                "failure_mode": [
+                    "heap_buffer_overflow",
+                    "fixed_array_capacity_overflow",
+                    "deserialized_count_trust_boundary_error",
+                    "sanitizer_visible_crash"
+                ]
+            },
+            "recipe_slots": {
+                "serialized_session_source": {
+                    "type": "api_generated_seed",
+                    "observed_value": "wolfSSL_i2d_SSL_SESSION"
+                },
+                "chain_count": {
+                    "type": "integer",
+                    "observed_value": 255,
+                    "mutation": "mutate SESSION_CERTS chain.count byte to 0xff"
+                },
+                "destination_capacity": {
+                    "type": "fixed_array_capacity",
+                    "observed_expression": "MAX_CHAIN_DEPTH / x509_buffer[9]"
+                },
+                "destination_array": {
+                    "type": "fixed_array",
+                    "observed_expression": "x509_buffer certificate chain array"
+                },
+                "api_entrypoint": {
+                    "type": "api_path",
+                    "values": [
+                        "wolfSSL_i2d_SSL_SESSION",
+                        "wolfSSL_d2i_SSL_SESSION"
+                    ]
+                },
+                "fixed_guard": {
+                    "type": "bounds_check",
+                    "observed_expression": "chain.count > MAX_CHAIN_DEPTH"
+                }
+            },
+            "mutation_strategy": [
+                "Create a valid WOLFSSL_SESSION object.",
+                "Serialize it using wolfSSL_i2d_SSL_SESSION.",
+                "Compute the SESSION_CERTS chain.count offset.",
+                "Mutate chain.count to 0xff.",
+                "Call wolfSSL_d2i_SSL_SESSION on the mutated serialized session.",
+                "Observe whether the deserializer rejects the count before writing into the fixed certificate-chain array."
+            ],
+            "oracle": {
+                "primary": "asan_heap_buffer_overflow",
+                "signals": [
+                    "ERROR: AddressSanitizer: heap-buffer-overflow",
+                    "WRITE of size 4",
+                    "crash in wolfSSL_d2i_SSL_SESSION",
+                    "src/ssl_sess.c:2831",
+                    "UBSan index 9 out of bounds for x509_buffer[9]"
+                ],
+                "fixed_behavior": [
+                    "wolfSSL_d2i_SSL_SESSION returns NULL",
+                    "cleanup completes",
+                    "NO_ASAN_CRASH_OBSERVED"
+                ]
+            },
+            "ast_masking_targets": [
+                "deserialized chain.count read",
+                "loop over certificate-chain count",
+                "fixed x509_buffer certificate-chain array",
+                "missing MAX_CHAIN_DEPTH bounds check",
+                "fixed-version chain.count validation"
+            ],
+            "rag_keywords": [
+                "wolfSSL_d2i_SSL_SESSION",
+                "wolfSSL_i2d_SSL_SESSION",
+                "SSL_SESSION",
+                "SESSION_CERTS",
+                "chain.count",
+                "MAX_CHAIN_DEPTH",
+                "x509_buffer",
+                "sessionIDSz",
+                "altIDLen",
+                "src/ssl_sess.c",
+                "serialized session"
+            ],
+            "dataset_tags": [
+                "ssl-session",
+                "session-deserialization",
+                "serialized-object",
+                "chain-count-overflow",
+                "fixed-array-overflow",
+                "heap-buffer-overflow",
+                "session-certs",
+                "sanitizer-oracle"
+            ]
+        },
+        {
+            "pattern_id": "Pattern-10",
+            "name": "ALPN protocol list length over-read",
+            "related_pocs": [
+                "WOLFSSL-POC-0010"
+            ],
+            "bug_class": "ALPN / NPN protocol-list heap-buffer-over-read",
+            "trigger_surface": "alpn_protocol_selection",
+            "input_type": "malformed_length_prefixed_alpn_protocol_lists",
+            "input_provenance": "reconstructed_from_official_select_next_proto_fix_pattern",
+            "quality_level": "Q1_strict_reproduction_candidate",
+            "bug_mechanism": {
+                "core_issue": "A length byte from a length-prefixed ALPN/NPN protocol list is trusted before validating that the declared protocol length fits within the provided buffer.",
+                "trust_boundary": "external ALPN/NPN protocol list buffer -> wolfSSL_select_next_proto protocol comparison loop",
+                "vulnerable_operation": "wolfSSL_select_next_proto calls memcmp/XMEMCMP using an attacker-controlled protocol length that exceeds the actual heap buffer size",
+                "failure_mode": [
+                    "heap_buffer_over_read",
+                    "length_prefixed_protocol_parser_error",
+                    "out_of_bounds_read",
+                    "sanitizer_visible_crash"
+                ]
+            },
+            "recipe_slots": {
+                "server_protocol_length": {
+                    "type": "integer",
+                    "observed_value": 200,
+                    "mutation": "set server protocol length byte larger than actual server protocol buffer"
+                },
+                "client_protocol_length": {
+                    "type": "integer",
+                    "observed_value": 200,
+                    "mutation": "set client protocol length byte larger than actual client protocol buffer"
+                },
+                "actual_buffer_size": {
+                    "type": "integer",
+                    "observed_value": 5,
+                    "role": "actual heap allocation size for each malformed protocol list"
+                },
+                "comparison_length": {
+                    "type": "derived_length",
+                    "observed_expression": "protocol length byte used as memcmp length"
+                },
+                "comparison_operation": {
+                    "type": "memory_compare",
+                    "observed_expression": "memcmp / XMEMCMP"
+                },
+                "api_entrypoint": {
+                    "type": "api_path",
+                    "values": [
+                        "wolfSSL_select_next_proto"
+                    ]
+                },
+                "fixed_guard": {
+                    "type": "bounds_check",
+                    "observed_expression": "validate declared protocol length against remaining input length before comparison"
+                }
+            },
+            "mutation_strategy": [
+                "Build wolfSSL with ALPN and OpenSSL compatibility APIs enabled.",
+                "Allocate small heap buffers for server and client protocol lists.",
+                "Set the first byte of each list to a large protocol length such as 200.",
+                "Provide only a few actual payload bytes after the length byte.",
+                "Call wolfSSL_select_next_proto.",
+                "Observe whether the parser validates length fields before calling memcmp/XMEMCMP."
+            ],
+            "oracle": {
+                "primary": "asan_heap_buffer_overflow_read",
+                "signals": [
+                    "ERROR: AddressSanitizer: heap-buffer-overflow",
+                    "READ of size 200",
+                    "memcmp / XMEMCMP",
+                    "wolfSSL_select_next_proto",
+                    "src/ssl.c:22298"
+                ],
+                "fixed_behavior": [
+                    "wolfSSL_select_next_proto returns safely",
+                    "cleanup completes",
+                    "NO_ASAN_CRASH_OBSERVED"
+                ]
+            },
+            "ast_masking_targets": [
+                "protocol list length-byte read",
+                "remaining-buffer length check",
+                "nested protocol-list iteration",
+                "memcmp/XMEMCMP length argument",
+                "fixed-version malformed-list rejection"
+            ],
+            "rag_keywords": [
+                "wolfSSL_select_next_proto",
+                "ALPN",
+                "NPN",
+                "protocol list",
+                "length-prefixed protocol",
+                "memcmp",
+                "XMEMCMP",
+                "serverLen",
+                "clientLen",
+                "HAVE_ALPN",
+                "OPENSSL_ALL",
+                "src/ssl.c"
+            ],
+            "dataset_tags": [
+                "alpn",
+                "npn",
+                "tls-extension",
+                "protocol-list-parser",
+                "length-field",
+                "heap-buffer-over-read",
+                "out-of-bounds-read",
+                "sanitizer-oracle"
+            ]
+        }
+    ],
+    "common_recipe_dimensions": [
+        "encoded_length",
+        "parsed_length",
+        "checked_length",
+        "copied_length",
+        "destination_capacity",
+        "repetition_count",
+        "selected_extension",
+        "compatibility_api",
+        "conversion_stage"
+    ],
+    "common_ast_patterns": [
+        "fixed-size array write indexed by parsed count",
+        "memcpy where guard variable differs from copy-length variable",
+        "setter that stores untrusted length without capacity check",
+        "getter or encoder that trusts stored length",
+        "compatibility wrapper copying into caller-provided buffer",
+        "parser path that preserves both raw and parsed extension forms"
+    ],
+    "global_dataset_tags": [
+        "wolfssl",
+        "x509",
+        "asn1",
+        "certificate-parser",
+        "openssl-compat-api",
+        "fixed-buffer",
+        "length-confusion",
+        "count-overflow",
+        "off-by-one",
+        "der-reencode",
+        "sanitizer-oracle"
+    ]
+}

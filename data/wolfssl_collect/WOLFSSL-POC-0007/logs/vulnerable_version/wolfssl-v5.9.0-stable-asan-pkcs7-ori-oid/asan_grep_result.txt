@@ -1,0 +1,13 @@
+2:[*] registering ORI decrypt callback
+4:[*] calling wc_PKCS7_DecodeEnvelopedData
+6:==5739==ERROR: AddressSanitizer: stack-buffer-overflow on address 0x7c3cc0c007a0 at pc 0x7c3cc50fb303 bp 0x7fffd1e08290 sp 0x7fffd1e07a38
+7:WRITE of size 80 at 0x7c3cc0c007a0 thread T0
+9:    #1 0x7c3cc4250034 in wc_PKCS7_DecryptOri wolfcrypt/src/pkcs7.c:11488
+11:    #3 0x7c3cc425aa83 in wc_PKCS7_DecodeEnvelopedData wolfcrypt/src/pkcs7.c:12802
+12:    #4 0x58d42768a689 in main /home/yvxi/workplace/CryptoPoc/Collect_Poc/wolfSSL_collect/WOLFSSL-POC-0007/poc/poc_pkcs7_ori_oversized_oid_min.c:74
+15:    #7 0x58d42768a244 in _start (/home/yvxi/workplace/CryptoPoc/Collect_Poc/wolfSSL_collect/WOLFSSL-POC-0007/poc/poc_pkcs7_ori_oversized_oid_min_v5_9_0_asan+0x2244) (BuildId: 4c540c65cef33fd14d00b64a697575d2a6838341)
+18:    #0 0x7c3cc424f55a in wc_PKCS7_DecryptOri wolfcrypt/src/pkcs7.c:11449
+22:    [64, 68) 'oriOIDSz' (line 11450)
+25:    [128, 160) 'oriOID' (line 11453) <== Memory access at offset 160 overflows this variable
+28:SUMMARY: AddressSanitizer: stack-buffer-overflow ../../../../src/libsanitizer/sanitizer_common/sanitizer_common_interceptors_memintrinsics.inc:115 in memcpy
+60:==5739==ABORTING

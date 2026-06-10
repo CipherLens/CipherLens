@@ -1,0 +1,24 @@
+src/dtls13.c:723:int Dtls13RtxAddAck(WOLFSSL* ssl, w64wrapper epoch, w64wrapper seq)
+src/dtls13.c:727:    WOLFSSL_ENTER("Dtls13RtxAddAck");
+src/dtls13.c:1547:    ret = Dtls13RtxAddAck(ssl, ssl->keys.curEpoch64, ssl->keys.curSeq);
+src/dtls13.c:2535:#define DTLS13_RN_SIZE 16
+src/dtls13.c:2550:    *length = (word16)(DTLS13_RN_SIZE * numberElements);
+src/dtls13.c:2554:int Dtls13WriteAckMessage(WOLFSSL* ssl,
+src/dtls13.c:2816:    if (length % (DTLS13_RN_SIZE) != 0)
+src/dtls13.c:2822:    for (i = 0; i < length; i += DTLS13_RN_SIZE) {
+src/dtls13.c:2899:    ret = Dtls13WriteAckMessage(ssl, ssl->dtls13Rtx.seenRecords, &length);
+wolfssl/internal.h:7172:        #define Dtls13WriteAckMessage wolfSSL_Dtls13WriteAckMessage
+wolfssl/internal.h:7173:        #define Dtls13RtxAddAck wolfSSL_Dtls13RtxAddAck
+wolfssl/internal.h:7226:WOLFSSL_TEST_VIS int Dtls13WriteAckMessage(WOLFSSL* ssl,
+wolfssl/internal.h:7229:WOLFSSL_TEST_VIS int Dtls13RtxAddAck(WOLFSSL* ssl, w64wrapper epoch, w64wrapper seq);
+tests/api/test_dtls.c:910:    ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 3), w64From32(0, 2)), 0);
+tests/api/test_dtls.c:911:    ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 3), w64From32(0, 0)), 0);
+tests/api/test_dtls.c:912:    ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 3), w64From32(0, 1)), 0);
+tests/api/test_dtls.c:913:    ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 3), w64From32(0, 4)), 0);
+tests/api/test_dtls.c:914:    ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 2), w64From32(0, 0)), 0);
+tests/api/test_dtls.c:915:    ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 3), w64From32(0, 6)), 0);
+tests/api/test_dtls.c:916:    ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 3), w64From32(0, 6)), 0);
+tests/api/test_dtls.c:917:    ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 2), w64From32(0, 1)), 0);
+tests/api/test_dtls.c:918:    ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 2), w64From32(0, 2)), 0);
+tests/api/test_dtls.c:919:    ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 2), w64From32(0, 2)), 0);
+tests/api/test_dtls.c:920:    ExpectIntEQ(Dtls13WriteAckMessage(ssl_c, ssl_c->dtls13Rtx.seenRecords,

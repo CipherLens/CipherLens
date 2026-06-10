@@ -1,0 +1,13 @@
+5:    add missing checks in wolfSSL_d2i_SSL_SESSION
+14:@@ -2827,12 +2827,20 @@ WOLFSSL_SESSION* wolfSSL_d2i_SSL_SESSION(WOLFSSL_SESSION** sess,
+17:     s->chain.count = data[idx++];
+18:+    if (s->chain.count > MAX_CHAIN_DEPTH) {
+19:+        ret = BUFFER_ERROR;
+22:     for (j = 0; j < s->chain.count; j++) {
+24:             ret = BUFFER_ERROR;
+27:         ato16(data + idx, &length); idx += OPAQUE16_LEN;
+28:+        if (length > MAX_X509_SIZE) {
+29:+            ret = BUFFER_ERROR;
+32:         s->chain.certs[j].length = length;
+33:         if (i - idx < length) {
+34:             ret = BUFFER_ERROR;

@@ -1,0 +1,193 @@
+211-                         err != WOLFSSL_ERROR_WANT_WRITE) {
+212-                    char buff[WOLFSSL_MAX_ERROR_SZ];
+213-                    fprintf(stderr, "memio server error = %d, %s\n", err,
+214-                        wolfSSL_ERR_error_string((word32)err, buff));
+215-                    return -1;
+216-                }
+217-            }
+218-        }
+219-        handshake_complete = hs_c && hs_s;
+220-        max_rounds--;
+221-        if (rounds != NULL)
+222-            *rounds = *rounds + 1;
+223-    }
+224-
+225-    if (!handshake_complete)
+226-        return -1;
+227-
+228-    return 0;
+229-}
+230-
+231:int test_memio_setup_ex(struct test_memio_ctx *ctx,
+232-    WOLFSSL_CTX **ctx_c, WOLFSSL_CTX **ctx_s, WOLFSSL **ssl_c, WOLFSSL **ssl_s,
+233-    method_provider method_c, method_provider method_s,
+234-    byte *caCert, int caCertSz, byte *serverCert, int serverCertSz,
+235-    byte *serverKey, int serverKeySz)
+236-{
+237-    int ret;
+238-    (void)caCert;
+239-    (void)caCertSz;
+240-    (void)serverCert;
+241-    (void)serverCertSz;
+242-    (void)serverKey;
+243-    (void)serverKeySz;
+244-
+245-    if (ctx_c != NULL && *ctx_c == NULL) {
+246-        *ctx_c = wolfSSL_CTX_new(method_c());
+247-        if (*ctx_c == NULL)
+248-            return -1;
+249-#ifndef NO_CERTS
+250-        if (caCert == NULL) {
+251-            ret = wolfSSL_CTX_load_verify_locations(*ctx_c, caCertFile, 0);
+252-        }
+253-        else {
+254-            ret = wolfSSL_CTX_load_verify_buffer(*ctx_c, caCert, (long)caCertSz,
+255-                                                 WOLFSSL_FILETYPE_ASN1);
+256-        }
+257-        if (ret != WOLFSSL_SUCCESS) {
+258-            wolfSSL_CTX_free(*ctx_c);
+259-            *ctx_c = NULL;
+260-            return -1;
+261-        }
+262-#endif /* NO_CERTS */
+263-        wolfSSL_SetIORecv(*ctx_c, test_memio_read_cb);
+264-        wolfSSL_SetIOSend(*ctx_c, test_memio_write_cb);
+265-        if (ctx->c_ciphers != NULL) {
+266-            ret = wolfSSL_CTX_set_cipher_list(*ctx_c, ctx->c_ciphers);
+267-            if (ret != WOLFSSL_SUCCESS) {
+268-                wolfSSL_CTX_free(*ctx_c);
+269-                *ctx_c = NULL;
+270-                return -1;
+271-            }
+272-        }
+273-    }
+274-
+275-    if (ctx_s != NULL && *ctx_s == NULL) {
+276-        *ctx_s = wolfSSL_CTX_new(method_s());
+277-        if (*ctx_s == NULL) {
+278-            if (ctx_c != NULL) {
+279-                wolfSSL_CTX_free(*ctx_c);
+280-                *ctx_c = NULL;
+281-            }
+282-            return -1;
+283-        }
+284-#ifndef NO_CERTS
+285-        if (serverKey == NULL) {
+286-            ret = wolfSSL_CTX_use_PrivateKey_file(*ctx_s, svrKeyFile,
+287-                CERT_FILETYPE);
+288-        }
+289-        else {
+290-            ret = wolfSSL_CTX_use_PrivateKey_buffer(*ctx_s, serverKey,
+291-                (long)serverKeySz, WOLFSSL_FILETYPE_ASN1);
+292-        }
+293-        if (ret != WOLFSSL_SUCCESS) {
+294-            if (ctx_s != NULL) {
+295-                wolfSSL_CTX_free(*ctx_s);
+296-                *ctx_s = NULL;
+297-            }
+298-            if (ctx_c != NULL) {
+299-                wolfSSL_CTX_free(*ctx_c);
+300-                *ctx_c = NULL;
+301-            }
+302-            return -1;
+303-        }
+304-
+305-        if (serverCert == NULL) {
+306-            ret = wolfSSL_CTX_use_certificate_file(*ctx_s, svrCertFile,
+307-                                                   CERT_FILETYPE);
+308-        }
+309-        else {
+310-            ret = wolfSSL_CTX_use_certificate_chain_buffer_format(*ctx_s,
+311-                serverCert, (long)serverCertSz, WOLFSSL_FILETYPE_ASN1);
+312-        }
+313-        if (ret != WOLFSSL_SUCCESS) {
+314-            if (ctx_s != NULL) {
+315-                wolfSSL_CTX_free(*ctx_s);
+316-                *ctx_s = NULL;
+317-            }
+318-            if (ctx_c != NULL) {
+319-                wolfSSL_CTX_free(*ctx_c);
+320-                *ctx_c = NULL;
+321-            }
+322-            return -1;
+323-        }
+324-#endif /* NO_CERTS */
+325-        wolfSSL_SetIORecv(*ctx_s, test_memio_read_cb);
+326-        wolfSSL_SetIOSend(*ctx_s, test_memio_write_cb);
+327-        if (ctx->s_ciphers != NULL) {
+328-            ret = wolfSSL_CTX_set_cipher_list(*ctx_s, ctx->s_ciphers);
+329-            if (ret != WOLFSSL_SUCCESS) {
+330-                if (ctx_s != NULL) {
+331-                    wolfSSL_CTX_free(*ctx_s);
+332-                    *ctx_s = NULL;
+333-                }
+334-                if (ctx_c != NULL) {
+335-                    wolfSSL_CTX_free(*ctx_c);
+336-                    *ctx_c = NULL;
+337-                }
+338-                return -1;
+339-            }
+340-        }
+341-    }
+342-
+343-    if (ctx_c != NULL && ssl_c != NULL) {
+344-        *ssl_c = wolfSSL_new(*ctx_c);
+345-        if (*ssl_c == NULL) {
+346-            if (ctx_s != NULL) {
+347-                wolfSSL_CTX_free(*ctx_s);
+348-                *ctx_s = NULL;
+349-            }
+350-            if (ctx_c != NULL) {
+351-                wolfSSL_CTX_free(*ctx_c);
+--
+759-    msg_sz = msg_sizes[msg_pos];
+760-
+761-    /* Check if buffer has enough space for length increase */
+762-    if (new_len > msg_sz) {
+763-        if (*len + (new_len - msg_sz) > TEST_MEMIO_BUF_SZ) {
+764-            return -1;
+765-        }
+766-    }
+767-
+768-    /* Shift buffer contents to accommodate new message length */
+769-    XMEMMOVE(buff + msg_off + new_len, buff + msg_off + msg_sz,
+770-        *len - msg_off - msg_sz);
+771-
+772-    /* Update message size and buffer length */
+773-    msg_sizes[msg_pos] = new_len;
+774-    *len = *len - msg_sz + new_len;
+775-
+776-    return 0;
+777-}
+778-
+779:int test_memio_setup(struct test_memio_ctx *ctx,
+780-    WOLFSSL_CTX **ctx_c, WOLFSSL_CTX **ctx_s, WOLFSSL **ssl_c, WOLFSSL **ssl_s,
+781-    method_provider method_c, method_provider method_s)
+782-{
+783:    return test_memio_setup_ex(ctx, ctx_c, ctx_s, ssl_c, ssl_s, method_c,
+784-                               method_s, NULL, 0, NULL, 0, NULL, 0);
+785-}
+786-
+787-#endif /* HAVE_MANUAL_MEMIO_TESTS_DEPENDENCIES */
+788-
+789-#if !defined(NO_FILESYSTEM) && defined(OPENSSL_EXTRA) && \
+790-    defined(DEBUG_UNIT_TEST_CERTS)
+791-/* Used when debugging name constraint tests. Not static to allow use in
+792- * multiple locations with complex define guards. */
+793-void DEBUG_WRITE_CERT_X509(WOLFSSL_X509* x509, const char* fileName)
+794-{
+795-    BIO* out = BIO_new_file(fileName, "wb");
+796-    if (out != NULL) {
+797-        PEM_write_bio_X509(out, x509);
+798-        BIO_free(out);
+799-    }
+800-}
+801-void DEBUG_WRITE_DER(const byte* der, int derSz, const char* fileName)
+802-{
+803-    BIO* out = BIO_new_file(fileName, "wb");
+804-    if (out != NULL) {
+805-        BIO_write(out, der, derSz);
+806-        BIO_free(out);
+807-    }
+808-}
+809-#endif

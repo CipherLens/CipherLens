@@ -1,0 +1,89 @@
+
+diff --git a/tests/api/test_x509.c b/tests/api/test_x509.c
+index aa993608d02..6590c24f83b 100644
+--- a/tests/api/test_x509.c
++++ b/tests/api/test_x509.c
+@@ -643,16 +643,27 @@ int test_x509_CertFromX509_akid_overflow(void)
+ {
+     EXPECT_DECLS;
+ #if defined(WOLFSSL_AKID_NAME) && defined(WOLFSSL_CERT_GEN) && \
+-    defined(WOLFSSL_CERT_EXT) && \
++    defined(WOLFSSL_CERT_EXT) && !defined(NO_BIO) && \
+     (defined(OPENSSL_EXTRA) || defined(OPENSSL_ALL))
+     /* DER builder helpers -- write into a flat buffer */
++#ifdef WOLFSSL_SMALL_STACK
++    unsigned char* buf = NULL;
++#else
+     unsigned char buf[16384];
++#endif
+     size_t pos = 0;
+     size_t akid_val_len;
+     unsigned char* akid_val = NULL;
+     WOLFSSL_X509* x = NULL;
+     WOLFSSL_BIO* bio = NULL;
+ 
++#ifdef WOLFSSL_SMALL_STACK
++    buf = (unsigned char*)XMALLOC(16384, NULL, DYNAMIC_TYPE_TMP_BUFFER);
++    ExpectNotNull(buf);
++    if (buf == NULL)
++        return EXPECT_RESULT();
++#endif
++
+     #define PUT1(b) do { buf[pos++] = (b); } while(0)
+     #define PUTN(p, n) do { XMEMCPY(buf + pos, (p), (n)); pos += (n); } while(0)
+ 
+@@ -840,6 +851,9 @@ int test_x509_CertFromX509_akid_overflow(void)
+     wolfSSL_BIO_free(bio);
+     wolfSSL_X509_free(x);
+     XFREE(akid_val, NULL, DYNAMIC_TYPE_TMP_BUFFER);
++#ifdef WOLFSSL_SMALL_STACK
++    XFREE(buf, NULL, DYNAMIC_TYPE_TMP_BUFFER);
++#endif
+ 
+     #undef PUT1
+     #undef PUTN
+
+From 2b1cde5bbb0ecab0341139433f2e2333b96483c0 Mon Sep 17 00:00:00 2001
+From: Eric Blankenhorn <eric@wolfssl.com>
+Date: Tue, 31 Mar 2026 14:15:01 -0500
+Subject: [PATCH 3/3] Fix test for FIPS config
+
+---
+ tests/api/test_x509.c | 17 +++++++++++++++--
+ 1 file changed, 15 insertions(+), 2 deletions(-)
+
+diff --git a/tests/api/test_x509.c b/tests/api/test_x509.c
+index 6590c24f83b..47780e6dc4e 100644
+--- a/tests/api/test_x509.c
++++ b/tests/api/test_x509.c
+@@ -731,7 +731,6 @@ int test_x509_CertFromX509_akid_overflow(void)
+     {
+         size_t tbs_start = pos;
+         size_t s;
+-        int i;
+ 
+         /* version [0] EXPLICIT INTEGER 2 (v3) */
+         PUT1(0xA0); PUT1(0x03); PUT1(0x02); PUT1(0x01); PUT1(0x02);
+@@ -792,7 +791,21 @@ int test_x509_CertFromX509_akid_overflow(void)
+             WRAP(alg, 0x30);
+             bs = pos;
+             PUT1(0x00); PUT1(0x04);
+-            for (i = 0; i < 64; i++) PUT1(0x01);
++            /* Use P-256 generator point (valid on-curve point) so that
++             * builds with WOLFSSL_VALIDATE_ECC_IMPORT accept the key. */
++            {
++                static const unsigned char p256G[64] = {
++                    0x6B,0x17,0xD1,0xF2,0xE1,0x2C,0x42,0x47,
++                    0xF8,0xBC,0xE6,0xE5,0x63,0xA4,0x40,0xF2,
++                    0x77,0x03,0x7D,0x81,0x2D,0xEB,0x33,0xA0,
++                    0xF4,0xA1,0x39,0x45,0xD8,0x98,0xC2,0x96,
++                    0x4F,0xE3,0x42,0xE2,0xFE,0x1A,0x7F,0x9B,
++                    0x8E,0xE7,0xEB,0x4A,0x7C,0x0F,0x9E,0x16,
++                    0x2B,0xCE,0x33,0x57,0x6B,0x31,0x5E,0xCE,
++                    0xCB,0xB6,0x40,0x68,0x37,0xBF,0x51,0xF5
++                };
++                PUTN(p256G, sizeof(p256G));
++            }
+             WRAP(bs, 0x03);
+         }
+         WRAP(s, 0x30);

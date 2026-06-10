@@ -1,0 +1,54 @@
+{
+  "poc_id": "WOLFSSL-POC-0001",
+  "source_library": "wolfSSL",
+  "issue_or_cve": "GitHub issue #2555",
+  "title": "Heap based buffer overflow while parsing crafted X.509 certificates",
+  "bug_class": "X.509 certificate parsing heap-buffer-overflow",
+  "harness_family": "x509_asn1_parser_memory_safety",
+  "oracle_type": "crash_sanitizer_oracle",
+  "source_api": [
+    "wolfSSL_CTX_use_certificate_chain_file",
+    "ProcessFile",
+    "ProcessBuffer",
+    "FreeDecodedCert"
+  ],
+  "target_candidate_apis": {
+    "openssl": [
+      "PEM_read_bio_X509",
+      "d2i_X509",
+      "SSL_CTX_use_certificate_chain_file"
+    ],
+    "mbedtls": [
+      "mbedtls_x509_crt_parse_file",
+      "mbedtls_x509_crt_parse",
+      "mbedtls_x509_crt_parse_der"
+    ]
+  },
+  "affected_versions": [
+    "wolfSSL 4.1.0",
+    "wolfSSL 4.2.0"
+  ],
+  "fixed_version": "wolfSSL v4.3.0-stable",
+  "fix_pr_or_commit": "",
+  "input_provenance": "original_issue_attachment",
+  "has_original_input": true,
+  "uses_placeholder_input": false,
+  "strict_reproduction": true,
+  "vulnerable_version_verified": true,
+  "fixed_version_verified": true,
+  "current_version_verified": true,
+  "expected_vulnerable_behavior": "On wolfSSL v4.2.0-stable with ASan/UBSan and extra certificate/OpenSSL compatibility options, the crafted X.509 certificate triggers UBSan index 19 out of bounds in GetName at wolfcrypt/src/asn.c:5121, followed by ASan SEGV during FreeDecodedCert.",
+  "expected_fixed_behavior": "wolfSSL v4.3.0-stable safely rejects the crafted certificate with 'GetLength value exceeds buffer length' and no UBSan/ASan/SEGV/FreeDecodedCert crash.",
+  "expected_current_behavior": "Current wolfSSL v5.9.1-stable-1299-geeab53205 safely rejects the crafted certificate with 'GetLength - value exceeds buffer length' and no UBSan/ASan/SEGV/FreeDecodedCert crash.",
+  "crash_signal": "UBSan: index 19 out of bounds for int[19] at wolfcrypt/src/asn.c:5121; ASan: SEGV during FreeDecodedCert at wolfcrypt/src/asn.c:4532; exit code 134.",
+  "semantic_signal": "",
+  "migration_value": "High. X.509/ASN.1 parser boundary pattern can be migrated to OpenSSL and mbedTLS certificate parsing APIs.",
+  "quality_level": "Q1_strict_reproduction_candidate",
+  "recommended_usage": [
+    "discovery_seed",
+    "regression_test",
+    "x509_asn1_parser_memory_safety_seed",
+    "cross_library_migration_candidate"
+  ],
+  "notes": "Strict reproduction succeeded on wolfSSL v4.2.0-stable commit 48c4b2fedcee4d61b6a76c5ce9e33ab212d6ab4a using the original crafted certificate. The crash requires ASan/UBSan extra build configuration with --enable-opensslextra, --enable-certgen, --enable-certreq, --enable-certext, and --enable-dtls. wolfSSL v4.3.0-stable safely rejects the input and is treated as the fixed release candidate. Current wolfSSL commit eeab53205ab57451778f7a76aad25f5349547ce5 also safely rejects the input. Candidate commit 88bf5d967 was tested but remained vulnerable."
+}

@@ -1,0 +1,180 @@
+/* utils.c
+ *
+ * Copyright (C) 2006-2026 wolfSSL Inc.
+ *
+ * This file is part of wolfSSL.
+ *
+ * wolfSSL is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * wolfSSL is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1335, USA
+ */
+
+#include <tests/unit.h>
+#include <tests/utils.h>
+#include <wolfssl/wolfcrypt/error-crypt.h>
+
+#ifdef HAVE_MANUAL_MEMIO_TESTS_DEPENDENCIES
+
+/* This set of memio functions allows for more fine tuned control of the TLS
+ * connection operations. For new tests, try to use ssl_memio first. */
+
+/* To dump the memory in gdb use
+ *   dump memory client.bin test_ctx.c_buff test_ctx.c_buff+test_ctx.c_len
+ *   dump memory server.bin test_ctx.s_buff test_ctx.s_buff+test_ctx.s_len
+ * This can be imported into Wireshark by transforming the file with
+ *   od -Ax -tx1 -v client.bin > client.hex
+ *   od -Ax -tx1 -v server.bin > server.hex
+ * Then transform the files into pcap (use -u instead of -T for UDP)
+ *   text2pcap -T 50,60 client.hex client.pcap
+ *   text2pcap -T 50,60 server.hex server.pcap
+ * Then open in wireshark
+ *   wireshark client.pcap
+ *   wireshark server.pcap
+ */
+
+int test_memio_write_cb(WOLFSSL *ssl, char *data, int sz, void *ctx)
+{
+    struct test_memio_ctx *test_ctx;
+    byte *buf;
+    int *len;
+    int *msg_sizes;
+    int *msg_count;
+    int *forceWantWrite;
+
+    test_ctx = (struct test_memio_ctx*)ctx;
+
+    if (wolfSSL_GetSide(ssl) == WOLFSSL_SERVER_END) {
+        buf = test_ctx->c_buff;
+        len = &test_ctx->c_len;
+        msg_sizes = test_ctx->c_msg_sizes;
+        msg_count = &test_ctx->c_msg_count;
+        forceWantWrite = &test_ctx->s_force_want_write;
+    }
+    else {
+        buf = test_ctx->s_buff;
+        len = &test_ctx->s_len;
+        msg_sizes = test_ctx->s_msg_sizes;
+        msg_count = &test_ctx->s_msg_count;
+        forceWantWrite = &test_ctx->c_force_want_write;
+    }
+
+    if (*forceWantWrite)
+        return WOLFSSL_CBIO_ERR_WANT_WRITE;
+
+    if ((unsigned)(*len + sz) > TEST_MEMIO_BUF_SZ)
+        return WOLFSSL_CBIO_ERR_WANT_WRITE;
+
+    if (*msg_count >= TEST_MEMIO_MAX_MSGS)
+        return WOLFSSL_CBIO_ERR_WANT_WRITE;
+
+#ifdef WOLFSSL_DUMP_MEMIO_STREAM
+    {
+        char dump_file_name[64];
+        WOLFSSL_BIO *dump_file;
+        sprintf(dump_file_name, "%s/%s.dump", tmpDirName, currentTestName);
+        dump_file = wolfSSL_BIO_new_file(dump_file_name, "a");
+        if (dump_file != NULL) {
+            (void)wolfSSL_BIO_write(dump_file, data, sz);
+            wolfSSL_BIO_free(dump_file);
+        }
+    }
+#endif
+    XMEMCPY(buf + *len, data, (size_t)sz);
+    msg_sizes[*msg_count] = sz;
+    (*msg_count)++;
+    *len += sz;
+
+    return sz;
+}
+
+int test_memio_read_cb(WOLFSSL *ssl, char *data, int sz, void *ctx)
+{
+    struct test_memio_ctx *test_ctx;
+    int read_sz;
+    byte *buf;
+    int *len;
+    int *msg_sizes;
+    int *msg_count;
+    int *msg_pos;
+    int is_dtls;
+
+    test_ctx = (struct test_memio_ctx*)ctx;
+    is_dtls = wolfSSL_dtls(ssl);
+
+    if (wolfSSL_GetSide(ssl) == WOLFSSL_SERVER_END) {
+        buf = test_ctx->s_buff;
+        len = &test_ctx->s_len;
+        msg_sizes = test_ctx->s_msg_sizes;
+        msg_count = &test_ctx->s_msg_count;
+        msg_pos = &test_ctx->s_msg_pos;
+    }
+    else {
+        buf = test_ctx->c_buff;
+        len = &test_ctx->c_len;
+        msg_sizes = test_ctx->c_msg_sizes;
+        msg_count = &test_ctx->c_msg_count;
+        msg_pos = &test_ctx->c_msg_pos;
+    }
+
+    if (*len == 0 || *msg_pos >= *msg_count)
+        return WOLFSSL_CBIO_ERR_WANT_READ;
+
+    /* Calculate how much we can read from current message */
+    read_sz = msg_sizes[*msg_pos];
+    if (read_sz > sz)
+        read_sz = sz;
+
+    if (read_sz > *len) {
+        return WOLFSSL_CBIO_ERR_GENERAL;
+    }
+
+    /* Copy data from current message */
+    XMEMCPY(data, buf, (size_t)read_sz);
+    /* remove the read data from the buffer */
+    XMEMMOVE(buf, buf + read_sz, (size_t)(*len - read_sz));
+    *len -= read_sz;
+    msg_sizes[*msg_pos] -= read_sz;
+
+    /* if we are on dtls, discard the rest of the message */
+    if (is_dtls && msg_sizes[*msg_pos] > 0) {
+        XMEMMOVE(buf, buf + msg_sizes[*msg_pos], (size_t)(*len - msg_sizes[*msg_pos]));
+        *len -= msg_sizes[*msg_pos];
+        msg_sizes[*msg_pos] = 0;
+    }
+
+    /* If we've read the entire message */
+    if (msg_sizes[*msg_pos] == 0) {
+        /* Move to next message */
+        (*msg_pos)++;
+        if (*msg_pos >= *msg_count) {
+            *msg_pos = 0;
+            *msg_count = 0;
+        }
+    }
+
+    return read_sz;
+}
+
+int test_memio_do_handshake(WOLFSSL *ssl_c, WOLFSSL *ssl_s,
+    int max_rounds, int *rounds)
+{
+    byte handshake_complete = 0, hs_c = 0, hs_s = 0;
+    int ret, err;
+
+    if (rounds != NULL)
+        *rounds = 0;
+    while (!handshake_complete && max_rounds > 0) {
+        if (!hs_c) {
+            wolfSSL_SetLoggingPrefix("client");
+            ret = wolfSSL_connect(ssl_c);
+            wolfSSL_SetLoggingPrefix(NULL);

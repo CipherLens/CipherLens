@@ -1,0 +1,112 @@
+1-commit 86212fd33f4a269ad0586bcf36636aca98c76a6a
+2-Author: Reda Chouk <reda@wolfssl.com>
+3-Date:   Tue Feb 10 19:58:14 2026 +0100
+4-
+5-    add test for session deserialization input validation
+6----
+7- tests/api.c | 85 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+8- 1 file changed, 85 insertions(+)
+9-
+10-diff --git a/tests/api.c b/tests/api.c
+11-index 708304029..281222c2c 100644
+12---- a/tests/api.c
+13-+++ b/tests/api.c
+14-@@ -16493,6 +16493,90 @@ static int test_wolfSSL_sigalg_info(void)
+15-     return EXPECT_RESULT();
+16- }
+17- 
+18:+static int test_wolfSSL_d2i_SSL_SESSION_bounds_check(void)
+19-+{
+20-+    EXPECT_DECLS;
+21-+#if defined(OPENSSL_EXTRA) && defined(HAVE_EXT_CACHE) && \
+22-+    defined(SESSION_CERTS)
+23-+    WOLFSSL_SESSION* sess = NULL;
+24-+    WOLFSSL_SESSION* restored = NULL;
+25-+    unsigned char* sessDer = NULL;
+26-+    unsigned char* modData = NULL;
+27-+    const unsigned char* ptr = NULL;
+28-+    unsigned char* pp = NULL;
+29-+    int sz = 0;
+30-+    int idx = 0;
+31-+    int sessionIDSz = 0;
+32-+    int altIDLen = 0;
+33-+    int chainOffset = 0;
+34-+    int newLen = 0;
+35-+    word16 oversized = 0;
+36-+
+37-+    /* Create and serialize a valid empty session to learn the format */
+38-+    ExpectNotNull(sess = wolfSSL_SESSION_new());
+39-+    ExpectIntGT((sz = wolfSSL_i2d_SSL_SESSION(sess, NULL)), 0);
+40-+    ExpectNotNull(sessDer = (unsigned char*)XMALLOC(sz, NULL,
+41-+        DYNAMIC_TYPE_OPENSSL));
+42-+    pp = sessDer;
+43-+    ExpectIntGT(wolfSSL_i2d_SSL_SESSION(sess, &pp), 0);
+44-+    wolfSSL_SESSION_free(sess);
+45-+    sess = NULL;
+46-+
+47-+    /* Calculate offset to chain.count field:
+48-+     *   side(1) + bornOn(4) + timeout(4) + sessionIDSz(1) + sessionID(var)
+49-+     *   + masterSecret(SECRET_LEN=48) + haveEMS(1) + altIDLen(1) + altID(var)
+50-+     */
+51-+    idx = 1 + 4 + 4;
+52-+    if (EXPECT_SUCCESS()) {
+53-+        sessionIDSz = sessDer[idx++];
+54-+        idx += sessionIDSz + SECRET_LEN + 1;
+55-+        altIDLen = sessDer[idx++];
+56-+        if (altIDLen == ID_LEN)
+57-+            idx += ID_LEN;
+58-+        chainOffset = idx;
+59-+    }
+60-+
+61-+    /*
+62-+     * The deserialization must reject this with a BUFFER_ERROR (return NULL).
+63-+     */
+64-+    newLen = chainOffset + 1 + 50;
+65-+    ExpectNotNull(modData = (unsigned char*)XMALLOC(newLen, NULL,
+66-+        DYNAMIC_TYPE_TMP_BUFFER));
+67-+    if (EXPECT_SUCCESS()) {
+68-+        XMEMCPY(modData, sessDer, chainOffset);
+69-+        modData[chainOffset] = MAX_CHAIN_DEPTH + 1;
+70-+        XMEMSET(modData + chainOffset + 1, 0, newLen - chainOffset - 1);
+71-+    }
+72-+    ptr = modData;
+73:+    ExpectNull(restored = wolfSSL_d2i_SSL_SESSION(NULL, &ptr, (long)newLen));
+74-+    XFREE(modData, NULL, DYNAMIC_TYPE_TMP_BUFFER);
+75-+    modData = NULL;
+76-+
+77-+    /*
+78-+     * chain.count is valid (1), but the cert length field is too large.
+79-+     */
+80-+    newLen = chainOffset + 1 + 2 + 100;
+81-+    ExpectNotNull(modData = (unsigned char*)XMALLOC(newLen, NULL,
+82-+        DYNAMIC_TYPE_TMP_BUFFER));
+83-+    if (EXPECT_SUCCESS()) {
+84-+        XMEMCPY(modData, sessDer, chainOffset);
+85-+        idx = chainOffset;
+86-+        modData[idx++] = 1;  /* chain.count = 1 */
+87-+        oversized = MAX_X509_SIZE + 1;
+88-+        modData[idx++] = (byte)(oversized >> 8);
+89-+        modData[idx++] = (byte)(oversized & 0xFF);
+90-+        XMEMSET(modData + idx, 0xCC, newLen - idx);
+91-+    }
+92-+    ptr = modData;
+93:+    ExpectNull(restored = wolfSSL_d2i_SSL_SESSION(NULL, &ptr, (long)newLen));
+94-+    XFREE(modData, NULL, DYNAMIC_TYPE_TMP_BUFFER);
+95-+    modData = NULL;
+96-+
+97-+    XFREE(sessDer, NULL, DYNAMIC_TYPE_OPENSSL);
+98-+#endif
+99-+    return EXPECT_RESULT();
+100-+}
+101-+
+102- static int test_wolfSSL_SESSION(void)
+103- {
+104-     EXPECT_DECLS;
+105-@@ -31747,6 +31831,7 @@ TEST_CASE testCases[] = {
+106-     TEST_DECL(test_wolfSSL_ciphersuite_auth),
+107-     TEST_DECL(test_wolfSSL_sigalg_info),
+108-     /* Can't memory test as tcp_connect aborts. */
+109:+    TEST_DECL(test_wolfSSL_d2i_SSL_SESSION_bounds_check),
+110-     TEST_DECL(test_wolfSSL_SESSION),
+111-     TEST_DECL(test_wolfSSL_SESSION_expire_downgrade),
+112-     TEST_DECL(test_wolfSSL_CTX_sess_set_remove_cb),

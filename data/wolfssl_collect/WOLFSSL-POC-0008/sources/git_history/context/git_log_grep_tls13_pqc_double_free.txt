@@ -1,0 +1,589 @@
+1d934846e Merge pull request #10565 from philljj/bsdkm_misc_cleanup
+0796519a9 More regression testing fixes
+27edd6411 bsdkm: call wolfkdriv_unregister before wolfkmod_cleanup, and misc cleanup.
+108b120d7 F-5632: zeroize Camellia key schedule on cipher free
+6e7bf5fa6 F-5629: reject ServerHello ALPN response with multiple protocols
+7a0eca841 F-5628: reject max_fragment_length response that differs from request
+62168d44c bsdkm: misc cleanup.
+8e4e76fdc X509 API: fix issues
+a31ce6e98 Merge pull request #10546 from philljj/malloc_nowait
+4bf539095 bsdkm: misc cleanup.
+064ebaa7b Merge pull request #10493 from kareem-wolfssl/zd21852
+9467d82ae NULL the correct key in TLSX_KeyShare_ProcessPqcHybridClient when using WOLFSSL_TLSX_PQC_MLKEM_STORE_OBJ. Thanks to Haiyang Huang for the report.
+ec2222964 Merge pull request #10481 from padelsbach/x509-set-double-free
+645996e8e Fix double free possibility in wolfSSL_X509_set_ext
+130f683d8 Validate minDowngrade in wolfSSL_SetSession before reusing version
+7a61b2e08 Refactor record padding handling to eliminate middle padding pattern
+c84ea8df8 tests: api: remove extra wolfSSL_cleanup()
+df5b2b6cb test.c: Improved testing
+54bb2c2ca zero-initialize DecodedCert immediately after allocation in wolfssl_certmanagerloadcabuffertype to prevent cleanup on an uninitialized struct on the pem error path.
+99e559737 wolfmath: check mpSz cleanup.
+5dcc99c68 [TA-100] Fix build breakage on TA100 builds
+84b94f523 test: move ECC curve cache cleanup from wolfcrypt_test() to unit.test exit path
+3b7ac9fd2 Merge pull request #10327 from embhorn/zd21704
+b7b021507 cleanup around passing external build flags
+7f7d28372 Configure.ac cleanup for demented AI logic
+e37118bdf Hardening in TLSX_KeyShare_ProcessPqcHybridClient
+d9beec2e8 Merge pull request #10283 from night1rider/SHE-test-double-free-fix
+d673b6214 Fix double-free of she2 in she_test
+ec9b2c0e8 Confirm sessIdSz's size in DoTls13ServerHello before it is used.
+e05ce26fc wolfCrypt SRAM PUF Support
+a010825bb Address review comments on Fenrir zeroization fixes
+96199467f scripts/*.test: delay reaping servers in cleanup handlers to allow sanitizers to finish rendering backtraces.
+4a36d16b3 Fix bugs found in crl.c, keys.c, and ssl_certman.c review
+85dd92335 cryptocb: always run software cleanup in key Free functions
+e0421828f Fix TLS 1.3 PQC key share over heap read (ZD 21413)
+4cf33849b Fix multiple bugs in OCSP implementation
+27aac0ac6 Merge pull request #10007 from julek-wolfssl/zd/21376
+18111b125 Merge pull request #10092 from anhu/hkex-ticket
+46f632038 Fix PQC hybrid KeyShare pointer sanity.
+c64fd4f13 Merge pull request #9905 from julek-wolfssl/WC_ALLOC_DO_ON_FAILURE-cleanup
+6cd001800 Merge pull request #10022 from dgarske/nb_leak
+5fdf32dec Fix to make sure a double free cannot occur (ZD 21093)
+0d7c58e3e Merge pull request #9912 from LinuxJedi/se050-fixes2
+c3289f8aa Enable and use ML-KEM by default
+e96dc3690 linuxkm/lkcapi_aes_glue.c: fix scatterwalk_map error handling in AesGcmCrypt_1
+cfd819370 Fix SE050 RSA-PSS signing, key cleanup, and mutex leaks
+2626f976f Update the PKCS11 ECC and dilithium free handlers so they will now return CRYPTOCB_UNAVAILABLE after attempting the context free so the caller still does software cleanup on the rest of the context that the callback does not handle.
+afed9d4b7 fixup! ProcessServerHello: verify extension lengths
+2febc1c7f ProcessServerHello: verify extension lengths
+f0ba67ee2 Merge pull request #9906 from julek-wolfssl/fenrir/25
+da9dc821e wolfSSL_ASN1_item_i2d: simplify buf cleanup
+4a51ed4c2 wolfcrypt/test/test.c: add FIPS gates around "Copy cleanup test" exercises added by 4713ad5675 (#9829).
+7842bf30f Fix for DTLS1.3 HRR group handling
+ca150724b Revert "Fix SHA3/Shake copy cleanup tests to heap-allocate shaCopy to avoid exceeding stack frame limit."
+b87cb3e1c Fix SHA3/Shake copy cleanup tests to heap-allocate shaCopy to avoid exceeding stack frame limit.
+4713ad567 Add Free(dst) + XMEMSET before XMEMCPY in all wc_ hash Copy functions (MD5, SHA, SHA2, SHA3, SHAKE) and add copy cleanup tests to prevent resource leaks when copying into previously-used contexts.
+1cdb2974a Fix test cleanup
+db7a04a62 improvements spurred by peer review for 20260204-linuxkm-fips-hash:
+8042f767e Fix issues found in static analysis
+f810dc2a0 Add check for KeyShare in ServerHello
+654901782 Peer review cleanups. ECDHE improvements.
+9427f9f26 Merge pull request #9665 from dgarske/cleanup_20260114
+b4344c17c add cleanup logic to sakke_kat_derive_test()
+268fc98a9 bsdkm: cleanup for multi-test.
+3f8efdc80 Merge pull request #9600 from padelsbach/addcrl-cleanup
+99527be3b bsdkm: review cleanup.
+198eac24d Merge pull request #9606 from Frauschi/cleanup_decode_private_key
+1844b8e3a linuxkm/Makefile: fix bash cleanup in recipe for libwolfssl.ko -- new trap for an event replaces previous trap rather than adding to it.
+b33a8568c bsdkm: small cleanup.
+db29dac76 backport 6f95a9c58e and a944575e4b, and fix in 20251226-fixes, to wolfcrypt/src/random.c: * in _InitRng(), remove "drbg_instantiated" conditional cleanup logic (Coverity true-benign-positive: DEADCODE because drbg_instantiated is always false when ret != DRBG_SUCCESS); * fix clang-diagnostic-unreachable-code in wc_GenerateSeed(); * in wc_GenerateSeed(), move the gate closures for !FORCE_FAILURE_RDSEED and !ENTROPY_MEMUSE_FORCE_FAILURE to follow the /dev/urandom fallback method.
+f21da9ddc backport 6f95a9c58e and a944575e4b, and fix in 20251226-fixes, to wolfcrypt/src/random.c: * in _InitRng(), remove "drbg_instantiated" conditional cleanup logic (Coverity true-benign-positive: DEADCODE because drbg_instantiated is always false when ret != DRBG_SUCCESS); * fix clang-diagnostic-unreachable-code in wc_GenerateSeed(); * in wc_GenerateSeed(), move the gate closures for !FORCE_FAILURE_RDSEED and !ENTROPY_MEMUSE_FORCE_FAILURE to follow the /dev/urandom fallback method.
+d5723d0d8 Merge pull request #9544 from julek-wolfssl/gh/9362
+6f95a9c58 wolfcrypt/src/random.c: in _InitRng(), remove "drbg_instantiated" conditional cleanup logic (Coverity true-benign-positive: DEADCODE because drbg_instantiated is always false when ret != DRBG_SUCCESS).
+fb82bdbc3 wolfcrypt/test/test.c:   * in wolfcrypt_test_main(), when WOLFSSL_TRACK_MEMORY, check and error if wc_MemStats_Ptr->currentBytes > 0;   * don't call the hash initialization APIs for hash structs that are later copied over with the hash copy API (sha224_test(), sha256_test(), sha512_test(), etc)   * in hash_test(), either wc_HashNew() or wc_HashInit(), not both (fixes leaks);   * in hmac_*_test(), add test coverage for wc_HmacCopy();   * in _rng_test(), when WOLFSSL_TRACK_MEMORY && WOLFSSL_SMALL_STACK_CACHE, check that wc_MemStats_Ptr->totalAllocs doesn't increase when wc_RNG_GenerateBlock() is called, and if HAVE_HASHDRBG) && !CUSTOM_RAND_GENERATE_BLOCK, check that forcing a reseed doesn't result in an increase.   * add missing context cleanups in openSSL_evpMD_test().
+8bd0fb0e4 wolfcrypt/src/random.c and wolfssl/wolfcrypt/random.h: refactor WOLFSSL_SMALL_STACK_CACHE support to eliminate all heap calls after init and before cleanup.   * add DRBG_internal.{seed_scratch,digest_scratch}   * add WC_RNG.{drbg_scratch,health_check_scratch,newSeed_buf}   * refactor to implement new WOLFSSL_SMALL_STACK_CACHE dynamics:     * wc_RNG_HealthTestLocal()     * Hash_df()     * Hash_gen()     * Hash_DRBG_Generate()     * Hash_DRBG_Instantiate()     * _InitRng()     * PollAndReSeed()     * wc_FreeRng()     * wc_RNG_HealthTest_ex_internal()     * wc_RNG_HealthTest_ex()     * wc_RNG_HealthTestLocal()   * refactor out WOLFSSL_KERNEL_MODE gates (now all WOLFSSL_SMALL_STACK_CACHE)
+f61bfd780 Check KeyShare after HRR
+44be44a50 TLS 1.3 missing extension: return correct alert code
+3062d1524 Merge pull request #9485 from philljj/bsdkm_cleanup
+cd99aa2f0 bsdkm: return cleanup.
+eac5c29fd Merge pull request #9455 from holtrop/rust-wc-init-cleanup
+551f90414 bsdkm: review cleanup.
+5a8411a1a Merge pull request #9418 from SparkiDev/tls13_ks_dup_check_fix
+1ec18949b TLS 1.3 duplicate KeyShare entry fix
+e78752f3b Merge pull request #9407 from holtrop/rust-heap-devid-cleanup
+3d99090bc Merge pull request #9374 from philljj/spelling_cleanup
+c14b1a050 Validate cipher suite after HelloRetryRequest
+11d2f4894 Guard ProcessKeyShare against truncated key shares
+874633da3 Merge pull request #9270 from effbiae/sm3-free-x2
+a53f0cd3f double free -- should be o_hash
+d5750ac7c Merge pull request #9250 from gasbytes/issue-9247
+be02b1ea7 Added check in TLX_Parse to check if KeyShare extension is present SupportedGroups must be present too (and viceversa). From RFC 8446 Section 9.2.
+1f579afc6 Merge pull request #9117 from SparkiDev/tls13_ks_fix
+b1cdf0b21 TLS 1.3 KeyShare: error on duplicate group
+cefeb4cd7 atomics/cpuid_flags fixes from peer review:
+b7b0ab6db src/tls.c: fix double free just added to TLSX_KeyShare_GenPqcKeyClient().
+8d7009e9d src/tls.c: in TLSX_KeyShare_GenPqcKeyClient(), add smallstack coverage to !WOLFSSL_TLSX_PQC_MLKEM_STORE_OBJ code paths.
+741795864 Merge pull request #9015 from philljj/fix_dual_alg_build
+e57198805 dual alg certs: fix dual alg certs build, and asn cleanup.
+e73fa74f1 linuxkm: misc cleanup.
+b3944a73c linuxkm/lkcapi_sha_glue.c:
+a8fc68d81 wolfcrypt/src/random.c: in Hash_DRBG_Generate(), gate the verbose reseed message on DEBUG_WOLFSSL or DEBUG_DRBG_RESEEDS, use WOLFSSL_MSG_EX(), and refactor the condition from `drbg->reseedCtr == RESEED_INTERVAL` to `drbg->reseedCtr >= WC_RESEED_INTERVAL`.
+574de4b23 Memory allocation failure testing fixes
+9b6b41627 move CFErrorRef instantiation
+3e5e47000 Merge pull request #8876 from philljj/small_drbg_cleanup
+8e9e671a5 Merge pull request #8853 from JacobBarthelmeh/pqc
+8a4200eb3 add macro WOLFSSL_ML_KEM_USE_OLD_IDS to PQC CI test
+f4821eb0f Merge pull request #8827 from SparkiDev/ml_kem_codepoints
+7eca4fb33 ML_KEM IDs backward compat
+aeae9cb3b Merge pull request #8807 from philljj/linuxkm_ecdsa_small_cleanup
+5c0a278c7 linuxkm/lkcapi_aes_glue.c: add error path cleanups for dangling skcipher_walks.
+b9ef6c583 wolfcrypt/test/test.c: in test_dilithium_decode_level(), on early malloc failure, stay in the flow to assure cleanup;
+7212fd048 linuxkm ecdsa: small debug msg cleanup.
+402ebec3b linuxkm rsa: comments, cleanup work buffer useage.
+63c3c547b Merge pull request #8768 from lealem47/zd19853
+76fd5319d Remove redefinition of MlKemKey
+b3d330258 linuxkm aes: cleanup.
+0532df5ce configure.ac: further fixes+cleanups for curve25519/ed25519 feature setup.  now recognizes =asm as an override optionally preventing implicit noasm (linuxkm), and fixes wrong -DHAVE_CURVE25519 added to flags in FIPS builds.
+982a7600c src/tls13.c: in DoTls13ServerHello() WOLFSSL_ASYNC_CRYPT path, fix -Wdeclaration-after-statement caused by fallthrough definition;
+b9b66042d wolfssl/wolfcrypt/dh.h: gate in wc_DhGeneratePublic() with WOLFSSL_DH_EXTRA,   adding WOLFSSL_NO_DH_GEN_PUB in the unlikely event it needs to be disabled;
+d4fc8c379 linuxkm/: null out pointers with PTR_ERR()-encoded values before jumping to cleanup;
+3cdc521d3 Merge pull request #8696 from douzzer/20250418-linuxkm-lkcapi-cleanup
+4ef7ef02d linuxkm ecdh: small cleanup.
+a626ec242 linuxkm ecdsa: tiny cleanup.
+a2eddc889 tests/api.c: fix double-free()s in test_wolfSSL_FPKI().
+2383402e1 Merge pull request #8537 from philljj/coverity_quic
+2de3d4697 wolfcrypt/test/test.c: in cryptocb_test(), fix error code from   wc_CryptoCb_RegisterDevice(), and call wc_CryptoCb_UnRegisterDevice() at   cleanup.
+8d90e321c coverity: tests quic cleanup.
+f4b770c5a Update Kyber APIs to ML-KEM APIs
+ac1f25d6f test_wolfssl_EVP_aes_gcm: fix for mem fail testing
+89491c7e3 Improvements for PQC hybrid key exchange
+f2bb063ca wolfio: peer review comment cleanup.
+be5f20327 Merge pull request #8425 from philljj/ecdsa_mldsa_test_api
+557e43bcd dual alg: peer review cleanup, and more function comments.
+3df616ae5 dual alg: small cleanup.
+035d4022f dual alg: add ML-DSA test, and misc cleanup.
+93cb9c4a5 Merge pull request #8417 from SparkiDev/tls13_hrr_keyshare_comments
+92491e636 TLS 1.3 HRR KeyShare: Improve comments
+d7e40e741 Merge pull request #8264 from dgarske/various_20241206
+017f931f8 Various cleanups and fixes: * Fix to properly set configure.ac LMS/XMSS enables and build of those code files. * Remove duplicate aes.c `wc_AesSetKeyLocal` call to `wc_AesSetIV`. Moved earlier in function in commit a10260ca5f. * Benchmark missing time.h with NO_ASN_TIME. * Added option to support disabling AES CFB 1/8 `WOLFSSL_NO_AES_CFB_1_8`. * Fixes for building with combinations of `WOLFSSL_RSA_VERIFY_ONLY` and `WOLFSSL_RSA_PUBLIC_ONLY`. * Fix for building `--enable-stacksize=verbose` with single threaded. * Various tab and formatting cleanups. ZD 18996
+c111bb87c Merge pull request #8196 from SparkiDev/pqc_kem_priv_key_fix
+5d61ca94c KeyShareEntry: include private key fields for KYBER
+c71fdc3ca acert: review cleanup.
+622fc70d1 acert: fix holder entityName parsing, light cleanup, better testing.
+886f5b0a5 Kyber: fixes to configure and wolfSSL_get_curve_name
+aa18bbca5 assorted cleanups and refactors for C89 conformance, codespell and check-source-text, and consistent heap shim usage.
+79d9aab5b Merge pull request #8159 from philljj/spelling_cleanup
+b4e8e57b5 spelling: tiny cleanup.
+beeda7bc6 Merge pull request #8100 from douzzer/20241022-cleanups
+5690af82d wolfcrypt test: fix double free.
+35def1178 coverity: fix error, and cleanup.
+901384e70 Init SoftHSMv2 support
+f44d12026 wolfssl/wolfcrypt/{aes.h,curve25519.h,ed25519.h,hash.h,rsa.h}: remove unneeded .isAllocated member from struct definitions, and add int *result_code argument to constructor prototypes;
+984d16b72 refactor wolfcrypt constructors:
+61b726fae Merge pull request #8088 from douzzer/20241016-dtls13-cleanup
+fa65da7bb analyzer-driven cleanups of --enable-dtls13 --enable-dtls-mtu --enable-dtls-frag-ch:
+554ebc2e9 coverity: fix double free of encryptedContent.
+dfd8ead95 Merge pull request #8050 from philljj/fix_acert_defines
+5f1ddadf7 Regression test fixes
+052cf7723 acert: fix defines, cleanup, more testing.
+e4f4274b4 Fix AesSivCipher heap hint on cleanup.
+2e539ef70 Merge pull request #7983 from philljj/tiny_dilithium_cleanup
+a04871f15 examples/pem/pem.c: fix double-free introduced in 65853a41b9;
+794f0d8d1 src/pk.c: add missing "keySz = padded_keySz" in _DH_compute_key() ct cleanup path.
+2328a7e40 Merge pull request #8017 from philljj/misc_cleanup
+67b0c4d03 Merge pull request #8009 from philljj/asn_cleanup
+e5109b3f4 misc cleanup: extra spaces, typos.
+c6124d573 asn: tiny peer review cleanup.
+0f646b6e4 asn: cleanup around edPubKeyASN.
+d714e55a2 Addressing PR comments typos and cleanup and support HAVE_AES_ECB, Sha1, and Sha224
+7df446bf4 cleanup: fix cast warning, and small cleanup.
+171ab4b13 Merge pull request #7967 from douzzer/20240910-configure-enable-all-asm-and-sp-cleanup
+887c5abcb Merge pull request #7949 from douzzer/20240905-whitespace-and-utf8-cleanup
+2bcfff349 Expand testing to include SW implementation of RSA with padding callback, code cleanup to address review comments.
+f5e775fe9 wolfcrypt/src/wc_kyber.c: fixes for null derefs (nullPointerRedundantCheck) in wc_KyberKey_MakeKeyWithRandom() and wc_KyberKey_Decapsulate() added in d350ba6c41.
+2a2f9d591 ML-KEM compatibility
+54370cc51 Merge pull request #7829 from douzzer/20240804-SetDNSEntry-double-free
+d65be7af2 wolfcrypt/src/asn.c and wolfssl/wolfcrypt/asn.h: in SetDNSEntry(), defer XFREE(dnsEntry, ...) until end (fixes double free); add PBE_NONE to enum PBESTypes; in EncryptContent(), initialize id to PBE_NONE to fix a -Wmaybe-uninitialized (CheckAlgo() can leave it unchanged even when returning success).
+54997837f Merge pull request #7805 from julek-wolfssl/wolfSSL_X509_REQ_add1_attr_by_NID-push-cleanup
+1d9b86e2b Fix for TLS v1.2 secret callback, incorrectly detecting bad master secret. API test cleanups (no sleep needed).
+50d60bf0e Code sonar cleanup (#7782)
+c4f73f595 Peer review cleanups.
+b5e188830 Merge pull request #7755 from philljj/misc_cleanup
+6a745518b Misc cleanup: FreeX509 null pointer checks, and spelling cleanup.
+5298039d0 fixes from peer review: move OS-specific code from wolfSSL_BIO_read() and wolfSSL_BIO_write() to wolfIO_Recv(), wolfIO_Send(), wolfIO_RecvFrom(), and wolfIO_SendTo(); add SOCKET_ETIMEDOUT definitions to wolfio.h; misc cleanups.
+1fd9f2af9 KYBER/ML-KEM: make ML-KEM available
+d09f955e6 Merge pull request #7626 from lealem47/parseServerHello
+219a33810 Merge pull request #7547 from philljj/spelling_cleanup
+712ff0a58 Merge pull request #7537 from dgarske/cleanups_20240515
+9166c1aa1 Various typo and copy/paste cleanups.
+b156a51e8 Code cleanup per review comments
+2fe366cc7 wolfcrypt/test/test.c: add test coverage for WOLFSSL_AESXTS_STREAM.
+e45686cce Merge pull request #7494 from douzzer/20240430-xmss-analyzer-cleanups
+78670f509 Merge pull request #7453 from douzzer/20240419-wolfSSL_CTX_SetTmpDH-double-free
+39e2405e2 src/ssl_load.c: fix double-free in wolfSSL_CTX_SetTmpDH().
+4a069ee5c Small cleanup for review.
+cf2f58bfd Merge pull request #7395 from douzzer/20240403-RPK-cleanups
+04ebc966d Merge pull request #7385 from philljj/spelling_cleanup
+3f3dd4743 Merge pull request #7365 from rizlik/ecc_cmp_param_cleanup
+3728cd3dc Kyber fixes:
+403fcc5a4 Fix for PQC enabled handshake
+0775baa2e Introduce SHA256/SHA512 interleave, HAVE_DSA; revised ERROR_OUT, cleanup
+aa19d8221 Add test forcing caTable cleanup during active connections
+44e0ee1ec wolfssl/wolfcrypt/types.h: * fix overallocation in WC_DECLARE_ARRAY() macro in the !WOLFSSL_SMALL_STACK path. * rename WC_INIT_ARRAY() to WC_ALLOC_ARRAY() for clarity (it doesn't initialize any memory). * rename WC_DECLARE_ARRAY_DYNAMIC_DEC(), WC_DECLARE_ARRAY_DYNAMIC_EXE(), and WC_FREE_ARRAY_DYNAMIC() to WC_DECLARE_HEAP_ARRAY(), WC_ALLOC_HEAP_ARRAY(), and WC_FREE_HEAP_ARRAY(), respectively, also for clarity, and refactor out the duplicate definitions. * add WC_ALLOC_VAR(), and move the XMALLOC() in smallstack WC_DECLARE_VAR() into it.  smallstack WC_DECLARE_VAR() now initializes the pointer to NULL, like smallstack WC_DECLARE_ARRAY(), assuring all pointers are valid upon shortcircuit to cleanup for a failed allocation (see WC_ALLOC_DO_ON_FAILURE below). * add a new hook "WC_ALLOC_DO_ON_FAILURE" in WC_ALLOC_VAR(), WC_ALLOC_ARRAY(), and WC_DECLARE_ARRAY_DYNAMIC_EXE(), which is invoked when an allocation fails.  by default the hook is defined to WC_DO_NOTHING. * add basic safety to WC_*_HEAP_ARRAY() by recording/detecting allocation state via idx##VAR_NAME. * add macros WC_ARRAY_OK() and WC_HEAP_ARRAY_OK() to test if allocation succeeded. * add macros WC_CALLOC_ARRAY() and WC_CALLOC_HEAP_ARRAY() which zero the objects. * add macro WC_CALLOC_VAR() which zeros the object.
+b1e5d0f9b linuxkm: completion and stabilization of LKCAPI integration for AES-CBC, AES-CFB, AES-GCM, and AES-XTS:
+f6ef14614 EarlySanityCheckMsgReceived: version_negotiated should always be checked
+49d258f01 Merge pull request #7124 from SKlimaRA/SKlimaRA/tls13SessionTicketDoubleFree
+e63c50b1f fixed double free happening during EvictSessionFromCache
+7f53bcc4d fixes for clang-tidy reported defects and misstylings --with-liboqs: * readability-named-parameter (style) * bugprone-sizeof-expression (true bugs) * clang-analyzer-deadcode.DeadStores (true bugs) * clang-analyzer-core.NonNullParamChecker (true bug) * clang-diagnostic-newline-eof (style) * clang-diagnostic-shorten-64-to-32 (true but benign in practice)
+f00c5eb95 Fix double free
+0d212d805 Further cleanup for `Hashes.sha` when not required. Gate all TLS SHA-1 on either old TLS or `WOLFSSL_ALLOW_TLS_SHA1`.
+64e48deb0 Merge pull request #7074 from douzzer/20231215-srtp-cleanup
+68cfaa76f Fix for TI-RTOS time. Cleanup forced settings.h for `WOLFSSL_TIRTOS`. Compiler warning cleanups.
+f708d42ef Merge pull request #7046 from dgarske/crl_cleanups
+689a82a62 fix AES-related code, in both crypto and TLS layers, for various uninitialized data and resource leak defects around wc_AesInit() and wc_AesFree():
+8097ed74c Merge pull request #7012 from philljj/spelling_cleanup
+cb381a233 src/tls.c: fix misspelling in TLSX_KeyShare_ProcessPqc().
+8c1ab783a Add missing wc_AesInit calls: small cleanup.
+a10260ca5 refactor AESNI implementations and *VECTOR_REGISTERS* macros to allow dynamic as-needed fallback to pure C, via WC_AES_C_DYNAMIC_FALLBACK.
+0dde07e28 Whitespace cleanups (appease multi-test "check-source-text").
+59e947d3e Merge pull request #6936 from philljj/codespell_cleanup
+21d465cf9 Fix possible double free
+46b1a030a XMSS/XMSSMT hooks support: fix g++ warnings, and small cleanup for review.
+16e6a8c15 Merge pull request #6795 from jpbland1/ech-double-free-fix
+f71423d62 set ssl->hsHashesEch to NULL regardless of acceptance
+0983ea9a8 pqc: fix memory type for shared secret storage server side
+928dd7021 Merge pull request #6716 from bandi13/dtls_test_cleanup
+9cc8cdcc3 Merge pull request #6712 from philljj/spelling_cleanup
+61761143e Merge pull request #6696 from philljj/small_benchmark_cleanup
+779b87f03 Tiny cleanup to benchmark print usage.
+44b634a59 More cleanup
+a495bb4e7 TLSX_CA_Names_Parse: make sure to do cleanup when smallstack is on
+71b28caa0 Added Initialize and Finalize functions to initialize and cleanup resources of the WolfSSL library. Removed definitions of exceptions.
+a747e7773 LMS: comments, SMALL_STACK, cleanup, etc.
+4c125ece7 LMS: cleanup INSTALL, and cap threads to 4.
+d7c3a176e LMS cleanup.
+55bbd5865 LMS/HSS: cleanup, and safer write/read callbacks
+266307da6 Add in ARIA wrappers
+00719182d Fix for benchmark always using 4KB of memory for `gStats`, even when not required. Added new `WC_BENCH_TRACK_STATS` to enable feature is needed. Code cleanups for line length and headers.
+06c1dd171 Merge pull request #6466 from dgarske/keilmdk
+a56fe30c2 Fixes and cleanups for Keil MDK examples. Combine duplicate user_settings.h. Use SP math all by default. Disable old/deprecated algorithms. Add CMSIS RTOS timer support for TLS and benchmark.
+ebc62f8d1 clear extension string and avoid potential double free
+e542e51d9 Test api.c: change more tests to use Expect instead of Assert
+ca2ca4f73 Merge pull request #6454 from philljj/spelling_cleanup
+541ea51ad Tests api.c: rework for malloc failure testing
+e3be76b23 Merge pull request #6435 from SparkiDev/sp_int_count_bits_cleanup
+fffff657d cleanups: line length, WOLFSSL_SMALL_STACK_STATIC, and SAVE_VECTOR_REGISTERS() failure trap in benchmark.c, proper path to benchmark.c in linuxkm/module_hooks.c, and proper casting in aes.c.  also harmonized semantics and prototype of bench_ripemd().
+1b6ab01d0 Merge pull request #6407 from dgarske/stm32_cleanup
+9cca571c1 Merge pull request #6399 from bigbrett/zd16083-ocsp-double-free
+46dce4b33 set pointer to null after freeing in InitOcspRequest() to prevent a subsequent double-free in FreeOcspRequest()
+11512c7e8 Merge pull request #6388 from philljj/zd16114
+8c792b836 Fix memory leak in TLSX_KeyShare_Setup
+a5a2316aa async: fix overwrite of keylen params between calls
+1106e5ff0 TLS v1.3: Support a stateful ticket and test HAVE_EXT_CACHE (#5960)
+510038022 Various Espressif HW crypto, SHA2, AES, MP updates. (#6287)
+5882b8f68 cleanup user_settings example file
+c08878ac9 configure.ac: include both -I. and -I$srcdir for "circular dependency" test, so that ${build_pwd}/wolfssl/options.h is found in out-of-tree builds; streamline scripting that dynamically sets $TRIM;
+848909505 Move ASN.1 APIs out to separate file: ssl_asn1.c
+6bed0c575 Merge pull request #6123 from dgarske/math_info
+22a5a5c45 Add introspection for math build and math cleanups:
+9ec742b11 Regression testing fixes
+cbedae2f5 This path in TLSX_KeyShare_Choose should not be taken normally
+8c08dbb6c Adding checks for SigAlgs, KeyShare, and Supported Groups
+41a9b1148 Merge pull request #6152 from philljj/spelling_cleanup
+24fd561bf Merge pull request #6099 from bandi13/ocsp-cleanup
+aaed55331 Merge pull request #6092 from dgarske/various
+47801107d Fix to make sure API unit test always calls init/cleanup when not running all tests.
+ed79545a2 Espressif examples run with local wolfSSL (no setup!) (#6018)
+1da392c29 Merge pull request #6069 from philljj/spelling_cleanup
+cc791a7a5 Spelling cleanup: configure.ac, ssl.c, ssl.h
+a8a61fe6b evp.c: fix gating in wolfSSL_EVP_CIPHER_CTX_cleanup() to avoid switch-unreachable; also fix indentation.
+38c057a08 fix resource leak (missing calls to wc_AesFree()) in wolfSSL_EVP_CIPHER_CTX_cleanup();
+462f76c1f Merge pull request #6033 from dgarske/stm32_fixes
+2d03a052e Fixes and cleanups for STM32: * Fix for STM32 Hash peripherals (like on F437) with FIFO depth = 1. * Cleanups for `XREALLOC` and new `WOLFSSL_NO_REALLOC` to force undef of `XREALLOC`. * Change STM32 Cube to default to `NO_TLS_UART_TEST`.
+46ace1911 Merge pull request #5975 from bandi13/cleanupContainers
+e42f6dbe4 Merge pull request #5939 from dgarske/20221228_cleanups
+b23db16ff Refactor the double-free fix
+46c47e4ad Fix a quick leak in the test apps
+78fd5d7db Fix wolfSSL_set_SSL_CTX() to be usable during handshake.
+6be051272 Peer review cleanups.
+e33d59cd7 Review cleanups.
+f87859a00 Whitespace cleanups. Use `const` for `test_tls_ext_duplicate`.
+9d9549fbd Merge pull request #5836 from anhu/kyber_cleanup
+312b48858 Remove double free
+fec7469c1 Tidy up Espressif ESP32 test and benchmark examples (#5800)
+7310eb102 Whitespace and line length cleanups.
+f610df59a Whitespace cleanups.
+fe2870289 Fixes for async sniffer handling of packets with multiple TLS messages. Other minor cleanups for spelling and `CheckPreRecord` `SnifferSession` deference.
+8b7668f77 Fix X509 subject and issuer name_hash mismatch
+02d37f08f Do not direclty return but goto exit label for cleanup of allocated resources in case ALPN selection or SNI callback fails.
+b1a69f646 Merge pull request #5630 from dgarske/deos_cleanups
+f80fb7f1a Merge pull request #5625 from dgarske/esp32_cleanups
+606f58a85 Spelling and whitespace cleanups.
+23ba1e7e9 Minor cleanups. Gate these API's on `OPENSSL_EXTRA` or `WOLFSSL_SET_CIPHER_BYTES` to keep code size reduced.
+e7dbb5b37 Merge pull request #5548 from dgarske/whitespace
+232a750cc Whitespace cleanup.
+11c553ea1 Merge pull request #5520 from julek-wolfssl/sni-tls-1.2
+88deaf9b5 SNI can appear in ServerHello for TLS 1.2
+28f22859b Merge pull request #5451 from embhorn/zd14428
+bcb9f3f70 Fix TSIP ret value in TLSX_KeyShare_ProcessEcc
+66aed8193 Merge pull request #5341 from dgarske/various_20220708
+8bb6ff8db Espressif HW acceleration update & cleanup
+4f6527353 src/{pk.c,x509.c}: style/clarity cleanups from dgarske.
+d5791d5c7 Fixes for TLS benchmarking app (tls_bench) for shutdown and formatting brace cleanups.
+d600a4b88 Spelling and Whitespace cleanups. Fix issue with trying to build pk.c directly and always getting warn even with `WOLFSSL_IGNORE_FILE_WARN`.
+1a57e3065 Small cleanups. Missing `(void)`, spelling and formatting. Also fixes for variations of 25519/448 build.
+829e9f527 tls13: fix cookie has keyShare information check
+36739bca6 cleanup memory on structure free
+3e774be88 Minor text and formatting cleanups.
+f6f6d91ae Merge pull request #5027 from LinuxJedi/fix-dox
+5ea9d1129 Minor documentation cleanup
+99af84f1e Whitespace cleanups.
+25d5a624d Merge pull request #4975 from cconlon/smallStack
+0ee01f08b Merge pull request #4984 from douzzer/20220325-multi-test-cleanup
+aa8e5a29d Merge pull request #4947 from cconlon/compatSmallStack
+2639c5e26 X509V3_set_ctx arg check fix, debug log cleanup
+141cf822f Merge pull request #4941 from douzzer/20220309-script-cleanup
+abfc78838 script cleanup: use #!/bin/bash on all scripts that use "echo -e" (/bin/sh is sometimes a non-Bourne/non-POSIX shell, e.g. dash/ash, with no support for "echo -e"); fix whitespace.
+86e08525c Merge pull request #4852 from elms/fix/more_oot
+b13826a3a Merge pull request #4840 from haydenroche5/visual_studio_cleanup
+d1895e567 automake: fix fips touch and cleanup
+a1198549d Merge pull request #4844 from dgarske/bench_cleanups
+d1ca8fc67 Merge pull request #4821 from elms/cmake/help_cleanup
+198843aa3 Merge pull request #4787 from douzzer/20220121-fixits-20220118-clang-tidy
+869246609 Merge pull request #4772 from douzzer/20220118-clang-tidy
+8e0ece920 Test cleanups. Fix possible leak in `TLSX_UseSRTP`.
+6a02826bb Merge pull request #4740 from dgarske/sess_names_docs
+e847bf730 ISO-TP buffer fixes
+247cbdeef Cleanups for ISO-TP in wolfio
+57d2555ac Merge pull request #4695 from douzzer/20211222-fips-config-update-and-fix-test_RsaDecryptBoundsCheck
+c89b7d5f7 configure and cmake: Closing gap on options and output
+951eb72ec fips-check.sh: update+streamline flavors -- add linuxv5-dev (checks out fips master same as old linuxv5-ready) , drop linuxv5-RC8, linuxv5-RC9, linuxv5-RC10, and the desupported/unbuildable fips-v3-ready; update linuxv5 and linuxv5-ready to use WCv5.0-RC11; use the term "flavor" consistently for the fips key (versus "version" or "platform"); cleanup to satisfy shellcheck.
+af0bcef0e Merge pull request #4648 from embhorn/zd13365
+771647615 Merge pull request #4669 from douzzer/rehab-configure-fips
+b6b12fe94 configure.ac: fips cleanup: drop flavor keys "v5-REL" (confusing); drop "v3" aka "v3-ready" (no longer buildable); add flavor "v5-dev" aka "dev"; refactor the "v5*" case of the FIPS setup switch to impose feature locks for v5 and v5-ready, but allow feature overrides with the new v5-dev; fix a debugging echo in the v2 case added in 1c27654300.
+44cc9e482 Fix - wolfSSL_init should cleanup on failure of a component
+a33ae2180 whitespace cleanups and portability/pedantic fixes
+3c1deff61 Fix falcon bench cleanup case (should not free if init fails). Fix RSA key gen keySz with `./wolfcrypt/benchmark/benchmark -asym`.
+18e487069 src/internal.c: fix typo introduced in earlier "typographic cleanup".
+8b3048a0e wolfcrypt/test/test.c: smallstack refactors for pkcs7authenveloped_run_vectors(), pkcs7signed_run_vectors(), and pkcs7signed_run_SingleShotVectors(); typographic&whitespace cleanup.
+59ec9fc28 configure.ac: refactor setup for --enable-reproducible-build; remove mutex between --enable-sp-math and --enable-sp-math-all (they can now coexist); whitespace cleanup.
+0b4f34d62 typographic cleanup: fix whitespace, remove unneeded UTF-8, convert C++ comment constructs to C.
+bc9118706 tls.c:TLSX_KeyShare_GenDhKey(): fix typo.
+083b97c5a tls.c: fix rebase error in TLSX_KeyShare_FreeAll().
+54b3f1b25 src/tls.c:TLSX_KeyShare_GenDhKey(): don't generate a key if one is already set.
+93f033823 Merge pull request #4482 from miyazakh/mindowngarde_staticrsa
+91cd2b173 TLS 1.3 ServerHello additional fix for PR4439 in Static RSA case
+2aa2ef84b Merge pull request #4470 from LinuxJedi/md-cleanups
+29f051e58 Fixes and cleanups for NXP SE050 support.
+f757318ee Merge pull request #4454 from dgarske/static_mem
+9f5734561 Fix for `Bad memory_mutex lock` on static memory cleanup (was free'ing mutex then trying to use it).
+024c59a04 Merge pull request #4439 from SparkiDev/tls13_min_down_no_ext
+4473e9335 TLS 1.3: Check min downgrade when no extensions in ServerHello
+0e80923fb Unit tests for post-quantum groups.
+6d715130a linuxkm: cleanups and smallstack refactors related to WOLFSSL_LINUXKM_SIMD_X86_IRQ_ALLOWED, associated linuxkm-SIMD-IRQ PR, and associated peer review:
+bfbb445e0 Register cleanup with atexit for OpenSSL compat layer
+b6665df6a Fixes for sniffer handling of TCP spurious retransmission (#4372)
+bac0497c3 PKCS7 fix for double free on error case and sanity check on set serial number (#4356)
+18314e5a4 Merge pull request #4309 from dgarske/sniff_cleanups
+c5f9e5556 Fixes for CMAC compatibility layer with AES CBC disabled. CMAC code cleanups. Fixes for "make check" with AES CBC disabled.
+07e0c60ce Merge pull request #4259 from dgarske/cleanups
+b4fd737fb Bind 9.17.9 Support
+dc19ba2aa Memory allocation: fixes from memory usage generation
+2dd169f9a Added new sniffer API for callback for key use `ssl_SetKeyCallback`. Support indicated by `WOLFSSL_SNIFFER_KEY_CALLBACK`. Trace cleanup for custom error.
+45ef68d5c Fix for async with fragmented packets where inline crypto could be overwritten on reprocessing fragment. FIxes unit tests with `--enable-all --enable-asynccrypt`. Minor cleanup for line length and free verify RSA buffer sooner.
+77df7d863 Merge pull request #3968 from elms/pedantic_cleanup
+2e4e65f51 Asynchronous support for TLS v1.3 TLSX ECC/DH key generation and key agreement * Added async support to `SendTls13ClientHello`, `DoTls13ServerHello` and `DoTls13ClientHello`. * Cleanup of the example client/server use key share code. * Fix some scan-build warnings. ZD 12065
+3ecb8d5a3 Merge pull request #4062 from dgarske/dh_key
+c34fcf908 code cleanup based on PR review comments
+0cf9bacf1 WOLFSSL_WOLFSENTRY_HOOKS/HAVE_EX_DATA*: refactor wolfSSL_CRYPTO_cleanup_ex_data() to take only one arg (the WOLFSSL_CRYPTO_EX_DATA *); fix preprocessor gates on wolfSSL_set_ex_data() and wolfSSL_X509_get_ex_new_index(); fix line lengths.
+0afcd4227 ssl.c/internal.c: refactor _EX_DATA_CLEANUP_HOOKS cleanup in _free() routines to use a common wolfSSL_CRYPTO_cleanup_ex_data() routine; remove superfluous WOLFSSL_API qualifiers in ssl.c.
+23d8df720 remove WOLFSSL_NETWORK_INTROSPECTION code; add wolfSSL_X509_STORE_set_ex_data_with_cleanup(); refactor WOLFSSL_WOLFSENTRY_HOOKS code in server.c to use HAVE_EX_DATA/HAVE_EX_DATA_CLEANUP_HOOKS.
+f931e67cd Merge pull request #3946 from TakayukiMatsuo/tk11899
+5955603c5 Merge pull request #3958 from TakayukiMatsuo/tk11969
+2db06eb3b Changed the logic for determining the group used for KeyShare.
+0a05acff0 Add test cases for EVP_CIPHER_CTX_cleanup and BIO_free
+952a9b349 Add unit tests for CONT_modules_xxx, CRYPTO_set_dynlock_xxx, CRYPTO_THREADID_xxx and ENGINE_cleanup.
+a1ff02667 Revert the change of wolfSSL_EVP_CHIPER_CTX_cleanup.
+7760dcb43 Fixes and cleanups for the openssl compatibility layer `RAND_` functions. For `opensslextra=x509small` don't include the RAND method code. Removed abandonded "ENABLED_SMALL" option in configure.ac.
+07807526c Change the following functions to behave the same as opeSSL: - EVP_CIPHER_CTX_cleanup - BIO_free - EVP_PKEY_cmp
+749425e1e first pre alpha code for QNX + CAAM
+7e8aa9947 Merge pull request #3820 from haydenroche5/cmake-options-cleanup
+36ba2e134 configure: FIPS error and compatability cleanup
+f63f0ccb9 Merge pull request #3740 from SparkiDev/tls13_one_hrr_sh
+4d70d3a3c TLS 1.3: Only allow one ServerHello and one HelloRetryRequest
+46821196a Fix call to wolfSSL_connect when in wolfSSL_connect_TLSv13
+c739b4d47 ECDSA sign: cleanup comments and variables
+a2917ae29 SSL: cleanup verify_mode coding style
+542ad0a81 linuxkm/module_hooks.c: separate cleanup into static libwolfssl_cleanup(), and call it from wolfssl_init() if wolfcrypt_test() fails.
+16ce8e077 only call wolfSSL_UseKeyShare() in example client with TLS 1.3
+40087f1fd SiLabs: AES return code fixup and comment cleanup
+cb61dc7d2 Merge pull request #3522 from douzzer/cleanups-20201119
+93fc37f87 SiLabs: add cleanup and address PR comments
+919c2a2df SiLabs: address PR comments to cleanup
+3abc4719a SiLabs: cleanup TODOs
+a8333b09a memory cleanup with test case
+e996a7d15 Scan-Build Fixes 1. Fixed a couple possible 0 byte allocations. 2. Fixed a couple missed frees due to error conditions. 3. Fixed a possible double free.
+d49038ae2 Fix overlapping sequence number error.
+9c1049f11 Compatibility Layer 1. Changed the ASN1_OBJECT member of the X509_NAME_ENTRY to be a pointer    rather than an object. It could lead to a double free on the name    entry. 2. The ASN1_OBJECT allocator should set the dynamic flag, as the    deallocator is the one that uses it. 3. General changes to treat the member as a pointer rather than a    member. 4. In the api test, we were iterating over the name members in the name    checking the NIDs. After the loop we freed the name member object.    This led to a double free error.
+1c492dc0b cosmetic cleanups.
+0c3599817 linuxkm/module_hooks.c: log "cleanup complete" at unload time.
+dd825d90c more LKM WIP: polish up the struct DRBG refactor ("struct DRBG_internal"), tweaks for buildability on 3.x kernels (now builds on 3.x, 4.x, and 5.x up to 5.8.1), move a slew of #[un]def[ines] from wc_port.h to settings.h where they belong, misc cleanup.
+6d5731b8e Fixes for HMAC_CTX cleanup not being called to free SHA2 resources with `WOLFSSL_SMALL_STACK_CACHE`. Added return code checking and cleanup for `openssl_test`.
+21ed05b85 Merge pull request #3214 from dgarske/snifferFreeFix
+65bcc0388 Fix for SSL sniffer free to properly cleanup globals (resolves issue with then calling `ssl_InitSniffer` -> `ssl_FreeSniffer` then `ssl_InitSniffer` again). ZD 10757.
+b500a54fc Added new file to read in and dump error message and added cleanup within cleanup script
+26f0a74d2 Merge pull request #3023 from kaleb-himes/GH2998-REWORK
+ae90119af remove double free in test case
+a855d6355 Added cleanup to test_wc_curve25519_export_key_raw_ex
+8c3f7a77c cleanup GET messages
+7901f74d0 Merge pull request #2977 from SparkiDev/tlsx_ks_ecc_fix
+5b918f7ac KeyShare ECC shift index range check
+e6547c75c Reimplement external data as it was before: a fixed size vector. This makes external data implementation easier as it doesn't require allocation or cleanup. Only zeroing the entire structure that it is in (which happens in all structures anyway) and then calling the appropriate getter and setter functions to manipulate external data.
+670ba75ea Missing varargs cleanup.
+e429dd8f0 Peer review feedback minor cleanup.
+b901a2cd3 Use `byte` for bit-field. Line length cleanup.
+deac82c8e Merge pull request #2683 from dgarske/various_items
+ad9011a86 initial DSP build and success with Debug mode
+22f0b145d Various cleanups and fixes: * Fix for key gen macro name in benchmark.c * Fix for possible RSA fall-through warning. * Fix for building `WOLFSSL_STM32_PKA` without `HAVE_ECC`. * Added option to build RSA keygen without the DER to PEM using `WOLFSSL_NO_DER_TO_PEM`. * Added options.h includes for test.c and benchmark.c. * Added printf warning on the math size mismatch in test.c. * Added support for benchmarking larger sizes. * TLS benchmarks for HiFive unleashed.
+ccc8a49fc Merge pull request #2607 from SparkiDev/tls13_serverhello_cs
+917e5b040 TLS 1.3 client detects non-TLS 1.3 cipher suite in ServerHello
+62eaa27b4 Review comment, avoid double-free
+1a3455110 Merge pull request #2599 from dgarske/cleanup_script
+5de27443d Merge pull request #2596 from dgarske/mqx_fio_cleanup
+abee442c1 Useful script to cleanup test files created.
+12d2d17d1 Minor cleanups to TLS bench tool configuration.
+d2c479845 Modify linked list traversal - fix for compiler bug
+1ad23334b Sync Sniffer API Cleanup 1. Switched the IntelQa sync API back to local. 2. Added two functions to setup and cleanup the IntelQA device. 3. Changed the Octeon functions to match the IntelQa functions. 4. Updated sniffer, wolfcryptest, and benchmark.
+d7fe000cf M68K (coldfire MCF5441X) wolfcrypt build and examples
+a258b8401 Merge pull request #2497 from danielinux/openssl-cleanup
+4ef8f53c9 PR Review Changes 1. Add more documentation 2. Add cleanup functions for client and server before return 3. Add the ability for client to use a hostname for SERVER_IP
+e75417fde Added build option to enforce check for cipher suite in `server_hello` from server. Enabled using `WOLFSSL_STRICT_CIPHER_SUITE`. Some cipher suites could be allowed if they were supported a build-time even though not sent in the cipher suite list in `client_hello`.
+6f54a2ec6 Merge pull request #2389 from dgarske/crypt_init_count
+3cf30f1e9 Fix to allow proper calling with counts for `wolfCrypt_Init` and `wolfCrypt_Cleanup`. Old code was not tracking case such as `wolfCrypt_Init` -> `wolfCrypt_Init` -> `wolfCrypt_Cleanup` and was causing cleanup to be performed, when it shouldn't.
+81a9779fc Merge pull request #2385 from dgarske/minor_items
+8ce2dd4bf Additional STSAFE return code cleanups.
+589b056ec update gitignore and location of test cleanup
+4ff9d951f TLS 1.3 ClientHello rework and other fixes
+1d05503d2 TLS 1.3 extension fixes
+56d7da313 Merge pull request #2284 from dgarske/api_test
+d7ab3a6de Further `user_settings.h` cleanup / additions. Additional README.md comments.
+a382a979c Merge pull request #2098 from kaleb-himes/ZD4793
+4226fb66f Merge pull request #2117 from SparkiDev/pkcs11_id_fix_2
+a3af2fc96 Fix for single threaded case with double free on suites.
+a44751cd3 PKCS #11 use private key id double free issue fixed
+7aa5cd6f1 Support FFDHE in TLS 1.2 and below. Better TLS 1.3 version support.
+390f3f5fc Merge pull request #4 from SparkiDev/pr_2069
+b7179c2a5 Disallow SupportedGroups in ServerHello for TLS 1.3
+003360237 Fixes for building with `NO_WOLFSSL_SERVER`. Minor test.h cleanups.
+ff0a4eb69 Fix for float compare warning. Minor cleanups.
+697c99a9e Merge pull request #1934 from dgarske/fix_alt_chain
+9c88218b6 Merge pull request #1998 from dgarske/async_fix_smallstack
+61757c83e Fix double free with `./configure --enable-asynccrypt --enable-smallstack`.
+59a3b4a11 New tests for cert chains, alternate cert chains, trusted peer certs and DH prime cleanup: * Added ECC and RSA intermediate CA's and server/client chain certificates for testing. * Enhanced suites test to support expected fail arg `-H exitWithRet` in any test .conf file. * Added new `test-altchains.conf` for testing with `WOLFSSL_ALT_CERT_CHAINS` defined. * Added new `test-chains` for testing chains. * Added new `test-dhprime.conf` for DH prime check tests. * Added new `test-trustedpeer.conf` for testing `WOLFSSL_TRUST_PEER_CERT`. * Refactor to add `-2` to disable DH prime check by default (except for new test-dhprime.conf). * Added ability to run a specific test.conf file using syntax like `./tests/unit.test tests/test-altchains.conf`.
+9733076fe Fixes and cleanups for processing peer certificates: * Fix with `WOLFSSL_ALT_CERT_CHAINS` to resolve issue with using a trusted intermediate to validate a partial chain. With the alt cert chain enabled a CA may fail with only `ASN_NO_SIGNER_E` and the connection is allowed if the peer's certificate validates to a trusted CA. Eliminates overly complex 1 deep error alternate chain detection logic. Resolves ZD 4525. * Refactor and cleanup of ProcessPeerPerts to combine duplicate code and improve code commenting. * Fix for CA path len check in `ParseCertRelative` to always check for self-signed case (was previously only in NO_SKID case). * Improvement to include self-signed flag in the DecodedCert struct.
+0a6732ee6 Merge pull request #1979 from SparkiDev/tls_sh_tlsx_parse
+f90e5601a Fix TLS 1.2 and below ServerHello TLSX_Parse to pass in message type
+70cb4dcdb Merge pull request #1972 from SparkiDev/tls13_alpn
+c844b1c25 ALPN is returned in ServerHello when downgrading from TLS 1.3
+310ffd004 Check for TLS 1.3 version in the method for extenstions.
+f87c327fa Merge pull request #1933 from SparkiDev/tls13_ems
+5156641f2 No Extended Master Secret in ServerHello if protocol TLSv1.3
+7c3313481 Fix for memory cleanup cases in `MakeTlsMasterSecret`.
+0b78b7553 Merge pull request #1860 from dgarske/tls_either_side
+d473fd38a Merge pull request #1861 from dgarske/coding_cleanup
+cfba86d3a Further cleanup of the Base64 and Base16 encoding start/min value.
+818b0a3c9 Merge pull request #1791 from SparkiDev/keyshare_ecc_free
+24694ef7b Fix memory leak in KeyShare using ECC and not fast math
+0f539616b Merge pull request #1766 from JacobBarthelmeh/UnitTests
+a178764a8 Portability and self-cleanup changes to ocsp test scripts
+244d931e7 Merge pull request #1721 from kaleb-himes/cleanup-debug
+50372b703 Memory Callback 1. Allow SetAllocators to use NULL as a callback. Memory wrappers will use default with NULL. 2. Remove the ResetAllocators function. Use SetAllocators with NULL. 3. Modify memory tracker to save the old allocators on init and restore them on cleanup.
+4eff7b641 First pass at bugs found with `./scripts/memtest.sh`. Fixes for NULL pointer checks, making sure free'd pointers are reset, making sure pointers are initialized and making sure memory is always free'd. Fix for TicketInit() which was using non-thread safe RNG and key_ctx. Fix for possible double free case in `wolfSSL_PEM_read_X509_CRL`.
+17c7ecb2b Merge pull request #1711 from dgarske/memtrack
+66c2c6544 Changes to support Lighttpd 1.4.49:
+cb8351c02 Merge pull request #1607 from SparkiDev/tls13_interop_ver
+df6fe0b07 FIPS Revalidation (acceptance fixes) 1. Update the fips-check script to pull the FIPSv2 code from the main repositories. 2. Script cleanup. 3. Disable the api.test check of wc_ecc_mulmod() when WOLFSSL_VALIDATE_ECC_IMPORT is enabled.
+020b69aba Return TLS 1.3 draft version in ServerHello
+1d281ce51 replace memset by XMEMSET
+2021bcb18 Merge pull request #1560 from dgarske/ciphernamecleanup
+3fd47bdff Fix for example client/server with `-H exitWithRet` option to make sure all cleanup is performed. Resolves valgrind report due to `TicketCleanup()` not being called.
+3ad708fb2 Merge pull request #1514 from dgarske/certdates
+089e1b6b9 Fix for expected Configurations Test - NIGHTLY BUILD #265 and ifdef cleanup.
+56025f38b Enhancements and cleanup to ASN date/time: * Refactor the ASN get date logic to combine shared code. * Added new API `wc_GetDateInfo` to get raw date, format and length. * Added new API `wc_GetCertDates` to extract certificate before/after dates as `struct tm` type. * Added new API `wc_GetDateAsCalendarTime` which parses the raw date string and convers to `struct tm`. * Added tests for new API's. * Added missing tests for `wc_SetAltNames`, `wc_SetAltNamesBuffer` and `wc_SetDatesBuffer`. * Fixed build for older `NO_TIME_H` macro.
+0b47811c4 Changes for interop and performance
+8f1e8be2d Merge pull request #1490 from dgarske/hashoid_cleanup
+e25da8076 Merge pull request #1467 from dgarske/asnpemtoder
+a38576146 * Added support for disabling PEM to DER functionality using `WOLFSSL_PEM_TO_DER`. This allows way to use with DER (ASN.1) certificates only in an embedded environment. This option builds, but internal make check requires PEM support for tests. * More cleanup to move PEM functions from ssl.c to asn.c (`wolfSSL_CertPemToDer`, `wolfSSL_KeyPemToDer`, `wolfSSL_PubKeyPemToDer`). Renamed these API's to `wc_` and added backwards compatability macro for old function names.
+21833e245 Fix TLS 1.3 with ECC disabled and CURVE25519 enabled. Resolves issue with using `./configure --disable-ecc --enable-curve25519 --enable-ed25519 --enable-tls13`. Refactor `TLSX_KeyShare_GenEccKey` to support either ECC or CURVE25519. Fix for `PemToDer` to handle ED25519 without ECC enabled.
+3a8a7b8a5 Merge pull request #1458 from dgarske/cleanupthreaded
+bba0a3e88 Merge pull request #1448 from dgarske/ecc_cleanup
+bd53d7ba5 TLS v1.3 support for Draft 23 and Draft 27
+fa73f7bc5 Fix for handling OCSP with non-blocking. The HashInput function was being called on the re-entry, which produced a bad mac response from server. Also cleanup for some of the WC_PENDING_E logic for the non-async cases to reduce code size.
+d35a3f1e6 Fixes from code review
+da4024b46 Fix downgrading from TLS v1.3 to TLS v1.2
+7a2aa6bc1 Merge pull request #1382 from dgarske/cleanup_strncpy
+e4df21df9 More cleanup for const strings.
+ae5dac899 Fixes for GCC 7 build errors with evp.c and switch fall through. General EVP code formatting cleanup. Fix for wolfCrypt test un-used var when `HAVE_AES_CBC` not defined. Fix for async in `test_wolfSSL_SESSION` with `err` not being initialized.
+a27d2448e Merge pull request #1344 from dgarske/portability_cleanups
+0da8694ff Fix Hello Retry Request parsing of new KeyShare choice
+9a0c82258 Support TLS v1.3 Draft 23
+5b083497d Merge pull request #1300 from kaleb-himes/SGX-FIPS-LINUX
+0590f2493 Merge pull request #1314 from dgarske/cleanups
+289ad7a42 add CRYPTO_cleanup_all_ex_data
+2e1068f30 Added stubs for new OBJ_cleanup, OBJ_nid2obj, OBJ_obj2txt. Added openssl/objects.h for compatibility. Moved around OBJ function defs.
+9290b2e46 RAND cleanup and no-op functions for compatibility -- brackets added to ssl.c if statements for gcc-6
+effb75120 Add build scripts for default SGX build and improve cleanup
+53ec80b29 Merge pull request #1238 from cconlon/pkcs7cleanup
+30e8f5539 PKCS7 cleanup: remove dependencies on 3DES and SHA1
+cc6542994 Merge pull request #1231 from dgarske/fix_max_sigalgo
+90c5a6454 Merge pull request #1211 from dgarske/cleanup_hardcoded
+4084255fd Improve SSL failure cleanup case where ssl->ctx isn't set yet.
+6369794b6 Fixes for static memory with `-r` session resumption option on client. Fix for possible failed InitSSL cleanup using NULL ssl->ctx for static memory.
+f4ae86dc1 Fix TLS extension code
+c0105b300 Merge pull request #1175 from dgarske/cleanup_inlines
+d46ab1f72 Merge pull request #1194 from dgarske/rel_fixes
+2d67f4624 Minor cleanups for the GCC ARM example. Fixed build with DH enabled. Changed random.h to always make sure `CUSTOM_RAND_TYPE` is defined. Added TLS13 option to reference user_settings.h.
+eec5f9bb4 Fixes for benchmark after buffers were moved into thread. Needed THREAD_LS_T and fixed benchmark alloc failure cleanup.
+a2ed22286 Adds `TFM_MIPS` (tested on PIC32MZ2048EFM144 with XC32 v1.44). Adds check for `mp_read_radix` to return failure for invalid character. Adds checking for `s_mp_sub` response code. Improved `mp_init_copy` error handling. Improved init to use size where applicable. Asm PPC 32 changes to add `r` to register. Asm formatting cleanups.
+2620cb455 OpenSSL Compatibility Additions and Fixes 1. Added a check on the hex2bn function for null strings to be treated like the NULL pointer. 2. Added some more test cases to the big number unit test. 3. Added wolfSSL_EVP_add_cipher() analogous to wolfSSL_EVP_add_digest(). 4. Implemented `RSA_public_encrypt()` and `RSA_private_decrypt()` for the OpenSSL compatibility layer. 5. Added `RSA_PKCS1_OAEP_PADDING` as an option to the new functions. 6. Fixed the constness on the `from` parameter in function `RSA_public_decrypt()`. Note: this does not allow OAEP to be used in FIPS mode. 7. Added size constants for EVP_MAX_BLOCK_LENGTH, RSA_PKCS1_PADDING_SIZE, and RSA_PKCS1_OAEP_PADDING_SIZE. 8. Added functions `wolfSSL_EVP_PKEY_new_mac_key()` and `wolfSSL_EVP_PKEY_get0_hmac()` for storing HMAC keys in an EVP_PKEY structure for use later. 9. Added the routines EVP_DigestSignXXX(). They only work w.r.t HMAC. 10. Added the ForceZero() to EVP_MD_CTX_cleanup(). 11. Modified the EVP_MD_CTX structure to have a union with both the hasher and a wolfCrypt Hmac structure. 12. Added a mapping of SHA1->SHA to the list of digest name aliases in wolfSSL_EVP_get_digestbyname(). 13. Changed the mapping of ssl3-sha1->SHA. 14. When using RSA blinding, the OpenSSL compatibility layer RSA object was attempting to decrypt without an RNG. Added an RNG if needed. 15. Add comment to wolfSSL_BN_hex2bn() to cover usage w.r.t. string length. Remember to keep the length even, front-pad with zeroes if needed. 16. Added tests for the new functions.
+a27738b5f Merge pull request #1071 from dgarske/cleanup_tests
+b40aad3f9 Added new “wolfSSL_mcast_get_max_peers” API. Minor cleanup with examples/client failure case. Fix possible unused var in wolfSSL_set_secret with DTLS disabled.
+7853440d8 Merge pull request #1015 from dgarske/config_ignore_cleanup
+17936d65e please Jenkins + a bit of cleanup
+68439d431 Completed refactor to cleanup dynamic types. Refined the tmp buffers to new types for more granularity. Fixed several places where malloc/free type was mis-matched. Cleanup of the PKCS12 code to improve cleanup handling. Fix wc_PKCS12_parse to return 0 on success else failure.
+88afc7a92 Progress on dynamic type cleanup for over-use of tmp_buffer. Increases performance on NUMA memory platform having ability to be more selective about the types that are NUMA allocated for use against QuickAssist hardware.
+ce231e0cb Fixes for asynchronous TLS 1.3. Fixes for PK_CALLBACKS with async. New helper API's for `wolfSSL_CTX_GetDevId` and `wolfSSL_CTX_GetHeap`. Fix for build to not include tls13.c if not enabled to suppress empty object file warning. Fix typo in fe_low_mem.c. General cleanup. Extra tls13.c debug messages.
+5c652e398 Merge pull request #896 from dgarske/async_cleanups
+2e016f3b2 Refactor of the rsa_test and dh_test to better handle cleanup.
+5726c23d8 Fix for scan-build warning with ret not being read in DoServerHello.
+253140f37 Fixes for TLS 1.3. Fix issue with wc_AesGcmDecrypt checking for authIn arg (allowed to be NULL). Fix for preMasterSz in TLSX_KeyShare_ProcessEcc. Fix for building with --disable-asn (NO_CERTS). Fix to remove client “-t” option from help, which no longer exists. Added new WOLFSSL_DEBUG_TLS option for new messages added.
+0532adf65 Merge pull request #887 from dgarske/minor_cleanups
+4f26e0341 allow different hashes with PKCS7 SignedData, cleanup conditional builds
+11133e578 Fixes and cleanups based on feedback from Sean. Added ifdef checks around WC_PENDING_E code to reduce code size for non-async builds. Cleanup accumulative result code checking in SSL_hmac. Cleanup of the RSA async state advancement.
+e419a6f89 Fixes and cleanups based on feedback from Sean.
+c1640e8a3 Intel QuickAssist (QAT) support and async enhancements/fixes: * Adds ./configure "--with-intelqa=../QAT1.6”, port files, memory management and README.md (see wolfcrypt/src/port/intel/). * Added Intel QAT support for RSA public/private (CRT/non-CRT), AES CBC/GCM, ECDH/ECDSA, DH, DES3, SHA, SHA224, SHA256, SHA384, SHA512, MD5 and HMAC. * wolfSSL async enabled all client and server: PKI, Encrypt/Decrypt, Hashing/HMAC and Certificate Sign/Verify. * wolfSSL async support in functions: Encrypt, Decrypt, VerifyMAC, BuildMessage, ConfirmSignature, DoCertificate, ParseCertRelative, and MakeSignature. * wolfCrypt test and benchmark async support added for all HW acceleration. * wolfCrypt benchmark multi-threading support. * Added QuickAssist memory overrides for XMALLOC, XFREE and XREALLOC. XREALLOC determines if existing pointer needs reallocated for NUMA. * Refactor to make sure “heap” is available for async dev init. * Added async support for all examples for connect, accept, read and write. * Added new WC_BIGINT (in wolfmath.c) for async hardware support. * Added async simulator tests for DES3 CBC, AES CBC/GCM. * Added QAT standalone build for unit testing. * Added int return code to SHA and MD5 functions. * Refactor of the async stack variable handling, so async operations have generic args buffer area and cleanup function pointer. * Combined duplicate code for async push/pop handling. * Refactor internal.c to add AllocKey / FreeKey. * Refactor of hash init/free in TLS to use InitHashes and FreeHashes. * Refactor of the async event->context to use WOLF_EVENT_TYPE_ASYNC_WOLFSSL for WOLFSSL* and WOLF_EVENT_TYPE_ASYNC_WOLFCRYPT for WC_ASYNC_DEV*. * Suppress error message for WC_PENDING_E. * Implemented "wolfSSL_EVP_MD_CTX_init" to do memset. * Cleanup of the openssl compat CTX sizes when async is enabled. * Cleanup of AES, DES3, DH, SHA, MD5, DES3, DH, HMAC, MD5 for consistency and readability. * Cleanup of the OPAQUE_LEN. * Cleanup to use ENCRYPT_LEN instead of sizeof(ssl->arrays.preMasterSecret). * Changed ssl->arrays.preMasterSecret to use XMALLOC (accelerates HW operations) * Reduce verbosity with debug enabled for "GetMyVersion", "wolfSSL Using RSA OAEP padding" and "wolfSSL Using RSA PKCSV15 padding". * Updated RSA un-padding error message so its different than one above it for better debugging. * Added QAT async enables for each algorithm. * Refactor of the async init to use _ex. * Added WC_ASYNC_THRESH_NONE to allow bypass of the async thresholds for testing. * Reformatted the benchmark results: PKI: "RSA 2048 private HW 18522 ops took 1.003 sec, avg 0.054 ms, 18467.763 ops/sec" Crypto/Hashing: SHA-256 SW 350 megs took 1.009 seconds, 346.946 MB/s Cycles per byte = 9.87 * Added min execution time for all benchmarks. * Moved wc_*GetHash and wc_*RestorePos to appropriate files so use of isCopy flag is local. * Fix for ECC sign status sometimes being invalid due to uninitialized ECC digest in benchmark. * Added new DECLARE_VAR/FREE_VAR and DECLARE_ARRAY/FREE_ARRAY macros for helping setup test/benchmark variables to accelerate async. * Added NO_SW_BENCH option to only run HW bench. * Added support for PRNG to use hardware SHA256 if _wc devId provided. * Fix to prevent curve tests from running against wrong curve sizes. Changed wc_ecc_set_curve to match on exact size. * Added the wc_*GetHash calls to the wolfCrypt tests. * Added async hardware start/stop to wolfSSL init/cleanup. * Refactor to add wc_*Copy for hashing context (for async), which replaces wc_*RestorePos. * Fixes for building with TI hashing (including: SHA224, missing new API’s and building with dummy build for non hw testing). Note: We need to add build test for this `./configure CFLAGS="-DWOLFSSL_TI_HASH -DTI_DUMMY_BUILD”`. * Added arg checks on wc_*GetHash and wc_*Copy. * Cleanup of the BuildMD5, BuildSHA, BuildMD5_CertVerify and BuildSHA_CertVerify functions. * Added new ./configure --enable-asyncthreads, to allow enable/disable of the async threading support. If --enable-asynccrypt set this will be enabled by default if pthread is supported. Allows multi-threaded benchmarks with async simulator. * Added checks for all hashing to verify valid ->buffLen. * Fix for SHA512 scan-build warning about un-initialized “W_X”. * Fix for valgrind un-initialized use of buffer in AllocDer (der->buffer) and BuildTlsFinished handshake_hash. * Refactor of the benchmarking to use common function for start, check and finish of the stats. * Fixed issue with ECC cache loading in multi-threading. * Fix bug with AESNI not aligned code that assumes XMALLOC is 16-byte aligned. * Added new WC_ASYNC_NO_… options to allow disabling of individual async algorithms. New defines are: WC_ASYNC_NO_CRYPT, WC_ASYNC_NO_PKI and WC_ASYNC_NO_HASH. Additionally each algorithm has a WC_ASYNC_NO_[ALGO] define. * Added “wolfSSL_GetAllocators” API and fixed the wolfCrypt memcb_test so it restores callback pointers after test is complete (fixes issue with using custom allocators and test breaking it).
+68076dee4 Merge pull request #805 from dgarske/rng_cleanup
+d69c860ab Fix bad #elif logic cleanup for using “USE_TEST_GENSEED”.
+507f052b3 ECC helper cleanup
+8763a7142 Merge pull request #745 from JacobBarthelmeh/Windows
+6a6e61f1d wolfCrypt cleanup in test.c moved and add wolfSSL init to testsuite with single threaded
+0286d157a First pass at cleanup of the GetLength function handling of 0 length value. Added some asn.c build option comments.
+d22bc5d34 Merge pull request #727 from ejohnstown/minor-cleanups
+008a69f18 Merge pull request #721 from ejohnstown/cleanups-for-multicast
+073aa9549 Merge pull request #678 from dgarske/cleanup_macros
+778680116 HMAC_cleanup, MD5xxx for bsd
+63dcacb43 templates: ENGINE_cleanup, BN_mod_exp
+e06b17e17 adds methods and client tests; adds context creation; adds memory module; removes init and cleanup functions.
+ed8e0132a do_cleanup on pkcallbacks.test
+bf23b2f9d Fix issue with "wc_ecc_set_custom_curve" function not setting index as "ECC_CUSTOM_IDX". Cleanup of the ECC tests to return actual error code (when available) and make sure keys are free'd. Some trailing whitespace cleanup.
+c17830e5c Merge pull request #467 from dgarske/stdlib_macro_cleanup
+dd52af087 ECC cleanup / fixes. Improvements to ECC with fast math enabled to avoid mp_clear on stack variables. Refactor of ECC failure cleanup (fixes possible mem leaks with small stack enabled). Refactor of "fp_is*" response checks to use FP_YES or FP_NO. Pulled libtom enhancement/cleanup of fp_isprime. Fix for compressed keys import with custom curves (still having some issues though).
+3789d9913 Fixes scan-build warning "wolfcrypt/src/ecc.c:2208:6: warning: Use of memory after it is freed". This is due to a rebase issue with static memory changes after the new ECC custom curves changes. The precomp[] is init to NULL at top so cleanup can always be done at end (shouldn't be done in middle).
+e8c4950a8 Merge pull request #446 from cconlon/cleanup
+6da166d83 Enhancement / cleanup of the "wc_ecc_make_key_ex" API so it can be used with "keysize" or "dp" and allows compatibility with existing "wc_ecc_make_key". Note: "wc_ecc_make_key_ex" was not previously public, so changing it at this point is okay.
+440956f8d Fixed new issue with ecc_projective_add_point not free'ing the local x, y, z if fast math was disabled. Formatting cleanup in integer.c.
+a4782fcf0 Fix in fast math version of ecc_projective_dbl_point to use a local for x,y,z since ecc_point fp_int's are reduced size and cause math issues with ALT_ECC_SIZE enabled. Added local stack variable cleanups for ecc_projective_add_point.
+84651e97d Merge pull request #405 from dgarske/memtrackdebug
+993972162 MinGW fixes, server port assigning cleanup and ping test cleanup. Fixes issue with visibility detection with MinGW. The visibility.m4 script was not actually trying to call the hidden function, which caused MinGW to detect improperly that visibility was supported. Fix for bogusFile on Windows build. Fixes to build warnings for unused variable 'res' and signed/unsigned comparison for sizeof min(). Cleanup of the server side port assignment to allow use with Windows/MinGW/Cygwin. If Windows uses new GetRandomPort() function in test.h to get port in in the 49152 - 65535 range. If *nix then uses the tcp_listen returned port. Otherwise uses the default wolfSSLPort. Refactor of the ping test code to use common file and properly handle ping count differences (Windows "-c" vs. *Nix style "-n"). Workaround for MinGW and cyassl/options.h getting file permissions error. Added non-fatal compile warning if using MinGW that "strtok_s" might be missing along with a link to public domain source that can be used.
+29194bd97 Merge pull request #371 from cconlon/sniffer-fix
+ec9f10d74 extra cleanup in sniffer.c with ForceZero
+59a84b40c Merge pull request #364 from toddouska/ecc-test-free
+03765ecca Fixes to cleanup unnecessary ECC make key, check key and free in ECC vector item test.
+2dfc7faa7 Merge pull request #355 from dgarske/EccTestCleanup
+dee3645c4 Fixed bug with ASN.1 X509V3 Certificate Policy extension parsing. Bug had to do with parsing when OID contains multiple items such as example 2 below. The wolfssl.com server key now contains a URL in the certificate policy "https://secure.comodo.com/CPS0", which wasn't being parsed over correctly. Also cleanup to use loop instead of duplicate code.
+6856e5bbe Merge pull request #261 from dgarske/AsnIoCleanup
+1c2a920b8 Merge pull request #203 from dgarske/SendServerHelloRNGCombine
+654e17379 Combined "wc_RNG_GenerateBlock" calls in "SendServerHello".
+91b7cddb7 better error checking on condition variable operations, cleanup
+32b2d7f9e have calling thread wait for crl monitor thread to setup for simpler cleanup
+7e5be2f31 fix resource cleanup in testsuite and wolfcrypt test
+d669fc28c add idea benchmark, cleanup
+3732d3195 Fixed file cleanup in gencrls, finished support for crl.test update crls sign revoked cert
+74cc2274f add tiket key cleanup to help valgrind
+1771fea17 fix ecc_make_key cleanup on rng failure
+2e7d3a912 cleanup ed benchmark
+84edbd1ff cleanup some configure help text
+42b58bd05 cleanup conditional header inclusion
+adfa2348b cleanup
+845e49781 internal.c: refactoring DoServerHello to reduce stack usage: --- variable clSuites removed (sizeof(Suites) saved)
+6956d146d Adds capture of ssl->arrays->sessionIDSz at DoServerHello.
+6175a2a20 cleanup fp cache on examples with thread local storage
+44ba0af19 free fp ecc resources on cleanup
+d734c86c7 cleanup build warnings 1. Change `CyaSSL_OCSP_set_options()` to return `SSL_SUCCESS`    or `SSL_FAILURE` as `int` like rest of API. 2. Fix data narrowing warning in file io.c function    `process_http_response()`. 3. Fix global variable shadowed warning in file ssl.c function    `CyaSSL_GetSessionAtIndex()` 4. Fix data narrowing warning in file internal.c functions    `Encrypt()` and `Decrypt()`. Passed in a word32 size parameter    that was provided a word16 and used as a word16. 5. Removed unreachable code from file tls.c function    `CyaSSL_GetHmacType()`. 6. Fix data narrowing warnings in file aes.c functions    `AesCcmEncrypt()` and `AesCcmDecrypt()`.
+f8ba117ce cleanup 64/128bit type decls for big int libs
+7c003c575 add sanity check on cleanup for possible no init
+ebf25c5c4 cleanup suite test output
+d1277b134 cleanup not supported suite test output to 1 warning
+20c8fab77 fix ecc cleanup bug with opensslExtra no fastmath
+17763ee67 DoServerKeyExchange var cleanup

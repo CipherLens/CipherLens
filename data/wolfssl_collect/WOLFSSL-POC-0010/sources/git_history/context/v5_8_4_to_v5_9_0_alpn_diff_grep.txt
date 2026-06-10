@@ -1,0 +1,260 @@
+1:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.8.4-stable-asan-alpn-parser/src/bio.c /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-alpn-parser/src/bio.c
+2:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.8.4-stable-asan-alpn-parser/src/bio.c	2026-06-08 23:08:36.595428646 +0800
+3:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-alpn-parser/src/bio.c	2026-06-08 23:08:37.439428436 +0800
+21:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.8.4-stable-asan-alpn-parser/src/conf.c /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-alpn-parser/src/conf.c
+22:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.8.4-stable-asan-alpn-parser/src/conf.c	2026-06-08 23:08:36.595428646 +0800
+23:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-alpn-parser/src/conf.c	2026-06-08 23:08:37.439428436 +0800
+32:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.8.4-stable-asan-alpn-parser/src/crl.c /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-alpn-parser/src/crl.c
+33:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.8.4-stable-asan-alpn-parser/src/crl.c	2026-06-08 23:08:36.595428646 +0800
+34:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-alpn-parser/src/crl.c	2026-06-08 23:08:37.443428435 +0800
+102:     /* ParseCRL_CertList() has already cached the Revoked certs into
+475:+    /* Calculate encoded lengths for AlgorithmIdentifier. */
+522:+            ret = BUFFER_E;
+642:+                ret = BUFFER_E;
+892:+    if (rev->revocationDate != NULL && (rev->revocationDate->length <= 0 ||
+893:+        (unsigned)rev->revocationDate->length > sizeof(rc->revDate))) {
+904:+        int serialSz = rev->serialNumber->length;
+939:+    if (rev->revocationDate != NULL && rev->revocationDate->length > 0) {
+941:+                 (size_t)rev->revocationDate->length);
+952:+        XMEMCPY(rc->revDate, revDate.data, revDate.length);
+1010:+    /* Initialize and parse the certificate */
+1012:+    ret = ParseCertRelative(cert, CERT_TYPE, NO_VERIFY, NULL, NULL);
+1014:+        WOLFSSL_MSG("Failed to parse certificate");
+1045:+    serialInt->length = cert->serialSz;
+1233:+        if (entry->lastDateAsn1.length > 0 && entry->lastDateFormat == 0) {
+1235:+                    (size_t)entry->lastDateAsn1.length);
+1238:+        if (entry->nextDateAsn1.length > 0 && entry->nextDateFormat == 0) {
+1240:+                    (size_t)entry->nextDateAsn1.length);
+1359:+            /* Parse outer SEQUENCE */
+1361:+                ret = ASN_PARSE_E;
+1369:+            /* Parse TBS SEQUENCE to get its length */
+1372:+                    ret = ASN_PARSE_E;
+1397:+                    ret = ASN_PARSE_E;
+1405:+                    ret = ASN_PARSE_E;
+1412:+                    ret = ASN_PARSE_E;
+1483:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.8.4-stable-asan-alpn-parser/src/dtls.c /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-alpn-parser/src/dtls.c
+1484:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.8.4-stable-asan-alpn-parser/src/dtls.c	2026-06-08 23:08:36.595428646 +0800
+1485:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-alpn-parser/src/dtls.c	2026-06-08 23:08:37.443428435 +0800
+1506:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.8.4-stable-asan-alpn-parser/src/dtls13.c /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-alpn-parser/src/dtls13.c
+1507:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.8.4-stable-asan-alpn-parser/src/dtls13.c	2026-06-08 23:08:36.595428646 +0800
+1508:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-alpn-parser/src/dtls13.c	2026-06-08 23:08:37.443428435 +0800
+1549:     int fragLength, rlHeaderLength;
+1551:-    int recordLength;
+1554:+    int recordLength, outputSz;
+1561:     rlHeaderLength = Dtls13GetRlHeaderLength(ssl, isEncrypted);
+1567:+            ssl->dtls13FragOffset > ssl->dtls13MessageLength) {
+1569:+        return BUFFER_E;
+1571:     remainingSize = ssl->dtls13MessageLength - ssl->dtls13FragOffset;
+1575:-        fragLength = maxFragment - rlHeaderLength - DTLS_HANDSHAKE_HEADER_SZ;
+1577:-        recordLength = maxFragment;
+1579:-        if (fragLength > remainingSize) {
+1580:-            fragLength = remainingSize;
+1581:-            recordLength =
+1582:-                fragLength + rlHeaderLength + DTLS_HANDSHAKE_HEADER_SZ;
+1583:+        fragLength = maxFragment - DTLS_HANDSHAKE_HEADER_SZ;
+1584:+        if (fragLength > (int)remainingSize)
+1585:+            fragLength = (int)remainingSize;
+1587:+        recordLength = fragLength + rlHeaderLength + DTLS_HANDSHAKE_HEADER_SZ;
+1589:+            fragLength + DTLS_HANDSHAKE_HEADER_SZ, isEncrypted);
+1592:+            return recordLength;
+1595:-        ret = CheckAvailableSize(ssl, recordLength + MAX_MSG_EXTRA);
+1604:-            (word16)recordLength + MAX_MSG_EXTRA, output, (word32)recordLength, 0);
+1605:+            (word16)outputSz, output, (word32)recordLength, 0);
+1607:             ssl->dtls13FragOffset += fragLength;
+1612:         ssl->dtls13FragOffset += fragLength;
+1613:-        remainingSize -= fragLength;
+1614:+        remainingSize -= (word32)fragLength;
+1646:     isComplete = isFirst && fragLength == messageLength;
+1660:     maxLen = length;
+1663:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.8.4-stable-asan-alpn-parser/src/include.am /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-alpn-parser/src/include.am
+1664:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.8.4-stable-asan-alpn-parser/src/include.am	2026-06-08 23:08:36.595428646 +0800
+1665:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-alpn-parser/src/include.am	2026-06-08 23:08:37.443428435 +0800
+1801:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.8.4-stable-asan-alpn-parser/src/internal.c /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-alpn-parser/src/internal.c
+1802:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.8.4-stable-asan-alpn-parser/src/internal.c	2026-06-08 23:08:36.599428645 +0800
+1803:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-alpn-parser/src/internal.c	2026-06-08 23:08:37.447428434 +0800
+1839:         return BUFFER_E;
+1866:         return BUFFER_E;
+2153:             ctx->altPrivateKey->length, ctx->altPrivateKey->type,
+2423: static void AddHandShakeHeader(byte* output, word32 length,
+2424:                                word32 fragOffset, word32 fragLength,
+2429:-static void AddHeaders(byte* output, word32 length, byte type, WOLFSSL* ssl)
+2430:+WC_MAYBE_UNUSED static void AddHeaders(byte* output, word32 length, byte type, WOLFSSL* ssl)
+2432:     word32 lengthAdj = HANDSHAKE_HEADER_SZ;
+2435:     AddRecordHeader(output, length + lengthAdj, handshake, ssl, CUR_ORDER);
+2436:     AddHandShakeHeader(output + outputAdj, length, 0, length, type, ssl);
+2449:-                           word32 length, byte type, WOLFSSL* ssl)
+2452:+        word32 fragOffset, word32 length, byte type, WOLFSSL* ssl)
+2454:     word32 lengthAdj = HANDSHAKE_HEADER_SZ;
+2457:     AddRecordHeader(output, fragSz + lengthAdj, handshake, ssl, CUR_ORDER);
+2458:     AddHandShakeHeader(output + outputAdj, length, fragOffset, fragSz, type, ssl);
+2493:+        return BUFFER_E;
+2502:+            return BUFFER_E;
+2511:+                    return BUFFER_E;
+2538:-    tmp = (byte*)XMALLOC(size + outputBuffer->length + align,
+2540:+    if (!WC_SAFE_SUM_WORD32(outputBuffer->length, (word32)size, newSz))
+2541:+        return BUFFER_E;
+2544:+        return BUFFER_E;
+2560:     if (outputBuffer->length && tmp == outputBuffer->buffer) {
+2561:-        outputBuffer->bufferSize = size + outputBuffer->length;
+2581:-    outputBuffer->bufferSize = size + outputBuffer->length;
+2613:     /* record layer length check */
+2618:+        WOLFSSL_MSG_EX("Record length %d exceeds max fragment size", *size);
+2619:         WOLFSSL_ERROR_VERBOSE(LENGTH_ERROR);
+2620:         return LENGTH_ERROR;
+2626:+        WOLFSSL_MSG_EX("Record length %d exceeds max record size", *size);
+2627:         WOLFSSL_ERROR_VERBOSE(LENGTH_ERROR);
+2628:         return LENGTH_ERROR;
+2816:                       word32 status_length, int idx)
+2822:         ret = CsrDoStatusVerifyCb(ssl, input + *inOutIdx, status_length, idx, ret);
+2826:     *inOutIdx += status_length;
+2828:     return ProcessCSR_ex(ssl, input, inOutIdx, status_length, 0);
+2885:                     else if (ret == WC_NO_ERR_TRACE(ASN_PARSE_E) ||
+3017:         return BUFFER_ERROR;
+3031:-                    ret = CsrDoStatusVerifyCb(ssl, input + *inOutIdx, status_length,
+3035:+                                              status_length, idx, ret);
+3047:             ret = BUFFER_ERROR;
+3538:+        WOLFSSL_ERROR_VERBOSE(PARSE_ERROR);
+3539:+        return PARSE_ERROR;
+3573:+        WOLFSSL_ERROR(PARSE_ERROR);
+3574:+        return PARSE_ERROR;
+3605:                 WOLFSSL_ERROR_VERBOSE(PARSE_ERROR);
+3606:                 return PARSE_ERROR;
+3699:         length -= (ssl->fragOffset + headerSz);
+3710:     while (length > 0 && ret == 0) {
+3870:+    case WOLFSSL_X509_V_ERR_PATH_LENGTH_EXCEEDED:
+3871:+        return "path length constraint exceeded";
+3972:-    case -WOLFSSL_X509_V_ERR_PATH_LENGTH_EXCEEDED:
+3973:-        return "path length constraint exceeded";
+4127:- * The maximum length of a signature is returned.
+4137:+ * sigLen       The length of a signature.
+4140:- * length  The length of a signature.
+4143:-int DecodePrivateKey(WOLFSSL *ssl, word32* length)
+4163:-            *length = (word32)GetPrivateKeySigSize(ssl);
+4204:+                                  key->length, *hsType,
+4223:-                                    (int)(ssl->buffers.key->length),
+4236:-                /* Return the maximum signature length. */
+4237:-                *length = (word32)ssl->buffers.keySz;
+4239:+            /* Return the maximum signature length. */
+4256:-                                     ssl->buffers.key->length, ssl->heap,
+4268:-                /* Return the maximum signature length. */
+4269:-                *length = (word32)wc_ecc_sig_size_calc(ssl->buffers.keySz);
+4271:+            /* Return the maximum signature length. */
+4289:-                                        ssl->buffers.key->length, ssl->heap,
+4312:                 /* Return the maximum signature length. */
+4313:-                *length = wc_falcon_sig_size((falcon_key*)ssl->hsKey);
+4333:-                                        ssl->buffers.key->length, ssl->heap,
+4366:                 /* Return the maximum signature length. */
+4367:-                *length = wc_dilithium_sig_size(
+4391:-                    (RsaKey*)ssl->hsKey, ssl->buffers.key->length);
+4393:+                    (RsaKey*)*hsKey, key->length);
+4402:-                        (RsaKey*)ssl->hsKey, ssl->buffers.key->length);
+4404:+                        (RsaKey*)*hsKey, key->length);
+4425:             /* Return the maximum signature length. */
+4426:-            *length = (word32)keySz;
+4465:-                                     ssl->buffers.key->length);
+4468:+                                     key->length);
+4478:-                                     ssl->buffers.key->length);
+4481:+                                     key->length);
+4504:             /* Return the maximum signature length. */
+4505:-            *length = (word32)wc_ecc_sig_size((ecc_key*)ssl->hsKey);
+4542:-                                         ssl->buffers.key->length);
+4545:+                                         key->length);
+4555:-                                            ssl->buffers.key->length);
+4558:+                                            key->length);
+4565:             /* Return the maximum signature length. */
+4566:-            *length = ED25519_SIG_SIZE;
+4605:-                                       ssl->buffers.key->length);
+4608:+                                       key->length);
+4618:-                                          ssl->buffers.key->length);
+4621:+                                          key->length);
+4628:             /* Return the maximum signature length. */
+4629:-            *length = ED448_SIG_SIZE;
+4694:-                                            ssl->buffers.key->length,
+4697:+                                            key->length,
+4711:             /* Return the maximum signature length. */
+4712:-            *length = wc_falcon_sig_size((falcon_key*)ssl->hsKey);
+4789:-                                            ssl->buffers.key->length);
+4791:+                                            key->length);
+4804:             /* Return the maximum signature length. */
+4805:-            *length = wc_dilithium_sig_size((dilithium_key*)ssl->hsKey);
+4823:-    (void)length;
+4839:+ * The maximum length of a signature is returned.
+4842:+ * sigLen  The length of a signature.
+4845:-int DecodeAltPrivateKey(WOLFSSL *ssl, word32* length)
+4891:-                                       ssl->buffers.altKey->length, ssl->heap,
+4900:-                /* Return the maximum signature length. */
+4901:-                *length = ssl->buffers.altKeySz;
+4917:-                                     ssl->buffers.altKey->length, ssl->heap,
+4926:-                /* Return the maximum signature length. */
+4927:-                *length = wc_ecc_sig_size_calc(ssl->buffers.altKeySz);
+4944:-                                        ssl->buffers.altKey->length, ssl->heap,
+4961:-                /* Return the maximum signature length. */
+4962:-                *length = wc_falcon_sig_size((falcon_key*)ssl->hsAltKey);
+4980:-                                        ssl->buffers.altKey->length, ssl->heap,
+5003:-                /* Return the maximum signature length. */
+5004:-                *length = wc_dilithium_sig_size(
+5030:-                    (RsaKey*)ssl->hsAltKey, ssl->buffers.altKey->length);
+5041:-                        (RsaKey*)ssl->hsAltKey, ssl->buffers.altKey->length);
+5058:-            /* Return the maximum signature length. */
+5059:-            *length = keySz;
+5094:-                                     ssl->buffers.altKey->length);
+5106:-                                     ssl->buffers.altKey->length);
+5119:-            /* Return the maximum signature length. */
+5120:-            *length = wc_ecc_sig_size((ecc_key*)ssl->hsAltKey);
+5169:-                                            ssl->buffers.altKey->length,
+5181:-            /* Return the maximum signature length. */
+5182:-            *length = wc_falcon_sig_size((falcon_key*)ssl->hsAltKey);
+5239:-                                            ssl->buffers.altKey->length);
+5250:-            /* Return the maximum signature length. */
+5251:-            *length = wc_dilithium_sig_size((dilithium_key*)ssl->hsAltKey);
+5265:-    (void)length;
+5318:+                               ssl->buffers.serverDH_P.length,
+5320:+                               ssl->buffers.serverDH_G.length,
+5331:+                          ssl->buffers.serverDH_P.length,
+5333:+                          ssl->buffers.serverDH_G.length);
+5347:+    /* sz + (use_psk_key ? sz 0s : sz unaltered) + length of psk + psk */
+5390:+    if (wc_ecc_import_x963_ex2(input + args->idx, length,
+5394:     if (wc_ecc_import_x963_ex(input + args->idx, length,
+5435:-    /* sz + (use_psk_key ? sz 0s : sz unaltered) + length of psk + psk */
+5531:-                            ssl->buffers.serverDH_P.length,
+5533:-                            ssl->buffers.serverDH_G.length,
+5545:-                            ssl->buffers.serverDH_P.length,
+5547:-                            ssl->buffers.serverDH_G.length);
+5556:                         ssl->buffers.sig.buffer, (word32*)&ssl->buffers.sig.length,
+5558:                     args->length = args->encSz - esSz - OPAQUE16_LEN;
+5574:-                            ssl->buffers.serverDH_P.length,
+5576:-                            ssl->buffers.serverDH_G.length,
+5588:-                            ssl->buffers.serverDH_P.length,
+5590:-                            ssl->buffers.serverDH_G.length);
+5622: int SetTicket(WOLFSSL* ssl, const byte* ticket, word32 length)
+5630:     ssl->session->ticketLen = (word16)length;
+5632:     if (length > 0) {
+5633:+        if (length < ID_LEN)
+5634:+            sessIdLen = length;
+5635:         XMEMCPY(ssl->session->ticket, ticket, length);
+5650:-                                 ssl->session->ticket + length - ID_LEN, ID_LEN);
+5651:+                                 ssl->session->ticket + length - sessIdLen,
+5660:-                                 ssl->session->ticket + length - ID_LEN, ID_LEN);
+5661:+                                 ssl->session->ticket + length - sessIdLen,
+5675:                 return wolfssl_alert_protocol_version;
+5730:+        args->sendSz = args->length + HANDSHAKE_HEADER_SZ +
+5754:+    static int LengthPlusServerHint(WOLFSSL* ssl, SskeArgs* args,
+5760:+        args->length += HINT_LEN_SZ + *hintLen;
+5782:+        /* curve type, named curve, length(1) */
+5784:+        args->length = ENUM_LEN + CURVE_LEN + ENUM_LEN;
+5786:+        /* Export temp ECC key and add to length */
+5825:+        args->length += args->exportSz;
+5831:+           of the sig length */
+5872:+            ssl->buffers.digest.length =
+5874:+                                   ssl->buffers.digest.length,
+5952:+    static int SKE_DhPubLength(WOLFSSL* ssl)
+5954:+        return LENGTH_SZ * 3 + /* p, g, pub */
+5955:+                 ssl->buffers.serverDH_P.length +
+5956:+                 ssl->buffers.serverDH_G.length +
+5957:+                 ssl->buffers.serverDH_Pub.length;
+5962:+        c16toa((word16)buffers->serverDH_P.length, output + idx);
+5963:+        idx += LENGTH_SZ;
+5965:+                              buffers->serverDH_P.length);
+5966:+        idx += buffers->serverDH_P.length;
+5968:+        c16toa((word16)buffers->serverDH_G.length, output + idx);
+5969:+        idx += LENGTH_SZ;

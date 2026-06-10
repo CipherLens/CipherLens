@@ -1,0 +1,34 @@
+commit f94eb68ea36aee271e0645812ec3bb038f43098b
+Author: Reda Chouk <reda@wolfssl.com>
+Date:   Fri Feb 6 17:00:42 2026 +0100
+
+    add missing checks in wolfSSL_d2i_SSL_SESSION
+---
+ src/ssl_sess.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/src/ssl_sess.c b/src/ssl_sess.c
+index cff004628..519b20580 100644
+--- a/src/ssl_sess.c
++++ b/src/ssl_sess.c
+@@ -2827,12 +2827,20 @@ WOLFSSL_SESSION* wolfSSL_d2i_SSL_SESSION(WOLFSSL_SESSION** sess,
+         goto end;
+     }
+     s->chain.count = data[idx++];
++    if (s->chain.count > MAX_CHAIN_DEPTH) {
++        ret = BUFFER_ERROR;
++        goto end;
++    }
+     for (j = 0; j < s->chain.count; j++) {
+         if (i - idx < OPAQUE16_LEN) {
+             ret = BUFFER_ERROR;
+             goto end;
+         }
+         ato16(data + idx, &length); idx += OPAQUE16_LEN;
++        if (length > MAX_X509_SIZE) {
++            ret = BUFFER_ERROR;
++            goto end;
++        }
+         s->chain.certs[j].length = length;
+         if (i - idx < length) {
+             ret = BUFFER_ERROR;

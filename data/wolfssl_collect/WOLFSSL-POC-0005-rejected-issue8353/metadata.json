@@ -1,0 +1,18 @@
+{
+  "poc_id": "WOLFSSL-POC-0005",
+  "source_library": "wolfSSL",
+  "issue_or_cve": "GitHub issue #8353",
+  "title": "wolfSSL PEM conversion heap-buffer-overflow candidate",
+  "bug_class": "PEM / DER / Base64 decoding memory safety candidate",
+  "harness_family": "pem_to_der_decoder_memory_safety",
+  "oracle_type": "crash_sanitizer_oracle_candidate",
+  "input_provenance": "github_issue_reconstructed_input",
+  "quality_level": "Q5_rejected_harness_bug",
+  "vulnerable_version_verified": false,
+  "fixed_version_verified": false,
+  "current_version_verified": false,
+  "strict_reproduction": false,
+  "notes": "Candidate selected for diversity batch v2. Source: GitHub issue #8353, reported heap-buffer-overflow in example/pem/pem.c involving wc_PemToDer. Must verify whether crash is inside wolfSSL library code or caused by harness logic. Minimal wc_PemToDer(CERT_TYPE) probe on commit 4bdccac58440cc589807d21d36af2331f3b8817b returned 0 and did not trigger ASan. Next step is to inspect/reproduce the issue-provided example/pem/pem.c harness. Candidate rejected after negative minimal API probe and issue discussion review. The reported crash is a harness-side NULL-termination / strlen bug, not a wolfSSL library bug.",
+  "verdict": "rejected_not_wolfssl_bug",
+  "rejection_reason": "Minimal wc_PemToDer(CERT_TYPE) harness returned 0 with no ASan crash. Issue discussion indicates the reported heap-buffer-overflow was caused by the issue-provided harness calling strlen on a non-NUL-terminated file buffer, before wolfSSL was called."
+}

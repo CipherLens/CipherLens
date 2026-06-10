@@ -1,0 +1,634 @@
+src/internal.c:3114:    if (ctx->alpn_cli_protos) {
+src/internal.c:3115:        XFREE((void*)ctx->alpn_cli_protos, ctx->heap, DYNAMIC_TYPE_OPENSSL);
+src/internal.c:3116:        ctx->alpn_cli_protos = NULL;
+src/internal.c:8038:#ifdef HAVE_ALPN
+src/internal.c:8039:    ssl->alpn_peer_requested = NULL;
+src/internal.c:8040:    ssl->alpn_peer_requested_length = 0;
+src/internal.c:8042:        ssl->alpnSelect    = ctx->alpnSelect;
+src/internal.c:8043:        ssl->alpnSelectArg = ctx->alpnSelectArg;
+src/internal.c:8046:        if (ctx->alpn_cli_protos != NULL && ctx->alpn_cli_protos_len > 0) {
+src/internal.c:8047:            ret = wolfSSL_set_alpn_protos(ssl, ctx->alpn_cli_protos,
+src/internal.c:8048:                                            ctx->alpn_cli_protos_len);
+src/internal.c:8054:                WOLFSSL_MSG("failed to set alpn protos to ssl object");
+src/internal.c:9106:#ifdef HAVE_ALPN
+src/internal.c:9107:    if (ssl->alpn_peer_requested != NULL) {
+src/internal.c:9108:        XFREE(ssl->alpn_peer_requested, ssl->heap, DYNAMIC_TYPE_ALPN);
+src/internal.c:9109:        ssl->alpn_peer_requested = NULL;
+src/internal.c:9110:        ssl->alpn_peer_requested_length = 0;
+src/internal.c:9468:#if !defined(HAVE_SNI) && !defined(HAVE_ALPN) && !defined(WOLFSSL_DTLS_CID) && \
+src/internal.c:9487:#endif /* !HAVE_SNI && && !HAVE_ALPN && !WOLFSSL_DTLS_CID &&
+src/internal.c:27870:    case UNKNOWN_ALPN_PROTOCOL_NAME_E:
+src/internal.c:28048:    case WOLFSSL_ALPN_NOT_FOUND:
+src/internal.c:38178:    (defined(HAVE_SNI) || defined(HAVE_ALPN))
+src/internal.c:38179:        /* Do not resume session if sniHash/alpnHash do not match. */
+src/internal.c:38191:#ifdef HAVE_ALPN
+src/internal.c:38193:                    (TicketAlpnHash(ssl, curHash) != 0 ||
+src/internal.c:38194:                     XMEMCMP(curHash, session->alpnHash,
+src/internal.c:38196:                WOLFSSL_MSG("Resumed session ALPN mismatch, full handshake");
+src/internal.c:38202:#endif /* HAVE_SESSION_TICKET && (HAVE_SNI || HAVE_ALPN) */
+src/internal.c:38778:    #ifdef HAVE_ALPN
+src/internal.c:38779:                if((ret=ALPN_Select(ssl)))
+src/internal.c:38783:        (defined(HAVE_SNI) || defined(HAVE_ALPN))
+src/internal.c:39599:#ifdef HAVE_ALPN
+src/internal.c:39600:    /* Hash negotiated ALPN; zeros dst when none. */
+src/internal.c:39601:    int TicketAlpnHash(WOLFSSL* ssl, byte* dst)
+src/internal.c:39604:        ALPN* alpn;
+src/internal.c:39608:            alpn = (ALPN*)extension->data;
+src/internal.c:39609:            if (alpn != NULL && alpn->negotiated == 1 &&
+src/internal.c:39610:                    alpn->protocol_name != NULL) {
+src/internal.c:39611:                word32 protoLen = (word32)XSTRLEN(alpn->protocol_name);
+src/internal.c:39614:                                   (const byte*)alpn->protocol_name,
+src/internal.c:39625:#if defined(HAVE_SNI) || defined(HAVE_ALPN)
+src/internal.c:39627:     * SNI/ALPN bound to the resumed session matches what was negotiated
+src/internal.c:39629:     * parsing and ALPN_Select so the negotiated values are available,
+src/internal.c:39631:     * ssl->session->sniHash/alpnHash from the decrypted ticket.
+src/internal.c:39660:#ifdef HAVE_ALPN
+src/internal.c:39661:        if (TicketAlpnHash(ssl, curHash) != 0 ||
+src/internal.c:39662:                XMEMCMP(curHash, ssl->session->alpnHash,
+src/internal.c:39664:            WOLFSSL_MSG("Ticket ALPN mismatch");
+src/internal.c:39776:#ifdef HAVE_ALPN
+src/internal.c:39777:        ret = TicketAlpnHash(ssl, it->alpnHash);
+src/internal.c:39780:        XMEMCPY(ssl->session->alpnHash, it->alpnHash, TICKET_BINDING_HASH_SZ);
+src/internal.c:40158:        /* SNI/ALPN binding is checked by the per-PSK loop in
+src/internal.c:40258:         * (SNI/ALPN aren't known when DoClientTicket runs during
+src/internal.c:40266:#ifdef HAVE_ALPN
+src/internal.c:40267:        XMEMCPY(ssl->session->alpnHash, it->alpnHash, TICKET_BINDING_HASH_SZ);
+src/internal.c:40381:#ifdef HAVE_ALPN
+src/internal.c:40382:        XMEMCPY(it->alpnHash, sess->alpnHash, TICKET_BINDING_HASH_SZ);
+src/internal.c:40628:        /* SNI/ALPN binding is verified later in DoClientHello via
+src/internal.c:40629:         * VerifyTicketBinding(), once extension parsing and ALPN_Select
+src/ssl_sess.c:2723:#ifdef HAVE_ALPN
+src/ssl_sess.c:2724:    /* alpnHash */
+src/ssl_sess.c:2818:#ifdef HAVE_ALPN
+src/ssl_sess.c:2819:        XMEMCPY(data + idx, sess->alpnHash, TICKET_BINDING_HASH_SZ);
+src/ssl_sess.c:3119:#ifdef HAVE_ALPN
+src/ssl_sess.c:3120:    /* alpnHash - ALPN binding for stateful resumption */
+src/ssl_sess.c:3125:    XMEMCPY(s->alpnHash, data + idx, TICKET_BINDING_HASH_SZ);
+src/ssl_sess.c:3709:    /* Bind the current SNI/ALPN to the session to verify on later resumption */
+src/ssl_sess.c:3713:#ifdef HAVE_ALPN
+src/ssl_sess.c:3714:    (void)TicketAlpnHash(ssl, session->alpnHash);
+src/tls.c:46: * HAVE_ALPN:                Application-Layer Protocol Negotiation default: off
+src/tls.c:1755:#ifdef HAVE_ALPN
+src/tls.c:1756:/** Creates a new ALPN object, providing protocol name to use. */
+src/tls.c:1757:static ALPN* TLSX_ALPN_New(char *protocol_name, word16 protocol_nameSz,
+src/tls.c:1760:    ALPN *alpn;
+src/tls.c:1762:    WOLFSSL_ENTER("TLSX_ALPN_New");
+src/tls.c:1764:    if (protocol_name == NULL ||
+src/tls.c:1765:        protocol_nameSz > WOLFSSL_MAX_ALPN_PROTO_NAME_LEN) {
+src/tls.c:1770:    alpn = (ALPN*)XMALLOC(sizeof(ALPN), heap, DYNAMIC_TYPE_TLSX);
+src/tls.c:1771:    if (alpn == NULL) {
+src/tls.c:1776:    alpn->next = NULL;
+src/tls.c:1777:    alpn->negotiated = 0;
+src/tls.c:1778:    alpn->options = 0;
+src/tls.c:1780:    alpn->protocol_name = (char*)XMALLOC(protocol_nameSz + 1,
+src/tls.c:1782:    if (alpn->protocol_name == NULL) {
+src/tls.c:1784:        XFREE(alpn, heap, DYNAMIC_TYPE_TLSX);
+src/tls.c:1788:    XMEMCPY(alpn->protocol_name, protocol_name, protocol_nameSz);
+src/tls.c:1789:    alpn->protocol_name[protocol_nameSz] = 0;
+src/tls.c:1793:    return alpn;
+src/tls.c:1796:/** Releases an ALPN object. */
+src/tls.c:1797:static void TLSX_ALPN_Free(ALPN *alpn, void* heap)
+src/tls.c:1801:    if (alpn == NULL)
+src/tls.c:1804:    XFREE(alpn->protocol_name, heap, DYNAMIC_TYPE_TLSX);
+src/tls.c:1805:    XFREE(alpn, heap, DYNAMIC_TYPE_TLSX);
+src/tls.c:1808:/** Releases all ALPN objects in the provided list. */
+src/tls.c:1809:static void TLSX_ALPN_FreeAll(ALPN *list, void* heap)
+src/tls.c:1811:    ALPN* alpn;
+src/tls.c:1813:    while ((alpn = list)) {
+src/tls.c:1814:        list = alpn->next;
+src/tls.c:1815:        TLSX_ALPN_Free(alpn, heap);
+src/tls.c:1819:/** Tells the buffered size of the ALPN objects in a list. */
+src/tls.c:1820:static word16 TLSX_ALPN_GetSize(ALPN *list)
+src/tls.c:1822:    ALPN* alpn;
+src/tls.c:1825:    while ((alpn = list)) {
+src/tls.c:1826:        list = alpn->next;
+src/tls.c:1829:        length += (word32)XSTRLEN(alpn->protocol_name);
+src/tls.c:1839:/** Writes the ALPN objects of a list in a buffer. */
+src/tls.c:1840:static word16 TLSX_ALPN_Write(ALPN *list, byte *output)
+src/tls.c:1842:    ALPN* alpn;
+src/tls.c:1846:    while ((alpn = list)) {
+src/tls.c:1847:        list = alpn->next;
+src/tls.c:1849:        length = (word16)XSTRLEN(alpn->protocol_name);
+src/tls.c:1855:        XMEMCPY(output + offset, alpn->protocol_name, length);
+src/tls.c:1866:/** Finds a protocol name in the provided ALPN list */
+src/tls.c:1867:static ALPN* TLSX_ALPN_Find(ALPN *list, char *protocol_name, word16 size)
+src/tls.c:1869:    ALPN *alpn;
+src/tls.c:1871:    if (list == NULL || protocol_name == NULL)
+src/tls.c:1874:    alpn = list;
+src/tls.c:1875:    while (alpn != NULL && (
+src/tls.c:1876:           (word16)XSTRLEN(alpn->protocol_name) != size ||
+src/tls.c:1877:           XSTRNCMP(alpn->protocol_name, protocol_name, size)))
+src/tls.c:1878:        alpn = alpn->next;
+src/tls.c:1880:    return alpn;
+src/tls.c:1883:/** Set the ALPN matching client and server requirements */
+src/tls.c:1884:static int TLSX_SetALPN(TLSX** extensions, const void* data, word16 size,
+src/tls.c:1887:    ALPN *alpn;
+src/tls.c:1893:    alpn = TLSX_ALPN_New((char *)data, size, heap);
+src/tls.c:1894:    if (alpn == NULL) {
+src/tls.c:1899:    alpn->negotiated = 1;
+src/tls.c:1901:    ret = TLSX_Push(extensions, TLSX_APPLICATION_LAYER_PROTOCOL, (void*)alpn,
+src/tls.c:1904:        TLSX_ALPN_Free(alpn, heap);
+src/tls.c:1911:static int ALPN_find_match(WOLFSSL *ssl, TLSX **pextension,
+src/tls.c:1913:                           const byte *alpn_val, word16 alpn_val_len)
+src/tls.c:1916:    ALPN    *alpn, *list;
+src/tls.c:1925:    /* No ALPN configured here */
+src/tls.c:1933:    list = (ALPN*)extension->data;
+src/tls.c:1934:    for (s = alpn_val;
+src/tls.c:1935:         (s - alpn_val) < alpn_val_len;
+src/tls.c:1938:        alpn = TLSX_ALPN_Find(list, (char*)s, wlen);
+src/tls.c:1939:        if (alpn != NULL) {
+src/tls.c:1940:            WOLFSSL_MSG("ALPN protocol match");
+src/tls.c:1948:        WOLFSSL_MSG("No ALPN protocol match");
+src/tls.c:1952:        if (list->options & WOLFSSL_ALPN_CONTINUE_ON_MISMATCH) {
+src/tls.c:1957:            WOLFSSL_ERROR_VERBOSE(UNKNOWN_ALPN_PROTOCOL_NAME_E);
+src/tls.c:1958:            return UNKNOWN_ALPN_PROTOCOL_NAME_E;
+src/tls.c:1968:int ALPN_Select(WOLFSSL *ssl)
+src/tls.c:1975:    WOLFSSL_ENTER("ALPN_Select");
+src/tls.c:1976:    if (ssl->alpn_peer_requested == NULL)
+src/tls.c:1980:    if (ssl->alpnSelect != NULL && ssl->options.side == WOLFSSL_SERVER_END) {
+src/tls.c:1981:        r = ssl->alpnSelect(ssl, &sel, &sel_len, ssl->alpn_peer_requested,
+src/tls.c:1982:                ssl->alpn_peer_requested_length, ssl->alpnSelectArg);
+src/tls.c:1985:                WOLFSSL_MSG("ALPN protocol match");
+src/tls.c:1988:                WOLFSSL_MSG("ALPN cb no match but not fatal");
+src/tls.c:1994:                WOLFSSL_MSG("ALPN cb no match and fatal");
+src/tls.c:1996:                WOLFSSL_ERROR_VERBOSE(UNKNOWN_ALPN_PROTOCOL_NAME_E);
+src/tls.c:1997:                return UNKNOWN_ALPN_PROTOCOL_NAME_E;
+src/tls.c:2003:        r = ALPN_find_match(ssl, &extension, &sel, &sel_len,
+src/tls.c:2004:                            ssl->alpn_peer_requested,
+src/tls.c:2005:                            ssl->alpn_peer_requested_length);
+src/tls.c:2012:        r = TLSX_SetALPN(&ssl->extensions, sel, sel_len, ssl->heap);
+src/tls.c:2014:            WOLFSSL_MSG("TLSX_SetALPN failed");
+src/tls.c:2017:        /* reply to ALPN extension sent from peer */
+src/tls.c:2025:/** Parses a buffer of ALPN extensions and set the first one matching
+src/tls.c:2027:static int TLSX_ALPN_ParseAndSet(WOLFSSL *ssl, const byte *input, word16 length,
+src/tls.c:2040:    /* validating alpn list length */
+src/tls.c:2053:         * use it later in ALPN_Select() for evaluation. */
+src/tls.c:2054:        if (ssl->alpn_peer_requested != NULL) {
+src/tls.c:2055:            XFREE(ssl->alpn_peer_requested, ssl->heap, DYNAMIC_TYPE_ALPN);
+src/tls.c:2056:            ssl->alpn_peer_requested_length = 0;
+src/tls.c:2058:        ssl->alpn_peer_requested = (byte *)XMALLOC(size, ssl->heap,
+src/tls.c:2059:                                                   DYNAMIC_TYPE_ALPN);
+src/tls.c:2060:        if (ssl->alpn_peer_requested == NULL) {
+src/tls.c:2063:        ssl->alpn_peer_requested_length = size;
+src/tls.c:2064:        XMEMCPY(ssl->alpn_peer_requested, (char*)input + offset, size);
+src/tls.c:2072:        /* RFC 7301 Section 3.1: a ServerHello ALPN extension MUST contain
+src/tls.c:2081:        r = ALPN_find_match(ssl, &extension, &sel, &sel_len, input + offset, size);
+src/tls.c:2087:            r = TLSX_SetALPN(&ssl->extensions, sel, sel_len, ssl->heap);
+src/tls.c:2089:                WOLFSSL_MSG("TLSX_SetALPN failed");
+src/tls.c:2104:int TLSX_UseALPN(TLSX** extensions, const void* data, word16 size, byte options,
+src/tls.c:2107:    ALPN *alpn;
+src/tls.c:2114:    alpn = TLSX_ALPN_New((char *)data, size, heap);
+src/tls.c:2115:    if (alpn == NULL) {
+src/tls.c:2120:    /* Set Options of ALPN */
+src/tls.c:2121:    alpn->options = options;
+src/tls.c:2126:                                                             (void*)alpn, heap);
+src/tls.c:2128:            TLSX_ALPN_Free(alpn, heap);
+src/tls.c:2133:        /* push new ALPN object to extension data. */
+src/tls.c:2134:        alpn->next = (ALPN*)extension->data;
+src/tls.c:2135:        extension->data = (void*)alpn;
+src/tls.c:2142:int TLSX_ALPN_GetRequest(TLSX* extensions, void** data, word16 *dataSz)
+src/tls.c:2145:    ALPN *alpn;
+src/tls.c:2156:        WOLFSSL_ERROR_VERBOSE(WOLFSSL_ALPN_NOT_FOUND);
+src/tls.c:2157:        return WOLFSSL_ALPN_NOT_FOUND;
+src/tls.c:2160:    alpn = (ALPN *)extension->data;
+src/tls.c:2161:    if (alpn == NULL) {
+src/tls.c:2162:        WOLFSSL_MSG("ALPN extension not found");
+src/tls.c:2167:    if (alpn->negotiated != 1) {
+src/tls.c:2170:        if (alpn->options & WOLFSSL_ALPN_FAILED_ON_MISMATCH) {
+src/tls.c:2178:        WOLFSSL_ERROR_VERBOSE(WOLFSSL_ALPN_NOT_FOUND);
+src/tls.c:2179:        return WOLFSSL_ALPN_NOT_FOUND;
+src/tls.c:2182:    if (alpn->next != NULL) {
+src/tls.c:2188:    *data = alpn->protocol_name;
+src/tls.c:2194:#define ALPN_FREE_ALL     TLSX_ALPN_FreeAll
+src/tls.c:2195:#define ALPN_GET_SIZE     TLSX_ALPN_GetSize
+src/tls.c:2196:#define ALPN_WRITE        TLSX_ALPN_Write
+src/tls.c:2197:#define ALPN_PARSE        TLSX_ALPN_ParseAndSet
+src/tls.c:2199:#else /* HAVE_ALPN */
+src/tls.c:2201:#define ALPN_FREE_ALL(list, heap) WC_DO_NOTHING
+src/tls.c:2202:#define ALPN_GET_SIZE(list)     0
+src/tls.c:2203:#define ALPN_WRITE(a, b)        0
+src/tls.c:2204:#define ALPN_PARSE(a, b, c, d)  0
+src/tls.c:2206:#endif /* HAVE_ALPN */
+src/tls.c:15095:                WOLFSSL_MSG("ALPN extension free");
+src/tls.c:15096:                ALPN_FREE_ALL((ALPN*)extension->data, heap);
+src/tls.c:15324:                word16 alpnSz = ALPN_GET_SIZE((ALPN*)extension->data);
+src/tls.c:15326:                if (alpnSz == 0 && extension->data != NULL) {
+src/tls.c:15330:                length += alpnSz;
+src/tls.c:15613:                WOLFSSL_MSG("ALPN extension to write");
+src/tls.c:15614:                offset += ALPN_WRITE((ALPN*)extension->data, output + offset);
+src/tls.c:17660:            return WOLFSSL_ALPN_MIN_SIZE_CLIENT;
+src/tls.c:17731:            return WOLFSSL_ALPN_MIN_SIZE_SERVER;
+src/tls.c:18148:                WOLFSSL_MSG("ALPN extension received");
+src/tls.c:18154:#if defined(WOLFSSL_TLS13) && defined(HAVE_ALPN)
+src/tls.c:18167:                ret = ALPN_PARSE(ssl, input + offset, size, isRequest);
+src/tls13.c:6491:        #if defined(HAVE_SNI) || defined(HAVE_ALPN)
+src/tls13.c:6493:                /* Decline this PSK if the SNI/ALPN bound to the ticket
+src/tls13.c:6496:                 * policy to ALPN as defense in depth. Skipping the PSK
+src/tls13.c:6499:                 * without unwinding committed PSK state. ALPN_Select
+src/tls13.c:6501:                 * negotiated ALPN is available to TicketAlpnHash. */
+src/tls13.c:6511:            #ifdef HAVE_ALPN
+src/tls13.c:6513:                        (TicketAlpnHash(ssl, curHash) != 0 ||
+src/tls13.c:6514:                         XMEMCMP(curHash, current->it->alpnHash,
+src/tls13.c:6516:                    WOLFSSL_MSG("Ticket ALPN mismatch, skipping PSK");
+src/tls13.c:6675:     * post-parse code (e.g. ALPN_Select via TLSX_SetALPN) may legitimately
+src/tls13.c:7666:     * here, before any post-parse code (e.g. ALPN_Select) modifies the
+src/tls13.c:7788:#ifdef HAVE_ALPN
+src/tls13.c:7789:    /* Select the ALPN protocol before PSK selection so that the
+src/tls13.c:7790:     * selected value is available to the per-PSK SNI/ALPN binding check
+src/tls13.c:7791:     * inside CheckPreSharedKeys/DoPreSharedKeys. ALPN_Select itself
+src/tls13.c:7794:    if ((ret = ALPN_Select(ssl)) != 0)
+src/ssl.c:3400:#ifdef HAVE_ALPN
+src/ssl.c:3403:int wolfSSL_UseALPN(WOLFSSL* ssl, char *protocol_name_list,
+src/ssl.c:3404:                    word32 protocol_name_listSz, byte options)
+src/ssl.c:3411:    WOLFSSL_ENTER("wolfSSL_UseALPN");
+src/ssl.c:3413:    if (ssl == NULL || protocol_name_list == NULL)
+src/ssl.c:3416:    if (protocol_name_listSz > (WOLFSSL_MAX_ALPN_NUMBER *
+src/ssl.c:3417:                                WOLFSSL_MAX_ALPN_PROTO_NAME_LEN +
+src/ssl.c:3418:                                WOLFSSL_MAX_ALPN_NUMBER)) {
+src/ssl.c:3423:    if (!(options & WOLFSSL_ALPN_CONTINUE_ON_MISMATCH) &&
+src/ssl.c:3424:        !(options & WOLFSSL_ALPN_FAILED_ON_MISMATCH)) {
+src/ssl.c:3430:    list = (char *)XMALLOC(protocol_name_listSz+1, ssl->heap,
+src/ssl.c:3431:                           DYNAMIC_TYPE_ALPN);
+src/ssl.c:3437:    token = (char **)XMALLOC(sizeof(char *) * (WOLFSSL_MAX_ALPN_NUMBER+1),
+src/ssl.c:3438:        ssl->heap, DYNAMIC_TYPE_ALPN);
+src/ssl.c:3440:        XFREE(list, ssl->heap, DYNAMIC_TYPE_ALPN);
+src/ssl.c:3444:    XMEMSET(token, 0, sizeof(char *) * (WOLFSSL_MAX_ALPN_NUMBER+1));
+src/ssl.c:3446:    XSTRNCPY(list, protocol_name_list, protocol_name_listSz);
+src/ssl.c:3447:    list[protocol_name_listSz] = '\0';
+src/ssl.c:3451:    while (idx < WOLFSSL_MAX_ALPN_NUMBER && token[idx] != NULL)
+src/ssl.c:3458:        ret = TLSX_UseALPN(&ssl->extensions, token[idx], len, options,
+src/ssl.c:3461:            WOLFSSL_MSG("TLSX_UseALPN failure");
+src/ssl.c:3466:    XFREE(token, ssl->heap, DYNAMIC_TYPE_ALPN);
+src/ssl.c:3467:    XFREE(list, ssl->heap, DYNAMIC_TYPE_ALPN);
+src/ssl.c:3472:int wolfSSL_ALPN_GetProtocol(WOLFSSL* ssl, char **protocol_name, word16 *size)
+src/ssl.c:3474:    return TLSX_ALPN_GetRequest(ssl ? ssl->extensions : NULL,
+src/ssl.c:3475:                               (void **)protocol_name, size);
+src/ssl.c:3478:int wolfSSL_ALPN_GetPeerProtocol(WOLFSSL* ssl, char **list, word16 *listSz)
+src/ssl.c:3487:    if (ssl->alpn_peer_requested == NULL
+src/ssl.c:3488:        || ssl->alpn_peer_requested_length == 0)
+src/ssl.c:3491:    /* ssl->alpn_peer_requested are the original bytes sent in a ClientHello,
+src/ssl.c:3496:    *listSz = ssl->alpn_peer_requested_length-1;
+src/ssl.c:3497:    *list = p = (char *)XMALLOC(ssl->alpn_peer_requested_length, ssl->heap,
+src/ssl.c:3502:    for (i = 0, s = ssl->alpn_peer_requested;
+src/ssl.c:3503:         i < ssl->alpn_peer_requested_length;
+src/ssl.c:3510:        if (i + len > ssl->alpn_peer_requested_length) {
+src/ssl.c:3523:/* used to free memory allocated by wolfSSL_ALPN_GetPeerProtocol */
+src/ssl.c:3524:int wolfSSL_ALPN_FreePeerProtocol(WOLFSSL* ssl, char **list)
+src/ssl.c:3536:#endif /* HAVE_ALPN */
+src/ssl.c:17209:#ifdef HAVE_ALPN
+src/ssl.c:17210:void wolfSSL_get0_alpn_selected(const WOLFSSL *ssl, const unsigned char **data,
+src/ssl.c:17216:        TLSX_ALPN_GetRequest(ssl->extensions, (void **)data, &nameLen);
+src/ssl.c:17263:void wolfSSL_set_alpn_select_cb(WOLFSSL *ssl,
+src/ssl.c:17272:        ssl->alpnSelect = cb;
+src/ssl.c:17273:        ssl->alpnSelectArg = arg;
+src/ssl.c:17277:void wolfSSL_CTX_set_alpn_select_cb(WOLFSSL_CTX *ctx,
+src/ssl.c:17286:        ctx->alpnSelect = cb;
+src/ssl.c:17287:        ctx->alpnSelectArg = arg;
+src/ssl.c:17326:#endif /* HAVE_ALPN */
+src/ssl.c:17717:int wolfSSL_CTX_set_alpn_protos(WOLFSSL_CTX *ctx, const unsigned char *p,
+src/ssl.c:17720:    WOLFSSL_ENTER("wolfSSL_CTX_set_alpn_protos");
+src/ssl.c:17723:    if (ctx->alpn_cli_protos != NULL) {
+src/ssl.c:17724:        XFREE((void*)ctx->alpn_cli_protos, ctx->heap, DYNAMIC_TYPE_OPENSSL);
+src/ssl.c:17727:    ctx->alpn_cli_protos = (const unsigned char*)XMALLOC(p_len,
+src/ssl.c:17729:    if (ctx->alpn_cli_protos == NULL) {
+src/ssl.c:17739:    XMEMCPY((void*)ctx->alpn_cli_protos, p, p_len);
+src/ssl.c:17740:    ctx->alpn_cli_protos_len = p_len;
+src/ssl.c:17753:#ifdef HAVE_ALPN
+src/ssl.c:17755:/* Sets the ALPN extension protos
+src/ssl.c:17763:int wolfSSL_set_alpn_protos(WOLFSSL* ssl,
+src/ssl.c:17773:    int alpn_opt = WOLFSSL_ALPN_FAILED_ON_MISMATCH;
+src/ssl.c:17776:    WOLFSSL_ENTER("wolfSSL_set_alpn_protos");
+src/ssl.c:17831:    /* clears out all current ALPN extensions set */
+src/ssl.c:17834:    ret = wolfSSL_UseALPN(ssl, pt, ptIdx, (byte)alpn_opt);
+src/ssl.c:17850:#endif /* HAVE_ALPN */
+src/sniffer.c:178:    EXT_APPLICATION_LAYER_PROTOCOL = 0x0010, /* a.k.a. ALPN */
+wolfssl/error-ssl.h:152:    UNKNOWN_ALPN_PROTOCOL_NAME_E = -405,   /* Unrecognized protocol name Error*/
+wolfssl/error-ssl.h:207:    WOLFSSL_ALPN_NOT_FOUND       = -458,   /* TLS extension not found */
+wolfssl/openssl/ssl.h:1123:#define SSL_CTX_set_alpn_protos         wolfSSL_CTX_set_alpn_protos
+wolfssl/openssl/ssl.h:1785:#define SSL_get0_alpn_selected          wolfSSL_get0_alpn_selected
+wolfssl/openssl/ssl.h:1787:#define SSL_CTX_set_alpn_select_cb      wolfSSL_CTX_set_alpn_select_cb
+wolfssl/openssl/ssl.h:1790:#define SSL_set_alpn_protos             wolfSSL_set_alpn_protos
+wolfssl/ssl.h:3091:    #define SSL_ALPN_NOT_FOUND WOLFSSL_ALPN_NOT_FOUND
+wolfssl/ssl.h:4679:#ifdef HAVE_ALPN
+wolfssl/ssl.h:4681:/* ALPN status code */
+wolfssl/ssl.h:4683:    WOLFSSL_ALPN_NO_MATCH = 0,
+wolfssl/ssl.h:4684:    WOLFSSL_ALPN_MATCH    = 1,
+wolfssl/ssl.h:4685:    WOLFSSL_ALPN_CONTINUE_ON_MISMATCH = 2,
+wolfssl/ssl.h:4686:    WOLFSSL_ALPN_FAILED_ON_MISMATCH = 4
+wolfssl/ssl.h:4690:    WOLFSSL_MAX_ALPN_PROTO_NAME_LEN = 255,
+wolfssl/ssl.h:4691:    WOLFSSL_MAX_ALPN_NUMBER = 257
+wolfssl/ssl.h:4697:typedef int (*CallbackALPNSelect)(WOLFSSL* ssl, const unsigned char** out,
+wolfssl/ssl.h:4702:WOLFSSL_ABI WOLFSSL_API int wolfSSL_UseALPN(WOLFSSL* ssl,
+wolfssl/ssl.h:4703:                                char *protocol_name_list,
+wolfssl/ssl.h:4704:                                unsigned int protocol_name_listSz,
+wolfssl/ssl.h:4707:WOLFSSL_API int wolfSSL_ALPN_GetProtocol(WOLFSSL* ssl, char **protocol_name,
+wolfssl/ssl.h:4710:WOLFSSL_API int wolfSSL_ALPN_GetPeerProtocol(WOLFSSL* ssl, char **list,
+wolfssl/ssl.h:4712:WOLFSSL_API int wolfSSL_ALPN_FreePeerProtocol(WOLFSSL* ssl, char **list);
+wolfssl/ssl.h:4713:#endif /* HAVE_ALPN */
+wolfssl/ssl.h:5859:WOLFSSL_API int wolfSSL_CTX_set_alpn_protos(WOLFSSL_CTX *ctx,
+wolfssl/ssl.h:5861:WOLFSSL_API int wolfSSL_set_alpn_protos(WOLFSSL* ssl,
+wolfssl/ssl.h:6014:WOLFSSL_API void wolfSSL_get0_alpn_selected(const WOLFSSL *ssl,
+wolfssl/ssl.h:6021:WOLFSSL_API void wolfSSL_set_alpn_select_cb(WOLFSSL *ssl,
+wolfssl/ssl.h:6028:WOLFSSL_API void wolfSSL_CTX_set_alpn_select_cb(WOLFSSL_CTX *ctx,
+wolfssl/ssl.h:6303: *      - Application-Layer Protocol Negotiation (ALPN)
+wolfssl/ssl.h:6395:#ifndef WOLFSSL_ALPN_MIN_SIZE_CLIENT
+wolfssl/ssl.h:6396:    #define WOLFSSL_ALPN_MIN_SIZE_CLIENT  2
+wolfssl/ssl.h:6398:#ifndef WOLFSSL_ALPN_MIN_SIZE_SERVER
+wolfssl/ssl.h:6399:    #define WOLFSSL_ALPN_MIN_SIZE_SERVER  2
+wolfssl/wolfcrypt/asn_public.h:662: * the certificate. Used to construct TLS-ALPN-01 ACME challenge response
+wolfssl/wolfcrypt/settings.h:610:/* RFC 8737 id-pe-acmeIdentifier (TLS-ALPN-01) requires SHA-256. */
+wolfssl/wolfcrypt/settings.h:1465:        defined(OPENSSL_ALL) || defined(HAVE_ALPN)
+wolfssl/wolfcrypt/settings.h:1764:    #define HAVE_ALPN
+wolfssl/wolfcrypt/settings.h:1765:    #define USE_WOLF_STRTOK /* use with HAVE_ALPN */
+wolfssl/wolfcrypt/asn.h:2162:    /* id-pe-acmeIdentifier (TLS-ALPN-01 challenge cert) */
+wolfssl/wolfcrypt/types.h:1169:        defined(HAVE_ALPN) || defined(WOLFSSL_SNIFFER) || \
+wolfssl/wolfcrypt/types.h:1355:    DYNAMIC_TYPE_ALPN         = 79,
+wolfssl/internal.h:2261:#ifdef HAVE_ALPN
+wolfssl/internal.h:2262:WOLFSSL_LOCAL int ALPN_Select(WOLFSSL* ssl);
+wolfssl/internal.h:2985:#define TLSXT_APPLICATION_LAYER_PROTOCOL 0x0010 /* a.k.a. ALPN */
+wolfssl/internal.h:3262:   || defined(HAVE_ALPN)                          \
+wolfssl/internal.h:3320:#ifdef HAVE_ALPN
+wolfssl/internal.h:3321:typedef struct ALPN {
+wolfssl/internal.h:3322:    char*        protocol_name; /* ALPN protocol name */
+wolfssl/internal.h:3323:    struct ALPN* next;          /* List Behavior      */
+wolfssl/internal.h:3325:    byte         negotiated;    /* ALPN protocol negotiated or not */
+wolfssl/internal.h:3326:} ALPN;
+wolfssl/internal.h:3328:WOLFSSL_LOCAL int TLSX_ALPN_GetRequest(TLSX* extensions,
+wolfssl/internal.h:3331:WOLFSSL_LOCAL int TLSX_UseALPN(TLSX** extensions, const void* data,
+wolfssl/internal.h:3334:WOLFSSL_LOCAL int TLSX_ALPN_SetOptions(TLSX** extensions, byte option);
+wolfssl/internal.h:3336:#endif /* HAVE_ALPN */
+wolfssl/internal.h:3525:#if defined(HAVE_SNI) || defined(HAVE_ALPN)
+wolfssl/internal.h:3526:/* Hash algorithm used for SNI/ALPN binding in session tickets.
+wolfssl/internal.h:3569:#ifdef HAVE_ALPN
+wolfssl/internal.h:3570:    byte            alpnHash[TICKET_BINDING_HASH_SZ]; /* digest of negotiated
+wolfssl/internal.h:3571:                                                       * ALPN at issue */
+wolfssl/internal.h:4103:    const unsigned char *alpn_cli_protos;/* ALPN client protocol list */
+wolfssl/internal.h:4104:    unsigned int         alpn_cli_protos_len;
+wolfssl/internal.h:4185:#if defined(HAVE_ALPN) && (defined(OPENSSL_ALL) || defined(WOLFSSL_NGINX) || \
+wolfssl/internal.h:4187:    CallbackALPNSelect alpnSelect;
+wolfssl/internal.h:4188:    void*              alpnSelectArg;
+wolfssl/internal.h:4819:#ifdef HAVE_ALPN
+wolfssl/internal.h:4820:    byte               alpnHash[TICKET_BINDING_HASH_SZ]; /* ALPN at issue */
+wolfssl/internal.h:6409:    #ifdef HAVE_ALPN
+wolfssl/internal.h:6410:        byte *alpn_peer_requested; /* the ALPN bytes requested by peer, sequence
+wolfssl/internal.h:6412:        word16 alpn_peer_requested_length; /* number of bytes total */
+wolfssl/internal.h:6415:            CallbackALPNSelect alpnSelect;
+wolfssl/internal.h:6416:            void*              alpnSelectArg;
+wolfssl/internal.h:6843:/* TicketSniHash, TicketAlpnHash, and VerifyTicketBinding are defined in
+wolfssl/internal.h:6851:#ifdef HAVE_ALPN
+wolfssl/internal.h:6852:WOLFSSL_LOCAL int TicketAlpnHash(WOLFSSL* ssl, byte* dst);
+wolfssl/internal.h:6854:#if defined(HAVE_SNI) || defined(HAVE_ALPN)
+tests/api.c:2314:static int test_wolfSSL_set_alpn_protos_default_fails(void)
+tests/api.c:2317:#if defined(HAVE_ALPN) && defined(OPENSSL_EXTRA) && !defined(NO_BIO) && \
+tests/api.c:2324:        ALPN* alpn = NULL;
+tests/api.c:2329:        ExpectIntEQ(wolfSSL_set_alpn_protos(ssl, p, sizeof(p)), 0);
+tests/api.c:2331:        ExpectIntEQ(wolfSSL_set_alpn_protos(ssl, p, sizeof(p)),
+tests/api.c:2339:                alpn = (ALPN*)ext->data;
+tests/api.c:2340:                ExpectNotNull(alpn);
+tests/api.c:2341:                if (alpn != NULL) {
+tests/api.c:2342:                    ExpectTrue((alpn->options
+tests/api.c:2343:                        & WOLFSSL_ALPN_FAILED_ON_MISMATCH) != 0);
+tests/api.c:2344:                    ExpectIntEQ(alpn->options
+tests/api.c:2345:                        & WOLFSSL_ALPN_CONTINUE_ON_MISMATCH, 0);
+tests/api.c:2367:        ExpectIntEQ(wolfSSL_set_alpn_protos(ssl_c, client_protos,
+tests/api.c:2370:        ExpectIntEQ(wolfSSL_set_alpn_protos(ssl_c, client_protos,
+tests/api.c:2373:        ExpectIntEQ(wolfSSL_UseALPN(ssl_s, (char*)server_protos,
+tests/api.c:2375:            WOLFSSL_ALPN_FAILED_ON_MISMATCH), WOLFSSL_SUCCESS);
+tests/api.c:6370:    defined(HAVE_ALPN) && defined(HAVE_SNI) && \
+tests/api.c:6372:    #define HAVE_ALPN_PROTOS_SUPPORT
+tests/api.c:6376: * Used by SNI / ALPN / crypto callback helper functions */
+tests/api.c:6378:    (defined(HAVE_SNI) || defined(HAVE_ALPN) || \
+tests/api.c:6382:     defined(HAVE_ALPN_PROTOS_SUPPORT)) || defined(WOLFSSL_STATIC_MEMORY)
+tests/api.c:8523:#if defined(HAVE_ALPN) && defined(HAVE_IO_TESTS_DEPENDENCIES)
+tests/api.c:8525:static void verify_ALPN_FATAL_ERROR_on_client(WOLFSSL* ssl)
+tests/api.c:8527:    AssertIntEQ(WC_NO_ERR_TRACE(UNKNOWN_ALPN_PROTOCOL_NAME_E), wolfSSL_get_error(ssl, 0));
+tests/api.c:8530:static void use_ALPN_all(WOLFSSL* ssl)
+tests/api.c:8533:    char alpn_list[] = {0x68, 0x74, 0x74, 0x70, 0x2f, 0x31, 0x2e, 0x31, 0x2c,
+tests/api.c:8537:    AssertIntEQ(WOLFSSL_SUCCESS, wolfSSL_UseALPN(ssl, alpn_list, sizeof(alpn_list),
+tests/api.c:8538:                                             WOLFSSL_ALPN_FAILED_ON_MISMATCH));
+tests/api.c:8541:static void use_ALPN_all_continue(WOLFSSL* ssl)
+tests/api.c:8544:    char alpn_list[] = {0x68, 0x74, 0x74, 0x70, 0x2f, 0x31, 0x2e, 0x31, 0x2c,
+tests/api.c:8548:    AssertIntEQ(WOLFSSL_SUCCESS, wolfSSL_UseALPN(ssl, alpn_list, sizeof(alpn_list),
+tests/api.c:8549:                                             WOLFSSL_ALPN_CONTINUE_ON_MISMATCH));
+tests/api.c:8552:static void use_ALPN_one(WOLFSSL* ssl)
+tests/api.c:8557:    AssertIntEQ(WOLFSSL_SUCCESS, wolfSSL_UseALPN(ssl, proto, sizeof(proto),
+tests/api.c:8558:                                             WOLFSSL_ALPN_FAILED_ON_MISMATCH));
+tests/api.c:8561:static void use_ALPN_unknown(WOLFSSL* ssl)
+tests/api.c:8566:    AssertIntEQ(WOLFSSL_SUCCESS, wolfSSL_UseALPN(ssl, proto, sizeof(proto),
+tests/api.c:8567:                                             WOLFSSL_ALPN_FAILED_ON_MISMATCH));
+tests/api.c:8570:static void use_ALPN_unknown_continue(WOLFSSL* ssl)
+tests/api.c:8575:    AssertIntEQ(WOLFSSL_SUCCESS, wolfSSL_UseALPN(ssl, proto, sizeof(proto),
+tests/api.c:8576:                                             WOLFSSL_ALPN_CONTINUE_ON_MISMATCH));
+tests/api.c:8579:static void verify_ALPN_not_matching_spdy3(WOLFSSL* ssl)
+tests/api.c:8587:    AssertIntEQ(WOLFSSL_SUCCESS, wolfSSL_ALPN_GetProtocol(ssl, &proto, &protoSz));
+tests/api.c:8596:static void verify_ALPN_not_matching_continue(WOLFSSL* ssl)
+tests/api.c:8601:    AssertIntEQ(WC_NO_ERR_TRACE(WOLFSSL_ALPN_NOT_FOUND),
+tests/api.c:8602:                wolfSSL_ALPN_GetProtocol(ssl, &proto, &protoSz));
+tests/api.c:8609:static void verify_ALPN_matching_http1(WOLFSSL* ssl)
+tests/api.c:8616:    AssertIntEQ(WOLFSSL_SUCCESS, wolfSSL_ALPN_GetProtocol(ssl, &proto, &protoSz));
+tests/api.c:8623:static void verify_ALPN_matching_spdy2(WOLFSSL* ssl)
+tests/api.c:8630:    AssertIntEQ(WOLFSSL_SUCCESS, wolfSSL_ALPN_GetProtocol(ssl, &proto, &protoSz));
+tests/api.c:8637:static void verify_ALPN_client_list(WOLFSSL* ssl)
+tests/api.c:8640:    char alpn_list[] = {0x68, 0x74, 0x74, 0x70, 0x2f, 0x31, 0x2e, 0x31, 0x2c,
+tests/api.c:8647:    AssertIntEQ(WOLFSSL_SUCCESS, wolfSSL_ALPN_GetPeerProtocol(ssl, &clist,
+tests/api.c:8651:    AssertIntEQ(1, sizeof(alpn_list) == clistSz);
+tests/api.c:8652:    AssertIntEQ(0, XMEMCMP(alpn_list, clist, clistSz));
+tests/api.c:8654:    AssertIntEQ(WOLFSSL_SUCCESS, wolfSSL_ALPN_FreePeerProtocol(ssl, &clist));
+tests/api.c:8660:/* ALPN select callback, success with spdy/2 */
+tests/api.c:8661:static int select_ALPN_spdy2(WOLFSSL *ssl, const unsigned char **out,
+tests/api.c:8685:/* ALPN select callback, force failure */
+tests/api.c:8686:static int select_ALPN_failure(WOLFSSL *ssl, const unsigned char **out,
+tests/api.c:8700:static void use_ALPN_spdy2_callback(WOLFSSL* ssl)
+tests/api.c:8702:    wolfSSL_set_alpn_select_cb(ssl, select_ALPN_spdy2, NULL);
+tests/api.c:8705:static void use_ALPN_failure_callback(WOLFSSL* ssl)
+tests/api.c:8707:    wolfSSL_set_alpn_select_cb(ssl, select_ALPN_failure, NULL);
+tests/api.c:8711:static int test_wolfSSL_UseALPN_connection(void)
+tests/api.c:8726:    client_cb.ctx_ready = NULL; client_cb.ssl_ready = use_ALPN_all; client_cb.on_result = NULL;
+tests/api.c:8727:    server_cb.ctx_ready = NULL; server_cb.ssl_ready = use_ALPN_all; server_cb.on_result = verify_ALPN_matching_http1;
+tests/api.c:8731:    client_cb.ctx_ready = NULL; client_cb.ssl_ready = use_ALPN_all; client_cb.on_result = NULL;
+tests/api.c:8732:    server_cb.ctx_ready = NULL; server_cb.ssl_ready = use_ALPN_one; server_cb.on_result = verify_ALPN_matching_spdy2;
+tests/api.c:8736:    client_cb.ctx_ready = NULL; client_cb.ssl_ready = use_ALPN_one; client_cb.on_result = NULL;
+tests/api.c:8737:    server_cb.ctx_ready = NULL; server_cb.ssl_ready = use_ALPN_all; server_cb.on_result = verify_ALPN_matching_spdy2;
+tests/api.c:8742:    server_cb.ctx_ready = NULL; server_cb.ssl_ready = use_ALPN_all; server_cb.on_result = NULL;
+tests/api.c:8746:    client_cb.ctx_ready = NULL; client_cb.ssl_ready = use_ALPN_all_continue;     client_cb.on_result = verify_ALPN_not_matching_continue;
+tests/api.c:8747:    server_cb.ctx_ready = NULL; server_cb.ssl_ready = use_ALPN_unknown_continue; server_cb.on_result = NULL;
+tests/api.c:8751:    client_cb.ctx_ready = NULL; client_cb.ssl_ready = use_ALPN_all; client_cb.on_result = NULL;
+tests/api.c:8752:    server_cb.ctx_ready = NULL; server_cb.ssl_ready = use_ALPN_one; server_cb.on_result = verify_ALPN_client_list;
+tests/api.c:8757:    client_cb.ctx_ready = NULL; client_cb.ssl_ready = use_ALPN_all; client_cb.on_result = NULL;
+tests/api.c:8758:    server_cb.ctx_ready = NULL; server_cb.ssl_ready = use_ALPN_all; server_cb.on_result = verify_ALPN_not_matching_spdy3;
+tests/api.c:8762:    client_cb.ctx_ready = NULL; client_cb.ssl_ready = use_ALPN_all;     client_cb.on_result = NULL;
+tests/api.c:8763:    server_cb.ctx_ready = NULL; server_cb.ssl_ready = use_ALPN_unknown; server_cb.on_result = verify_ALPN_FATAL_ERROR_on_client;
+tests/api.c:8769:    /* WOLFSSL-level ALPN select callback tests */
+tests/api.c:8772:    client_cb.ssl_ready = use_ALPN_one;
+tests/api.c:8773:    client_cb.on_result = verify_ALPN_matching_spdy2;
+tests/api.c:8775:    server_cb.ssl_ready = use_ALPN_spdy2_callback;
+tests/api.c:8776:    server_cb.on_result = verify_ALPN_matching_spdy2;
+tests/api.c:8781:    client_cb.ssl_ready = use_ALPN_one;
+tests/api.c:8784:    server_cb.ssl_ready = use_ALPN_failure_callback;
+tests/api.c:8785:    server_cb.on_result = verify_ALPN_FATAL_ERROR_on_client;
+tests/api.c:8795:static int test_wolfSSL_UseALPN_params(void)
+tests/api.c:8818:                wolfSSL_UseALPN(NULL, http1, sizeof(http1),
+tests/api.c:8819:                                WOLFSSL_ALPN_FAILED_ON_MISMATCH));
+tests/api.c:8820:    ExpectIntNE(WOLFSSL_SUCCESS, wolfSSL_UseALPN(ssl, NULL, 0,
+tests/api.c:8821:                                              WOLFSSL_ALPN_FAILED_ON_MISMATCH));
+tests/api.c:8826:                wolfSSL_UseALPN(ssl, http1, sizeof(http1),
+tests/api.c:8827:                                WOLFSSL_ALPN_FAILED_ON_MISMATCH));
+tests/api.c:8835:    ExpectIntEQ(WOLFSSL_SUCCESS, wolfSSL_UseALPN(ssl, buff, idx,
+tests/api.c:8836:                                              WOLFSSL_ALPN_FAILED_ON_MISMATCH));
+tests/api.c:8847:    ExpectIntEQ(WOLFSSL_SUCCESS, wolfSSL_UseALPN(ssl, buff, idx,
+tests/api.c:8848:                                              WOLFSSL_ALPN_FAILED_ON_MISMATCH));
+tests/api.c:8862:    ExpectIntEQ(WOLFSSL_SUCCESS, wolfSSL_UseALPN(ssl, buff, idx,
+tests/api.c:8863:                                            WOLFSSL_ALPN_CONTINUE_ON_MISMATCH));
+tests/api.c:8870:#endif /* HAVE_ALPN  */
+tests/api.c:8872:#ifdef HAVE_ALPN_PROTOS_SUPPORT
+tests/api.c:8873:static void CTX_set_alpn_protos(SSL_CTX *ctx)
+tests/api.c:8884:    ret = SSL_CTX_set_alpn_protos(ctx, p, p_len);
+tests/api.c:8893:static void set_alpn_protos(SSL* ssl)
+tests/api.c:8905:    ret = SSL_set_alpn_protos(ssl, p, p_len);
+tests/api.c:8915:static void verify_alpn_matching_spdy3(WOLFSSL* ssl)
+tests/api.c:8922:    SSL_get0_alpn_selected(ssl, &proto, &protoSz);
+tests/api.c:8929:static void verify_alpn_matching_http1(WOLFSSL* ssl)
+tests/api.c:8936:    SSL_get0_alpn_selected(ssl, &proto, &protoSz);
+tests/api.c:8943:static int test_wolfSSL_set_alpn_protos(void)
+tests/api.c:8957:    /* use CTX_alpn_protos */
+tests/api.c:8958:    client_cb.ctx_ready = CTX_set_alpn_protos;
+tests/api.c:8961:    server_cb.ctx_ready = CTX_set_alpn_protos;
+tests/api.c:8963:    server_cb.on_result = verify_alpn_matching_http1;
+tests/api.c:8966:    /* use set_alpn_protos */
+tests/api.c:8968:    client_cb.ssl_ready = set_alpn_protos;
+tests/api.c:8971:    server_cb.ssl_ready = set_alpn_protos;
+tests/api.c:8972:    server_cb.on_result = verify_alpn_matching_spdy3;
+tests/api.c:9098:#endif /* HAVE_ALPN_PROTOS_SUPPORT */
+tests/api.c:10550: * TLS-ALPN-01 ACME challenge certs.
+tests/api.c:16072:    ExpectTrue(wolfSSL_CTX_set_alpn_protos(ctx, protos, len) == 0);
+tests/api.c:16074:    ExpectTrue(wolfSSL_CTX_set_alpn_protos(ctx, protos, len) == WOLFSSL_SUCCESS);
+tests/api.c:16082:#if defined(HAVE_ALPN) && !defined(NO_BIO)
+tests/api.c:16085:    ExpectTrue(wolfSSL_set_alpn_protos(ssl, protos, len) == 0);
+tests/api.c:16087:    ExpectTrue(wolfSSL_set_alpn_protos(ssl, protos, len) == WOLFSSL_SUCCESS);
+tests/api.c:16090:#endif /* HAVE_ALPN && !NO_BIO */
+tests/api.c:34964:    TEST_DECL(test_wolfSSL_set_alpn_protos_default_fails),
+tests/api.c:35063:#if defined(HAVE_ALPN) && defined(HAVE_IO_TESTS_DEPENDENCIES)
+tests/api.c:35065:    TEST_DECL(test_wolfSSL_UseALPN_connection),
+tests/api.c:35066:    TEST_DECL(test_wolfSSL_UseALPN_params),
+tests/api.c:35068:#ifdef HAVE_ALPN_PROTOS_SUPPORT
+tests/api.c:35070:    TEST_DECL(test_wolfSSL_set_alpn_protos),
+tests/quic.c:1478:    && defined(HAVE_ALPN) && defined(HAVE_SNI)
+tests/quic.c:1479:#define REALLY_HAVE_ALPN_AND_SNI
+tests/quic.c:1481:#undef REALLY_HAVE_ALPN_AND_SNI
+tests/quic.c:1484:#ifdef REALLY_HAVE_ALPN_AND_SNI
+tests/quic.c:1499:static int select_ALPN(WOLFSSL *ssl,
+tests/quic.c:1517:static int test_quic_alpn(int verbose) {
+tests/quic.c:1524:    unsigned char        alpn_protos[256];
+tests/quic.c:1527:    XMEMSET(alpn_protos, 0, sizeof(alpn_protos));
+tests/quic.c:1539:    wolfSSL_CTX_set_alpn_select_cb(ctx_s, select_ALPN, &stripe);
+tests/quic.c:1545:    /* set SNI and ALPN callbacks on server side,
+tests/quic.c:1552:    XSTRLCPY((char*)(alpn_protos + 1), "test", sizeof(alpn_protos));
+tests/quic.c:1553:    alpn_protos[0] = strlen("test");
+tests/quic.c:1554:    wolfSSL_set_alpn_protos(tclient.ssl, alpn_protos, 1 + strlen("test"));
+tests/quic.c:1560:    /* SNI callback needs to be called before ALPN callback */
+tests/quic.c:1568:    printf("    test_quic_alpn: %s\n", (EXPECT_SUCCESS())? pass : fail);
+tests/quic.c:1571:#endif /* REALLY_HAVE_ALPN_AND_SNI */
+tests/quic.c:2008:#ifdef REALLY_HAVE_ALPN_AND_SNI
+tests/quic.c:2009:    if ((ret = test_quic_alpn(verbose)) != TEST_SUCCESS) goto leave;
+tests/quic.c:2010:#endif /* REALLY_HAVE_ALPN_AND_SNI */
+tests/api/test_tls.c:934: * SNI/ALPN does not match previously established session. */
+tests/api/test_tls.c:1074:/* Regression test for the post-ALPN_Select PSK-head check.
+tests/api/test_tls.c:1075: * When ALPN_Select runs before CheckPreSharedKeys (so the per-PSK
+tests/api/test_tls.c:1076: * binding check has the negotiated ALPN available), TLSX_SetALPN
+tests/api/test_tls.c:1077: * prepends a new ALPN entry to ssl->extensions, displacing the PSK
+tests/api/test_tls.c:1081: * (TLS 1.3 PSK resumption with ALPN, no SNI callback -- the grpc
+tests/api/test_tls.c:1083:int test_tls13_resumption_with_alpn(void)
+tests/api/test_tls.c:1087:    defined(HAVE_SNI) && defined(HAVE_ALPN) && defined(HAVE_SESSION_TICKET) && \
+tests/api/test_tls.c:1094:    const char alpn[] = "h2";
+tests/api/test_tls.c:1102:    ExpectIntEQ(wolfSSL_UseALPN(ssl_c, (char*)alpn, (word32)XSTRLEN(alpn),
+tests/api/test_tls.c:1103:                    WOLFSSL_ALPN_FAILED_ON_MISMATCH), WOLFSSL_SUCCESS);
+tests/api/test_tls.c:1104:    ExpectIntEQ(wolfSSL_UseALPN(ssl_s, (char*)alpn, (word32)XSTRLEN(alpn),
+tests/api/test_tls.c:1105:                    WOLFSSL_ALPN_FAILED_ON_MISMATCH), WOLFSSL_SUCCESS);
+tests/api/test_tls.c:1124:    ExpectIntEQ(wolfSSL_UseALPN(ssl_c, (char*)alpn, (word32)XSTRLEN(alpn),
+tests/api/test_tls.c:1125:                    WOLFSSL_ALPN_FAILED_ON_MISMATCH), WOLFSSL_SUCCESS);
+tests/api/test_tls.c:1126:    ExpectIntEQ(wolfSSL_UseALPN(ssl_s, (char*)alpn, (word32)XSTRLEN(alpn),
+tests/api/test_tls.c:1127:                    WOLFSSL_ALPN_FAILED_ON_MISMATCH), WOLFSSL_SUCCESS);
+tests/api/test_tls.h:38:int test_tls13_resumption_with_alpn(void);
+tests/api/test_tls.h:61:        TEST_DECL_GROUP("tls", test_tls13_resumption_with_alpn),              \
+examples/server/server.c:964:#ifdef HAVE_ALPN
+examples/server/server.c:1182:#ifdef HAVE_ALPN
+examples/server/server.c:1408:#ifdef HAVE_ALPN
+examples/server/server.c:1731:    char*  alpnList = NULL;
+examples/server/server.c:1732:    unsigned char alpn_opt = 0;
+examples/server/server.c:1914:    (void)alpnList;
+examples/server/server.c:1915:    (void)alpn_opt;
+examples/server/server.c:2185:                #ifdef HAVE_ALPN
+examples/server/server.c:2186:                    alpnList = myoptarg;
+examples/server/server.c:2188:                    if (alpnList[0] == 'C' && alpnList[1] == ':')
+examples/server/server.c:2189:                        alpn_opt = WOLFSSL_ALPN_CONTINUE_ON_MISMATCH;
+examples/server/server.c:2190:                    else if (alpnList[0] == 'F' && alpnList[1] == ':')
+examples/server/server.c:2191:                        alpn_opt = WOLFSSL_ALPN_FAILED_ON_MISMATCH;
+examples/server/server.c:2197:                    alpnList += 2;
+examples/server/server.c:3594:#ifdef HAVE_ALPN
+examples/server/server.c:3595:        if (alpnList != NULL) {
+examples/server/server.c:3596:            printf("ALPN accepted protocols list : %s\n", alpnList);
+examples/server/server.c:3597:            wolfSSL_UseALPN(ssl, alpnList, (word32)XSTRLEN(alpnList), alpn_opt);
+examples/server/server.c:3925:#ifdef HAVE_ALPN
+examples/server/server.c:3926:        if (alpnList != NULL) {
+examples/server/server.c:3927:            char *protocol_name = NULL, *list = NULL;
+examples/server/server.c:3928:            word16 protocol_nameSz = 0, listSz = 0;
+examples/server/server.c:3930:            err = wolfSSL_ALPN_GetProtocol(ssl, &protocol_name,
+examples/server/server.c:3931:                                           &protocol_nameSz);
+examples/server/server.c:3933:                printf("Sent ALPN protocol : %s (%d)\n",
+examples/server/server.c:3934:                       protocol_name, protocol_nameSz);
+examples/server/server.c:3935:            else if (err == WC_NO_ERR_TRACE(WOLFSSL_ALPN_NOT_FOUND))
+examples/server/server.c:3936:                printf("No ALPN response sent (no match)\n");
+examples/server/server.c:3938:                printf("Getting ALPN protocol name failed\n");
+examples/server/server.c:3940:            err = wolfSSL_ALPN_GetPeerProtocol(ssl, &list, &listSz);
+examples/server/server.c:3947:            (void)wolfSSL_ALPN_FreePeerProtocol(ssl, &list);
+examples/client/client.c:1268:#ifdef HAVE_ALPN
+examples/client/client.c:1538:#ifdef HAVE_ALPN
+examples/client/client.c:1844:#ifdef HAVE_ALPN
+examples/client/client.c:2243:    char*  alpnList = NULL;
+examples/client/client.c:2244:    unsigned char alpn_opt = 0;
+examples/client/client.c:2428:    (void)alpnList;
+examples/client/client.c:2429:    (void)alpn_opt;
+examples/client/client.c:2828:                #ifdef HAVE_ALPN
+examples/client/client.c:2829:                    alpnList = myoptarg;
+examples/client/client.c:2831:                    if (alpnList[0] == 'C' && alpnList[1] == ':')
+examples/client/client.c:2832:                        alpn_opt = WOLFSSL_ALPN_CONTINUE_ON_MISMATCH;
+examples/client/client.c:2833:                    else if (alpnList[0] == 'F' && alpnList[1] == ':')
+examples/client/client.c:2834:                        alpn_opt = WOLFSSL_ALPN_FAILED_ON_MISMATCH;
+examples/client/client.c:2840:                    alpnList += 2;
+examples/client/client.c:4124:#ifdef HAVE_ALPN
+examples/client/client.c:4125:    if (alpnList != NULL) {
+examples/client/client.c:4126:       printf("ALPN accepted protocols list : %s\n", alpnList);
+examples/client/client.c:4127:       wolfSSL_UseALPN(ssl, alpnList, (word32)XSTRLEN(alpnList), alpn_opt);
+examples/client/client.c:4470:#ifdef HAVE_ALPN
+examples/client/client.c:4471:    if (alpnList != NULL) {
+examples/client/client.c:4472:        char *protocol_name = NULL;
+examples/client/client.c:4473:        word16 protocol_nameSz = 0;
+examples/client/client.c:4475:        err = wolfSSL_ALPN_GetProtocol(ssl, &protocol_name, &protocol_nameSz);
+examples/client/client.c:4477:            printf("Received ALPN protocol : %s (%d)\n",
+examples/client/client.c:4478:                   protocol_name, protocol_nameSz);
+examples/client/client.c:4479:        else if (err == WC_NO_ERR_TRACE(WOLFSSL_ALPN_NOT_FOUND))
+examples/client/client.c:4480:            printf("No ALPN response received (no match with server)\n");
+examples/client/client.c:4482:            printf("Getting ALPN protocol name failed\n");
+examples/client/client.c:4813:#ifdef HAVE_ALPN
+examples/client/client.c:4814:        if (alpnList != NULL) {
+examples/client/client.c:4815:            printf("ALPN accepted protocols list : %s\n", alpnList);
+examples/client/client.c:4816:            wolfSSL_UseALPN(sslResume, alpnList, (word32)XSTRLEN(alpnList),
+examples/client/client.c:4817:                            alpn_opt);
+examples/client/client.c:4913:#ifdef HAVE_ALPN
+examples/client/client.c:4914:        if (alpnList != NULL) {
+examples/client/client.c:4915:            char *protocol_name = NULL;
+examples/client/client.c:4916:            word16 protocol_nameSz = 0;
+examples/client/client.c:4918:            printf("Sending ALPN accepted list : %s\n", alpnList);
+examples/client/client.c:4919:            err = wolfSSL_ALPN_GetProtocol(sslResume, &protocol_name,
+examples/client/client.c:4920:                                           &protocol_nameSz);
+examples/client/client.c:4922:                printf("Received ALPN protocol : %s (%d)\n",
+examples/client/client.c:4923:                       protocol_name, protocol_nameSz);
+examples/client/client.c:4924:            else if (err == WC_NO_ERR_TRACE(WOLFSSL_ALPN_NOT_FOUND))
+examples/client/client.c:4925:                printf("Not received ALPN response (no match with server)\n");
+examples/client/client.c:4927:                printf("Getting ALPN protocol name failed\n");
+examples/configs/user_settings_all.h:87:#define HAVE_ALPN
+examples/configs/user_settings_espressif.h:171:    #define HAVE_ALPN
+examples/configs/user_settings_espressif.h:190:    #define HAVE_ALPN
+examples/configs/user_settings_espressif.h:298:    #define HAVE_ALPN
+examples/configs/user_settings_arduino.h:109:    /* SNI, Supported Groups (elliptic curves), ALPN: */
+examples/configs/user_settings_openssl_compat.h:137:#define HAVE_ALPN

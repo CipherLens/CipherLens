@@ -1,0 +1,51 @@
+{
+  "poc_id": "WOLFSSL-POC-0004",
+  "source_library": "wolfSSL",
+  "issue_or_cve": "CVE-2026-5447",
+  "title": "wolfSSL CertFromX509 AuthorityKeyIdentifier size confusion heap-buffer-overflow",
+  "bug_class": "X.509 AuthorityKeyIdentifier heap buffer overflow",
+  "harness_family": "x509_authority_key_identifier_memory_safety",
+  "oracle_type": "crash_sanitizer_oracle",
+  "source_api": [
+    "wolfSSL_X509_d2i",
+    "wolfSSL_i2d_X509_bio",
+    "CertFromX509"
+  ],
+  "target_candidate_apis": {
+    "openssl": [
+      "X509_get_ext_d2i",
+      "NID_authority_key_identifier",
+      "AUTHORITY_KEYID"
+    ],
+    "mbedtls": [
+      "mbedtls_x509_crt_parse",
+      "mbedtls_x509_crt"
+    ]
+  },
+  "affected_versions": [
+    "wolfSSL < 5.9.1"
+  ],
+  "candidate_vulnerable_version": "wolfSSL v5.9.0-stable",
+  "fixed_version": "wolfSSL v5.9.1-stable",
+  "fix_pr_or_commit": "PR 10112",
+  "input_provenance": "reconstructed_from_pr_10112_official_test_pattern",
+  "has_original_input": false,
+  "uses_placeholder_input": false,
+  "strict_reproduction": true,
+  "vulnerable_version_verified": true,
+  "fixed_version_verified": true,
+  "current_version_verified": true,
+  "expected_vulnerable_behavior": "On wolfSSL v5.9.0-stable with WOLFSSL_AKID_NAME and ASan/UBSan, a reconstructed DER X.509 certificate containing an oversized AuthorityKeyIdentifier extension triggers AddressSanitizer heap-buffer-overflow in CertFromX509 through wolfSSL_i2d_X509_bio.",
+  "expected_fixed_behavior": "wolfSSL v5.9.1-stable safely rejects the reconstructed DER X.509 certificate with oversized AuthorityKeyIdentifier. wolfSSL_i2d_X509_bio returns 0, the harness exits with code 1, and no ASan heap-buffer-overflow, WRITE of size 20046, or abort is observed.",
+  "expected_current_behavior": "Current wolfSSL v5.9.1-stable-1373-g8fca95ce6 safely rejects the reconstructed DER X.509 certificate with oversized AuthorityKeyIdentifier. wolfSSL_i2d_X509_bio returns 0, the harness exits with code 1, and no ASan heap-buffer-overflow, WRITE of size 20046, or abort is observed.",
+  "crash_signal": "ASan heap-buffer-overflow; WRITE of size 20046; memcpy; CertFromX509 src/x509.c:11863; wolfSSL_i2d_X509_bio trigger path; exit code 134.",
+  "semantic_signal": "",
+  "migration_value": "High. AuthorityKeyIdentifier extension parsing and X.509 internal conversion are relevant to cross-library X.509 parser comparison and structured mutation.",
+  "quality_level": "Q1_strict_reproduction_candidate",
+  "recommended_usage": [
+    "candidate_for_patch_analysis",
+    "x509_authority_key_identifier_seed",
+    "cross_library_migration_candidate"
+  ],
+  "notes": "Certificate-level strict reproduction succeeded on wolfSSL v5.9.0-stable commit 922d04b3568c6428a9fb905ddee3ef5a68db3108. The reconstructed DER certificate uses a small 20-byte AuthorityKeyIdentifier keyIdentifier and an oversized full AKID source of approximately 20046 bytes. The vulnerable code checks authKeyIdSz but copies authKeyIdSrcSz into cert->akid, producing ASan heap-buffer-overflow in CertFromX509. Fixed release candidate verified: wolfSSL v5.9.1-stable commit 1d363f3adceba9d1478230ede476a37b0dcdef24 safely rejects the oversized AuthorityKeyIdentifier input without sanitizer crash evidence. Current wolfSSL v5.9.1-stable-1373-g8fca95ce6 commit 8fca95ce651d6e370d91f5598786de4bc66aa2c2 was tested with the same reconstructed oversized AuthorityKeyIdentifier DER certificate. It safely rejected the input without sanitizer crash evidence."
+}
