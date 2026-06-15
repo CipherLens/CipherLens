@@ -1,0 +1,22 @@
+# Next Task Recommendation
+
+top_1_family: x509_parsing
+top_2_family: evp_pkey_context_lifecycle
+top_3_family: der_full_consumption
+recommended_next_task: x509_parsing_triage_v1
+recommended_route: C_app_level_validation_gap
+glm_allowed: false
+auto_render_allowed: false
+auto_run_allowed: false
+why_not_previous_families:
+  secure_heap: Moved to external validation after current-version init_failed_then_query
+    candidate; not main exploratory top-1.
+  cipher_aead_lifecycle: GCM cases closed or demoted as legal semantics/mapping gaps;
+    non-GCM spaces can wait.
+  asn1_nested_boundary: Blocked by real seed missing / placeholder-only evidence.
+  der_full_consumption: Strong app-level candidate, but next step is minimal reproducer/upstream
+    inquiry rather than another scheduler-selected experiment.
+  mac_lifecycle: Successful A-path template; useful as reference, not urgent next
+    discovery loop target.
+selected_family: x509_parsing
+selection_reason: 'Status: ready_for_triage.'

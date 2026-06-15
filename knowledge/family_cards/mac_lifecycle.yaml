@@ -1,0 +1,32 @@
+schema: family_card_v1
+family: mac_lifecycle
+track: lifecycle
+archetype: mac_context_lifecycle
+target_library: openssl
+component: EVP_MAC
+summary: >
+  EVP_MAC lifecycle seeds exercise HMAC context init/update/final/re-init/free
+  state transitions without parser replay, DER trailing garbage, or
+  full-consumption oracles.
+primary_apis:
+  - EVP_MAC_fetch
+  - EVP_MAC_CTX_new
+  - EVP_MAC_init
+  - EVP_MAC_update
+  - EVP_MAC_final
+  - EVP_MAC_CTX_free
+  - EVP_MAC_free
+  - OSSL_PARAM
+oracle:
+  - unexpected_failure_on_valid_sequence
+  - unexpected_success_after_invalid_state
+  - state_transition_observation
+  - crash_or_sanitizer
+avoid_patterns:
+  - der_single_object_trailing_garbage_full_consumption
+  - secure_heap_state_lifecycle_issue_28669
+  - x509_pkey_pkcs8_parsing
+claim_policy:
+  confirmed_vulnerability: false
+  cve: false
+  exploitable: false

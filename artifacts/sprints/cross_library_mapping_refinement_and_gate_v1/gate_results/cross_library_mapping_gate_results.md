@@ -1,0 +1,40 @@
+| mapping_id | family | wolfssl_api | target_library | target_api | gate_status | required_oracle_style |
+| --- | --- | --- | --- | --- | --- | --- |
+| map_001 | asn1_nested_boundary | wc_InitDecodedCert | mbedtls | mbedtls_x509_crt_parse_der | usable_for_adapter | parser_reject_accept |
+| map_002 | asn1_nested_boundary | wc_InitDecodedCert | openssl | ASN1_item_d2i | usable_for_adapter | parser_reject_accept |
+| map_003 | asn1_nested_boundary | wc_ParseCert | mbedtls | mbedtls_x509_crt_parse_der | needs_manual_review | parser_reject_accept |
+| map_004 | asn1_nested_boundary | wc_ParseCert | openssl | d2i_X509 | needs_manual_review | parser_reject_accept |
+| map_005 | pkcs_container_parsing | wc_PKCS12_parse | mbedtls |  | no_direct_counterpart | no_adapter |
+| map_006 | pkcs_container_parsing | wc_PKCS12_parse | openssl | PKCS12_parse | usable_for_adapter | parser_reject_accept |
+| map_007 | pkcs_container_parsing | wc_PKCS7_DecodeSignedData | mbedtls |  | no_direct_counterpart | no_adapter |
+| map_008 | pkcs_container_parsing | wc_PKCS7_DecodeSignedData | openssl | d2i_PKCS7 | weak_evidence | parser_reject_accept |
+| map_009 | pkcs_container_parsing | wc_PKCS7_VerifySignedData | mbedtls |  | no_direct_counterpart | no_adapter |
+| map_010 | pkcs_container_parsing | wc_PKCS7_VerifySignedData | openssl | PKCS7_verify | usable_for_adapter | parser_reject_accept |
+| map_011 | secure_heap_state_lifecycle | wolfSSL_Free | mbedtls | mbedtls_free | usable_for_adapter | cleanup_required |
+| map_012 | secure_heap_state_lifecycle | wolfSSL_Free | openssl | OPENSSL_free | candidate_only | cleanup_required |
+| map_013 | secure_heap_state_lifecycle | wolfSSL_Malloc | mbedtls | mbedtls_calloc | candidate_only | lifecycle_state |
+| map_014 | secure_heap_state_lifecycle | wolfSSL_Malloc | openssl | OPENSSL_malloc | candidate_only | lifecycle_state |
+| map_015 | secure_heap_state_lifecycle | wolfSSL_SetAllocators | mbedtls | mbedtls_platform_set_calloc_free | candidate_only | cleanup_required |
+| map_016 | secure_heap_state_lifecycle | wolfSSL_SetAllocators | openssl | CRYPTO_set_mem_functions | candidate_only | lifecycle_state |
+| map_017 | tls_protocol_state_lifecycle | wolfSSL_CTX_new | mbedtls | mbedtls_ssl_config_init | usable_for_adapter | lifecycle_state |
+| map_018 | tls_protocol_state_lifecycle | wolfSSL_CTX_new | openssl | SSL_CTX_new | usable_for_adapter | lifecycle_state |
+| map_019 | tls_protocol_state_lifecycle | wolfSSL_accept | mbedtls | mbedtls_ssl_handshake | candidate_only | lifecycle_state |
+| map_020 | tls_protocol_state_lifecycle | wolfSSL_accept | openssl | SSL_accept | candidate_only | lifecycle_state |
+| map_021 | tls_protocol_state_lifecycle | wolfSSL_connect | mbedtls | mbedtls_ssl_handshake | candidate_only | lifecycle_state |
+| map_022 | tls_protocol_state_lifecycle | wolfSSL_connect | openssl | SSL_connect | candidate_only | lifecycle_state |
+| map_023 | tls_protocol_state_lifecycle | wolfSSL_free | mbedtls | mbedtls_ssl_free | usable_for_adapter | lifecycle_state |
+| map_024 | tls_protocol_state_lifecycle | wolfSSL_free | openssl | SSL_free | usable_for_adapter | lifecycle_state |
+| map_025 | tls_protocol_state_lifecycle | wolfSSL_new | mbedtls | mbedtls_ssl_init | usable_for_adapter | lifecycle_state |
+| map_026 | tls_protocol_state_lifecycle | wolfSSL_new | openssl | SSL_new | usable_for_adapter | lifecycle_state |
+| map_027 | tls_protocol_state_lifecycle | wolfSSL_read | mbedtls | mbedtls_ssl_read | candidate_only | lifecycle_state |
+| map_028 | tls_protocol_state_lifecycle | wolfSSL_read | openssl | SSL_read | candidate_only | lifecycle_state |
+| map_029 | tls_protocol_state_lifecycle | wolfSSL_write | mbedtls | mbedtls_ssl_write | candidate_only | lifecycle_state |
+| map_030 | tls_protocol_state_lifecycle | wolfSSL_write | openssl | SSL_write | candidate_only | lifecycle_state |
+| map_031 | x509_parsing | wc_InitDecodedCert | mbedtls | mbedtls_x509_crt_parse_der | usable_for_adapter | parser_reject_accept |
+| map_032 | x509_parsing | wc_ParseCert | mbedtls | mbedtls_x509_crt_parse_der | needs_manual_review | parser_reject_accept |
+| map_033 | x509_parsing | wolfSSL_X509_free | mbedtls | mbedtls_x509_crt_free | candidate_only | parser_reject_accept |
+| map_034 | x509_parsing | wolfSSL_X509_free | openssl | X509_free | candidate_only | parser_reject_accept |
+| map_035 | x509_parsing | wolfSSL_X509_load_certificate_file | mbedtls | mbedtls_x509_crt_parse_file | candidate_only | parser_reject_accept |
+| map_036 | x509_parsing | wolfSSL_X509_load_certificate_file | openssl | PEM_read_X509 | candidate_only | parser_reject_accept |
+| map_037 | x509_parsing | wolfSSL_X509_verify | mbedtls | mbedtls_x509_crt_verify | candidate_only | parser_reject_accept |
+| map_038 | x509_parsing | wolfSSL_X509_verify | openssl | X509_verify | candidate_only | parser_reject_accept |

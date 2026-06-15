@@ -1,0 +1,231 @@
+2694-#ifdef WOLFSSL_SESSION_ID_CTX
+2695-        data[idx++] = sess->sessionCtxSz;
+2696-        XMEMCPY(data + idx, sess->sessionCtx, sess->sessionCtxSz);
+2697-        idx += sess->sessionCtxSz;
+2698-#endif
+2699-#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL)
+2700-        data[idx++] = sess->peerVerifyRet;
+2701-#endif
+2702-#ifdef WOLFSSL_TLS13
+2703-        c16toa(sess->namedGroup, data + idx);
+2704-        idx += OPAQUE16_LEN;
+2705-#endif
+2706-#if defined(HAVE_SESSION_TICKET) || !defined(NO_PSK)
+2707-#ifdef WOLFSSL_TLS13
+2708-#ifdef WOLFSSL_32BIT_MILLI_TIME
+2709-        c32toa(sess->ticketSeen, data + idx);
+2710-        idx += OPAQUE32_LEN;
+2711-#else
+2712-        c32toa((word32)(sess->ticketSeen >> 32), data + idx);
+2713-        idx += OPAQUE32_LEN;
+2714-        c32toa((word32)sess->ticketSeen, data + idx);
+2715-        idx += OPAQUE32_LEN;
+2716-#endif
+2717-        c32toa(sess->ticketAdd, data + idx);
+2718-        idx += OPAQUE32_LEN;
+2719-        data[idx++] = sess->ticketNonce.len;
+2720-        XMEMCPY(data + idx, sess->ticketNonce.data, sess->ticketNonce.len);
+2721-        idx += sess->ticketNonce.len;
+2722-#endif
+2723-#ifdef WOLFSSL_EARLY_DATA
+2724-        c32toa(sess->maxEarlyDataSz, data + idx);
+2725-        idx += OPAQUE32_LEN;
+2726-#endif
+2727-#endif
+2728-#ifdef HAVE_SESSION_TICKET
+2729-        c16toa(sess->ticketLen, data + idx); idx += OPAQUE16_LEN;
+2730-        XMEMCPY(data + idx, sess->ticket, sess->ticketLen);
+2731-        idx += sess->ticketLen;
+2732-#endif
+2733-    }
+2734-#endif
+2735-
+2736-    (void)sess;
+2737-    (void)p;
+2738-#ifdef HAVE_EXT_CACHE
+2739-    (void)idx;
+2740-#endif
+2741-
+2742-    return size;
+2743-}
+2744-
+2745-
+2746-/* TODO: no function to free new session.
+2747- *
+2748- * Note: It is expected that the importing and exporting function have been
+2749- *       built with the same settings. For example if session tickets was
+2750- *       enabled with the wolfSSL library exporting a session then it is
+2751- *       expected to be turned on with the wolfSSL library importing the
+2752- *       session.
+2753- */
+2754:WOLFSSL_SESSION* wolfSSL_d2i_SSL_SESSION(WOLFSSL_SESSION** sess,
+2755-                                const unsigned char** p, long i)
+2756-{
+2757-    WOLFSSL_SESSION* s = NULL;
+2758-    int ret = 0;
+2759-#if defined(HAVE_EXT_CACHE)
+2760-    int idx = 0;
+2761-    byte* data;
+2762-#ifdef SESSION_CERTS
+2763-    int j;
+2764-    word16 length;
+2765-#endif
+2766-#endif /* HAVE_EXT_CACHE */
+2767-
+2768-    (void)p;
+2769-    (void)i;
+2770-    (void)ret;
+2771-    (void)sess;
+2772-
+2773-#ifdef HAVE_EXT_CACHE
+2774-    if (p == NULL || *p == NULL)
+2775-        return NULL;
+2776-
+2777-    s = wolfSSL_SESSION_new();
+2778-    if (s == NULL)
+2779-        return NULL;
+2780-
+2781-    idx = 0;
+2782-    data = (byte*)*p;
+2783-
+2784-    /* side | bornOn | timeout | sessionID len */
+2785-    if (i < OPAQUE8_LEN + OPAQUE32_LEN + OPAQUE32_LEN + OPAQUE8_LEN) {
+2786-        ret = BUFFER_ERROR;
+2787-        goto end;
+2788-    }
+2789-    s->side = data[idx++];
+2790-    ato32(data + idx, &s->bornOn); idx += OPAQUE32_LEN;
+2791-    ato32(data + idx, &s->timeout); idx += OPAQUE32_LEN;
+2792-    s->sessionIDSz = data[idx++];
+2793-
+2794-    /* sessionID | secret | haveEMS | haveAltSessionID */
+2795-    if (i - idx < s->sessionIDSz + SECRET_LEN + OPAQUE8_LEN + OPAQUE8_LEN) {
+2796-        ret = BUFFER_ERROR;
+2797-        goto end;
+2798-    }
+2799-    XMEMCPY(s->sessionID, data + idx, s->sessionIDSz);
+2800-    idx  += s->sessionIDSz;
+2801-    XMEMCPY(s->masterSecret, data + idx, SECRET_LEN); idx += SECRET_LEN;
+2802-    s->haveEMS = data[idx++];
+2803-    if (data[idx] != ID_LEN && data[idx] != 0) {
+2804-        ret = BUFFER_ERROR;
+2805-        goto end;
+2806-    }
+2807-    s->haveAltSessionID = data[idx++] == ID_LEN;
+2808-
+2809-    /* altSessionID */
+2810-    if (s->haveAltSessionID) {
+2811-        if (i - idx < ID_LEN) {
+2812-            ret = BUFFER_ERROR;
+2813-            goto end;
+2814-        }
+2815-        XMEMCPY(s->altSessionID, data + idx, ID_LEN); idx += ID_LEN;
+2816-    }
+2817-
+2818-#ifdef SESSION_CERTS
+2819-    /* Certificate chain */
+2820-    if (i - idx == 0) {
+2821-        ret = BUFFER_ERROR;
+2822-        goto end;
+2823-    }
+2824-    s->chain.count = data[idx++];
+2825-    for (j = 0; j < s->chain.count; j++) {
+2826-        if (i - idx < OPAQUE16_LEN) {
+2827-            ret = BUFFER_ERROR;
+2828-            goto end;
+2829-        }
+2830-        ato16(data + idx, &length); idx += OPAQUE16_LEN;
+2831-        s->chain.certs[j].length = length;
+2832-        if (i - idx < length) {
+2833-            ret = BUFFER_ERROR;
+2834-            goto end;
+2835-        }
+2836-        XMEMCPY(s->chain.certs[j].buffer, data + idx, length);
+2837-        idx += length;
+2838-    }
+2839-#endif
+2840-#if defined(SESSION_CERTS) || (defined(WOLFSSL_TLS13) && \
+2841-                               defined(HAVE_SESSION_TICKET))
+2842-    /* Protocol Version */
+2843-    if (i - idx < OPAQUE16_LEN) {
+2844-        ret = BUFFER_ERROR;
+2845-        goto end;
+2846-    }
+2847-    s->version.major = data[idx++];
+2848-    s->version.minor = data[idx++];
+2849-#endif
+2850-#if defined(SESSION_CERTS) || !defined(NO_RESUME_SUITE_CHECK) || \
+2851-                        (defined(WOLFSSL_TLS13) && defined(HAVE_SESSION_TICKET))
+2852-    /* Cipher suite */
+2853-    if (i - idx < OPAQUE16_LEN) {
+2854-        ret = BUFFER_ERROR;
+2855-        goto end;
+2856-    }
+2857-    s->cipherSuite0 = data[idx++];
+2858-    s->cipherSuite = data[idx++];
+2859-#endif
+2860-#ifndef NO_CLIENT_CACHE
+2861-    /* ServerID len */
+2862-    if (i - idx < OPAQUE16_LEN) {
+2863-        ret = BUFFER_ERROR;
+2864-        goto end;
+2865-    }
+2866-    ato16(data + idx, &s->idLen); idx += OPAQUE16_LEN;
+2867-
+2868-    /* ServerID */
+2869-    if (i - idx < s->idLen) {
+2870-        ret = BUFFER_ERROR;
+2871-        goto end;
+2872-    }
+2873-    XMEMCPY(s->serverID, data + idx, s->idLen); idx += s->idLen;
+2874-#endif
+2875-#ifdef WOLFSSL_SESSION_ID_CTX
+2876-    /* byte for length of session context ID */
+2877-    if (i - idx < OPAQUE8_LEN) {
+2878-        ret = BUFFER_ERROR;
+2879-        goto end;
+2880-    }
+2881-    s->sessionCtxSz = data[idx++];
+2882-
+2883-    /* app session context ID */
+2884-    if (i - idx < s->sessionCtxSz) {
+2885-        ret = BUFFER_ERROR;
+2886-        goto end;
+2887-    }
+2888-    XMEMCPY(s->sessionCtx, data + idx, s->sessionCtxSz); idx += s->sessionCtxSz;
+2889-#endif
+2890-#if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL)
+2891-    /* byte for peerVerifyRet */
+2892-    if (i - idx < OPAQUE8_LEN) {
+2893-        ret = BUFFER_ERROR;
+2894-        goto end;
+2895-    }
+2896-    s->peerVerifyRet = data[idx++];
+2897-#endif
+2898-#ifdef WOLFSSL_TLS13
+2899-    if (i - idx < OPAQUE16_LEN) {
+2900-        ret = BUFFER_ERROR;
+2901-        goto end;
+2902-    }
+2903-    ato16(data + idx, &s->namedGroup);
+2904-    idx += OPAQUE16_LEN;
+2905-#endif
+2906-#if defined(HAVE_SESSION_TICKET) || !defined(NO_PSK)
+2907-#ifdef WOLFSSL_TLS13
+2908-    if (i - idx < (OPAQUE32_LEN * 2)) {
+2909-        ret = BUFFER_ERROR;
+2910-        goto end;
+2911-    }
+2912-#ifdef WOLFSSL_32BIT_MILLI_TIME
+2913-    ato32(data + idx, &s->ticketSeen);
+2914-    idx += OPAQUE32_LEN;
+2915-#else
+2916-    {
+2917-        word32 seenHi, seenLo;
+2918-
+2919-        ato32(data + idx, &seenHi);
+2920-        idx += OPAQUE32_LEN;
+2921-        ato32(data + idx, &seenLo);
+2922-        idx += OPAQUE32_LEN;
+2923-        s->ticketSeen = ((sword64)seenHi << 32) + seenLo;
+2924-    }

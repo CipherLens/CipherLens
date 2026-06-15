@@ -1,0 +1,225 @@
+recipe_id: x509_parsing_wolfssl_template_recipe_v1
+family: x509_parsing
+source_library: wolfssl
+candidate_pocs: []
+harness_family: x509_asn1_inner_boundary
+recommended_generalization_mode: needs_new_family_recipe
+template_files_to_generate:
+- poc_original.c
+- tmpl_wolfssl.c
+- template_meta.yaml
+- mask_report.yaml
+- ast_mask_report.yaml
+- selected_mask_units.yaml
+must_preserve_semantics:
+- input_loading
+- buffer_length_calculation
+- target_api_call
+- return_code_check
+- cleanup_call
+- oracle_observable
+ast_mask_preserve_units:
+- unit_type: trigger_call
+  node_kind_hint: call_expression
+  reason: preserve source API path and oracle trigger
+- unit_type: cleanup_call
+  node_kind_hint: call_expression
+  reason: preserve ownership/lifecycle semantics
+- unit_type: oracle_check
+  node_kind_hint: if_statement or return_statement
+  reason: preserve observable safe/bug/triage classification
+ast_maskable_units:
+- unit_type: api_argument
+  slot_name: CERT_INPUT
+  node_kind_hint: argument or literal
+  reason: file/path APIs need fixture handling in later template generation
+- unit_type: api_argument
+  slot_name: SUBJECT_FIELD
+  node_kind_hint: argument or literal
+  reason: field mutation may be app-level not parser-level
+- unit_type: api_argument
+  slot_name: ISSUER_FIELD
+  node_kind_hint: argument or literal
+  reason: avoid interpreting policy rejection as parser bug
+- unit_type: api_argument
+  slot_name: TRAILING_DATA
+  node_kind_hint: argument or literal
+  reason: only if API preserves input consumption signal
+- unit_type: api_argument
+  slot_name: INVALID_LENGTH
+  node_kind_hint: argument or literal
+  reason: length mismatch should be bounded
+mutation_slots:
+- slot_name: CERT_INPUT
+  slot_type: byte_array_or_path
+  examples:
+  - DER
+  - PEM
+  - malformed
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: file/path APIs need fixture handling in later template generation
+- slot_name: SUBJECT_FIELD
+  slot_type: asn1_field
+  examples:
+  - valid_cn
+  - malformed_cn
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: field mutation may be app-level not parser-level
+- slot_name: ISSUER_FIELD
+  slot_type: asn1_field
+  examples:
+  - valid_issuer
+  - truncated_issuer
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: avoid interpreting policy rejection as parser bug
+- slot_name: TRAILING_DATA
+  slot_type: byte_array
+  examples:
+  - none
+  - tail
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: only if API preserves input consumption signal
+- slot_name: INVALID_LENGTH
+  slot_type: integer
+  examples:
+  - short
+  - long
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: length mismatch should be bounded
+api_slots:
+- slot_name: wolfSSL_X509_load_certificate_file
+  source_api: wolfSSL_X509_load_certificate_file
+  allowed_target_apis:
+  - mbedtls:mbedtls_x509_crt_parse_file
+  - openssl:PEM_read_X509
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: wolfSSL_X509_free
+  source_api: wolfSSL_X509_free
+  allowed_target_apis:
+  - mbedtls:mbedtls_x509_crt_free
+  - openssl:X509_free
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: d2i_X509
+  source_api: ''
+  allowed_target_apis: []
+  blocked_target_apis: []
+  mapping_gate_status:
+  - not_in_mapping_gate
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: X509_free
+  source_api: X509_free
+  allowed_target_apis:
+  - openssl:X509_free
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: mbedtls_x509_crt_parse_der
+  source_api: ''
+  allowed_target_apis:
+  - mbedtls:mbedtls_x509_crt_parse_der
+  blocked_target_apis:
+  - mbedtls:mbedtls_x509_crt_parse_der
+  mapping_gate_status:
+  - needs_manual_review
+  - usable_for_adapter
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: mbedtls_x509_crt_free
+  source_api: ''
+  allowed_target_apis:
+  - mbedtls:mbedtls_x509_crt_free
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+cleanup_slots:
+- slot_name: cleanup_call
+  source_cleanup: family-specific wolfSSL cleanup/free API
+  target_cleanup_candidates:
+  - X509_free
+  - mbedtls_x509_crt_free
+  required: true
+oracle_types:
+- parser_reject_accept
+- return_code_semantics
+- cleanup_required
+adapter_scope:
+  allowed_targets:
+    openssl:
+      allowed_apis: []
+      candidate_only_apis:
+      - PEM_read_X509
+      - X509_free
+      - X509_verify
+    mbedtls:
+      allowed_apis:
+      - mbedtls_x509_crt_parse_der
+      candidate_only_apis:
+      - mbedtls_x509_crt_free
+      - mbedtls_x509_crt_parse_file
+      - mbedtls_x509_crt_verify
+  blocked_targets:
+  - target_library: mbedtls
+    target_api: mbedtls_x509_crt_parse_der
+    reason: needs_manual_review
+    source_api: wc_ParseCert
+  candidate_only_targets:
+    openssl:
+    - PEM_read_X509
+    - X509_free
+    - X509_verify
+    mbedtls:
+    - mbedtls_x509_crt_free
+    - mbedtls_x509_crt_parse_file
+    - mbedtls_x509_crt_verify
+rag_evidence_required:
+- source_api_card
+- target_api_card
+- mapping_gate
+- constraints
+- call_sequence
+tree_sitter_ast_mask_pipeline:
+  expected_script:
+  - template_maker/ast_mask_tree_sitter.py
+  - template_maker/ast_mask_lite.py
+  - template_maker/ast_mask_select.py
+  expected_outputs:
+  - ast_mask_report.yaml
+  - selected_mask_units.yaml
+  canonical_schema:
+    ast_units_field: ast_mask_units
+    selected_units_field: selected_units
+  fallback_allowed: true
+glm_allowed:
+  default: false
+  allowed_later_for:
+  - adapter_slot_filling
+  - slot_bindings
+  forbidden_for:
+  - full_c_generation
+  - freeform_harness_generation
+  - ast_selection
+risk_notes:
+- wc_ParseCert x509 mappings currently need manual review under gate
+- Do not report candidate mapping as confirmed equivalence or vulnerability.

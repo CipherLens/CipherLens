@@ -1,0 +1,25 @@
+sprint: asn1_nested_boundary_d_path_audit_v1
+selected_family: asn1_nested_boundary
+why_scheduler_recommended:
+- Ranked first after AEAD-GCM closure because GCM candidates were downgraded and ASN.1
+  nested boundary has existing historical seeds.
+- The family has a clearer malformed-structure oracle than AEAD-GCM lifecycle legal-semantics
+  cases.
+- Available seeds include MBEDTLS-POC-0017 and OPENSSL-ISSUE-30581.
+difference_from_der_full_consumption:
+  der_full_consumption: Focuses on whether a parser accepts a valid DER object prefix
+    while ignoring trailing bytes after the top-level object.
+  asn1_nested_boundary: Focuses on malformed nested child objects, inner length/end-pointer
+    boundaries, and safe rejection inside the object.
+why_d_path_first: OPENSSL-ISSUE-30581 has crash/sanitizer metadata but the local artifact
+  uses placeholder input and is not a strict reproduction; MBEDTLS-POC-0017 is currently
+  safe/safe.
+available_historical_seeds:
+- MBEDTLS-POC-0017
+- OPENSSL-ISSUE-30581
+- OPENSSL-ISSUE-9043
+- OPENSSL-ISSUE-16196
+- OPENSSL-ISSUE-18168
+- OPENSSL-ISSUE-26106
+- OPENSSL-ISSUE-27572
+a_path_possibility: possible_later_after_D_path_reproduction_and_oracle_stabilization

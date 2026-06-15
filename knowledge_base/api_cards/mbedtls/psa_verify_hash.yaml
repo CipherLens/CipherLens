@@ -27,6 +27,9 @@ related_apis:
   - psa_import_key
   - psa_destroy_key
 mutation_hints:
+  - invalid signature acceptance
+  - bitflip signature
+  - wrong digest algorithm
   - wrong key usage flags
   - algorithm/key mismatch
   - shortened signature
@@ -35,8 +38,11 @@ oracle_observables:
   - psa_status
   - sanitizer_signal
   - error_class
+  - signature_acceptance
+known_pitfalls:
+  - PSA_ERROR_INVALID_SIGNATURE should be separated from unsupported algorithm or key usage errors
+  - hash_length mismatch may reject at API validation before signature verification
 source_references:
   - psa/crypto.h
 notes:
   - "Known pitfall: invalid signature and API misuse are separate semantic classes."
-

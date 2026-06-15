@@ -1,0 +1,171 @@
+schema: family_adapter_recipe_v1
+adapter_id: asn1_nested_boundary.openssl.family_adapter_recipe_v1
+family: asn1_nested_boundary
+source_library: wolfssl
+target_library: openssl
+template_level: family
+source_template:
+  family_template_dir: artifacts/sprints/family_template_generalization_v1/family_packages/asn1_nested_boundary
+  canonical_template: canonical_tmpl_wolfssl.c
+  family_template_meta: family_template_meta.yaml
+  selected_mask_units: selected_mask_units.yaml
+source_slots:
+  api_slots:
+  - slot_name: wc_InitDecodedCert
+    source_api: wc_InitDecodedCert
+    allowed_target_apis:
+    - mbedtls:mbedtls_x509_crt_parse_der
+    - openssl:ASN1_item_d2i
+    blocked_target_apis: []
+    mapping_gate_status:
+    - usable_for_adapter
+    notes: candidate mapping only; not confirmed equivalence
+  - slot_name: wc_ParseCert
+    source_api: wc_ParseCert
+    allowed_target_apis: []
+    blocked_target_apis:
+    - mbedtls:mbedtls_x509_crt_parse_der
+    - openssl:d2i_X509
+    mapping_gate_status:
+    - needs_manual_review
+    notes: candidate mapping only; not confirmed equivalence
+  - slot_name: wc_FreeDecodedCert
+    source_api: wc_FreeDecodedCert
+    allowed_target_apis: []
+    blocked_target_apis: []
+    mapping_gate_status:
+    - not_in_mapping_gate
+    notes: candidate mapping only; not confirmed equivalence
+  - slot_name: ASN1_item_d2i
+    source_api: ''
+    allowed_target_apis:
+    - openssl:ASN1_item_d2i
+    blocked_target_apis: []
+    mapping_gate_status:
+    - usable_for_adapter
+    notes: candidate mapping only; not confirmed equivalence
+  - slot_name: mbedtls_x509_crt_parse_der
+    source_api: ''
+    allowed_target_apis:
+    - mbedtls:mbedtls_x509_crt_parse_der
+    blocked_target_apis:
+    - mbedtls:mbedtls_x509_crt_parse_der
+    mapping_gate_status:
+    - needs_manual_review
+    - usable_for_adapter
+    notes: candidate mapping only; not confirmed equivalence
+  mutation_slots:
+  - ASN1_NESTED_LENGTH
+  - DER_BYTES
+  - TRAILING_GARBAGE
+  - NESTED_DEPTH
+  - EXPECT_RET
+  cleanup_slots:
+  - slot_name: cleanup_call
+    source_cleanup: family-specific wolfSSL cleanup/free API
+    target_cleanup_candidates: []
+    required: true
+  oracle_slots:
+  - parser_reject_accept
+target_mapping:
+  mapping_gate_status:
+  - adapter_ready
+  - needs_manual_review
+  target_apis:
+  - ASN1_item_d2i
+  candidate_only_apis:
+  - ASN1_item_d2i
+  blocked_apis:
+  - d2i_X509
+  mappings:
+  - family: asn1_nested_boundary
+    source_library: wolfssl
+    target_library: openssl
+    wolfssl_api: wc_InitDecodedCert
+    target_api: ASN1_item_d2i
+    mapping_type: semantic_related
+    required_oracle_style: parser_reject_accept
+    adapter_slot_hint: DER input, length, parser result slots
+    cleanup_mapping_hint: family-specific cleanup if object allocated
+    lifecycle_hint: candidate lifecycle must be verified by generated harness
+    risk_notes: candidate mapping only; compile/run/analyze still required
+  blocked_mappings:
+  - family: asn1_nested_boundary
+    wolfssl_api: wc_ParseCert
+    target_library: openssl
+    target_api: d2i_X509
+    reason: needs_manual_review
+    recommendation: manual_review_before_adapter
+    notes: not adapter-ready under current evidence gate
+  confirmed_equivalence: false
+slot_binding_policy:
+  glm_allowed: false
+  glm_allowed_later_for:
+  - adapter_slot_filling
+  required_bindings:
+  - api_mapping
+  - type_mapping
+  - cleanup_mapping
+  - oracle_mapping
+  - input_mapping
+  - mutation_slot_mapping
+validation:
+  require_trigger_call: true
+  require_cleanup_call: true
+  require_oracle_check: true
+  require_blocked_targets_respected: true
+  require_no_confirmed_equivalence_claim: true
+oracle_strategy:
+  primary:
+  - parser_reject_accept
+  secondary: []
+false_positive_risks:
+- api_misuse
+- candidate_mapping_not_confirmed
+- no_direct_counterpart
+- needs_manual_review_wc_ParseCert
+render_policy:
+  render_allowed_now: false
+  render_allowed_after:
+  - adapter_slot_filling
+  - adapter_validate
+compile_policy:
+  compile_allowed_now: false
+selected_mask_units_used:
+- unit_id: ASTLITE-0005
+  role: trigger_call
+  suggested_use: migrate_api_call
+- unit_id: ASTLITE-0004
+  role: trigger_call
+  suggested_use: migrate_api_call
+- unit_id: ASTLITE-0007
+  role: trigger_call
+  suggested_use: migrate_api_call
+- unit_id: ASTLITE-0009
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+- unit_id: ASTLITE-0011
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+- unit_id: ASTLITE-0001
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+- unit_id: ASTLITE-0010
+  role: helper_function
+  suggested_use: preserve_input_preparation
+- unit_id: ASTLITE-0018
+  role: cleanup
+  suggested_use: preserve_cleanup
+- unit_id: ASTLITE-0017
+  role: helper_function
+  suggested_use: preserve_input_preparation
+- unit_id: ASTLITE-0002
+  role: entrypoint
+  suggested_use: llm_reconstruction_context
+- unit_id: ASTLITE-0014
+  role: cleanup
+  suggested_use: preserve_cleanup
+notes:
+- Family-level adapter recipe skeleton only.
+- Candidate mapping is not confirmed API equivalence.
+- No GLM, render, compile, run, or C generation in this sprint.

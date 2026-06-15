@@ -1,0 +1,19 @@
+# Adapter Validate Tooling Inventory
+
+```yaml
+schema: adapter_validate_tooling_inventory_v1
+existing_validator_found: true
+existing_validator_paths:
+- migration/adapter_validate.py
+existing_validator_cli: python3 -m migration.adapter_validate --adapter-root <root>
+  --out-root <out>
+existing_validator_used: false
+new_lightweight_validator_added: true
+new_validator_path: tools/apply_pkcs_slot_bindings_and_adapter_validate_v1.py
+why_lightweight_validator: existing adapter_validate validates adapter.yaml flows;
+  this sprint validates slot_bindings.yaml policy without render/compile
+scope: structure and policy validation only; no render/compile/run
+raw_search_files:
+- artifacts/sprints/apply_pkcs_slot_bindings_and_adapter_validate_v1/validator_inventory/adapter_validate_related_rg.txt
+- artifacts/sprints/apply_pkcs_slot_bindings_and_adapter_validate_v1/validator_inventory/tooling_files.txt
+```

@@ -1,0 +1,205 @@
+call_sequences:
+- library: mbedtls
+  sequence_id: mbedtls_allocator_hook_lifecycle
+  family: secure_heap_state_lifecycle
+  api_sequence:
+  - mbedtls_platform_set_calloc_free
+  - mbedtls_calloc
+  - mbedtls_free
+  resource_lifecycle:
+    init_or_parse:
+    - mbedtls_platform_set_calloc_free
+    use:
+    - mbedtls_calloc
+  cleanup_sequence:
+  - mbedtls_free
+  status: synthetic_lifecycle_sequence
+  evidence:
+    test_or_example_supported_apis:
+    - mbedtls_calloc
+    - mbedtls_free
+  confidence: candidate
+  review_status: synthetic_lifecycle_sequence
+  import_source:
+    sprint: api_card_import_cross_library_counterparts_to_knowledge_raw_v1
+  notes: Do not treat as confirmed usage; sequence was reviewed as a synthetic lifecycle
+    candidate.
+- library: mbedtls
+  sequence_id: mbedtls_tls_config_session_io_lifecycle
+  family: tls_protocol_state_lifecycle
+  api_sequence:
+  - mbedtls_ssl_config_init
+  - mbedtls_ssl_init
+  - mbedtls_ssl_setup
+  - mbedtls_ssl_handshake
+  - mbedtls_ssl_read
+  - mbedtls_ssl_write
+  - mbedtls_ssl_free
+  - mbedtls_ssl_config_free
+  resource_lifecycle:
+    init_or_parse:
+    - mbedtls_ssl_config_init
+    use:
+    - mbedtls_ssl_init
+    - mbedtls_ssl_setup
+    - mbedtls_ssl_handshake
+    - mbedtls_ssl_read
+    - mbedtls_ssl_write
+    - mbedtls_ssl_free
+  cleanup_sequence:
+  - mbedtls_ssl_config_free
+  status: synthetic_lifecycle_sequence
+  evidence:
+    test_or_example_supported_apis:
+    - mbedtls_ssl_config_init
+    - mbedtls_ssl_init
+    - mbedtls_ssl_setup
+    - mbedtls_ssl_handshake
+    - mbedtls_ssl_read
+    - mbedtls_ssl_write
+    - mbedtls_ssl_free
+    - mbedtls_ssl_config_free
+  confidence: candidate
+  review_status: synthetic_lifecycle_sequence
+  import_source:
+    sprint: api_card_import_cross_library_counterparts_to_knowledge_raw_v1
+  notes: Do not treat as confirmed usage; sequence was reviewed as a synthetic lifecycle
+    candidate.
+- library: mbedtls
+  sequence_id: mbedtls_x509_der_parse_lifecycle
+  family: x509_parsing
+  api_sequence:
+  - mbedtls_x509_crt_init
+  - mbedtls_x509_crt_parse_der
+  - mbedtls_x509_crt_free
+  resource_lifecycle:
+    init_or_parse:
+    - mbedtls_x509_crt_init
+    use:
+    - mbedtls_x509_crt_parse_der
+  cleanup_sequence:
+  - mbedtls_x509_crt_free
+  status: synthetic_lifecycle_sequence
+  evidence:
+    test_or_example_supported_apis:
+    - mbedtls_x509_crt_init
+    - mbedtls_x509_crt_parse_der
+    - mbedtls_x509_crt_free
+  confidence: candidate
+  review_status: synthetic_lifecycle_sequence
+  import_source:
+    sprint: api_card_import_cross_library_counterparts_to_knowledge_raw_v1
+  notes: Do not treat as confirmed usage; sequence was reviewed as a synthetic lifecycle
+    candidate.
+- library: openssl
+  sequence_id: openssl_pkcs7_der_verify_lifecycle
+  family: pkcs_container_parsing
+  api_sequence:
+  - d2i_PKCS7
+  - PKCS7_verify
+  - PKCS7_free
+  resource_lifecycle:
+    init_or_parse:
+    - d2i_PKCS7
+    use:
+    - PKCS7_verify
+  cleanup_sequence:
+  - PKCS7_free
+  status: synthetic_lifecycle_sequence
+  evidence:
+    test_or_example_supported_apis:
+    - PKCS7_verify
+    - PKCS7_free
+  confidence: candidate
+  review_status: synthetic_lifecycle_sequence
+  import_source:
+    sprint: api_card_import_cross_library_counterparts_to_knowledge_raw_v1
+  notes: Do not treat as confirmed usage; sequence was reviewed as a synthetic lifecycle
+    candidate.
+- library: openssl
+  sequence_id: openssl_secure_heap_alloc_free_lifecycle
+  family: secure_heap_state_lifecycle
+  api_sequence:
+  - CRYPTO_secure_malloc_init
+  - OPENSSL_secure_malloc
+  - OPENSSL_secure_free
+  resource_lifecycle:
+    init_or_parse:
+    - CRYPTO_secure_malloc_init
+    use:
+    - OPENSSL_secure_malloc
+  cleanup_sequence:
+  - OPENSSL_secure_free
+  status: synthetic_lifecycle_sequence
+  evidence:
+    test_or_example_supported_apis:
+    - CRYPTO_secure_malloc_init
+    - OPENSSL_secure_malloc
+    - OPENSSL_secure_free
+  confidence: candidate
+  review_status: synthetic_lifecycle_sequence
+  import_source:
+    sprint: api_card_import_cross_library_counterparts_to_knowledge_raw_v1
+  notes: Do not treat as confirmed usage; sequence was reviewed as a synthetic lifecycle
+    candidate.
+- library: openssl
+  sequence_id: openssl_tls_context_session_io_lifecycle
+  family: tls_protocol_state_lifecycle
+  api_sequence:
+  - SSL_CTX_new
+  - SSL_new
+  - SSL_connect
+  - SSL_read
+  - SSL_write
+  - SSL_free
+  - SSL_CTX_free
+  resource_lifecycle:
+    init_or_parse:
+    - SSL_CTX_new
+    use:
+    - SSL_new
+    - SSL_connect
+    - SSL_read
+    - SSL_write
+    - SSL_free
+  cleanup_sequence:
+  - SSL_CTX_free
+  status: synthetic_lifecycle_sequence
+  evidence:
+    test_or_example_supported_apis:
+    - SSL_CTX_new
+    - SSL_new
+    - SSL_connect
+    - SSL_read
+    - SSL_write
+    - SSL_free
+    - SSL_CTX_free
+  confidence: candidate
+  review_status: synthetic_lifecycle_sequence
+  import_source:
+    sprint: api_card_import_cross_library_counterparts_to_knowledge_raw_v1
+  notes: Do not treat as confirmed usage; sequence was reviewed as a synthetic lifecycle
+    candidate.
+- library: openssl
+  sequence_id: openssl_x509_der_parse_lifecycle
+  family: x509_parsing
+  api_sequence:
+  - d2i_X509
+  - X509_free
+  resource_lifecycle:
+    init_or_parse:
+    - d2i_X509
+    use: []
+  cleanup_sequence:
+  - X509_free
+  status: synthetic_lifecycle_sequence
+  evidence:
+    test_or_example_supported_apis:
+    - d2i_X509
+    - X509_free
+  confidence: candidate
+  review_status: synthetic_lifecycle_sequence
+  import_source:
+    sprint: api_card_import_cross_library_counterparts_to_knowledge_raw_v1
+  notes: Do not treat as confirmed usage; sequence was reviewed as a synthetic lifecycle
+    candidate.

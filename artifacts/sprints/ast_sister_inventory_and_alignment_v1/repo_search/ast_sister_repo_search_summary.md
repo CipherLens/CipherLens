@@ -1,0 +1,111 @@
+# AST Sister Repo Search Summary
+
+- search_files:
+  - rg:
+    - path: artifacts/sprints/ast_sister_inventory_and_alignment_v1/repo_search/ast_sister_related_rg.txt
+    - line_count: 84760
+    - exists: True
+  - filename_search:
+    - path: artifacts/sprints/ast_sister_inventory_and_alignment_v1/repo_search/ast_sister_related_files.txt
+    - line_count: 2544
+    - exists: True
+  - project_files:
+    - path: artifacts/sprints/ast_sister_inventory_and_alignment_v1/repo_search/project_code_and_template_files.txt
+    - line_count: 7508
+    - exists: True
+- explicit_ast_sister_name_found: True
+- equivalent_ast_mask_pipeline_found: True
+- related_scripts:
+  - template_maker/ast_mask.py
+  - template_maker/ast_mask_lite.py
+  - template_maker/ast_mask_tree_sitter.py
+  - template_maker/ast_mask_select.py
+  - template_maker/validate_template.py
+  - template_maker/cross_generator_from_adapters.py
+  - template_maker/render_cases.py
+  - config/harness_family_ast_rules.yaml
+- tree_sitter_backend_file: template_maker/ast_mask_tree_sitter.py
+- related_historical_artifacts_sample:
+  - ./artifacts/migrations/mbedtls-poc-0001-mpi-write-string/cross_templates_recipe/BIGNUM_MPI_WRITE_STRING_NEGATIVE_SMALL_BUFFER/openssl_BN_signed_bn2bin/mask_report.yaml
+  - ./artifacts/migrations/mbedtls-poc-0002-mpi-sub-abs/cross_templates_recipe/BIGNUM_MPI_SUB_ABS_LIMB_BOUNDARY/openssl_BN_usub/mask_report.yaml
+  - ./artifacts/migrations/mbedtls-poc-0003-pk-verify-ext-null-deref/cross_templates_recipe/PK_VERIFY_EXT_OPAQUE_RSA_PSS_NULL_DEREF/openssl_EVP_DigestVerify/mask_report.yaml
+  - ./artifacts/migrations/mbedtls-poc-0004-cipher-pkcs-padding-outlen-underflow/cross_templates_recipe/CIPHER_PKCS_PADDING_INVALID_OUTLEN_UNDERFLOW/openssl_EVP_DecryptFinal_ex/mask_report.yaml
+  - ./artifacts/migrations/mbedtls-poc-0005-asn1-store-named-data-zero-len-stale-state/cross_templates_recipe/ASN1_STORE_NAMED_DATA_ZERO_LEN_STALE_STATE/openssl_ASN1_STRING_set/mask_report.yaml
+  - ./artifacts/migrations/mbedtls-poc-0011-pem-encrypted-empty-decoded-buffer-underflow/cross_templates_recipe/PEM_ENCRYPTED_EMPTY_DECODED_BUFFER_UNDERFLOW/openssl_PEM_read_bio_PrivateKey/mask_report.yaml
+  - ./artifacts/migrations/mbedtls-poc-0017-x509-asn1-inner-boundary-d2i-x509/cross_templates_recipe/X509_ASN1_INNER_SUBSTRUCTURE_BOUNDARY/openssl_d2i_X509/mask_report.yaml
+  - ./artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_PrivateKey/mask_report.yaml
+  - ./artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSAPrivateKey/mask_report.yaml
+  - ./artifacts/migrations/mbedtls-poc-0020-rsa-der-trailing-garbage/cross_templates_recipe/RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE/openssl_d2i_RSA_PUBKEY/mask_report.yaml
+  - ./artifacts/migrations/mbedtls-poc-0028-psa-aead-invalid-shortened-tag-setup/cross_templates_recipe/PSA_AEAD_INVALID_SHORTENED_TAG_SETUP/openssl_EVP_CIPHER_CTX_ctrl/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-19524-pkey-public-only-sign-null-deref/cross_templates_recipe/PKEY_PUBLIC_ONLY_SIGN_NULL_DEREF/mbedtls_psa_sign_message/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/cross_templates_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-21935-rsa-tiny-key-digest-sign-null-deref/rendered_cases_recipe/RSA_TINY_KEY_DIGEST_SIGN_NULL_DEREF/mbedtls_psa_sign_hash/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/cross_templates_recipe/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE/mbedtls_psa_mac_sign_setup/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0000/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0001/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0002/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0003/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0004/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0005/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0006/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0007/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0008/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0009/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0010/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0011/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0012/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0013/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0014/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0015/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0016/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0017/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0018/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0019/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0020/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0021/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0022/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0023/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0024/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0025/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0026/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0027/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0028/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0029/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0030/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0031/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0032/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0033/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0034/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0035/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0036/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0037/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0038/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0039/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0040/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0041/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0042/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0043/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0044/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0045/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0046/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0047/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0048/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0049/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0050/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0051/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0052/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0053/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0054/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0055/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0056/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0057/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0058/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0059/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0060/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0061/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0062/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/expanded_cross_templates/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0063/mask_report.yaml
+  - ./artifacts/migrations/openssl-issue-22842-evp-mac-get-size-uninit-lifecycle/main_chain_api_cards_v0/rendered_cases_expanded/EVP_MAC_GET_SIZE_UNINIT_LIFECYCLE__MBEDTLS_PSA_MAC_SIGN_SETUP/psa_mac_sign_setup/mac_lifecycle_0000/mask_report.yaml
+- notes:
+  - AST-SISTER appears as a concept/name in project text, but the concrete implementation is named ast_mask/ast_mask_lite/ast_mask_tree_sitter.
+  - The current equivalent pipeline produces ast_mask_report.yaml and selected_mask_units.yaml.

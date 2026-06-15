@@ -1,0 +1,139 @@
+commit 88bf5d967620f072365077fc47ea93fc78ce81e7
+Author: Jacob Barthelmeh <jacob@wolfssl.com>
+Date:   Thu May 9 10:08:11 2019 -0600
+
+    add sanity check on buffer index and regression tests
+    
+    macro guards on use case and adjustment for memory size
+    
+    gcc-8 warning fix
+    
+    adjustement to default memory bucket sizes
+
+diff --git a/wolfcrypt/src/asn.c b/wolfcrypt/src/asn.c
+index 5a0e2c64c..c9c3e99df 100644
+--- a/wolfcrypt/src/asn.c
++++ b/wolfcrypt/src/asn.c
+@@ -4594,6 +4594,9 @@ static int GetName(DecodedCert* cert, int nameType)
+         DecodedName* dName =
+                   (nameType == ISSUER) ? &cert->issuerName : &cert->subjectName;
+         int dcnum = 0;
++        #ifdef OPENSSL_EXTRA
++        int count = 0;
++        #endif
+     #endif /* OPENSSL_EXTRA */
+ 
+     WOLFSSL_MSG("Getting Cert Name");
+@@ -4826,6 +4829,10 @@ static int GetName(DecodedCert* cert, int nameType)
+             #endif
+                 XMEMCPY(&full[idx], &cert->source[cert->srcIdx], strLen);
+                 idx += strLen;
++            #if defined(OPENSSL_EXTRA)
++                /* store order that DN was parsed */
++                dName->loc[count++] = id;
++            #endif
+             }
+ 
+             cert->srcIdx += strLen;
+@@ -4896,6 +4903,10 @@ static int GetName(DecodedCert* cert, int nameType)
+             #endif
+                 XMEMCPY(&full[idx], &cert->source[cert->srcIdx], strLen);
+                 idx += strLen;
++            #if defined(OPENSSL_EXTRA)
++                /* store order that DN was parsed */
++                dName->loc[count++] = id;
++            #endif
+             }
+ 
+             cert->srcIdx += strLen;
+@@ -4977,6 +4988,10 @@ static int GetName(DecodedCert* cert, int nameType)
+                 if (!tooBig) {
+                     XMEMCPY(&full[idx], &cert->source[cert->srcIdx], adv);
+                     idx += adv;
++                #if defined(OPENSSL_EXTRA)
++                    /* store order that DN was parsed */
++                    dName->loc[count++] = ASN_EMAIL_NAME;
++                #endif
+                 }
+             }
+ 
+@@ -4994,6 +5009,11 @@ static int GetName(DecodedCert* cert, int nameType)
+                             defined(OPENSSL_EXTRA_X509_SMALL)
+                             dName->uidIdx = cert->srcIdx;
+                             dName->uidLen = adv;
++
++                            #ifdef OPENSSL_EXTRA
++                            /* store order that DN was parsed */
++                            dName->loc[count++] = ASN_USER_ID;
++                            #endif
+                         #endif /* OPENSSL_EXTRA */
+                             break;
+ 
+@@ -5006,6 +5026,11 @@ static int GetName(DecodedCert* cert, int nameType)
+                             dName->dcLen[dcnum] = adv;
+                             dName->dcNum = dcnum + 1;
+                             dcnum++;
++
++                            #ifdef OPENSSL_EXTRA
++                            /* store order that DN was parsed */
++                            dName->loc[count++] = ASN_DOMAIN_COMPONENT;
++                            #endif
+                         #endif /* OPENSSL_EXTRA */
+                             break;
+ 
+@@ -5022,6 +5047,10 @@ static int GetName(DecodedCert* cert, int nameType)
+         }
+     }
+     full[idx++] = 0;
++    #if defined(OPENSSL_EXTRA)
++    /* store order that DN was parsed */
++    dName->locSz = count;
++    #endif
+ 
+     #if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL)
+     {
+diff --git a/wolfssl/wolfcrypt/asn.h b/wolfssl/wolfcrypt/asn.h
+index 38d48717b..5c0ef6879 100644
+--- a/wolfssl/wolfcrypt/asn.h
++++ b/wolfssl/wolfcrypt/asn.h
+@@ -214,11 +214,15 @@ enum ECC_TYPES
+ #define ASN_JOI_ST     0x2
+ 
+ #ifndef WC_ASN_NAME_MAX
+-    #define WC_ASN_NAME_MAX 256
++    #ifdef OPENSSL_EXTRA
++        #define WC_ASN_NAME_MAX 300
++    #else
++        #define WC_ASN_NAME_MAX 256
++    #endif
+ #endif
++#define ASN_NAME_MAX WC_ASN_NAME_MAX
+ 
+ enum Misc_ASN {
+-    ASN_NAME_MAX        = WC_ASN_NAME_MAX,
+     MAX_SALT_SIZE       =  64,     /* MAX PKCS Salt length */
+     MAX_IV_SIZE         =  64,     /* MAX PKCS Iv length */
+     ASN_BOOL_SIZE       =   2,     /* including type */
+@@ -538,6 +542,7 @@ struct Base_entry {
+ };
+ 
+ #define DOMAIN_COMPONENT_MAX 10
++#define DN_NAMES_MAX 9
+ 
+ struct DecodedName {
+     char*   fullName;
+@@ -585,6 +590,14 @@ struct DecodedName {
+     int     dcLen[DOMAIN_COMPONENT_MAX];
+     int     dcNum;
+     int     dcMode;
++#ifdef OPENSSL_EXTRA
++    /* hold the location / order with which each of the DN tags was found
++     *
++     * example of ASN_DOMAIN_COMPONENT at index 0 if first found and so on.
++     */
++    int     loc[DOMAIN_COMPONENT_MAX + DN_NAMES_MAX];
++    int     locSz;
++#endif
+ };
+ 
+ enum SignatureState {

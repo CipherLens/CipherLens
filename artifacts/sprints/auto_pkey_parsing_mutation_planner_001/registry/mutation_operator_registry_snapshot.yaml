@@ -1,0 +1,77 @@
+schema: mutation_operator_registry_v1
+operators:
+  valid_object_plus_trailing_garbage:
+    canonical_strategy: der_valid_plus_trailing_garbage
+    input_format: der
+    output_suffix: .der
+    trailing_bytes_hex: '00'
+    parser_accept_expected: true
+    full_consumption_check_required: true
+    malformed_only_control: false
+    render_allowed: true
+    notes:
+    - valid DER object plus trailing garbage for full-consumption oracle probing
+  pem_valid_plus_trailing_garbage:
+    canonical_strategy: pem_valid_plus_trailing_garbage
+    input_format: pem
+    output_suffix: .pem
+    trailing_text: '
+
+      # trailing-garbage
+
+      '
+    parser_accept_expected: true
+    full_consumption_check_required: true
+    malformed_only_control: false
+    render_allowed: true
+    notes:
+    - valid PEM object plus trailing text for parser tolerance probing
+  malformed_only_control:
+    canonical_strategy: malformed_only_control
+    input_format: der
+    output_suffix: .der
+    static_bytes_hex: '30820008020101'
+    parser_accept_expected: false
+    full_consumption_check_required: false
+    malformed_only_control: true
+    render_allowed: true
+    notes:
+    - malformed-only control to calibrate reject-path oracle
+  near_valid_length_delta:
+    canonical_strategy: near_valid_der_length_delta
+    input_format: der
+    output_suffix: .der
+    parser_accept_expected: false
+    full_consumption_check_required: true
+    malformed_only_control: false
+    render_allowed: true
+    notes:
+    - near-valid DER with a small length mutation
+  valid_prefix_trailing_only:
+    canonical_strategy: valid_prefix_trailing_only
+    input_format: der
+    output_suffix: .der
+    trailing_bytes_hex: ff00
+    parser_accept_expected: true
+    full_consumption_check_required: true
+    malformed_only_control: false
+    render_allowed: true
+  truncated_tail:
+    canonical_strategy: truncated_tail
+    input_format: der
+    output_suffix: .der
+    truncate_bytes: 1
+    parser_accept_expected: false
+    full_consumption_check_required: true
+    malformed_only_control: false
+    render_allowed: true
+  format_toggle_der_pem:
+    canonical_strategy: format_toggle_der_pem
+    input_format: pem
+    output_suffix: .der
+    parser_accept_expected: false
+    full_consumption_check_required: false
+    malformed_only_control: true
+    render_allowed: false
+    notes:
+    - format-toggle placeholder requires a converter before render readiness

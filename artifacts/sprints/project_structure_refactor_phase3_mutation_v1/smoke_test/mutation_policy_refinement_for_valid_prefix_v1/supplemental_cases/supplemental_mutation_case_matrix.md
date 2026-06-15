@@ -1,0 +1,292 @@
+# Supplemental Mutation Case Matrix
+
+```yaml
+schema: supplemental_mutation_case_matrix_v1
+generated_at: '2026-06-12T08:08:52+00:00'
+base_reason: accepted_true_zero_in_oracle_aware_analysis
+cases:
+- supplemental_case_id: asn1_nested_boundary_openssl__supp_001__valid_der_plus_trailing_garbage
+  base_family: asn1_nested_boundary
+  derived_from_case_id: asn1_nested_boundary_openssl__mut_002__trailing_garbage
+  refinement_strategy: valid_object_plus_trailing_garbage
+  mutation_assignments:
+  - slot_name: DER_BYTES
+    mutation_type: valid_control
+    mutation_value_strategy: reuse_valid_der_seed_prefix
+    preserves_valid_prefix: true
+    preserves_outer_container: true
+    expected_accept_path_probability: high
+  - slot_name: TRAILING_GARBAGE
+    mutation_type: boundary
+    mutation_value_strategy: append_00_after_valid_object
+    preserves_valid_prefix: true
+    preserves_outer_container: true
+    expected_accept_path_probability: high
+  expected_result_label: full_consumption_probe
+  target_library: openssl
+  oracle_focus:
+  - accepted
+  - full_consumption
+  - consumed_len
+  - openssl_error
+  render_allowed: true
+  render_block_reason: ''
+  notes:
+  - supplemental planning case only; no render/compile/run performed
+  - accepted-path observation must be validated in a later sprint
+- supplemental_case_id: asn1_nested_boundary_openssl__supp_002__valid_prefix_trailing_only_ff00
+  base_family: asn1_nested_boundary
+  derived_from_case_id: asn1_nested_boundary_openssl__mut_002__trailing_garbage
+  refinement_strategy: valid_prefix_trailing_only
+  mutation_assignments:
+  - slot_name: DER_BYTES
+    mutation_type: valid_control
+    mutation_value_strategy: preserve_seed_exact
+    preserves_valid_prefix: true
+    preserves_outer_container: true
+    expected_accept_path_probability: high
+  - slot_name: TRAILING_GARBAGE
+    mutation_type: boundary
+    mutation_value_strategy: append_ff00_after_valid_object
+    preserves_valid_prefix: true
+    preserves_outer_container: true
+    expected_accept_path_probability: high
+  expected_result_label: full_consumption_probe
+  target_library: openssl
+  oracle_focus:
+  - accepted
+  - full_consumption
+  - consumed_len
+  - openssl_error
+  render_allowed: true
+  render_block_reason: ''
+  notes:
+  - supplemental planning case only; no render/compile/run performed
+  - accepted-path observation must be validated in a later sprint
+- supplemental_case_id: asn1_nested_boundary_openssl__supp_003__outer_sequence_inner_length_plus_one
+  base_family: asn1_nested_boundary
+  derived_from_case_id: asn1_nested_boundary_openssl__mut_005__nested_length_mismatch
+  refinement_strategy: preserve_outer_container_mutate_inner
+  mutation_assignments:
+  - slot_name: DER_BYTES
+    mutation_type: valid_control
+    mutation_value_strategy: preserve_outer_sequence_seed
+    preserves_valid_prefix: true
+    preserves_outer_container: true
+    expected_accept_path_probability: medium
+  - slot_name: ASN1_NESTED_LENGTH
+    mutation_type: boundary
+    mutation_value_strategy: small_delta_plus_one_inner_only
+    preserves_valid_prefix: true
+    preserves_outer_container: true
+    expected_accept_path_probability: medium
+  expected_result_label: near_valid_reject_probe
+  target_library: openssl
+  oracle_focus:
+  - accepted
+  - full_consumption
+  - consumed_len
+  - openssl_error
+  render_allowed: true
+  render_block_reason: ''
+  notes:
+  - supplemental planning case only; no render/compile/run performed
+  - accepted-path observation must be validated in a later sprint
+- supplemental_case_id: asn1_nested_boundary_openssl__supp_004__outer_sequence_inner_length_minus_one
+  base_family: asn1_nested_boundary
+  derived_from_case_id: asn1_nested_boundary_openssl__mut_003__short_length
+  refinement_strategy: near_valid_small_length_delta
+  mutation_assignments:
+  - slot_name: DER_BYTES
+    mutation_type: valid_control
+    mutation_value_strategy: preserve_outer_sequence_seed
+    preserves_valid_prefix: true
+    preserves_outer_container: true
+    expected_accept_path_probability: medium
+  - slot_name: ASN1_NESTED_LENGTH
+    mutation_type: boundary
+    mutation_value_strategy: small_delta_minus_one_inner_only
+    preserves_valid_prefix: true
+    preserves_outer_container: true
+    expected_accept_path_probability: medium
+  expected_result_label: near_valid_reject_probe
+  target_library: openssl
+  oracle_focus:
+  - accepted
+  - full_consumption
+  - consumed_len
+  - openssl_error
+  render_allowed: true
+  render_block_reason: ''
+  notes:
+  - supplemental planning case only; no render/compile/run performed
+  - accepted-path observation must be validated in a later sprint
+- supplemental_case_id: asn1_nested_boundary_openssl__supp_005__valid_prefix_truncated_tail_one_byte
+  base_family: asn1_nested_boundary
+  derived_from_case_id: asn1_nested_boundary_openssl__mut_003__short_length
+  refinement_strategy: valid_prefix_trailing_only
+  mutation_assignments:
+  - slot_name: DER_BYTES
+    mutation_type: boundary
+    mutation_value_strategy: preserve_valid_prefix_truncate_tail_one_byte
+    preserves_valid_prefix: true
+    preserves_outer_container: false
+    expected_accept_path_probability: medium
+  expected_result_label: near_valid_reject_probe
+  target_library: openssl
+  oracle_focus:
+  - accepted
+  - full_consumption
+  - consumed_len
+  - openssl_error
+  render_allowed: true
+  render_block_reason: ''
+  notes:
+  - supplemental planning case only; no render/compile/run performed
+  - accepted-path observation must be validated in a later sprint
+- supplemental_case_id: asn1_nested_boundary_openssl__supp_006__nested_depth_near_valid
+  base_family: asn1_nested_boundary
+  derived_from_case_id: asn1_nested_boundary_openssl__mut_006__nested_depth_variation
+  refinement_strategy: preserve_outer_container_mutate_inner
+  mutation_assignments:
+  - slot_name: DER_BYTES
+    mutation_type: valid_control
+    mutation_value_strategy: preserve_seed_exact
+    preserves_valid_prefix: true
+    preserves_outer_container: true
+    expected_accept_path_probability: medium
+  - slot_name: NESTED_DEPTH
+    mutation_type: boundary
+    mutation_value_strategy: increase_depth_by_one_only
+    preserves_valid_prefix: true
+    preserves_outer_container: true
+    expected_accept_path_probability: medium
+  expected_result_label: accept_path_probe
+  target_library: openssl
+  oracle_focus:
+  - accepted
+  - full_consumption
+  - consumed_len
+  - openssl_error
+  render_allowed: true
+  render_block_reason: ''
+  notes:
+  - supplemental planning case only; no render/compile/run performed
+  - accepted-path observation must be validated in a later sprint
+- supplemental_case_id: pkcs_container_parsing_openssl__supp_001__valid_pkcs12_seed_required
+  base_family: pkcs_container_parsing
+  derived_from_case_id: pkcs_container_parsing_openssl__mut_001__seed_preserving_baseline
+  refinement_strategy: seed_required_pending
+  mutation_assignments:
+  - slot_name: CONTAINER_BYTES
+    mutation_type: valid_control
+    mutation_value_strategy: verified_valid_pkcs12_der_required
+    preserves_valid_prefix: true
+    preserves_outer_container: true
+    expected_accept_path_probability: unknown
+  expected_result_label: seed_required_pending
+  target_library: openssl
+  oracle_focus:
+  - accepted
+  - full_consumption
+  - consumed_len
+  - openssl_error
+  render_allowed: false
+  render_block_reason: missing_valid_pkcs_seed
+  notes:
+  - supplemental planning case only; no render/compile/run performed
+  - accepted-path observation must be validated in a later sprint
+- supplemental_case_id: pkcs_container_parsing_openssl__supp_002__valid_pkcs12_plus_trailing_seed_required
+  base_family: pkcs_container_parsing
+  derived_from_case_id: pkcs_container_parsing_openssl__mut_002__trailing_garbage
+  refinement_strategy: seed_required_pending
+  mutation_assignments:
+  - slot_name: CONTAINER_BYTES
+    mutation_type: valid_control
+    mutation_value_strategy: verified_valid_pkcs12_der_required
+    preserves_valid_prefix: true
+    preserves_outer_container: true
+    expected_accept_path_probability: unknown
+  - slot_name: TRAILING_BYTES
+    mutation_type: boundary
+    mutation_value_strategy: append_00_after_valid_pkcs_object
+    preserves_valid_prefix: true
+    preserves_outer_container: true
+    expected_accept_path_probability: unknown
+  expected_result_label: seed_required_pending
+  target_library: openssl
+  oracle_focus:
+  - accepted
+  - full_consumption
+  - consumed_len
+  - openssl_error
+  render_allowed: false
+  render_block_reason: missing_valid_pkcs_seed
+  notes:
+  - supplemental planning case only; no render/compile/run performed
+  - accepted-path observation must be validated in a later sprint
+- supplemental_case_id: pkcs_container_parsing_openssl__supp_003__preserve_outer_pkcs_mutate_inner_seed_required
+  base_family: pkcs_container_parsing
+  derived_from_case_id: pkcs_container_parsing_openssl__mut_004__nested_length_mismatch
+  refinement_strategy: seed_required_pending
+  mutation_assignments:
+  - slot_name: CONTAINER_BYTES
+    mutation_type: valid_control
+    mutation_value_strategy: verified_valid_pkcs_container_required
+    preserves_valid_prefix: true
+    preserves_outer_container: true
+    expected_accept_path_probability: unknown
+  - slot_name: NESTED_LENGTH_DELTA
+    mutation_type: boundary
+    mutation_value_strategy: small_inner_delta_only
+    preserves_valid_prefix: true
+    preserves_outer_container: true
+    expected_accept_path_probability: unknown
+  expected_result_label: seed_required_pending
+  target_library: openssl
+  oracle_focus:
+  - accepted
+  - full_consumption
+  - consumed_len
+  - openssl_error
+  render_allowed: false
+  render_block_reason: missing_valid_pkcs_seed
+  notes:
+  - supplemental planning case only; no render/compile/run performed
+  - accepted-path observation must be validated in a later sprint
+- supplemental_case_id: pkcs_container_parsing_openssl__supp_004__near_valid_pkcs_length_delta_seed_required
+  base_family: pkcs_container_parsing
+  derived_from_case_id: pkcs_container_parsing_openssl__mut_003__malformed_length
+  refinement_strategy: seed_required_pending
+  mutation_assignments:
+  - slot_name: CONTAINER_BYTES
+    mutation_type: valid_control
+    mutation_value_strategy: verified_valid_pkcs_container_required
+    preserves_valid_prefix: true
+    preserves_outer_container: true
+    expected_accept_path_probability: unknown
+  - slot_name: NESTED_LENGTH_DELTA
+    mutation_type: boundary
+    mutation_value_strategy: small_delta_minus_one_only
+    preserves_valid_prefix: true
+    preserves_outer_container: true
+    expected_accept_path_probability: unknown
+  expected_result_label: seed_required_pending
+  target_library: openssl
+  oracle_focus:
+  - accepted
+  - full_consumption
+  - consumed_len
+  - openssl_error
+  render_allowed: false
+  render_block_reason: missing_valid_pkcs_seed
+  notes:
+  - supplemental planning case only; no render/compile/run performed
+  - accepted-path observation must be validated in a later sprint
+summary:
+  total_cases: 10
+  render_allowed_cases: 6
+  pending_seed_cases: 4
+  pkcs_cases: 4
+  asn1_cases: 6
+```

@@ -1,0 +1,205 @@
+406365ec1 TLS ECH keylogging
+c674cec4a api.c: move out tests into other files
+7592b481e test: dtls: add WOLFSSL_DTLS13_5_9_0_COMPAT related tests
+8f477356c dtls: add compat flag for buggy pre 5.9.0 DTLSv1.3 clients
+e3b291589 TLS ECH outerExtensions (client-side)
+061311d6c zd/21661: harden X.509 chain validation, session ticket identity binding, and peer cert restore
+e5f569ad7 TLS 1.3: evict session from cache after accepted 0-RTT resumption
+8b378bcfd fixup! DTLS1.3: Implement RFC 9147 legacy_session_id_echo requirements
+3b0b50e39 DTLS1.3: Implement RFC 9147 legacy_session_id_echo requirements
+46f632038 Fix PQC hybrid KeyShare pointer sanity.
+4c75a866d Add inline documentation for missing macros and fix spelling errors
+58625d1f0 corrections for ECH specification
+cb2d69355 bad rebase + fixing dtls13 support for ECH
+a2fe12a38 TLS ECH OuterExtensions support (Server side)
+0a99a08b0 ssl_sess: check fields in wolfSSL_d2i_SSL_SESSION.
+1537f83c2 Enforce null compression in compression_methods list`
+e9a2f27b2 Address peer review
+38b52d807 nginx 1.28.1
+0463e3771 Pad session ID with 0s if session ticket length is less than ID_LEN. Prevents underflow in SetTicket. Thanks to Arjuna Arya for discovering and reporting this.
+86212fd33 add test for session deserialization input validation
+43d831ff0 API testing: split out more test cases
+0b2fb66af api.c: Split out more functions
+b40e3d479 api.c: split out more tests into separate files
+56263d957 fixup! Push/pop to/from the end of the list object
+1b404e844 tests quic: fix assignment where comparison intended warning.
+40588574c tests quic: clean up line lengths.
+8d90e321c coverity: tests quic cleanup.
+c6974a921 fix for return values of write_ex/read_ex, propogate PARAMS, handle CRL with load_verify_locations, fix for get verified/unverified chain
+8ff79dc26 Add size checks to sessionID
+547cdeac1 src/ssl_sess.c: in wolfSSL_CTX_flush_sessions(), add missing check of s->sessionIDSz, similar to the fix to TlsSessionCacheGetAndLock() in #8182 (ef67b1c06a).  also, add missing macro to .wolfssl_known_macro_extras.
+3444d5c52 Fixes from compatibility header decoupling PR #8182. Fixes issue with wolfEngine and wolfProvider.  Change behavior for openssl compatibility headers to be installed unless `--enable-opensslextra=noinstall` is used. Removed dependency on X509 small with SESSION_CERTS, KEEP_PEER_CERTS and KEEP_OUR_CERT.
+ef67b1c06 Support for building without wolfssl/openssl header files. ZD 18465 * Fix for `TlsSessionCacheGetAndLock` that was not checking the sessionIDSz, so could return a pointer to an invalid session (if 0's). Resolves issue with `test_wolfSSL_CTX_sess_set_remove_cb` test. * Fix cast warning with `HAVE_EX_DATA` in Windows VS. * Fix openssl_extra without PKCS12. * Refactor the EX data crypto and session API's to gate on `HAVE_EX_DATA_CRYPTO`. * Grouped the EX data API's in ssl.h * Moved API's in ssl.h to separate the compatibility ones from ours.
+5d86031f5 Initialize vars & change types to appease Windows/VS
+25e32c253 Fix for TLS v1.2 session resumption with tickets where the server decides to do a full handshake. The wrong sessionIDSz was being checked and should be the arrays one since it get set from the server_hello.
+2847cbfba Simplify TLS 1.2 session ID logic
+b178138d8 src/internal.c: in wolfSSL_ERR_reason_error_string(), add missing error string for SCR_DIFFERENT_CERT_E, and de-gate error strings previously gated on HAVE_HTTP_CLIENT.
+affd0a318 Fix sign conversion errors
+8e9810e87 ssl.c: Move functions out to separate files
+d0c2609eb stop ProcessPeerCerts from reseting the cert chain
+dee32247b Code review
+bfe7bc0fc Recover when the client sends a 0-length session ID when using tickets
+0abaa8978 Add support for nginx-1.25.0
+2248140bf Clear ssl->arrays->sessionIDSz at start of function
+57e53d1a4 Don't allow a resumption handshake inside of a SCR
+fd17fa3e9 Implement the option to disable CRL check Do leaf CRL check by default Correct wolfSSL_sk_X509_NAME_push return check Update OpenSSL compatibility errors for HAProxy Change X509_V to literal constant values Fix the compat layer with TLS session ticket reuse Fix for tls1_2 session resume and cache miss Save intitial wolfSSL ctx Check for OpenSSL CRL error code 23
+291c538e5 Ignore session ID's shorter than 32 bytes instead of erroring out
+578f56e60 Test api.c: change more tests to use Expect instead of Assert
+e467112a9 Test api.c: change more tests to use Expect instead of Assert
+ccb9bdd90 set dev ID with signature check (#6318)
+1106e5ff0 TLS v1.3: Support a stateful ticket and test HAVE_EXT_CACHE (#5960)
+18e0c2848 Only send session ID in resumed ClientHello from SendTls13ClientHello() if ssl->options.resuming
+885106584 cppcheck fixes
+17e20b8c3 Server ID - long id, TLS 1.3 - cache client session for tickets
+5f39c594a TLS 1.3: hold decrypted ticket to check which ciphersuite matches
+5f6575241 Refactor alerts into one location
+c15043b19 Refactor SendStatelessReply 1.3 branch into new function
+aa9dcca62 Rebase and Jenkins fixes
+984d709db dtls 1.3: Stateless ClientHello parsing
+5a77db3f2 Add dynamic session cache which allocates sessions from the heap.
+55a7e24cf Support pthread_rwlock (#5952)
+9d73c197e Move X509_V errors from enums to defines for HAProxy CLI (#5901)
+abbba4815 tests: add tests for stateless dtls v1.2 cookie
+af00c89f1 dtls v1.2: stateless support WOLFSSL_DTLS_NO_HVR_ON_RESUME
+cc7dad3ee dtls v1.2: support stateless client hello processing
+43809b5f9 SSL session retrieval: check protocol version
+ae4228f92 tests: add WOLFSSL_TICKE_NONCE_MALLOC tests
+e565d0d7d Refactor and code review
+a66516d3a Extending quic resumption tests.
+4431438fb add QUIC support.
+fd412ed29 Fix so curl can do FTPS on TLS 1.3 with session resumption.
+1c7f64cce Fixes for sniffer session ticket resumption with TLS v1.2. ZD14531.
+720030b5a Improvements to error handling for `AddSessionToClientCache`.
+63b4c475d wolfSSL_set_session_secret_cb: fix for NULL input
+1b29f7353 Check memory is zeroized
+f1ce0cc95 Memory zeroization fixes
+7f8f0dcff Refactor cache ex_data update/retrieve into one function
+b6b007de3 Call ctx->rem_sess_cb when a session is about to be invalid
+25aa0af26 ssl.c break out
+29c120356 Sniffer asynchronous support. * Adds stateful handling of DH shared secret computation in `SetupKeys`. * Improved the decrypt handling to use internal functions and avoid generating alerts on failures. * Fix for sniffer resume due to missing `sessionIDSz` broken in #4807. * Fix sniffer test cases to split resume (session_ticket) tests. * Add `snifftest` list of build features so test script can gate running resume test.
+b402102e5 Add backwards compatibility for `wolfSSL_get_session`
+ceff40126 Fixes for Jenkins tests
+91b08fb69 Allocate `ssl->session` separately on the heap
+1d712d47b Access to session cache is now atomic
+afca455cd stunnel 5.61 support
+b7cecbacb update headers to resolve clang-tidy carping (mostly bugprone-macro-parentheses and readability-named-parameter).  also disables MSC C4028 because incompatible with readability-avoid-const-params-in-decls.
+b69dc00bd src/internal.c: fixes for cppcheck complaints: nullPointerRedundantCheck uninitvar
+569c066fa Improve TLS client side session cache references to provide option for not returning an internal session cache pointer. Now use `wolfSSL_get1_sesson` for reference logic, that requires calling `wolfSSL_SESSION_free`. To disable this feature use `NO_SESSION_CACHE_REF`.
+0b4f34d62 typographic cleanup: fix whitespace, remove unneeded UTF-8, convert C++ comment constructs to C.
+c8926a45a Improvements to session locking to allow per-row. Can manually be enabled with `ENABLE_SESSION_CACHE_ROW_LOCK` or forcefully disabled using `NO_SESSION_CACHE_ROW_LOCK`. Enabled by default for Titan cache. ZD 12715.
+fe77e29ba Fix for SNI refactor handling of return codes. Fix for possible use of NULL on client array.
+3ff21171c Fix for secure renegotiation, which was not keeping handshake resources. Added NULL checks for case where handshake resources might be free'd to prevent possible use of NULL. Refactor the SNI client hello processing to not assume TLS header is in prior buffer (not there for decrypted handshake packets).
+ddbe0e6da Fix for sniffer stats on resume miss. The logic for `hello_retry_request` will no longer try and do resume, so restore `BAD_SESSION_RESUME_STR` error.
+2ca655020 Reorg of ssl.c: PKCS7, PKCS12, crypto-only APIs isolated
+2e4e65f51 Asynchronous support for TLS v1.3 TLSX ECC/DH key generation and key agreement * Added async support to `SendTls13ClientHello`, `DoTls13ServerHello` and `DoTls13ClientHello`. * Cleanup of the example client/server use key share code. * Fix some scan-build warnings. ZD 12065
+2b6f62377 Add implementation for wolfSSL_SESSION_is_resumable.
+e80158a96 Set full chain with known CA's in wolfSSL_set_peer_cert_chain
+031ce6854 Differentiate between server and client sessions
+5cda549d0 Allow passing multiple keys (comma separated) with the sniffer test tool. This allows setting both DH and ECC static ephemeral keys. Do not fail on resume not found.
+1c87f3bdc Improve sniffer resume logic.
+3e0d47854 Fix for sniffer with TLS v1.2 session ticket. Logic broken in PR #3044. ZD 10926.
+1b051d9c5 TLS v1.3 sniffer support: * Added TLS v1.3 sniffer support using static ephemeral key. * Add support for using a static ephemeral DH and ECC keys with TLS v1.3 using `WOLFSSL_STATIC_EPHEMERAL`. * Adds new API's `wolfSSL_CTX_set_ephemeral_key` and `wolfSSL_set_ephemeral_key`. * Expanded TLS extension support in sniffer. * Refactor of the handshake hashing code. * Added parameter checking to the TLS v1.3 key derivations (protects use of "DoTls13Finished" if handshake resources have been free'd). * Added support for loading DH keys via `wc_DhImportKeyPair` and `wc_DhExportKeyPair`, enabled with `WOLFSSL_DH_EXTRA`. * Added sniffer documentation `sslSniffer/README.md`.
+3af4316cf Fix for session test with TLS v1.3 and session tickets not enabled. Cleanups in `AddSession`.
+cd1c2d5fa Enable TLS v1.3 by default. Remove old TLS v1.3 draft build support.
+dd6807410 Fix merge issues
+c2c3e0d4a add initial implementation for wolfSSL_SESSION_get0_peer
+f13cee268 Add comments above functions
+ee13dfd87 Add Qt 5.12 and 5.13 support
+9be1b4cfd Remove tabs
+a892f2a95 Changes for nginx 1.15 - ssl.c: add to check to overwrite existing session ID if found - evp.c: wolfSSL_EVP_DecryptFinal* was checking for wrong value
+c6fa49d4b wolfSSL ABI Add the ABI tag to the prescribed list of functions in the header and source files.
+f2a3da94b refactor some openssl extra functions for cryptonly use
+3cdb4f8bf Sniffer Watch Cert Chain Modifed the sniffer watch callback so it provides a SHA-256 hash of the peer certificate, as before, and the entire certificate chain sent by the server in the Certificate handshake message. The chain is taken directly from the message payload, unprocessed. It'll be a list of pairs of 24-bit certificate length and a DER encoded certificate, all in network byte order.
+b61803f16 Sniffer Watch Mode Added the build option for the Watch mode for the sniffer. Instead of setting a set of IP addresses and keys, you set a callback function. When any TLS connection is started, the hook is called and a hash of the peer certificate is given to the callback function. It has a chance to load a private key into the sniffer session. Enable this option with the build flag "WOLFSSL_SNIFFER_WATCH".
+c600f7659 Sniffer Statistics Added more of the statistics.
+57d8e070f 1. Remove the clearing of the sessionID from Rehandshake. 2. Put SecureResume in terms of a regular resume, using Get/SetSession and then calling Rehandshake. 3. Add the startScr after checking secure_renegotiation enabled during a resume.
+a376e17ae Switch the bound for the XMEMSET of the sessionID when starting a renegotiation to use sizeof the sessionID rather than the constat used to set the size of the array.
+1f6314746 Secure Renegotiation 1. Split the wolfSSL_Rehandshake() function into wolfSSL_Rehadshake() which performs a full handshake on secure renegotiation and wolfSSL_SecureResume() which performs a session resumption on a secure renegotiation. 2. Add option to example client to perform a secure resumption instead of a full secure handshake.
+95bd340de Add support for more OpenSSL APIs
+029368699 Added example client/server support for loading certificate and private key into WOLFSSL object using `-H loadSSL`. Added `load_ssl_buffer` function to load buffers into WOLFSSL objects. Changed `wolfSSL_get_SSL_CTX` API to always be exposed. Added `TEST_LOAD_BUFFER` build option to use the `load_buffer` and `load_ssl_buffer` calls for example client/server.
+bbdb17975 Adds build option `WOLFSSL_EITHER_SIDE` for deferring the "side" of the TLS session until first connect or accept. Added the DTLS generic v1.0 and v1.2 methods for "either" side. Added "either" methods unit tests. Added "either" -v e support to example client/server. Fix to expose `wolfSSL_use_certificate_file` and `wolfSSL_use_PrivateKey_file` without `OPENSSL_EXTRA`. Cleanup of the methods for (void)heap and log messages. Spelling fixes.
+fd01659ba Obj_obj2nid
+ffc0f0fb2 Fix for building with `SESSION_CERTS` using pointer after free. Documented `store->discardSessionCerts`.
+498d8e6c1 Fix for old certs not discarded when server does not resume session
+506c858ed Add memory usage tracking and logging
+bb574d28b Support for more cert subject OIDs and raw subject access (#1734)
+586874b99 Rename INLINE 1. Renamed the macro INLINE as WC_INLINE. 2. For FIPS and the "selftest" build, define INLINE as WC_INLINE. Allows the FIPS code to work unchanged.
+94157634e TLS 1.3 fixes/improvements
+da4024b46 Fix downgrading from TLS v1.3 to TLS v1.2
+5f14de33e Changes for TLS v1.3 Draft 22
+32bf16363 update base64 WOLFSSL_BIO encoding and checking session context ID
+c6988b74b Remove unused files
+c195c8599 merge master
+4c8d22808 Added `WOLFSSL_ALT_CERT_CHAINS` option to enable checking cert aginst multiple CA's. Added new API's for `wolfSSL_get_peer_alt_chain` and `wolfSSL_is_peer_alt_cert_chain`, which allow a way to know if alternate cert chain is used and provides a way to get it (when `SESSION_CERTS` is defined). Cleanup of the defines to enable debugging certs (just use `SHOW_CERTS` now).
+31ac379c4 Code review fixes
+5bddb2e4e Changes for Nginx
+d2ce95955 Improvements to TLS v1.3 code
+4edcbc79c RipeMd and Sha224 added to unit test.
+570befb63 Fixes for using async. Combine duplicate `DoCertificate` and `DoTls13Certificate` code into `ProcessPeerCerts`. Cleanup of the XMALLOC/XFREE to use ssl->heap.
+2b1e9973e Add TLS v1.3 as an option
+dbb67d858 warnings for builds of haproxy, nginx, and leanpsk
+c1640e8a3 Intel QuickAssist (QAT) support and async enhancements/fixes: * Adds ./configure "--with-intelqa=../QAT1.6”, port files, memory management and README.md (see wolfcrypt/src/port/intel/). * Added Intel QAT support for RSA public/private (CRT/non-CRT), AES CBC/GCM, ECDH/ECDSA, DH, DES3, SHA, SHA224, SHA256, SHA384, SHA512, MD5 and HMAC. * wolfSSL async enabled all client and server: PKI, Encrypt/Decrypt, Hashing/HMAC and Certificate Sign/Verify. * wolfSSL async support in functions: Encrypt, Decrypt, VerifyMAC, BuildMessage, ConfirmSignature, DoCertificate, ParseCertRelative, and MakeSignature. * wolfCrypt test and benchmark async support added for all HW acceleration. * wolfCrypt benchmark multi-threading support. * Added QuickAssist memory overrides for XMALLOC, XFREE and XREALLOC. XREALLOC determines if existing pointer needs reallocated for NUMA. * Refactor to make sure “heap” is available for async dev init. * Added async support for all examples for connect, accept, read and write. * Added new WC_BIGINT (in wolfmath.c) for async hardware support. * Added async simulator tests for DES3 CBC, AES CBC/GCM. * Added QAT standalone build for unit testing. * Added int return code to SHA and MD5 functions. * Refactor of the async stack variable handling, so async operations have generic args buffer area and cleanup function pointer. * Combined duplicate code for async push/pop handling. * Refactor internal.c to add AllocKey / FreeKey. * Refactor of hash init/free in TLS to use InitHashes and FreeHashes. * Refactor of the async event->context to use WOLF_EVENT_TYPE_ASYNC_WOLFSSL for WOLFSSL* and WOLF_EVENT_TYPE_ASYNC_WOLFCRYPT for WC_ASYNC_DEV*. * Suppress error message for WC_PENDING_E. * Implemented "wolfSSL_EVP_MD_CTX_init" to do memset. * Cleanup of the openssl compat CTX sizes when async is enabled. * Cleanup of AES, DES3, DH, SHA, MD5, DES3, DH, HMAC, MD5 for consistency and readability. * Cleanup of the OPAQUE_LEN. * Cleanup to use ENCRYPT_LEN instead of sizeof(ssl->arrays.preMasterSecret). * Changed ssl->arrays.preMasterSecret to use XMALLOC (accelerates HW operations) * Reduce verbosity with debug enabled for "GetMyVersion", "wolfSSL Using RSA OAEP padding" and "wolfSSL Using RSA PKCSV15 padding". * Updated RSA un-padding error message so its different than one above it for better debugging. * Added QAT async enables for each algorithm. * Refactor of the async init to use _ex. * Added WC_ASYNC_THRESH_NONE to allow bypass of the async thresholds for testing. * Reformatted the benchmark results: PKI: "RSA 2048 private HW 18522 ops took 1.003 sec, avg 0.054 ms, 18467.763 ops/sec" Crypto/Hashing: SHA-256 SW 350 megs took 1.009 seconds, 346.946 MB/s Cycles per byte = 9.87 * Added min execution time for all benchmarks. * Moved wc_*GetHash and wc_*RestorePos to appropriate files so use of isCopy flag is local. * Fix for ECC sign status sometimes being invalid due to uninitialized ECC digest in benchmark. * Added new DECLARE_VAR/FREE_VAR and DECLARE_ARRAY/FREE_ARRAY macros for helping setup test/benchmark variables to accelerate async. * Added NO_SW_BENCH option to only run HW bench. * Added support for PRNG to use hardware SHA256 if _wc devId provided. * Fix to prevent curve tests from running against wrong curve sizes. Changed wc_ecc_set_curve to match on exact size. * Added the wc_*GetHash calls to the wolfCrypt tests. * Added async hardware start/stop to wolfSSL init/cleanup. * Refactor to add wc_*Copy for hashing context (for async), which replaces wc_*RestorePos. * Fixes for building with TI hashing (including: SHA224, missing new API’s and building with dummy build for non hw testing). Note: We need to add build test for this `./configure CFLAGS="-DWOLFSSL_TI_HASH -DTI_DUMMY_BUILD”`. * Added arg checks on wc_*GetHash and wc_*Copy. * Cleanup of the BuildMD5, BuildSHA, BuildMD5_CertVerify and BuildSHA_CertVerify functions. * Added new ./configure --enable-asyncthreads, to allow enable/disable of the async threading support. If --enable-asynccrypt set this will be enabled by default if pthread is supported. Allows multi-threaded benchmarks with async simulator. * Added checks for all hashing to verify valid ->buffLen. * Fix for SHA512 scan-build warning about un-initialized “W_X”. * Fix for valgrind un-initialized use of buffer in AllocDer (der->buffer) and BuildTlsFinished handshake_hash. * Refactor of the benchmarking to use common function for start, check and finish of the stats. * Fixed issue with ECC cache loading in multi-threading. * Fix bug with AESNI not aligned code that assumes XMALLOC is 16-byte aligned. * Added new WC_ASYNC_NO_… options to allow disabling of individual async algorithms. New defines are: WC_ASYNC_NO_CRYPT, WC_ASYNC_NO_PKI and WC_ASYNC_NO_HASH. Additionally each algorithm has a WC_ASYNC_NO_[ALGO] define. * Added “wolfSSL_GetAllocators” API and fixed the wolfCrypt memcb_test so it restores callback pointers after test is complete (fixes issue with using custom allocators and test breaking it).
+739436d7a Merge with wolfSSL master.
+e6434f380 Get Nginx working with wolfSSL
+e8f7d78fc add helper functions for choosing static buffer size
+c7b969b5b don't echo session id on blank ticket if we're going to create a new ticket
+7b76c3ab3 allow bogus client sessoinID of non 32 bytes with session ticket
+ac6635593 Revert "Bio"
+e214086dc tlsx with static memory / account for session certs size
+4017e0f8d fix BIO issues : - remove unrequited tests - fix compilations for lighty, stunned, openssh - wc_BioGetAcceptSocket IPv4 / IPv6 support - remove <stdio.h> from bio.h - add NO_STDIO_FILESYSTEM for BIO_printf - memset -> XMEMSET - strlen -> XSTRLEN
+5d1de3bb3 One file for all BIO functions in wolfcrypt move required functions from wolfssl to wolfcrypt add client/server tests for BIO
+1bd65cc8a First version for OpenSSL BIO compatibility
+5f12b4c2a Add check to see if thread modified session in AddSession
+5f9c1ffca Initial support for deep copying of session
+0eb59d5c3 Fix rand num generation on MacOS, Improve organization with tic storage
+c8b20d909 Add support for dynamic session tickets, add openssl.test to testuiste
+654e17379 Combined "wc_RNG_GenerateBlock" calls in "SendServerHello".
+8951d72f0 Merge branch 'master' of https://github.com/wolfSSL/wolfssl
+03172818a Changes to remove last warnings from Stunnel
+96cf16848 Stunnel Base Commit
+f6d12bfc3 initial server side session ticket support
+495fbe087 allow dh to be used w/o certs and asn
+4ba12c86c fastmath, maxfragment, md5, iopool, certreq, certgen
+5365bdb06 debugging on name change
+c97db6ba6 src updated, CTaoCrypt -> wc_
+0957d275b latest
+17c37ae20 moved cyassl -> wolfssl
+53057f0b0 name changes kaleb push
+bf718a7d5 Added a callback function to set the master secret on the client
+c2ade678e Adds use of ssl->session.sessionIDSz during SendClientHello().
+b10fdbf1f Adds storage of ssl->arrays->sessionIDSz in SessionCache at AddSession(); Adds storage of ssl->arrays->sessionIDSz in ssl->session at FreeArrays();
+6956d146d Adds capture of ssl->arrays->sessionIDSz at DoServerHello.
+557f19db0 Adds support to session IDs of size 1 to 31 bytes. Only session IDs of size 0 or 32 bytes was allowed before, now the session ID size may be from 0 to 32 bytes. A size of zero bytes means that is no session ID provided by the server.
+80a474eba 1. Fixed encoding of session ticket hello extension. 2. Session tickets used as alternative resumption.
+961bf710b Removes unnecessary indentation. Since we use 80 characters line wrap, every space is important.
+8eeadc01b ssl: refactoring HashSession to reduce stack usage: --- variable md5 moved to the heap (sizeof(Md5) saved) --- variable sha moved to the heap (sizeof(Sha) saved) --- variable sha256 moved to the heap (sizeof(Sha256) saved)
+c322cb05a uses most recent version of cyassl
+4aac37bff move CipherRequires() to both client and server, VerifyClientSuite() to client only
+8d8fca67c SHA256, SHA384 and SHA512 error propagation. Major impact on random functions with error propagation.
+644bb9c52 SHA256, SHA384 and SHA512 error propagation. Minor impact on some of internal.c static functions.
+3607db907 add SHA1 fips mode
+b0d255ed4 fix IE session tickets, they don't have sessionIDs like Chrome, Safari, and Firefox do
+f5922255b Catching up 2.9.0
+95bc95427 Boundaries check for server hello parsing. -- added totalSz to the function parameters -- INCOMPLETE DATA checked only once with hello size against buffer size -- BUFFER_ERROR returned in case of message overflow (piece larger than the hello size) -- OPAQUE16_LEN used whenever 2 bytes are needed. -- Session id checking improved.
+2ff78b7fd Boundaries check for client hello parsing. -- INCOMPLETE DATA checked only once with hello size against buffer size -- BUFFER_ERROR returned in case of message overflow (piece larger than the hello size) -- OPAQUE16_LEN used whenever 2 bytes are needed. -- Session id checking improved.
+f8b30b337 changing variable names to build on Ubuntu.
+7dfb3c6b2 Fixing length adjustment on both while loops added test for client hello without SNI extension
+0f2f9b698 added more tests with code refactoring.
+ba18f8b03 added new function to retrieve SNI from a buffer.
+9c9c59cec update sevrver session cert w/ old client hello too
+9505f92bd restore session certs when resuming session
+1e6119bb0 always try most recent used session on row first for match
+5c4fdb30a add client session table lookup based on serverID, use CyaSSL_SetServerID to set/store with serverid
+2e980423e hash session IDs since some aren't random afterall
+f6c5bf032 update sniffer more memory changes
+40972868c fix merge conflicts
+8c32a5a2e make RNG in ssl dynamic, release after hs if stream or < tls1.1
+22cb11f30 add hello_request and session_ticket handling to sniffer
+ba2d7f590 internal sanity checks on memcmp
+ba6d956d0 fix sniffer resumption for new sessionId flag in 2.2.0
+4b8ab62bd don't retrieve or cache null sessions
+7b2d62f4f don't compare session id if server rejects
+efe6f80e7 allow an app to link with cyassl and openssl, whew
+6c96166c4 more logging messages
+58589b4f9 add verify from root, top->down, serial number extension for size
+6b88eb05b 1.8.8 init

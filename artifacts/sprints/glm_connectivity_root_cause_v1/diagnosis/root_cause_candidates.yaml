@@ -1,0 +1,52 @@
+schema: root_cause_candidates_v1
+generated_at: '2026-06-13T10:26:50+00:00'
+previous_sprint: /home/wen/work/crypto-pattern-fuzz/artifacts/sprints/glm_connectivity_preflight_and_slot_filling_retry_v1
+primary_cause: model_missing
+candidates:
+- code: model_missing
+  confidence: high
+  summary: GLM_MODEL is not set, so the diagnosis policy did not attempt a real GLM request.
+  evidence:
+  - 'current env snapshot: GLM_MODEL present=false'
+  - 'previous preflight: glm_model was empty'
+  - 'previous invocation: glm_called=false and request_count=0'
+  recommended_fix: 'Set an explicit model, for example: export GLM_MODEL="glm-4.5-flash"'
+- code: base_url_missing
+  confidence: medium
+  summary: No explicit GLM/OpenAI-compatible base URL is configured.
+  evidence:
+  - 'current env snapshot: GLM_BASE_URL present=false and OPENAI_BASE_URL present=false'
+  - 'previous preflight: glm_base_url_present=false'
+  recommended_fix: Use the SDK default endpoint intentionally, or set GLM_BASE_URL/OPENAI_BASE_URL for
+    an OpenAI-compatible client.
+- code: sdk_missing
+  confidence: low
+  summary: Optional client package 'zai' is not installed.
+  evidence:
+  - 'package probe: zai installed=false'
+  recommended_fix: Install zai only if that client path is the intended GLM access path.
+- code: sdk_missing
+  confidence: low
+  summary: Optional client package 'openai' is not installed.
+  evidence:
+  - 'package probe: openai installed=false'
+  recommended_fix: Install openai only if that client path is the intended GLM access path.
+- code: network_dns_failure
+  confidence: medium
+  summary: DNS lookup for the default GLM endpoint failed in this environment.
+  evidence:
+  - 'dns error type: gaierror'
+  - 'endpoint host: open.bigmodel.cn'
+  recommended_fix: Check local DNS/proxy/firewall before retrying a real GLM request.
+- code: unknown_connection_error
+  confidence: low
+  summary: The previous sprint reported a generic connection error but did not perform a real request.
+  evidence:
+  - 'previous unavailable_reason: Connection error.'
+  - previous glm_request_count=0
+  - current diagnosis skipped real request because GLM_MODEL is missing
+  recommended_fix: Resolve model/env configuration first, then retry with request/response logging enabled.
+root_cause_candidates_generated: true
+confirmed_vulnerability_claim: false
+slot_bindings_generated: false
+real_glm_request_attempted: false

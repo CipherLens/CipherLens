@@ -1,0 +1,126 @@
+
+    return NOT_COMPILED_IN;
+}
+
+/* 64 bits epoch + 64 bits sequence */
+#define DTLS13_RN_SIZE 16
+
+static int Dtls13GetAckListLength(Dtls13RecordNumber* list, word16* length)
+{
+    int numberElements;
+
+    numberElements = 0;
+
+    /* TODO: check that we don't exceed the maximum length */
+
+    while (list != NULL) {
+        list = list->next;
+        numberElements++;
+    }
+
+    *length = (word16)(DTLS13_RN_SIZE * numberElements);
+    return 0;
+}
+
+int Dtls13WriteAckMessage(WOLFSSL* ssl,
+    Dtls13RecordNumber* recordNumberList, word32* length)
+{
+    word16 msgSz, headerLength;
+    byte *output, *ackMessage;
+    word32 sendSz;
+    int ret;
+
+    sendSz = 0;
+
+    if (ssl->dtls13EncryptEpoch == NULL)
+        return BAD_STATE_E;
+
+    if (w64IsZero(ssl->dtls13EncryptEpoch->epochNumber)) {
+        /* unprotected ACK */
+        headerLength = DTLS_RECORD_HEADER_SZ;
+    }
+    else {
+        headerLength = Dtls13GetRlHeaderLength(ssl, 1);
+        sendSz += MAX_MSG_EXTRA;
+    }
+
+    ret = Dtls13GetAckListLength(recordNumberList, &msgSz);
+    if (ret != 0)
+        return ret;
+
+    sendSz += headerLength;
+
+    /* ACK list 2 bytes length field */
+    sendSz += OPAQUE16_LEN;
+
+    /* ACK list */
+    sendSz += msgSz;
+
+    ret = CheckAvailableSize(ssl, sendSz);
+    if (ret != 0)
+        return ret;
+
+    output = GetOutputBuffer(ssl);
+
+    ackMessage = output + headerLength;
+
+    c16toa(msgSz, ackMessage);
+    ackMessage += OPAQUE16_LEN;
+
+    WOLFSSL_MSG("write ack records");
+
+    while (recordNumberList != NULL) {
+        WOLFSSL_MSG_EX("epoch %d seq %d", recordNumberList->epoch,
+                recordNumberList->seq);
+        c64toa(&recordNumberList->epoch, ackMessage);
+        ackMessage += OPAQUE64_LEN;
+        c64toa(&recordNumberList->seq, ackMessage);
+        ackMessage += OPAQUE64_LEN;
+        recordNumberList = recordNumberList->next;
+    }
+
+    *length = msgSz + OPAQUE16_LEN;
+
+    return 0;
+}
+
+static int Dtls13RtxIsTrackedByRn(const Dtls13RtxRecord* r, w64wrapper epoch,
+    w64wrapper seq)
+{
+    int i;
+    if (!w64Equal(r->epoch, epoch))
+        return 0;
+
+    for (i = 0; i < r->rnIdx; ++i) {
+        if (w64Equal(r->seq[i], seq))
+            return 1;
+    }
+
+    return 0;
+}
+
+static int Dtls13KeyUpdateAckReceived(WOLFSSL* ssl)
+{
+    int ret;
+
+    ret = DeriveTls13Keys(ssl, update_traffic_key, ENCRYPT_SIDE_ONLY, 1);
+    if (ret != 0)
+        return ret;
+
+    w64Increment(&ssl->dtls13Epoch);
+
+    /* Epoch wrapped up */
+    if (w64IsZero(ssl->dtls13Epoch))
+        return BAD_STATE_E;
+
+    return Dtls13SetEpochKeys(ssl, ssl->dtls13Epoch, ENCRYPT_SIDE_ONLY);
+}
+
+#ifdef WOLFSSL_DEBUG_TLS
+static void Dtls13PrintRtxRecord(Dtls13RtxRecord* r)
+{
+    int i;
+
+    WOLFSSL_MSG_EX("r: hs: %d epoch: %ld", r->handshakeType, r->epoch);
+    for (i = 0; i < r->rnIdx; i++)
+        WOLFSSL_MSG_EX("seq: %ld", r->seq[i]);

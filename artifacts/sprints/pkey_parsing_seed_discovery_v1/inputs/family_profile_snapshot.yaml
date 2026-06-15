@@ -1,0 +1,37 @@
+schema: family_profile_snapshot_v1
+generated_at: '2026-06-13T08:04:43+00:00'
+family: pkey_parsing
+profile:
+  family: pkey_parsing
+  status: profile_ready
+  description: OpenSSL pkey / public/private key parsing
+  input_formats:
+  - der
+  - pem
+  seed_discovery:
+    enabled: true
+    seed_keywords:
+    - key
+    - pkey
+    - private
+    - public
+    - rsa
+    - ec
+    candidate_extensions:
+    - .key
+    - .pem
+    - .der
+    - .pub
+    validation_commands:
+    - openssl pkey -in <file> -noout
+    - openssl pkey -pubin -in <file> -noout
+  oracle_goals:
+  - parser_accept
+  - full_consumption_gap
+  mutation_operators:
+  - valid_object_plus_trailing_garbage
+  - malformed_only_control
+  - near_valid_length_delta
+  - format_toggle_der_pem
+  notes: Bootstrap profile for scheduler seed-discovery selection only; does not add family-specific mutators
+    or execute harnesses.

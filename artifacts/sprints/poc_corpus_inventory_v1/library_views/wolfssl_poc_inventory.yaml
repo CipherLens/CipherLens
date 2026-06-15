@@ -1,0 +1,1053 @@
+library: wolfssl
+total: 11
+artifacts:
+- poc_id: WOLFSSL-POC-0001
+  source_library: wolfssl
+  corpus_root: data/wolfssl_collect
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0001
+  directory_name: WOLFSSL-POC-0001
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files: []
+    poc_dir: []
+    run_sh: []
+    scripts: []
+    inputs:
+    - inputs/original/SOURCE.txt
+    - inputs/original/crash_000_FreeDecodedCert.zip
+    logs:
+    - logs/current_version/wolfssl-current-asan-extra/build_info.txt
+    - logs/current_version/wolfssl-current-asan-extra/client_exit_code.txt
+    - logs/current_version/wolfssl-current-asan-extra/server_dtls_exit_code.txt
+    - logs/current_version/wolfssl-current-asan-extra/server_exit_code.txt
+    - logs/fixed_version/wolfssl-4.3.0-asan-extra/client_exit_code.txt
+    - logs/fixed_version/wolfssl-4.3.0-asan-extra/server_dtls_exit_code.txt
+    - logs/fixed_version/wolfssl-4.3.0-asan-extra/server_exit_code.txt
+    - logs/fixed_version/wolfssl-88bf5d967-asan-extra/client_exit_code.txt
+    - logs/fixed_version/wolfssl-88bf5d967-asan-extra/server_dtls_exit_code.txt
+    - logs/fixed_version/wolfssl-88bf5d967-asan-extra/server_exit_code.txt
+    - logs/vulnerable_version/wolfssl-4.1.0-asan/client_exit_code.txt
+    - logs/vulnerable_version/wolfssl-4.1.0-asan/server_dtls_exit_code.txt
+    - logs/vulnerable_version/wolfssl-4.1.0-asan/server_exit_code.txt
+    - logs/vulnerable_version/wolfssl-4.2.0-asan-extra/client_exit_code.txt
+    - logs/vulnerable_version/wolfssl-4.2.0-asan-extra/server_dtls_exit_code.txt
+    - logs/vulnerable_version/wolfssl-4.2.0-asan-extra/server_exit_code.txt
+    - logs/vulnerable_version/wolfssl-4.2.0-asan/client_exit_code.txt
+    - logs/vulnerable_version/wolfssl-4.2.0-asan/server_dtls_exit_code.txt
+    - logs/vulnerable_version/wolfssl-4.2.0-asan/server_exit_code.txt
+    sources:
+    - sources/advisory.md
+    - sources/cve.md
+    - sources/git_history/candidate_fix_commits.md
+    - sources/git_history/patches/88bf5d967.patch
+    - sources/issue.md
+    - sources/issue_2555.html
+    - sources/patch.md
+    - sources/regression_test.md
+    notes:
+    - notes.md
+    patch_files:
+    - fix.patch
+    reproduction_result:
+    - reproduction_result.md
+    version_matrix:
+    - version_matrix.md
+    quality_report:
+    - quality_report.md
+    triage_report:
+    - triage_report.md
+    other_files:
+    - commits.txt
+    - fix_commits.txt
+    - library_files.txt
+    - test_files.txt
+  metadata_summary:
+    title: Heap based buffer overflow while parsing crafted X.509 certificates
+    source_url: null
+    state: null
+    has_poc: null
+    poc_type: null
+    quality: Q1_strict_reproduction_candidate
+    component: null
+    trigger_behavior: X.509 certificate parsing heap-buffer-overflow
+    affected_version:
+    - wolfSSL 4.1.0
+    - wolfSSL 4.2.0
+    critical_api_or_function:
+    - wolfSSL_CTX_use_certificate_chain_file
+    - ProcessFile
+    - ProcessBuffer
+    - FreeDecodedCert
+    root_cause: null
+    reproduction_command: null
+    input_artifact: original_issue_attachment
+    fix_evidence: null
+    artifact_class: null
+    local_compile: null
+    local_run: null
+    strict_reproduction: true
+    tested_library: null
+    local_test_result: null
+    input_status: true
+    validation_notes: Strict reproduction succeeded on wolfSSL v4.2.0-stable commit
+      48c4b2fedcee4d61b6a76c5ce9e33ab212d6ab4a using the original crafted certificate.
+      The crash requires ASan/UBSan extra build configuration with --enable-opensslextra,
+      --enable-certgen, --enable-certreq, --enable-certext, and --enable-dtls. wolfSSL
+      v4.3.0-stable safely rejects the input and is treated as the fixed release candidate.
+      Current wolfSSL commit eeab53205ab57451778f7a76aad25f5349547ce5 also safely
+      rejects the input. Candidate commit 88bf5d967 was tested but remained vulnerable.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: WOLFSSL-POC-0002
+  source_library: wolfssl
+  corpus_root: data/wolfssl_collect
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0002
+  directory_name: WOLFSSL-POC-0002
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc/poc_certfields_min.c
+    poc_dir:
+    - poc/exploitdb_41984_raw.txt
+    - poc/poc_certfields_min.c
+    run_sh: []
+    scripts:
+    - scripts/test_wolfssl_current.sh
+    - scripts/test_wolfssl_fixed_release.sh
+    inputs:
+    - inputs/reconstructed/SHA256SUMS_generated_from_exploitdb_command.txt
+    - inputs/reconstructed/cve-2017-2800-cert1.der
+    - inputs/reconstructed/generated_from_exploitdb_command/SHA256SUMS.txt
+    - inputs/reconstructed/generated_from_exploitdb_command/SOURCE.txt
+    logs:
+    - logs/current_version/wolfssl-current-asan-certfields/asan_grep_result.txt
+    - logs/current_version/wolfssl-current-asan-certfields/build_info.txt
+    - logs/current_version/wolfssl-current-asan-certfields/ldd.txt
+    - logs/current_version/wolfssl-current-asan-certfields/poc_certfields_min_exit_code.txt
+    - logs/fixed_version/wolfssl-v3.11.0-stable-asan-certfields/asan_grep_result.txt
+    - logs/fixed_version/wolfssl-v3.11.0-stable-asan-certfields/build_info.txt
+    - logs/fixed_version/wolfssl-v3.11.0-stable-asan-certfields/ldd.txt
+    - logs/fixed_version/wolfssl-v3.11.0-stable-asan-certfields/poc_certfields_min_exit_code.txt
+    - logs/vulnerable_version/wolfssl-3.10.2-asan-certfields/poc_certfields_min_exit_code.txt
+    - sources/exploitdb_asan_excerpt.txt
+    sources:
+    - sources/advisory.md
+    - sources/cve.md
+    - sources/exploitdb_41984.html
+    - sources/exploitdb_reproduction_excerpt.txt
+    - sources/exploitdb_root_cause_excerpt.txt
+    - sources/issue.md
+    - sources/nvd_CVE-2017-2800.html
+    - sources/patch.md
+    - sources/regression_test.md
+    - sources/talos_blog_wolfssl_x509_vuln.html
+    notes:
+    - notes.md
+    patch_files:
+    - fix.patch
+    reproduction_result:
+    - reproduction_result.md
+    version_matrix:
+    - version_matrix.md
+    quality_report:
+    - quality_report.md
+    triage_report:
+    - triage_report.md
+    other_files:
+    - commits.txt
+    - fix_commits.txt
+    - library_files.txt
+    - poc/exploitdb_41984_raw.txt
+    - test_files.txt
+  metadata_summary:
+    title: wolfSSL 3.10.2 X.509 certificate text parsing off-by-one
+    source_url: null
+    state: null
+    has_poc: null
+    poc_type: null
+    quality: Q1_strict_reproduction_candidate
+    component: null
+    trigger_behavior: X.509 certificate text parsing off-by-one out-of-bounds byte
+      overwrite
+    affected_version:
+    - wolfSSL <= 3.10.2
+    critical_api_or_function:
+    - wolfSSL_X509_d2i
+    - wolfSSL_X509_get_subject_name
+    - wolfSSL_X509_NAME_get_text_by_NID
+    root_cause: null
+    reproduction_command: null
+    input_artifact: reconstructed_from_exploitdb_talos_poc_command
+    fix_evidence: null
+    artifact_class: null
+    local_compile: null
+    local_run: null
+    strict_reproduction: true
+    tested_library: null
+    local_test_result: null
+    input_status: false
+    validation_notes: 'Strict reproduction succeeded on wolfSSL v3.10.2-stable using
+      a reconstructed certificate generated from the public Exploit-DB/Talos PoC OpenSSL
+      command. The input is not the original attached certificate bytes, but it preserves
+      the published trigger structure and reproduces the reported ASan stack-buffer-overflow
+      in wolfSSL_X509_NAME_get_text_by_NID. Fixed release candidate verified: wolfSSL
+      v3.11.0-stable does not reproduce the ASan stack-buffer-overflow observed on
+      v3.10.2-stable under the same minimal certfields harness and ASan/UBSan configuration.
+      The first build attempt failed because -Werror promoted compiler warnings to
+      errors; after removing -Werror from Makefile, the library built successfully.
+      These build warnings are unrelated to the CVE-2017-2800 runtime PoC behavior.
+      Current wolfSSL v5.9.1-stable-1299-geeab53205 commit eeab53205ab57451778f7a76aad25f5349547ce5
+      was tested with the same reconstructed CVE-2017-2800 certificate and minimal
+      certfields harness under ASan/UBSan. No ASan stack-buffer-overflow, WRITE of
+      size 1, or abort was observed.'
+  status: ready_for_ingestion
+  notes: []
+- poc_id: WOLFSSL-POC-0003
+  source_library: wolfssl
+  corpus_root: data/wolfssl_collect
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0003
+  directory_name: WOLFSSL-POC-0003
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc/poc_x509_date_min.c
+    poc_dir:
+    - poc/poc_x509_date_min.c
+    run_sh: []
+    scripts:
+    - scripts/test_wolfssl_x509date_current.sh
+    - scripts/test_wolfssl_x509date_tag.sh
+    inputs: []
+    logs:
+    - logs/current_version/wolfssl-current-asan-x509date/after_exit_code.txt
+    - logs/current_version/wolfssl-current-asan-x509date/asan_grep_result.txt
+    - logs/current_version/wolfssl-current-asan-x509date/before_exit_code.txt
+    - logs/current_version/wolfssl-current-asan-x509date/build_info.txt
+    - logs/current_version/wolfssl-current-asan-x509date/ldd.txt
+    - logs/fixed_version/wolfssl-v5.9.1-stable-asan-x509date/after_exit_code.txt
+    - logs/fixed_version/wolfssl-v5.9.1-stable-asan-x509date/asan_grep_result.txt
+    - logs/fixed_version/wolfssl-v5.9.1-stable-asan-x509date/before_exit_code.txt
+    - logs/fixed_version/wolfssl-v5.9.1-stable-asan-x509date/build_info.txt
+    - logs/fixed_version/wolfssl-v5.9.1-stable-asan-x509date/ldd.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-x509date/after_exit_code.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-x509date/asan_grep_result.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-x509date/before_exit_code.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-x509date/build_info.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-x509date/ldd.txt
+    sources:
+    - sources/advisory.md
+    - sources/cve.md
+    - sources/git_history/patches/pr_10071.patch
+    - sources/git_history/pr_10071_copydate_context.patch
+    - sources/git_history/pr_10071_notbefore_notafter_context.patch
+    - sources/git_history/pr_10071_relevant_grep.txt
+    - sources/git_history/pr_10071_tests_context.patch
+    - sources/github_pr_10071.html
+    - sources/issue.md
+    - sources/nvd_CVE-2026-5448.html
+    - sources/patch.md
+    - sources/regression_test.md
+    - sources/wolfssl_security_vulnerabilities.html
+    notes:
+    - notes.md
+    patch_files:
+    - fix.patch
+    reproduction_result:
+    - reproduction_result.md
+    version_matrix:
+    - version_matrix.md
+    quality_report:
+    - quality_report.md
+    triage_report:
+    - triage_report.md
+    other_files:
+    - commits.txt
+    - fix_commits.txt
+    - library_files.txt
+    - test_files.txt
+  metadata_summary:
+    title: wolfSSL X.509 date buffer overflow in wolfSSL_X509_notAfter / wolfSSL_X509_notBefore
+    source_url: null
+    state: null
+    has_poc: null
+    poc_type: null
+    quality: Q1_strict_reproduction_candidate
+    component: null
+    trigger_behavior: X.509 date parsing buffer overflow
+    affected_version:
+    - wolfSSL < 5.9.1
+    critical_api_or_function:
+    - wolfSSL_X509_set_notAfter
+    - wolfSSL_X509_notAfter
+    - wolfSSL_X509_set_notBefore
+    - wolfSSL_X509_notBefore
+    root_cause: null
+    reproduction_command: null
+    input_artifact: reconstructed_from_pr_10071_official_test_pattern
+    fix_evidence: PR 10071
+    artifact_class: null
+    local_compile: null
+    local_run: null
+    strict_reproduction: true
+    tested_library: null
+    local_test_result: null
+    input_status: false
+    validation_notes: 'API-level strict reproduction succeeded on wolfSSL v5.9.0-stable
+      commit 922d04b3568c6428a9fb905ddee3ef5a68db3108 using a crafted WOLFSSL_ASN1_TIME
+      object following PR 10071''s official test pattern. Both notAfter and notBefore
+      paths triggered ASan heap-buffer-overflow with WRITE of size 255. Fixed release
+      candidate verified: wolfSSL v5.9.1-stable commit 1d363f3adceba9d1478230ede476a37b0dcdef24
+      rejects the oversized ASN1_TIME length in both notAfter and notBefore paths
+      without sanitizer crash evidence. Current wolfSSL v5.9.1-stable-1373-g8fca95ce6
+      commit 8fca95ce651d6e370d91f5598786de4bc66aa2c2 was tested with the same API-level
+      X.509 date harness. Both notAfter and notBefore paths safely rejected the oversized
+      ASN1_TIME length without sanitizer crash evidence.'
+  status: ready_for_ingestion
+  notes: []
+- poc_id: WOLFSSL-POC-0004
+  source_library: wolfssl
+  corpus_root: data/wolfssl_collect
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0004
+  directory_name: WOLFSSL-POC-0004
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc/poc_akid_certfromx509_debug.c
+    - poc/poc_akid_certfromx509_long.c
+    - poc/poc_akid_certfromx509_min.c
+    poc_dir:
+    - poc/poc_akid_certfromx509_debug.c
+    - poc/poc_akid_certfromx509_long.c
+    - poc/poc_akid_certfromx509_min.c
+    - poc/probe_cert_akid_layout.c
+    - poc/probe_cert_akid_size.c
+    run_sh: []
+    scripts:
+    - scripts/test_wolfssl_akid_long_current.sh
+    - scripts/test_wolfssl_akid_long_tag.sh
+    - scripts/test_wolfssl_akid_tag.sh
+    inputs:
+    - inputs/reconstructed/cve-2026-5447-akid-overflow-debug.der
+    - inputs/reconstructed/cve-2026-5447-akid-overflow-long.der
+    - inputs/reconstructed/cve-2026-5447-akid-overflow.der
+    logs:
+    - logs/current_version/wolfssl-current-asan-akid/akid_exit_code.txt
+    - logs/current_version/wolfssl-current-asan-akid/asan_grep_result.txt
+    - logs/current_version/wolfssl-current-asan-akid/build_info.txt
+    - logs/current_version/wolfssl-current-asan-akid/der_file.txt
+    - logs/current_version/wolfssl-current-asan-akid/der_sha256.txt
+    - logs/current_version/wolfssl-current-asan-akid/ldd.txt
+    - logs/fixed_version/wolfssl-v5.9.1-stable-asan-akid/akid_exit_code.txt
+    - logs/fixed_version/wolfssl-v5.9.1-stable-asan-akid/asan_grep_result.txt
+    - logs/fixed_version/wolfssl-v5.9.1-stable-asan-akid/build_info.txt
+    - logs/fixed_version/wolfssl-v5.9.1-stable-asan-akid/der_file.txt
+    - logs/fixed_version/wolfssl-v5.9.1-stable-asan-akid/der_sha256.txt
+    - logs/fixed_version/wolfssl-v5.9.1-stable-asan-akid/ldd.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-akid-debug/akid_debug_exit_code.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-akid-long/akid_long_exit_code.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-akid/akid_exit_code.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-akid/asan_grep_result.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-akid/build_info.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-akid/der_file.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-akid/der_sha256.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-akid/ldd.txt
+    sources:
+    - sources/advisory.md
+    - sources/cve.md
+    - sources/git_history/context/pr_10112_akid_test_context_part1.patch
+    - sources/git_history/context/pr_10112_akid_test_context_part2.patch
+    - sources/git_history/context/pr_10112_certfromx509_fix_context.patch
+    - sources/git_history/patches/pr_10112.patch
+    - sources/git_history/pr_10112_relevant_grep.txt
+    - sources/github_pr_10112.html
+    - sources/issue.md
+    - sources/nvd_CVE-2026-5447.html
+    - sources/patch.md
+    - sources/regression_test.md
+    notes:
+    - notes.md
+    patch_files:
+    - fix.patch
+    reproduction_result:
+    - reproduction_result.md
+    version_matrix:
+    - version_matrix.md
+    quality_report:
+    - quality_report.md
+    triage_report:
+    - triage_report.md
+    other_files:
+    - commits.txt
+    - fix_commits.txt
+    - library_files.txt
+    - poc/probe_cert_akid_layout.c
+    - poc/probe_cert_akid_size.c
+    - test_files.txt
+  metadata_summary:
+    title: wolfSSL CertFromX509 AuthorityKeyIdentifier size confusion heap-buffer-overflow
+    source_url: null
+    state: null
+    has_poc: null
+    poc_type: null
+    quality: Q1_strict_reproduction_candidate
+    component: null
+    trigger_behavior: X.509 AuthorityKeyIdentifier heap buffer overflow
+    affected_version:
+    - wolfSSL < 5.9.1
+    critical_api_or_function:
+    - wolfSSL_X509_d2i
+    - wolfSSL_i2d_X509_bio
+    - CertFromX509
+    root_cause: null
+    reproduction_command: null
+    input_artifact: reconstructed_from_pr_10112_official_test_pattern
+    fix_evidence: PR 10112
+    artifact_class: null
+    local_compile: null
+    local_run: null
+    strict_reproduction: true
+    tested_library: null
+    local_test_result: null
+    input_status: false
+    validation_notes: 'Certificate-level strict reproduction succeeded on wolfSSL
+      v5.9.0-stable commit 922d04b3568c6428a9fb905ddee3ef5a68db3108. The reconstructed
+      DER certificate uses a small 20-byte AuthorityKeyIdentifier keyIdentifier and
+      an oversized full AKID source of approximately 20046 bytes. The vulnerable code
+      checks authKeyIdSz but copies authKeyIdSrcSz into cert->akid, producing ASan
+      heap-buffer-overflow in CertFromX509. Fixed release candidate verified: wolfSSL
+      v5.9.1-stable commit 1d363f3adceba9d1478230ede476a37b0dcdef24 safely rejects
+      the oversized AuthorityKeyIdentifier input without sanitizer crash evidence.
+      Current wolfSSL v5.9.1-stable-1373-g8fca95ce6 commit 8fca95ce651d6e370d91f5598786de4bc66aa2c2
+      was tested with the same reconstructed oversized AuthorityKeyIdentifier DER
+      certificate. It safely rejected the input without sanitizer crash evidence.'
+  status: ready_for_ingestion
+  notes: []
+- poc_id: WOLFSSL-POC-0005
+  source_library: wolfssl
+  corpus_root: data/wolfssl_collect
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0005
+  directory_name: WOLFSSL-POC-0005
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files: []
+    poc_c_files:
+    - poc/poc_dtls13_ack_overflow_fixed_api.c
+    - poc/poc_dtls13_ack_overflow_min.c
+    poc_dir:
+    - poc/poc_dtls13_ack_overflow_fixed_api.c
+    - poc/poc_dtls13_ack_overflow_min.c
+    run_sh: []
+    scripts: []
+    inputs: []
+    logs:
+    - logs/current_version/wolfssl-current-asan-dtls13-ack/asan_grep_result.txt
+    - logs/current_version/wolfssl-current-asan-dtls13-ack/build_info.txt
+    - logs/current_version/wolfssl-current-asan-dtls13-ack/dtls13_ack_overflow_current_exit_code.txt
+    - logs/fixed_version/wolfssl-v5.9.1-stable-asan-dtls13-ack/asan_grep_result.txt
+    - logs/fixed_version/wolfssl-v5.9.1-stable-asan-dtls13-ack/build_info.txt
+    - logs/fixed_version/wolfssl-v5.9.1-stable-asan-dtls13-ack/dtls13_ack_overflow_fixed_exit_code.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-dtls13-ack/asan_grep_result.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-dtls13-ack/asan_grep_result_from_builddir.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-dtls13-ack/asan_precise_crash_signal.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-dtls13-ack/build_info.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-dtls13-ack/dtls13_ack_nm_dynamic.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-dtls13-ack/dtls13_ack_nm_static.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-dtls13-ack/dtls13_ack_overflow_min_exit_code.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-dtls13-ack/dtls13_ack_overflow_min_from_builddir_exit_code.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-dtls13-ack/dtls13_ack_symbol_grep.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-dtls13-ack/dtls13_internal_decl_source.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-dtls13-ack/dtls13_macro_grep.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-dtls13-ack/dtls13_rtx_add_ack_source.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-dtls13-ack/dtls13_write_ack_message_source.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-dtls13-ack/test_dtls13_ack_order_source.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-dtls13-ack/test_memio_helper_grep.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-dtls13-ack/test_memio_setup_source.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-dtls13-ack/test_utils_head.txt
+    sources:
+    - sources/git_history/context/pr_10076_dtls13_ack_fix_context.patch
+    - sources/git_history/context/pr_10076_dtls13_ack_overflow_test_context.patch
+    - sources/git_history/context/pr_10076_dtls13_struct_decl_context.patch
+    - sources/git_history/patches/pr_10076.patch
+    - sources/git_history/pr_10076_relevant_grep.txt
+    - sources/github_pr/pr_10076.html
+    - sources/official/nvd_CVE-2026-5264.html
+    - sources/official/wolfssl_security_vulnerabilities.html
+    notes:
+    - notes/pr_10076_patch_analysis.md
+    patch_files: []
+    reproduction_result:
+    - reproduction_result.md
+    version_matrix:
+    - version_matrix.md
+    quality_report: []
+    triage_report: []
+    other_files: []
+  metadata_summary:
+    title: wolfSSL DTLS 1.3 ACK message processing heap-buffer-overflow
+    source_url: null
+    state: null
+    has_poc: null
+    poc_type: null
+    quality: Q1_strict_reproduction_candidate
+    component: null
+    trigger_behavior: DTLS 1.3 ACK record processing heap buffer overflow
+    affected_version: null
+    critical_api_or_function: null
+    root_cause: null
+    reproduction_command: null
+    input_artifact: reconstructed_from_official_pr_10076_test_pattern
+    fix_evidence: null
+    artifact_class: null
+    local_compile: null
+    local_run: null
+    strict_reproduction: true
+    tested_library: null
+    local_test_result: null
+    input_status: null
+    validation_notes: 'Selected from official wolfSSL 2026 vulnerability list. CVE-2026-5264
+      is a DTLS 1.3 ACK message processing heap-buffer-overflow. PR #10076 adds ACK
+      record count bounds, seenRecordsCount tracking, and DTLS 1.3 ACK overflow tests.
+      Candidate should be reproduced through DTLS 1.3 ACK handling path, preferably
+      using official PR test pattern. Vulnerable reproduction confirmed on wolfSSL
+      v5.9.0-stable: 4097 DTLS 1.3 ACK records trigger ASan out-of-bounds write in
+      c64toa via Dtls13WriteAckMessage. Fixed/current validation pending. Fixed release
+      verified on wolfSSL v5.9.1-stable: 4097 attempted ACK records are bounded to
+      seenRecordsCount 128 and Dtls13WriteAckMessage completes without ASan crash.
+      Version matrix complete: vulnerable v5.9.0-stable reproduces ASan out-of-bounds
+      heap write in Dtls13WriteAckMessage; fixed v5.9.1-stable and current wolfSSL
+      safely bound seenRecordsCount to 128 and complete without sanitizer evidence.'
+  status: ready_for_ingestion
+  notes: []
+- poc_id: WOLFSSL-POC-0005
+  source_library: wolfssl
+  corpus_root: data/wolfssl_collect
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0005-rejected-issue8353
+  directory_name: WOLFSSL-POC-0005-rejected-issue8353
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files: []
+    poc_c_files:
+    - poc/poc_pem_to_der_min.c
+    poc_dir:
+    - poc/poc_pem_to_der_min.c
+    run_sh: []
+    scripts: []
+    inputs:
+    - inputs/original/SHA256SUMS.txt
+    logs:
+    - logs/vulnerable_version/wolfssl-issue8353-asan/asan_grep_result.txt
+    - logs/vulnerable_version/wolfssl-issue8353-asan/build_info.txt
+    - logs/vulnerable_version/wolfssl-issue8353-asan/pem_to_der_min_exit_code.txt
+    sources:
+    - sources/github_issue/issue_8353.html
+    - sources/github_issue/issue_8353.json
+    - sources/github_issue/issue_8353_body.md
+    notes: []
+    patch_files: []
+    reproduction_result:
+    - reproduction_result.md
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files: []
+  metadata_summary:
+    title: wolfSSL PEM conversion heap-buffer-overflow candidate
+    source_url: null
+    state: null
+    has_poc: null
+    poc_type: null
+    quality: Q5_rejected_harness_bug
+    component: null
+    trigger_behavior: PEM / DER / Base64 decoding memory safety candidate
+    affected_version: null
+    critical_api_or_function: null
+    root_cause: null
+    reproduction_command: null
+    input_artifact: github_issue_reconstructed_input
+    fix_evidence: null
+    artifact_class: null
+    local_compile: null
+    local_run: null
+    strict_reproduction: false
+    tested_library: null
+    local_test_result: null
+    input_status: null
+    validation_notes: 'Candidate selected for diversity batch v2. Source: GitHub issue
+      #8353, reported heap-buffer-overflow in example/pem/pem.c involving wc_PemToDer.
+      Must verify whether crash is inside wolfSSL library code or caused by harness
+      logic. Minimal wc_PemToDer(CERT_TYPE) probe on commit 4bdccac58440cc589807d21d36af2331f3b8817b
+      returned 0 and did not trigger ASan. Next step is to inspect/reproduce the issue-provided
+      example/pem/pem.c harness. Candidate rejected after negative minimal API probe
+      and issue discussion review. The reported crash is a harness-side NULL-termination
+      / strlen bug, not a wolfSSL library bug.'
+  status: ready_for_ingestion
+  notes: []
+- poc_id: WOLFSSL-POC-0006
+  source_library: wolfssl
+  corpus_root: data/wolfssl_collect
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0006
+  directory_name: WOLFSSL-POC-0006
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files: []
+    poc_c_files:
+    - poc/poc_pkcs7_signedattrs_overflow_min.c
+    poc_dir:
+    - poc/poc_pkcs7_signedattrs_overflow_min.c
+    run_sh: []
+    scripts: []
+    inputs: []
+    logs:
+    - logs/current_version/wolfssl-current-asan-pkcs7-signedattrs/asan_grep_result.txt
+    - logs/current_version/wolfssl-current-asan-pkcs7-signedattrs/pkcs7_signedattrs_overflow_min_exit_code.txt
+    - logs/fixed_version/wolfssl-v5.9.0-stable-asan-pkcs7-signedattrs/asan_grep_result.txt
+    - logs/fixed_version/wolfssl-v5.9.0-stable-asan-pkcs7-signedattrs/build_info.txt
+    - logs/fixed_version/wolfssl-v5.9.0-stable-asan-pkcs7-signedattrs/pkcs7_signedattrs_overflow_min_exit_code.txt
+    - logs/vulnerable_version/wolfssl-v5.8.4-stable-asan-pkcs7-signedattrs/asan_grep_result.txt
+    - logs/vulnerable_version/wolfssl-v5.8.4-stable-asan-pkcs7-signedattrs/build_config_grep.txt
+    - logs/vulnerable_version/wolfssl-v5.8.4-stable-asan-pkcs7-signedattrs/build_info.txt
+    - logs/vulnerable_version/wolfssl-v5.8.4-stable-asan-pkcs7-signedattrs/pkcs7_signedattrs_overflow_min_exit_code.txt
+    sources:
+    - sources/git_history/context/configure_pkcs7_options_v5_8_4.txt
+    - sources/git_history/context/current_pkcs7_symbol_grep.txt
+    - sources/git_history/context/custom_signedattrs_minimal.diff
+    - sources/git_history/context/git_log_grep_pkcs7_cve0819.txt
+    - sources/git_history/context/git_log_pickaxe_EncodeAttributes.txt
+    - sources/git_history/context/git_log_pickaxe_signedAttribsCount.txt
+    - sources/git_history/context/v5_8_4_BuildSignedAttributes_context.txt
+    - sources/git_history/context/v5_8_4_PKCS7Attrib_struct.txt
+    - sources/git_history/context/v5_8_4_custom_signedattrs_context.txt
+    - sources/git_history/context/v5_8_4_pkcs7_api_grep.txt
+    - sources/git_history/context/v5_8_4_pkcs7_usage_examples.txt
+    - sources/git_history/context/v5_8_4_test_pkcs7_custom_signedattrs_1280_1375.txt
+    - sources/git_history/context/v5_8_4_test_pkcs7_encode_signeddata_560_780.txt
+    - sources/git_history/context/v5_8_4_test_pkcs7_encode_signeddata_ex_781_1050.txt
+    - sources/git_history/context/v5_8_4_to_v5_9_0_BuildSignedAttributes.diff
+    - sources/git_history/context/v5_9_0_BuildSignedAttributes_context.txt
+    - sources/git_history/context/v5_9_0_availableSpace_fix_context.txt
+    - sources/git_history/context/v5_9_0_custom_signedattrs_context.txt
+    - sources/nvd/CVE-2026-0819.html
+    - sources/nvd/CVE-2026-0819_relevant_grep.txt
+    - sources/wolfssl_official/CVE-2026-0819_relevant_grep.txt
+    - sources/wolfssl_official/security_vulnerabilities.html
+    notes:
+    - notes/candidate_selection.md
+    - notes/version_matrix.md
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files: []
+  metadata_summary:
+    title: wolfSSL PKCS7 SignedData signed attributes out-of-bounds write
+    source_url: null
+    state: null
+    has_poc: null
+    poc_type: null
+    quality: Q1_strict_reproduction_candidate
+    component: null
+    trigger_behavior: PKCS7 SignedData encoding out-of-bounds write
+    affected_version: null
+    critical_api_or_function: null
+    root_cause: null
+    reproduction_command: null
+    input_artifact: reconstructed_from_official_security_advisory_and_source_patch
+    fix_evidence: null
+    artifact_class: null
+    local_compile: null
+    local_run: null
+    strict_reproduction: true
+    tested_library: null
+    local_test_result: null
+    input_status: null
+    validation_notes: 'Candidate selected from wolfSSL official security vulnerability
+      entry and NVD description. Expected root cause: PKCS7 SignedData custom signed
+      attributes exceed fixed signedAttribs[7] capacity due to incorrect capacity
+      passed to EncodeAttributes.'
+  status: ready_for_ingestion
+  notes: []
+- poc_id: WOLFSSL-POC-0007
+  source_library: wolfssl
+  corpus_root: data/wolfssl_collect
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0007
+  directory_name: WOLFSSL-POC-0007
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files: []
+    poc_c_files:
+    - poc/poc_pkcs7_ori_oversized_oid_min.c
+    poc_dir:
+    - poc/poc_pkcs7_ori_oversized_oid_min.c
+    run_sh: []
+    scripts: []
+    inputs:
+    - inputs/reconstructed/pkcs7_ori_oversized_oid.der
+    logs:
+    - logs/current_version/wolfssl-current-asan-pkcs7-ori-oid/asan_grep_result.txt
+    - logs/current_version/wolfssl-current-asan-pkcs7-ori-oid/pkcs7_ori_oversized_oid_min_exit_code.txt
+    - logs/fixed_version/wolfssl-v5.9.1-stable-asan-pkcs7-ori-oid/asan_grep_result.txt
+    - logs/fixed_version/wolfssl-v5.9.1-stable-asan-pkcs7-ori-oid/pkcs7_ori_oversized_oid_min_exit_code.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-pkcs7-ori-oid/asan_grep_result.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-pkcs7-ori-oid/build_config_grep.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-pkcs7-ori-oid/build_info.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-pkcs7-ori-oid/pkcs7_ori_oversized_oid_min_exit_code.txt
+    sources:
+    - sources/git_history/context/current_pkcs7_ori_symbol_grep.txt
+    - sources/git_history/context/git_log_grep_pkcs7_ori.txt
+    - sources/git_history/context/git_log_pickaxe_DecryptOri.txt
+    - sources/git_history/context/git_log_pickaxe_oriOID.txt
+    - sources/git_history/context/pr_10116_DecryptOri_fix_context.patch
+    - sources/git_history/context/pr_10116_ori_oversized_oid_test_context.patch
+    - sources/git_history/context/pr_10116_relevant_grep.txt
+    - sources/git_history/patches/pr_10116.patch
+    - sources/github_advisory/CVE-2026-5295_relevant_grep.txt
+    - sources/github_advisory/GHSA-fgx8-q3cf-p457.html
+    - sources/nvd/CVE-2026-5295.html
+    - sources/nvd/CVE-2026-5295_relevant_grep.txt
+    - sources/wolfssl_official/CVE-2026-5295_relevant_grep.txt
+    - sources/wolfssl_official/security_vulnerabilities.html
+    notes:
+    - notes/candidate_selection.md
+    - notes/version_matrix.md
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files: []
+  metadata_summary:
+    title: wolfSSL PKCS7 ORI OID processing stack buffer overflow
+    source_url: null
+    state: null
+    has_poc: null
+    poc_type: null
+    quality: Q1_strict_reproduction_candidate
+    component: null
+    trigger_behavior: PKCS7 ORI OID processing stack buffer overflow
+    affected_version: null
+    critical_api_or_function: null
+    root_cause: null
+    reproduction_command: null
+    input_artifact: reconstructed_from_official_pr_10116_test_pattern
+    fix_evidence: null
+    artifact_class: null
+    local_compile: null
+    local_run: null
+    strict_reproduction: true
+    tested_library: null
+    local_test_result: null
+    input_status: null
+    validation_notes: 'Candidate selected from wolfSSL official security vulnerability
+      entry, NVD, and GitHub Advisory. Expected root cause: wc_PKCS7_DecryptOri copies
+      an ASN.1 parsed ORI OID into oriOID[MAX_OID_SZ] without validating OID length
+      first. Requires PKCS7 support and ORI decrypt callback.'
+  status: ready_for_ingestion
+  notes: []
+- poc_id: WOLFSSL-POC-0008
+  source_library: wolfssl
+  corpus_root: data/wolfssl_collect
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0008
+  directory_name: WOLFSSL-POC-0008
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files: []
+    poc_c_files:
+    - poc/poc_tls13_pqc_hybrid_truncated_keyshare_min.c
+    poc_dir:
+    - poc/poc_tls13_pqc_hybrid_truncated_keyshare_min.c
+    run_sh: []
+    scripts: []
+    inputs:
+    - inputs/reconstructed/tls13_pqc_hybrid_truncated_keyshare_serverhello.bin
+    logs:
+    - logs/current_version/wolfssl-current-asan-pqc-keyshare-cleanup/asan_grep_result.txt
+    - logs/current_version/wolfssl-current-asan-pqc-keyshare-cleanup/tls13_pqc_hybrid_truncated_keyshare_min_exit_code.txt
+    - logs/fixed_version/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/asan_grep_result.txt
+    - logs/fixed_version/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/preprocessor_macro_probe_after_rebuild.txt
+    - logs/fixed_version/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/tls13_pqc_hybrid_truncated_keyshare_min_exit_code.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/asan_grep_result.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/build_config_pqc_grep.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/build_config_pqc_grep_after_rebuild.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/preprocessor_macro_probe_after_rebuild.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/preprocessor_macro_probe_before_rebuild.txt
+    - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/tls13_pqc_hybrid_truncated_keyshare_min_exit_code.txt
+    - notes/asan_oracle_summary.md
+    sources:
+    - notes/source_evidence.md
+    - sources/git_history/context/11d2f4894_candidate_relevant_grep.txt
+    - sources/git_history/context/46f632038_ProcessPqcHybridClient_fix_context.patch
+    - sources/git_history/context/46f632038_candidate_relevant_grep.txt
+    - sources/git_history/context/46f632038_truncated_keyshare_test_context.patch
+    - sources/git_history/context/9467d82ae_candidate_relevant_grep.txt
+    - sources/git_history/context/candidate_commit_membership.txt
+    - sources/git_history/context/candidate_patch_grep_summary.txt
+    - sources/git_history/context/configure_pqc_options_v5_9_0.txt
+    - sources/git_history/context/current_tls13_pqc_keyshare_symbol_grep.txt
+    - sources/git_history/context/e37118bdf_candidate_relevant_grep.txt
+    - sources/git_history/context/e37118bdf_dangling_keyshare_test_context.patch
+    - sources/git_history/context/git_log_grep_tls13_pqc_double_free.txt
+    - sources/git_history/context/git_log_pickaxe_KyberKey.txt
+    - sources/git_history/context/git_log_pickaxe_ML_KEM_512.txt
+    - sources/git_history/context/git_log_pickaxe_P256_ML_KEM_512.txt
+    - sources/git_history/context/git_log_regex_free_kyber_mlkem.txt
+    - sources/git_history/context/keyshare_process_relevant_grep.txt
+    - sources/git_history/context/v5_9_0_KeyShare_Process_context.txt
+    - sources/git_history/context/v5_9_0_ProcessPqcHybridClient_context.txt
+    - sources/git_history/context/v5_9_0_to_v5_9_1_ProcessPqcHybridClient.diff
+    - sources/git_history/context/v5_9_0_to_v5_9_1_pqc_cleanup_diff_grep.txt
+    - sources/git_history/context/v5_9_0_to_v5_9_1_src.diff
+    - sources/git_history/context/v5_9_1_KeyShare_Process_context.txt
+    - sources/git_history/context/v5_9_1_ProcessPqcHybridClient_context.txt
+    - sources/git_history/patches/11d2f4894_candidate.patch
+    - sources/git_history/patches/46f632038_candidate.patch
+    - sources/git_history/patches/9467d82ae_candidate.patch
+    - sources/git_history/patches/e37118bdf_candidate.patch
+    - sources/github_advisory/CVE-2026-5460_github_advisory_search.html
+    - sources/github_advisory/CVE-2026-5460_relevant_grep.txt
+    - sources/nvd/CVE-2026-5460.html
+    - sources/nvd/CVE-2026-5460_relevant_grep.txt
+    - sources/wolfssl_official/CVE-2026-5460_relevant_grep.txt
+    - sources/wolfssl_official/security_vulnerabilities.html
+    notes:
+    - notes/candidate_selection.md
+    - notes/reproduction_route.md
+    - notes/version_matrix.md
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files: []
+  metadata_summary:
+    title: wolfSSL TLS 1.3 PQC hybrid KeyShare KyberKey error cleanup double-free
+    source_url: null
+    state: null
+    has_poc: null
+    poc_type: null
+    quality: Q1_strict_reproduction_candidate
+    component: null
+    trigger_behavior: TLS 1.3 PQC hybrid KeyShare error cleanup double-free
+    affected_version: null
+    critical_api_or_function: null
+    root_cause: null
+    reproduction_command: null
+    input_artifact: reconstructed_from_official_46f632038_test_pattern
+    fix_evidence: null
+    artifact_class: null
+    local_compile: null
+    local_run: null
+    strict_reproduction: true
+    tested_library: null
+    local_test_result: null
+    input_status: null
+    validation_notes: 'Candidate selected from wolfSSL official security vulnerability
+      entry. Expected root cause: malformed TLS 1.3 PQC hybrid KeyShare triggers an
+      error cleanup path that double-frees KyberKey / ML-KEM state.'
+  status: ready_for_ingestion
+  notes: []
+- poc_id: WOLFSSL-POC-0009
+  source_library: wolfssl
+  corpus_root: data/wolfssl_collect
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0009
+  directory_name: WOLFSSL-POC-0009
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files: []
+    poc_c_files:
+    - poc/poc_d2i_ssl_session_bounds_min.c
+    poc_dir:
+    - poc/poc_d2i_ssl_session_bounds_min.c
+    run_sh: []
+    scripts: []
+    inputs: []
+    logs:
+    - logs/current_version/wolfssl-current-asan-session-deser/asan_grep_result.txt
+    - logs/current_version/wolfssl-current-asan-session-deser/d2i_ssl_session_bounds_min_exit_code.txt
+    - logs/fixed_version/wolfssl-v5.9.0-stable-asan-session-deser/asan_grep_result.txt
+    - logs/fixed_version/wolfssl-v5.9.0-stable-asan-session-deser/build_config_session_grep.txt
+    - logs/fixed_version/wolfssl-v5.9.0-stable-asan-session-deser/d2i_ssl_session_bounds_min_exit_code.txt
+    - logs/vulnerable_version/wolfssl-v5.8.4-stable-asan-session-deser/asan_grep_result.txt
+    - logs/vulnerable_version/wolfssl-v5.8.4-stable-asan-session-deser/build_config_session_grep.txt
+    - logs/vulnerable_version/wolfssl-v5.8.4-stable-asan-session-deser/d2i_ssl_session_bounds_min_exit_code.txt
+    - notes/asan_oracle_summary.md
+    sources:
+    - sources/git_history/context/0a99a08b0_candidate_relevant_grep.txt
+    - sources/git_history/context/211124950_candidate_relevant_grep.txt
+    - sources/git_history/context/67abcc6f2_candidate_relevant_grep.txt
+    - sources/git_history/context/7245ad02b_candidate_relevant_grep.txt
+    - sources/git_history/context/86212fd33_candidate_relevant_grep.txt
+    - sources/git_history/context/86212fd33_d2i_session_test_context.patch
+    - sources/git_history/context/candidate_commit_membership.txt
+    - sources/git_history/context/candidate_patch_grep_summary.txt
+    - sources/git_history/context/configure_session_options_v5_8_4.txt
+    - sources/git_history/context/current_ssl_session_symbol_grep.txt
+    - sources/git_history/context/current_test_wolfSSL_d2i_SSL_SESSION_context.txt
+    - sources/git_history/context/f94eb68ea_candidate_relevant_grep.txt
+    - sources/git_history/context/git_log_grep_session_deser.txt
+    - sources/git_history/context/git_log_pickaxe_SESSION_CERTS.txt
+    - sources/git_history/context/git_log_pickaxe_d2i_SSL_SESSION.txt
+    - sources/git_history/context/git_log_regex_session_deser.txt
+    - sources/git_history/context/session_deser_tests_examples_grep.txt
+    - sources/git_history/context/v5_8_4_d2i_SSL_SESSION_context.txt
+    - sources/git_history/context/v5_8_4_d2i_symbol_locations.txt
+    - sources/git_history/context/v5_8_4_ssl_sess_d2i_context.txt
+    - sources/git_history/context/v5_8_4_to_v5_9_0_d2i_SSL_SESSION.diff
+    - sources/git_history/context/v5_8_4_to_v5_9_0_ssl_sess_d2i.diff
+    - sources/git_history/context/v5_9_0_d2i_SSL_SESSION_context.txt
+    - sources/git_history/context/v5_9_0_d2i_symbol_locations.txt
+    - sources/git_history/context/v5_9_0_ssl_sess_d2i_context.txt
+    - sources/git_history/context/v5_9_0_test_wolfSSL_d2i_SSL_SESSION_context.txt
+    - sources/git_history/patches/0a99a08b0_candidate.patch
+    - sources/git_history/patches/211124950_candidate.patch
+    - sources/git_history/patches/67abcc6f2_candidate.patch
+    - sources/git_history/patches/7245ad02b_candidate.patch
+    - sources/git_history/patches/86212fd33_candidate.patch
+    - sources/git_history/patches/f94eb68ea_candidate.patch
+    - sources/github_advisory/CVE-2026-2646_github_advisory_search.html
+    - sources/github_advisory/CVE-2026-2646_relevant_grep.txt
+    - sources/nvd/CVE-2026-2646.html
+    - sources/nvd/CVE-2026-2646_relevant_grep.txt
+    - sources/wolfssl_official/CVE-2026-2646_relevant_grep.txt
+    - sources/wolfssl_official/security_vulnerabilities.html
+    notes:
+    - notes/candidate_selection.md
+    - notes/reproduction_route.md
+    - notes/version_matrix.md
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files: []
+  metadata_summary:
+    title: wolfSSL wolfSSL_d2i_SSL_SESSION SESSION_CERTS heap-buffer-overflow
+    source_url: null
+    state: null
+    has_poc: null
+    poc_type: null
+    quality: Q1_strict_reproduction_candidate
+    component: null
+    trigger_behavior: SSL_SESSION deserialization heap-buffer-overflow
+    affected_version: null
+    critical_api_or_function: null
+    root_cause: null
+    reproduction_command: null
+    input_artifact: reconstructed_from_official_session_deserialization_test_pattern
+    fix_evidence: null
+    artifact_class: null
+    local_compile: null
+    local_run: null
+    strict_reproduction: true
+    tested_library: null
+    local_test_result: null
+    input_status: null
+    validation_notes: 'Candidate selected from wolfSSL official security vulnerability
+      entry. Expected root cause: wolfSSL_d2i_SSL_SESSION reads certificate and session
+      id lengths from untrusted serialized session input without sufficient bounds
+      validation when SESSION_CERTS is enabled.'
+  status: ready_for_ingestion
+  notes: []
+- poc_id: WOLFSSL-POC-0010
+  source_library: wolfssl
+  corpus_root: data/wolfssl_collect
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0010
+  directory_name: WOLFSSL-POC-0010
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files: []
+    poc_c_files:
+    - poc/poc_select_next_proto_oob_read_min.c
+    poc_dir:
+    - poc/poc_select_next_proto_oob_read_min.c
+    run_sh: []
+    scripts: []
+    inputs:
+    - inputs/reconstructed/select_next_proto_malformed_lists.bin
+    logs:
+    - logs/current_version/wolfssl-current-asan-alpn-parser/asan_grep_result.txt
+    - logs/current_version/wolfssl-current-asan-alpn-parser/select_next_proto_oob_read_min_exit_code.txt
+    - logs/fixed_version/wolfssl-v5.9.0-stable-asan-alpn-parser/asan_grep_result.txt
+    - logs/fixed_version/wolfssl-v5.9.0-stable-asan-alpn-parser/select_next_proto_oob_read_min_exit_code.txt
+    - logs/vulnerable_version/wolfssl-v5.8.4-stable-asan-alpn-parser/asan_grep_result.txt
+    - logs/vulnerable_version/wolfssl-v5.8.4-stable-asan-alpn-parser/build_config_alpn_grep.txt
+    - logs/vulnerable_version/wolfssl-v5.8.4-stable-asan-alpn-parser/select_next_proto_oob_read_min_exit_code.txt
+    - notes/asan_oracle_summary.md
+    sources:
+    - sources/git_history/context/af329b38a_select_next_proto_relevant_grep.txt
+    - sources/git_history/context/candidate_commit_membership.txt
+    - sources/git_history/context/configure_alpn_options_v5_8_4.txt
+    - sources/git_history/context/current_alpn_symbol_grep.txt
+    - sources/git_history/context/git_log_grep_alpn.txt
+    - sources/git_history/context/git_log_pickaxe_HAVE_ALPN.txt
+    - sources/git_history/context/git_log_pickaxe_TLSX_ALPN.txt
+    - sources/git_history/context/git_log_regex_alpn_length.txt
+    - sources/git_history/context/select_next_proto_tests_examples_grep.txt
+    - sources/git_history/context/v5_8_4_select_next_proto_context.txt
+    - sources/git_history/context/v5_8_4_select_next_proto_locations.txt
+    - sources/git_history/context/v5_8_4_to_v5_9_0_alpn_diff_grep.txt
+    - sources/git_history/context/v5_8_4_to_v5_9_0_select_next_proto.diff
+    - sources/git_history/context/v5_9_0_select_next_proto_context.txt
+    - sources/git_history/context/v5_9_0_select_next_proto_locations.txt
+    - sources/git_history/patches/af329b38a_select_next_proto.patch
+    - sources/github_advisory/CVE-2026-3547_github_advisory_search.html
+    - sources/github_advisory/CVE-2026-3547_relevant_grep.txt
+    - sources/nvd/CVE-2026-3547.html
+    - sources/nvd/CVE-2026-3547_relevant_grep.txt
+    - sources/wolfssl_official/CVE-2026-3547_relevant_grep.txt
+    - sources/wolfssl_official/security_vulnerabilities.html
+    notes:
+    - notes/candidate_selection.md
+    - notes/version_matrix.md
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files: []
+  metadata_summary:
+    title: wolfSSL ALPN parsing out-of-bounds read
+    source_url: null
+    state: null
+    has_poc: null
+    poc_type: null
+    quality: Q1_strict_reproduction_candidate
+    component: null
+    trigger_behavior: TLS ALPN extension parsing out-of-bounds read
+    affected_version: null
+    critical_api_or_function: null
+    root_cause: null
+    reproduction_command: null
+    input_artifact: reconstructed_from_official_select_next_proto_fix_pattern
+    fix_evidence: null
+    artifact_class: null
+    local_compile: null
+    local_run: null
+    strict_reproduction: true
+    tested_library: null
+    local_test_result: null
+    input_status: null
+    validation_notes: 'Candidate selected from wolfSSL official security vulnerability
+      entry. Expected root cause: incomplete validation in ALPN protocol-list parsing
+      when HAVE_ALPN / --enable-alpn is enabled.'
+  status: ready_for_ingestion
+  notes: []

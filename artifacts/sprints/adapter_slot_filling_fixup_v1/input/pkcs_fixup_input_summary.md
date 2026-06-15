@@ -1,0 +1,40 @@
+# PKCS Fixup Input Summary
+
+```yaml
+schema: pkcs_fixup_input_summary_v1
+generated_at: '2026-06-11T15:08:07+00:00'
+adapter_id: pkcs_container_parsing_openssl
+family: pkcs_container_parsing
+target_library: openssl
+scope: only pkcs_container_parsing -> OpenSSL
+not_touched:
+- asn1_nested_boundary -> OpenSSL
+- asn1_nested_boundary -> mbedTLS
+- blocked targets
+forbidden_actions:
+- no_render
+- no_compile_run
+- no_poc_run
+- no_c_generation
+- no_adapter_recipe_yaml_modification
+- no_slot_filling_plan_yaml_modification
+- no_family_template_modification
+- no_knowledge_raw_modification
+- no_knowledge_base_modification
+- no_pattern_bank_modification
+- no_scheduler_seed_modification
+- no_commit_push_git_add
+inputs:
+  slot_plan: artifacts/sprints/adapter_slot_filling_plan_v1/slot_filling_plans/pkcs_container_parsing/openssl/slot_filling_plan.yaml
+  slot_schema: artifacts/sprints/adapter_slot_filling_plan_v1/schemas/pkcs_container_parsing_openssl_slot_bindings_schema.yaml
+  prompt_context: artifacts/sprints/adapter_slot_filling_plan_v1/prompt_contexts/pkcs_container_parsing_openssl_prompt_context.md
+  validation_rules: artifacts/sprints/adapter_slot_filling_plan_v1/validation_rules/adapter_slot_binding_validation_rules.yaml
+  adapter_recipe: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/adapter_recipe.yaml
+  family_template: normalized_templates/wolfssl_family/pkcs_container_parsing
+  previous_raw: artifacts/sprints/adapter_slot_filling_v1/logs/pkcs_container_parsing_openssl_glm_raw.txt
+  previous_bindings: artifacts/sprints/adapter_slot_filling_v1/slot_bindings/pkcs_container_parsing/openssl/slot_bindings.yaml
+  current_adapter_recipe_slot_bindings: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_bindings.yaml
+previous_failure: GLM echoed the slot filling plan and did not form valid api/cleanup/oracle
+  bindings.
+yaml_slot_bindings_only: true
+```

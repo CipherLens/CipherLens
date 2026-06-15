@@ -1,0 +1,19 @@
+schema: oracle_adjustment_v1
+family: cipher_aead_lifecycle_ccm
+source_triage: /home/wen/work/crypto-pattern-fuzz/artifacts/triage/ccm_plaintext_length_not_announced_triage_v1
+decision: downgrade_to_observation
+payload_only_without_explicit_plaintext_length:
+  case_type: payload_only_without_explicit_plaintext_length
+  expected_behavior: observation
+  allowed_actual_behavior:
+  - success
+  - error
+  candidate: false
+  label: state_transition_observation
+with_aad_without_plaintext_length_announcement:
+  case_type: with_aad_without_plaintext_length_announcement
+  expected_behavior: error_or_documented
+  candidate_condition: actual_behavior == success
+  candidate_label: unexpected_success_after_invalid_state_candidate
+main_feedback_written: false
+pattern_bank_modified: false

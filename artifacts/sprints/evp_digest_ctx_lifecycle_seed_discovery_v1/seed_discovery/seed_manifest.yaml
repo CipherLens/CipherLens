@@ -1,0 +1,176 @@
+schema: lifecycle_seed_manifest_v1
+generated_at: '2026-06-13T15:40:05+00:00'
+family: evp_digest_ctx_lifecycle
+track: lifecycle
+archetype: evp_context_lifecycle
+target_library: openssl
+seed_ready: true
+uses_der_parsing: false
+uses_trailing_garbage: false
+uses_full_consumption_oracle: false
+api_cards_used:
+- knowledge/family_cards/evp_digest_ctx_lifecycle.yaml
+previous_completed_family:
+  family: pkey_verify_semantic
+  status: completed_no_candidate
+seeds:
+- seed_id: evp_digest_ctx_lifecycle_valid_init_update_final_control
+  seed_type: valid_digest_lifecycle_control
+  api_sequence:
+  - EVP_MD_CTX_new
+  - EVP_DigestInit_ex(ctx, EVP_sha256(), NULL)
+  - EVP_DigestUpdate(ctx, message, message_len)
+  - EVP_DigestFinal_ex(ctx, digest_out, &digest_out_len)
+  - EVP_MD_CTX_free
+  expected_behavior: success
+  oracle:
+  - unexpected_failure_on_valid_sequence
+  - crash_or_sanitizer
+  enabled: true
+  mutation_hints:
+  - valid init/update/final control
+  - digest output length observation
+  render_requirements:
+    render_mode: lifecycle_harness
+    target_header: openssl/evp.h
+    observe_return_codes: true
+    observe_digest_output_length: true
+    must_not_use_der_parsing: true
+    must_not_use_trailing_garbage: true
+    must_not_use_full_consumption_oracle: true
+    cleanup:
+    - EVP_MD_CTX_free
+- seed_id: evp_digest_ctx_lifecycle_update_before_init_control
+  seed_type: invalid_state_update_before_init_control
+  api_sequence:
+  - EVP_MD_CTX_new
+  - EVP_DigestUpdate(ctx, message, message_len)
+  - EVP_MD_CTX_free
+  expected_behavior: error_or_reject
+  oracle:
+  - unexpected_success_after_invalid_state
+  - crash_or_sanitizer
+  enabled: true
+  mutation_hints:
+  - call update before digest init
+  - invalid state return-code observation
+  render_requirements:
+    render_mode: lifecycle_harness
+    target_header: openssl/evp.h
+    observe_return_codes: true
+    observe_digest_output_length: true
+    must_not_use_der_parsing: true
+    must_not_use_trailing_garbage: true
+    must_not_use_full_consumption_oracle: true
+    cleanup:
+    - EVP_MD_CTX_free
+- seed_id: evp_digest_ctx_lifecycle_final_without_update_control
+  seed_type: final_without_update_control
+  api_sequence:
+  - EVP_MD_CTX_new
+  - EVP_DigestInit_ex(ctx, EVP_sha256(), NULL)
+  - EVP_DigestFinal_ex(ctx, digest_out, &digest_out_len)
+  - EVP_MD_CTX_free
+  expected_behavior: success_or_error_documented
+  oracle:
+  - state_transition_observation
+  - crash_or_sanitizer
+  enabled: true
+  mutation_hints:
+  - empty message digest observation
+  - documented final-without-update boundary
+  render_requirements:
+    render_mode: lifecycle_harness
+    target_header: openssl/evp.h
+    observe_return_codes: true
+    observe_digest_output_length: true
+    must_not_use_der_parsing: true
+    must_not_use_trailing_garbage: true
+    must_not_use_full_consumption_oracle: true
+    cleanup:
+    - EVP_MD_CTX_free
+  notes: Empty-message digest can be valid; success alone must not be treated as a vulnerability.
+- seed_id: evp_digest_ctx_lifecycle_update_after_final_control
+  seed_type: update_after_final_control
+  api_sequence:
+  - EVP_MD_CTX_new
+  - EVP_DigestInit_ex(ctx, EVP_sha256(), NULL)
+  - EVP_DigestUpdate(ctx, message, message_len)
+  - EVP_DigestFinal_ex(ctx, digest_out, &digest_out_len)
+  - EVP_DigestUpdate(ctx, message, message_len)
+  - EVP_MD_CTX_free
+  expected_behavior: error_or_documented_behavior
+  oracle:
+  - state_transition_observation
+  - crash_or_sanitizer
+  enabled: true
+  mutation_hints:
+  - post-final update boundary
+  - state transition observation
+  render_requirements:
+    render_mode: lifecycle_harness
+    target_header: openssl/evp.h
+    observe_return_codes: true
+    observe_digest_output_length: true
+    must_not_use_der_parsing: true
+    must_not_use_trailing_garbage: true
+    must_not_use_full_consumption_oracle: true
+    cleanup:
+    - EVP_MD_CTX_free
+  notes: API-contract boundary; do not claim a vulnerability from success alone.
+- seed_id: evp_digest_ctx_lifecycle_reset_reuse_control
+  seed_type: reset_reuse_control
+  api_sequence:
+  - EVP_MD_CTX_new
+  - EVP_DigestInit_ex(ctx, EVP_sha256(), NULL)
+  - EVP_DigestUpdate(ctx, message, message_len)
+  - EVP_DigestFinal_ex(ctx, digest_out, &digest_out_len)
+  - EVP_MD_CTX_reset
+  - EVP_DigestInit_ex(ctx, EVP_sha256(), NULL)
+  - EVP_DigestUpdate(ctx, message, message_len)
+  - EVP_DigestFinal_ex(ctx, digest_out, &digest_out_len)
+  - EVP_MD_CTX_free
+  expected_behavior: success
+  oracle:
+  - unexpected_failure_on_valid_sequence
+  - crash_or_sanitizer
+  enabled: true
+  mutation_hints:
+  - reset and reuse
+  - second digest output length observation
+  render_requirements:
+    render_mode: lifecycle_harness
+    target_header: openssl/evp.h
+    observe_return_codes: true
+    observe_digest_output_length: true
+    must_not_use_der_parsing: true
+    must_not_use_trailing_garbage: true
+    must_not_use_full_consumption_oracle: true
+    cleanup:
+    - EVP_MD_CTX_free
+- seed_id: evp_digest_ctx_lifecycle_use_after_free_negative_control
+  seed_type: unsafe_negative_control
+  api_sequence:
+  - EVP_MD_CTX_new
+  - EVP_DigestInit_ex(ctx, EVP_sha256(), NULL)
+  - EVP_MD_CTX_free
+  - EVP_DigestUpdate(ctx, message, message_len)
+  expected_behavior: skip_or_disabled_by_default
+  oracle:
+  - disabled_unsafe_control
+  enabled: false
+  mutation_hints:
+  - unsafe use-after-free negative control retained only as disabled metadata
+  render_requirements:
+    render_mode: lifecycle_harness
+    target_header: openssl/evp.h
+    observe_return_codes: true
+    observe_digest_output_length: true
+    must_not_use_der_parsing: true
+    must_not_use_trailing_garbage: true
+    must_not_use_full_consumption_oracle: true
+    cleanup:
+    - EVP_MD_CTX_free
+  disabled_reason: Use-after-free is intentionally invalid memory use and must not be run by default as
+    a normal campaign case.
+next_stage: generic_lifecycle_mutation_engine

@@ -1,0 +1,104 @@
+c674cec4a api.c: move out tests into other files
+061311d6c zd/21661: harden X.509 chain validation, session ticket identity binding, and peer cert restore
+ecfd1174b refactor sanity pointer set of session and clean up macro guards
+c335f7dd6 Remove UTF-8 chars
+985cceaa9 Fix session cache restore dangling pointer (ZD 21423)
+f6b022883 fix for acert builds
+c9c237606 TLS1.3: Improve session version handling for resumption
+fb4600bf5 Core: Unconditionally expose WOLFSSL_SESSION::version
+4c75a866d Add inline documentation for missing macros and fix spelling errors
+38b52d807 nginx 1.28.1
+86212fd33 add test for session deserialization input validation
+610d530e4 Add Name Constraints extension support with wolfSSL_X509_get_ext_d2i() and wolfSSL_NAME_CONSTRAINTS_check_name()
+43d831ff0 API testing: split out more test cases
+0b2fb66af api.c: Split out more functions
+f9063c406 Enables dynamic TLS cert loading with OCSP
+453557242 Use memio in tests, fix ifdef, fix typos
+5efc4a7cd Fix tests
+3bdb43eb6 Add support for certificate_authorities extension in ClientHello
+d998d01a0 coverity: prune dead code in ssl_sess.c.
+b39c2206d modified client chain at server side
+c6974a921 fix for return values of write_ex/read_ex, propogate PARAMS, handle CRL with load_verify_locations, fix for get verified/unverified chain
+3444d5c52 Fixes from compatibility header decoupling PR #8182. Fixes issue with wolfEngine and wolfProvider.  Change behavior for openssl compatibility headers to be installed unless `--enable-opensslextra=noinstall` is used. Removed dependency on X509 small with SESSION_CERTS, KEEP_PEER_CERTS and KEEP_OUR_CERT.
+ef67b1c06 Support for building without wolfssl/openssl header files. ZD 18465 * Fix for `TlsSessionCacheGetAndLock` that was not checking the sessionIDSz, so could return a pointer to an invalid session (if 0's). Resolves issue with `test_wolfSSL_CTX_sess_set_remove_cb` test. * Fix cast warning with `HAVE_EX_DATA` in Windows VS. * Fix openssl_extra without PKCS12. * Refactor the EX data crypto and session API's to gate on `HAVE_EX_DATA_CRYPTO`. * Grouped the EX data API's in ssl.h * Moved API's in ssl.h to separate the compatibility ones from ours.
+86ad96ca2 X509: improve testing coverage
+6607314dc Address code comments, rewrite get issuer internals, use better internal names, get rid of all lines over 80 chars
+7faed6cde X509 attribute cert (acert) support.
+685bfd1f9 add wolfSSL_get0_peername() and SSL_set_mtu().
+195bbcc31 Generic Memory Pools Fix
+8e9810e87 ssl.c: Move functions out to separate files
+291c538e5 Ignore session ID's shorter than 32 bytes instead of erroring out
+578f56e60 Test api.c: change more tests to use Expect instead of Assert
+1106e5ff0 TLS v1.3: Support a stateful ticket and test HAVE_EXT_CACHE (#5960)
+5f39c594a TLS 1.3: hold decrypted ticket to check which ciphersuite matches
+55a7e24cf Support pthread_rwlock (#5952)
+023db01ac * Fixed some build configuration variations. * Fixed `PEM_BUFSIZE` macro redefined when building with coexist. * Updated the `user_settings_all.h` and `user_settings_wolfboot_keytools.h` to include latest options. * Improved API unit test error case checking where `TEST_RES_CHECK` is not used. * Changed `TEST_SKIPPED` to unique value. * Added CI tests for enable-all, small stack, and user setting templates.
+8c4887c16 Free session in `wolfSSL_clear`
+25aa0af26 ssl.c break out
+90f53aed3 ssl.c: move out X509 store APIs to new file
+582f0d82e address review feedback for PKCS7 compat additions
+3fba5d17c Various portability improvements: * Change DTLS epoch size word16. * Allow override of the `RECORD_SIZE` and `STATIC_BUFFER_LEN`. * Remove endianness force from game build. * Add `gmtime_s` option. * Fix for macro conflict with `MAX_KEY_SIZE`. * Expose functions `wolfSSL_X509_notBefore`, `wolfSSL_X509_notAfter`, `wolfSSL_X509_version` without `OPENSSL_EXTRA`.
+ce514e6fc add PKCS7_sign, PKCS7_final, SMIME_write_PKCS7. add signer cert verify support to PKCS7_verify, support for PKCS7_TEXT, PKCS7_DETACHED, PKCS7_STREAM
+45ff8af02 refactor PKCS12 parse key creation
+1d712d47b Access to session cache is now atomic
+afca455cd stunnel 5.61 support
+569c066fa Improve TLS client side session cache references to provide option for not returning an internal session cache pointer. Now use `wolfSSL_get1_sesson` for reference logic, that requires calling `wolfSSL_SESSION_free`. To disable this feature use `NO_SESSION_CACHE_REF`.
+911d95e5e Add CTX static memory API unit tests. Expanded crypto callback TLS tests to older SSL/TLS and DTLS.
+0f6e56409 Rebase fixes
+d4391bd99 Parse distinguished names in `DoCertificateRequest`
+7dea1dcd3 OpenResty 1.13.6.2 and 1.19.3.1 support
+e184cf5c2 fix api.c build with --enable-opensslall and --enable-debug
+52be7c94b Introduce thread safety to unsafe functions in wolfSSL
+780e8a461 Fixes for building `--enable-wpas=small` with WPA Supplicant v2.7.
+3621af999 Implement new OpenSSL API
+10aa8a4ff Added support `--enable-wpas=small` for reduced code size when building against the WPA supplicant with EAP-TLS. This does not use `OPENSSL_EXTRA`, which helps reduce code size.
+76eec8884 clean up memory after test and don't leak x509 with get session peer
+49def9699 add test for get0 session peer certificate
+ee13dfd87 Add Qt 5.12 and 5.13 support
+b71758895 Add support for SSL_CTX_set0_chain
+2dafd2102 Add Apache HTTP Server compatibility and --enable-apachehttpd option (#2466)
+22c398494 DTLS Maintenance The options to switch on and off the code to serialize/deserialize items in the struct need to match the options for the struct. (ZD5130, ZD5590)
+e96ede65c Don't resume if stored session's ciphersuite isn't in client list
+10dde2436 Added support for `SHOW_CERTS` with `OPENSSL_EXTRA_X509_SMALL` for embedded debugging of certs. Minor build warning fixes with `OPENSSL_EXTRA` and `STM32_HASH` on IAR.
+3f82fb62a SSL_get_peer_cert_chain() count value check in api.c
+ffc0f0fb2 Fix for building with `SESSION_CERTS` using pointer after free. Documented `store->discardSessionCerts`.
+498d8e6c1 Fix for old certs not discarded when server does not resume session
+7d39a897d Refactor of the verify callback to eliminate duplicate code and provide consistency with various build options. Documented build options and added code comments in new DoVerifyCallback function. Added documentation in test.h `myVerify` function for arguments and return code. Fix from commit da1ac36 which added `current_cert` to `WOLFSSL_X509_STORE_CTX`, but is only required for ASIO compatibility and is not used.
+bb979980c add test case for parsing URI from certificate
+ce6728951 Added a new `--enable-opensslall` option, which ensures all openssl features are enabled. Documented and tested building the various open source defines we support in our build.
+4614bd4e5 scan-build warning and AES key size builds for ARMv8
+025ba1445 add WOLFSSL_VERIFY_CB_ALL_CERTS macro
+a918dfdb3 discard session chain in SSL_clear
+a643ae190 return code of sk num, X509 store peer chain, and get text by NID fix
+fce1b90b6 SSL_get_peer_cert_chain(ssl)->count value check in api.c
+c6988b74b Remove unused files
+c195c8599 merge master
+279f12cc7 fix test_wolfSSL_msgCb
+527c94c06 add test_wolfSSL_msgCb
+4c8d22808 Added `WOLFSSL_ALT_CERT_CHAINS` option to enable checking cert aginst multiple CA's. Added new API's for `wolfSSL_get_peer_alt_chain` and `wolfSSL_is_peer_alt_cert_chain`, which allow a way to know if alternate cert chain is used and provides a way to get it (when `SESSION_CERTS` is defined). Cleanup of the defines to enable debugging certs (just use `SHOW_CERTS` now).
+4edcbc79c RipeMd and Sha224 added to unit test.
+570befb63 Fixes for using async. Combine duplicate `DoCertificate` and `DoTls13Certificate` code into `ProcessPeerCerts`. Cleanup of the XMALLOC/XFREE to use ssl->heap.
+2b1e9973e Add TLS v1.3 as an option
+c1640e8a3 Intel QuickAssist (QAT) support and async enhancements/fixes: * Adds ./configure "--with-intelqa=../QAT1.6”, port files, memory management and README.md (see wolfcrypt/src/port/intel/). * Added Intel QAT support for RSA public/private (CRT/non-CRT), AES CBC/GCM, ECDH/ECDSA, DH, DES3, SHA, SHA224, SHA256, SHA384, SHA512, MD5 and HMAC. * wolfSSL async enabled all client and server: PKI, Encrypt/Decrypt, Hashing/HMAC and Certificate Sign/Verify. * wolfSSL async support in functions: Encrypt, Decrypt, VerifyMAC, BuildMessage, ConfirmSignature, DoCertificate, ParseCertRelative, and MakeSignature. * wolfCrypt test and benchmark async support added for all HW acceleration. * wolfCrypt benchmark multi-threading support. * Added QuickAssist memory overrides for XMALLOC, XFREE and XREALLOC. XREALLOC determines if existing pointer needs reallocated for NUMA. * Refactor to make sure “heap” is available for async dev init. * Added async support for all examples for connect, accept, read and write. * Added new WC_BIGINT (in wolfmath.c) for async hardware support. * Added async simulator tests for DES3 CBC, AES CBC/GCM. * Added QAT standalone build for unit testing. * Added int return code to SHA and MD5 functions. * Refactor of the async stack variable handling, so async operations have generic args buffer area and cleanup function pointer. * Combined duplicate code for async push/pop handling. * Refactor internal.c to add AllocKey / FreeKey. * Refactor of hash init/free in TLS to use InitHashes and FreeHashes. * Refactor of the async event->context to use WOLF_EVENT_TYPE_ASYNC_WOLFSSL for WOLFSSL* and WOLF_EVENT_TYPE_ASYNC_WOLFCRYPT for WC_ASYNC_DEV*. * Suppress error message for WC_PENDING_E. * Implemented "wolfSSL_EVP_MD_CTX_init" to do memset. * Cleanup of the openssl compat CTX sizes when async is enabled. * Cleanup of AES, DES3, DH, SHA, MD5, DES3, DH, HMAC, MD5 for consistency and readability. * Cleanup of the OPAQUE_LEN. * Cleanup to use ENCRYPT_LEN instead of sizeof(ssl->arrays.preMasterSecret). * Changed ssl->arrays.preMasterSecret to use XMALLOC (accelerates HW operations) * Reduce verbosity with debug enabled for "GetMyVersion", "wolfSSL Using RSA OAEP padding" and "wolfSSL Using RSA PKCSV15 padding". * Updated RSA un-padding error message so its different than one above it for better debugging. * Added QAT async enables for each algorithm. * Refactor of the async init to use _ex. * Added WC_ASYNC_THRESH_NONE to allow bypass of the async thresholds for testing. * Reformatted the benchmark results: PKI: "RSA 2048 private HW 18522 ops took 1.003 sec, avg 0.054 ms, 18467.763 ops/sec" Crypto/Hashing: SHA-256 SW 350 megs took 1.009 seconds, 346.946 MB/s Cycles per byte = 9.87 * Added min execution time for all benchmarks. * Moved wc_*GetHash and wc_*RestorePos to appropriate files so use of isCopy flag is local. * Fix for ECC sign status sometimes being invalid due to uninitialized ECC digest in benchmark. * Added new DECLARE_VAR/FREE_VAR and DECLARE_ARRAY/FREE_ARRAY macros for helping setup test/benchmark variables to accelerate async. * Added NO_SW_BENCH option to only run HW bench. * Added support for PRNG to use hardware SHA256 if _wc devId provided. * Fix to prevent curve tests from running against wrong curve sizes. Changed wc_ecc_set_curve to match on exact size. * Added the wc_*GetHash calls to the wolfCrypt tests. * Added async hardware start/stop to wolfSSL init/cleanup. * Refactor to add wc_*Copy for hashing context (for async), which replaces wc_*RestorePos. * Fixes for building with TI hashing (including: SHA224, missing new API’s and building with dummy build for non hw testing). Note: We need to add build test for this `./configure CFLAGS="-DWOLFSSL_TI_HASH -DTI_DUMMY_BUILD”`. * Added arg checks on wc_*GetHash and wc_*Copy. * Cleanup of the BuildMD5, BuildSHA, BuildMD5_CertVerify and BuildSHA_CertVerify functions. * Added new ./configure --enable-asyncthreads, to allow enable/disable of the async threading support. If --enable-asynccrypt set this will be enabled by default if pthread is supported. Allows multi-threaded benchmarks with async simulator. * Added checks for all hashing to verify valid ->buffLen. * Fix for SHA512 scan-build warning about un-initialized “W_X”. * Fix for valgrind un-initialized use of buffer in AllocDer (der->buffer) and BuildTlsFinished handshake_hash. * Refactor of the benchmarking to use common function for start, check and finish of the stats. * Fixed issue with ECC cache loading in multi-threading. * Fix bug with AESNI not aligned code that assumes XMALLOC is 16-byte aligned. * Added new WC_ASYNC_NO_… options to allow disabling of individual async algorithms. New defines are: WC_ASYNC_NO_CRYPT, WC_ASYNC_NO_PKI and WC_ASYNC_NO_HASH. Additionally each algorithm has a WC_ASYNC_NO_[ALGO] define. * Added “wolfSSL_GetAllocators” API and fixed the wolfCrypt memcb_test so it restores callback pointers after test is complete (fixes issue with using custom allocators and test breaking it).
+739436d7a Merge with wolfSSL master.
+e6434f380 Get Nginx working with wolfSSL
+039aedcfb Added "wolfSSL_use_certificate_chain_buffer_format". Added  "wolfSSL_SESSION_CIPHER_get_name" to get cipher suite name using WOLFSSL_SESSION*. Moved the "wolfSSL_get_cipher_name_from_suite" function to internal.c. Added new server-cert-chain.der, which is combination of ca-cert.der and server-cert.der. Enhanced load_buffer to detect format using file extension. Can test use of DER cert chain with NO_FILESYSTEM defined using "./examples/server/server -c ./certs/server-cert-chain.der -k ./certs/server-key.der".
+e8f7d78fc add helper functions for choosing static buffer size
+ac6635593 Revert "Bio"
+e214086dc tlsx with static memory / account for session certs size
+f19541ffe update to MYSQL compatibility
+1bd65cc8a First version for OpenSSL BIO compatibility
+5f9c1ffca Initial support for deep copying of session
+7393b0eea allow user to free x509 object in static case (no op)
+e6c369e02 use memset on Init SSL for 0,NULL defaults
+edf53a1ed new changes
+ea3bf1649 in process of shiffting many files
+17c37ae20 moved cyassl -> wolfssl
+53057f0b0 name changes kaleb push
+831d9cf64 SEP Profile 1. Changed session index shift values to constants. 2. Added bounds checking when retrieving a session. 3. Added function to retrieve the peer cert chain from    a CYASSL_SESSION record.
+9c9c59cec update sevrver session cert w/ old client hello too
+9505f92bd restore session certs when resuming session
+aebd92647 better endif ids
+bad1c32df add session cert conversion to x509, and free x509 for dynamic variety
+729fc1e60 add discardSessionCerts flag for verify callback
+6b88eb05b 1.8.8 init

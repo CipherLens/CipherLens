@@ -1,0 +1,231 @@
+schema: adapter_recipe_generation_report_v1
+task: adapter_recipe_generation_v1
+answers:
+  generated_by_family: true
+  avoided_one_poc_one_adapter: true
+  concrete_adapter_recipe_count: 3
+  spec_only_adapter_recipe_count: 3
+  blocked_targets:
+  - family: pkcs_container_parsing
+    source_library: wolfssl
+    target_library: mbedtls
+    blocked_reason: no_direct_counterpart
+    blocked_apis:
+    - wc_PKCS12_parse
+    recommendation:
+    - do_not_generate_adapter
+    - requires_new_target_strategy
+    notes:
+    - not adapter-ready under current evidence gate
+    - candidate_only mappings are not confirmed equivalence.
+  - family: pkcs_container_parsing
+    source_library: wolfssl
+    target_library: mbedtls
+    blocked_reason: no_direct_counterpart
+    blocked_apis:
+    - wc_PKCS7_DecodeSignedData
+    recommendation:
+    - do_not_generate_adapter
+    - requires_new_target_strategy
+    notes:
+    - not adapter-ready under current evidence gate
+    - candidate_only mappings are not confirmed equivalence.
+  - family: pkcs_container_parsing
+    source_library: wolfssl
+    target_library: openssl
+    blocked_reason: weak_evidence
+    blocked_apis:
+    - d2i_PKCS7
+    recommendation:
+    - do_not_generate_adapter
+    - manual_review_before_adapter
+    notes:
+    - not adapter-ready under current evidence gate
+    - candidate_only mappings are not confirmed equivalence.
+  - family: pkcs_container_parsing
+    source_library: wolfssl
+    target_library: mbedtls
+    blocked_reason: no_direct_counterpart
+    blocked_apis:
+    - wc_PKCS7_VerifySignedData
+    recommendation:
+    - do_not_generate_adapter
+    - requires_new_target_strategy
+    notes:
+    - not adapter-ready under current evidence gate
+    - candidate_only mappings are not confirmed equivalence.
+  - family: asn1_nested_boundary
+    source_library: wolfssl
+    target_library: mbedtls
+    blocked_reason: needs_manual_review
+    blocked_apis:
+    - mbedtls_x509_crt_parse_der
+    recommendation:
+    - manual_review_before_adapter
+    - manual_review_before_adapter
+    notes:
+    - not adapter-ready under current evidence gate
+    - candidate_only mappings are not confirmed equivalence.
+  - family: asn1_nested_boundary
+    source_library: wolfssl
+    target_library: openssl
+    blocked_reason: needs_manual_review
+    blocked_apis:
+    - d2i_X509
+    recommendation:
+    - manual_review_before_adapter
+    - manual_review_before_adapter
+    notes:
+    - not adapter-ready under current evidence gate
+    - candidate_only mappings are not confirmed equivalence.
+  - family: x509_parsing
+    source_library: wolfssl
+    target_library: mbedtls
+    blocked_reason: needs_manual_review
+    blocked_apis:
+    - mbedtls_x509_crt_parse_der
+    recommendation:
+    - manual_review_before_adapter
+    - manual_review_before_adapter
+    notes:
+    - not adapter-ready under current evidence gate
+    - candidate_only mappings are not confirmed equivalence.
+  glm_called: false
+  generated_c: false
+  render_compile_run: false
+  next_task_name: adapter_slot_filling_plan_v1
+concrete_recipes:
+- artifacts/sprints/adapter_recipe_generation_v1/adapter_recipes/pkcs_container_parsing/openssl/adapter_recipe.yaml
+- artifacts/sprints/adapter_recipe_generation_v1/adapter_recipes/asn1_nested_boundary/openssl/adapter_recipe.yaml
+- artifacts/sprints/adapter_recipe_generation_v1/adapter_recipes/asn1_nested_boundary/mbedtls/adapter_recipe.yaml
+spec_recipes:
+- artifacts/sprints/adapter_recipe_generation_v1/adapter_specs/x509_parsing/adapter_recipe_spec.yaml
+- artifacts/sprints/adapter_recipe_generation_v1/adapter_specs/tls_protocol_state_lifecycle/adapter_recipe_spec.yaml
+- artifacts/sprints/adapter_recipe_generation_v1/adapter_specs/secure_heap_state_lifecycle/adapter_recipe_spec.yaml
+write_summary:
+- source: artifacts/sprints/adapter_recipe_generation_v1/adapter_recipes/pkcs_container_parsing/openssl/adapter_recipe.yaml
+  target: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/adapter_recipe.yaml
+  status: written_new_adapter_recipe
+  draft_written: ''
+- source: artifacts/sprints/adapter_recipe_generation_v1/adapter_recipes/asn1_nested_boundary/openssl/adapter_recipe.yaml
+  target: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/adapter_recipe.yaml
+  status: written_new_adapter_recipe
+  draft_written: ''
+- source: artifacts/sprints/adapter_recipe_generation_v1/adapter_recipes/asn1_nested_boundary/mbedtls/adapter_recipe.yaml
+  target: adapter_recipes/wolfssl_family/asn1_nested_boundary/mbedtls/adapter_recipe.yaml
+  status: written_new_adapter_recipe
+  draft_written: ''
+- source: artifacts/sprints/adapter_recipe_generation_v1/adapter_specs/x509_parsing/adapter_recipe_spec.yaml
+  target: adapter_recipes/wolfssl_family/x509_parsing/adapter_recipe_spec.yaml
+  status: written_new_adapter_recipe
+  draft_written: ''
+- source: artifacts/sprints/adapter_recipe_generation_v1/adapter_specs/tls_protocol_state_lifecycle/adapter_recipe_spec.yaml
+  target: adapter_recipes/wolfssl_family/tls_protocol_state_lifecycle/adapter_recipe_spec.yaml
+  status: written_new_adapter_recipe
+  draft_written: ''
+- source: artifacts/sprints/adapter_recipe_generation_v1/adapter_specs/secure_heap_state_lifecycle/adapter_recipe_spec.yaml
+  target: adapter_recipes/wolfssl_family/secure_heap_state_lifecycle/adapter_recipe_spec.yaml
+  status: written_new_adapter_recipe
+  draft_written: ''
+quality_checks:
+- adapter_id: pkcs_container_parsing.openssl.family_adapter_recipe_v1
+  family: pkcs_container_parsing
+  target_library: openssl
+  recipe_exists: true
+  template_level_is_family: true
+  source_template_exists: true
+  selected_mask_units_exists: true
+  mapping_gate_status_recorded: true
+  blocked_targets_respected: true
+  glm_policy_recorded: true
+  render_disabled_now: true
+  compile_disabled_now: true
+  required_bindings_present: true
+  quality_status: pass
+  notes: concrete family adapter recipe skeleton
+- adapter_id: asn1_nested_boundary.openssl.family_adapter_recipe_v1
+  family: asn1_nested_boundary
+  target_library: openssl
+  recipe_exists: true
+  template_level_is_family: true
+  source_template_exists: true
+  selected_mask_units_exists: true
+  mapping_gate_status_recorded: true
+  blocked_targets_respected: true
+  glm_policy_recorded: true
+  render_disabled_now: true
+  compile_disabled_now: true
+  required_bindings_present: true
+  quality_status: pass
+  notes: concrete family adapter recipe skeleton
+- adapter_id: asn1_nested_boundary.mbedtls.family_adapter_recipe_v1
+  family: asn1_nested_boundary
+  target_library: mbedtls
+  recipe_exists: true
+  template_level_is_family: true
+  source_template_exists: true
+  selected_mask_units_exists: true
+  mapping_gate_status_recorded: true
+  blocked_targets_respected: true
+  glm_policy_recorded: true
+  render_disabled_now: true
+  compile_disabled_now: true
+  required_bindings_present: true
+  quality_status: pass
+  notes: concrete family adapter recipe skeleton
+- adapter_id: x509_parsing.spec.family_adapter_recipe_spec_v1
+  family: x509_parsing
+  target_library: spec_only
+  recipe_exists: true
+  template_level_is_family: true
+  source_template_exists: false
+  selected_mask_units_exists: false
+  mapping_gate_status_recorded: true
+  blocked_targets_respected: true
+  glm_policy_recorded: true
+  render_disabled_now: true
+  compile_disabled_now: true
+  required_bindings_present: true
+  quality_status: spec_only_pass
+  notes: spec-only family adapter recipe
+- adapter_id: tls_protocol_state_lifecycle.spec.family_adapter_recipe_spec_v1
+  family: tls_protocol_state_lifecycle
+  target_library: spec_only
+  recipe_exists: true
+  template_level_is_family: true
+  source_template_exists: false
+  selected_mask_units_exists: false
+  mapping_gate_status_recorded: true
+  blocked_targets_respected: true
+  glm_policy_recorded: true
+  render_disabled_now: true
+  compile_disabled_now: true
+  required_bindings_present: true
+  quality_status: spec_only_pass
+  notes: spec-only family adapter recipe
+- adapter_id: secure_heap_state_lifecycle.spec.family_adapter_recipe_spec_v1
+  family: secure_heap_state_lifecycle
+  target_library: spec_only
+  recipe_exists: true
+  template_level_is_family: true
+  source_template_exists: false
+  selected_mask_units_exists: false
+  mapping_gate_status_recorded: true
+  blocked_targets_respected: true
+  glm_policy_recorded: true
+  render_disabled_now: true
+  compile_disabled_now: true
+  required_bindings_present: true
+  quality_status: spec_only_pass
+  notes: spec-only family adapter recipe
+forbidden_actions_observed:
+  poc_execution: false
+  compile_run: false
+  render_cases: false
+  glm_call: false
+  c_generation: false
+  knowledge_raw_modified: false
+  knowledge_base_modified: false
+  rag_rebuild: false
+  commit_or_push: false
+next_task: adapter_slot_filling_plan_v1

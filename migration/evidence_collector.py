@@ -4,8 +4,9 @@ import os
 import re
 import subprocess
 import sys
+from collections import Counter, defaultdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, DefaultDict, Dict, List, Optional, Set, Tuple
 
 import yaml
 
@@ -25,6 +26,92 @@ def load_optional_yaml(path: Optional[Path]) -> Dict[str, Any]:
     if path is None or not path.exists():
         return {}
     return load_yaml(path)
+
+
+def normalize_token(value: Any) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", str(value or "").strip().lower()).strip("_")
+
+
+def as_list(value: Any) -> List[Any]:
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return value
+    return [value]
+
+
+def read_jsonl(path: Path) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    if not path.exists():
+        return rows
+    with path.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                rows.append(json.loads(line))
+    return rows
+
+
+def card_known_pitfalls(card: Dict[str, Any]) -> List[str]:
+    out: List[str] = []
+    for note in as_list(card.get("notes")):
+        text = str(note)
+        if "pitfall" in text.lower():
+            out.append(text)
+    return out
+
+
+def compact_api_card(path: Path, root: Path, card: Dict[str, Any]) -> Dict[str, Any]:
+    try:
+        rel_path = str(path.relative_to(root))
+    except ValueError:
+        rel_path = str(path)
+    return {
+        "path": rel_path,
+        "api": str(card.get("api") or ""),
+        "library": str(card.get("library") or ""),
+        "family": str(card.get("family") or ""),
+        "related_apis": [str(x) for x in as_list(card.get("related_apis"))],
+        "mutation_hints": [str(x) for x in as_list(card.get("mutation_hints"))],
+        "oracle_observables": [str(x) for x in as_list(card.get("oracle_observables"))],
+        "state_preconditions": [str(x) for x in as_list(card.get("state_preconditions"))],
+        "known_pitfalls": card_known_pitfalls(card),
+    }
+
+
+def load_api_cards(api_cards_root: Optional[Path]) -> Tuple[List[Dict[str, Any]], List[str]]:
+    if api_cards_root is None:
+        return [], []
+    if not api_cards_root.exists():
+        return [], [f"api_cards_root_not_found: {api_cards_root}"]
+
+    cards: List[Dict[str, Any]] = []
+    warnings: List[str] = []
+    for path in sorted(api_cards_root.rglob("*")):
+        if not path.is_file() or path.suffix.lower() not in {".yaml", ".yml"}:
+            continue
+        try:
+            raw = load_yaml(path)
+        except Exception as exc:
+            warnings.append(f"failed_to_load_api_card: {path}: {exc}")
+            continue
+        if not isinstance(raw, dict):
+            warnings.append(f"api_card_not_mapping: {path}")
+            continue
+        cards.append(compact_api_card(path, api_cards_root, raw))
+    return cards, warnings
+
+
+def family_aliases(*families: Any) -> Set[str]:
+    aliases: Set[str] = set()
+    for family in families:
+        token = normalize_token(family)
+        if not token:
+            continue
+        aliases.add(token)
+        if token in {"object_state_lifecycle", "mac_context_size_lifecycle_oracle", "mac_lifecycle"}:
+            aliases.update({"object_state_lifecycle", "mac_context_size_lifecycle_oracle", "mac_lifecycle", "lifecycle"})
+    return aliases
 
 
 def infer_selected_mask_units_path(mask_report_path: Optional[Path]) -> Optional[Path]:
@@ -329,6 +416,9 @@ def run_rag_query(query: str, top_k: int = 5, timeout: int = 90, max_chars: int 
                         "rank": hit.get("rank", idx),
                         "score": hit.get("score"),
                         "distance": hit.get("distance"),
+                        "base_score": hit.get("base_score"),
+                        "rerank_score": hit.get("rerank_score"),
+                        "rerank_reasons": hit.get("rerank_reasons", []),
                         "layer": hit.get("layer") or metadata.get("layer", ""),
                         "source_file": hit.get("source_file") or metadata.get("source_file", ""),
                         "text": hit.get("text", ""),
@@ -416,6 +506,7 @@ def get_source_context(mask_report: Dict[str, Any], selected_mask_report: Option
     selected_mask_report = selected_mask_report or {}
     return {
         "pattern_id": poc_pattern.get("pattern_id"),
+        "source_library": mask_report.get("source_library", ""),
         "root_cause_summary": root_cause.get("summary", ""),
         "must_preserve_features": features.get("must_preserve", []),
         "optional_features": features.get("optional", []),
@@ -424,6 +515,7 @@ def get_source_context(mask_report: Dict[str, Any], selected_mask_report: Option
         "bad_target_api_features": guidance.get("bad_target_api_features", []),
         "rag_query_context": mask_report.get("rag_query_context", ""),
         "harness_family": selected_mask_report.get("harness_family") or mask_report.get("harness_family", ""),
+        "oracle_type": mask_report.get("oracle_type", ""),
         "trigger_apis": selected_mask_report.get("trigger_apis") or mask_report.get("trigger_apis", []),
         "selected_mask_units": {
             "summary": selected_units_summary(selected_mask_report),
@@ -610,6 +702,288 @@ def candidate_harness_family(candidate: Dict[str, Any]) -> str:
     return str(candidate.get("harness_family") or "")
 
 
+def candidate_preserved_features(candidate: Dict[str, Any]) -> List[str]:
+    return [
+        str(x)
+        for x in (
+            as_list(candidate.get("preserved_vulnerability_features"))
+            or as_list(candidate.get("preserved_features"))
+        )
+    ]
+
+
+def candidate_lost_features(candidate: Dict[str, Any]) -> List[str]:
+    return [
+        str(x)
+        for x in (
+            as_list(candidate.get("lost_or_weakened_features"))
+            or as_list(candidate.get("weakened_features"))
+        )
+    ]
+
+
+def card_api_names(card: Dict[str, Any]) -> Set[str]:
+    names = {normalize_token(card.get("api"))}
+    names.update(normalize_token(x) for x in card.get("related_apis", []) or [])
+    return {x for x in names if x}
+
+
+def api_card_matches(
+    card: Dict[str, Any],
+    candidate: Dict[str, Any],
+    source_ctx: Dict[str, Any],
+    candidate_family_aliases: Set[str],
+) -> Tuple[bool, str]:
+    card_library = normalize_token(card.get("library"))
+    card_family = normalize_token(card.get("family"))
+    target_library = normalize_token(candidate_library(candidate))
+    target_api = normalize_token(candidate_api(candidate))
+    source_library = normalize_token(source_ctx.get("source_library"))
+    trigger_apis = {normalize_token(x) for x in source_ctx.get("trigger_apis", []) or []}
+    card_names = card_api_names(card)
+
+    family_match = bool(card_family and card_family in candidate_family_aliases)
+    target_api_match = bool(target_api and target_api in card_names)
+    trigger_api_match = bool(trigger_apis & card_names)
+
+    if target_library and card_library == target_library and target_api_match:
+        return True, "target_api_exact_or_related"
+    if source_library and card_library == source_library and trigger_api_match:
+        return True, "source_trigger_api_exact_or_related"
+    if family_match and (target_api_match or trigger_api_match):
+        return True, "family_api_related"
+    if family_match and card_library in {target_library, source_library}:
+        return True, "same_family_same_library_context"
+    return False, ""
+
+
+def infer_from_api_cards(cards: List[Dict[str, Any]]) -> Dict[str, Any]:
+    text = "\n".join(
+        " ".join(
+            str(x)
+            for x in (
+                [card.get("family"), card.get("api")]
+                + card.get("mutation_hints", [])
+                + card.get("oracle_observables", [])
+                + card.get("state_preconditions", [])
+                + card.get("known_pitfalls", [])
+            )
+        )
+        for card in cards
+    ).lower()
+
+    dims: Set[str] = set()
+    if any(term in text for term in ["lifecycle", "before setup", "double final", "abort", "after final", "uninitialized"]):
+        dims.add("lifecycle_sequence")
+    if any(term in text for term in ["hmac", "cmac", "mac implementation", "selected mac"]):
+        dims.add("mac_algorithm")
+    if any(term in text for term in ["digest", "sha", "cipher", "aes"]):
+        dims.add("digest_or_cipher")
+    if any(term in text for term in ["outl", "mac_length", "output length", "output_buffer", "undersized", "small mac_size"]):
+        dims.add("output_length")
+
+    return {
+        "state_sensitive": any(term in text for term in ["state", "lifecycle", "uninitialized", "inactive", "stale"]),
+        "lifecycle_sensitive": any(term in text for term in ["lifecycle", "before setup", "double final", "abort", "after final"]),
+        "output_length_observable": any(term in text for term in ["outl", "mac_length", "output length", "returned_size"]),
+        "suggested_mutation_dimensions": sorted(dims),
+    }
+
+
+def collect_api_card_evidence(
+    candidate: Dict[str, Any],
+    source_ctx: Dict[str, Any],
+    api_cards: List[Dict[str, Any]],
+    api_card_warnings: List[str],
+) -> Dict[str, Any]:
+    aliases = family_aliases(
+        candidate_harness_family(candidate),
+        candidate.get("oracle_type"),
+        source_ctx.get("harness_family"),
+        source_ctx.get("oracle_type"),
+    )
+    matched: List[Dict[str, Any]] = []
+    seen_paths: Set[str] = set()
+    for card in api_cards:
+        ok, reason = api_card_matches(card, candidate, source_ctx, aliases)
+        if not ok:
+            continue
+        path = str(card.get("path") or "")
+        if path in seen_paths:
+            continue
+        seen_paths.add(path)
+        compact = {k: v for k, v in card.items() if k != "related_apis"}
+        compact["match_reason"] = reason
+        matched.append(compact)
+
+    matched.sort(key=lambda c: (str(c.get("library")), str(c.get("api")), str(c.get("path"))))
+    return {
+        "api_cards_root_loaded": bool(api_cards),
+        "matched_cards": matched,
+        "warnings": list(api_card_warnings),
+        "inferred_from_cards": infer_from_api_cards(matched),
+    }
+
+
+def feedback_family_aliases(family: str) -> Set[str]:
+    token = normalize_token(family)
+    aliases = {token} if token else set()
+    if token in {"pkey_verify_semantic", "pkey_verify", "signature_verify_semantic"}:
+        aliases.update({
+            "pkey_verify_semantic",
+            "pkey_verify",
+            "signature_verify_semantic",
+            "signature_verification",
+        })
+    return aliases
+
+
+def candidate_feedback_aliases(
+    candidate: Dict[str, Any],
+    source_ctx: Dict[str, Any],
+    api_card_evidence: Dict[str, Any],
+) -> Set[str]:
+    aliases = family_aliases(
+        candidate_harness_family(candidate),
+        candidate.get("oracle_type"),
+        source_ctx.get("harness_family"),
+        source_ctx.get("oracle_type"),
+        candidate.get("operation_family"),
+    )
+    text = " ".join([
+        candidate_api(candidate),
+        candidate_library(candidate),
+        str(candidate.get("source_api") or ""),
+        str(source_ctx.get("root_cause_summary") or ""),
+        " ".join(str(x) for x in source_ctx.get("trigger_apis", []) or []),
+        " ".join(str(card.get("family") or "") for card in api_card_evidence.get("matched_cards", []) or []),
+        " ".join(str(card.get("api") or "") for card in api_card_evidence.get("matched_cards", []) or []),
+    ]).lower()
+    if any(term in text for term in [
+        "evp_digestverify",
+        "evp_pkey_verify",
+        "mbedtls_pk_verify",
+        "mbedtls_pk_verify_ext",
+        "psa_verify_hash",
+        "signature",
+        "verify",
+    ]):
+        aliases.update(feedback_family_aliases("pkey_verify_semantic"))
+    return aliases
+
+
+def summarize_feedback_rows(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+    verdicts = Counter(str(row.get("verdict") or "") for row in rows)
+    categories = Counter(str(row.get("feedback_category") or "") for row in rows)
+    return {
+        "total_feedback_cases": len(rows),
+        "verdict_counts": dict(verdicts),
+        "feedback_category_counts": dict(categories),
+    }
+
+
+def score_entries_for_family(scores_obj: Dict[str, Any], family: str) -> Dict[str, Any]:
+    families = scores_obj.get("families", {}) if isinstance(scores_obj, dict) else {}
+    if not isinstance(families, dict):
+        return {}
+    if family in families:
+        return families.get(family) or {}
+    wanted = normalize_token(family)
+    for name, obj in families.items():
+        if normalize_token(name) == wanted:
+            return obj or {}
+    return {}
+
+
+def flatten_score_entries(scores_obj: Dict[str, Any], family: str) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    family_obj = score_entries_for_family(scores_obj, family)
+    dimensions = family_obj.get("dimensions", {}) if isinstance(family_obj, dict) else {}
+    high: List[Dict[str, Any]] = []
+    down: List[Dict[str, Any]] = []
+    for dimension, dim_obj in sorted((dimensions or {}).items()):
+        values = dim_obj.get("values", {}) if isinstance(dim_obj, dict) else {}
+        for value, score_obj in sorted((values or {}).items()):
+            if not isinstance(score_obj, dict):
+                continue
+            entry = {
+                "dimension": str(dimension),
+                "value": str(value),
+                "score": score_obj.get("score"),
+                "classification": score_obj.get("classification", ""),
+                "count": score_obj.get("count", 0),
+            }
+            classification = str(score_obj.get("classification", ""))
+            score = float(score_obj.get("score", 0.0) or 0.0)
+            if classification == "upweighted" or score >= 1.0:
+                high.append(entry)
+            if classification in {"downweighted", "stable_safe_negative"} and score <= 0.1:
+                down.append(entry)
+    high.sort(key=lambda x: (-float(x.get("score") or 0.0), x["dimension"], x["value"]))
+    down.sort(key=lambda x: (float(x.get("score") or 0.0), x["dimension"], x["value"]))
+    return high, down
+
+
+def collect_feedback_evidence(
+    candidate: Dict[str, Any],
+    source_ctx: Dict[str, Any],
+    api_card_evidence: Dict[str, Any],
+    feedback_rows: List[Dict[str, Any]],
+    feedback_scores_obj: Dict[str, Any],
+    feedback_file: Optional[Path],
+    feedback_scores: Optional[Path],
+) -> Dict[str, Any]:
+    if not feedback_rows and not feedback_scores_obj:
+        return {"enabled": False}
+
+    candidate_aliases = candidate_feedback_aliases(candidate, source_ctx, api_card_evidence)
+    rows_by_family: DefaultDict[str, List[Dict[str, Any]]] = defaultdict(list)
+    for row in feedback_rows:
+        family = str(row.get("family") or "")
+        if feedback_family_aliases(family) & candidate_aliases:
+            rows_by_family[family].append(row)
+
+    score_families = (feedback_scores_obj.get("families", {}) or {}) if isinstance(feedback_scores_obj, dict) else {}
+    matched_family = ""
+    matched_rows: List[Dict[str, Any]] = []
+    for family, rows in sorted(rows_by_family.items(), key=lambda item: (-len(item[1]), item[0])):
+        matched_family = family
+        matched_rows = rows
+        break
+    if not matched_family:
+        for family in sorted(score_families):
+            if feedback_family_aliases(family) & candidate_aliases:
+                matched_family = family
+                break
+
+    if not matched_family:
+        return {
+            "enabled": False,
+            "reason": "no_feedback_family_match_for_candidate",
+            "candidate_feedback_aliases": sorted(candidate_aliases),
+        }
+
+    high, down = flatten_score_entries(feedback_scores_obj, matched_family)
+    summary = summarize_feedback_rows(matched_rows)
+    notes = [
+        "Feedback evidence is an auxiliary signal and does not override RAG or API-card evidence.",
+        "Safe-negative feedback is treated as a stable baseline, not as a vulnerability.",
+    ]
+    if summary.get("verdict_counts", {}).get("safe_reject_behavior") or summary.get("feedback_category_counts", {}).get("safe_negative"):
+        notes.append("PKEY verify v0 produced stable safe-negative results and no unexpected_success_candidate.")
+    if high:
+        notes.append("High-value mutations are kept with prior score even if v0 rejected them safely.")
+    return {
+        "enabled": True,
+        "feedback_file": str(feedback_file or ""),
+        "feedback_scores": str(feedback_scores or ""),
+        "matched_family": matched_family,
+        "summary": summary,
+        "high_score_mutations": high[:12],
+        "downweighted_mutations": down[:12],
+        "notes": notes,
+    }
+
+
 def filter_rule_features_for_family(
     features: Set[str],
     evidence_hits: Dict[str, Dict[str, List[str]]],
@@ -708,8 +1082,8 @@ def infer_features(
     rule_negative, _ = filter_rule_features_for_family(rule_negative, {}, harness_family)
 
     # Candidate mapper already knows some weakened/lost features.
-    candidate_lost = {normalize_feature_name(x) for x in candidate.get("lost_or_weakened_features", []) or []}
-    candidate_preserved = {normalize_feature_name(x) for x in candidate.get("preserved_vulnerability_features", []) or []}
+    candidate_lost = {normalize_feature_name(x) for x in candidate_lost_features(candidate)}
+    candidate_preserved = {normalize_feature_name(x) for x in candidate_preserved_features(candidate)}
 
     # Keep the raw observed/negative sets visible for debugging, then compute a
     # conflict-free effective set for required_present/required_missing.
@@ -767,6 +1141,10 @@ def collect_evidence(
     target_api: Optional[str] = None,
     max_candidates: Optional[int] = None,
     max_queries: Optional[int] = None,
+    api_cards_root: Optional[Path] = None,
+    use_feedback_evidence: bool = False,
+    feedback_file: Optional[Path] = None,
+    feedback_scores: Optional[Path] = None,
     progress: bool = False,
 ) -> Dict[str, Any]:
     selected_mask_report = selected_mask_report or {}
@@ -774,6 +1152,9 @@ def collect_evidence(
     bug_classes = get_bug_classes(mask_report, candidates_obj, feature_rules)
     key = candidate_list_key(candidates_obj)
     candidates = list(candidates_obj.get(key, []) or [])
+    api_cards, api_card_warnings = load_api_cards(api_cards_root)
+    feedback_rows = read_jsonl(feedback_file) if use_feedback_evidence and feedback_file else []
+    feedback_scores_obj = load_optional_yaml(feedback_scores) if use_feedback_evidence and feedback_scores else {}
 
     if target_api:
         candidates = [
@@ -799,6 +1180,25 @@ def collect_evidence(
         "selected_mask_units": {
             "loaded": bool(selected_mask_report),
             "summary": selected_units_summary(selected_mask_report),
+        },
+        "api_cards": {
+            "root": str(api_cards_root or ""),
+            "loaded": bool(api_cards),
+            "count": len(api_cards),
+            "warnings": api_card_warnings,
+        },
+        "feedback_evidence": {
+            "enabled": bool(use_feedback_evidence),
+            "feedback_file": str(feedback_file or ""),
+            "feedback_scores": str(feedback_scores or ""),
+            "feedback_rows": len(feedback_rows),
+            "score_families": sorted(
+                (feedback_scores_obj.get("families", {}) or {}).keys()
+            ) if isinstance(feedback_scores_obj, dict) else [],
+            "note": (
+                "Feedback evidence is attached as mutation-planning context only; "
+                "safe-negative feedback is a stable baseline, not a vulnerability."
+            ),
         },
         "note": (
             "Evidence is retrieved before LLM adapter filling. Source-pattern evidence "
@@ -851,6 +1251,26 @@ def collect_evidence(
             "queries": rag_results,
             "inferred_features": inferred,
         }
+        api_card_evidence = collect_api_card_evidence(
+            candidate=cand,
+            source_ctx=source_ctx,
+            api_cards=api_cards,
+            api_card_warnings=api_card_warnings,
+        )
+        cand["api_card_evidence"] = api_card_evidence
+        cand["evidence"]["api_card_evidence"] = api_card_evidence
+        if use_feedback_evidence:
+            feedback_evidence = collect_feedback_evidence(
+                candidate=cand,
+                source_ctx=source_ctx,
+                api_card_evidence=api_card_evidence,
+                feedback_rows=feedback_rows,
+                feedback_scores_obj=feedback_scores_obj,
+                feedback_file=feedback_file,
+                feedback_scores=feedback_scores,
+            )
+            cand["feedback_evidence"] = feedback_evidence
+            cand["evidence"]["feedback_evidence"] = feedback_evidence
 
         updated_candidates.append(cand)
 
@@ -875,6 +1295,23 @@ def main() -> int:
     parser.add_argument(
         "--feature-rules",
         default="config/evidence_feature_rules.yaml",
+    )
+    parser.add_argument(
+        "--api-cards-root",
+        help="Optional API cards root used to attach structured API-card evidence to each candidate.",
+    )
+    parser.add_argument(
+        "--feedback-file",
+        help="Optional mutation feedback JSONL used as auxiliary evidence.",
+    )
+    parser.add_argument(
+        "--feedback-scores",
+        help="Optional mutation feedback score YAML used as auxiliary evidence.",
+    )
+    parser.add_argument(
+        "--use-feedback-evidence",
+        action="store_true",
+        help="Attach feedback_evidence blocks to matching candidates without changing legacy evidence behavior.",
     )
     parser.add_argument("--timeout", type=int, default=90)
     parser.add_argument("--max-chars", type=int, default=6000)
@@ -919,6 +1356,10 @@ def main() -> int:
             target_api=args.target_api,
             max_candidates=args.max_candidates,
             max_queries=args.max_queries,
+            api_cards_root=Path(args.api_cards_root) if args.api_cards_root else None,
+            use_feedback_evidence=args.use_feedback_evidence,
+            feedback_file=Path(args.feedback_file) if args.feedback_file else None,
+            feedback_scores=Path(args.feedback_scores) if args.feedback_scores else None,
             progress=args.progress,
         )
     except ValueError as e:
@@ -947,6 +1388,15 @@ def main() -> int:
             inf.get("required_missing", []),
             "negative=",
             inf.get("negative_or_weakened_features", []),
+            "api_cards=",
+            [
+                card.get("api")
+                for card in c.get("api_card_evidence", {}).get("matched_cards", [])
+            ],
+            "feedback=",
+            c.get("feedback_evidence", {}).get("matched_family", "")
+            if c.get("feedback_evidence", {}).get("enabled")
+            else "disabled",
         )
 
     return 0

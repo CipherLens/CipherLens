@@ -1,0 +1,145 @@
+schema: family_template_spec_v1
+family_template_id: WOLFSSL-FAMILY-secure_heap_state_lifecycle
+family: secure_heap_state_lifecycle
+source_library: wolfssl
+template_level: family
+generation_mode: spec_only_no_source_seed
+canonical_c_template_generated: false
+reason: No explicit wolfSSL source template seed selected for this sprint.
+trigger_apis:
+- wolfSSL_Malloc
+- wolfSSL_Free
+- wolfSSL_SetAllocators
+- XMALLOC
+- XFREE
+- OPENSSL_malloc
+- OPENSSL_free
+- CRYPTO_set_mem_functions
+- CRYPTO_secure_malloc
+- CRYPTO_secure_free
+- mbedtls_calloc
+- mbedtls_free
+- mbedtls_platform_set_calloc_free
+oracle_types:
+- cleanup_required
+- lifecycle_state
+- crash_or_sanitizer
+mutation_slots:
+- ALLOCATOR_INITIALIZED
+- MALLOC_SIZE
+- FREE_ORDER
+- DOUBLE_FREE_CANDIDATE
+- ALLOCATOR_REPLACEMENT
+api_slots:
+- slot_name: wolfSSL_Malloc
+  source_api: wolfSSL_Malloc
+  allowed_target_apis:
+  - mbedtls:mbedtls_calloc
+  - openssl:OPENSSL_malloc
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: wolfSSL_Free
+  source_api: wolfSSL_Free
+  allowed_target_apis:
+  - mbedtls:mbedtls_free
+  - openssl:OPENSSL_free
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  - usable_for_adapter
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: wolfSSL_SetAllocators
+  source_api: wolfSSL_SetAllocators
+  allowed_target_apis:
+  - mbedtls:mbedtls_platform_set_calloc_free
+  - openssl:CRYPTO_set_mem_functions
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: XMALLOC
+  source_api: XMALLOC
+  allowed_target_apis: []
+  blocked_target_apis: []
+  mapping_gate_status:
+  - not_in_mapping_gate
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: XFREE
+  source_api: XFREE
+  allowed_target_apis: []
+  blocked_target_apis: []
+  mapping_gate_status:
+  - not_in_mapping_gate
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: OPENSSL_malloc
+  source_api: ''
+  allowed_target_apis:
+  - openssl:OPENSSL_malloc
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: OPENSSL_free
+  source_api: ''
+  allowed_target_apis:
+  - openssl:OPENSSL_free
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: CRYPTO_set_mem_functions
+  source_api: ''
+  allowed_target_apis:
+  - openssl:CRYPTO_set_mem_functions
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: CRYPTO_secure_malloc
+  source_api: ''
+  allowed_target_apis: []
+  blocked_target_apis: []
+  mapping_gate_status:
+  - not_in_mapping_gate
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: CRYPTO_secure_free
+  source_api: ''
+  allowed_target_apis: []
+  blocked_target_apis: []
+  mapping_gate_status:
+  - not_in_mapping_gate
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: mbedtls_calloc
+  source_api: ''
+  allowed_target_apis:
+  - mbedtls:mbedtls_calloc
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: mbedtls_free
+  source_api: ''
+  allowed_target_apis:
+  - mbedtls:mbedtls_free
+  blocked_target_apis: []
+  mapping_gate_status:
+  - usable_for_adapter
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: mbedtls_platform_set_calloc_free
+  source_api: ''
+  allowed_target_apis:
+  - mbedtls:mbedtls_platform_set_calloc_free
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+glm_policy:
+  allowed: false
+  allowed_later_for:
+  - adapter_slot_filling
+  - slot_bindings
+  forbidden_for:
+  - full_c_generation
+  - freeform_harness_generation

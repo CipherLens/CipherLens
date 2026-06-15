@@ -1,0 +1,31 @@
+schema: family_card_v1
+family: cms_container_parsing
+harness_family: object_or_container_parsing
+operation_family: cms container parsing
+apps:
+- openssl cms
+target_api_features:
+- parser API
+- DER or PEM input
+- accepted/rejected observability
+- full-consumption observability
+common_mutation_points:
+- valid DER single object plus trailing garbage
+- malformed-only control
+- near-valid length delta
+- DER/PEM format toggle
+oracle_goals:
+- parser_accept
+- full_consumption_gap
+- container_boundary
+- malformed_only_reject
+known_pattern_refs:
+- der_single_object_trailing_garbage_full_consumption
+safe_behavior: reject malformed-only controls and avoid claiming accepted-prefix behavior as confirmed
+  vulnerability
+triage_behavior: deduplicate known full-consumption gaps unless a new semantic class or crash/sanitizer
+  appears
+claim_policy:
+  confirmed_vulnerability: false
+  cve: false
+  exploitable: false

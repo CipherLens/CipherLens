@@ -1,0 +1,29 @@
+schema: nullderef_null_mac_ctx_init_triage_decision_v1
+family: null_deref_dispatch
+case_id: nullderef_null_mac_ctx_init
+original_label: sanitizer_candidate
+decision: downgrade_to_contract_observation
+reason: UBSAN is stable and occurs in OpenSSL EVP_MAC_init for NULL ctx, but NULL
+  EVP_MAC_CTX is outside the documented MAC context lifecycle. Valid ctx control passes,
+  and valid ctx + NULL key boundaries return errors without sanitizer. This is better
+  classified as invalid-contract hardening observation than a default sanitizer candidate.
+trigger_api: EVP_MAC_init
+ubsan_location: openssl_internal
+stacktrace_available: true
+candidate_reproduced: true
+candidate_reproduced_in_minimal_harness: true
+valid_control_passed: true
+valid_ctx_null_key_zero_keylen_result: error_no_sanitizer
+valid_ctx_null_key_nonzero_keylen_result: error_no_sanitizer_contract_boundary_observation
+api_contract_checked: true
+api_contract_summary: EVP_MAC_init expects an EVP_MAC_CTX created through the MAC
+  context lifecycle; docs do not promise safe rejection for NULL ctx. NULL key must
+  be supplied via params or separately if key is NULL.
+null_ctx_documented_invalid: true
+asan_observed: false
+ubsan_observed: true
+crash_observed: false
+harness_fault: false
+recommended_next_action: Downgrade EVP_MAC_init(NULL, ...) to contract-boundary hardening
+  observation in default null_deref_dispatch oracle; keep valid-ctx NULL key variants
+  as non-candidate unless sanitizer/crash appears.

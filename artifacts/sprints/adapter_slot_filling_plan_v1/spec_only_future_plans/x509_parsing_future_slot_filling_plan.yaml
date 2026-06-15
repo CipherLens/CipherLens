@@ -1,0 +1,103 @@
+schema: spec_only_future_slot_filling_plan_v1
+family: x509_parsing
+reason_not_ready: Family package is spec-only or lacks canonical_tmpl_wolfssl.c /
+  selected_mask_units.yaml.
+required_before_slot_filling:
+- canonical_tmpl_wolfssl.c
+- selected_mask_units.yaml
+- concrete_adapter_recipe.yaml
+possible_targets:
+- family: x509_parsing
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wc_InitDecodedCert
+  target_api: mbedtls_x509_crt_parse_der
+  mapping_type: candidate_counterpart
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: parser input and object cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: x509_parsing
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_X509_free
+  target_api: mbedtls_x509_crt_free
+  mapping_type: cleanup_equivalent
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: parser input and object cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: x509_parsing
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_X509_free
+  target_api: X509_free
+  mapping_type: cleanup_equivalent
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: parser input and object cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: x509_parsing
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_X509_load_certificate_file
+  target_api: mbedtls_x509_crt_parse_file
+  mapping_type: parser_equivalent
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: parser input and object cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: x509_parsing
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_X509_load_certificate_file
+  target_api: PEM_read_X509
+  mapping_type: parser_equivalent
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: parser input and object cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: x509_parsing
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_X509_verify
+  target_api: mbedtls_x509_crt_verify
+  mapping_type: semantic_related
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: parser input and object cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: x509_parsing
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_X509_verify
+  target_api: X509_verify
+  mapping_type: semantic_related
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: parser input and object cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+blocked_targets:
+- family: x509_parsing
+  target_library: mbedtls
+  blocked_reason: needs_manual_review
+  blocked_apis:
+  - mbedtls_x509_crt_parse_der
+  why_not_slot_filling: blocked/no_direct/weak/manual-review target must not enter
+    slot filling
+  recommendation:
+  - manual_review_before_adapter
+  - manual_review_before_adapter
+  notes:
+  - not adapter-ready under current evidence gate
+  - candidate_only mappings are not confirmed equivalence.
+notes:
+- Do not create concrete slot filling request until family canonical template and
+  concrete adapter recipe exist.

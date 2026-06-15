@@ -1,0 +1,48 @@
+# API Card Enrichment For Cross-Library Counterparts Plan
+
+- recommended_next_task: `api_card_enrichment_for_cross_library_counterparts_v1`
+## Priority targets
+- `openssl:pkcs_container_parsing:PKCS12_free:missing_api_card`
+- `openssl:pkcs_container_parsing:PKCS12_parse:missing_api_card`
+- `openssl:pkcs_container_parsing:PKCS7_free:missing_api_card`
+- `openssl:pkcs_container_parsing:PKCS7_verify:missing_api_card`
+- `openssl:pkcs_container_parsing:d2i_PKCS12:missing_api_card`
+- `openssl:pkcs_container_parsing:d2i_PKCS7:missing_api_card`
+- `openssl:x509_parsing:ASN1_item_d2i:missing_api_card`
+- `openssl:x509_parsing:PEM_read_bio_X509:missing_api_card`
+- `openssl:x509_parsing:X509_free:missing_api_card`
+- `openssl:x509_parsing:d2i_ASN1_SEQUENCE_ANY:missing_api_card`
+- `openssl:asn1_nested_boundary:ASN1_item_d2i:missing_api_card`
+- `openssl:asn1_nested_boundary:d2i_ASN1_SEQUENCE_ANY:missing_api_card`
+- `mbedtls:x509_parsing:mbedtls_x509_crt_free:missing_api_card`
+- `mbedtls:x509_parsing:mbedtls_x509_crt_init:missing_api_card`
+- `mbedtls:x509_parsing:mbedtls_x509_crt_parse:missing_api_card`
+- `mbedtls:x509_parsing:mbedtls_x509_crt_parse_der:missing_api_card`
+- `mbedtls:tls_protocol_state_lifecycle:mbedtls_ssl_config_free:missing_api_card`
+- `mbedtls:tls_protocol_state_lifecycle:mbedtls_ssl_config_init:missing_api_card`
+- `mbedtls:tls_protocol_state_lifecycle:mbedtls_ssl_free:missing_api_card`
+- `mbedtls:tls_protocol_state_lifecycle:mbedtls_ssl_handshake:missing_api_card`
+- `mbedtls:tls_protocol_state_lifecycle:mbedtls_ssl_init:missing_api_card`
+- `mbedtls:tls_protocol_state_lifecycle:mbedtls_ssl_read:missing_api_card`
+- `mbedtls:tls_protocol_state_lifecycle:mbedtls_ssl_setup:missing_api_card`
+- `mbedtls:tls_protocol_state_lifecycle:mbedtls_ssl_write:missing_api_card`
+- `openssl:secure_heap_state_lifecycle:CRYPTO_secure_free:missing_api_card`
+- `openssl:secure_heap_state_lifecycle:CRYPTO_secure_malloc:missing_api_card`
+- `openssl:secure_heap_state_lifecycle:CRYPTO_secure_malloc_init:missing_api_card`
+- `openssl:secure_heap_state_lifecycle:OPENSSL_secure_free:missing_api_card`
+- `openssl:secure_heap_state_lifecycle:OPENSSL_secure_malloc:missing_api_card`
+- `mbedtls:secure_heap_state_lifecycle:mbedtls_calloc:missing_api_card`
+- `mbedtls:secure_heap_state_lifecycle:mbedtls_free:missing_api_card`
+- `mbedtls:secure_heap_state_lifecycle:mbedtls_platform_set_calloc_free:missing_api_card`
+- `mbedtls:asn1_nested_boundary:mbedtls_x509_crt_free:missing_api_card`
+- `mbedtls:asn1_nested_boundary:mbedtls_x509_crt_init:missing_api_card`
+- `mbedtls:asn1_nested_boundary:mbedtls_x509_crt_parse:missing_api_card`
+- `mbedtls:asn1_nested_boundary:mbedtls_x509_crt_parse_der:missing_api_card`
+- `openssl:tls_protocol_state_lifecycle:SSL_CTX_free:missing_api_card`
+- `openssl:tls_protocol_state_lifecycle:SSL_CTX_new:missing_api_card`
+- `openssl:tls_protocol_state_lifecycle:SSL_accept:missing_api_card`
+- `openssl:tls_protocol_state_lifecycle:SSL_connect:missing_api_card`
+- `openssl:tls_protocol_state_lifecycle:SSL_free:missing_api_card`
+- `openssl:tls_protocol_state_lifecycle:SSL_new:missing_api_card`
+- `openssl:tls_protocol_state_lifecycle:SSL_read:missing_api_card`
+- `openssl:tls_protocol_state_lifecycle:SSL_write:missing_api_card`

@@ -26,7 +26,13 @@ related_apis:
 mutation_hints:
   - final before setup
   - double final
+  - update after final
+  - third final
+  - update after second final
   - abort then final
+  - final after abort
+  - query after final
+  - query after abort
   - small mac_size
 oracle_observables:
   - psa_status
@@ -37,4 +43,11 @@ source_references:
   - psa/crypto.h
 notes:
   - "Known pitfall: failure return must be interpreted with mac_length and operation state."
-
+  - "Feedback: successful psa_mac_sign_finish() terminates the PSA MAC operation."
+  - "Observed behavior: repeated psa_mac_sign_finish() after success returns BAD_STATE-like failure, not a second successful MAC."
+  - "MAC lifecycle v2 minimal confirmation: after successful CMAC finish, mbedTLS PSA rejects update-after-finish, second finish, third finish, and update-after-second-finish with status -137."
+  - "MAC lifecycle v2 minimal confirmation was stable under normal and ASan/UBSan runs; no sanitizer crash was observed."
+  - "Classification guidance: PSA strict lifecycle rejection is a safe negative side of CMAC double-final comparison, not crash evidence."
+known_pitfalls:
+  - mbedTLS PSA MAC has no public query-size-before-setup equivalent; mark that projection as projection_limitation.
+  - Invalid algorithm projections such as HMAC+AES or CMAC+SHA should be avoided or marked projection_limitation.

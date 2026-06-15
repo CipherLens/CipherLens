@@ -42,6 +42,146 @@ feedback_summary:
     - artifacts/sprints/cipher_aead_lifecycle_botan_crosscheck_v1/reports/cipher_aead_lifecycle_botan_crosscheck_report.yaml
     - artifacts/sprints/cipher_aead_lifecycle_gcm_closure_v1/reports/aead_gcm_closure_report.yaml
     - artifacts/feedback/cipher_aead_lifecycle_gcm_closure_feedback.jsonl
+  asn1_nested_boundary:
+    sprint: asn1_nested_boundary_seed_enrichment_v1
+    status: blocked_seed_missing
+    recommended_next_action: framework_automation_schema_unification_v1
+    recommended_path: switch_to_framework_automation
+    seed_inventory:
+    - MBEDTLS-POC-0017
+    - OPENSSL-ISSUE-30581
+    - OPENSSL-ISSUE-9043
+    oracle_quality: medium
+    family_readiness: blocked_on_original_seed
+    vulnerability_conclusion: none_confirmed
+    audit_labels:
+    - real_seed_not_found
+    - equivalent_seed_not_generated
+    - generated_seed_parse_error_no_crash
+    - blocked_seed_missing
+    - blocked_high_uncertainty_reconstruction
+    - not_enough_for_claim
+    previous_minimal_reproducer_labels:
+    - placeholder_only
+    - seed_missing
+    - strict_reproduction_failed
+    - sanitizer_needed
+    - not_enough_for_claim
+    previous_audit_labels:
+    - D_audit_only
+    - migrated_safe_negative_feedback
+    - not_enough_for_claim
+    seed_summary:
+      MBEDTLS-POC-0017:
+        evidence_quality: medium
+        result: migrated_safe_negative_feedback
+      OPENSSL-ISSUE-30581:
+        evidence_quality: strong
+        result: original_seed_not_found_related_pbmac1_vectors_no_crash
+        strict_reproduction_success: false
+        next_action: framework_automation_schema_unification
+        related_vectors:
+        - pbmac1_256_256.no-salt.p12
+        - pbmac1_256_256.bad-salt-type.p12
+        - pbmac1_256_256.bad-salt.p12
+      OPENSSL-ISSUE-9043:
+        evidence_quality: medium
+        result: needs_more_seed_evidence
+    scheduler_note: Original issue seed remains missing; do not continue ASN.1 A-path until a real seed appears.
+    evidence_files:
+    - artifacts/sprints/asn1_nested_boundary_seed_enrichment_v1/reports/asn1_nested_boundary_seed_enrichment_report.yaml
+    - artifacts/sprints/asn1_nested_boundary_seed_enrichment_v1/seed_search/seed_search_report.yaml
+    - artifacts/sprints/asn1_nested_boundary_seed_enrichment_v1/reconstruction/pkcs12_pbmac1_null_salt_reconstruction_plan.yaml
+    - artifacts/sprints/asn1_nested_boundary_seed_enrichment_v1/validation/seed_validation_report.yaml
+    - artifacts/sprints/asn1_nested_boundary_seed_enrichment_v1/analysis/seed_enrichment_analysis.yaml
+    - artifacts/feedback/asn1_nested_boundary_seed_enrichment_feedback.jsonl
+    - artifacts/sprints/asn1_nested_boundary_minimal_reproducer_v1/reports/asn1_nested_boundary_minimal_reproducer_report.yaml
+    - artifacts/sprints/asn1_nested_boundary_minimal_reproducer_v1/input_discovery/seed_discovery_report.yaml
+    - artifacts/sprints/asn1_nested_boundary_minimal_reproducer_v1/analysis/minimal_reproducer_analysis.yaml
+    - artifacts/feedback/asn1_nested_boundary_minimal_reproducer_feedback.jsonl
+    - artifacts/sprints/asn1_nested_boundary_d_path_audit_v1/reports/asn1_nested_boundary_d_path_audit_report.yaml
+    - artifacts/sprints/asn1_nested_boundary_d_path_audit_v1/seeds/asn1_seed_inventory.yaml
+    - artifacts/sprints/asn1_nested_boundary_d_path_audit_v1/rag/rag_evidence_summary.yaml
+    - artifacts/sprints/asn1_nested_boundary_d_path_audit_v1/api_mapping/asn1_x509_api_mapping.yaml
+    - artifacts/sprints/asn1_nested_boundary_d_path_audit_v1/oracle/asn1_nested_boundary_oracle.yaml
+    - artifacts/feedback/asn1_nested_boundary_d_path_audit_feedback.jsonl
+  x509_parsing:
+    sprint: x509_parsing_triage_v1
+    status: source_vector_reproducer_planning_ready
+    recommended_next_action: x509_app_level_source_vector_reproducer_planning_v1
+    recommended_path: C_app_level_validation_gap_source_vector
+    seed_inventory:
+    - MBEDTLS-POC-0027
+    - OPENSSL-ISSUE-11567
+    - OPENSSL-ISSUE-11772
+    - OPENSSL-ISSUE-13860
+    - OPENSSL-ISSUE-14457
+    - OPENSSL-ISSUE-14675
+    - OPENSSL-ISSUE-23325
+    - OPENSSL-ISSUE-29418
+    - OPENSSL-ISSUE-29574
+    - OPENSSL-ISSUE-6788
+    - OPENSSL-ISSUE-9043
+    oracle_quality: medium
+    family_readiness: source_vector_only_no_original_seed
+    vulnerability_conclusion: none_confirmed
+    route_summary:
+      app_level_x509_count: 8
+      der_overlap_count: 0
+      asn1_overlap_count: 1
+      d_path_crash_seed_count: 1
+      needs_more_evidence_count: 1
+      glm_allowed: false
+      render_run_allowed: false
+    overlap_feedback:
+      OPENSSL-ISSUE-29574: overlaps_asn1_nested_boundary
+      OPENSSL-ISSUE-9043: D_crash_sanitizer_evidence_audit
+      MBEDTLS-POC-0027: future_tls_verify_result_semantic_family
+      OPENSSL-ISSUE-13860: needs_more_evidence
+    scheduler_note: Promote app-level x509 validation-gap triage; do not duplicate DER full-consumption or ASN.1 nested-boundary routes.
+    app_level_gap_triage:
+      latest_sprint: x509_parsing_app_level_gap_triage_v1
+      c_path_seed_count: 7
+      top_candidates:
+      - OPENSSL-ISSUE-14457
+      - OPENSSL-ISSUE-29418
+      - OPENSSL-ISSUE-14675
+      ready_for_minimal_reproducer_planning: []
+      real_input_found_count: 0
+      needs_seed_recovery_count: 7
+      next_action: x509_app_level_seed_recovery_v1
+      scheduler_note: All app-level C-path seeds still lack real original input / strict reproduction; recover inputs before minimal reproducer planning.
+    seed_recovery:
+      latest_sprint: x509_app_level_seed_recovery_v1
+      original_seed_found: []
+      source_test_vector_found:
+      - OPENSSL-ISSUE-29418
+      construction_script_found:
+      - OPENSSL-ISSUE-14457
+      - OPENSSL-ISSUE-14675
+      - OPENSSL-ISSUE-23325
+      - OPENSSL-ISSUE-6788
+      top_after_recovery:
+      - OPENSSL-ISSUE-29418
+      - OPENSSL-ISSUE-14457
+      - OPENSSL-ISSUE-14675
+      next_action: x509_app_level_source_vector_reproducer_planning_v1
+      scheduler_note: OPENSSL-ISSUE-29418 has a local OpenSSL source-tree servercert.pem candidate; this supports source-vector planning, not original issue strict reproduction.
+    evidence_files:
+    - artifacts/sprints/x509_parsing_triage_v1/reports/x509_parsing_triage_report.yaml
+    - artifacts/sprints/x509_parsing_triage_v1/seeds/x509_seed_inventory.yaml
+    - artifacts/sprints/x509_parsing_triage_v1/route_classification/x509_seed_route_classification.yaml
+    - artifacts/sprints/x509_parsing_triage_v1/api_mapping/x509_api_group_report.yaml
+    - artifacts/sprints/x509_parsing_triage_v1/oracle/x509_parsing_oracle.yaml
+    - artifacts/feedback/x509_parsing_triage_feedback.jsonl
+    - artifacts/sprints/x509_parsing_app_level_gap_triage_v1/reports/x509_parsing_app_level_gap_triage_report.yaml
+    - artifacts/sprints/x509_parsing_app_level_gap_triage_v1/ranking/x509_app_level_candidate_ranking.yaml
+    - artifacts/sprints/x509_parsing_app_level_gap_triage_v1/artifact_review/x509_app_level_artifact_review.yaml
+    - artifacts/feedback/x509_parsing_app_level_gap_triage_feedback.jsonl
+    - artifacts/sprints/x509_app_level_seed_recovery_v1/reports/x509_app_level_seed_recovery_report.yaml
+    - artifacts/sprints/x509_app_level_seed_recovery_v1/ranking/x509_seed_recovery_ranking.yaml
+    - artifacts/sprints/x509_app_level_seed_recovery_v1/seed_recovery/seed_recovery_status.yaml
+    - artifacts/feedback/x509_app_level_seed_recovery_feedback.jsonl
   pkey_verify_semantic: &id002
     total_cases: 160
     verdict_counts:

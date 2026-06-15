@@ -1,0 +1,20 @@
+# Manual Review Input Summary
+
+{
+  "task": "manual_review_counterpart_staged_cards_before_import_v1",
+  "openssl_staged_cards": "artifacts/sprints/api_card_enrichment_for_cross_library_counterparts_v1/api_cards/staged_openssl_counterpart_api_cards.yaml",
+  "mbedtls_staged_cards": "artifacts/sprints/api_card_enrichment_for_cross_library_counterparts_v1/api_cards/staged_mbedtls_counterpart_api_cards.yaml",
+  "openssl_src": "/home/wen/work/clean_sources/openssl-3.5.5",
+  "mbedtls_src": "/home/wen/work/clean_sources/mbedtls-4.1.0",
+  "source_dirs_usable": {
+    "openssl": true,
+    "mbedtls": true
+  },
+  "write_knowledge_raw": false,
+  "write_knowledge_base": false,
+  "rag_rebuild": false,
+  "poc_run": false,
+  "glm": false,
+  "render": false,
+  "template_generated": false
+}

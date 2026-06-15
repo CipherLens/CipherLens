@@ -1,0 +1,137 @@
+schema: added_family_profiles_v1
+generated_at: '2026-06-13T06:09:24+00:00'
+profiles:
+  pkey_parsing:
+    family: pkey_parsing
+    status: profile_ready
+    description: OpenSSL pkey / public/private key parsing
+    input_formats:
+    - der
+    - pem
+    seed_discovery:
+      enabled: true
+      seed_keywords:
+      - key
+      - pkey
+      - private
+      - public
+      - rsa
+      - ec
+      candidate_extensions:
+      - .key
+      - .pem
+      - .der
+      - .pub
+      validation_commands:
+      - openssl pkey -in <file> -noout
+      - openssl pkey -pubin -in <file> -noout
+    oracle_goals:
+    - parser_accept
+    - full_consumption_gap
+    mutation_operators:
+    - valid_object_plus_trailing_garbage
+    - malformed_only_control
+    - near_valid_length_delta
+    - format_toggle_der_pem
+    notes: Bootstrap profile for scheduler seed-discovery selection only; does not add family-specific
+      mutators or execute harnesses.
+  pkcs8_parsing:
+    family: pkcs8_parsing
+    status: profile_ready
+    description: PKCS#8 private key parsing
+    input_formats:
+    - der
+    - pem
+    seed_discovery:
+      enabled: true
+      seed_keywords:
+      - pkcs8
+      - private key
+      candidate_extensions:
+      - .pk8
+      - .key
+      - .pem
+      - .der
+      validation_commands:
+      - openssl pkcs8 -in <file> -inform PEM -nocrypt -out /dev/null
+      - openssl pkcs8 -in <file> -inform DER -nocrypt -out /dev/null
+    oracle_goals:
+    - parser_accept
+    - full_consumption_gap
+    mutation_operators:
+    - valid_object_plus_trailing_garbage
+    - malformed_only_control
+    - near_valid_length_delta
+    - format_toggle_der_pem
+    notes: Bootstrap profile for scheduler seed-discovery selection only; does not add family-specific
+      mutators or execute harnesses.
+  cms_container_parsing:
+    family: cms_container_parsing
+    status: profile_ready
+    description: CMS / SignedData / EnvelopedData container parsing
+    input_formats:
+    - der
+    - pem
+    seed_discovery:
+      enabled: true
+      seed_keywords:
+      - cms
+      - signeddata
+      - envelopeddata
+      - pkcs7
+      candidate_extensions:
+      - .cms
+      - .p7m
+      - .p7s
+      - .der
+      - .pem
+      validation_commands:
+      - openssl cms -inform DER -in <file> -cmsout -noout
+      - openssl cms -inform PEM -in <file> -cmsout -noout
+    oracle_goals:
+    - parser_accept
+    - full_consumption_gap
+    mutation_operators:
+    - valid_object_plus_trailing_garbage
+    - malformed_only_control
+    - near_valid_length_delta
+    - format_toggle_der_pem
+    notes: Bootstrap profile for scheduler seed-discovery selection only; does not add family-specific
+      mutators or execute harnesses.
+  x509_crl_parsing:
+    family: x509_crl_parsing
+    status: profile_ready
+    description: X.509 CRL parsing
+    input_formats:
+    - der
+    - pem
+    seed_discovery:
+      enabled: true
+      seed_keywords:
+      - crl
+      - certificate revocation list
+      - x509
+      candidate_extensions:
+      - .crl
+      - .der
+      - .pem
+      validation_commands:
+      - openssl crl -inform DER -in <file> -noout
+      - openssl crl -inform PEM -in <file> -noout
+    oracle_goals:
+    - parser_accept
+    - full_consumption_gap
+    mutation_operators:
+    - valid_object_plus_trailing_garbage
+    - malformed_only_control
+    - near_valid_length_delta
+    - format_toggle_der_pem
+    notes: Bootstrap profile for scheduler seed-discovery selection only; does not add family-specific
+      mutators or execute harnesses.
+summary:
+  added_profile_count: 4
+  families:
+  - cms_container_parsing
+  - pkcs8_parsing
+  - pkey_parsing
+  - x509_crl_parsing

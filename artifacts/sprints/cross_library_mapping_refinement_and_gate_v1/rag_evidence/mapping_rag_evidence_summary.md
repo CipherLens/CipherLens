@@ -1,0 +1,40 @@
+| mapping_id | wolfssl_api | target_library | target_api | evidence_strength |
+| --- | --- | --- | --- | --- |
+| map_001 | wc_InitDecodedCert | mbedtls | mbedtls_x509_crt_parse_der | strong |
+| map_002 | wc_InitDecodedCert | openssl | ASN1_item_d2i | strong |
+| map_003 | wc_ParseCert | mbedtls | mbedtls_x509_crt_parse_der | strong |
+| map_004 | wc_ParseCert | openssl | d2i_X509 | moderate |
+| map_005 | wc_PKCS12_parse | mbedtls |  | none |
+| map_006 | wc_PKCS12_parse | openssl | PKCS12_parse | strong |
+| map_007 | wc_PKCS7_DecodeSignedData | mbedtls |  | none |
+| map_008 | wc_PKCS7_DecodeSignedData | openssl | d2i_PKCS7 | weak |
+| map_009 | wc_PKCS7_VerifySignedData | mbedtls |  | none |
+| map_010 | wc_PKCS7_VerifySignedData | openssl | PKCS7_verify | strong |
+| map_011 | wolfSSL_Free | mbedtls | mbedtls_free | strong |
+| map_012 | wolfSSL_Free | openssl | OPENSSL_free | moderate |
+| map_013 | wolfSSL_Malloc | mbedtls | mbedtls_calloc | moderate |
+| map_014 | wolfSSL_Malloc | openssl | OPENSSL_malloc | moderate |
+| map_015 | wolfSSL_SetAllocators | mbedtls | mbedtls_platform_set_calloc_free | moderate |
+| map_016 | wolfSSL_SetAllocators | openssl | CRYPTO_set_mem_functions | moderate |
+| map_017 | wolfSSL_CTX_new | mbedtls | mbedtls_ssl_config_init | strong |
+| map_018 | wolfSSL_CTX_new | openssl | SSL_CTX_new | strong |
+| map_019 | wolfSSL_accept | mbedtls | mbedtls_ssl_handshake | moderate |
+| map_020 | wolfSSL_accept | openssl | SSL_accept | moderate |
+| map_021 | wolfSSL_connect | mbedtls | mbedtls_ssl_handshake | moderate |
+| map_022 | wolfSSL_connect | openssl | SSL_connect | moderate |
+| map_023 | wolfSSL_free | mbedtls | mbedtls_ssl_free | strong |
+| map_024 | wolfSSL_free | openssl | SSL_free | strong |
+| map_025 | wolfSSL_new | mbedtls | mbedtls_ssl_init | strong |
+| map_026 | wolfSSL_new | openssl | SSL_new | strong |
+| map_027 | wolfSSL_read | mbedtls | mbedtls_ssl_read | moderate |
+| map_028 | wolfSSL_read | openssl | SSL_read | moderate |
+| map_029 | wolfSSL_write | mbedtls | mbedtls_ssl_write | moderate |
+| map_030 | wolfSSL_write | openssl | SSL_write | moderate |
+| map_031 | wc_InitDecodedCert | mbedtls | mbedtls_x509_crt_parse_der | strong |
+| map_032 | wc_ParseCert | mbedtls | mbedtls_x509_crt_parse_der | strong |
+| map_033 | wolfSSL_X509_free | mbedtls | mbedtls_x509_crt_free | moderate |
+| map_034 | wolfSSL_X509_free | openssl | X509_free | moderate |
+| map_035 | wolfSSL_X509_load_certificate_file | mbedtls | mbedtls_x509_crt_parse_file | moderate |
+| map_036 | wolfSSL_X509_load_certificate_file | openssl | PEM_read_X509 | moderate |
+| map_037 | wolfSSL_X509_verify | mbedtls | mbedtls_x509_crt_verify | moderate |
+| map_038 | wolfSSL_X509_verify | openssl | X509_verify | moderate |

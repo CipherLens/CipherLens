@@ -1,0 +1,183 @@
+# Render Candidate Plan
+
+```yaml
+schema: render_candidate_plan_v1
+render_candidates:
+- case_id: pkcs_container_parsing_openssl__mut_001__seed_preserving_baseline
+  family: pkcs_container_parsing
+  target_library: openssl
+  base_adapter: pkcs_container_parsing_openssl
+  render_allowed: true
+  reason: case belongs to validated render-ready adapter
+  required_inputs:
+  - family_template
+  - adapter_recipe
+  - slot_bindings
+  - mutation_case
+  - oracle_expectation
+- case_id: pkcs_container_parsing_openssl__mut_002__trailing_garbage
+  family: pkcs_container_parsing
+  target_library: openssl
+  base_adapter: pkcs_container_parsing_openssl
+  render_allowed: true
+  reason: case belongs to validated render-ready adapter
+  required_inputs:
+  - family_template
+  - adapter_recipe
+  - slot_bindings
+  - mutation_case
+  - oracle_expectation
+- case_id: pkcs_container_parsing_openssl__mut_003__malformed_length
+  family: pkcs_container_parsing
+  target_library: openssl
+  base_adapter: pkcs_container_parsing_openssl
+  render_allowed: true
+  reason: case belongs to validated render-ready adapter
+  required_inputs:
+  - family_template
+  - adapter_recipe
+  - slot_bindings
+  - mutation_case
+  - oracle_expectation
+- case_id: pkcs_container_parsing_openssl__mut_004__nested_length_mismatch
+  family: pkcs_container_parsing
+  target_library: openssl
+  base_adapter: pkcs_container_parsing_openssl
+  render_allowed: true
+  reason: case belongs to validated render-ready adapter
+  required_inputs:
+  - family_template
+  - adapter_recipe
+  - slot_bindings
+  - mutation_case
+  - oracle_expectation
+- case_id: pkcs_container_parsing_openssl__mut_005__invalid_container_structure
+  family: pkcs_container_parsing
+  target_library: openssl
+  base_adapter: pkcs_container_parsing_openssl
+  render_allowed: true
+  reason: case belongs to validated render-ready adapter
+  required_inputs:
+  - family_template
+  - adapter_recipe
+  - slot_bindings
+  - mutation_case
+  - oracle_expectation
+- case_id: pkcs_container_parsing_openssl__mut_006__pem_der_format_toggle
+  family: pkcs_container_parsing
+  target_library: openssl
+  base_adapter: pkcs_container_parsing_openssl
+  render_allowed: true
+  reason: case belongs to validated render-ready adapter
+  required_inputs:
+  - family_template
+  - adapter_recipe
+  - slot_bindings
+  - mutation_case
+  - oracle_expectation
+- case_id: pkcs_container_parsing_openssl__mut_007__expected_return_flip
+  family: pkcs_container_parsing
+  target_library: openssl
+  base_adapter: pkcs_container_parsing_openssl
+  render_allowed: true
+  reason: case belongs to validated render-ready adapter
+  required_inputs:
+  - family_template
+  - adapter_recipe
+  - slot_bindings
+  - mutation_case
+  - oracle_expectation
+- case_id: asn1_nested_boundary_openssl__mut_001__seed_preserving_baseline
+  family: asn1_nested_boundary
+  target_library: openssl
+  base_adapter: asn1_nested_boundary_openssl
+  render_allowed: true
+  reason: case belongs to validated render-ready adapter
+  required_inputs:
+  - family_template
+  - adapter_recipe
+  - slot_bindings
+  - mutation_case
+  - oracle_expectation
+- case_id: asn1_nested_boundary_openssl__mut_002__trailing_garbage
+  family: asn1_nested_boundary
+  target_library: openssl
+  base_adapter: asn1_nested_boundary_openssl
+  render_allowed: true
+  reason: case belongs to validated render-ready adapter
+  required_inputs:
+  - family_template
+  - adapter_recipe
+  - slot_bindings
+  - mutation_case
+  - oracle_expectation
+- case_id: asn1_nested_boundary_openssl__mut_003__short_length
+  family: asn1_nested_boundary
+  target_library: openssl
+  base_adapter: asn1_nested_boundary_openssl
+  render_allowed: true
+  reason: case belongs to validated render-ready adapter
+  required_inputs:
+  - family_template
+  - adapter_recipe
+  - slot_bindings
+  - mutation_case
+  - oracle_expectation
+- case_id: asn1_nested_boundary_openssl__mut_004__long_length
+  family: asn1_nested_boundary
+  target_library: openssl
+  base_adapter: asn1_nested_boundary_openssl
+  render_allowed: true
+  reason: case belongs to validated render-ready adapter
+  required_inputs:
+  - family_template
+  - adapter_recipe
+  - slot_bindings
+  - mutation_case
+  - oracle_expectation
+- case_id: asn1_nested_boundary_openssl__mut_005__nested_length_mismatch
+  family: asn1_nested_boundary
+  target_library: openssl
+  base_adapter: asn1_nested_boundary_openssl
+  render_allowed: true
+  reason: case belongs to validated render-ready adapter
+  required_inputs:
+  - family_template
+  - adapter_recipe
+  - slot_bindings
+  - mutation_case
+  - oracle_expectation
+- case_id: asn1_nested_boundary_openssl__mut_006__nested_depth_variation
+  family: asn1_nested_boundary
+  target_library: openssl
+  base_adapter: asn1_nested_boundary_openssl
+  render_allowed: true
+  reason: case belongs to validated render-ready adapter
+  required_inputs:
+  - family_template
+  - adapter_recipe
+  - slot_bindings
+  - mutation_case
+  - oracle_expectation
+- case_id: asn1_nested_boundary_openssl__mut_007__expected_return_flip
+  family: asn1_nested_boundary
+  target_library: openssl
+  base_adapter: asn1_nested_boundary_openssl
+  render_allowed: true
+  reason: case belongs to validated render-ready adapter
+  required_inputs:
+  - family_template
+  - adapter_recipe
+  - slot_bindings
+  - mutation_case
+  - oracle_expectation
+blocked_cases:
+- case_id: asn1_nested_boundary_mbedtls__blocked
+  family: asn1_nested_boundary
+  target_library: mbedtls
+  reason: blocked_expected / needs_manual_review / mapping gate not render-ready
+summary:
+  total_cases: 14
+  render_allowed: 14
+  render_blocked: 1
+```

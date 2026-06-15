@@ -1,0 +1,240 @@
+1:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/bio.c /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/bio.c
+2:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/bio.c	2026-06-08 21:52:04.612198769 +0800
+3:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/bio.c	2026-06-08 21:52:05.656198211 +0800
+81:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/conf.c /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/conf.c
+82:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/conf.c	2026-06-08 21:52:04.612198769 +0800
+83:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/conf.c	2026-06-08 21:52:05.656198211 +0800
+93:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/dtls.c /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/dtls.c
+94:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/dtls.c	2026-06-08 21:52:04.612198769 +0800
+95:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/dtls.c	2026-06-08 21:52:05.660198209 +0800
+103:+        /* RFC 9147 Section 5.3: DTLS 1.3 ServerHello must have empty
+109:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/dtls13.c /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/dtls13.c
+110:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/dtls13.c	2026-06-08 21:52:04.612198769 +0800
+111:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/dtls13.c	2026-06-08 21:52:05.660198209 +0800
+201:             XFREE(rn, ssl->heap, DYNAMIC_TYPE_DTLS_MSG);
+223:             Dtls13FreeFragmentsBuffer(ssl);
+228:+            Dtls13FreeFragmentsBuffer(ssl);
+447:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/include.am /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/include.am
+448:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/include.am	2026-06-08 21:52:04.612198769 +0800
+449:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/include.am	2026-06-08 21:52:05.660198209 +0800
+459:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/internal.c /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/internal.c
+460:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/internal.c	2026-06-08 21:52:04.624198763 +0800
+461:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/internal.c	2026-06-08 21:52:05.672198202 +0800
+467:- *     Verify the certificate signature without using DecodedCert. Doubles up
+722:-void FreeHandshakeHashes(WOLFSSL* ssl)
+723:+void Free_HS_Hashes(HS_Hashes* hsHashes, void* heap)
+728:-        wc_Md5Free(&ssl->hsHashes->hashMd5);
+729:+        wc_Md5Free(&hsHashes->hashMd5);
+733:-        wc_ShaFree(&ssl->hsHashes->hashSha);
+734:+        wc_ShaFree(&hsHashes->hashSha);
+737:-        wc_Sha256Free(&ssl->hsHashes->hashSha256);
+738:+        wc_Sha256Free(&hsHashes->hashSha256);
+741:-        wc_Sha384Free(&ssl->hsHashes->hashSha384);
+742:+        wc_Sha384Free(&hsHashes->hashSha384);
+745:-        wc_Sha512Free(&ssl->hsHashes->hashSha512);
+746:+        wc_Sha512Free(&hsHashes->hashSha512);
+749:-        wc_Sm3Free(&ssl->hsHashes->hashSm3);
+750:+        wc_Sm3Free(&hsHashes->hashSm3);
+757:-            XFREE(ssl->hsHashes->messages, ssl->heap, DYNAMIC_TYPE_HASHES);
+761:+            XFREE(hsHashes->messages, heap, DYNAMIC_TYPE_HASHES);
+766:-        XFREE(ssl->hsHashes, ssl->heap, DYNAMIC_TYPE_HASHES);
+768:+        XFREE(hsHashes, heap, DYNAMIC_TYPE_HASHES);
+773:+void FreeHandshakeHashes(WOLFSSL* ssl)
+775:+    Free_HS_Hashes(ssl->hsHashes, ssl->heap);
+786:-     * freed, else they would leak.  To keep things simple, we reuse
+787:-     * FreeHandshakeHashes(), which deallocates *destination.
+792:-        FreeHandshakeHashes(ssl);
+795:+     * freed, else they would leak. */
+796:+    Free_HS_Hashes(*destination, ssl->heap);
+851:     FreeHandshakeHashes(ssl);
+853:     XFREE(ssl->buffers.domainName.buffer, ssl->heap, DYNAMIC_TYPE_DOMAIN);
+854:+    XFREE(ssl->buffers.ipasc.buffer, ssl->heap, DYNAMIC_TYPE_DOMAIN);
+1234:+        defined(WOLFSSL_MLKEM_KYBER)
+1237:         #ifndef WOLFSSL_NO_ML_KEM
+1239:             case WOLFSSL_SECP256R1MLKEM768:
+1240:             case WOLFSSL_X25519MLKEM768:
+1241:             case WOLFSSL_SECP384R1MLKEM1024:
+1244:             case WOLFSSL_SECP256R1MLKEM512:
+1245:             case WOLFSSL_SECP384R1MLKEM768:
+1246:             case WOLFSSL_SECP521R1MLKEM1024:
+1247:             case WOLFSSL_X25519MLKEM512:
+1248:             case WOLFSSL_X448MLKEM768:
+1249:-#ifdef WOLFSSL_ML_KEM_USE_OLD_IDS
+1250:+            #ifdef WOLFSSL_ML_KEM_USE_OLD_IDS
+1251:             case WOLFSSL_P256_ML_KEM_512_OLD:
+1252:             case WOLFSSL_P384_ML_KEM_768_OLD:
+1253:             case WOLFSSL_P521_ML_KEM_1024_OLD:
+1258:         #ifdef WOLFSSL_MLKEM_KYBER
+1269: #endif /* WOLFSSL_HAVE_MLKEM */
+1293:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/keys.c /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/keys.c
+1294:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/keys.c	2026-06-08 21:52:04.624198763 +0800
+1295:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/keys.c	2026-06-08 21:52:05.672198202 +0800
+1305:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/ocsp.c /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/ocsp.c
+1306:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/ocsp.c	2026-06-08 21:52:04.624198763 +0800
+1307:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/ocsp.c	2026-06-08 21:52:05.676198201 +0800
+1318:     XFREE(ocspRequest, NULL, DYNAMIC_TYPE_TMP_BUFFER);
+1327: void FreeOCSP(WOLFSSL_OCSP* ocsp, int dynamic)
+1332:     WOLFSSL_ENTER("FreeOCSP");
+1336:-        FreeOcspEntry(entry, ocsp->cm->heap);
+1337:-        XFREE(entry, ocsp->cm->heap, DYNAMIC_TYPE_OCSP_ENTRY);
+1338:+        FreeOcspEntry(entry, heap);
+1339:+        XFREE(entry, heap, DYNAMIC_TYPE_OCSP_ENTRY);
+1342:     wc_FreeMutex(&ocsp->ocspLock);
+1345:-        XFREE(ocsp, ocsp->cm->heap, DYNAMIC_TYPE_OCSP);
+1346:+        XFREE(ocsp, heap, DYNAMIC_TYPE_OCSP);
+1369:         XFREE(newSingle, NULL, DYNAMIC_TYPE_OCSP_ENTRY);
+1370:         XFREE(ocspResponse, NULL, DYNAMIC_TYPE_OCSP_REQUEST);
+1432:+    /* Deep-copy the status to avoid double-free */
+1437:+            XFREE(certId, NULL, DYNAMIC_TYPE_OPENSSL);
+1488:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/pk_ec.c /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/pk_ec.c
+1489:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/pk_ec.c	2026-06-08 21:52:04.628198761 +0800
+1490:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/pk_ec.c	2026-06-08 21:52:05.676198201 +0800
+1578:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/sniffer.c /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/sniffer.c
+1579:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/sniffer.c	2026-06-08 21:52:04.632198758 +0800
+1580:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/sniffer.c	2026-06-08 21:52:05.684198195 +0800
+1614:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/ssl.c /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/ssl.c
+1615:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/ssl.c	2026-06-08 21:52:04.640198754 +0800
+1616:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/ssl.c	2026-06-08 21:52:05.696198189 +0800
+1641:- *     pointer will be freed with the related WOLFSSL object.
+1645:- *     memory only when a session is added to the cache, frees memory after the
+1668:+ * HAVE_EX_DATA_CLEANUP_HOOKS: Cleanup callbacks for ex_data           default: off
+1737:+ * WOLFSSL_CLEANUP_THREADSAFE_BY_ATOMIC_OPS:
+1738:+ *                  Thread-safe cleanup via atomics                     default: off
+1740:+ * WOLFSSL_DEBUG_MEMORY:       Log malloc/free with file/line info     default: off
+1741:+ * WOLFSSL_NO_REALLOC:         Disable realloc, use malloc+copy+free   default: off
+1748:+ * HAVE_ATEXIT:                Register wolfSSL_Cleanup via atexit     default: off
+1761:     if (doFree) {
+1762:-        WOLFSSL_MSG("Doing WriteDup full free, count to zero");
+1767:+            XFREE(rn, ssl->heap, DYNAMIC_TYPE_DTLS_MSG);
+1772:+        Free_HS_Hashes(ssl->dupWrite->postHandshakeHashState, ssl->heap);
+1777:+                XFREE(ctx, ssl->heap, DYNAMIC_TYPE_TMP_BUFFER);
+1782:         wc_FreeMutex(&ssl->dupWrite->dupMutex);
+1783:         XFREE(ssl->dupWrite, ssl->heap, DYNAMIC_TYPE_WRITEDUP);
+1784:+        WOLFSSL_MSG("Did WriteDup full free, count to zero");
+1893:+                FreeHandshakeHashes(ssl);
+1926:+                            XFREE(rn, ssl->heap, DYNAMIC_TYPE_DTLS_MSG);
+2020: #ifdef WOLFSSL_HAVE_MLKEM
+2021: #ifndef WOLFSSL_NO_ML_KEM
+2022:+    #ifndef WOLFSSL_TLS_NO_MLKEM_STANDALONE
+2023:         case WOLFSSL_ML_KEM_512:
+2024:         case WOLFSSL_ML_KEM_768:
+2025:         case WOLFSSL_ML_KEM_1024:
+2026:+    #endif /* !WOLFSSL_TLS_NO_MLKEM_STANDALONE */
+2027:     #if defined(WOLFSSL_WC_MLKEM) || defined(HAVE_LIBOQS)
+2029:+        case WOLFSSL_SECP384R1MLKEM1024:
+2030:+        case WOLFSSL_X25519MLKEM768:
+2031:+        case WOLFSSL_SECP256R1MLKEM768:
+2034:         case WOLFSSL_SECP256R1MLKEM512:
+2035:         case WOLFSSL_SECP384R1MLKEM768:
+2036:         case WOLFSSL_SECP521R1MLKEM1024:
+2037:-        case WOLFSSL_SECP384R1MLKEM1024:
+2038:         case WOLFSSL_X25519MLKEM512:
+2039:         case WOLFSSL_X448MLKEM768:
+2040:-        case WOLFSSL_X25519MLKEM768:
+2041:-        case WOLFSSL_SECP256R1MLKEM768:
+2044: #endif /* !WOLFSSL_NO_ML_KEM */
+2045: #ifdef WOLFSSL_MLKEM_KYBER
+2063:+        XFREE(ssl->buffers.ipasc.buffer, ssl->heap, DYNAMIC_TYPE_DOMAIN);
+2121:     #ifndef WOLFSSL_NO_ML_KEM_512
+2122:         case WOLFSSL_ML_KEM_512:
+2123:             return "ML_KEM_512";
+2124:-        case WOLFSSL_SECP256R1MLKEM512:
+2125:-            return "SecP256r1MLKEM512";
+2126:-#ifdef WOLFSSL_ML_KEM_USE_OLD_IDS
+2128:+        #ifdef WOLFSSL_ML_KEM_USE_OLD_IDS
+2129:         case WOLFSSL_P256_ML_KEM_512_OLD:
+2130:             return "P256_ML_KEM_512_OLD";
+2132:+        #endif /* WOLFSSL_ML_KEM_USE_OLD_IDS */
+2133:+        case WOLFSSL_SECP256R1MLKEM512:
+2134:+            return "SecP256r1MLKEM512";
+2136:         case WOLFSSL_X25519MLKEM512:
+2137:             return "X25519MLKEM512";
+2142:+    #endif /* WOLFSSL_NO_ML_KEM_512 */
+2143:     #ifndef WOLFSSL_NO_ML_KEM_768
+2144:         case WOLFSSL_ML_KEM_768:
+2145:             return "ML_KEM_768";
+2146:-        case WOLFSSL_SECP384R1MLKEM768:
+2147:-            return "SecP384r1MLKEM768";
+2148:-#ifdef WOLFSSL_ML_KEM_USE_OLD_IDS
+2149:-        case WOLFSSL_P384_ML_KEM_768_OLD:
+2150:-            return "P384_ML_KEM_768_OLD";
+2153:         case WOLFSSL_SECP256R1MLKEM768:
+2154:             return "SecP256r1MLKEM768";
+2156:         case WOLFSSL_X25519MLKEM768:
+2157:             return "X25519MLKEM768";
+2161:+        #ifdef WOLFSSL_ML_KEM_USE_OLD_IDS
+2162:+        case WOLFSSL_P384_ML_KEM_768_OLD:
+2163:+            return "P384_ML_KEM_768_OLD";
+2164:+        #endif /* WOLFSSL_ML_KEM_USE_OLD_IDS */
+2165:+        case WOLFSSL_SECP384R1MLKEM768:
+2166:+            return "SecP384r1MLKEM768";
+2168:         case WOLFSSL_X448MLKEM768:
+2169:             return "X448MLKEM768";
+2174:+    #endif /* WOLFSSL_NO_ML_KEM_768 */
+2175:     #ifndef WOLFSSL_NO_ML_KEM_1024
+2176:         case WOLFSSL_ML_KEM_1024:
+2177:             return "ML_KEM_1024";
+2178:-        case WOLFSSL_SECP521R1MLKEM1024:
+2179:-            return "SecP521r1MLKEM1024";
+2180:-#ifdef WOLFSSL_ML_KEM_USE_OLD_IDS
+2181:-        case WOLFSSL_P521_ML_KEM_1024_OLD:
+2182:-            return "P521_ML_KEM_1024_OLD";
+2185:         case WOLFSSL_SECP384R1MLKEM1024:
+2186:             return "SecP384r1MLKEM1024";
+2190:+        #ifdef WOLFSSL_ML_KEM_USE_OLD_IDS
+2191:+        case WOLFSSL_P521_ML_KEM_1024_OLD:
+2192:+            return "P521_ML_KEM_1024_OLD";
+2193:+        #endif /* WOLFSSL_ML_KEM_USE_OLD_IDS */
+2194:+        case WOLFSSL_SECP521R1MLKEM1024:
+2195:+            return "SecP521r1MLKEM1024";
+2197:+    #endif /* WOLFSSL_NO_ML_KEM_1024 */
+2199:         case WOLFSSL_ML_KEM_512:
+2200:             return "ML_KEM_512";
+2204:         XFREE(*port, NULL, DYNAMIC_TYPE_OPENSSL);
+2251:     {CURVE_NAME("ML_KEM_768"), WOLFSSL_ML_KEM_768, WOLFSSL_ML_KEM_768},
+2252:     {CURVE_NAME("ML_KEM_1024"), WOLFSSL_ML_KEM_1024, WOLFSSL_ML_KEM_1024},
+2253: #if (defined(WOLFSSL_WC_MLKEM) || defined(HAVE_LIBOQS)) && defined(HAVE_ECC)
+2255:+    {CURVE_NAME("SecP256r1MLKEM768"), WOLFSSL_SECP256R1MLKEM768,
+2256:+     WOLFSSL_SECP256R1MLKEM768},
+2257:+    {CURVE_NAME("SecP384r1MLKEM1024"), WOLFSSL_SECP384R1MLKEM1024,
+2258:+     WOLFSSL_SECP384R1MLKEM1024},
+2259:+    {CURVE_NAME("X25519MLKEM768"), WOLFSSL_X25519MLKEM768,
+2260:+     WOLFSSL_X25519MLKEM768},
+2263:     {CURVE_NAME("SecP256r1MLKEM512"), WOLFSSL_SECP256R1MLKEM512,
+2264:      WOLFSSL_SECP256R1MLKEM512},
+2265:     {CURVE_NAME("SecP384r1MLKEM768"), WOLFSSL_SECP384R1MLKEM768,
+2266:      WOLFSSL_SECP384R1MLKEM768},
+2267:-    {CURVE_NAME("SecP256r1MLKEM768"), WOLFSSL_SECP256R1MLKEM768,
+2268:-     WOLFSSL_SECP256R1MLKEM768},
+2269:     {CURVE_NAME("SecP521r1MLKEM1024"), WOLFSSL_SECP521R1MLKEM1024,
+2270:      WOLFSSL_SECP521R1MLKEM1024},
+2271:-    {CURVE_NAME("SecP384r1MLKEM1024"), WOLFSSL_SECP384R1MLKEM1024,
+2272:-     WOLFSSL_SECP384R1MLKEM1024},
+2273:     {CURVE_NAME("X25519MLKEM512"), WOLFSSL_X25519MLKEM512,
+2274:      WOLFSSL_X25519MLKEM512},
+2275:     {CURVE_NAME("X448MLKEM768"), WOLFSSL_X448MLKEM768,
+2276:      WOLFSSL_X448MLKEM768},
+2277:-    {CURVE_NAME("X25519MLKEM768"), WOLFSSL_X25519MLKEM768,
+2278:-     WOLFSSL_X25519MLKEM768},
+2281: #endif /* !WOLFSSL_NO_ML_KEM */
+2282: #ifdef WOLFSSL_MLKEM_KYBER
+2283:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/ssl_api_crl_ocsp.c /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/ssl_api_crl_ocsp.c
+2284:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/ssl_api_crl_ocsp.c	2026-06-08 21:52:04.640198754 +0800
+2285:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/ssl_api_crl_ocsp.c	2026-06-08 21:52:05.696198189 +0800
+2295:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/ssl_asn1.c /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/ssl_asn1.c
+2296:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/ssl_asn1.c	2026-06-08 21:52:04.640198754 +0800
+2297:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/ssl_asn1.c	2026-06-08 21:52:05.700198187 +0800
+2299:     XFREE(in, NULL, DYNAMIC_TYPE_OPENSSL);
+2359:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/ssl_certman.c /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/ssl_certman.c
+2360:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/ssl_certman.c	2026-06-08 21:52:04.644198752 +0800
+2361:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/ssl_certman.c	2026-06-08 21:52:05.700198187 +0800
+2373:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/ssl_ech.c /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/ssl_ech.c
+2374:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/ssl_ech.c	2026-06-08 21:52:04.644198752 +0800
+2375:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/ssl_ech.c	2026-06-08 21:52:05.700198187 +0800
+2475:         /* KEM or ciphersuite not supported, free this config and then try to
+2480:             XFREE(workingConfig->cipherSuites, heap, DYNAMIC_TYPE_TMP_BUFFER);
+2481:             XFREE(workingConfig->publicName, heap, DYNAMIC_TYPE_TMP_BUFFER);
+2482:             XFREE(workingConfig->raw, heap, DYNAMIC_TYPE_TMP_BUFFER);
+2483:diff -ruN '--exclude=.git' '--exclude=*.o' '--exclude=*.lo' '--exclude=.libs' /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/ssl_sess.c /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/ssl_sess.c
+2484:--- /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.0-stable-asan-pqc-keyshare-cleanup/src/ssl_sess.c	2026-06-08 21:52:04.648198750 +0800
+2485:+++ /home/yvxi/workplace/CryptoPoc/Builds/wolfssl_repro/wolfssl-v5.9.1-stable-asan-pqc-keyshare-cleanup/src/ssl_sess.c	2026-06-08 21:52:05.704198185 +0800

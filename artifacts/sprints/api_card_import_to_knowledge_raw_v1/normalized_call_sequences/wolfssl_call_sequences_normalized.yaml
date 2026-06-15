@@ -1,0 +1,203 @@
+wolfssl_call_sequences_normalized:
+- library: wolfssl
+  sequence_id: wolfssl_decodedcert_parse_free_004
+  family: asn1_nested_boundary
+  api_sequence:
+  - wc_InitDecodedCert
+  - wc_ParseCert
+  - wc_FreeDecodedCert
+  resource_lifecycle: wc_InitDecodedCert -> wc_ParseCert -> wc_FreeDecodedCert
+  cleanup_sequence:
+  - wc_FreeDecodedCert
+  evidence:
+    source_file: examples/ocsp_responder/ocsp_responder.c
+    refs:
+    - file: ''
+      line: 870
+      summary: wc_InitDecodedCert(&caCert, caCertDer, caCertDerSz, NULL);
+    - file: ''
+      line: 871
+      summary: ret = wc_ParseCert(&caCert, CERT_TYPE, 0, NULL);
+    - file: ''
+      line: 1113
+      summary: wc_FreeDecodedCert(&caCert);
+  confidence: medium
+  usage_role: cleanup_example
+  notes:
+  - Sequence inferred from tests/examples; use as staged RAG evidence only.
+  - Usage sequence candidate only; not a generated harness.
+- library: wolfssl
+  sequence_id: wolfssl_pkcs7_init_decode_free_005
+  family: pkcs_container_parsing
+  api_sequence:
+  - wc_PKCS7_Init
+  - wc_PKCS7_Free
+  resource_lifecycle: wc_PKCS7_Init -> wc_PKCS7_Free
+  cleanup_sequence:
+  - wc_PKCS7_Free
+  evidence:
+    source_file: tests/api.c
+    refs:
+    - file: ''
+      line: 34928
+      summary: wc_PKCS7_Free(p7);
+    - file: ''
+      line: 34987
+      summary: wc_PKCS7_Free(p7);
+    - file: ''
+      line: 35054
+      summary: ExpectIntEQ(wc_PKCS7_Init(&pkcs7, NULL, 0), 0);
+    - file: ''
+      line: 35068
+      summary: wc_PKCS7_Free(&pkcs7);
+    - file: ''
+      line: 35105
+      summary: ExpectIntEQ(wc_PKCS7_Init(&pkcs7, NULL, 0), 0);
+  confidence: medium
+  usage_role: cleanup_example
+  notes:
+  - Sequence inferred from tests/examples; use as staged RAG evidence only.
+  - Usage sequence candidate only; not a generated harness.
+- library: wolfssl
+  sequence_id: wolfssl_pkcs7_init_verify_free_006
+  family: pkcs_container_parsing
+  api_sequence:
+  - wc_PKCS7_Init
+  - wc_PKCS7_Free
+  resource_lifecycle: wc_PKCS7_Init -> wc_PKCS7_Free
+  cleanup_sequence:
+  - wc_PKCS7_Free
+  evidence:
+    source_file: tests/api.c
+    refs:
+    - file: ''
+      line: 34928
+      summary: wc_PKCS7_Free(p7);
+    - file: ''
+      line: 34987
+      summary: wc_PKCS7_Free(p7);
+    - file: ''
+      line: 35054
+      summary: ExpectIntEQ(wc_PKCS7_Init(&pkcs7, NULL, 0), 0);
+    - file: ''
+      line: 35068
+      summary: wc_PKCS7_Free(&pkcs7);
+    - file: ''
+      line: 35105
+      summary: ExpectIntEQ(wc_PKCS7_Init(&pkcs7, NULL, 0), 0);
+  confidence: medium
+  usage_role: cleanup_example
+  notes:
+  - Sequence inferred from tests/examples; use as staged RAG evidence only.
+  - Usage sequence candidate only; not a generated harness.
+- library: wolfssl
+  sequence_id: wolfssl_tls_accept_lifecycle_002
+  family: tls_protocol_state_lifecycle
+  api_sequence:
+  - wolfSSL_CTX_new
+  - wolfSSL_new
+  - wolfSSL_read
+  - wolfSSL_write
+  - wolfSSL_free
+  - wolfSSL_CTX_free
+  resource_lifecycle: wolfSSL_CTX_new -> wolfSSL_new -> wolfSSL_read -> wolfSSL_write
+    -> wolfSSL_free -> wolfSSL_CTX_free
+  cleanup_sequence:
+  - wolfSSL_free
+  - wolfSSL_CTX_free
+  evidence:
+    source_file: examples/async/async_client.c
+    refs:
+    - file: ''
+      line: 325
+      summary: ctx = wolfSSL_CTX_new(wolfTLSv1_2_client_method());
+    - file: ''
+      line: 328
+      summary: ctx = wolfSSL_CTX_new(wolfSSLv23_client_method());
+    - file: ''
+      line: 396
+      summary: ssl = wolfSSL_new(ctx);
+    - file: ''
+      line: 479
+      summary: ret = wolfSSL_write(ssl, tx, tx_len);
+    - file: ''
+      line: 504
+      summary: 'fprintf(stderr, "ERROR: wolfSSL_write failed: %d (%s)\n",'
+  confidence: high
+  usage_role: lifecycle_example
+  notes:
+  - Sequence inferred from tests/examples; use as staged RAG evidence only.
+  - Usage sequence candidate only; not a generated harness.
+- library: wolfssl
+  sequence_id: wolfssl_tls_lifecycle_001
+  family: tls_protocol_state_lifecycle
+  api_sequence:
+  - wolfSSL_CTX_new
+  - wolfSSL_new
+  - wolfSSL_connect
+  - wolfSSL_read
+  - wolfSSL_write
+  - wolfSSL_free
+  - wolfSSL_CTX_free
+  resource_lifecycle: wolfSSL_CTX_new -> wolfSSL_new -> wolfSSL_connect -> wolfSSL_read
+    -> wolfSSL_write -> wolfSSL_free -> wolfSSL_CTX_free
+  cleanup_sequence:
+  - wolfSSL_free
+  - wolfSSL_CTX_free
+  evidence:
+    source_file: examples/async/async_client.c
+    refs:
+    - file: ''
+      line: 325
+      summary: ctx = wolfSSL_CTX_new(wolfTLSv1_2_client_method());
+    - file: ''
+      line: 328
+      summary: ctx = wolfSSL_CTX_new(wolfSSLv23_client_method());
+    - file: ''
+      line: 396
+      summary: ssl = wolfSSL_new(ctx);
+    - file: ''
+      line: 430
+      summary: ret = wolfSSL_connect(ssl);
+    - file: ''
+      line: 455
+      summary: 'fprintf(stderr, "ERROR: wolfSSL_connect failed: %d (%s)\n",'
+  confidence: high
+  usage_role: lifecycle_example
+  notes:
+  - Sequence inferred from tests/examples; use as staged RAG evidence only.
+  - Usage sequence candidate only; not a generated harness.
+- library: wolfssl
+  sequence_id: wolfssl_x509_load_inspect_free_003
+  family: x509_parsing
+  api_sequence:
+  - wolfSSL_X509_load_certificate_file
+  - wolfSSL_X509_get_subject_name
+  - wolfSSL_X509_free
+  resource_lifecycle: wolfSSL_X509_load_certificate_file -> wolfSSL_X509_get_subject_name
+    -> wolfSSL_X509_free
+  cleanup_sequence:
+  - wolfSSL_X509_free
+  evidence:
+    source_file: tests/api.c
+    refs:
+    - file: ''
+      line: 2270
+      summary: wolfSSL_X509_free(x509);
+    - file: ''
+      line: 3006
+      summary: ExpectNotNull(issuer = wolfSSL_X509_load_certificate_file(caFile,
+    - file: ''
+      line: 3018
+      summary: wolfSSL_X509_free(issuer);
+    - file: ''
+      line: 3145
+      summary: ExpectNotNull(issuer = wolfSSL_X509_load_certificate_file(caFile,
+    - file: ''
+      line: 3155
+      summary: wolfSSL_X509_free(issuer);
+  confidence: medium
+  usage_role: cleanup_example
+  notes:
+  - Sequence inferred from tests/examples; use as staged RAG evidence only.
+  - Usage sequence candidate only; not a generated harness.

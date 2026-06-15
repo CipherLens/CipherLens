@@ -1,0 +1,475 @@
+{
+  "query": "mbedTLS GCM CCM PSA AEAD lifecycle update finish tag aad bad state after finish",
+  "top_k": 20,
+  "results": [
+    {
+      "rank": 1,
+      "score": 1.0112203633255161,
+      "distance": 0.6360711455345154,
+      "base_score": 0.6112203633255162,
+      "rerank_score": 1.0112203633255161,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "layer:api_cards",
+        "keyword_overlap:finish,lifecycle,mbedtls,psa,state",
+        "recent_feedback_source"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/mbedtls/psa_mac_sign_finish.yaml",
+      "text": "Source: API Card\napi: psa_mac_sign_finish\nlibrary: mbedtls\nfamily: mac_lifecycle\nsignature: psa_status_t psa_mac_sign_finish(psa_mac_operation_t *operation, uint8_t *mac, size_t mac_size, size_t *mac_length)\nparameter_semantics: operation: PSA MAC operation state\nmac: output buffer\nmac_size: output buffer capacity\nmac_length: caller-visible output length\nreturn_value_semantics: success: PSA_SUCCESS and mac_length receives produced length\nfailure: PSA error status and output state should remain safe\nvalid_invalid_ranges: valid: active sign operation and sufficient output buffer\ninvalid: finish before setup, double finish, undersized output\nunsupported_conditions: - operation in verify mode\n- aborted or inactive operation\nmutation_hints: - final before setup\n- double final\n- update after final\n- third final\n- update after second final\n- abort then final\n- final after abort\n- query after final\n- query after abort\n- small mac_size\noracle_observables: - psa_status\n- mac_length\n- output_buffer_state\n- sanitizer_signal\nknown_pitfalls: - mbedTLS PSA MAC has no public query-size-before-setup equivalent; mark that projection\n  as projection_limitation.\n- Invalid algorithm projections such as HMAC+AES or CMAC+SHA should be avoided or\n  marked projection_limitation.\nnotes: - 'Known pitfall: failure return must be interpreted with mac_length and operation\n  state.'\n- 'Feedback: successful psa_mac_sign_finish() terminates the PSA MAC operation.'\n- 'Observed behavior: repeated psa_mac_sign_finish() after success returns BAD_STATE-like\n  failure, not a second successful MAC.'\n- 'MAC lifecycle v2 minimal confirmation: after successful CMAC finish, mbedTLS PSA\n  rejects update-after-finish, second finish, third finish, and update-after-second-finish\n  with status -137.'\n- MAC lifecycle v2 minimal confirmation was stable under normal and ASan/UBSan runs;\n  no sanitizer crash was observed.\n- 'Classification guidance: PSA strict lifecycle rejection is a safe negative side\n  of CMAC double-final comparison, not crash evidence.'\n",
+      "metadata": {
+        "source_file": "knowledge_base/api_cards/mbedtls/psa_mac_sign_finish.yaml",
+        "family": "mac_lifecycle",
+        "library": "mbedtls",
+        "api": "psa_mac_sign_finish",
+        "doc_type": "api_card",
+        "layer": "api_cards"
+      }
+    },
+    {
+      "rank": 2,
+      "score": 0.8392135490951096,
+      "distance": 0.6414605379104614,
+      "base_score": 0.6092135490951096,
+      "rerank_score": 0.8392135490951096,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:aead,mbedtls,psa,tag",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+      "text": "## MBEDTLS-POC-0028\n\n- Source: data/pocs/core10/MBEDTLS-POC-0028\n- Family: cipher_aead_lifecycle\n- Oracle type: unexpected_success\n- Root cause: Missing validation of AEAD tag lengths from PSA drivers.\n- Source API: psa_aead_setup\n- Target API: unknown\n- Historical verdict: pending_inference\n- Feedback summary: none\n- Scheduler priority: 0.6 (invalid_parameter_acceptance, psa_aead_setup)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: invalid parameter accepted.",
+      "metadata": {
+        "layer": "poc_patterns",
+        "oracle_type": "unexpected_success",
+        "pattern_id": "MBEDTLS-POC-0028",
+        "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+        "doc_type": "poc_pattern",
+        "library": "",
+        "family": "cipher_aead_lifecycle"
+      }
+    },
+    {
+      "rank": 3,
+      "score": 0.8392135490951096,
+      "distance": 0.6414605379104614,
+      "base_score": 0.6092135490951096,
+      "rerank_score": 0.8392135490951096,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:aead,mbedtls,psa,tag",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "## MBEDTLS-POC-0028\n\n- Source: data/pocs/core10/MBEDTLS-POC-0028\n- Family: cipher_aead_lifecycle\n- Oracle type: unexpected_success\n- Root cause: Missing validation of AEAD tag lengths from PSA drivers.\n- Source API: psa_aead_setup\n- Target API: unknown\n- Historical verdict: pending_inference\n- Feedback summary: none\n- Scheduler priority: 0.6 (invalid_parameter_acceptance, psa_aead_setup)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: invalid parameter accepted.",
+      "metadata": {
+        "doc_type": "poc_pattern",
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+        "pattern_id": "MBEDTLS-POC-0028",
+        "layer": "poc_patterns",
+        "oracle_type": "unexpected_success",
+        "family": "cipher_aead_lifecycle",
+        "library": ""
+      }
+    },
+    {
+      "rank": 4,
+      "score": 0.8162151719132615,
+      "distance": 0.6228097677230835,
+      "base_score": 0.6162151719132616,
+      "rerank_score": 0.8162151719132615,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:aad,aead,ccm,gcm,mbedtls,tag"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_DecryptUpdate.md",
+      "text": "or provider failure.\n\n## Ownership and Buffer Constraints\n\n- `out` is caller-owned writable output when non-NULL.\n- `outl` must be non-NULL.\n- `in` is caller-owned readable input when non-NULL.\n\n## Harness Generation Notes\n\n- For GCM/CCM decrypt, use separate calls for AAD and ciphertext.\n- For CCM, final authentication result may be returned by the ciphertext update call rather than `EVP_DecryptFinal_ex()`.\n\n## Vulnerability-Pattern Migration Notes\n\n- Companion API for `MBEDTLS-POC-0028` OpenSSL AEAD migration.\n- May be where invalid tag length or authentication failure becomes observable for CCM.\n\n## Related Tests or Examples Found Locally\n\n- `test/evp_extra_test.c`: AEAD update tests.\n- `demos/cipher/aesccm.c`, `demos/cipher/aesgcm.c`: decrypt update flows.",
+      "metadata": {
+        "pattern_id": "",
+        "oracle_type": "",
+        "doc_type": "api_constraint",
+        "library": "openssl",
+        "family": "",
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_DecryptUpdate.md",
+        "layer": "api_constraints"
+      }
+    },
+    {
+      "rank": 5,
+      "score": 0.8139442012707683,
+      "distance": 0.6557821035385132,
+      "base_score": 0.6039442012707683,
+      "rerank_score": 0.8139442012707683,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:lifecycle,mbedtls,state",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+      "text": "## MBEDTLS-POC-0005\n\n- Source: data/pocs/core10/MBEDTLS-POC-0005\n- Family: api_state_machine\n- Oracle type: safe_reject_baseline\n- Root cause: Missing validation for conflicting ASN.1 named-data value pointer and nonzero length, allowing NULL pointer dereference.\n- Source API: mbedtls_asn1_store_named_data\n- Target API: ASN1_STRING_set\n- Historical verdict: migrated_safe\n- Feedback summary: none\n- Scheduler priority: 0.42 (object_state_lifecycle, safe_negative_baseline)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: NULL pointer dereference. Local metadata and artifacts describe mbedtls_asn1_store_named_data stale state, not a MAC lifecycle issue.",
+      "metadata": {
+        "oracle_type": "safe_reject_baseline",
+        "doc_type": "poc_pattern",
+        "layer": "poc_patterns",
+        "family": "api_state_machine",
+        "pattern_id": "MBEDTLS-POC-0005",
+        "library": "",
+        "source_file": "knowledge_raw/poc_patterns/core10_patterns.md"
+      }
+    },
+    {
+      "rank": 6,
+      "score": 0.8139442012707683,
+      "distance": 0.6557821035385132,
+      "base_score": 0.6039442012707683,
+      "rerank_score": 0.8139442012707683,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:lifecycle,mbedtls,state",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "## MBEDTLS-POC-0005\n\n- Source: data/pocs/core10/MBEDTLS-POC-0005\n- Family: api_state_machine\n- Oracle type: safe_reject_baseline\n- Root cause: Missing validation for conflicting ASN.1 named-data value pointer and nonzero length, allowing NULL pointer dereference.\n- Source API: mbedtls_asn1_store_named_data\n- Target API: ASN1_STRING_set\n- Historical verdict: migrated_safe\n- Feedback summary: none\n- Scheduler priority: 0.42 (object_state_lifecycle, safe_negative_baseline)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: NULL pointer dereference. Local metadata and artifacts describe mbedtls_asn1_store_named_data stale state, not a MAC lifecycle issue.",
+      "metadata": {
+        "layer": "poc_patterns",
+        "oracle_type": "safe_reject_baseline",
+        "doc_type": "poc_pattern",
+        "family": "api_state_machine",
+        "pattern_id": "MBEDTLS-POC-0005",
+        "library": "",
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md"
+      }
+    },
+    {
+      "rank": 7,
+      "score": 0.8002164285961648,
+      "distance": 0.6660656929016113,
+      "base_score": 0.6002164285961649,
+      "rerank_score": 0.8002164285961648,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:bad,lifecycle,mbedtls,psa,state"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "erved repeated-final and update-after-final lifecycle semantic divergence candidates: OpenSSL CMAC can continue after a terminal-looking finalization, while mbedTLS PSA rejects with bad-state-like status. This is not a confirmed vulnerability and not a CVE; next triage requires documentation semantics, caller-impact analysis, and minimization.",
+      "metadata": {
+        "oracle_type": "crash_or_sanitizer",
+        "library": "",
+        "doc_type": "poc_pattern",
+        "pattern_id": "OPENSSL-ISSUE-22842",
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+        "layer": "poc_patterns",
+        "family": "mac_lifecycle"
+      }
+    },
+    {
+      "rank": 8,
+      "score": 0.7954171343499904,
+      "distance": 0.8004485964775085,
+      "base_score": 0.5554171343499904,
+      "rerank_score": 0.7954171343499904,
+      "rerank_reasons": [
+        "layer:api_cards",
+        "keyword_overlap:lifecycle,state",
+        "recent_feedback_source"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/openssl/EVP_MAC_final.yaml",
+      "text": "Source: API Card\napi: EVP_MAC_final\nlibrary: openssl\nfamily: mac_lifecycle\nsignature: int EVP_MAC_final(EVP_MAC_CTX *ctx, unsigned char *out, size_t *outl, size_t outsize)\nparameter_semantics: ctx: MAC context\nout: output buffer\noutl: caller-visible output length\noutsize: output buffer capacity\nreturn_value_semantics: success: 1 and outl receives MAC length\nfailure: 0 and output state should remain safe for caller\nvalid_invalid_ranges: valid: initialized MAC context and sufficiently sized output buffer\ninvalid: final before setup, update after final for strict lifecycle APIs, undersized\n  output\nunsupported_conditions: - using ctx after invalid lifecycle transition\nmutation_hints: - final before setup\n- double final\n- update after final\n- third final\n- update after second final\n- abort then final\n- output buffer too small\noracle_observables: - return_code\n- outl\n- output_buffer_state\n- sanitizer_signal\nknown_pitfalls: - HMAC failure-path outl observations should be classified as failure_path_output_state_triage,\n  not bug_candidate, without stronger output-state evidence.\n- HMAC+AES and CMAC+SHA are invalid parameter projections; skip them or mark projection_limitation.\nnotes: - 'Known pitfall: failure paths must not expose unsafe outl or stale output state.'\n- 'Feedback: OpenSSL CMAC repeated final may be allowed legacy/provider semantics\n  rather than a vulnerability by itself.'\n- 'Observed CMAC behavior: a second EVP_MAC_final() can succeed and return outl=16.'\n- 'MAC lifecycle v2 minimal confirmation: CMAC AES-128-CBC and AES-256-CBC accepted\n  EVP_MAC_update() after EVP_MAC_final(); a follow-up EVP_MAC_final() also succeeded\n  and produced a different 16-byte output.'\n- 'MAC lifecycle v2 minimal confirmation: CMAC third-final sequences returned success\n  for final1/final2/final3, each with outl=16 and distinct output bytes.'\n- 'MAC lifecycle v2 minimal confirmation: CMAC update-after-second-final sequences\n  returned success for final1, final2, update-after-second-final, and final3.'\n- High-value follow-up mutations are update-after-final and update-after-second-final\n  because they show continuation after a terminal-looking finalization state.\n- Third-final is useful evidence but should be treated as allowed_legacy_semantics_needs_review\n  until OpenSSL documentation confirms whether repeated finalization is intentional\n  provider semantics.\n- 'Classification guidance: do not report these CMAC lifecycle observations as confirmed\n  vulnerabilities without documentation review and caller-impact evidence.'\n",
+      "metadata": {
+        "layer": "api_cards",
+        "doc_type": "api_card",
+        "api": "EVP_MAC_final",
+        "family": "mac_lifecycle",
+        "source_file": "knowledge_base/api_cards/openssl/EVP_MAC_final.yaml",
+        "library": "openssl"
+      }
+    },
+    {
+      "rank": 9,
+      "score": 0.7765390097828582,
+      "distance": 0.7344880104064941,
+      "base_score": 0.5765390097828582,
+      "rerank_score": 0.7765390097828582,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:aad,aead,ccm,gcm,mbedtls,tag"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_aes_128_gcm.md",
+      "text": "optionally set IV length, process AAD, process ciphertext, set expected tag, then call `EVP_DecryptFinal_ex()`.\n- GCM is useful as a comparison target for AEAD shortened tag validation but is not the same mode as the CCM source PoC.\n\n## Vulnerability-Pattern Migration Notes\n\n- Secondary OpenSSL AEAD candidate for `MBEDTLS-POC-0028`.\n- Tag length rules differ from CCM, so migration scoring should reduce operation-family specificity if source is strictly CCM.\n\n## Related Tests or Examples Found Locally\n\n- `demos/cipher/aesgcm.c`: full AES-GCM decrypt example.\n- `test/evp_extra_test.c`, `test/tls13encryptiontest.c`: GCM EVP test usage.",
+      "metadata": {
+        "oracle_type": "",
+        "library": "openssl",
+        "pattern_id": "",
+        "family": "",
+        "doc_type": "api_constraint",
+        "layer": "api_constraints",
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_aes_128_gcm.md"
+      }
+    },
+    {
+      "rank": 10,
+      "score": 0.76366871475646,
+      "distance": 0.7740917205810547,
+      "base_score": 0.5636687147564601,
+      "rerank_score": 0.76366871475646,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:aead,ccm,gcm,mbedtls,psa,tag"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_CIPHER_CTX_ctrl.md",
+      "text": "- `ctx` is caller-owned.\n- `ptr` semantics depend on control type; for AEAD set tag it points to caller-provided tag bytes.\n- No ownership of `ptr` is transferred.\n\n## Harness Generation Notes\n\n- For `MBEDTLS-POC-0028`, use this API to set AEAD tag length/value in OpenSSL-style GCM/CCM decrypt setup.\n- Invalid tag length behavior may be observed here or during later decrypt/final calls depending on cipher/mode.\n\n## Vulnerability-Pattern Migration Notes\n\n- Important OpenSSL companion API for AEAD tag-length migration.\n- Unlike PSA, tag length is not encoded in the algorithm macro; adapter must map shortened-tag semantics to ctrl/params.\n\n## Related Tests or Examples Found Locally\n\n- `test/evp_extra_test.c`: `EVP_CTRL_AEAD_SET_TAG`, `EVP_CTRL_AEAD_GET_TAG`, and `EVP_CTRL_GCM_SET_IVLEN`.\n- `demos/cipher/aesccm.c`, `demos/cipher/aesgcm.c`: AEAD tag configuration.",
+      "metadata": {
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_CIPHER_CTX_ctrl.md",
+        "family": "",
+        "library": "openssl",
+        "pattern_id": "",
+        "oracle_type": "",
+        "layer": "api_constraints",
+        "doc_type": "api_constraint"
+      }
+    },
+    {
+      "rank": 11,
+      "score": 0.7604109050114447,
+      "distance": 0.7229173183441162,
+      "base_score": 0.5804109050114448,
+      "rerank_score": 0.7604109050114447,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:aead,ccm,mbedtls,tag"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0028.md",
+      "text": "## Root Cause\n\nThe buggy `psa_aead_setup()` path accepts AEAD algorithms with invalid shortened\ntag lengths. For CCM, tag length `3` is invalid, but the buggy\n`psa_aead_decrypt_setup()` returns `PSA_SUCCESS`.\n\nThe fixed setup path validates the tag length:\n\n```c\nif( ( status = psa_validate_tag_length( operation, alg ) ) != PSA_SUCCESS )\n    goto exit;\n```",
+      "metadata": {
+        "oracle_type": "",
+        "library": "mbedtls",
+        "layer": "poc_patterns",
+        "pattern_id": "Root Cause",
+        "family": "",
+        "doc_type": "poc_pattern",
+        "source_file": "knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0028.md"
+      }
+    },
+    {
+      "rank": 12,
+      "score": 0.7589037193219459,
+      "distance": 0.789216935634613,
+      "base_score": 0.5589037193219459,
+      "rerank_score": 0.7589037193219459,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:aead,ccm,mbedtls,psa,tag"
+      ],
+      "layer": "unit_tests",
+      "source_file": "knowledge_raw/unit_tests/mbedtls/4.1.0/MBEDTLS-POC-0028_psa_aead_invalid_tag_evidence.md",
+      "text": "# Unit Test / Example Evidence: MBEDTLS-POC-0028 PSA AEAD Invalid Tag Length\n\nSource version: `/home/wen/work/clean_sources/mbedtls-4.1.0`\n\nstatus: found_in_local_tests\n\n## APIs Covered\n\n- `psa_aead_decrypt_setup`\n- internal `psa_aead_setup`\n- internal `psa_validate_tag_length`\n\n## Evidence\n\n- `tf-psa-crypto/tests/suites/test_suite_psa_crypto.function`\n  - Multiple direct calls to `psa_aead_decrypt_setup()`.\n  - `aead_multipart_setup` imports a key, calls encrypt setup, aborts, then calls decrypt setup and checks the expected setup status.\n\n- `tf-psa-crypto/tests/suites/test_suite_psa_crypto_op_fail.generated.data`\n  - Contains generated invalid-argument cases for `PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM,63)` with expected `PSA_ERROR_INVALID_ARGUMENT`.\n  - These cases prove local tests cover invalid shortened CCM tag length setup rejection, although not tag length `3` specifically in the searched lines.\n\n- `tf-psa-crypto/tests/suites/test_suite_psa_crypto_driver_wrappers.function`",
+      "metadata": {
+        "layer": "unit_tests",
+        "source_file": "knowledge_raw/unit_tests/mbedtls/4.1.0/MBEDTLS-POC-0028_psa_aead_invalid_tag_evidence.md",
+        "oracle_type": "",
+        "pattern_id": "",
+        "library": "mbedtls",
+        "family": "",
+        "doc_type": "unit_test_call_pattern"
+      }
+    },
+    {
+      "rank": 13,
+      "score": 0.7526354164151587,
+      "distance": 0.8095112442970276,
+      "base_score": 0.5526354164151588,
+      "rerank_score": 0.7526354164151587,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:aad,aead,ccm,mbedtls,psa,tag"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_aes_128_ccm.md",
+      "text": "/IV, specify total ciphertext length, process AAD, then process ciphertext.\n- OpenSSL CCM tag length is configured through ctrl/params, not the algorithm identifier.\n\n## Vulnerability-Pattern Migration Notes\n\n- Primary OpenSSL AEAD candidate for `MBEDTLS-POC-0028` because the source bug is invalid CCM shortened tag length.\n- Adapter should test invalid tag lengths such as 3 and observe whether setup/control/update rejects them.\n\n## Related Tests or Examples Found Locally\n\n- `demos/cipher/aesccm.c`: full AES-CCM decrypt example.\n- `test/evp_extra_test.c`: selects `EVP_aes_128_ccm()` in EVP tests.\n- `tf-psa-crypto` mbedTLS source states valid CCM tag lengths are 4, 6, 8, 10, 12, 14, 16; OpenSSL behavior must be measured locally by harness.",
+      "metadata": {
+        "library": "openssl",
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_aes_128_ccm.md",
+        "doc_type": "api_constraint",
+        "layer": "api_constraints",
+        "family": "",
+        "pattern_id": "",
+        "oracle_type": ""
+      }
+    },
+    {
+      "rank": 14,
+      "score": 0.7485418784650211,
+      "distance": 0.758885383605957,
+      "base_score": 0.5685418784650211,
+      "rerank_score": 0.7485418784650211,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:aead,mbedtls,psa,tag"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/4.1.0/psa_aead_setup.md",
+      "text": "# API Constraints: psa_aead_setup (mbedTLS 4.1.0 internal)\n\nSource version: `/home/wen/work/clean_sources/mbedtls-4.1.0`\n\n## API\n\n- API/function name: `psa_aead_setup`\n- Visibility: `static` internal core helper\n- Implementation file: `tf-psa-crypto/core/psa_crypto.c`\n- Signature:\n\n```c\nstatic psa_status_t psa_aead_setup(psa_aead_operation_t *operation,\n                                   int is_encrypt,\n                                   mbedtls_svc_key_id_t key,\n                                   psa_algorithm_t alg);\n```\n\n## Parameter Semantics\n\n- `operation`: caller-owned PSA AEAD operation.\n- `is_encrypt`: nonzero for encrypt setup, zero for decrypt setup.\n- `key`: PSA key identifier.\n- `alg`: AEAD algorithm with optional shortened tag encoding.\n\n## Return Value Semantics\n\n- `PSA_SUCCESS`: setup succeeded and operation records base algorithm and direction.\n- `PSA_ERROR_BAD_STATE`: operation already active or partially started.\n- `PSA_ERROR_INVALID_ARGUMENT`: invalid key/algorithm c",
+      "metadata": {
+        "layer": "api_constraints",
+        "library": "mbedtls",
+        "oracle_type": "",
+        "source_file": "knowledge_raw/api_constraints/mbedtls/4.1.0/psa_aead_setup.md",
+        "pattern_id": "",
+        "doc_type": "api_constraint",
+        "family": ""
+      }
+    },
+    {
+      "rank": 15,
+      "score": 0.7460858319080428,
+      "distance": 0.7665165662765503,
+      "base_score": 0.5660858319080427,
+      "rerank_score": 0.7460858319080428,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:aead,ccm,mbedtls,tag"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0028.md",
+      "text": "## Oracle\n\nBug signal:\n\n- `psa_aead_decrypt_setup()` returns `PSA_SUCCESS`,\n- invalid CCM tag length `3` is accepted.\n\nSafe signal:\n\n- `psa_aead_decrypt_setup()` returns `PSA_ERROR_INVALID_ARGUMENT`,\n- invalid AEAD tag length is rejected during setup.",
+      "metadata": {
+        "library": "mbedtls",
+        "source_file": "knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0028.md",
+        "doc_type": "poc_pattern",
+        "oracle_type": "",
+        "layer": "poc_patterns",
+        "family": "",
+        "pattern_id": "Oracle"
+      }
+    },
+    {
+      "rank": 16,
+      "score": 0.7430583845283265,
+      "distance": 0.7450228929519653,
+      "base_score": 0.5730583845283265,
+      "rerank_score": 0.7430583845283265,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:mbedtls",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+      "text": "## MBEDTLS-POC-0020\n\n- Source: data/pocs/core10/MBEDTLS-POC-0020\n- Family: der_full_consumption\n- Oracle type: full_consumption_semantic\n- Root cause: Incorrect edge-case handling in mbedtls_pk_parse_key.\n- Source API: mbedtls_pk_parse_key, mbedtls_rsa_parse_key, mbedtls_rsa_parse_pubkey\n- Target API: d2i_RSAPrivateKey, d2i_PrivateKey, d2i_RSA_PUBKEY\n- Historical verdict: app_level_validation_gap_candidate\n- Feedback summary: app_level_validation_gap_candidate; total_cases=75; verdict_counts={'app_level_validation_gap_candidate': 30, 'expected_prefix_accept_behavior': 39, 'malformed_baseline_reject': 3, 'valid_baseline_success': 3}\n- Scheduler priority: 0.9 (app_level_validation_gap_candidate, clear_oracle, controlled_app_level_wrapper, der_v2_feedback, reusable_der_family, semantic_candidate_observed)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: accepts malformed key / trailing garbage. DER v2 controlled app-level sprint observed valid DER prefix plus malformed t",
+      "metadata": {
+        "doc_type": "poc_pattern",
+        "oracle_type": "full_consumption_semantic",
+        "pattern_id": "MBEDTLS-POC-0020",
+        "family": "der_full_consumption",
+        "layer": "poc_patterns",
+        "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+        "library": ""
+      }
+    },
+    {
+      "rank": 17,
+      "score": 0.7430583845283265,
+      "distance": 0.7450228929519653,
+      "base_score": 0.5730583845283265,
+      "rerank_score": 0.7430583845283265,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:mbedtls",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "## MBEDTLS-POC-0020\n\n- Source: data/pocs/core10/MBEDTLS-POC-0020\n- Family: der_full_consumption\n- Oracle type: full_consumption_semantic\n- Root cause: Incorrect edge-case handling in mbedtls_pk_parse_key.\n- Source API: mbedtls_pk_parse_key, mbedtls_rsa_parse_key, mbedtls_rsa_parse_pubkey\n- Target API: d2i_RSAPrivateKey, d2i_PrivateKey, d2i_RSA_PUBKEY\n- Historical verdict: app_level_validation_gap_candidate\n- Feedback summary: app_level_validation_gap_candidate; total_cases=75; verdict_counts={'app_level_validation_gap_candidate': 30, 'expected_prefix_accept_behavior': 39, 'malformed_baseline_reject': 3, 'valid_baseline_success': 3}\n- Scheduler priority: 0.9 (app_level_validation_gap_candidate, clear_oracle, controlled_app_level_wrapper, der_v2_feedback, reusable_der_family, semantic_candidate_observed)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: accepts malformed key / trailing garbage. DER v2 controlled app-level sprint observed valid DER prefix plus malformed t",
+      "metadata": {
+        "doc_type": "poc_pattern",
+        "layer": "poc_patterns",
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+        "oracle_type": "full_consumption_semantic",
+        "family": "der_full_consumption",
+        "pattern_id": "MBEDTLS-POC-0020",
+        "library": ""
+      }
+    },
+    {
+      "rank": 18,
+      "score": 0.7357388046009161,
+      "distance": 0.7994064688682556,
+      "base_score": 0.5557388046009162,
+      "rerank_score": 0.7357388046009161,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:aead,mbedtls,psa,tag"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/4.1.0/psa_aead_decrypt_setup.md",
+      "text": "- Relevant to `MBEDTLS-POC-0028`.\n- The migration feature is setup-time rejection of algorithm-specific invalid shortened AEAD tag lengths.\n- Target APIs should support configuring AEAD tag length before decrypt and expose invalid-parameter status before full authentication.\n\n## Related Tests or Examples Found Locally\n\n- `tf-psa-crypto/tests/suites/test_suite_psa_crypto.function`: many `psa_aead_decrypt_setup()` direct calls.\n- `tf-psa-crypto/tests/suites/test_suite_psa_crypto_op_fail.generated.data`: generated invalid-parameter cases for `PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM,63)`.\n- `tf-psa-crypto/tests/suites/test_suite_psa_crypto_driver_wrappers.function`: driver wrapper setup status propagation.",
+      "metadata": {
+        "oracle_type": "",
+        "doc_type": "api_constraint",
+        "pattern_id": "",
+        "layer": "api_constraints",
+        "family": "",
+        "library": "mbedtls",
+        "source_file": "knowledge_raw/api_constraints/mbedtls/4.1.0/psa_aead_decrypt_setup.md"
+      }
+    },
+    {
+      "rank": 19,
+      "score": 0.7337097747501592,
+      "distance": 0.7739624977111816,
+      "base_score": 0.5637097747501592,
+      "rerank_score": 0.7337097747501592,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:mbedtls",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+      "text": "## MBEDTLS-POC-0027\n\n- Source: data/pocs/core10/MBEDTLS-POC-0027\n- Family: x509_parsing\n- Oracle type: behavior_divergence\n- Root cause: Incorrect return value handling on error path.\n- Source API: mbedtls_ssl_get_verify_result\n- Target API: unknown\n- Historical verdict: pending_inference\n- Feedback summary: none\n- Scheduler priority: 0.45 (semantic_correctness, x509_tls_verdict)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: wrong behavior / semantic validation failure.",
+      "metadata": {
+        "family": "x509_parsing",
+        "pattern_id": "MBEDTLS-POC-0027",
+        "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+        "layer": "poc_patterns",
+        "doc_type": "poc_pattern",
+        "oracle_type": "behavior_divergence",
+        "library": ""
+      }
+    },
+    {
+      "rank": 20,
+      "score": 0.7337097747501592,
+      "distance": 0.7739624977111816,
+      "base_score": 0.5637097747501592,
+      "rerank_score": 0.7337097747501592,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:mbedtls",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "## MBEDTLS-POC-0027\n\n- Source: data/pocs/core10/MBEDTLS-POC-0027\n- Family: x509_parsing\n- Oracle type: behavior_divergence\n- Root cause: Incorrect return value handling on error path.\n- Source API: mbedtls_ssl_get_verify_result\n- Target API: unknown\n- Historical verdict: pending_inference\n- Feedback summary: none\n- Scheduler priority: 0.45 (semantic_correctness, x509_tls_verdict)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: wrong behavior / semantic validation failure.",
+      "metadata": {
+        "oracle_type": "behavior_divergence",
+        "layer": "poc_patterns",
+        "library": "",
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+        "family": "x509_parsing",
+        "doc_type": "poc_pattern",
+        "pattern_id": "MBEDTLS-POC-0027"
+      }
+    }
+  ]
+}

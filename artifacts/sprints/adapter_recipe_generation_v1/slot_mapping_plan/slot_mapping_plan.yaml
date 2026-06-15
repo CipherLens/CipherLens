@@ -1,0 +1,302 @@
+schema: slot_mapping_plan_v1
+slot_mapping_plan:
+- adapter_id: pkcs_container_parsing.openssl.family_adapter_recipe_v1
+  family: pkcs_container_parsing
+  target_library: openssl
+  source_slots:
+    api_slots:
+    - slot_name: wc_PKCS12_parse
+      source_api: wc_PKCS12_parse
+      allowed_target_apis:
+      - openssl:PKCS12_parse
+      blocked_target_apis:
+      - 'mbedtls:'
+      mapping_gate_status:
+      - no_direct_counterpart
+      - usable_for_adapter
+      notes: candidate mapping only; not confirmed equivalence
+    - slot_name: wc_PKCS7_VerifySignedData
+      source_api: wc_PKCS7_VerifySignedData
+      allowed_target_apis:
+      - openssl:PKCS7_verify
+      blocked_target_apis:
+      - 'mbedtls:'
+      mapping_gate_status:
+      - no_direct_counterpart
+      - usable_for_adapter
+      notes: candidate mapping only; not confirmed equivalence
+    - slot_name: wc_PKCS7_DecodeSignedData
+      source_api: wc_PKCS7_DecodeSignedData
+      allowed_target_apis: []
+      blocked_target_apis:
+      - 'mbedtls:'
+      - openssl:d2i_PKCS7
+      mapping_gate_status:
+      - no_direct_counterpart
+      - weak_evidence
+      notes: candidate mapping only; not confirmed equivalence
+    - slot_name: PKCS12_parse
+      source_api: ''
+      allowed_target_apis:
+      - openssl:PKCS12_parse
+      blocked_target_apis: []
+      mapping_gate_status:
+      - usable_for_adapter
+      notes: candidate mapping only; not confirmed equivalence
+    - slot_name: PKCS7_verify
+      source_api: ''
+      allowed_target_apis:
+      - openssl:PKCS7_verify
+      blocked_target_apis: []
+      mapping_gate_status:
+      - usable_for_adapter
+      notes: candidate mapping only; not confirmed equivalence
+    mutation_slots:
+    - CONTAINER_BYTES
+    - CONTAINER_FORMAT
+    - TRAILING_BYTES
+    - NESTED_LENGTH_DELTA
+    - EXPECT_RET
+    cleanup_slots:
+    - slot_name: cleanup_call
+      source_cleanup: family-specific wolfSSL cleanup/free API
+      target_cleanup_candidates: []
+      required: true
+    oracle_slots:
+    - parser_reject_accept
+  target_slot_requirements:
+    api_mapping:
+    - PKCS12_parse
+    - PKCS7_verify
+    type_mapping: required_later
+    cleanup_mapping: required_later
+    oracle_mapping:
+      primary:
+      - parser_reject_accept
+      secondary: []
+    input_mapping: required_later
+    mutation_slot_mapping:
+    - CONTAINER_BYTES
+    - CONTAINER_FORMAT
+    - TRAILING_BYTES
+    - NESTED_LENGTH_DELTA
+    - EXPECT_RET
+  selected_mask_units_used:
+  - ASTLITE-0003
+  - ASTLITE-0004
+  - ASTLITE-0001
+  - ASTLITE-0002
+  - ASTLITE-0015
+  - ASTLITE-0033
+  - ASTLITE-0026
+  - ASTLITE-0027
+  - ASTLITE-0028
+  - ASTLITE-0029
+  - ASTLITE-0030
+  - ASTLITE-0007
+  - ASTLITE-0018
+  - ASTLITE-0020
+  - ASTLITE-0021
+  - ASTLITE-0008
+  - ASTLITE-0019
+  - ASTLITE-0009
+  - ASTLITE-0031
+  - ASTLITE-0017
+  - ASTLITE-0025
+  glm_needed_later: true
+  validation_before_render:
+  - adapter_slot_filling
+  - adapter_validate
+  notes:
+  - GLM may later fill slot_bindings only; free-form C remains forbidden.
+- adapter_id: asn1_nested_boundary.openssl.family_adapter_recipe_v1
+  family: asn1_nested_boundary
+  target_library: openssl
+  source_slots:
+    api_slots:
+    - slot_name: wc_InitDecodedCert
+      source_api: wc_InitDecodedCert
+      allowed_target_apis:
+      - mbedtls:mbedtls_x509_crt_parse_der
+      - openssl:ASN1_item_d2i
+      blocked_target_apis: []
+      mapping_gate_status:
+      - usable_for_adapter
+      notes: candidate mapping only; not confirmed equivalence
+    - slot_name: wc_ParseCert
+      source_api: wc_ParseCert
+      allowed_target_apis: []
+      blocked_target_apis:
+      - mbedtls:mbedtls_x509_crt_parse_der
+      - openssl:d2i_X509
+      mapping_gate_status:
+      - needs_manual_review
+      notes: candidate mapping only; not confirmed equivalence
+    - slot_name: wc_FreeDecodedCert
+      source_api: wc_FreeDecodedCert
+      allowed_target_apis: []
+      blocked_target_apis: []
+      mapping_gate_status:
+      - not_in_mapping_gate
+      notes: candidate mapping only; not confirmed equivalence
+    - slot_name: ASN1_item_d2i
+      source_api: ''
+      allowed_target_apis:
+      - openssl:ASN1_item_d2i
+      blocked_target_apis: []
+      mapping_gate_status:
+      - usable_for_adapter
+      notes: candidate mapping only; not confirmed equivalence
+    - slot_name: mbedtls_x509_crt_parse_der
+      source_api: ''
+      allowed_target_apis:
+      - mbedtls:mbedtls_x509_crt_parse_der
+      blocked_target_apis:
+      - mbedtls:mbedtls_x509_crt_parse_der
+      mapping_gate_status:
+      - needs_manual_review
+      - usable_for_adapter
+      notes: candidate mapping only; not confirmed equivalence
+    mutation_slots:
+    - ASN1_NESTED_LENGTH
+    - DER_BYTES
+    - TRAILING_GARBAGE
+    - NESTED_DEPTH
+    - EXPECT_RET
+    cleanup_slots:
+    - slot_name: cleanup_call
+      source_cleanup: family-specific wolfSSL cleanup/free API
+      target_cleanup_candidates: []
+      required: true
+    oracle_slots:
+    - parser_reject_accept
+  target_slot_requirements:
+    api_mapping:
+    - ASN1_item_d2i
+    type_mapping: required_later
+    cleanup_mapping: required_later
+    oracle_mapping:
+      primary:
+      - parser_reject_accept
+      secondary: []
+    input_mapping: required_later
+    mutation_slot_mapping:
+    - ASN1_NESTED_LENGTH
+    - DER_BYTES
+    - TRAILING_GARBAGE
+    - NESTED_DEPTH
+    - EXPECT_RET
+  selected_mask_units_used:
+  - ASTLITE-0005
+  - ASTLITE-0004
+  - ASTLITE-0007
+  - ASTLITE-0009
+  - ASTLITE-0011
+  - ASTLITE-0001
+  - ASTLITE-0010
+  - ASTLITE-0018
+  - ASTLITE-0017
+  - ASTLITE-0002
+  - ASTLITE-0014
+  glm_needed_later: true
+  validation_before_render:
+  - adapter_slot_filling
+  - adapter_validate
+  notes:
+  - GLM may later fill slot_bindings only; free-form C remains forbidden.
+- adapter_id: asn1_nested_boundary.mbedtls.family_adapter_recipe_v1
+  family: asn1_nested_boundary
+  target_library: mbedtls
+  source_slots:
+    api_slots:
+    - slot_name: wc_InitDecodedCert
+      source_api: wc_InitDecodedCert
+      allowed_target_apis:
+      - mbedtls:mbedtls_x509_crt_parse_der
+      - openssl:ASN1_item_d2i
+      blocked_target_apis: []
+      mapping_gate_status:
+      - usable_for_adapter
+      notes: candidate mapping only; not confirmed equivalence
+    - slot_name: wc_ParseCert
+      source_api: wc_ParseCert
+      allowed_target_apis: []
+      blocked_target_apis:
+      - mbedtls:mbedtls_x509_crt_parse_der
+      - openssl:d2i_X509
+      mapping_gate_status:
+      - needs_manual_review
+      notes: candidate mapping only; not confirmed equivalence
+    - slot_name: wc_FreeDecodedCert
+      source_api: wc_FreeDecodedCert
+      allowed_target_apis: []
+      blocked_target_apis: []
+      mapping_gate_status:
+      - not_in_mapping_gate
+      notes: candidate mapping only; not confirmed equivalence
+    - slot_name: ASN1_item_d2i
+      source_api: ''
+      allowed_target_apis:
+      - openssl:ASN1_item_d2i
+      blocked_target_apis: []
+      mapping_gate_status:
+      - usable_for_adapter
+      notes: candidate mapping only; not confirmed equivalence
+    - slot_name: mbedtls_x509_crt_parse_der
+      source_api: ''
+      allowed_target_apis:
+      - mbedtls:mbedtls_x509_crt_parse_der
+      blocked_target_apis:
+      - mbedtls:mbedtls_x509_crt_parse_der
+      mapping_gate_status:
+      - needs_manual_review
+      - usable_for_adapter
+      notes: candidate mapping only; not confirmed equivalence
+    mutation_slots:
+    - ASN1_NESTED_LENGTH
+    - DER_BYTES
+    - TRAILING_GARBAGE
+    - NESTED_DEPTH
+    - EXPECT_RET
+    cleanup_slots:
+    - slot_name: cleanup_call
+      source_cleanup: family-specific wolfSSL cleanup/free API
+      target_cleanup_candidates: []
+      required: true
+    oracle_slots:
+    - parser_reject_accept
+  target_slot_requirements:
+    api_mapping:
+    - mbedtls_x509_crt_parse_der
+    type_mapping: required_later
+    cleanup_mapping: required_later
+    oracle_mapping:
+      primary:
+      - parser_reject_accept
+      secondary: []
+    input_mapping: required_later
+    mutation_slot_mapping:
+    - ASN1_NESTED_LENGTH
+    - DER_BYTES
+    - TRAILING_GARBAGE
+    - NESTED_DEPTH
+    - EXPECT_RET
+  selected_mask_units_used:
+  - ASTLITE-0005
+  - ASTLITE-0004
+  - ASTLITE-0007
+  - ASTLITE-0009
+  - ASTLITE-0011
+  - ASTLITE-0001
+  - ASTLITE-0010
+  - ASTLITE-0018
+  - ASTLITE-0017
+  - ASTLITE-0002
+  - ASTLITE-0014
+  glm_needed_later: true
+  validation_before_render:
+  - adapter_slot_filling
+  - adapter_validate
+  notes:
+  - GLM may later fill slot_bindings only; free-form C remains forbidden.
+glm_policy: later slot_bindings only; free-form C forbidden

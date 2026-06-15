@@ -1,0 +1,21 @@
+5:    add test for session deserialization input validation
+18:+static int test_wolfSSL_d2i_SSL_SESSION_bounds_check(void)
+22:+    defined(SESSION_CERTS)
+31:+    int sessionIDSz = 0;
+38:+    ExpectNotNull(sess = wolfSSL_SESSION_new());
+40:+    ExpectNotNull(sessDer = (unsigned char*)XMALLOC(sz, NULL,
+47:+    /* Calculate offset to chain.count field:
+48:+     *   side(1) + bornOn(4) + timeout(4) + sessionIDSz(1) + sessionID(var)
+53:+        sessionIDSz = sessDer[idx++];
+54:+        idx += sessionIDSz + SECRET_LEN + 1;
+62:+     * The deserialization must reject this with a BUFFER_ERROR (return NULL).
+65:+    ExpectNotNull(modData = (unsigned char*)XMALLOC(newLen, NULL,
+68:+        XMEMCPY(modData, sessDer, chainOffset);
+69:+        modData[chainOffset] = MAX_CHAIN_DEPTH + 1;
+73:+    ExpectNull(restored = wolfSSL_d2i_SSL_SESSION(NULL, &ptr, (long)newLen));
+78:+     * chain.count is valid (1), but the cert length field is too large.
+81:+    ExpectNotNull(modData = (unsigned char*)XMALLOC(newLen, NULL,
+84:+        XMEMCPY(modData, sessDer, chainOffset);
+86:+        modData[idx++] = 1;  /* chain.count = 1 */
+93:+    ExpectNull(restored = wolfSSL_d2i_SSL_SESSION(NULL, &ptr, (long)newLen));
+109:+    TEST_DECL(test_wolfSSL_d2i_SSL_SESSION_bounds_check),

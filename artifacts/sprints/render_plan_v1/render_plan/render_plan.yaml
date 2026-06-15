@@ -1,0 +1,969 @@
+schema: render_plan_v1
+generated_at: '2026-06-11T15:53:58+00:00'
+execution_policy:
+  render_c: false
+  compile: false
+  run: false
+  llm_call: false
+  plan_only: true
+render_jobs:
+- render_job_id: render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001
+  case_name: pkcs_container_parsing__openssl__seed_preserving_baseline__case_001
+  case_id: pkcs_container_parsing_openssl__mut_001__seed_preserving_baseline
+  family: pkcs_container_parsing
+  target_library: openssl
+  base_adapter: pkcs_container_parsing_openssl
+  template_level: family
+  mutation_strategy: seed_preserving_baseline
+  mutation_slots:
+  - slot_name: CONTAINER_BYTES
+    mutation_type: valid_control
+    mutation_value: valid_family_seed
+    source: family_mutation_slots
+    safety_notes: container data must remain bounded
+  - slot_name: EXPECT_RET
+    mutation_type: valid_control
+    mutation_value: reject_or_accept_as_seed
+    source: family_mutation_slots
+    safety_notes: do not hard-code library numeric values
+  expected_result_label: migrated_safe
+  oracle:
+    primary: parser_reject_accept
+    secondary:
+    - return_code_semantics
+    - full_consumption
+    - cleanup_required
+    expected_result_label: migrated_safe
+  inputs:
+    family_template_dir: normalized_templates/wolfssl_family/pkcs_container_parsing
+    canonical_template: normalized_templates/wolfssl_family/pkcs_container_parsing/canonical_tmpl_wolfssl.c
+    family_template_meta: normalized_templates/wolfssl_family/pkcs_container_parsing/family_template_meta.yaml
+    mask_report: normalized_templates/wolfssl_family/pkcs_container_parsing/mask_report.yaml
+    selected_mask_units: normalized_templates/wolfssl_family/pkcs_container_parsing/selected_mask_units.yaml
+    adapter_dir: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl
+    adapter_recipe: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/adapter_recipe.yaml
+    slot_filling_plan: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_filling_plan.yaml
+    slot_bindings: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_bindings.yaml
+    mutation_case: artifacts/sprints/family_adapter_mutation_planner_v1/mutation_case_matrix/mutation_case_matrix.yaml#cases[pkcs_container_parsing_openssl__mut_001__seed_preserving_baseline]
+    oracle_expectation: artifacts/sprints/family_adapter_mutation_planner_v1/oracle_expectation_plan/oracle_expectation_plan.yaml#families[pkcs_container_parsing:openssl]
+  planned_outputs:
+    case_dir: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001
+    harness_c: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001/harness.c
+    input_corpus_dir: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001/inputs
+    build_metadata: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001/build_metadata.yaml
+    oracle_metadata: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001/oracle_metadata.yaml
+    run_metadata: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001/run_metadata.yaml
+  preflight:
+    status: preflight_pending
+    required_input_paths_exist: true
+    required_input_paths:
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/canonical_tmpl_wolfssl.c
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/family_template_meta.yaml
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/mask_report.yaml
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/selected_mask_units.yaml
+    - adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/adapter_recipe.yaml
+    - adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_filling_plan.yaml
+    - adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_bindings.yaml
+    adapter_validation_status: pass
+    adapter_render_ready: true
+    render_allowed: true
+    blocked_adapter_excluded: true
+    target_library_allowed: true
+    no_confirmed_equivalence_claim: true
+  risk_notes:
+  - case spec only; no C generated
+  - candidate mapping only; downstream analyze_results must triage
+  render_execution:
+    rendered: false
+    compiled: false
+    run: false
+    llm_called: false
+    c_files_generated_by_this_tool: false
+- render_job_id: render__pkcs_container_parsing__openssl__trailing_garbage__case_001
+  case_name: pkcs_container_parsing__openssl__trailing_garbage__case_001
+  case_id: pkcs_container_parsing_openssl__mut_002__trailing_garbage
+  family: pkcs_container_parsing
+  target_library: openssl
+  base_adapter: pkcs_container_parsing_openssl
+  template_level: family
+  mutation_strategy: trailing_garbage
+  mutation_slots:
+  - slot_name: TRAILING_BYTES
+    mutation_type: boundary
+    mutation_value: ff00
+    source: family_mutation_slots
+    safety_notes: only meaningful for APIs exposing consumption
+  expected_result_label: semantic_divergence_candidate
+  oracle:
+    primary: parser_reject_accept
+    secondary:
+    - return_code_semantics
+    - full_consumption
+    - cleanup_required
+    expected_result_label: semantic_divergence_candidate
+  inputs:
+    family_template_dir: normalized_templates/wolfssl_family/pkcs_container_parsing
+    canonical_template: normalized_templates/wolfssl_family/pkcs_container_parsing/canonical_tmpl_wolfssl.c
+    family_template_meta: normalized_templates/wolfssl_family/pkcs_container_parsing/family_template_meta.yaml
+    mask_report: normalized_templates/wolfssl_family/pkcs_container_parsing/mask_report.yaml
+    selected_mask_units: normalized_templates/wolfssl_family/pkcs_container_parsing/selected_mask_units.yaml
+    adapter_dir: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl
+    adapter_recipe: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/adapter_recipe.yaml
+    slot_filling_plan: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_filling_plan.yaml
+    slot_bindings: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_bindings.yaml
+    mutation_case: artifacts/sprints/family_adapter_mutation_planner_v1/mutation_case_matrix/mutation_case_matrix.yaml#cases[pkcs_container_parsing_openssl__mut_002__trailing_garbage]
+    oracle_expectation: artifacts/sprints/family_adapter_mutation_planner_v1/oracle_expectation_plan/oracle_expectation_plan.yaml#families[pkcs_container_parsing:openssl]
+  planned_outputs:
+    case_dir: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__trailing_garbage__case_001
+    harness_c: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__trailing_garbage__case_001/harness.c
+    input_corpus_dir: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__trailing_garbage__case_001/inputs
+    build_metadata: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__trailing_garbage__case_001/build_metadata.yaml
+    oracle_metadata: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__trailing_garbage__case_001/oracle_metadata.yaml
+    run_metadata: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__trailing_garbage__case_001/run_metadata.yaml
+  preflight:
+    status: preflight_pending
+    required_input_paths_exist: true
+    required_input_paths:
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/canonical_tmpl_wolfssl.c
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/family_template_meta.yaml
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/mask_report.yaml
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/selected_mask_units.yaml
+    - adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/adapter_recipe.yaml
+    - adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_filling_plan.yaml
+    - adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_bindings.yaml
+    adapter_validation_status: pass
+    adapter_render_ready: true
+    render_allowed: true
+    blocked_adapter_excluded: true
+    target_library_allowed: true
+    no_confirmed_equivalence_claim: true
+  risk_notes:
+  - case spec only; no C generated
+  - candidate mapping only; downstream analyze_results must triage
+  render_execution:
+    rendered: false
+    compiled: false
+    run: false
+    llm_called: false
+    c_files_generated_by_this_tool: false
+- render_job_id: render__pkcs_container_parsing__openssl__malformed_length__case_001
+  case_name: pkcs_container_parsing__openssl__malformed_length__case_001
+  case_id: pkcs_container_parsing_openssl__mut_003__malformed_length
+  family: pkcs_container_parsing
+  target_library: openssl
+  base_adapter: pkcs_container_parsing_openssl
+  template_level: family
+  mutation_strategy: malformed_length
+  mutation_slots:
+  - slot_name: NESTED_LENGTH_DELTA
+    mutation_type: malformed
+    mutation_value: '-1'
+    source: family_mutation_slots
+    safety_notes: nested length mutation can become generic parse failure
+  expected_result_label: needs_triage
+  oracle:
+    primary: parser_reject_accept
+    secondary:
+    - return_code_semantics
+    - full_consumption
+    - cleanup_required
+    expected_result_label: needs_triage
+  inputs:
+    family_template_dir: normalized_templates/wolfssl_family/pkcs_container_parsing
+    canonical_template: normalized_templates/wolfssl_family/pkcs_container_parsing/canonical_tmpl_wolfssl.c
+    family_template_meta: normalized_templates/wolfssl_family/pkcs_container_parsing/family_template_meta.yaml
+    mask_report: normalized_templates/wolfssl_family/pkcs_container_parsing/mask_report.yaml
+    selected_mask_units: normalized_templates/wolfssl_family/pkcs_container_parsing/selected_mask_units.yaml
+    adapter_dir: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl
+    adapter_recipe: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/adapter_recipe.yaml
+    slot_filling_plan: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_filling_plan.yaml
+    slot_bindings: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_bindings.yaml
+    mutation_case: artifacts/sprints/family_adapter_mutation_planner_v1/mutation_case_matrix/mutation_case_matrix.yaml#cases[pkcs_container_parsing_openssl__mut_003__malformed_length]
+    oracle_expectation: artifacts/sprints/family_adapter_mutation_planner_v1/oracle_expectation_plan/oracle_expectation_plan.yaml#families[pkcs_container_parsing:openssl]
+  planned_outputs:
+    case_dir: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__malformed_length__case_001
+    harness_c: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__malformed_length__case_001/harness.c
+    input_corpus_dir: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__malformed_length__case_001/inputs
+    build_metadata: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__malformed_length__case_001/build_metadata.yaml
+    oracle_metadata: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__malformed_length__case_001/oracle_metadata.yaml
+    run_metadata: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__malformed_length__case_001/run_metadata.yaml
+  preflight:
+    status: preflight_pending
+    required_input_paths_exist: true
+    required_input_paths:
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/canonical_tmpl_wolfssl.c
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/family_template_meta.yaml
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/mask_report.yaml
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/selected_mask_units.yaml
+    - adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/adapter_recipe.yaml
+    - adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_filling_plan.yaml
+    - adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_bindings.yaml
+    adapter_validation_status: pass
+    adapter_render_ready: true
+    render_allowed: true
+    blocked_adapter_excluded: true
+    target_library_allowed: true
+    no_confirmed_equivalence_claim: true
+  risk_notes:
+  - case spec only; no C generated
+  - candidate mapping only; downstream analyze_results must triage
+  render_execution:
+    rendered: false
+    compiled: false
+    run: false
+    llm_called: false
+    c_files_generated_by_this_tool: false
+- render_job_id: render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001
+  case_name: pkcs_container_parsing__openssl__nested_length_mismatch__case_001
+  case_id: pkcs_container_parsing_openssl__mut_004__nested_length_mismatch
+  family: pkcs_container_parsing
+  target_library: openssl
+  base_adapter: pkcs_container_parsing_openssl
+  template_level: family
+  mutation_strategy: nested_length_mismatch
+  mutation_slots:
+  - slot_name: NESTED_LENGTH_DELTA
+    mutation_type: boundary
+    mutation_value: '+1'
+    source: family_mutation_slots
+    safety_notes: nested length mutation can become generic parse failure
+  - slot_name: CONTAINER_BYTES
+    mutation_type: malformed
+    mutation_value: length_field_mismatch
+    source: family_mutation_slots
+    safety_notes: container data must remain bounded
+  expected_result_label: semantic_divergence_candidate
+  oracle:
+    primary: parser_reject_accept
+    secondary:
+    - return_code_semantics
+    - full_consumption
+    - cleanup_required
+    expected_result_label: semantic_divergence_candidate
+  inputs:
+    family_template_dir: normalized_templates/wolfssl_family/pkcs_container_parsing
+    canonical_template: normalized_templates/wolfssl_family/pkcs_container_parsing/canonical_tmpl_wolfssl.c
+    family_template_meta: normalized_templates/wolfssl_family/pkcs_container_parsing/family_template_meta.yaml
+    mask_report: normalized_templates/wolfssl_family/pkcs_container_parsing/mask_report.yaml
+    selected_mask_units: normalized_templates/wolfssl_family/pkcs_container_parsing/selected_mask_units.yaml
+    adapter_dir: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl
+    adapter_recipe: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/adapter_recipe.yaml
+    slot_filling_plan: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_filling_plan.yaml
+    slot_bindings: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_bindings.yaml
+    mutation_case: artifacts/sprints/family_adapter_mutation_planner_v1/mutation_case_matrix/mutation_case_matrix.yaml#cases[pkcs_container_parsing_openssl__mut_004__nested_length_mismatch]
+    oracle_expectation: artifacts/sprints/family_adapter_mutation_planner_v1/oracle_expectation_plan/oracle_expectation_plan.yaml#families[pkcs_container_parsing:openssl]
+  planned_outputs:
+    case_dir: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001
+    harness_c: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001/harness.c
+    input_corpus_dir: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001/inputs
+    build_metadata: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001/build_metadata.yaml
+    oracle_metadata: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001/oracle_metadata.yaml
+    run_metadata: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001/run_metadata.yaml
+  preflight:
+    status: preflight_pending
+    required_input_paths_exist: true
+    required_input_paths:
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/canonical_tmpl_wolfssl.c
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/family_template_meta.yaml
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/mask_report.yaml
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/selected_mask_units.yaml
+    - adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/adapter_recipe.yaml
+    - adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_filling_plan.yaml
+    - adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_bindings.yaml
+    adapter_validation_status: pass
+    adapter_render_ready: true
+    render_allowed: true
+    blocked_adapter_excluded: true
+    target_library_allowed: true
+    no_confirmed_equivalence_claim: true
+  risk_notes:
+  - case spec only; no C generated
+  - candidate mapping only; downstream analyze_results must triage
+  render_execution:
+    rendered: false
+    compiled: false
+    run: false
+    llm_called: false
+    c_files_generated_by_this_tool: false
+- render_job_id: render__pkcs_container_parsing__openssl__invalid_container_structure__case_001
+  case_name: pkcs_container_parsing__openssl__invalid_container_structure__case_001
+  case_id: pkcs_container_parsing_openssl__mut_005__invalid_container_structure
+  family: pkcs_container_parsing
+  target_library: openssl
+  base_adapter: pkcs_container_parsing_openssl
+  template_level: family
+  mutation_strategy: invalid_container_structure
+  mutation_slots:
+  - slot_name: CONTAINER_BYTES
+    mutation_type: malformed
+    mutation_value: malformed_pkcs7_der
+    source: family_mutation_slots
+    safety_notes: container data must remain bounded
+  expected_result_label: migrated_safe
+  oracle:
+    primary: parser_reject_accept
+    secondary:
+    - return_code_semantics
+    - full_consumption
+    - cleanup_required
+    expected_result_label: migrated_safe
+  inputs:
+    family_template_dir: normalized_templates/wolfssl_family/pkcs_container_parsing
+    canonical_template: normalized_templates/wolfssl_family/pkcs_container_parsing/canonical_tmpl_wolfssl.c
+    family_template_meta: normalized_templates/wolfssl_family/pkcs_container_parsing/family_template_meta.yaml
+    mask_report: normalized_templates/wolfssl_family/pkcs_container_parsing/mask_report.yaml
+    selected_mask_units: normalized_templates/wolfssl_family/pkcs_container_parsing/selected_mask_units.yaml
+    adapter_dir: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl
+    adapter_recipe: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/adapter_recipe.yaml
+    slot_filling_plan: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_filling_plan.yaml
+    slot_bindings: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_bindings.yaml
+    mutation_case: artifacts/sprints/family_adapter_mutation_planner_v1/mutation_case_matrix/mutation_case_matrix.yaml#cases[pkcs_container_parsing_openssl__mut_005__invalid_container_structure]
+    oracle_expectation: artifacts/sprints/family_adapter_mutation_planner_v1/oracle_expectation_plan/oracle_expectation_plan.yaml#families[pkcs_container_parsing:openssl]
+  planned_outputs:
+    case_dir: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__invalid_container_structure__case_001
+    harness_c: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__invalid_container_structure__case_001/harness.c
+    input_corpus_dir: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__invalid_container_structure__case_001/inputs
+    build_metadata: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__invalid_container_structure__case_001/build_metadata.yaml
+    oracle_metadata: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__invalid_container_structure__case_001/oracle_metadata.yaml
+    run_metadata: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__invalid_container_structure__case_001/run_metadata.yaml
+  preflight:
+    status: preflight_pending
+    required_input_paths_exist: true
+    required_input_paths:
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/canonical_tmpl_wolfssl.c
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/family_template_meta.yaml
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/mask_report.yaml
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/selected_mask_units.yaml
+    - adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/adapter_recipe.yaml
+    - adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_filling_plan.yaml
+    - adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_bindings.yaml
+    adapter_validation_status: pass
+    adapter_render_ready: true
+    render_allowed: true
+    blocked_adapter_excluded: true
+    target_library_allowed: true
+    no_confirmed_equivalence_claim: true
+  risk_notes:
+  - case spec only; no C generated
+  - candidate mapping only; downstream analyze_results must triage
+  render_execution:
+    rendered: false
+    compiled: false
+    run: false
+    llm_called: false
+    c_files_generated_by_this_tool: false
+- render_job_id: render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001
+  case_name: pkcs_container_parsing__openssl__pem_der_format_toggle__case_001
+  case_id: pkcs_container_parsing_openssl__mut_006__pem_der_format_toggle
+  family: pkcs_container_parsing
+  target_library: openssl
+  base_adapter: pkcs_container_parsing_openssl
+  template_level: family
+  mutation_strategy: pem_der_format_toggle
+  mutation_slots:
+  - slot_name: CONTAINER_FORMAT
+    mutation_type: boundary
+    mutation_value: PEM_vs_DER_toggle
+    source: family_mutation_slots
+    safety_notes: avoid format/API mismatch false positives
+  expected_result_label: api_misuse_false_positive
+  oracle:
+    primary: parser_reject_accept
+    secondary:
+    - return_code_semantics
+    - full_consumption
+    - cleanup_required
+    expected_result_label: api_misuse_false_positive
+  inputs:
+    family_template_dir: normalized_templates/wolfssl_family/pkcs_container_parsing
+    canonical_template: normalized_templates/wolfssl_family/pkcs_container_parsing/canonical_tmpl_wolfssl.c
+    family_template_meta: normalized_templates/wolfssl_family/pkcs_container_parsing/family_template_meta.yaml
+    mask_report: normalized_templates/wolfssl_family/pkcs_container_parsing/mask_report.yaml
+    selected_mask_units: normalized_templates/wolfssl_family/pkcs_container_parsing/selected_mask_units.yaml
+    adapter_dir: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl
+    adapter_recipe: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/adapter_recipe.yaml
+    slot_filling_plan: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_filling_plan.yaml
+    slot_bindings: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_bindings.yaml
+    mutation_case: artifacts/sprints/family_adapter_mutation_planner_v1/mutation_case_matrix/mutation_case_matrix.yaml#cases[pkcs_container_parsing_openssl__mut_006__pem_der_format_toggle]
+    oracle_expectation: artifacts/sprints/family_adapter_mutation_planner_v1/oracle_expectation_plan/oracle_expectation_plan.yaml#families[pkcs_container_parsing:openssl]
+  planned_outputs:
+    case_dir: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001
+    harness_c: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/harness.c
+    input_corpus_dir: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/inputs
+    build_metadata: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/build_metadata.yaml
+    oracle_metadata: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/oracle_metadata.yaml
+    run_metadata: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/run_metadata.yaml
+  preflight:
+    status: preflight_pending
+    required_input_paths_exist: true
+    required_input_paths:
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/canonical_tmpl_wolfssl.c
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/family_template_meta.yaml
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/mask_report.yaml
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/selected_mask_units.yaml
+    - adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/adapter_recipe.yaml
+    - adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_filling_plan.yaml
+    - adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_bindings.yaml
+    adapter_validation_status: pass
+    adapter_render_ready: true
+    render_allowed: true
+    blocked_adapter_excluded: true
+    target_library_allowed: true
+    no_confirmed_equivalence_claim: true
+  risk_notes:
+  - case spec only; no C generated
+  - candidate mapping only; downstream analyze_results must triage
+  render_execution:
+    rendered: false
+    compiled: false
+    run: false
+    llm_called: false
+    c_files_generated_by_this_tool: false
+- render_job_id: render__pkcs_container_parsing__openssl__expected_return_flip__case_001
+  case_name: pkcs_container_parsing__openssl__expected_return_flip__case_001
+  case_id: pkcs_container_parsing_openssl__mut_007__expected_return_flip
+  family: pkcs_container_parsing
+  target_library: openssl
+  base_adapter: pkcs_container_parsing_openssl
+  template_level: family
+  mutation_strategy: expected_return_flip
+  mutation_slots:
+  - slot_name: EXPECT_RET
+    mutation_type: malformed
+    mutation_value: flip_accept_reject_expectation
+    source: family_mutation_slots
+    safety_notes: do not hard-code library numeric values
+  expected_result_label: needs_triage
+  oracle:
+    primary: parser_reject_accept
+    secondary:
+    - return_code_semantics
+    - full_consumption
+    - cleanup_required
+    expected_result_label: needs_triage
+  inputs:
+    family_template_dir: normalized_templates/wolfssl_family/pkcs_container_parsing
+    canonical_template: normalized_templates/wolfssl_family/pkcs_container_parsing/canonical_tmpl_wolfssl.c
+    family_template_meta: normalized_templates/wolfssl_family/pkcs_container_parsing/family_template_meta.yaml
+    mask_report: normalized_templates/wolfssl_family/pkcs_container_parsing/mask_report.yaml
+    selected_mask_units: normalized_templates/wolfssl_family/pkcs_container_parsing/selected_mask_units.yaml
+    adapter_dir: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl
+    adapter_recipe: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/adapter_recipe.yaml
+    slot_filling_plan: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_filling_plan.yaml
+    slot_bindings: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_bindings.yaml
+    mutation_case: artifacts/sprints/family_adapter_mutation_planner_v1/mutation_case_matrix/mutation_case_matrix.yaml#cases[pkcs_container_parsing_openssl__mut_007__expected_return_flip]
+    oracle_expectation: artifacts/sprints/family_adapter_mutation_planner_v1/oracle_expectation_plan/oracle_expectation_plan.yaml#families[pkcs_container_parsing:openssl]
+  planned_outputs:
+    case_dir: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__expected_return_flip__case_001
+    harness_c: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/harness.c
+    input_corpus_dir: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/inputs
+    build_metadata: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/build_metadata.yaml
+    oracle_metadata: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/oracle_metadata.yaml
+    run_metadata: artifacts/sprints/render_cases_v1/rendered_cases/pkcs_container_parsing/openssl/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/run_metadata.yaml
+  preflight:
+    status: preflight_pending
+    required_input_paths_exist: true
+    required_input_paths:
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/canonical_tmpl_wolfssl.c
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/family_template_meta.yaml
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/mask_report.yaml
+    - normalized_templates/wolfssl_family/pkcs_container_parsing/selected_mask_units.yaml
+    - adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/adapter_recipe.yaml
+    - adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_filling_plan.yaml
+    - adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_bindings.yaml
+    adapter_validation_status: pass
+    adapter_render_ready: true
+    render_allowed: true
+    blocked_adapter_excluded: true
+    target_library_allowed: true
+    no_confirmed_equivalence_claim: true
+  risk_notes:
+  - case spec only; no C generated
+  - candidate mapping only; downstream analyze_results must triage
+  render_execution:
+    rendered: false
+    compiled: false
+    run: false
+    llm_called: false
+    c_files_generated_by_this_tool: false
+- render_job_id: render__asn1_nested_boundary__openssl__seed_preserving_baseline__case_001
+  case_name: asn1_nested_boundary__openssl__seed_preserving_baseline__case_001
+  case_id: asn1_nested_boundary_openssl__mut_001__seed_preserving_baseline
+  family: asn1_nested_boundary
+  target_library: openssl
+  base_adapter: asn1_nested_boundary_openssl
+  template_level: family
+  mutation_strategy: seed_preserving_baseline
+  mutation_slots:
+  - slot_name: DER_BYTES
+    mutation_type: valid_control
+    mutation_value: well_formed
+    source: family_mutation_slots
+    safety_notes: keep DER buffer and len paired
+  - slot_name: EXPECT_RET
+    mutation_type: valid_control
+    mutation_value: reject_or_accept_as_seed
+    source: family_mutation_slots
+    safety_notes: semantic labels preferred over numeric codes
+  expected_result_label: migrated_safe
+  oracle:
+    primary: parser_reject_accept
+    secondary:
+    - full_consumption
+    - return_code_semantics
+    expected_result_label: migrated_safe
+  inputs:
+    family_template_dir: normalized_templates/wolfssl_family/asn1_nested_boundary
+    canonical_template: normalized_templates/wolfssl_family/asn1_nested_boundary/canonical_tmpl_wolfssl.c
+    family_template_meta: normalized_templates/wolfssl_family/asn1_nested_boundary/family_template_meta.yaml
+    mask_report: normalized_templates/wolfssl_family/asn1_nested_boundary/mask_report.yaml
+    selected_mask_units: normalized_templates/wolfssl_family/asn1_nested_boundary/selected_mask_units.yaml
+    adapter_dir: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl
+    adapter_recipe: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/adapter_recipe.yaml
+    slot_filling_plan: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_filling_plan.yaml
+    slot_bindings: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_bindings.yaml
+    mutation_case: artifacts/sprints/family_adapter_mutation_planner_v1/mutation_case_matrix/mutation_case_matrix.yaml#cases[asn1_nested_boundary_openssl__mut_001__seed_preserving_baseline]
+    oracle_expectation: artifacts/sprints/family_adapter_mutation_planner_v1/oracle_expectation_plan/oracle_expectation_plan.yaml#families[asn1_nested_boundary:openssl]
+  planned_outputs:
+    case_dir: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__seed_preserving_baseline__case_001
+    harness_c: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__seed_preserving_baseline__case_001/harness.c
+    input_corpus_dir: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__seed_preserving_baseline__case_001/inputs
+    build_metadata: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__seed_preserving_baseline__case_001/build_metadata.yaml
+    oracle_metadata: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__seed_preserving_baseline__case_001/oracle_metadata.yaml
+    run_metadata: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__seed_preserving_baseline__case_001/run_metadata.yaml
+  preflight:
+    status: preflight_pending
+    required_input_paths_exist: true
+    required_input_paths:
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/canonical_tmpl_wolfssl.c
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/family_template_meta.yaml
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/mask_report.yaml
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/selected_mask_units.yaml
+    - adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/adapter_recipe.yaml
+    - adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_filling_plan.yaml
+    - adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_bindings.yaml
+    adapter_validation_status: pass
+    adapter_render_ready: true
+    render_allowed: true
+    blocked_adapter_excluded: true
+    target_library_allowed: true
+    no_confirmed_equivalence_claim: true
+  risk_notes:
+  - case spec only; no C generated
+  - candidate mapping only; downstream analyze_results must triage
+  render_execution:
+    rendered: false
+    compiled: false
+    run: false
+    llm_called: false
+    c_files_generated_by_this_tool: false
+- render_job_id: render__asn1_nested_boundary__openssl__trailing_garbage__case_001
+  case_name: asn1_nested_boundary__openssl__trailing_garbage__case_001
+  case_id: asn1_nested_boundary_openssl__mut_002__trailing_garbage
+  family: asn1_nested_boundary
+  target_library: openssl
+  base_adapter: asn1_nested_boundary_openssl
+  template_level: family
+  mutation_strategy: trailing_garbage
+  mutation_slots:
+  - slot_name: TRAILING_GARBAGE
+    mutation_type: boundary
+    mutation_value: random_tail
+    source: family_mutation_slots
+    safety_notes: needs pointer/consumption observable
+  expected_result_label: semantic_divergence_candidate
+  oracle:
+    primary: parser_reject_accept
+    secondary:
+    - full_consumption
+    - return_code_semantics
+    expected_result_label: semantic_divergence_candidate
+  inputs:
+    family_template_dir: normalized_templates/wolfssl_family/asn1_nested_boundary
+    canonical_template: normalized_templates/wolfssl_family/asn1_nested_boundary/canonical_tmpl_wolfssl.c
+    family_template_meta: normalized_templates/wolfssl_family/asn1_nested_boundary/family_template_meta.yaml
+    mask_report: normalized_templates/wolfssl_family/asn1_nested_boundary/mask_report.yaml
+    selected_mask_units: normalized_templates/wolfssl_family/asn1_nested_boundary/selected_mask_units.yaml
+    adapter_dir: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl
+    adapter_recipe: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/adapter_recipe.yaml
+    slot_filling_plan: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_filling_plan.yaml
+    slot_bindings: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_bindings.yaml
+    mutation_case: artifacts/sprints/family_adapter_mutation_planner_v1/mutation_case_matrix/mutation_case_matrix.yaml#cases[asn1_nested_boundary_openssl__mut_002__trailing_garbage]
+    oracle_expectation: artifacts/sprints/family_adapter_mutation_planner_v1/oracle_expectation_plan/oracle_expectation_plan.yaml#families[asn1_nested_boundary:openssl]
+  planned_outputs:
+    case_dir: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__trailing_garbage__case_001
+    harness_c: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__trailing_garbage__case_001/harness.c
+    input_corpus_dir: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__trailing_garbage__case_001/inputs
+    build_metadata: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__trailing_garbage__case_001/build_metadata.yaml
+    oracle_metadata: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__trailing_garbage__case_001/oracle_metadata.yaml
+    run_metadata: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__trailing_garbage__case_001/run_metadata.yaml
+  preflight:
+    status: preflight_pending
+    required_input_paths_exist: true
+    required_input_paths:
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/canonical_tmpl_wolfssl.c
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/family_template_meta.yaml
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/mask_report.yaml
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/selected_mask_units.yaml
+    - adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/adapter_recipe.yaml
+    - adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_filling_plan.yaml
+    - adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_bindings.yaml
+    adapter_validation_status: pass
+    adapter_render_ready: true
+    render_allowed: true
+    blocked_adapter_excluded: true
+    target_library_allowed: true
+    no_confirmed_equivalence_claim: true
+  risk_notes:
+  - case spec only; no C generated
+  - candidate mapping only; downstream analyze_results must triage
+  render_execution:
+    rendered: false
+    compiled: false
+    run: false
+    llm_called: false
+    c_files_generated_by_this_tool: false
+- render_job_id: render__asn1_nested_boundary__openssl__short_length__case_001
+  case_name: asn1_nested_boundary__openssl__short_length__case_001
+  case_id: asn1_nested_boundary_openssl__mut_003__short_length
+  family: asn1_nested_boundary
+  target_library: openssl
+  base_adapter: asn1_nested_boundary_openssl
+  template_level: family
+  mutation_strategy: short_length
+  mutation_slots:
+  - slot_name: ASN1_NESTED_LENGTH
+    mutation_type: boundary
+    mutation_value: short
+    source: family_mutation_slots
+    safety_notes: RAG v2 wc_ParseCert recall is weaker; use as risk, not block
+  expected_result_label: migrated_safe
+  oracle:
+    primary: parser_reject_accept
+    secondary:
+    - full_consumption
+    - return_code_semantics
+    expected_result_label: migrated_safe
+  inputs:
+    family_template_dir: normalized_templates/wolfssl_family/asn1_nested_boundary
+    canonical_template: normalized_templates/wolfssl_family/asn1_nested_boundary/canonical_tmpl_wolfssl.c
+    family_template_meta: normalized_templates/wolfssl_family/asn1_nested_boundary/family_template_meta.yaml
+    mask_report: normalized_templates/wolfssl_family/asn1_nested_boundary/mask_report.yaml
+    selected_mask_units: normalized_templates/wolfssl_family/asn1_nested_boundary/selected_mask_units.yaml
+    adapter_dir: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl
+    adapter_recipe: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/adapter_recipe.yaml
+    slot_filling_plan: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_filling_plan.yaml
+    slot_bindings: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_bindings.yaml
+    mutation_case: artifacts/sprints/family_adapter_mutation_planner_v1/mutation_case_matrix/mutation_case_matrix.yaml#cases[asn1_nested_boundary_openssl__mut_003__short_length]
+    oracle_expectation: artifacts/sprints/family_adapter_mutation_planner_v1/oracle_expectation_plan/oracle_expectation_plan.yaml#families[asn1_nested_boundary:openssl]
+  planned_outputs:
+    case_dir: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__short_length__case_001
+    harness_c: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__short_length__case_001/harness.c
+    input_corpus_dir: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__short_length__case_001/inputs
+    build_metadata: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__short_length__case_001/build_metadata.yaml
+    oracle_metadata: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__short_length__case_001/oracle_metadata.yaml
+    run_metadata: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__short_length__case_001/run_metadata.yaml
+  preflight:
+    status: preflight_pending
+    required_input_paths_exist: true
+    required_input_paths:
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/canonical_tmpl_wolfssl.c
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/family_template_meta.yaml
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/mask_report.yaml
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/selected_mask_units.yaml
+    - adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/adapter_recipe.yaml
+    - adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_filling_plan.yaml
+    - adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_bindings.yaml
+    adapter_validation_status: pass
+    adapter_render_ready: true
+    render_allowed: true
+    blocked_adapter_excluded: true
+    target_library_allowed: true
+    no_confirmed_equivalence_claim: true
+  risk_notes:
+  - case spec only; no C generated
+  - candidate mapping only; downstream analyze_results must triage
+  render_execution:
+    rendered: false
+    compiled: false
+    run: false
+    llm_called: false
+    c_files_generated_by_this_tool: false
+- render_job_id: render__asn1_nested_boundary__openssl__long_length__case_001
+  case_name: asn1_nested_boundary__openssl__long_length__case_001
+  case_id: asn1_nested_boundary_openssl__mut_004__long_length
+  family: asn1_nested_boundary
+  target_library: openssl
+  base_adapter: asn1_nested_boundary_openssl
+  template_level: family
+  mutation_strategy: long_length
+  mutation_slots:
+  - slot_name: ASN1_NESTED_LENGTH
+    mutation_type: boundary
+    mutation_value: long
+    source: family_mutation_slots
+    safety_notes: RAG v2 wc_ParseCert recall is weaker; use as risk, not block
+  expected_result_label: needs_triage
+  oracle:
+    primary: parser_reject_accept
+    secondary:
+    - full_consumption
+    - return_code_semantics
+    expected_result_label: needs_triage
+  inputs:
+    family_template_dir: normalized_templates/wolfssl_family/asn1_nested_boundary
+    canonical_template: normalized_templates/wolfssl_family/asn1_nested_boundary/canonical_tmpl_wolfssl.c
+    family_template_meta: normalized_templates/wolfssl_family/asn1_nested_boundary/family_template_meta.yaml
+    mask_report: normalized_templates/wolfssl_family/asn1_nested_boundary/mask_report.yaml
+    selected_mask_units: normalized_templates/wolfssl_family/asn1_nested_boundary/selected_mask_units.yaml
+    adapter_dir: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl
+    adapter_recipe: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/adapter_recipe.yaml
+    slot_filling_plan: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_filling_plan.yaml
+    slot_bindings: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_bindings.yaml
+    mutation_case: artifacts/sprints/family_adapter_mutation_planner_v1/mutation_case_matrix/mutation_case_matrix.yaml#cases[asn1_nested_boundary_openssl__mut_004__long_length]
+    oracle_expectation: artifacts/sprints/family_adapter_mutation_planner_v1/oracle_expectation_plan/oracle_expectation_plan.yaml#families[asn1_nested_boundary:openssl]
+  planned_outputs:
+    case_dir: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__long_length__case_001
+    harness_c: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__long_length__case_001/harness.c
+    input_corpus_dir: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__long_length__case_001/inputs
+    build_metadata: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__long_length__case_001/build_metadata.yaml
+    oracle_metadata: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__long_length__case_001/oracle_metadata.yaml
+    run_metadata: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__long_length__case_001/run_metadata.yaml
+  preflight:
+    status: preflight_pending
+    required_input_paths_exist: true
+    required_input_paths:
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/canonical_tmpl_wolfssl.c
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/family_template_meta.yaml
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/mask_report.yaml
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/selected_mask_units.yaml
+    - adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/adapter_recipe.yaml
+    - adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_filling_plan.yaml
+    - adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_bindings.yaml
+    adapter_validation_status: pass
+    adapter_render_ready: true
+    render_allowed: true
+    blocked_adapter_excluded: true
+    target_library_allowed: true
+    no_confirmed_equivalence_claim: true
+  risk_notes:
+  - case spec only; no C generated
+  - candidate mapping only; downstream analyze_results must triage
+  render_execution:
+    rendered: false
+    compiled: false
+    run: false
+    llm_called: false
+    c_files_generated_by_this_tool: false
+- render_job_id: render__asn1_nested_boundary__openssl__nested_length_mismatch__case_001
+  case_name: asn1_nested_boundary__openssl__nested_length_mismatch__case_001
+  case_id: asn1_nested_boundary_openssl__mut_005__nested_length_mismatch
+  family: asn1_nested_boundary
+  target_library: openssl
+  base_adapter: asn1_nested_boundary_openssl
+  template_level: family
+  mutation_strategy: nested_length_mismatch
+  mutation_slots:
+  - slot_name: ASN1_NESTED_LENGTH
+    mutation_type: malformed
+    mutation_value: length_field_mismatch
+    source: family_mutation_slots
+    safety_notes: RAG v2 wc_ParseCert recall is weaker; use as risk, not block
+  - slot_name: DER_BYTES
+    mutation_type: malformed
+    mutation_value: truncated
+    source: family_mutation_slots
+    safety_notes: keep DER buffer and len paired
+  expected_result_label: semantic_divergence_candidate
+  oracle:
+    primary: parser_reject_accept
+    secondary:
+    - full_consumption
+    - return_code_semantics
+    expected_result_label: semantic_divergence_candidate
+  inputs:
+    family_template_dir: normalized_templates/wolfssl_family/asn1_nested_boundary
+    canonical_template: normalized_templates/wolfssl_family/asn1_nested_boundary/canonical_tmpl_wolfssl.c
+    family_template_meta: normalized_templates/wolfssl_family/asn1_nested_boundary/family_template_meta.yaml
+    mask_report: normalized_templates/wolfssl_family/asn1_nested_boundary/mask_report.yaml
+    selected_mask_units: normalized_templates/wolfssl_family/asn1_nested_boundary/selected_mask_units.yaml
+    adapter_dir: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl
+    adapter_recipe: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/adapter_recipe.yaml
+    slot_filling_plan: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_filling_plan.yaml
+    slot_bindings: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_bindings.yaml
+    mutation_case: artifacts/sprints/family_adapter_mutation_planner_v1/mutation_case_matrix/mutation_case_matrix.yaml#cases[asn1_nested_boundary_openssl__mut_005__nested_length_mismatch]
+    oracle_expectation: artifacts/sprints/family_adapter_mutation_planner_v1/oracle_expectation_plan/oracle_expectation_plan.yaml#families[asn1_nested_boundary:openssl]
+  planned_outputs:
+    case_dir: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__nested_length_mismatch__case_001
+    harness_c: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__nested_length_mismatch__case_001/harness.c
+    input_corpus_dir: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__nested_length_mismatch__case_001/inputs
+    build_metadata: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__nested_length_mismatch__case_001/build_metadata.yaml
+    oracle_metadata: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__nested_length_mismatch__case_001/oracle_metadata.yaml
+    run_metadata: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__nested_length_mismatch__case_001/run_metadata.yaml
+  preflight:
+    status: preflight_pending
+    required_input_paths_exist: true
+    required_input_paths:
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/canonical_tmpl_wolfssl.c
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/family_template_meta.yaml
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/mask_report.yaml
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/selected_mask_units.yaml
+    - adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/adapter_recipe.yaml
+    - adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_filling_plan.yaml
+    - adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_bindings.yaml
+    adapter_validation_status: pass
+    adapter_render_ready: true
+    render_allowed: true
+    blocked_adapter_excluded: true
+    target_library_allowed: true
+    no_confirmed_equivalence_claim: true
+  risk_notes:
+  - case spec only; no C generated
+  - candidate mapping only; downstream analyze_results must triage
+  render_execution:
+    rendered: false
+    compiled: false
+    run: false
+    llm_called: false
+    c_files_generated_by_this_tool: false
+- render_job_id: render__asn1_nested_boundary__openssl__nested_depth_variation__case_001
+  case_name: asn1_nested_boundary__openssl__nested_depth_variation__case_001
+  case_id: asn1_nested_boundary_openssl__mut_006__nested_depth_variation
+  family: asn1_nested_boundary
+  target_library: openssl
+  base_adapter: asn1_nested_boundary_openssl
+  template_level: family
+  mutation_strategy: nested_depth_variation
+  mutation_slots:
+  - slot_name: NESTED_DEPTH
+    mutation_type: boundary
+    mutation_value: '8'
+    source: family_mutation_slots
+    safety_notes: deep nesting may trigger resource limits
+  expected_result_label: needs_triage
+  oracle:
+    primary: parser_reject_accept
+    secondary:
+    - full_consumption
+    - return_code_semantics
+    expected_result_label: needs_triage
+  inputs:
+    family_template_dir: normalized_templates/wolfssl_family/asn1_nested_boundary
+    canonical_template: normalized_templates/wolfssl_family/asn1_nested_boundary/canonical_tmpl_wolfssl.c
+    family_template_meta: normalized_templates/wolfssl_family/asn1_nested_boundary/family_template_meta.yaml
+    mask_report: normalized_templates/wolfssl_family/asn1_nested_boundary/mask_report.yaml
+    selected_mask_units: normalized_templates/wolfssl_family/asn1_nested_boundary/selected_mask_units.yaml
+    adapter_dir: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl
+    adapter_recipe: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/adapter_recipe.yaml
+    slot_filling_plan: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_filling_plan.yaml
+    slot_bindings: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_bindings.yaml
+    mutation_case: artifacts/sprints/family_adapter_mutation_planner_v1/mutation_case_matrix/mutation_case_matrix.yaml#cases[asn1_nested_boundary_openssl__mut_006__nested_depth_variation]
+    oracle_expectation: artifacts/sprints/family_adapter_mutation_planner_v1/oracle_expectation_plan/oracle_expectation_plan.yaml#families[asn1_nested_boundary:openssl]
+  planned_outputs:
+    case_dir: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__nested_depth_variation__case_001
+    harness_c: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__nested_depth_variation__case_001/harness.c
+    input_corpus_dir: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__nested_depth_variation__case_001/inputs
+    build_metadata: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__nested_depth_variation__case_001/build_metadata.yaml
+    oracle_metadata: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__nested_depth_variation__case_001/oracle_metadata.yaml
+    run_metadata: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__nested_depth_variation__case_001/run_metadata.yaml
+  preflight:
+    status: preflight_pending
+    required_input_paths_exist: true
+    required_input_paths:
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/canonical_tmpl_wolfssl.c
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/family_template_meta.yaml
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/mask_report.yaml
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/selected_mask_units.yaml
+    - adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/adapter_recipe.yaml
+    - adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_filling_plan.yaml
+    - adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_bindings.yaml
+    adapter_validation_status: pass
+    adapter_render_ready: true
+    render_allowed: true
+    blocked_adapter_excluded: true
+    target_library_allowed: true
+    no_confirmed_equivalence_claim: true
+  risk_notes:
+  - case spec only; no C generated
+  - candidate mapping only; downstream analyze_results must triage
+  render_execution:
+    rendered: false
+    compiled: false
+    run: false
+    llm_called: false
+    c_files_generated_by_this_tool: false
+- render_job_id: render__asn1_nested_boundary__openssl__expected_return_flip__case_001
+  case_name: asn1_nested_boundary__openssl__expected_return_flip__case_001
+  case_id: asn1_nested_boundary_openssl__mut_007__expected_return_flip
+  family: asn1_nested_boundary
+  target_library: openssl
+  base_adapter: asn1_nested_boundary_openssl
+  template_level: family
+  mutation_strategy: expected_return_flip
+  mutation_slots:
+  - slot_name: EXPECT_RET
+    mutation_type: malformed
+    mutation_value: flip_accept_reject_expectation
+    source: family_mutation_slots
+    safety_notes: semantic labels preferred over numeric codes
+  expected_result_label: needs_triage
+  oracle:
+    primary: parser_reject_accept
+    secondary:
+    - full_consumption
+    - return_code_semantics
+    expected_result_label: needs_triage
+  inputs:
+    family_template_dir: normalized_templates/wolfssl_family/asn1_nested_boundary
+    canonical_template: normalized_templates/wolfssl_family/asn1_nested_boundary/canonical_tmpl_wolfssl.c
+    family_template_meta: normalized_templates/wolfssl_family/asn1_nested_boundary/family_template_meta.yaml
+    mask_report: normalized_templates/wolfssl_family/asn1_nested_boundary/mask_report.yaml
+    selected_mask_units: normalized_templates/wolfssl_family/asn1_nested_boundary/selected_mask_units.yaml
+    adapter_dir: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl
+    adapter_recipe: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/adapter_recipe.yaml
+    slot_filling_plan: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_filling_plan.yaml
+    slot_bindings: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_bindings.yaml
+    mutation_case: artifacts/sprints/family_adapter_mutation_planner_v1/mutation_case_matrix/mutation_case_matrix.yaml#cases[asn1_nested_boundary_openssl__mut_007__expected_return_flip]
+    oracle_expectation: artifacts/sprints/family_adapter_mutation_planner_v1/oracle_expectation_plan/oracle_expectation_plan.yaml#families[asn1_nested_boundary:openssl]
+  planned_outputs:
+    case_dir: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__expected_return_flip__case_001
+    harness_c: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/harness.c
+    input_corpus_dir: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/inputs
+    build_metadata: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/build_metadata.yaml
+    oracle_metadata: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/oracle_metadata.yaml
+    run_metadata: artifacts/sprints/render_cases_v1/rendered_cases/asn1_nested_boundary/openssl/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/run_metadata.yaml
+  preflight:
+    status: preflight_pending
+    required_input_paths_exist: true
+    required_input_paths:
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/canonical_tmpl_wolfssl.c
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/family_template_meta.yaml
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/mask_report.yaml
+    - normalized_templates/wolfssl_family/asn1_nested_boundary/selected_mask_units.yaml
+    - adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/adapter_recipe.yaml
+    - adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_filling_plan.yaml
+    - adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_bindings.yaml
+    adapter_validation_status: pass
+    adapter_render_ready: true
+    render_allowed: true
+    blocked_adapter_excluded: true
+    target_library_allowed: true
+    no_confirmed_equivalence_claim: true
+  risk_notes:
+  - case spec only; no C generated
+  - candidate mapping only; downstream analyze_results must triage
+  render_execution:
+    rendered: false
+    compiled: false
+    run: false
+    llm_called: false
+    c_files_generated_by_this_tool: false
+summary:
+  total_render_jobs: 14
+  jobs_by_family:
+    pkcs_container_parsing: 7
+    asn1_nested_boundary: 7
+  jobs_by_adapter:
+    pkcs_container_parsing_openssl: 7
+    asn1_nested_boundary_openssl: 7
+  blocked_cases_not_rendered: 1

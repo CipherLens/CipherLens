@@ -1,0 +1,142 @@
+schema: x509_seed_validation_report_v1
+generated_at: '2026-06-12T14:38:49+00:00'
+openssl:
+  available: true
+  path: /usr/bin/openssl
+  version: 'OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)'
+  attempts:
+  - path: /home/wen/work/install-openssl-3.5.5-asan/bin/openssl
+    command:
+    - /home/wen/work/install-openssl-3.5.5-asan/bin/openssl
+    - version
+    return_code: 1
+    stdout: ''
+    stderr: '/home/wen/work/install-openssl-3.5.5-asan/bin/openssl: /lib/x86_64-linux-gnu/libssl.so.3:
+      version `OPENSSL_3.4.0'' not found (required by /home/wen/work/install-openssl-3.5.5-asan/bin/openssl)
+
+      /home/wen/work/install-openssl-3.5.5-asan/bin/openssl: /lib/x86_64-linux-gnu/libssl.so.3: version
+      `OPENSSL_3.2.0'' not found (required by /home/wen/work/install-openssl-3.5.5-asan/bin/openssl)
+
+      /home/wen/work/install-openssl-3.5.5-asan/bin/openssl: /lib/x86_64-linux-gnu/libcrypto.so.3: version
+      `OPENSSL_3.2.0'' not found (required by /home/wen/work/install-openssl-3.5.5-asan/bin/openssl)
+
+      /home/wen/work/install-openssl-3.5.5-asan/bin/openssl: /lib/x86_64-linux-gnu/libcrypto.so.3: version
+      `OPENSSL_3.5.0'' not found (required by /home/wen/work/install-openssl-3.5.5-asan/bin/openssl)
+
+      /home/wen/work/install-openssl-3.5.5-asan/bin/openssl: /lib/x86_64-linux-gnu/libcrypto.so.3: version
+      `OPENSSL_3.3.0'' not found (required by /home/wen/work/install-openssl-3.5.5-asan/bin/openssl)
+
+      /home/wen/work/install-openssl-3.5.5-asan/bin/openssl: /lib/x86_64-linux-gnu/libcrypto.so.3: version
+      `OPENSSL_3.4.0'' not found (required by /home/wen/work/install-openssl-3.5.5-asan/bin/openssl)
+
+      '
+    timeout: false
+  - path: /usr/bin/openssl
+    command:
+    - /usr/bin/openssl
+    - version
+    return_code: 0
+    stdout: 'OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)
+
+      '
+    stderr: ''
+    timeout: false
+scheduler_allowed_to_run_now: true
+candidate_validations:
+- path: data/wolfssl_collect/WOLFSSL-POC-0002/inputs/reconstructed/cve-2017-2800-cert1.der
+  suffix: .der
+  candidate_reason: x509_cert_path_hint
+  size_bytes: 1549
+  sha256: ebbd400e3007c5fac9ba31cfba0e7e83e6699a5420d36d11c7c7112867972cf5
+  validated: true
+  attempts:
+  - format: der
+    command:
+    - /usr/bin/openssl
+    - x509
+    - -inform
+    - DER
+    - -in
+    - /home/wen/work/crypto-pattern-fuzz/data/wolfssl_collect/WOLFSSL-POC-0002/inputs/reconstructed/cve-2017-2800-cert1.der
+    - -noout
+    return_code: 0
+    stdout: ''
+    stderr: ''
+    timeout: false
+  verified_seed_id: existing_x509_der_ebbd400e
+- path: datasets/openssl/poc_artifacts/issue_13860/inputs/cert.crt
+  suffix: .crt
+  candidate_reason: x509_cert_path_hint
+  size_bytes: 2007
+  sha256: 9a6ec012e1a7da9dbe34194d478ad7c0db1822fb071df12981496ed104384113
+  validated: false
+  attempts:
+  - format: pem
+    command:
+    - /usr/bin/openssl
+    - x509
+    - -inform
+    - PEM
+    - -in
+    - /home/wen/work/crypto-pattern-fuzz/datasets/openssl/poc_artifacts/issue_13860/inputs/cert.crt
+    - -noout
+    return_code: 1
+    stdout: ''
+    stderr: 'Could not read certificate from /home/wen/work/crypto-pattern-fuzz/datasets/openssl/poc_artifacts/issue_13860/inputs/cert.crt
+
+      80BB4CA2B1780000:error:1E08010C:DECODER routines:OSSL_DECODER_from_bio:unsupported:../crypto/encode_decode/decoder_lib.c:101:No
+      supported data to decode.  Input type: PEM, Input structure: Certificate
+
+      Unable to load certificate
+
+      '
+    timeout: false
+  verified_seed_id: ''
+- path: datasets/openssl/poc_artifacts/issue_14457/inputs/root.cer
+  suffix: .cer
+  candidate_reason: certificate_suffix
+  size_bytes: 1131
+  sha256: 5d83ab3bca7d87b11a905fc8d0b242327784df755fd1b13f29c1b42fa7bcabff
+  validated: true
+  attempts:
+  - format: der
+    command:
+    - /usr/bin/openssl
+    - x509
+    - -inform
+    - DER
+    - -in
+    - /home/wen/work/crypto-pattern-fuzz/datasets/openssl/poc_artifacts/issue_14457/inputs/root.cer
+    - -noout
+    return_code: 1
+    stdout: ''
+    stderr: 'Could not read certificate from /home/wen/work/crypto-pattern-fuzz/datasets/openssl/poc_artifacts/issue_14457/inputs/root.cer
+
+      Unable to load certificate
+
+      '
+    timeout: false
+  - format: pem
+    command:
+    - /usr/bin/openssl
+    - x509
+    - -inform
+    - PEM
+    - -in
+    - /home/wen/work/crypto-pattern-fuzz/datasets/openssl/poc_artifacts/issue_14457/inputs/root.cer
+    - -noout
+    return_code: 0
+    stdout: ''
+    stderr: ''
+    timeout: false
+  verified_seed_id: existing_x509_pem_5d83ab3b
+synthetic_generation:
+  attempted: false
+  commands: []
+summary:
+  candidate_count: 306
+  validated_candidate_count: 3
+  verified_seed_count: 2
+  der_seed_verified: true
+  pem_seed_verified: true
+  synthetic_seed_generated: false

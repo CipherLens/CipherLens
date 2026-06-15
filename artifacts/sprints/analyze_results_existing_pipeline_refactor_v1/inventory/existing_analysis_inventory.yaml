@@ -1,0 +1,63 @@
+schema: existing_analysis_inventory_v1
+task: analyze_results_existing_pipeline_refactor_v1
+generated_at: '2026-06-12T02:25:12+00:00'
+existing_analyzer_entrypoints:
+- module: analyzer/analyze_poc.py
+  entrypoint: analyze_poc(path, trigger_api="")
+  cli: python3 -m analyzer.analyze_poc <poc.c> --trigger-api <api>
+  role: 'lightweight C PoC structure extractor: includes, macros, API calls, trigger call, oracle helper
+    names, library guess'
+- module: runner/analyze_results.py
+  entrypoint: classify_record(record)
+  cli: python3 -m runner.analyze_results --input <run.jsonl> --output <summary.json>
+  role: existing verdict classifier for compile/run records, sanitizer text, BUG/OK oracle strings, and
+    family-aware semantic verdicts
+- module: analysis/audit_crash_sanitizer_candidates.py
+  entrypoint: audit_one(item)
+  cli: python3 analysis/audit_crash_sanitizer_candidates.py
+  role: candidate queue crash/sanitizer evidence audit with signature flags and promotion readiness scoring
+- module: analysis/build_candidate_queue.py
+  entrypoint: build_candidate(entry, feedback_ids)
+  role: pattern-bank to candidate-queue readiness/severity/candidate class scoring
+- module: analysis/plan_execution_paths.py
+  entrypoint: recommend_path(candidate, seed)
+  role: route candidate families into execution paths A/B/C/D based on family/oracle/readiness
+analyzer_analyze_poc_summary:
+  does:
+  - Reads a C PoC file.
+  - 'Extracts #include directives and #define macros.'
+  - Collects semicolon-ended statements and approximates function calls.
+  - Marks crypto API calls by prefixes such as mbedtls_, psa_, BN_, EVP_, RSA_, ECDSA_, Botan::.
+  - Guesses library and trigger API.
+  - Extracts simple oracle helper markers such as canary_corrupted and fixed return checks.
+  does_not_do:
+  - It does not classify runtime compile/run results.
+  - It does not inspect sanitizer logs.
+  - It does not produce migration verdicts.
+reusable_analysis_scripts:
+- 'analysis/audit_crash_sanitizer_candidates.py: crash/sanitizer signatures, has_any_crash_signal, crash
+  confidence/readiness audit.'
+- 'analysis/build_candidate_queue.py: readiness/severity/candidate class from pattern bank and feedback.'
+- 'analysis/plan_execution_paths.py: family/oracle-aware routing into migration, mutation, app-level,
+  or sanitizer-audit paths.'
+- 'analysis/check_a_path_compliance.py: path compliance checks for planned artifacts.'
+- 'runner/analyze_results.py: mature compile/run verdict classifier reused by this refactor.'
+existing_crash_sanitizer_support:
+- runner/analyze_results.py has ASAN_PATTERNS and UBSAN_PATTERNS and classifies sanitizer_crash / ubsan_crash.
+- analysis/audit_crash_sanitizer_candidates.py has SIGNATURES for ASAN, UBSAN, SIGSEGV, exit 139, heap/stack
+  buffer overflow, use-after-free, Invalid read.
+- runner/analyze_results.py distinguishes timeout, compile_error, run_nonzero, sanitizer crashes, BUG
+  patterns, SAFE patterns, and family-specific oracle strings.
+existing_candidate_label_support:
+- runner/analyze_results.py emits verdicts such as bug_candidate, safe_reject_behavior, normal_behavior_needs_triage,
+  semantic_projection_limitation, sanitizer_crash.
+- analysis/build_candidate_queue.py groups research candidates into crash_or_sanitizer_candidates, lifecycle_semantic_divergence_candidates,
+  stable_safe_negative_baselines, and others.
+- The refactor maps existing analyzer verdicts into analyze_results_v1 candidate_label while keeping no
+  confirmed vulnerability claim.
+duplicated_parts_in_old_analyze_results_v1:
+- Direct analysis_label decision tree for compile failure, timeout, sanitizer, signal, nonzero, normal_exit.
+- Direct candidate_label_for mapping from raw labels to sanitizer_crash_candidate / needs_triage / no_crash_observed.
+- Crash/sanitizer interpretation lived only in tools/analyze_results_v1 instead of calling the existing
+  analyzer verdict classifier.
+quality_status: pass

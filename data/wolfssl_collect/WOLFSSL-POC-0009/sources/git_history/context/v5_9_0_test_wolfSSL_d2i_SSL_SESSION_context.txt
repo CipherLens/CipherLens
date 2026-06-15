@@ -1,0 +1,221 @@
+    client_cbf.keyPemFile = cliPubKeyPemFile;
+    client_cbf.caPemFile = cliCaPemFile;
+
+    server_cbf.certPemFile = svrCertPemFile;
+    server_cbf.keyPemFile = svrPubKeyPemFile;
+    server_cbf.caPemFile = svrCaPemFile;
+
+    /* Setup a crypto callback with pointer to private key file for testing */
+    client_cbf.devId = 1;
+    wc_CryptoCb_RegisterDevice(client_cbf.devId, test_CryptoCb_Func,
+        (void*)cliPrivKeyPemFile);
+    server_cbf.devId = 2;
+    wc_CryptoCb_RegisterDevice(server_cbf.devId, test_CryptoCb_Func,
+        (void*)svrPrivKeyPemFile);
+
+    /* Perform TLS server and client test */
+    /* First test is at WOLFSSL_CTX level */
+    test_wolfSSL_client_server(&client_cbf, &server_cbf);
+    /* Check for success */
+    ExpectIntEQ(server_cbf.return_code, TEST_SUCCESS);
+    ExpectIntEQ(client_cbf.return_code, TEST_SUCCESS);
+
+    if (EXPECT_SUCCESS()) {
+        /* Second test is a WOLFSSL object level */
+        client_cbf.loadToSSL = 1; server_cbf.loadToSSL = 1;
+        test_wolfSSL_client_server(&client_cbf, &server_cbf);
+    }
+
+    /* Check for success */
+    ExpectIntEQ(server_cbf.return_code, TEST_SUCCESS);
+    ExpectIntEQ(client_cbf.return_code, TEST_SUCCESS);
+
+    /* Un register the devId's */
+    wc_CryptoCb_UnRegisterDevice(client_cbf.devId);
+    client_cbf.devId = INVALID_DEVID;
+    wc_CryptoCb_UnRegisterDevice(server_cbf.devId);
+    server_cbf.devId = INVALID_DEVID;
+
+    return EXPECT_RESULT();
+}
+#endif /* WOLF_CRYPTO_CB && HAVE_IO_TESTS_DEPENDENCIES */
+
+static int test_wc_CryptoCb(void)
+{
+    EXPECT_DECLS;
+#ifdef WOLF_CRYPTO_CB
+    /* TODO: Add crypto callback API tests */
+
+#ifdef HAVE_IO_TESTS_DEPENDENCIES
+    #if !defined(NO_RSA) || defined(HAVE_ECC) || defined(HAVE_ED25519)
+    int tlsVer;
+    #endif
+
+    #ifndef NO_RSA
+    for (tlsVer = WOLFSSL_SSLV3; tlsVer <= WOLFSSL_DTLSV1; tlsVer++) {
+        ExpectIntEQ(test_wc_CryptoCb_TLS(tlsVer,
+            svrCertFile, cliCertFile, cliKeyFile, cliKeyPubFile,
+            cliCertFile, svrCertFile, svrKeyFile, svrKeyPubFile),
+            TEST_SUCCESS);
+    }
+    #endif
+    #ifdef HAVE_ECC
+    for (tlsVer = WOLFSSL_TLSV1; tlsVer <= WOLFSSL_DTLSV1; tlsVer++) {
+        ExpectIntEQ(test_wc_CryptoCb_TLS(tlsVer,
+            caEccCertFile,  cliEccCertFile, cliEccKeyFile, cliEccKeyPubFile,
+            cliEccCertFile, eccCertFile,    eccKeyFile,    eccKeyPubFile),
+            TEST_SUCCESS);
+    }
+    #endif
+    #ifdef HAVE_ED25519
+    for (tlsVer = WOLFSSL_TLSV1_2; tlsVer <= WOLFSSL_DTLSV1_2; tlsVer++) {
+        if (tlsVer == WOLFSSL_DTLSV1) continue;
+        ExpectIntEQ(test_wc_CryptoCb_TLS(tlsVer,
+            caEdCertFile,  cliEdCertFile, cliEdKeyFile, cliEdKeyPubFile,
+            cliEdCertFile, edCertFile,    edKeyFile,    edKeyPubFile),
+            TEST_SUCCESS);
+    }
+    #endif
+#endif /* HAVE_IO_TESTS_DEPENDENCIES */
+#endif /* WOLF_CRYPTO_CB */
+    return EXPECT_RESULT();
+}
+
+#if defined(WOLFSSL_STATIC_MEMORY) && defined(HAVE_IO_TESTS_DEPENDENCIES)
+
+/* tlsVer: Example: WOLFSSL_TLSV1_2 or WOLFSSL_TLSV1_3 */
+static int test_wolfSSL_CTX_StaticMemory_TLS(int tlsVer,
+    const char* cliCaPemFile, const char* cliCertPemFile,
+    const char* cliPrivKeyPemFile,
+    const char* svrCaPemFile, const char* svrCertPemFile,
+    const char* svrPrivKeyPemFile,
+    byte* cliMem, word32 cliMemSz, byte* svrMem, word32 svrMemSz)
+{
+    EXPECT_DECLS;
+    callback_functions client_cbf;
+    callback_functions server_cbf;
+
+    XMEMSET(&client_cbf, 0, sizeof(client_cbf));
+    XMEMSET(&server_cbf, 0, sizeof(server_cbf));
+
+    if (tlsVer == WOLFSSL_TLSV1_3) {
+    #ifdef WOLFSSL_TLS13
+        server_cbf.method_ex = wolfTLSv1_3_server_method_ex;
+        client_cbf.method_ex = wolfTLSv1_3_client_method_ex;
+    #endif
+    }
+    else if (tlsVer == WOLFSSL_TLSV1_2) {
+    #ifndef WOLFSSL_NO_TLS12
+        server_cbf.method_ex = wolfTLSv1_2_server_method_ex;
+        client_cbf.method_ex = wolfTLSv1_2_client_method_ex;
+    #endif
+    }
+    else if (tlsVer == WOLFSSL_TLSV1_1) {
+    #ifndef NO_OLD_TLS
+        server_cbf.method_ex = wolfTLSv1_1_server_method_ex;
+        client_cbf.method_ex = wolfTLSv1_1_client_method_ex;
+    #endif
+    }
+    else if (tlsVer == WOLFSSL_TLSV1) {
+    #if !defined(NO_OLD_TLS) && defined(WOLFSSL_ALLOW_TLSV10)
+        server_cbf.method_ex = wolfTLSv1_server_method_ex;
+        client_cbf.method_ex = wolfTLSv1_client_method_ex;
+    #endif
+    }
+    else if (tlsVer == WOLFSSL_SSLV3) {
+    #if !defined(NO_OLD_TLS) && defined(WOLFSSL_ALLOW_SSLV3) && \
+         defined(WOLFSSL_STATIC_RSA)
+        server_cbf.method_ex = wolfSSLv3_server_method_ex;
+        client_cbf.method_ex = wolfSSLv3_client_method_ex;
+    #endif
+    }
+    else if (tlsVer == WOLFSSL_DTLSV1_2) {
+    #if defined(WOLFSSL_DTLS) && !defined(WOLFSSL_NO_TLS12)
+        server_cbf.method_ex = wolfDTLSv1_2_server_method_ex;
+        client_cbf.method_ex = wolfDTLSv1_2_client_method_ex;
+    #endif
+    }
+    else if (tlsVer == WOLFSSL_DTLSV1) {
+    #if defined(WOLFSSL_DTLS) && !defined(NO_OLD_TLS)
+        server_cbf.method_ex = wolfDTLSv1_server_method_ex;
+        client_cbf.method_ex = wolfDTLSv1_client_method_ex;
+    #endif
+    }
+
+    if (server_cbf.method_ex == NULL) {
+        /* not enabled */
+        return TEST_SUCCESS;
+    }
+
+    /* Setup the keys for the TLS test */
+    client_cbf.certPemFile = cliCertPemFile;
+    client_cbf.keyPemFile = cliPrivKeyPemFile;
+    client_cbf.caPemFile = cliCaPemFile;
+
+    server_cbf.certPemFile = svrCertPemFile;
+    server_cbf.keyPemFile = svrPrivKeyPemFile;
+    server_cbf.caPemFile = svrCaPemFile;
+
+    client_cbf.mem = cliMem;
+    client_cbf.memSz = cliMemSz;
+    server_cbf.mem = svrMem;
+    server_cbf.memSz = svrMemSz;
+
+    client_cbf.devId = INVALID_DEVID;
+    server_cbf.devId = INVALID_DEVID;
+
+    /* Perform TLS server and client test */
+    /* First test is at WOLFSSL_CTX level */
+    test_wolfSSL_client_server(&client_cbf, &server_cbf);
+    /* Check for success */
+    ExpectIntEQ(server_cbf.return_code, TEST_SUCCESS);
+    ExpectIntEQ(client_cbf.return_code, TEST_SUCCESS);
+
+    if (EXPECT_SUCCESS()) {
+       /* Second test is a WOLFSSL object level */
+       client_cbf.loadToSSL = 1; server_cbf.loadToSSL = 1;
+       test_wolfSSL_client_server(&client_cbf, &server_cbf);
+    }
+
+    /* Check for success */
+    ExpectIntEQ(server_cbf.return_code, TEST_SUCCESS);
+    ExpectIntEQ(client_cbf.return_code, TEST_SUCCESS);
+
+    return EXPECT_RESULT();
+}
+#endif /* WOLFSSL_STATIC_MEMORY && HAVE_IO_TESTS_DEPENDENCIES */
+
+#if defined(WOLFSSL_STATIC_MEMORY) && !defined(WOLFCRYPT_ONLY)
+static int test_wolfSSL_CTX_StaticMemory_SSL(WOLFSSL_CTX* ctx)
+{
+    EXPECT_DECLS;
+    WOLFSSL *ssl1 = NULL, *ssl2 = NULL, *ssl3 = NULL;
+    WOLFSSL_MEM_STATS mem_stats;
+    WOLFSSL_MEM_CONN_STATS ssl_stats;
+
+#if !defined(NO_FILESYSTEM) && !defined(NO_CERTS) && !defined(NO_RSA)
+    ExpectIntEQ(wolfSSL_CTX_use_certificate_file(ctx, svrCertFile,
+        WOLFSSL_FILETYPE_PEM), WOLFSSL_SUCCESS);
+    ExpectIntEQ(wolfSSL_CTX_use_PrivateKey_file(ctx, svrKeyFile,
+        WOLFSSL_FILETYPE_PEM), WOLFSSL_SUCCESS);
+#endif
+
+    ExpectNotNull((ssl1 = wolfSSL_new(ctx)));
+    ExpectNotNull((ssl2 = wolfSSL_new(ctx)));
+
+#ifndef WOLFSSL_STATIC_MEMORY_LEAN
+    /* this should fail because kMaxCtxClients == 2 */
+    ExpectNull((ssl3 = wolfSSL_new(ctx)));
+#else
+    (void)ssl3;
+#endif
+
+    if (wolfSSL_is_static_memory(ssl1, &ssl_stats) == 1) {
+    #if defined(DEBUG_WOLFSSL) && !defined(WOLFSSL_STATIC_MEMORY_LEAN)
+        wolfSSL_PrintStatsConn(&ssl_stats);
+    #endif
+        (void)ssl_stats;
+    }
+
+    /* display collected statistics */
+    if (wolfSSL_CTX_is_static_memory(ctx, &mem_stats) == 1) {

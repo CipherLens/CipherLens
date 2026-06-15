@@ -1,0 +1,52 @@
+schema: family_novelty_policy_v1
+
+historical_tested_families:
+  secure_heap_state_lifecycle:
+    status: manually_reproduced_current_version
+    related_issue: OPENSSL-ISSUE-28669
+    target_library: openssl
+    tested_version: OpenSSL 3.5.5
+    finding_class: robustness_hardening_candidate
+    default_action: skip_for_novel_campaign
+    claim_policy:
+      confirmed_vulnerability: false
+      cve: false
+      exploitable: false
+
+known_pattern_only_families:
+  pkey_parsing:
+    pattern_id: der_single_object_trailing_garbage_full_consumption
+    default_action: skip_for_novel_campaign
+
+completed_no_candidate_families:
+  pkey_verify_semantic:
+    status: completed_no_candidate
+    source_sprint: artifacts/sprints/pkey_verify_semantic_compile_run_analyze_v1
+    quality_status: pass_no_candidate
+    candidate_count: 0
+    default_action: skip_for_novel_campaign
+  evp_digest_ctx_lifecycle:
+    status: completed_no_candidate
+    source_sprint: artifacts/sprints/evp_digest_ctx_lifecycle_full_pipeline_v1
+    quality_status: pass_no_candidate
+    candidate_count: 0
+    default_action: skip_for_novel_campaign
+
+deprioritized_tracks:
+  parsing:
+    reason: der_full_consumption_known_pattern_already_observed
+
+default_selection_policy:
+  prefer_untested_non_parsing_family: true
+  skip_historical_tested: true
+  skip_known_pattern_only: true
+  skip_completed_no_candidate: true
+  allow_only_if_explicit_rerun: true
+
+preferred_untested_non_parsing_families:
+  - evp_digest_ctx_lifecycle
+  - evp_cipher_ctx_lifecycle
+  - provider_fetch_lifecycle
+  - ossl_store_lifecycle
+  - ec_arithmetic_semantic
+  - bn_arithmetic_semantic

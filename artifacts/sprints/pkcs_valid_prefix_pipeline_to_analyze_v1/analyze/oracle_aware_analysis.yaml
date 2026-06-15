@@ -1,0 +1,87 @@
+schema: pkcs_oracle_aware_analysis_v1
+generated_at: '2026-06-12T11:04:18+00:00'
+allowed_candidate_labels:
+- external_validation_pending
+- full_consumption_gap_candidate
+- needs_triage
+- normal_accept
+- normal_reject
+- oracle_incomplete
+- semantic_divergence_candidate
+cases:
+- case_id: pkcs_container_parsing_openssl__supp_001__valid_pkcs12_seed_required
+  family: pkcs_container_parsing
+  target_library: openssl
+  container_type: pkcs12
+  seed_id: synthetic_pkcs12_valid_minimal
+  seed_origin: synthetic_openssl_generated
+  mutation_strategy: verified_seed_exact
+  run_status: exited
+  exit_code: 0
+  oracle_event_count: 4
+  candidate_label: normal_accept
+  reason: parser accepted the seed and consumed the observed object
+  claim_policy:
+    confirmed_vulnerability: false
+    cve: false
+    exploitable: false
+- case_id: pkcs_container_parsing_openssl__supp_002__valid_pkcs12_plus_trailing_seed_required
+  family: pkcs_container_parsing
+  target_library: openssl
+  container_type: pkcs12
+  seed_id: synthetic_pkcs12_valid_minimal
+  seed_origin: synthetic_openssl_generated
+  mutation_strategy: valid_seed_plus_trailing_00
+  run_status: exited
+  exit_code: 0
+  oracle_event_count: 4
+  candidate_label: full_consumption_gap_candidate
+  reason: parser accepted a prefix and left trailing bytes unconsumed
+  claim_policy:
+    confirmed_vulnerability: false
+    cve: false
+    exploitable: false
+- case_id: pkcs_container_parsing_openssl__supp_003__preserve_outer_pkcs_mutate_inner_seed_required
+  family: pkcs_container_parsing
+  target_library: openssl
+  container_type: pkcs7
+  seed_id: synthetic_pkcs7_valid_certbag
+  seed_origin: synthetic_openssl_generated
+  mutation_strategy: valid_pkcs7_seed_plus_trailing_ff00
+  run_status: exited
+  exit_code: 0
+  oracle_event_count: 3
+  candidate_label: full_consumption_gap_candidate
+  reason: parser accepted a prefix and left trailing bytes unconsumed
+  claim_policy:
+    confirmed_vulnerability: false
+    cve: false
+    exploitable: false
+- case_id: pkcs_container_parsing_openssl__supp_004__near_valid_pkcs_length_delta_seed_required
+  family: pkcs_container_parsing
+  target_library: openssl
+  container_type: pkcs7
+  seed_id: synthetic_pkcs7_valid_certbag
+  seed_origin: synthetic_openssl_generated
+  mutation_strategy: near_valid_outer_length_delta_plus_one
+  run_status: exited
+  exit_code: 0
+  oracle_event_count: 3
+  candidate_label: normal_reject
+  reason: parser rejected the mutated seed without sanitizer evidence
+  claim_policy:
+    confirmed_vulnerability: false
+    cve: false
+    exploitable: false
+summary:
+  external_validation_pending: 0
+  full_consumption_gap_candidate: 2
+  needs_triage: 0
+  normal_accept: 1
+  normal_reject: 1
+  oracle_incomplete: 0
+  semantic_divergence_candidate: 0
+claim_policy:
+  confirmed_vulnerability: false
+  cve: false
+  exploitable: false

@@ -1,0 +1,2044 @@
+library: openssl
+total: 30
+artifacts:
+- poc_id: OPENSSL-ISSUE-11567
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_11567
+  directory_name: issue_11567
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs: []
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: semantic bug when verifying certificate file
+    source_url: https://github.com/openssl/openssl/issues/11567
+    state: null
+    has_poc: 'YES'
+    poc_type: CLI+INPUT_SEED
+    quality: HIGH_CANDIDATE
+    component: X509/ASN1
+    trigger_behavior: WRONG_RESULT
+    affected_version: Libressl (3.1.0), openssl (commit 031c9bd3f3e9a02fa126c7dbc47f3d934678a195),
+      openssl-1.0.2t
+    critical_api_or_function:
+    - X509v3 Subject Key Identifier
+    - X509v3 Authority Key Identifier
+    - X509v3 Basic Constraints
+    - md5WithRSAEncryption
+    root_cause: Newer OpenSSL versions do not support zero serial numbers, which is
+      non-conforming with RFC 5280.
+    reproduction_command:
+    - openssl x509 -in $PoC -text -noout
+    input_artifact:
+    - https://github.com/SuhwanSong/PoC/blob/master/ssl/issue%2311567
+    - https://github.com/openssl/openssl/issues/11567#issuecomment-4498267
+    fix_evidence: null
+    artifact_class: B2_cli_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / libcrypto.so.3
+    local_test_result: compiled_and_executed_with_non_buggy_sample_input
+    input_status: placeholder_input_used
+    validation_notes: Translated from CLI command `openssl x509 -in $PoC -text -noout`.
+      The generated C harness compiled and executed successfully using a system certificate
+      copied to inputs/poc.pem. Valgrind reported 0 errors. This validates the harness
+      structure, but does not strictly reproduce the original issue because the original
+      PoC certificate has not been recovered.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-11772
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_11772
+  directory_name: issue_11772
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs: []
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: openssl x509 returns 0 even though the date of certificate is invalid
+    source_url: https://github.com/openssl/openssl/issues/11772
+    state: null
+    has_poc: 'YES'
+    poc_type: CLI+INPUT_SEED
+    quality: HIGH_CANDIDATE
+    component: X509/X509V3/ASN1
+    trigger_behavior: WRONG_RESULT
+    affected_version: openssl-1.0.2u
+    critical_api_or_function:
+    - X509_cmp_time
+    - X509_get0_notAfter
+    root_cause: The function calling X509_cmp_time() doesn't check that it returned
+      an error.
+    reproduction_command:
+    - build openssl-1.0.2u
+    - unzip PoC.zip
+    - openssl x509 -in $PoC -checkend 0 -noout
+    - openssl x509 -in $PoC -text -noout
+    input_artifact:
+    - PoC.zip
+    fix_evidence: null
+    artifact_class: B2_cli_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_with_non_buggy_sample_input
+    input_status: placeholder_input_used
+    validation_notes: The generated C harness was translated from the original CLI
+      command and compiled/executed using a placeholder local input. This validates
+      the harness structure but does not strictly reproduce the original issue because
+      the original PoC input artifact has not been recovered.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-13860
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_13860
+  directory_name: issue_13860
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs:
+    - inputs/cert.crt
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: 'openssl-x509: change of behaviour for public key output between versions
+      1.0.2 and 1.1.1'
+    source_url: https://github.com/openssl/openssl/issues/13860
+    state: null
+    has_poc: 'YES'
+    poc_type: CLI+INPUT_SEED
+    quality: HIGH_CANDIDATE
+    component: X509/X509V3/ASN1
+    trigger_behavior: UNKNOWN
+    affected_version: 1.0.2, 1.1.1
+    critical_api_or_function:
+    - X509_parse
+    - X509_get_pubkey
+    root_cause: Change in behavior of public key output in OpenSSL x509 command between
+      versions 1.0.2 and 1.1.1
+    reproduction_command:
+    - openssl x509 -in cert.crt -inform der -out cert.pem -pubkey > pubkey.pem
+    - openssl x509 -in servercert.pem  -out /tmp/servercert.pem -pubkey > /tmp/pubkey.pem
+    input_artifact:
+    - cert.crt
+    - servercert.pem
+    fix_evidence: null
+    artifact_class: B2_cli_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_with_non_buggy_sample_input
+    input_status: placeholder_input_used
+    validation_notes: The generated C harness was translated from the original CLI
+      command and compiled/executed using a placeholder local input. This validates
+      the harness structure but does not strictly reproduce the original issue because
+      the original PoC input artifact has not been recovered.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-14457
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_14457
+  directory_name: issue_14457
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs:
+    - inputs/root.cer
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: 'Self-signed certificates generated with a single `openssl req` command
+      fail to verify (error 20 at 0 depth lookup: unable to get local issuer certificate)'
+    source_url: https://github.com/openssl/openssl/issues/14457
+    state: null
+    has_poc: null
+    poc_type: CLI+INPUT_SEED
+    quality: HQ
+    component: X509/X509V3/ASN1
+    trigger_behavior: WRONG_OUTPUT
+    affected_version: 1.1.1, 1.1.1f
+    critical_api_or_function:
+    - X509v3 extensions
+    - basicConstraints
+    - subjectKeyIdentifier
+    - authorityKeyIdentifier
+    - subjectAltName
+    - keyUsage
+    root_cause: CONFIGURATION_FILE_EXTENSION_OVERRIDE
+    reproduction_command:
+    - openssl req -new -x509 -nodes -sha256 -newkey rsa:4096 -keyout root.key -out
+      root.cer -days 3650 -subj '/C=CA/ST=State/L=City/OU=POC/OU=Certificate Authorities/CN=POC
+      Root CA' -addext "basicConstraints = CA:TRUE" -addext "subjectKeyIdentifier
+      = hash" -addext "authorityKeyIdentifier = keyid:always, issuer:always" -addext
+      "subjectAltName = DNS:POC Root CA" -addext "keyUsage = digitalSignature, nonRepudiation,
+      keyEncipherment, dataEncipherment, keyAgreement, keyCertSign, cRLSign, encipherOnly,
+      decipherOnly"
+    - openssl verify -CAfile root.cer root.cer
+    input_artifact:
+    - root.key
+    - root.cer
+    fix_evidence: null
+    artifact_class: B2_cli_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_with_placeholder_input
+    input_status: placeholder_input_used
+    validation_notes: X509 self-verification harness compiled and executed with generated
+      self-signed certificate placeholder input. Valgrind reported 0 errors. This
+      validates the generated C harness structure and API path, but does not strictly
+      reproduce the original issue because the original PoC input artifacts have not
+      been recovered.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-14675
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_14675
+  directory_name: issue_14675
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs: []
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: openssl verify silently ignores any but the first certificate in the certificates
+      argument
+    source_url: https://github.com/openssl/openssl/issues/14675
+    state: null
+    has_poc: 'YES'
+    poc_type: CLI+INPUT_SEED
+    quality: HIGH_CANDIDATE
+    component: X509/VERIFY
+    trigger_behavior: WRONG_ALERT_OR_PROTOCOL_BEHAVIOR
+    affected_version: 1.1.1f
+    critical_api_or_function:
+    - X509_verify_cert
+    root_cause: openssl verify does not process multiple certificates in the input
+      file
+    reproduction_command:
+    - cp /etc/ssl/certs/Certigna_Root_CA.pem /tmp/poc.pem
+    - echo "unverifiable garbage" >> /tmp/poc.pem
+    - openssl verify /tmp/poc.pem
+    input_artifact:
+    - /tmp/poc.pem
+    fix_evidence: null
+    artifact_class: B2_cli_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_with_placeholder_cert_bundle
+    input_status: placeholder_input_used
+    validation_notes: The generated C harness was translated from the CLI command
+      `openssl verify /tmp/poc.pem`. It compiled and executed using a placeholder
+      certificate bundle with appended garbage. This validates the X509 verification
+      API path, but does not strictly reproduce the original issue semantics.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-15899
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_15899
+  directory_name: issue_15899
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs:
+    - inputs/httpd.crt
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: 'openssl rsa -modulus segfaults: bn_expand_internal: Assertion `b->top
+      <= words'' failed'
+    source_url: https://github.com/openssl/openssl/issues/15899
+    state: null
+    has_poc: 'YES'
+    poc_type: CLI+SANITIZER_LOG
+    quality: HQ
+    component: BN/ASN1
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    affected_version: 3.0.0-beta2-dev
+    critical_api_or_function:
+    - bn_expand_internal
+    - EVP_PKEY_get_bn_param
+    root_cause: Uninitialized BIGNUM variable 'n' passed to EVP_PKEY_get_bn_param
+    reproduction_command:
+    - LD_LIBRARY_PATH=$(pwd) apps/openssl x509 -noout -modulus -in /tmp/httpd.crt
+    input_artifact:
+    - /tmp/httpd.crt
+    fix_evidence: null
+    artifact_class: B2_cli_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_with_non_buggy_sample_input
+    input_status: placeholder_input_used
+    validation_notes: The generated C harness was translated from the original CLI
+      command `openssl x509 -noout -modulus -in /tmp/httpd.crt`. It compiled and executed
+      successfully using a placeholder local certificate copied from the system CA
+      bundle. The harness extracted and printed the RSA modulus through X509_get_pubkey,
+      EVP_PKEY_get1_RSA, RSA_get0_key and BN_print_fp. Valgrind reported 0 errors.
+      This validates the harness structure and API path, but does not strictly reproduce
+      the original issue because the original /tmp/httpd.crt input has not been recovered.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-16196
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_16196
+  directory_name: issue_16196
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs:
+    - inputs/test.csr
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: openssl req segfault
+    source_url: https://github.com/openssl/openssl/issues/16196
+    state: null
+    has_poc: 'YES'
+    poc_type: CLI+INPUT_SEED
+    quality: HIGH_CANDIDATE
+    component: REQ/ASN1
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    affected_version: null
+    critical_api_or_function:
+    - BN_print
+    root_cause: null
+    reproduction_command:
+    - openssl req -newkey rsa:2048 -keyout test.key -out test.csr
+    - openssl req -modulus -in test.csr -noout
+    input_artifact:
+    - test.csr
+    fix_evidence: null
+    artifact_class: B2_cli_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_with_generated_csr
+    input_status: placeholder_input_used
+    validation_notes: The generated C harness was translated from the CLI command
+      `openssl req -modulus -in test.csr -noout`. It compiled and executed with a
+      generated RSA CSR as placeholder input. This validates the CSR parsing and RSA
+      modulus extraction path, but does not strictly reproduce the original issue.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-17715
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_17715
+  directory_name: issue_17715
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs: []
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: DRBG fails to initialize cipher_data prior to EVP_EncryptUpdate leading
+      to segfault
+    source_url: https://github.com/openssl/openssl/issues/17715
+    state: null
+    has_poc: null
+    poc_type: CLI+SANITIZER_LOG
+    quality: HIGH_CANDIDATE
+    component: RAND_DRBG/EVP_CIPHER_CTX
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    affected_version: 1.1.1a
+    critical_api_or_function:
+    - RAND_DRBG_generate
+    - EVP_EncryptUpdate
+    - EVP_CipherUpdate
+    - drbg_ctr_generate
+    - aesni_ecb_encrypt
+    root_cause: ctx->cipher_data is not being initialized prior to EVP_EncryptUpdate
+    reproduction_command:
+    - openssl x509 -in input.pem -out output.pem
+    - openssl req -new -key key.pem -out req.pem
+    - openssl pkcs12 -export -in cert.pem -out pkcs12.pem -name user
+    - openssl pkey -in pkey.pem -out pkey_out.pem
+    - openssl rsa -in rsa.pem -out rsa_out.pem
+    - openssl s_client -connect example.com:443
+    - openssl s_server -port 443
+    input_artifact:
+    - input.pem
+    - output.pem
+    - req.pem
+    - key.pem
+    - cert.pem
+    - pkcs12.pem
+    - pkey.pem
+    - pkey_out.pem
+    - rsa.pem
+    - rsa_out.pem
+    fix_evidence: null
+    artifact_class: B2_cli_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_with_placeholder_input
+    input_status: placeholder_input_used
+    validation_notes: The generated C harness was translated from a CLI PoC candidate
+      and compiled/executed using placeholder local inputs. This validates the harness
+      structure and API path, but does not strictly reproduce the original issue because
+      the original PoC input artifacts or environment have not been recovered.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-18168
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_18168
+  directory_name: issue_18168
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs:
+    - inputs/poc
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: Assertion failure in WPACKET_put_bytes__, packet.c:387, openssl-rsa
+    source_url: https://github.com/openssl/openssl/issues/18168
+    state: null
+    has_poc: 'YES'
+    poc_type: CLI+INPUT_SEED+SANITIZER_LOG
+    quality: HQ
+    component: WPACKET/DER_WRITER/RSA
+    trigger_behavior: ASSERTION_FAILURE
+    affected_version: 3.1.0-dev
+    critical_api_or_function:
+    - WPACKET_put_bytes__
+    - int_der_w_integer
+    - ossl_DER_w_ulong
+    - ossl_DER_w_RSASSA_PSS_params
+    - prepare_rsa_params
+    - key_to_pki_pem_priv_bio
+    - key2any_encode
+    - rsapss_to_PrivateKeyInfo_pem_encode
+    root_cause: null
+    reproduction_command:
+    - '# CFLAGS="-g -O0" CXXFLAGS="-g -O0" ./Configure no-shared no-module -DPEDANTIC
+      enable-tls1_3 enable-weak-ssl-ciphers enable-rc5 enable-md2 enable-ssl3 enable-ssl3-method
+      enable-nextprotoneg enable-ec_nistp_64_gcc_128 --debug'
+    - '# make -j; make install; make clean'
+    - '# openssl rsa -in poc -out /tmp/foo'
+    input_artifact:
+    - poc.zip
+    fix_evidence: null
+    artifact_class: B2_cli_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_with_generated_rsa_key
+    input_status: placeholder_input_used
+    validation_notes: The generated C harness was translated from the original CLI
+      command `openssl rsa -in poc -out /tmp/foo`. It compiled and executed successfully
+      using a generated RSA private key as placeholder input. This validates the RSA
+      key read/write API path, but does not strictly reproduce the original issue
+      because the original `poc` key file has not been recovered.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-18659
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_18659
+  directory_name: issue_18659
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs: []
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: CONF_modules_unload after OPENSSL_cleanup causes segfault
+    source_url: https://github.com/openssl/openssl/issues/18659
+    state: closed
+    has_poc: 'YES'
+    poc_type: C_API+STACKTRACE
+    quality: HQ
+    component: CONF/OPENSSL
+    trigger_behavior: SEGV
+    affected_version: null
+    critical_api_or_function:
+    - OPENSSL_cleanup
+    - CONF_modules_unload
+    root_cause: null
+    reproduction_command:
+    - clang++ -fsanitize=address -std=c++11 test.cpp -o test.elf -lcrypto -lssl &&
+      ./test.elf
+    input_artifact: null
+    fix_evidence: 'I''ve created a fix anyway in #18673'
+    artifact_class: A_ast_ready
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_no_valgrind_error
+    input_status: no_external_input_required_or_embedded
+    validation_notes: The extracted C PoC compiled and executed successfully against
+      system OpenSSL 3.0.13. Valgrind reported 0 errors. This validates local harness
+      execution, but strict reproduction requires the original affected version.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-19524
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_19524
+  directory_name: issue_19524
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs: []
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: ED25519_sign and ED448_sign missing check for private_key leading to segfault
+    source_url: https://github.com/openssl/openssl/issues/19524
+    state: null
+    has_poc: null
+    poc_type: C_API
+    quality: HQ
+    component: PKEY/ED25519/ED448
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    affected_version: openssl3.0.2, openssl 1.1.1r
+    critical_api_or_function:
+    - EVP_PKEY_new_raw_public_key
+    - EVP_MD_CTX_new
+    - EVP_DigestSignInit
+    - EVP_DigestSign
+    - OPENSSL_hexstr2buf
+    - OPENSSL_zalloc
+    root_cause: EVP_DigestUpdate() allows NULL to get passed to it, and digests don't
+      check for NULL.
+    reproduction_command:
+    - "OPENSSL_init();\r\nint ret = 0;\r\nint res;\r\nunsigned char *public = OPENSSL_hexstr2buf(\"\
+      7d4d0e7f6153a69b6242b522abbee685fda4420f8834b108c3bdae369ef549fa\", NULL);\r\
+      \nunsigned char *msg = OPENSSL_hexstr2buf(\"54657374\", NULL);\r\n\r\nsize_t\
+      \ sig_len;\r\nunsigned char *sigg = NULL;\r\n\r\nEVP_PKEY *pkey = EVP_PKEY_new_raw_public_key(NID_ED25519,\
+      \ NULL, public, 32);\r\nassert(pkey != NULL);\r\nEVP_MD_CTX *ctx = EVP_MD_CTX_new();\r\
+      \nres = EVP_DigestSignInit(ctx, NULL, NULL, NULL, pkey);\r\nassert(res == 1);\r\
+      \n\r\nif (EVP_DigestSign(ctx, NULL, &sig_len, msg, 4) != 1)\r\n   printf(\"\
+      EVP_DigestSign get the size of signature buffer fail\\n\");\r\nsigg = OPENSSL_zalloc(sig_len);\r\
+      \nif (EVP_DigestSign(ctx, sigg, &sig_len, msg, 4) != 1)\r\n   printf(\"EVP_DigestSign\
+      \ fail\\n\");\r\n\r\nprintf(\"ok\\n\");\r\nexit(ret);"
+    input_artifact: null
+    fix_evidence: null
+    artifact_class: C_rag_seed_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_with_controlled_openssl_error
+    input_status: no_external_input_required
+    validation_notes: The C harness was generated from a semantic RAG seed and compiled/executed
+      locally to validate the target OpenSSL API path. Valgrind reported 0 errors.
+      This is not strict vulnerability reproduction.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-21935
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_21935
+  directory_name: issue_21935
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs: []
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: RSA 1.1.1 API broken in openssl-SNAP-20230831
+    source_url: https://github.com/openssl/openssl/issues/21935
+    state: null
+    has_poc: null
+    poc_type: C_API+STACKTRACE
+    quality: HQ
+    component: PKEY/RSA
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    affected_version: openssl-SNAP-20230831
+    critical_api_or_function:
+    - EVP_PKEY_new
+    - RSA_new
+    - RSA_set0_factors
+    - RSA_set0_key
+    - EVP_PKEY_assign
+    - EVP_DigestSignInit
+    - EVP_DigestSign
+    - EVP_MD_CTX_free
+    - EVP_PKEY_free
+    root_cause: NULL pointer dereference in BN_is_negative function when handling
+      invalid BIGNUM pointers.
+    reproduction_command:
+    - RETVAL = EVP_PKEY_new();
+    - RSA *rsa = RSA_new();
+    - checkerr(RSA_set0_factors(rsa, p, q));
+    - checkerr(RSA_set0_key(rsa, n, e, d));
+    - checkerr(EVP_PKEY_assign(RETVAL, EVP_PKEY_RSA, (char*)rsa));
+    - checkerr(EVP_DigestSignInit(ctx, NULL, md, NULL, pkey));
+    - error = EVP_DigestSign(ctx, sigbuf, &buflen, msgbuf, msglen);
+    - EVP_MD_CTX_free(ctx);
+    - EVP_PKEY_free(pkey);
+    - checkerr(error);
+    - RETVAL = newSVpvn((char*)sigbuf, buflen);
+    input_artifact: null
+    fix_evidence: null
+    artifact_class: C_rag_seed_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_as_rag_seed_candidate
+    input_status: no_external_input_required
+    validation_notes: The C harness was generated from a semantic RAG seed and compiled/executed
+      locally to validate the target OpenSSL API path. Valgrind reported 0 errors.
+      This is not strict vulnerability reproduction.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-22388
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_22388
+  directory_name: issue_22388
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs:
+    - inputs/hello.txt
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: Support X25519 and X448 in CMS
+    source_url: https://github.com/openssl/openssl/issues/22388
+    state: null
+    has_poc: null
+    poc_type: CLI+INPUT_SEED
+    quality: HIGH_CANDIDATE
+    component: CMS/X509
+    trigger_behavior: WRONG_RESULT
+    affected_version: 3.0.8
+    critical_api_or_function:
+    - evp_pkey_asym_cipher_init
+    - ossl_cms_pkey_get_ri_type
+    root_cause: operation not supported for this keytype
+    reproduction_command:
+    - '[create key and certificate X25519/X448](https://github.com/zablockil/enc/blob/main/smime/standalone/standalone_EDWARDS_dual-key.sh)'
+    - $ echo "Hello world\!" > hello.txt
+    - $ openssl cms -encrypt -stream -binary -keyid -outform DER -recip "public_user/user_E.crt"
+      -in "hello.txt" -out "hello.der"
+    input_artifact:
+    - hello.txt
+    - public_user/user_E.crt
+    fix_evidence: null
+    artifact_class: B2_cli_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_with_placeholder_input
+    input_status: placeholder_input_used
+    validation_notes: The generated C harness was translated from a CLI PoC candidate
+      and compiled/executed using placeholder local inputs. This validates the harness
+      structure and API path, but does not strictly reproduce the original issue because
+      the original PoC input artifacts or environment have not been recovered.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-22842
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_22842
+  directory_name: issue_22842
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs: []
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: SIGSEGV from EVP_MAC_CTX_get_mac_size()
+    source_url: https://github.com/openssl/openssl/issues/22842
+    state: null
+    has_poc: null
+    poc_type: C_API
+    quality: HQ
+    component: EVP/MAC
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    affected_version: 3.1.1
+    critical_api_or_function:
+    - EVP_MAC_CTX_new()
+    - EVP_MAC_CTX_get_mac_size()
+    - EVP_MAC_init()
+    root_cause: NULL pointer dereference in EVP_MAC_CTX_get_mac_size() due to uninitialized
+      algctx cipher struct
+    reproduction_command:
+    - EVP_MAC_CTX_new()
+    - EVP_MAC_CTX_get_mac_size()
+    input_artifact:
+    - bug.c.txt
+    fix_evidence: null
+    artifact_class: C_rag_seed_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_as_rag_seed_candidate
+    input_status: no_external_input_required
+    validation_notes: The C harness was generated from a semantic RAG seed and compiled/executed
+      locally to validate the target OpenSSL API path. Valgrind reported 0 errors.
+      This is not strict vulnerability reproduction.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-23325
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_23325
+  directory_name: issue_23325
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs:
+    - inputs/ca.cnf
+    - inputs/cacert.srl
+    - inputs/cert.csr
+    - inputs/demoCA/crlnumber
+    - inputs/demoCA/crlnumber.old
+    - inputs/demoCA/index.txt
+    - inputs/demoCA/serial
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: 'X509: wrongly rejects cert without CDP if CRL contains IDP with name matching
+      cert issuer'
+    source_url: https://github.com/openssl/openssl/issues/23325
+    state: null
+    has_poc: null
+    poc_type: CLI+INPUT_SEED
+    quality: HIGH_CANDIDATE
+    component: X509/CRL
+    trigger_behavior: WRONG_RESULT
+    affected_version: null
+    critical_api_or_function:
+    - X509_V_ERR_DIFFERENT_CRL_SCOPE
+    - crl_crldp_check
+    - get_crl_score
+    root_cause: Incomplete implementation of CRL scope checks in case an IDP is present
+      in a CRL but no CDPs are present in the target cert.
+    reproduction_command:
+    - 'openssl verify -attime 1705520210 -trusted cacert.pem -crl_check -CRLfile crl-no-IDP.pem
+      cert-no-CDP.pem cert-no-CDP.pem: OK'
+    - 'openssl verify -attime 1705520210 -trusted cacert.pem -crl_check -CRLfile crl-no-IDP.pem
+      cert-with-CDP.pem cert-with-CDP.pem: OK'
+    - 'openssl verify -attime 1705520210 -trusted cacert.pem -crl_check -CRLfile crl-with-IDP.pem
+      cert-with-CDP.pem cert-with-CDP.pem: OK'
+    - 'openssl verify -attime 1705520210 -trusted cacert.pem -crl_check -CRLfile crl-with-IDP.pem
+      cert-no-CDP.pem CN=x509-check-test error 44 at 0 depth lookup: different CRL
+      scope error cert-no-CDP.pem: verification failed'
+    - 'openssl verify -attime 1768585400 -trusted demoCA/cacert2.pem -crl_check -CRLfile
+      demoCA/crl-with-macthing-IDP.pem demoCA/cert2-no-CDP.pem CN=x509-check-test2
+      error 44 at 0 depth lookup: different CRL scope error demoCA/cert2-no-CDP.pem:
+      verification failed'
+    input_artifact:
+    - demoCA.zip
+    - crl-no-IDP.pem
+    - cert-no-CDP.pem
+    - cert-with-CDP.pem
+    - crl-with-IDP.pem
+    - demoCA/cacert2.pem
+    - demoCA/crl-with-macthing-IDP.pem
+    - demoCA/cert2-no-CDP.pem
+    fix_evidence: null
+    artifact_class: B2_cli_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_with_placeholder_crl_validation_inputs
+    input_status: placeholder_input_used
+    validation_notes: The generated C harness was translated from an OpenSSL verify
+      command using CRL checking. It compiled and executed with generated placeholder
+      CA, end-entity certificate, and CRL inputs. Valgrind reported 0 errors. This
+      validates the X509_STORE CRL verification API path, but does not strictly reproduce
+      the original issue because the original CA/CRL/certificate inputs have not been
+      recovered.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-26106
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_26106
+  directory_name: issue_26106
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs:
+    - inputs/test.p12
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: 'Segmentation fault in X509_ALGOR_get0 during PKCS#12 processing '
+    source_url: https://github.com/openssl/openssl/issues/26106
+    state: null
+    has_poc: null
+    poc_type: INPUT_SEED+CLI+SANITIZER_LOG
+    quality: HQ
+    component: PKCS12/X509_ALGOR
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    affected_version: 3.4, 3.5.0-dev
+    critical_api_or_function:
+    - X509_ALGOR_get0
+    root_cause: NULL pointer dereference in X509_ALGOR_get0 during PKCS#12 processing
+    reproduction_command:
+    - (gdb) r
+    - 'Starting program: /home/user/gits/openssl/apps/openssl pkcs12 -in X509_ALGOR_get0_testpassword.pk12
+      -passin pass:testpassword'
+    - Program received signal SIGSEGV, Segmentation fault.
+    - 0x00000000005327f9 in X509_ALGOR_get0 ()
+    - (gdb) bt
+    - '#0  0x00000000005327f9 in X509_ALGOR_get0 ()'
+    - '#1  0x00000000004314c0 in pkcs12_main ()'
+    - '#2  0x000000000042cab2 in do_cmd ()'
+    - '#3  0x000000000040240d in main ()'
+    input_artifact:
+    - X509_ALGOR_get0_testpassword.pk12.gz
+    fix_evidence: null
+    artifact_class: B2_cli_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_with_placeholder_input
+    input_status: placeholder_input_used
+    validation_notes: PKCS12 parse harness compiled and executed with generated PKCS#12
+      placeholder input. Valgrind reported 0 errors. This validates the generated
+      C harness structure and API path, but does not strictly reproduce the original
+      issue because the original PoC input artifacts have not been recovered.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-2630
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_2630
+  directory_name: issue_2630
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs: []
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: 'Secure heap impl.: segmentation fault in sh_add_to_list for small allocations'
+    source_url: https://github.com/openssl/openssl/issues/2630
+    state: closed
+    has_poc: 'YES'
+    poc_type: C_API
+    quality: HQ
+    component: BIO/SECURE_HEAP
+    trigger_behavior: SEGV
+    affected_version: null
+    critical_api_or_function:
+    - CRYPTO_secure_malloc_init
+    - BIO_new
+    - BIO_write
+    root_cause: null
+    reproduction_command:
+    - example1();
+    - example2();
+    input_artifact: null
+    fix_evidence: '#2657'
+    artifact_class: A_ast_ready
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_no_valgrind_error
+    input_status: no_external_input_required_or_embedded
+    validation_notes: The extracted C PoC compiled and executed successfully against
+      system OpenSSL 3.0.13. Valgrind reported 0 errors. This validates local harness
+      execution, but strict reproduction requires the original affected version.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-27572
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_27572
+  directory_name: issue_27572
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs:
+    - inputs/req.der
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: openssl cmp -cmd cr corrupts UTF-8 subject names
+    source_url: https://github.com/openssl/openssl/issues/27572
+    state: null
+    has_poc: 'YES'
+    poc_type: CLI+INPUT_SEED
+    quality: HQ
+    component: CMP/ASN1
+    trigger_behavior: WRONG_OUTPUT
+    affected_version: 3.3.3
+    critical_api_or_function:
+    - parse_name
+    root_cause: Hardcoded use of MBSTRING_ASC when calling parse_name
+    reproduction_command:
+    - $ openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:prime256v1 -out key.pem
+    - '$ openssl cmp -cmd cr -config "" -unprotected_requests -secret pass: -recipient
+      / -subject "/CN=Dämlich" -newkey key.pem -reqout_only req.der'
+    - $ openssl asn1parse -inform DER -in req.der
+    input_artifact:
+    - key.pem
+    - req.der
+    fix_evidence: null
+    artifact_class: B2_cli_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_with_non_buggy_sample_input
+    input_status: placeholder_input_used
+    validation_notes: The generated C harness was translated from the original CLI
+      command and compiled/executed using a placeholder local input. This validates
+      the harness structure but does not strictly reproduce the original issue because
+      the original PoC input artifact has not been recovered.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-28669
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_28669
+  directory_name: issue_28669
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs: []
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: NULL rwlock dereference in CRYPTO_secure_used when secure heap is not initialized
+    source_url: https://github.com/openssl/openssl/issues/28669
+    state: closed
+    has_poc: 'YES'
+    poc_type: C_API+STACKTRACE
+    quality: null
+    component: CRYPTO/MEM_SEC
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    affected_version: null
+    critical_api_or_function:
+    - CRYPTO_secure_used
+    root_cause: null
+    reproduction_command:
+    - "int main(){\n    // Call without initializing the secure heap\n    size_t u\
+      \ = CRYPTO_secure_used();\n    (void)u;\n    return 0;\n}"
+    input_artifact: null
+    fix_evidence: null
+    artifact_class: A_ast_ready
+    local_compile: true
+    local_run: false
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / libcrypto.so.3
+    local_test_result: segmentation_fault_and_valgrind_invalid_read
+    input_status: null
+    validation_notes: 'Compiled successfully against system OpenSSL 3.0.13. Normal
+      execution triggered SIGSEGV with exit code 139. Valgrind reported Invalid read
+      of size 4 and ERROR SUMMARY: 1 errors from 1 contexts. This is local artifact
+      validation, not strict reproduction against the original affected version.'
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-29418
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_29418
+  directory_name: issue_29418
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs: []
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: openssl x509 -purpose produces inconsistent results depending on parsing
+      options
+    source_url: https://github.com/openssl/openssl/issues/29418
+    state: null
+    has_poc: 'YES'
+    poc_type: CLI+INPUT_SEED
+    quality: HQ
+    component: X509/X509V3/ASN1
+    trigger_behavior: WRONG_RESULT
+    affected_version: 3.0.13
+    critical_api_or_function:
+    - X509_get_ext_count
+    - X509_get_ext
+    - OBJ_nid2sn
+    - X509_EXTENSION_free
+    - X509_delete_ext
+    root_cause: Inconsistent handling of extensions when using the -ext option with
+      openssl x509 command.
+    reproduction_command:
+    - openssl x509 -in ./openssl/test/certs/servercert.pem -noout -purpose
+    - openssl x509 -in ./openssl/test/certs/servercert.pem -ext subjectAltName -noout
+      -purpose
+    input_artifact:
+    - ./openssl/test/certs/servercert.pem
+    fix_evidence: null
+    artifact_class: B2_cli_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_with_non_buggy_sample_input
+    input_status: placeholder_input_used
+    validation_notes: The generated C harness was translated from the original CLI
+      command and compiled/executed using a placeholder local input. This validates
+      the harness structure but does not strictly reproduce the original issue because
+      the original PoC input artifact has not been recovered.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-29574
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_29574
+  directory_name: issue_29574
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs:
+    - inputs/cert.disk
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: Loading "short" certificate is accepted but corrupts openssl
+    source_url: https://github.com/openssl/openssl/issues/29574
+    state: null
+    has_poc: null
+    poc_type: C_API+CLI+INPUT_SEED
+    quality: HIGH_CANDIDATE
+    component: X509/X509V3/ASN1
+    trigger_behavior: CORRUPTED_STATE
+    affected_version: null
+    critical_api_or_function:
+    - SSL_CTX_use_PrivateKey_ASN1
+    - SSL_CTX_use_certificate_ASN1
+    - X509_Object::choose_sig_format
+    - X509_CA::make_cert
+    - PKCS8::PEM_encode
+    - PEM_encode
+    root_cause: null
+    reproduction_command:
+    - g++ main.cpp --std=c++23 -I/usr/include/botan-3 -lbotan-3
+    - $ openssl x509 -noout -text -in cert.disk
+    input_artifact:
+    - cert.disk
+    - key.disk
+    fix_evidence: null
+    artifact_class: B2_cli_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_with_placeholder_input
+    input_status: placeholder_input_used
+    validation_notes: The generated C harness was translated from a CLI PoC candidate
+      and compiled/executed using placeholder local inputs. This validates the harness
+      structure and API path, but does not strictly reproduce the original issue because
+      the original PoC input artifacts or environment have not been recovered.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-29645
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_29645
+  directory_name: issue_29645
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs: []
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: BIO_set_data() causes crash
+    source_url: https://github.com/openssl/openssl/issues/29645
+    state: null
+    has_poc: null
+    poc_type: C_API+SANITIZER_LOG
+    quality: HQ
+    component: BIO/CONF/ERR
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    affected_version: 3.5.4
+    critical_api_or_function:
+    - BIO_set_data
+    - BIO_free
+    root_cause: NULL pointer dereference in BIO_free when called with a BIO that was
+      not properly initialized
+    reproduction_command:
+    - include <openssl/bio.h>
+    - int main()
+    - '{'
+    - '    BIO *bio = BIO_new(BIO_s_socket());'
+    - '    uint8_t data[2] = {0};'
+    - '    BIO_set_data(bio, data);'
+    - '    BIO_free(bio);'
+    - '    return 0;'
+    - '}'
+    input_artifact: null
+    fix_evidence: null
+    artifact_class: C_rag_seed_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_as_rag_seed_candidate
+    input_status: no_external_input_required
+    validation_notes: The C harness was generated from a semantic RAG seed and compiled/executed
+      locally to validate the target OpenSSL API path. Valgrind reported 0 errors.
+      This is not strict vulnerability reproduction.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-30291
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_30291
+  directory_name: issue_30291
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs:
+    - inputs/text.txt
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: 'CMS regression: signed attributes with ED448'
+    source_url: https://github.com/openssl/openssl/issues/30291
+    state: null
+    has_poc: null
+    poc_type: CLI+INPUT_SEED
+    quality: HIGH_CANDIDATE
+    component: CMS/ED448
+    trigger_behavior: REGRESSION_TEST
+    affected_version: 3.5, 3.6
+    critical_api_or_function:
+    - CMS_sign
+    - CMS_verify
+    root_cause: REGRESSION
+    reproduction_command:
+    - openssl req -x509 -newkey ed448 -keyout key.pem -out cert.pem -nodes -subj "/CN=blah"
+      -addext keyUsage=nonRepudiation,digitalSignature,keyEncipherment
+    - echo "text to sign" > text.txt
+    - openssl cms -sign -signer cert.pem -inkey key.pem -in text.txt -out out.cms
+      -md shake256
+    - openssl cms -verify -in out.cms -CAfile cert.pem -content text.txt
+    input_artifact:
+    - key.pem
+    - cert.pem
+    - text.txt
+    - out.cms
+    fix_evidence: null
+    artifact_class: B2_cli_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_with_placeholder_input
+    input_status: placeholder_input_used
+    validation_notes: CMS sign/verify harness compiled and executed with generated
+      certificate/key/text placeholder inputs. Valgrind reported 0 errors. This validates
+      the generated C harness structure and API path, but does not strictly reproduce
+      the original issue because the original PoC input artifacts have not been recovered.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-30432
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_30432
+  directory_name: issue_30432
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs:
+    - inputs/ca_cert.srl
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: dsa_with_SHA384 and dsa_with_SHA512 verify error
+    source_url: https://github.com/openssl/openssl/issues/30432
+    state: null
+    has_poc: null
+    poc_type: CLI+INPUT_SEED
+    quality: HIGH_CANDIDATE
+    component: PKEY/DSA/RSA
+    trigger_behavior: VERIFY_ERROR
+    affected_version: 3.0.15, 3.5.4
+    critical_api_or_function:
+    - openssl dsaparam
+    - openssl gendsa
+    - openssl req
+    - openssl x509
+    - openssl verify
+    root_cause: OID of dsa_with_SHA384-512 is incorrect
+    reproduction_command:
+    - '# openssl dsaparam -out ca_dsaparam.pem 2048'
+    - '# openssl gendsa -out ca_key.pem ca_dsaparam.pem'
+    - '# openssl req -new -x509 -key ca_key.pem -sha384 -out ca_cert.pem -days 365
+      -subj "/CN=Root CA"'
+    - '# openssl gendsa -out ee_key.pem ca_dsaparam.pem'
+    - '# openssl req -new -key ee_key.pem -out ee_csr.pem -subj "/CN=End Entity"'
+    - '# openssl x509 -req -in ee_csr.pem -CA ca_cert.pem -CAkey ca_key.pem -CAcreateserial
+      -out ee_cert.pem -days 365 -sha384'
+    - '# openssl verify -CAfile ca_cert.pem ee_cert.pem'
+    input_artifact:
+    - ca_dsaparam.pem
+    - ca_key.pem
+    - ca_cert.pem
+    - ee_key.pem
+    - ee_csr.pem
+    - ee_cert.pem
+    fix_evidence: null
+    artifact_class: B2_cli_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_with_placeholder_input
+    input_status: placeholder_input_used
+    validation_notes: DSA certificate-chain verification harness compiled and executed
+      with generated DSA CA/end-entity certificate placeholder inputs. Valgrind reported
+      0 errors. This validates the generated C harness structure and API path, but
+      does not strictly reproduce the original issue because the original PoC input
+      artifacts have not been recovered.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-30581
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_30581
+  directory_name: issue_30581
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs:
+    - inputs/test.p12
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: NULL pointer dereference in openssl pkcs12 -info when printing PBMAC1 salt
+      metadata
+    source_url: https://github.com/openssl/openssl/issues/30581
+    state: null
+    has_poc: null
+    poc_type: CLI+INPUT_SEED+CLI+SANITIZER_LOG
+    quality: HIGH_CANDIDATE
+    component: PKCS12/ASN1
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    affected_version: OpenSSL 4.1.0-dev
+    critical_api_or_function:
+    - ASN1_STRING_length
+    - pkcs12_main
+    - do_cmd
+    - main
+    - BIO_puts
+    - BIO_printf
+    - ASN1_INTEGER_get
+    root_cause: Dereferencing a NULL pointer when decoding PBKDF2 salt as ASN.1 NULL
+      in the CLI info path.
+    reproduction_command:
+    - cd /tmp
+    - git clone --depth=1 https://github.com/openssl/openssl openssl-asan
+    - cd /tmp/openssl-asan
+    - make distclean
+    - ./config enable-asan no-shared
+    - make include/openssl/opensslv.h
+    - make -j4 apps/openssl
+    - ASAN_OPTIONS=detect_leaks=0 \
+    - OPENSSL_MODULES=/tmp/openssl-asan/providers \
+    - /tmp/openssl-asan/apps/openssl pkcs12 \
+    - '  -in /tmp/pbmac1_null_salt.p12 -info -noout -passin pass:any'
+    input_artifact:
+    - /tmp/pbmac1_null_salt.p12
+    fix_evidence: null
+    artifact_class: B2_cli_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_with_placeholder_input
+    input_status: placeholder_input_used
+    validation_notes: The generated C harness was translated from a CLI PoC candidate
+      and compiled/executed using placeholder local inputs. This validates the harness
+      structure and API path, but does not strictly reproduce the original issue because
+      the original PoC input artifacts or environment have not been recovered.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-30889
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_30889
+  directory_name: issue_30889
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs: []
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: Segfault in 'openssl pkey' for interactive encryption (v4.0.0)
+    source_url: https://github.com/openssl/openssl/issues/30889
+    state: null
+    has_poc: null
+    poc_type: CLI
+    quality: HQ
+    component: PKEY/ML-DSA/RSA
+    trigger_behavior: SEGV
+    affected_version: 4.0.0
+    critical_api_or_function:
+    - pkey_main
+    - encode_private_key
+    root_cause: NULL_DEREFERENCE_CRASH
+    reproduction_command:
+    - sudo ./config --prefix=/usr/local/ssl -d no-asm -O0
+    - sudo make -j$(nproc)
+    - sudo make install
+    - /usr/local/ssl/bin/openssl genpkey -algorithm ML-DSA-65 -out plain.pem
+    - /usr/local/ssl/bin/openssl pkey -in plain.pem -aes-256-cbc -out enc.pem
+    input_artifact:
+    - plain.pem
+    fix_evidence: null
+    artifact_class: B2_cli_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_with_placeholder_input
+    input_status: placeholder_input_used
+    validation_notes: The generated C harness was translated from a CLI PoC candidate
+      and compiled/executed using placeholder local inputs. This validates the harness
+      structure and API path, but does not strictly reproduce the original issue because
+      the original PoC input artifacts or environment have not been recovered.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-6788
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_6788
+  directory_name: issue_6788
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs:
+    - inputs/ca.cnf
+    - inputs/ca.crt
+    - inputs/demoCA/crlnumber
+    - inputs/demoCA/crlnumber.old
+    - inputs/demoCA/index.txt
+    - inputs/demoCA/serial
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: openssl crl does not work properly if -CAfile contains multiple CA certs
+      with the same subject
+    source_url: https://github.com/openssl/openssl/issues/6788
+    state: null
+    has_poc: null
+    poc_type: CLI+INPUT_SEED
+    quality: HIGH_CANDIDATE
+    component: CRL/X509
+    trigger_behavior: WRONG_RESULT
+    affected_version: null
+    critical_api_or_function:
+    - X509_STORE_CTX_get_obj_by_subject
+    - X509_verify_cert
+    root_cause: The crl application's use of X509_STORE_CTX_get_obj_by_subject, which
+      matches the first certificate with an identical subject, relies on the unstable
+      qsort function to sort certificates before the lookup, resulting in inconsistent
+      verification behavior.
+    reproduction_command:
+    - /usr/local/bin/openssl genpkey -algorithm RSA -out ca1.key
+    - /usr/local/bin/openssl genpkey -algorithm RSA -out ca2.key
+    - /usr/local/bin/openssl genpkey -algorithm RSA -out ca3.key
+    - /usr/local/bin/openssl genpkey -algorithm RSA -out ca4.key
+    - /usr/local/bin/openssl req -new -x509 -days 3650 -key ca1.key -out ca1.crt -config
+      identical.cnf -batch
+    - /usr/local/bin/openssl req -new -x509 -days 3650 -key ca2.key -out ca2.crt -config
+      identical.cnf -batch
+    - /usr/local/bin/openssl req -new -x509 -days 3650 -key ca3.key -out ca3.crt -config
+      ca3.cnf -batch
+    - /usr/local/bin/openssl req -new -x509 -days 3650 -key ca4.key -out ca4.crt -config
+      ca3.cnf -batch
+    - cat ca1.crt ca2.crt ca3.crt ca4.crt > ca_bundle.pem
+    - mkdir ca_dir
+    - touch ca_dir/index.txt
+    - cp ca2.crt ca_dir/ca.crt
+    - cp ca2.key ca_dir/ca.key
+    - /usr/local/bin/openssl crl -in crl_test.crl -inform DER -CAfile CA.pem -noout
+    input_artifact:
+    - ca1.key
+    - ca2.key
+    - ca3.key
+    - ca4.key
+    - ca1.crt
+    - ca2.crt
+    - ca3.crt
+    - ca4.crt
+    - ca_bundle.pem
+    - ca_dir/index.txt
+    - ca_dir/ca.crt
+    - ca_dir/ca.key
+    - crl_test.crl
+    - CA.pem
+    - identical.cnf
+    - ca3.cnf
+    fix_evidence: null
+    artifact_class: B2_cli_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_with_placeholder_input
+    input_status: placeholder_input_used
+    validation_notes: CRL parse harness compiled and executed with generated CRL placeholder
+      input. Valgrind reported 0 errors. This validates the generated C harness structure
+      and API path, but does not strictly reproduce the original issue because the
+      original PoC input artifacts have not been recovered.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-8435
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_8435
+  directory_name: issue_8435
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs:
+    - inputs/message.txt
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: SM2 private key cannot produce valid signatures
+    source_url: https://github.com/openssl/openssl/issues/8435
+    state: null
+    has_poc: 'YES'
+    poc_type: CLI+INPUT_SEED
+    quality: HIGH_CANDIDATE
+    component: PKEY/ECC/SM2
+    trigger_behavior: WRONG_RESULT
+    affected_version: null
+    critical_api_or_function:
+    - pkey
+    - pkeyutl
+    - sm2_id
+    root_cause: OpenSSL treats SM2 keys like normal ECC keys, leading to invalid private
+      keys.
+    reproduction_command:
+    - openssl pkey -in sm2_bad.key -pubout > sm2_bad.key.pub
+    - openssl pkeyutl -inkey sm2_bad.key -in /etc/lsb-release -rawin -sign -pkeyopt
+      sm2_id:Alice > sm2_bad.sig
+    - openssl pkeyutl -inkey sm2_bad.key.pub -pubin -in /etc/lsb-release -rawin -verify
+      -pkeyopt sm2_id:Alice -sigfile sm2_bad.sig
+    input_artifact:
+    - sm2_bad.key
+    - /etc/lsb-release
+    fix_evidence: null
+    artifact_class: B2_cli_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_with_generated_sm2_key
+    input_status: placeholder_input_used
+    validation_notes: The generated C harness was translated from the original CLI
+      commands involving `openssl pkey` and `openssl pkeyutl` with SM2 id Alice. It
+      compiled and executed using a generated SM2 key and placeholder message. This
+      validates the PKEY/SM2 sign/verify API path, but does not strictly reproduce
+      the original issue because the original sm2_bad.key input has not been recovered.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-8980
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_8980
+  directory_name: issue_8980
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs: []
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: OpenSSL 1.0.2 branch on uninitialized memory in EVP_CIPHER_CTX_copy
+    source_url: https://github.com/openssl/openssl/issues/8980
+    state: closed
+    has_poc: 'YES'
+    poc_type: C_API
+    quality: HIGH_CANDIDATE
+    component: EVP/AES_GCM
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    affected_version: 1.0.2
+    critical_api_or_function:
+    - EVP_CIPHER_CTX_new
+    - EVP_aes_128_gcm
+    - EVP_EncryptInit_ex
+    - EVP_CIPHER_CTX_copy
+    root_cause: Uninitialized memory access in EVP_CIPHER_CTX_copy
+    reproduction_command:
+    - gcc poc.c -o poc -lssl -lcrypto
+    - ./poc
+    input_artifact: null
+    fix_evidence: 'mattcaswell: ''Hmm. Probably this is just a bug. Since 1.0.2 is
+      in security-fix only mode I think we''ll probably not fix this.'''
+    artifact_class: A_ast_ready
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_no_valgrind_error
+    input_status: no_external_input_required
+    validation_notes: The C PoC was extracted from issue evidence and normalized as
+      an AST-ready harness. The harness preserves the EVP_CIPHER_CTX_copy API path
+      and adds resource cleanup to avoid validation noise from harness-owned allocations.
+      It compiled and executed locally under OpenSSL 3.0.13 with Valgrind reporting
+      0 errors. This validates the harness structure and API path, but strict reproduction
+      requires testing against the original affected OpenSSL 1.0.2 branch.
+  status: ready_for_ingestion
+  notes: []
+- poc_id: OPENSSL-ISSUE-9043
+  source_library: openssl
+  corpus_root: datasets/openssl/poc_artifacts
+  artifact_path: datasets/openssl/poc_artifacts/issue_9043
+  directory_name: issue_9043
+  artifact_files:
+    metadata_json:
+    - metadata.json
+    readme_files:
+    - README.md
+    poc_c_files:
+    - poc.c
+    poc_dir: []
+    run_sh:
+    - run.sh
+    scripts: []
+    inputs: []
+    logs: []
+    sources: []
+    notes: []
+    patch_files: []
+    reproduction_result: []
+    version_matrix: []
+    quality_report: []
+    triage_report: []
+    other_files:
+    - poc
+  metadata_summary:
+    title: NULL pointer dereference in CSR text output code
+    source_url: https://github.com/openssl/openssl/issues/9043
+    state: null
+    has_poc: null
+    poc_type: INPUT_SEED
+    quality: HQ
+    component: X509/CSR/ASN1
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    affected_version: 1.1.1b
+    critical_api_or_function:
+    - X509_ATTRIBUTE_get0_type
+    root_cause: NULL pointer dereference in CSR text output code
+    reproduction_command:
+    - openssl req -in poc.csr -text -noout
+    input_artifact:
+    - poc.csr
+    fix_evidence: null
+    artifact_class: C_rag_seed_to_c_candidate
+    local_compile: true
+    local_run: true
+    strict_reproduction: false
+    tested_library: OpenSSL 3.0.13 / system libssl-libcrypto
+    local_test_result: compiled_and_executed_as_rag_seed_candidate
+    input_status: placeholder_input_used
+    validation_notes: The C harness was generated from a semantic RAG seed and compiled/executed
+      locally to validate the target OpenSSL API path. Valgrind reported 0 errors.
+      This is not strict vulnerability reproduction.
+  status: ready_for_ingestion
+  notes: []

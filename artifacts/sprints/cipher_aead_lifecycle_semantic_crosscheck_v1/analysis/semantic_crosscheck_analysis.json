@@ -1,0 +1,164 @@
+{
+  "candidate_reclassification": [
+    {
+      "case_id": "aead_006_final_without_update_gcm_encrypt",
+      "claim_level": "legal_semantics",
+      "doc_support": "sufficient: OpenSSL AEAD docs allow zero or more data updates before finish; PSA docs also say update zero, one or more times before finish.",
+      "new_classification": "legal_semantics",
+      "next_action": "downgrade; keep as negative feedback for AEAD lifecycle scheduler.",
+      "observed_cross_library_behavior": "OpenSSL succeeds with empty plaintext/AAD-only GCM final; mbedTLS PSA also succeeds with zero data updates and returns tag_len=16.",
+      "previous_classification": "semantic_divergence_candidate"
+    },
+    {
+      "case_id": "aead_009_set_tag_after_final_gcm_decrypt",
+      "claim_level": "permissive_but_harmless",
+      "doc_support": "sufficient for ordering rule: OpenSSL docs require SET_TAG before decrypt final; source indicates ctrl success is state-permissive and not evidence of authentication change.",
+      "new_classification": "permissive_but_harmless",
+      "next_action": "do not promote to A-path; optional version matrix only if older OpenSSL state handling is suspected.",
+      "observed_cross_library_behavior": "OpenSSL final-before-set-tag fails authentication, then post-final SET_TAG ctrl returns success; PSA has no post-final tag setter and therefore maps to mapping_gap.",
+      "previous_classification": "permissive_behavior"
+    },
+    {
+      "case_id": "aead_012_wrong_tag_length_gcm_decrypt",
+      "claim_level": "legal_semantics",
+      "doc_support": "sufficient: OpenSSL GCM SET_TAG allows taglen 1..16; PSA exposes shortened-tag AEAD algorithms.",
+      "new_classification": "legal_semantics",
+      "next_action": "downgrade; rename future case from wrong_tag_length to truncated_tag_length unless using truly invalid lengths.",
+      "observed_cross_library_behavior": "OpenSSL accepts tag length 8; mbedTLS PSA shortened-tag GCM with 8-byte tag encrypts and decrypts successfully.",
+      "previous_classification": "semantic_divergence_candidate"
+    }
+  ],
+  "mbedtls_cases": {
+    "aead_006_final_without_update_gcm_encrypt": {
+      "case_result": "legal_semantics",
+      "classification": "legal_semantics",
+      "exit_code": 0,
+      "library": "mbedtls",
+      "local_case_id": "mbedtls_final_without_update_gcm_encrypt",
+      "prior_openssl_case_id": "aead_006_final_without_update_gcm_encrypt",
+      "status": "run_ok",
+      "stdout_summary": [
+        "LIBRARY=mbedtls_psa",
+        "CASE_ID=mbedtls_final_without_update_gcm_encrypt",
+        "STATE_SEQUENCE=final_without_update",
+        "STEP=psa_crypto_init status=0",
+        "STEP=psa_import_key status=0 key=1073741824",
+        "STEP=psa_aead_encrypt_setup status=0",
+        "STEP=psa_aead_set_nonce status=0",
+        "STEP=psa_aead_update_ad status=0",
+        "MUTATION_STEP=psa_aead_finish_without_data status=0 ciphertext_len=0 tag_len=16",
+        "CASE_RESULT=legal_semantics"
+      ]
+    },
+    "aead_009_set_tag_after_final_gcm_decrypt": {
+      "case_result": "mapping_gap",
+      "classification": "mapping_gap",
+      "exit_code": 0,
+      "library": "mbedtls",
+      "local_case_id": "mbedtls_set_tag_after_final_gcm_decrypt",
+      "prior_openssl_case_id": "aead_009_set_tag_after_final_gcm_decrypt",
+      "status": "run_ok",
+      "stdout_summary": [
+        "LIBRARY=mbedtls_psa",
+        "CASE_ID=mbedtls_set_tag_after_final_gcm_decrypt",
+        "STATE_SEQUENCE=set_tag_after_final",
+        "MAPPING=PSA AEAD has psa_aead_verify(tag) as the decrypt final operation",
+        "MAPPING=There is no post-final SET_TAG ctrl equivalent to OpenSSL EVP_CTRL_GCM_SET_TAG",
+        "CASE_RESULT=mapping_gap"
+      ]
+    },
+    "aead_012_wrong_tag_length_gcm_decrypt": {
+      "case_result": "legal_semantics",
+      "classification": "legal_semantics",
+      "exit_code": 0,
+      "library": "mbedtls",
+      "local_case_id": "mbedtls_wrong_tag_length_gcm_decrypt",
+      "prior_openssl_case_id": "aead_012_wrong_tag_length_gcm_decrypt",
+      "status": "run_ok",
+      "stdout_summary": [
+        "LIBRARY=mbedtls_psa",
+        "CASE_ID=mbedtls_wrong_tag_length_gcm_decrypt",
+        "STATE_SEQUENCE=wrong_tag_length",
+        "TAG_LENGTH=8",
+        "STEP=psa_crypto_init status=0",
+        "STEP=psa_import_key status=0 key=1073741824",
+        "STEP=psa_aead_encrypt_short_tag status=0 output_len=37",
+        "MUTATION_STEP=psa_aead_decrypt_short_tag status=0 plaintext_len=29",
+        "PLAINTEXT_MATCH=1",
+        "CASE_RESULT=legal_semantics"
+      ]
+    }
+  },
+  "next_action": {
+    "all_downgraded": true,
+    "crash_candidate_count": 0,
+    "recommendation": "Return to scheduler or extend AEAD to CCM / ctx copy / init-failure; do not start D-path or A-path for these three candidates.",
+    "semantic_divergence_candidate_count": 0
+  },
+  "openssl_cases": {
+    "aead_006_final_without_update_gcm_encrypt": {
+      "algorithm": "aes-128-gcm",
+      "case_id": "aead_006_final_without_update_gcm_encrypt",
+      "case_name": "final_without_update",
+      "case_result": "permissive_behavior",
+      "case_type": "mutation_case",
+      "classification": "semantic_divergence_candidate",
+      "exit_code": 0,
+      "expected_oracle": "return_code_and_output_integrity",
+      "family": "cipher_aead_lifecycle",
+      "mode": "encrypt",
+      "next_action": "compare_against API documentation and other AEAD implementations",
+      "observed_behavior": "mutation_allowed_but_may_match_documented_low_level_semantics",
+      "source": "artifacts/sprints/cipher_aead_lifecycle_mutation_v1/rendered_cases/mutations/aead_006_final_without_update_gcm_encrypt/aead_006_final_without_update_gcm_encrypt_openssl.c",
+      "state_sequence": "final_without_update",
+      "status": "run_ok"
+    },
+    "aead_009_set_tag_after_final_gcm_decrypt": {
+      "algorithm": "aes-128-gcm",
+      "case_id": "aead_009_set_tag_after_final_gcm_decrypt",
+      "case_name": "set_tag_after_final",
+      "case_result": "permissive_behavior",
+      "case_type": "mutation_case",
+      "classification": "permissive_behavior",
+      "exit_code": 0,
+      "expected_oracle": "strict_bad_state_reject_or_unexpected_success",
+      "family": "cipher_aead_lifecycle",
+      "mode": "decrypt",
+      "next_action": "prioritize for cross-library comparison, not as confirmed bug",
+      "observed_behavior": "mutation_allowed_by_api",
+      "source": "artifacts/sprints/cipher_aead_lifecycle_mutation_v1/rendered_cases/mutations/aead_009_set_tag_after_final_gcm_decrypt/aead_009_set_tag_after_final_gcm_decrypt_openssl.c",
+      "state_sequence": "set_tag_after_final",
+      "status": "run_ok"
+    },
+    "aead_012_wrong_tag_length_gcm_decrypt": {
+      "algorithm": "aes-128-gcm",
+      "case_id": "aead_012_wrong_tag_length_gcm_decrypt",
+      "case_name": "wrong_tag_length",
+      "case_result": "permissive_behavior",
+      "case_type": "mutation_case",
+      "classification": "semantic_divergence_candidate",
+      "exit_code": 0,
+      "expected_oracle": "unexpected_success_or_strict_reject",
+      "family": "cipher_aead_lifecycle",
+      "mode": "decrypt",
+      "next_action": "compare_against API documentation and other AEAD implementations",
+      "observed_behavior": "mutation_allowed_but_may_match_documented_low_level_semantics",
+      "source": "artifacts/sprints/cipher_aead_lifecycle_mutation_v1/rendered_cases/mutations/aead_012_wrong_tag_length_gcm_decrypt/aead_012_wrong_tag_length_gcm_decrypt_openssl.c",
+      "state_sequence": "wrong_tag_length",
+      "status": "run_ok"
+    }
+  },
+  "summary": {
+    "botan_completed": false,
+    "confirmed_vulnerability_found": false,
+    "mbedtls_cases": 3,
+    "mbedtls_classification_counts": {
+      "legal_semantics": 2,
+      "mapping_gap": 1
+    },
+    "mbedtls_raw_status_counts": {
+      "run_ok": 3
+    },
+    "openssl_high_value_candidates": 3
+  }
+}

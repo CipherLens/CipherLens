@@ -1,0 +1,70 @@
+target_library: cross_library
+target_api: mac_lifecycle_pair
+harness_family: mac_lifecycle
+oracle_type: lifecycle_state_transition_semantic_oracle
+
+include_headers:
+  openssl:
+    - openssl/evp.h
+    - openssl/core_names.h
+    - openssl/params.h
+  mbedtls_psa:
+    - psa/crypto.h
+
+allowed_slots:
+  openssl_MAC_FETCH_API:
+    description: OpenSSL MAC fetch API.
+    default: EVP_MAC_fetch
+  openssl_MAC_CTX_NEW_API:
+    description: OpenSSL MAC context constructor.
+    default: EVP_MAC_CTX_new
+  openssl_MAC_INIT_API:
+    description: OpenSSL MAC init API.
+    default: EVP_MAC_init
+  openssl_MAC_UPDATE_API:
+    description: OpenSSL MAC update API.
+    default: EVP_MAC_update
+  openssl_MAC_FINAL_API:
+    description: OpenSSL MAC final API.
+    default: EVP_MAC_final
+  openssl_MAC_FREE_API:
+    description: OpenSSL MAC context free API.
+    default: EVP_MAC_CTX_free
+  openssl_MAC_ALGORITHM:
+    description: OpenSSL fetched MAC name.
+    default: CMAC
+  mbedtls_psa_MAC_SETUP_API:
+    description: PSA MAC setup API.
+    default: psa_mac_sign_setup
+  mbedtls_psa_MAC_UPDATE_API:
+    description: PSA MAC update API.
+    default: psa_mac_update
+  mbedtls_psa_MAC_FINAL_API:
+    description: PSA MAC final API.
+    default: psa_mac_sign_finish
+  mbedtls_psa_MAC_ABORT_API:
+    description: PSA MAC abort API.
+    default: psa_mac_abort
+  mbedtls_psa_MAC_ALGORITHM:
+    description: PSA CMAC algorithm expression.
+    default: PSA_ALG_CMAC
+
+safe_behavior:
+  normal_init_update_final: Both libraries initialize, update, and finalize successfully for valid key material.
+  strict_bad_state: A library rejects repeated-final or update-after-final after a terminal finish state.
+
+bug_behavior:
+  condition: sanitizer crash, SEGV, unsafe output state, or caller-impacting acceptance after a terminal state.
+  note: This sprint does not classify permissive OpenSSL behavior as a confirmed vulnerability.
+
+triage_behavior:
+  behavior_divergence_candidate: OpenSSL accepts repeated-final or update-after-final while PSA rejects with bad-state-like status.
+  permissive_legacy_behavior: Both libraries accept a lifecycle sequence that looks terminal but may be documented legacy/provider behavior.
+  harness_error: Setup, provider, key import, or initialization failure prevents reaching the lifecycle oracle.
+
+forbidden_terms:
+  - init_block
+  - trigger_block
+  - cleanup_block
+  - oracle_strategy
+  - free-form C

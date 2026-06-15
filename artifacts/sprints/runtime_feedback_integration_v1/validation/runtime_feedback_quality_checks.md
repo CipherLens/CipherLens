@@ -1,0 +1,23 @@
+# Quality Checks
+
+```yaml
+schema: runtime_feedback_quality_checks_v1
+generated_at: '2026-06-12T04:30:42+00:00'
+inputs_loaded: true
+valid_prefix_results_loaded: true
+candidate_queue_generated: true
+mutation_policy_feedback_generated: true
+scheduler_feedback_generated: true
+teammate_handoff_generated: true
+staged_feedback_written: true
+main_knowledge_written: false
+pattern_bank_written: false
+scheduler_seed_written: false
+oracle_semantic_triage_performed: false
+render_executed: false
+compile_executed: false
+run_executed: false
+glm_called: false
+confirmed_vulnerability_claim: false
+quality_status: pass
+```

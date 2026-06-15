@@ -1,0 +1,195 @@
+wolfssl_call_sequence_candidates:
+- sequence_id: wolfssl_decodedcert_parse_free_004
+  library: wolfssl
+  family_relevance:
+  - asn1_nested_boundary
+  source_file: examples/ocsp_responder/ocsp_responder.c
+  api_sequence:
+  - wc_InitDecodedCert
+  - wc_ParseCert
+  - wc_FreeDecodedCert
+  resource_lifecycle: wc_InitDecodedCert -> wc_ParseCert -> wc_FreeDecodedCert
+  cleanup_sequence:
+  - wc_FreeDecodedCert
+  evidence_lines_or_refs:
+  - line: 870
+    text: wc_InitDecodedCert(&caCert, caCertDer, caCertDerSz, NULL);
+  - line: 871
+    text: ret = wc_ParseCert(&caCert, CERT_TYPE, 0, NULL);
+  - line: 1113
+    text: wc_FreeDecodedCert(&caCert);
+  confidence: medium
+  notes: Sequence inferred from tests/examples; use as staged RAG evidence only.
+- sequence_id: wolfssl_pkcs7_init_decode_free_005
+  library: wolfssl
+  family_relevance:
+  - pkcs_container_parsing
+  source_file: tests/api.c
+  api_sequence:
+  - wc_PKCS7_Init
+  - wc_PKCS7_Free
+  resource_lifecycle: wc_PKCS7_Init -> wc_PKCS7_Free
+  cleanup_sequence:
+  - wc_PKCS7_Free
+  evidence_lines_or_refs:
+  - line: 34928
+    text: wc_PKCS7_Free(p7);
+  - line: 34987
+    text: wc_PKCS7_Free(p7);
+  - line: 35054
+    text: ExpectIntEQ(wc_PKCS7_Init(&pkcs7, NULL, 0), 0);
+  - line: 35068
+    text: wc_PKCS7_Free(&pkcs7);
+  - line: 35105
+    text: ExpectIntEQ(wc_PKCS7_Init(&pkcs7, NULL, 0), 0);
+  - line: 35114
+    text: wc_PKCS7_Free(&pkcs7);
+  confidence: medium
+  notes: Sequence inferred from tests/examples; use as staged RAG evidence only.
+- sequence_id: wolfssl_pkcs7_init_verify_free_006
+  library: wolfssl
+  family_relevance:
+  - pkcs_container_parsing
+  source_file: tests/api.c
+  api_sequence:
+  - wc_PKCS7_Init
+  - wc_PKCS7_Free
+  resource_lifecycle: wc_PKCS7_Init -> wc_PKCS7_Free
+  cleanup_sequence:
+  - wc_PKCS7_Free
+  evidence_lines_or_refs:
+  - line: 34928
+    text: wc_PKCS7_Free(p7);
+  - line: 34987
+    text: wc_PKCS7_Free(p7);
+  - line: 35054
+    text: ExpectIntEQ(wc_PKCS7_Init(&pkcs7, NULL, 0), 0);
+  - line: 35068
+    text: wc_PKCS7_Free(&pkcs7);
+  - line: 35105
+    text: ExpectIntEQ(wc_PKCS7_Init(&pkcs7, NULL, 0), 0);
+  - line: 35114
+    text: wc_PKCS7_Free(&pkcs7);
+  confidence: medium
+  notes: Sequence inferred from tests/examples; use as staged RAG evidence only.
+- sequence_id: wolfssl_tls_accept_lifecycle_002
+  library: wolfssl
+  family_relevance:
+  - tls_protocol_state_lifecycle
+  source_file: examples/async/async_client.c
+  api_sequence:
+  - wolfSSL_CTX_new
+  - wolfSSL_new
+  - wolfSSL_read
+  - wolfSSL_write
+  - wolfSSL_free
+  - wolfSSL_CTX_free
+  resource_lifecycle: wolfSSL_CTX_new -> wolfSSL_new -> wolfSSL_read -> wolfSSL_write
+    -> wolfSSL_free -> wolfSSL_CTX_free
+  cleanup_sequence:
+  - wolfSSL_free
+  - wolfSSL_CTX_free
+  evidence_lines_or_refs:
+  - line: 325
+    text: ctx = wolfSSL_CTX_new(wolfTLSv1_2_client_method());
+  - line: 328
+    text: ctx = wolfSSL_CTX_new(wolfSSLv23_client_method());
+  - line: 396
+    text: ssl = wolfSSL_new(ctx);
+  - line: 479
+    text: ret = wolfSSL_write(ssl, tx, tx_len);
+  - line: 504
+    text: 'fprintf(stderr, "ERROR: wolfSSL_write failed: %d (%s)\n",'
+  - line: 511
+    text: ret = wolfSSL_read(ssl, rx, (int)sizeof(rx) - 1);
+  - line: 538
+    text: 'fprintf(stderr, "ERROR: wolfSSL_read failed: %d (%s)\n",'
+  - line: 567
+    text: wolfSSL_free(ssl);
+  - line: 570
+    text: wolfSSL_CTX_free(ctx);
+  confidence: high
+  notes: Sequence inferred from tests/examples; use as staged RAG evidence only.
+- sequence_id: wolfssl_tls_lifecycle_001
+  library: wolfssl
+  family_relevance:
+  - tls_protocol_state_lifecycle
+  source_file: examples/async/async_client.c
+  api_sequence:
+  - wolfSSL_CTX_new
+  - wolfSSL_new
+  - wolfSSL_connect
+  - wolfSSL_read
+  - wolfSSL_write
+  - wolfSSL_free
+  - wolfSSL_CTX_free
+  resource_lifecycle: wolfSSL_CTX_new -> wolfSSL_new -> wolfSSL_connect -> wolfSSL_read
+    -> wolfSSL_write -> wolfSSL_free -> wolfSSL_CTX_free
+  cleanup_sequence:
+  - wolfSSL_free
+  - wolfSSL_CTX_free
+  evidence_lines_or_refs:
+  - line: 325
+    text: ctx = wolfSSL_CTX_new(wolfTLSv1_2_client_method());
+  - line: 328
+    text: ctx = wolfSSL_CTX_new(wolfSSLv23_client_method());
+  - line: 396
+    text: ssl = wolfSSL_new(ctx);
+  - line: 430
+    text: ret = wolfSSL_connect(ssl);
+  - line: 455
+    text: 'fprintf(stderr, "ERROR: wolfSSL_connect failed: %d (%s)\n",'
+  - line: 479
+    text: ret = wolfSSL_write(ssl, tx, tx_len);
+  - line: 504
+    text: 'fprintf(stderr, "ERROR: wolfSSL_write failed: %d (%s)\n",'
+  - line: 511
+    text: ret = wolfSSL_read(ssl, rx, (int)sizeof(rx) - 1);
+  - line: 538
+    text: 'fprintf(stderr, "ERROR: wolfSSL_read failed: %d (%s)\n",'
+  - line: 567
+    text: wolfSSL_free(ssl);
+  - line: 570
+    text: wolfSSL_CTX_free(ctx);
+  confidence: high
+  notes: Sequence inferred from tests/examples; use as staged RAG evidence only.
+- sequence_id: wolfssl_x509_load_inspect_free_003
+  library: wolfssl
+  family_relevance:
+  - x509_parsing
+  source_file: tests/api.c
+  api_sequence:
+  - wolfSSL_X509_load_certificate_file
+  - wolfSSL_X509_get_subject_name
+  - wolfSSL_X509_free
+  resource_lifecycle: wolfSSL_X509_load_certificate_file -> wolfSSL_X509_get_subject_name
+    -> wolfSSL_X509_free
+  cleanup_sequence:
+  - wolfSSL_X509_free
+  evidence_lines_or_refs:
+  - line: 2270
+    text: wolfSSL_X509_free(x509);
+  - line: 3006
+    text: ExpectNotNull(issuer = wolfSSL_X509_load_certificate_file(caFile,
+  - line: 3018
+    text: wolfSSL_X509_free(issuer);
+  - line: 3145
+    text: ExpectNotNull(issuer = wolfSSL_X509_load_certificate_file(caFile,
+  - line: 3155
+    text: wolfSSL_X509_free(issuer);
+  - line: 3489
+    text: wolfSSL_X509_free(x509);
+  - line: 3493
+    text: ExpectNotNull(x509 = wolfSSL_X509_load_certificate_file(*cert,
+  - line: 3512
+    text: ExpectNotNull(x509 = wolfSSL_X509_load_certificate_file(*cert,
+  - line: 3557
+    text: ExpectNotNull(x509 = wolfSSL_X509_load_certificate_file(
+  - line: 3560
+    text: wolfSSL_X509_free(x509);
+  - line: 3586
+    text: ExpectNotNull(x509 = wolfSSL_X509_load_certificate_file(
+  - line: 3589
+    text: wolfSSL_X509_free(x509);
+  confidence: medium
+  notes: Sequence inferred from tests/examples; use as staged RAG evidence only.

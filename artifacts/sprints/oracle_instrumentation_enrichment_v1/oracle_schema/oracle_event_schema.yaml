@@ -1,0 +1,36 @@
+schema: oracle_event_schema_v1
+event_prefix: ORACLE_EVENT
+fields:
+  required:
+  - schema
+  - case_id
+  - family
+  - mutation_strategy
+  - target_library
+  - phase
+  - api
+  optional:
+  - ret
+  - accepted
+  - input_len
+  - consumed_len
+  - full_consumption
+  - openssl_error_code
+  - openssl_error_reason
+  - cleanup_executed
+  - notes
+phases:
+- parse
+- verify
+- full_consumption_check
+- cleanup
+interpretation:
+  accepted: parser returned success / non-null / ret==1 depending on API
+  full_consumption: consumed_len == input_len when pointer-consumption is observable
+  openssl_error: ERR_peek_last_error / ERR_error_string_n output
+unknown_fields_policy: Do not fabricate values; emit unknown or document limitation when a field is not
+  reliably observable.
+claim_policy:
+  confirmed_vulnerability: false
+  cve: false
+  exploitable: false

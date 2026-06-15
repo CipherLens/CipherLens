@@ -1,0 +1,45 @@
+# Staged wolfSSL API Cards
+
+- total: `36`
+- high: `30`
+- medium: `3`
+- low: `0`
+- not_found: `3`
+
+## Cards
+- `DecodedCert`: high (asn1_nested_boundary)
+- `wc_FreeDecodedCert`: high (asn1_nested_boundary)
+- `wc_GetSubjectCN`: not_found_in_source (asn1_nested_boundary)
+- `wc_InitDecodedCert`: high (asn1_nested_boundary)
+- `wc_ParseCert`: high (asn1_nested_boundary)
+- `wc_PKCS12_parse`: high (pkcs_container_parsing)
+- `wc_PKCS7_DecodeSignedData`: not_found_in_source (pkcs_container_parsing)
+- `wc_PKCS7_Free`: high (pkcs_container_parsing)
+- `wc_PKCS7_Init`: high (pkcs_container_parsing)
+- `wc_PKCS7_VerifySignedData`: high (pkcs_container_parsing)
+- `wc_d2i_PKCS12_bio`: not_found_in_source (pkcs_container_parsing)
+- `XFREE`: high (secure_heap_state_lifecycle)
+- `XMALLOC`: high (secure_heap_state_lifecycle)
+- `wolfSSL_Free`: medium (secure_heap_state_lifecycle)
+- `wolfSSL_Malloc`: medium (secure_heap_state_lifecycle)
+- `wolfSSL_SetAllocators`: medium (secure_heap_state_lifecycle)
+- `wolfSSL_CTX_free`: high (tls_protocol_state_lifecycle)
+- `wolfSSL_CTX_new`: high (tls_protocol_state_lifecycle)
+- `wolfSSL_CTX_set_verify`: high (tls_protocol_state_lifecycle)
+- `wolfSSL_accept`: high (tls_protocol_state_lifecycle)
+- `wolfSSL_connect`: high (tls_protocol_state_lifecycle)
+- `wolfSSL_dtls`: high (tls_protocol_state_lifecycle)
+- `wolfSSL_dtls_set_peer`: high (tls_protocol_state_lifecycle)
+- `wolfSSL_free`: high (tls_protocol_state_lifecycle)
+- `wolfSSL_new`: high (tls_protocol_state_lifecycle)
+- `wolfSSL_read`: high (tls_protocol_state_lifecycle)
+- `wolfSSL_shutdown`: high (tls_protocol_state_lifecycle)
+- `wolfSSL_use_PrivateKey_file`: high (tls_protocol_state_lifecycle)
+- `wolfSSL_use_certificate_file`: high (tls_protocol_state_lifecycle)
+- `wolfSSL_write`: high (tls_protocol_state_lifecycle)
+- `wolfSSL_X509_free`: high (x509_parsing)
+- `wolfSSL_X509_get_der`: high (x509_parsing)
+- `wolfSSL_X509_get_issuer_name`: high (x509_parsing)
+- `wolfSSL_X509_get_subject_name`: high (x509_parsing)
+- `wolfSSL_X509_load_certificate_file`: high (x509_parsing)
+- `wolfSSL_X509_verify`: high (x509_parsing)

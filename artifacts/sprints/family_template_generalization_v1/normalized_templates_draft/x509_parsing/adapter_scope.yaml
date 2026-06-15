@@ -1,0 +1,39 @@
+schema: family_adapter_scope_v1
+family: x509_parsing
+source_library: wolfssl
+allowed_targets:
+  openssl:
+    allowed_apis: []
+    candidate_only_apis:
+    - PEM_read_X509
+    - X509_free
+    - X509_verify
+  mbedtls:
+    allowed_apis:
+    - mbedtls_x509_crt_parse_der
+    candidate_only_apis:
+    - mbedtls_x509_crt_free
+    - mbedtls_x509_crt_parse_file
+    - mbedtls_x509_crt_verify
+blocked_targets:
+- target_library: mbedtls
+  target_api: mbedtls_x509_crt_parse_der
+  reason: needs_manual_review
+  source_api: wc_ParseCert
+candidate_only_targets:
+  openssl:
+  - PEM_read_X509
+  - X509_free
+  - X509_verify
+  mbedtls:
+  - mbedtls_x509_crt_free
+  - mbedtls_x509_crt_parse_file
+  - mbedtls_x509_crt_verify
+adapter_ready_mapping_count: 1
+candidate_only_mapping_count: 6
+manual_review_mapping_count: 1
+adapter_generation_in_this_sprint: false
+glm_usage_in_this_sprint: false
+notes:
+- Future adapters must bind slots through recipe-slot mode only.
+- Mappings are candidate evidence, not confirmed API equivalence.

@@ -1,0 +1,109 @@
+# Rendered Case Index
+
+```yaml
+schema: valid_prefix_rendered_case_index_v1
+generated_at: '2026-06-12T04:13:07+00:00'
+cases:
+- supplemental_case_id: asn1_nested_boundary_openssl__supp_001__valid_der_plus_trailing_garbage
+  case_id: asn1_nested_boundary_openssl__supp_001__valid_der_plus_trailing_garbage
+  render_job_id: render_valid_prefix__asn1_nested_boundary__openssl__001
+  family: asn1_nested_boundary
+  target_library: openssl
+  refinement_strategy: valid_object_plus_trailing_garbage
+  mutation_strategy: valid_prefix_valid_object_plus_trailing_garbage
+  seed_source: data/wolfssl_collect/WOLFSSL-POC-0002/inputs/reconstructed/cve-2017-2800-cert1.der
+  input_der: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__001/input_corpus/input.der
+  harness_c: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__001/harness.c
+  case_dir: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__001
+  oracle_instrumentation:
+    enabled: true
+    profile: oracle_event_v1
+    expected_event_prefix: ORACLE_EVENT
+  render_status: rendered
+- supplemental_case_id: asn1_nested_boundary_openssl__supp_002__valid_prefix_trailing_only_ff00
+  case_id: asn1_nested_boundary_openssl__supp_002__valid_prefix_trailing_only_ff00
+  render_job_id: render_valid_prefix__asn1_nested_boundary__openssl__002
+  family: asn1_nested_boundary
+  target_library: openssl
+  refinement_strategy: valid_prefix_trailing_only
+  mutation_strategy: valid_prefix_valid_prefix_trailing_only
+  seed_source: data/wolfssl_collect/WOLFSSL-POC-0002/inputs/reconstructed/cve-2017-2800-cert1.der
+  input_der: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__002/input_corpus/input.der
+  harness_c: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__002/harness.c
+  case_dir: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__002
+  oracle_instrumentation:
+    enabled: true
+    profile: oracle_event_v1
+    expected_event_prefix: ORACLE_EVENT
+  render_status: rendered
+- supplemental_case_id: asn1_nested_boundary_openssl__supp_003__outer_sequence_inner_length_plus_one
+  case_id: asn1_nested_boundary_openssl__supp_003__outer_sequence_inner_length_plus_one
+  render_job_id: render_valid_prefix__asn1_nested_boundary__openssl__003
+  family: asn1_nested_boundary
+  target_library: openssl
+  refinement_strategy: preserve_outer_container_mutate_inner
+  mutation_strategy: valid_prefix_preserve_outer_container_mutate_inner
+  seed_source: data/wolfssl_collect/WOLFSSL-POC-0002/inputs/reconstructed/cve-2017-2800-cert1.der
+  input_der: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__003/input_corpus/input.der
+  harness_c: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__003/harness.c
+  case_dir: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__003
+  oracle_instrumentation:
+    enabled: true
+    profile: oracle_event_v1
+    expected_event_prefix: ORACLE_EVENT
+  render_status: rendered
+- supplemental_case_id: asn1_nested_boundary_openssl__supp_004__outer_sequence_inner_length_minus_one
+  case_id: asn1_nested_boundary_openssl__supp_004__outer_sequence_inner_length_minus_one
+  render_job_id: render_valid_prefix__asn1_nested_boundary__openssl__004
+  family: asn1_nested_boundary
+  target_library: openssl
+  refinement_strategy: near_valid_small_length_delta
+  mutation_strategy: valid_prefix_near_valid_small_length_delta
+  seed_source: data/wolfssl_collect/WOLFSSL-POC-0002/inputs/reconstructed/cve-2017-2800-cert1.der
+  input_der: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__004/input_corpus/input.der
+  harness_c: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__004/harness.c
+  case_dir: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__004
+  oracle_instrumentation:
+    enabled: true
+    profile: oracle_event_v1
+    expected_event_prefix: ORACLE_EVENT
+  render_status: rendered
+- supplemental_case_id: asn1_nested_boundary_openssl__supp_005__valid_prefix_truncated_tail_one_byte
+  case_id: asn1_nested_boundary_openssl__supp_005__valid_prefix_truncated_tail_one_byte
+  render_job_id: render_valid_prefix__asn1_nested_boundary__openssl__005
+  family: asn1_nested_boundary
+  target_library: openssl
+  refinement_strategy: valid_prefix_trailing_only
+  mutation_strategy: valid_prefix_valid_prefix_trailing_only
+  seed_source: data/wolfssl_collect/WOLFSSL-POC-0002/inputs/reconstructed/cve-2017-2800-cert1.der
+  input_der: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__005/input_corpus/input.der
+  harness_c: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__005/harness.c
+  case_dir: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__005
+  oracle_instrumentation:
+    enabled: true
+    profile: oracle_event_v1
+    expected_event_prefix: ORACLE_EVENT
+  render_status: rendered
+- supplemental_case_id: asn1_nested_boundary_openssl__supp_006__nested_depth_near_valid
+  case_id: asn1_nested_boundary_openssl__supp_006__nested_depth_near_valid
+  render_job_id: render_valid_prefix__asn1_nested_boundary__openssl__006
+  family: asn1_nested_boundary
+  target_library: openssl
+  refinement_strategy: preserve_outer_container_mutate_inner
+  mutation_strategy: valid_prefix_preserve_outer_container_mutate_inner
+  seed_source: data/wolfssl_collect/WOLFSSL-POC-0002/inputs/reconstructed/cve-2017-2800-cert1.der
+  input_der: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__006/input_corpus/input.der
+  harness_c: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__006/harness.c
+  case_dir: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__006
+  oracle_instrumentation:
+    enabled: true
+    profile: oracle_event_v1
+    expected_event_prefix: ORACLE_EVENT
+  render_status: rendered
+summary:
+  rendered_cases: 6
+  family: asn1_nested_boundary
+  target_library: openssl
+  pkcs_cases: 0
+  mbedtls_cases: 0
+```

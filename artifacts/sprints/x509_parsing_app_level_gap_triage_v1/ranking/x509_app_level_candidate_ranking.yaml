@@ -1,0 +1,132 @@
+family: x509_parsing
+sprint: x509_parsing_app_level_gap_triage_v1
+ranking:
+- seed_id: OPENSSL-ISSUE-14457
+  candidate_score:
+    real_input_available: 1
+    app_command_clarity: 3
+    oracle_observability: 3
+    non_overlap_purity: 2
+    prior_artifact_quality: 2
+    normal_control_availability: 2
+    reproduction_cost: -1
+    false_positive_risk: -1
+    final_score: 11
+  candidate_status: needs_input_recovery
+  input_status: synthetic_only
+  app_path: openssl verify
+  oracle_type: verify_semantic_gap
+  rationale: Synthetic root.cer exists; original key/cert not bundled, but original command can generate input from
+    documented req options.
+  rank: 1
+- seed_id: OPENSSL-ISSUE-29418
+  candidate_score:
+    real_input_available: 0
+    app_command_clarity: 3
+    oracle_observability: 3
+    non_overlap_purity: 2
+    prior_artifact_quality: 2
+    normal_control_availability: 2
+    reproduction_cost: -1
+    false_positive_risk: -1
+    final_score: 10
+  candidate_status: needs_input_recovery
+  input_status: placeholder_only
+  app_path: openssl x509
+  oracle_type: inconsistent_app_behavior
+  rationale: Original input references OpenSSL test cert servercert.pem; not bundled in artifact, but source-tree
+    recovery may be feasible.
+  rank: 2
+- seed_id: OPENSSL-ISSUE-14675
+  candidate_score:
+    real_input_available: 0
+    app_command_clarity: 3
+    oracle_observability: 3
+    non_overlap_purity: 2
+    prior_artifact_quality: 1
+    normal_control_availability: 2
+    reproduction_cost: -1
+    false_positive_risk: -1
+    final_score: 9
+  candidate_status: needs_input_recovery
+  input_status: placeholder_only
+  app_path: openssl verify
+  oracle_type: verify_semantic_gap
+  rationale: Input can be reconstructed from a normal PEM plus appended unverifiable garbage, but local artifact
+    still marks placeholder and non-strict reproduction.
+  rank: 3
+- seed_id: OPENSSL-ISSUE-23325
+  candidate_score:
+    real_input_available: 1
+    app_command_clarity: 3
+    oracle_observability: 3
+    non_overlap_purity: 2
+    prior_artifact_quality: 1
+    normal_control_availability: 2
+    reproduction_cost: -2
+    false_positive_risk: -2
+    final_score: 8
+  candidate_status: needs_input_recovery
+  input_status: synthetic_only
+  app_path: openssl verify
+  oracle_type: verify_semantic_gap
+  rationale: Multi-file CA/cert/CRL setup is semantically rich but missing original demoCA/CRL/cert files; higher
+    recovery cost.
+  rank: 4
+- seed_id: OPENSSL-ISSUE-11772
+  candidate_score:
+    real_input_available: 0
+    app_command_clarity: 3
+    oracle_observability: 3
+    non_overlap_purity: 2
+    prior_artifact_quality: 1
+    normal_control_availability: 2
+    reproduction_cost: -1
+    false_positive_risk: -2
+    final_score: 8
+  candidate_status: needs_input_recovery
+  input_status: placeholder_only
+  app_path: openssl x509
+  oracle_type: verify_semantic_gap
+  rationale: PoC.zip is not bundled; X509_cmp_time oracle is clear once invalid-date cert is recovered.
+  rank: 5
+- seed_id: OPENSSL-ISSUE-11567
+  candidate_score:
+    real_input_available: 0
+    app_command_clarity: 3
+    oracle_observability: 2
+    non_overlap_purity: 2
+    prior_artifact_quality: 1
+    normal_control_availability: 2
+    reproduction_cost: -2
+    false_positive_risk: -2
+    final_score: 6
+  candidate_status: needs_input_recovery
+  input_status: placeholder_only
+  app_path: openssl x509
+  oracle_type: malformed_accepted_with_output
+  rationale: Original external certificate not bundled; command is clear but oracle depends on recovered malformed/nonconforming
+    cert.
+  rank: 6
+- seed_id: OPENSSL-ISSUE-6788
+  candidate_score:
+    real_input_available: 1
+    app_command_clarity: 3
+    oracle_observability: 2
+    non_overlap_purity: 2
+    prior_artifact_quality: 1
+    normal_control_availability: 1
+    reproduction_cost: -2
+    false_positive_risk: -3
+    final_score: 5
+  candidate_status: needs_input_recovery
+  input_status: synthetic_only
+  app_path: openssl crl
+  oracle_type: inconsistent_app_behavior
+  rationale: CRL/CA bundle case requires many generated files; local artifact only has partial placeholder inputs,
+    so reproduction cost is high.
+  rank: 7
+top_1_candidate: OPENSSL-ISSUE-14457
+top_2_candidate: OPENSSL-ISSUE-29418
+top_3_candidate: OPENSSL-ISSUE-14675
+ready_for_minimal_reproducer_planning: []

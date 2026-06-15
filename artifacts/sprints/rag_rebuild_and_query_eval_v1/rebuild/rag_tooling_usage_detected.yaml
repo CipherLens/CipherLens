@@ -1,0 +1,25 @@
+rag_builder:
+  command_detected: python3 knowledge/rag_builder.py
+  supported_inputs:
+  - config/rag_config.yaml raw_dirs
+  - knowledge_raw/api_constraints
+  - knowledge_raw/unit_tests
+  - knowledge_raw/poc_patterns
+  - knowledge_raw/cross_lib_equivalence
+  - knowledge_raw/wycheproof_vectors
+  - knowledge_base/api_cards
+  supported_output: knowledge_base/chroma collection crypto_knowledge
+  embedding_backend: ollama mxbai-embed-large via config/rag_config.yaml
+  notes:
+  - --help is not implemented; it triggered a rebuild attempt in sandbox.
+  - knowledge_raw/api_knowledge_cards is not currently a configured builder input.
+rag_query:
+  command_detected: python3 knowledge/rag_query.py --query <query> --top-k 8 --json
+  supported_args:
+  - --query
+  - --top-k
+  - --json
+  output_format: plain text or JSON
+  notes:
+  - JSON mode redirects initialization chatter to stderr.
+  - Query embedding also uses local Ollama.

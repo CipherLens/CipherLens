@@ -1,0 +1,79 @@
+schema: family_mutation_slots_v1
+family: tls_protocol_state_lifecycle
+template_level: family
+seed_pocs: []
+mutation_slots:
+- slot_name: INIT_ORDER
+  slot_type: sequence
+  examples:
+  - ctx_before_ssl
+  - ssl_without_ctx
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: API misuse must be labeled false-positive risk
+- slot_name: SETUP_ORDER
+  slot_type: sequence
+  examples:
+  - missing_config
+  - partial_config
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: distinguish expected safe error from vulnerability
+- slot_name: HANDSHAKE_STATE
+  slot_type: enum
+  examples:
+  - before
+  - during
+  - after
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: requires deterministic mocked I/O later
+- slot_name: IO_BEFORE_HANDSHAKE
+  slot_type: enum
+  examples:
+  - read
+  - write
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: normal API misuse can dominate signal
+- slot_name: CLEANUP_REPEAT
+  slot_type: integer
+  examples:
+  - '0'
+  - '1'
+  - '2'
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: double cleanup must not be overreported without crash evidence
+ast_maskable_units:
+- unit_type: api_argument
+  slot_name: INIT_ORDER
+  node_kind_hint: argument or literal
+  reason: API misuse must be labeled false-positive risk
+- unit_type: api_argument
+  slot_name: SETUP_ORDER
+  node_kind_hint: argument or literal
+  reason: distinguish expected safe error from vulnerability
+- unit_type: api_argument
+  slot_name: HANDSHAKE_STATE
+  node_kind_hint: argument or literal
+  reason: requires deterministic mocked I/O later
+- unit_type: api_argument
+  slot_name: IO_BEFORE_HANDSHAKE
+  node_kind_hint: argument or literal
+  reason: normal API misuse can dominate signal
+- unit_type: api_argument
+  slot_name: CLEANUP_REPEAT
+  node_kind_hint: argument or literal
+  reason: double cleanup must not be overreported without crash evidence
+semantic_policy: mutate slots, preserve trigger/cleanup/oracle shape

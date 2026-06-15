@@ -1,0 +1,57 @@
+schema: runner_inventory_v1
+generated_at: '2026-06-12T05:13:49+00:00'
+runner_existing_files:
+- runner/__init__.py
+- runner/analyze_behavior_novelty.py
+- runner/analyze_cipher_aead_lifecycle.py
+- runner/analyze_cipher_aead_semantic_crosscheck.py
+- runner/analyze_cross_results.py
+- runner/analyze_der_full_consumption.py
+- runner/analyze_mac_lifecycle.py
+- runner/analyze_results.py
+- runner/analyze_secure_heap_state.py
+- runner/analyze_secure_heap_state_expansion.py
+- runner/build_repair_queue.py
+- runner/compile_run.py
+- runner/family_compile_runner.py
+- runner/render_repair_prompt.py
+- runner/run_app_cases.py
+- runner/run_records.py
+- runner/sanitizer_env.py
+tools_compile_run_files:
+- tools/compile_plan_v1.py
+- tools/compile_run_oracle_instrumented_v1.py
+- tools/compile_run_v1.py
+- tools/valid_prefix_pipeline_to_analyze_v1.py
+poc_level_legacy_runner:
+- runner/compile_run.py
+- runner/analyze_results.py
+- runner/analyze_cross_results.py
+- runner/render_repair_prompt.py
+- runner/build_repair_queue.py
+new_family_runner_modules:
+- runner/sanitizer_env.py
+- runner/run_records.py
+- runner/family_compile_runner.py
+reusable_logic:
+  existing_runner_compile_run: true
+  existing_runner_analysis: true
+  new_sanitizer_env: true
+  new_run_records: true
+  new_family_compile_runner: true
+tools_logic_to_extract:
+- tools/compile_run_v1.py
+- tools/compile_run_oracle_instrumented_v1.py
+- tools/compile_plan_v1.py
+- tools/valid_prefix_pipeline_to_analyze_v1.py
+naming_conflicts:
+  family_compile_runner_preexisted: false
+  sanitizer_env_preexisted: false
+  run_records_preexisted: false
+  old_runner_files_overwritten: false
+rg_match_count: 1502
+notes:
+- Existing runner/compile_run.py was not overwritten or refactored in place.
+- New modules are additive and scoped to family-level compile/run wrappers.
+- tools/compile_plan_v1.py and tools/valid_prefix_pipeline_to_analyze_v1.py still
+  contain orchestration/planning logic for later phases.

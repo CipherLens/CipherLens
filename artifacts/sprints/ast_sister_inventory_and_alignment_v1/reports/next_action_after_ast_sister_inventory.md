@@ -1,0 +1,4 @@
+# Next Action After AST Sister Inventory
+
+- next_task_name: template_recipe_design_for_top_wolfssl_families_v1
+- why: AST mask pipeline exists, tree-sitter/lite backends are identifiable, and output schemas are observable enough for recipe alignment.

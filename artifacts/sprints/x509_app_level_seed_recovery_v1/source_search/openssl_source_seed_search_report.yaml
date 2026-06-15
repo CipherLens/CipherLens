@@ -1,0 +1,94 @@
+family: x509_parsing
+source_text_hit_count: 14363
+cert_like_file_count: 922
+seeds:
+- seed_id: OPENSSL-ISSUE-14457
+  source_test_reference_found: false
+  candidate_test_vectors: []
+  candidate_construction_script:
+  - openssl req -new -x509 -nodes -sha256 -newkey rsa:4096 -keyout root.key -out root.cer -days 3650 -subj '/C=CA/ST=State/L=City/OU=POC/OU=Certificate
+    Authorities/CN=POC Root CA' -addext "basicConstraints = CA:TRUE" -addext "subjectKeyIdentifier = hash" -addext
+    "authorityKeyIdentifier = keyid:always, issuer:always" -addext "subjectAltName = DNS:POC Root CA" -addext "keyUsage
+    = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment, keyAgreement, keyCertSign, cRLSign, encipherOnly,
+    decipherOnly"
+  - openssl verify -CAfile root.cer root.cer
+  related_app_test: []
+  confidence: medium
+  notes: construction hints from metadata
+- seed_id: OPENSSL-ISSUE-29418
+  source_test_reference_found: true
+  candidate_test_vectors:
+  - /home/wen/work/clean_sources/openssl-3.5.5/test/certs/servercert.pem
+  candidate_construction_script: []
+  related_app_test:
+  - '/home/wen/work/clean_sources/openssl-3.5.5/apps/x509.c: X509_check_purpose path'
+  - /home/wen/work/clean_sources/openssl-3.5.5/crypto/x509/v3_purp.c
+  confidence: high
+  notes: metadata input_artifact references ./openssl/test/certs/servercert.pem; local source tree has test/certs/servercert.pem
+- seed_id: OPENSSL-ISSUE-14675
+  source_test_reference_found: false
+  candidate_test_vectors: []
+  candidate_construction_script:
+  - cp /etc/ssl/certs/Certigna_Root_CA.pem /tmp/poc.pem
+  - echo "unverifiable garbage" >> /tmp/poc.pem
+  - openssl verify /tmp/poc.pem
+  related_app_test: []
+  confidence: medium
+  notes: construction hints from metadata
+- seed_id: OPENSSL-ISSUE-11567
+  source_test_reference_found: false
+  candidate_test_vectors: []
+  candidate_construction_script: []
+  related_app_test: []
+  confidence: none
+  notes: no local source vector found
+- seed_id: OPENSSL-ISSUE-11772
+  source_test_reference_found: true
+  candidate_test_vectors: []
+  candidate_construction_script: []
+  related_app_test:
+  - /home/wen/work/clean_sources/openssl-3.5.5/test/x509_time_test.c
+  - '/home/wen/work/clean_sources/openssl-3.5.5/apps/x509.c: checkend uses X509_cmp_time'
+  confidence: low
+  notes: OpenSSL source has test/x509_time_test.c for X509_cmp_time behavior, but not original PoC.zip certificate
+- seed_id: OPENSSL-ISSUE-23325
+  source_test_reference_found: false
+  candidate_test_vectors: []
+  candidate_construction_script:
+  - 'openssl verify -attime 1705520210 -trusted cacert.pem -crl_check -CRLfile crl-no-IDP.pem cert-no-CDP.pem cert-no-CDP.pem:
+    OK'
+  - 'openssl verify -attime 1705520210 -trusted cacert.pem -crl_check -CRLfile crl-no-IDP.pem cert-with-CDP.pem
+    cert-with-CDP.pem: OK'
+  - 'openssl verify -attime 1705520210 -trusted cacert.pem -crl_check -CRLfile crl-with-IDP.pem cert-with-CDP.pem
+    cert-with-CDP.pem: OK'
+  - 'openssl verify -attime 1705520210 -trusted cacert.pem -crl_check -CRLfile crl-with-IDP.pem cert-no-CDP.pem
+    CN=x509-check-test error 44 at 0 depth lookup: different CRL scope error cert-no-CDP.pem: verification failed'
+  - 'openssl verify -attime 1768585400 -trusted demoCA/cacert2.pem -crl_check -CRLfile demoCA/crl-with-macthing-IDP.pem
+    demoCA/cert2-no-CDP.pem CN=x509-check-test2 error 44 at 0 depth lookup: different CRL scope error demoCA/cert2-no-CDP.pem:
+    verification failed'
+  related_app_test:
+  - '/home/wen/work/clean_sources/openssl-3.5.5/crypto/x509/x509_txt.c: different CRL scope'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/apps/include/opt.h: crl_check option'
+  confidence: low
+  notes: construction hints from metadata
+- seed_id: OPENSSL-ISSUE-6788
+  source_test_reference_found: false
+  candidate_test_vectors: []
+  candidate_construction_script:
+  - /usr/local/bin/openssl genpkey -algorithm RSA -out ca1.key
+  - /usr/local/bin/openssl genpkey -algorithm RSA -out ca2.key
+  - /usr/local/bin/openssl genpkey -algorithm RSA -out ca3.key
+  - /usr/local/bin/openssl genpkey -algorithm RSA -out ca4.key
+  - /usr/local/bin/openssl req -new -x509 -days 3650 -key ca1.key -out ca1.crt -config identical.cnf -batch
+  - /usr/local/bin/openssl req -new -x509 -days 3650 -key ca2.key -out ca2.crt -config identical.cnf -batch
+  - /usr/local/bin/openssl req -new -x509 -days 3650 -key ca3.key -out ca3.crt -config ca3.cnf -batch
+  - /usr/local/bin/openssl req -new -x509 -days 3650 -key ca4.key -out ca4.crt -config ca3.cnf -batch
+  - cat ca1.crt ca2.crt ca3.crt ca4.crt > ca_bundle.pem
+  - mkdir ca_dir
+  - touch ca_dir/index.txt
+  - cp ca2.crt ca_dir/ca.crt
+  - cp ca2.key ca_dir/ca.key
+  - /usr/local/bin/openssl crl -in crl_test.crl -inform DER -CAfile CA.pem -noout
+  related_app_test: []
+  confidence: low
+  notes: construction hints from metadata

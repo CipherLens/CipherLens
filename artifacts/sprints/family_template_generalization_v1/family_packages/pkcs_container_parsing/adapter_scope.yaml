@@ -1,0 +1,40 @@
+schema: family_adapter_scope_v1
+family: pkcs_container_parsing
+source_library: wolfssl
+allowed_targets:
+  openssl:
+    allowed_apis:
+    - PKCS12_parse
+    - PKCS7_verify
+    candidate_only_apis: []
+  mbedtls:
+    allowed_apis: []
+    candidate_only_apis: []
+blocked_targets:
+- target_library: mbedtls
+  target_api: ''
+  reason: no_direct_counterpart
+  source_api: wc_PKCS12_parse
+- target_library: mbedtls
+  target_api: ''
+  reason: no_direct_counterpart
+  source_api: wc_PKCS7_DecodeSignedData
+- target_library: mbedtls
+  target_api: ''
+  reason: no_direct_counterpart
+  source_api: wc_PKCS7_VerifySignedData
+- target_library: openssl
+  target_api: d2i_PKCS7
+  reason: weak_evidence
+  source_api: wc_PKCS7_DecodeSignedData
+candidate_only_targets:
+  openssl: []
+  mbedtls: []
+adapter_ready_mapping_count: 2
+candidate_only_mapping_count: 0
+manual_review_mapping_count: 0
+adapter_generation_in_this_sprint: false
+glm_usage_in_this_sprint: false
+notes:
+- Future adapters must bind slots through recipe-slot mode only.
+- Mappings are candidate evidence, not confirmed API equivalence.

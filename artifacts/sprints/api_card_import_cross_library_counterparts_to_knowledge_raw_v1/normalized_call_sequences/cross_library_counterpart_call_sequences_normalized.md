@@ -1,0 +1,9 @@
+| library | sequence_id | family | status |
+| --- | --- | --- | --- |
+| mbedtls | mbedtls_allocator_hook_lifecycle | secure_heap_state_lifecycle | synthetic_lifecycle_sequence |
+| mbedtls | mbedtls_tls_config_session_io_lifecycle | tls_protocol_state_lifecycle | synthetic_lifecycle_sequence |
+| mbedtls | mbedtls_x509_der_parse_lifecycle | x509_parsing | synthetic_lifecycle_sequence |
+| openssl | openssl_pkcs7_der_verify_lifecycle | pkcs_container_parsing | synthetic_lifecycle_sequence |
+| openssl | openssl_secure_heap_alloc_free_lifecycle | secure_heap_state_lifecycle | synthetic_lifecycle_sequence |
+| openssl | openssl_tls_context_session_io_lifecycle | tls_protocol_state_lifecycle | synthetic_lifecycle_sequence |
+| openssl | openssl_x509_der_parse_lifecycle | x509_parsing | synthetic_lifecycle_sequence |

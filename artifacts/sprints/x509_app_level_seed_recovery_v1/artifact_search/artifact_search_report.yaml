@@ -1,0 +1,118 @@
+family: x509_parsing
+file_candidate_count: 0
+text_hit_count: 1672
+seeds:
+- seed_id: OPENSSL-ISSUE-14457
+  artifact_found: true
+  metadata_found: true
+  input_files:
+  - datasets/openssl/poc_artifacts/issue_14457/inputs/root.cer
+  input_status: synthetic_only
+  construction_hint_found: true
+  run_script_found: true
+  app_command_found: true
+  app_command: openssl verify -CAfile root.cer root.cer
+  expected_observation_found: true
+  recovery_confidence: medium
+  notes: X509 self-verification harness compiled and executed with generated self-signed certificate placeholder
+    input. Valgrind reported 0 errors. This validates the generated C harness structure and API path, but does not
+    strictly reproduce the original issue because the original PoC input artifacts have not been recovered.
+- seed_id: OPENSSL-ISSUE-29418
+  artifact_found: true
+  metadata_found: true
+  input_files: []
+  input_status: placeholder_only
+  construction_hint_found: true
+  run_script_found: true
+  app_command_found: true
+  app_command: openssl x509 -in servercert.pem -noout -purpose
+  expected_observation_found: true
+  recovery_confidence: high
+  notes: The generated C harness was translated from the original CLI command and compiled/executed using a placeholder
+    local input. This validates the harness structure but does not strictly reproduce the original issue because
+    the original PoC input artifact has not been recovered.
+- seed_id: OPENSSL-ISSUE-14675
+  artifact_found: true
+  metadata_found: true
+  input_files: []
+  input_status: placeholder_only
+  construction_hint_found: true
+  run_script_found: true
+  app_command_found: true
+  app_command: openssl verify /tmp/poc.pem
+  expected_observation_found: true
+  recovery_confidence: medium
+  notes: The generated C harness was translated from the CLI command `openssl verify /tmp/poc.pem`. It compiled
+    and executed using a placeholder certificate bundle with appended garbage. This validates the X509 verification
+    API path, but does not strictly reproduce the original issue semantics.
+- seed_id: OPENSSL-ISSUE-11567
+  artifact_found: true
+  metadata_found: true
+  input_files: []
+  input_status: placeholder_only
+  construction_hint_found: true
+  run_script_found: true
+  app_command_found: true
+  app_command: openssl x509 -in $PoC -text -noout
+  expected_observation_found: true
+  recovery_confidence: low
+  notes: Translated from CLI command `openssl x509 -in $PoC -text -noout`. The generated C harness compiled and
+    executed successfully using a system certificate copied to inputs/poc.pem. Valgrind reported 0 errors. This
+    validates the harness structure, but does not strictly reproduce the original issue because the original PoC
+    certificate has not been recovered.
+- seed_id: OPENSSL-ISSUE-11772
+  artifact_found: true
+  metadata_found: true
+  input_files: []
+  input_status: placeholder_only
+  construction_hint_found: true
+  run_script_found: true
+  app_command_found: true
+  app_command: openssl x509 -in $PoC -checkend 0 -noout
+  expected_observation_found: true
+  recovery_confidence: low
+  notes: The generated C harness was translated from the original CLI command and compiled/executed using a placeholder
+    local input. This validates the harness structure but does not strictly reproduce the original issue because
+    the original PoC input artifact has not been recovered.
+- seed_id: OPENSSL-ISSUE-23325
+  artifact_found: true
+  metadata_found: true
+  input_files:
+  - datasets/openssl/poc_artifacts/issue_23325/inputs/cert.csr
+  - datasets/openssl/poc_artifacts/issue_23325/inputs/cacert.srl
+  - datasets/openssl/poc_artifacts/issue_23325/inputs/ca.cnf
+  - datasets/openssl/poc_artifacts/issue_23325/inputs/demoCA/crlnumber
+  - datasets/openssl/poc_artifacts/issue_23325/inputs/demoCA/serial
+  - datasets/openssl/poc_artifacts/issue_23325/inputs/demoCA/index.txt
+  - datasets/openssl/poc_artifacts/issue_23325/inputs/demoCA/crlnumber.old
+  input_status: synthetic_only
+  construction_hint_found: true
+  run_script_found: true
+  app_command_found: true
+  app_command: openssl verify -trusted cacert.pem -crl_check -CRLfile crl.pem cert.pem
+  expected_observation_found: true
+  recovery_confidence: low
+  notes: The generated C harness was translated from an OpenSSL verify command using CRL checking. It compiled and
+    executed with generated placeholder CA, end-entity certificate, and CRL inputs. Valgrind reported 0 errors.
+    This validates the X509_STORE CRL verification API path, but does not strictly reproduce the original issue
+    because the original CA/CRL/certificate inputs have not been recovered.
+- seed_id: OPENSSL-ISSUE-6788
+  artifact_found: true
+  metadata_found: true
+  input_files:
+  - datasets/openssl/poc_artifacts/issue_6788/inputs/ca.crt
+  - datasets/openssl/poc_artifacts/issue_6788/inputs/ca.cnf
+  - datasets/openssl/poc_artifacts/issue_6788/inputs/demoCA/crlnumber
+  - datasets/openssl/poc_artifacts/issue_6788/inputs/demoCA/serial
+  - datasets/openssl/poc_artifacts/issue_6788/inputs/demoCA/index.txt
+  - datasets/openssl/poc_artifacts/issue_6788/inputs/demoCA/crlnumber.old
+  input_status: synthetic_only
+  construction_hint_found: true
+  run_script_found: true
+  app_command_found: true
+  app_command: openssl crl -in crl.pem -noout -issuer
+  expected_observation_found: true
+  recovery_confidence: low
+  notes: CRL parse harness compiled and executed with generated CRL placeholder input. Valgrind reported 0 errors.
+    This validates the generated C harness structure and API path, but does not strictly reproduce the original
+    issue because the original PoC input artifacts have not been recovered.

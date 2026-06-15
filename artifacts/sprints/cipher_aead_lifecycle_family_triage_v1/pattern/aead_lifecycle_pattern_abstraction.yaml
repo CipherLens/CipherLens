@@ -1,0 +1,62 @@
+family: cipher_aead_lifecycle
+positioning: "family triage and mutation planning; no vulnerability conclusion"
+root_cause_hypotheses:
+  - terminal_state_reuse
+  - tag_order_mismatch
+  - aad_data_order_mismatch
+  - init_failure_followed_by_operation
+  - cleanup_free_followed_by_reuse
+  - mode_confusion_encrypt_decrypt
+  - invalid_tag_length_acceptance
+  - error_path_output_state_pollution
+mutation_points:
+  - operation_order
+  - tag_length
+  - tag_set_timing
+  - tag_get_timing
+  - aad_timing
+  - final_repetition
+  - ctx_reuse
+  - decrypt_verify_path
+  - cleanup_timing
+  - init_failure_path
+oracles:
+  strict_bad_state_reject:
+    observables:
+      - return_code
+      - psa_status
+      - error_stack
+    interpretation: "safe rejection of invalid lifecycle transition"
+  permissive_terminal_reuse:
+    observables:
+      - success_return_after_terminal_state
+      - changed_output_or_tag
+    interpretation: "semantic divergence or allowed legacy/provider behavior pending contract review"
+  crash_or_sanitizer:
+    observables:
+      - SIGSEGV
+      - ASAN
+      - UBSAN
+      - valgrind
+    interpretation: "crash candidate only with explicit crash/sanitizer evidence"
+  unexpected_success:
+    observables:
+      - success_on_invalid_tag_length
+      - success_on_bad_order
+    interpretation: "candidate requiring contract and negative-control review"
+  semantic_divergence:
+    observables:
+      - openssl_behavior
+      - mbedtls_behavior
+      - output_integrity
+      - tag_verification_result
+    interpretation: "cross-library behavior difference, not automatically a vulnerability"
+  normal_defined_behavior:
+    observables:
+      - expected_success_control
+      - expected_failure_control
+    interpretation: "baseline/control behavior"
+claim_boundaries:
+  - "Do not classify OpenSSL permissive behavior as vulnerability without contract and caller-impact evidence."
+  - "Do not classify mbedTLS strict rejection as vulnerability."
+  - "Use semantic divergence / robustness candidate until stronger evidence exists."

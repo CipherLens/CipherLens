@@ -1,0 +1,140 @@
+# Oracle-Aware Candidate Labels
+
+```yaml
+schema: oracle_aware_candidate_labels_v1
+generated_at: '2026-06-12T07:43:40+00:00'
+labels:
+- case_id: pkcs_container_parsing_openssl__mut_001__seed_preserving_baseline
+  family: pkcs_container_parsing
+  mutation_strategy: seed_preserving_baseline
+  raw_execution_label: normal_exit
+  oracle_semantic_label: normal_reject_observed
+  candidate_label: normal_reject
+  confidence: high
+  reason: accepted=false path observed; full_consumption=false on reject path is not a gap by itself
+  next_action: generate valid-prefix or near-valid variants
+- case_id: pkcs_container_parsing_openssl__mut_002__trailing_garbage
+  family: pkcs_container_parsing
+  mutation_strategy: trailing_garbage
+  raw_execution_label: normal_exit
+  oracle_semantic_label: normal_reject_observed
+  candidate_label: normal_reject
+  confidence: high
+  reason: accepted=false path observed; full_consumption=false on reject path is not a gap by itself
+  next_action: generate valid-prefix or near-valid variants
+- case_id: pkcs_container_parsing_openssl__mut_003__malformed_length
+  family: pkcs_container_parsing
+  mutation_strategy: malformed_length
+  raw_execution_label: normal_exit
+  oracle_semantic_label: normal_reject_observed
+  candidate_label: normal_reject
+  confidence: high
+  reason: accepted=false path observed; full_consumption=false on reject path is not a gap by itself
+  next_action: generate valid-prefix or near-valid variants
+- case_id: pkcs_container_parsing_openssl__mut_004__nested_length_mismatch
+  family: pkcs_container_parsing
+  mutation_strategy: nested_length_mismatch
+  raw_execution_label: normal_exit
+  oracle_semantic_label: normal_reject_observed
+  candidate_label: normal_reject
+  confidence: high
+  reason: accepted=false path observed; full_consumption=false on reject path is not a gap by itself
+  next_action: generate valid-prefix or near-valid variants
+- case_id: pkcs_container_parsing_openssl__mut_005__invalid_container_structure
+  family: pkcs_container_parsing
+  mutation_strategy: invalid_container_structure
+  raw_execution_label: normal_exit
+  oracle_semantic_label: normal_reject_observed
+  candidate_label: normal_reject
+  confidence: high
+  reason: accepted=false path observed; full_consumption=false on reject path is not a gap by itself
+  next_action: generate valid-prefix or near-valid variants
+- case_id: pkcs_container_parsing_openssl__mut_006__pem_der_format_toggle
+  family: pkcs_container_parsing
+  mutation_strategy: pem_der_format_toggle
+  raw_execution_label: normal_exit
+  oracle_semantic_label: normal_reject_observed
+  candidate_label: normal_reject
+  confidence: high
+  reason: accepted=false path observed; full_consumption=false on reject path is not a gap by itself
+  next_action: generate valid-prefix or near-valid variants
+- case_id: pkcs_container_parsing_openssl__mut_007__expected_return_flip
+  family: pkcs_container_parsing
+  mutation_strategy: expected_return_flip
+  raw_execution_label: normal_exit
+  oracle_semantic_label: normal_reject_observed
+  candidate_label: normal_reject
+  confidence: high
+  reason: accepted=false path observed; full_consumption=false on reject path is not a gap by itself
+  next_action: generate valid-prefix or near-valid variants
+- case_id: asn1_nested_boundary_openssl__mut_001__seed_preserving_baseline
+  family: asn1_nested_boundary
+  mutation_strategy: seed_preserving_baseline
+  raw_execution_label: normal_exit
+  oracle_semantic_label: normal_reject_observed
+  candidate_label: normal_reject
+  confidence: high
+  reason: accepted=false path observed; full_consumption=false on reject path is not a gap by itself
+  next_action: generate valid-prefix or near-valid variants
+- case_id: asn1_nested_boundary_openssl__mut_002__trailing_garbage
+  family: asn1_nested_boundary
+  mutation_strategy: trailing_garbage
+  raw_execution_label: normal_exit
+  oracle_semantic_label: normal_reject_observed
+  candidate_label: normal_reject
+  confidence: high
+  reason: accepted=false path observed; full_consumption=false on reject path is not a gap by itself
+  next_action: generate valid-prefix or near-valid variants
+- case_id: asn1_nested_boundary_openssl__mut_003__short_length
+  family: asn1_nested_boundary
+  mutation_strategy: short_length
+  raw_execution_label: normal_exit
+  oracle_semantic_label: normal_reject_observed
+  candidate_label: normal_reject
+  confidence: high
+  reason: accepted=false path observed; full_consumption=false on reject path is not a gap by itself
+  next_action: generate valid-prefix or near-valid variants
+- case_id: asn1_nested_boundary_openssl__mut_004__long_length
+  family: asn1_nested_boundary
+  mutation_strategy: long_length
+  raw_execution_label: normal_exit
+  oracle_semantic_label: normal_reject_observed
+  candidate_label: normal_reject
+  confidence: high
+  reason: accepted=false path observed; full_consumption=false on reject path is not a gap by itself
+  next_action: generate valid-prefix or near-valid variants
+- case_id: asn1_nested_boundary_openssl__mut_005__nested_length_mismatch
+  family: asn1_nested_boundary
+  mutation_strategy: nested_length_mismatch
+  raw_execution_label: normal_exit
+  oracle_semantic_label: normal_reject_observed
+  candidate_label: normal_reject
+  confidence: high
+  reason: accepted=false path observed; full_consumption=false on reject path is not a gap by itself
+  next_action: generate valid-prefix or near-valid variants
+- case_id: asn1_nested_boundary_openssl__mut_006__nested_depth_variation
+  family: asn1_nested_boundary
+  mutation_strategy: nested_depth_variation
+  raw_execution_label: normal_exit
+  oracle_semantic_label: normal_reject_observed
+  candidate_label: normal_reject
+  confidence: high
+  reason: accepted=false path observed; full_consumption=false on reject path is not a gap by itself
+  next_action: generate valid-prefix or near-valid variants
+- case_id: asn1_nested_boundary_openssl__mut_007__expected_return_flip
+  family: asn1_nested_boundary
+  mutation_strategy: expected_return_flip
+  raw_execution_label: normal_exit
+  oracle_semantic_label: normal_reject_observed
+  candidate_label: normal_reject
+  confidence: high
+  reason: accepted=false path observed; full_consumption=false on reject path is not a gap by itself
+  next_action: generate valid-prefix or near-valid variants
+summary:
+  normal_reject: 14
+  normal_accept: 0
+  full_consumption_gap_candidate: 0
+  semantic_divergence_candidate: 0
+  needs_triage: 0
+  oracle_incomplete: 0
+```

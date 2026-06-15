@@ -1,0 +1,216 @@
+schema: family_adapter_recipe_spec_v1
+family: secure_heap_state_lifecycle
+source_library: wolfssl
+template_level: family
+generation_mode: spec_only_no_canonical_template
+reason_no_concrete_adapter: Family package is spec-only or lacks canonical_tmpl_wolfssl.c
+  / selected_mask_units.yaml.
+required_future_inputs:
+- canonical_tmpl_wolfssl.c
+- selected_mask_units.yaml
+- family_template_meta.yaml
+allowed_targets:
+  openssl:
+    allowed_apis: []
+    candidate_only_apis:
+    - CRYPTO_set_mem_functions
+    - OPENSSL_free
+    - OPENSSL_malloc
+  mbedtls:
+    allowed_apis:
+    - mbedtls_free
+    candidate_only_apis:
+    - mbedtls_calloc
+    - mbedtls_platform_set_calloc_free
+candidate_only_targets:
+- family: secure_heap_state_lifecycle
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_Free
+  target_api: mbedtls_free
+  mapping_type: cleanup_equivalent
+  required_oracle_style: cleanup_required
+  adapter_slot_hint: allocator setup/use/free slots
+  cleanup_mapping_hint: cleanup required
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: secure_heap_state_lifecycle
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_Free
+  target_api: OPENSSL_free
+  mapping_type: cleanup_equivalent
+  required_oracle_style: cleanup_required
+  adapter_slot_hint: allocator setup/use/free slots
+  cleanup_mapping_hint: cleanup required
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: secure_heap_state_lifecycle
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_Malloc
+  target_api: mbedtls_calloc
+  mapping_type: semantic_related
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: allocator setup/use/free slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: secure_heap_state_lifecycle
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_Malloc
+  target_api: OPENSSL_malloc
+  mapping_type: semantic_related
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: allocator setup/use/free slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: secure_heap_state_lifecycle
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_SetAllocators
+  target_api: mbedtls_platform_set_calloc_free
+  mapping_type: semantic_related
+  required_oracle_style: cleanup_required
+  adapter_slot_hint: allocator setup/use/free slots
+  cleanup_mapping_hint: cleanup required
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: secure_heap_state_lifecycle
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_SetAllocators
+  target_api: CRYPTO_set_mem_functions
+  mapping_type: semantic_related
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: allocator setup/use/free slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+blocked_targets: []
+expected_api_slots:
+- slot_name: wolfSSL_Malloc
+  source_api: wolfSSL_Malloc
+  allowed_target_apis:
+  - mbedtls:mbedtls_calloc
+  - openssl:OPENSSL_malloc
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: wolfSSL_Free
+  source_api: wolfSSL_Free
+  allowed_target_apis:
+  - mbedtls:mbedtls_free
+  - openssl:OPENSSL_free
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  - usable_for_adapter
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: wolfSSL_SetAllocators
+  source_api: wolfSSL_SetAllocators
+  allowed_target_apis:
+  - mbedtls:mbedtls_platform_set_calloc_free
+  - openssl:CRYPTO_set_mem_functions
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: XMALLOC
+  source_api: XMALLOC
+  allowed_target_apis: []
+  blocked_target_apis: []
+  mapping_gate_status:
+  - not_in_mapping_gate
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: XFREE
+  source_api: XFREE
+  allowed_target_apis: []
+  blocked_target_apis: []
+  mapping_gate_status:
+  - not_in_mapping_gate
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: OPENSSL_malloc
+  source_api: ''
+  allowed_target_apis:
+  - openssl:OPENSSL_malloc
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: OPENSSL_free
+  source_api: ''
+  allowed_target_apis:
+  - openssl:OPENSSL_free
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: CRYPTO_set_mem_functions
+  source_api: ''
+  allowed_target_apis:
+  - openssl:CRYPTO_set_mem_functions
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: CRYPTO_secure_malloc
+  source_api: ''
+  allowed_target_apis: []
+  blocked_target_apis: []
+  mapping_gate_status:
+  - not_in_mapping_gate
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: CRYPTO_secure_free
+  source_api: ''
+  allowed_target_apis: []
+  blocked_target_apis: []
+  mapping_gate_status:
+  - not_in_mapping_gate
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: mbedtls_calloc
+  source_api: ''
+  allowed_target_apis:
+  - mbedtls:mbedtls_calloc
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: mbedtls_free
+  source_api: ''
+  allowed_target_apis:
+  - mbedtls:mbedtls_free
+  blocked_target_apis: []
+  mapping_gate_status:
+  - usable_for_adapter
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: mbedtls_platform_set_calloc_free
+  source_api: ''
+  allowed_target_apis:
+  - mbedtls:mbedtls_platform_set_calloc_free
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+expected_cleanup_slots:
+- slot_name: cleanup_call
+  source_cleanup: family-specific wolfSSL cleanup/free API
+  target_cleanup_candidates:
+  - OPENSSL_free
+  - mbedtls_free
+  - mbedtls_platform_set_calloc_free
+  required: true
+expected_oracle_slots:
+- cleanup_required
+- lifecycle_state
+- crash_or_sanitizer
+glm_policy:
+  allowed_now: false
+  allowed_later_for:
+  - adapter_slot_filling
+notes:
+- Spec-only adapter recipe; do not render or compile.
+- Adapter-ready mappings remain candidate-only until a family canonical template exists.

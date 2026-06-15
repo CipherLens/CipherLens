@@ -1,0 +1,66 @@
+schema: oracle_aware_family_analysis_v1
+generated_at: '2026-06-12T07:43:40+00:00'
+families:
+- family: asn1_nested_boundary
+  target_library: openssl
+  total_cases: 7
+  mutation_strategies:
+  - seed_preserving_baseline
+  - trailing_garbage
+  - short_length
+  - long_length
+  - nested_length_mismatch
+  - nested_depth_variation
+  - expected_return_flip
+  parse_events: 7
+  verify_events: 0
+  full_consumption_events: 7
+  cleanup_events: 7
+  accepted_true: 0
+  accepted_false: 7
+  full_consumption_true: 0
+  full_consumption_false: 14
+  full_consumption_unknown: 7
+  sanitizer_observed: 0
+  crash_signal: 0
+  timeout: 0
+  preliminary_interpretation: all observed OpenSSL cases rejected; useful reject-path evidence but no
+    successful parser path for full-consumption gap evaluation
+  limitations:
+  - bounded mutation matrix; not coverage-guided fuzzing
+  - no confirmed vulnerability claim is made
+  - accepted_true=0 prevents judging successful parser-path full consumption gaps
+  - asn1_nested_boundary mutations may be too strong for accept-path semantic observation
+- family: pkcs_container_parsing
+  target_library: openssl
+  total_cases: 7
+  mutation_strategies:
+  - seed_preserving_baseline
+  - trailing_garbage
+  - malformed_length
+  - nested_length_mismatch
+  - invalid_container_structure
+  - pem_der_format_toggle
+  - expected_return_flip
+  parse_events: 7
+  verify_events: 7
+  full_consumption_events: 7
+  cleanup_events: 7
+  accepted_true: 0
+  accepted_false: 14
+  full_consumption_true: 0
+  full_consumption_false: 21
+  full_consumption_unknown: 7
+  sanitizer_observed: 0
+  crash_signal: 0
+  timeout: 0
+  preliminary_interpretation: all observed OpenSSL cases rejected; useful reject-path evidence but no
+    successful parser path for full-consumption gap evaluation
+  limitations:
+  - bounded mutation matrix; not coverage-guided fuzzing
+  - no confirmed vulnerability claim is made
+  - accepted_true=0 prevents judging successful parser-path full consumption gaps
+  - pkcs_container_parsing mutations may be too strong for accept-path semantic observation
+summary:
+  families_seen: 2
+  total_cases: 14

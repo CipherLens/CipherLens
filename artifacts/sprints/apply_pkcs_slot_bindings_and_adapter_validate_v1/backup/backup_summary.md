@@ -1,0 +1,9 @@
+# Backup Summary
+
+```yaml
+backup_attempted: true
+backup_written: true
+backup_path: artifacts/sprints/apply_pkcs_slot_bindings_and_adapter_validate_v1/backup/pkcs_container_parsing_openssl_slot_bindings.before_apply.yaml
+source_target_file: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_bindings.yaml
+reason: target differs from fixed source and apply requested
+```

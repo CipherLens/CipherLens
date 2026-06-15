@@ -1,0 +1,136 @@
+schema: family_template_meta_v1
+family_template_id: WOLFSSL-FAMILY-asn1_nested_boundary
+family: asn1_nested_boundary
+source_library: wolfssl
+template_level: family
+generation_mode: family_template_from_seed_pocs
+seed_pocs:
+  primary:
+  - WOLFSSL-POC-0004
+  secondary: []
+  role: seed_evidence_only_not_final_template_units
+template_files:
+  canonical_template: canonical_tmpl_wolfssl.c
+  template_meta_compat: template_meta.yaml
+  mask_report: mask_report.yaml
+  ast_mask_report: ast_mask_report.yaml
+  selected_mask_units: selected_mask_units.yaml
+  mutation_slots: mutation_slots.yaml
+  oracle_plan: oracle_plan.yaml
+  adapter_scope: adapter_scope.yaml
+trigger_apis:
+- wc_InitDecodedCert
+- wc_ParseCert
+- wc_FreeDecodedCert
+- ASN1_item_d2i
+- mbedtls_x509_crt_parse_der
+cleanup_apis:
+- slot_name: cleanup_call
+  source_cleanup: family-specific wolfSSL cleanup/free API
+  target_cleanup_candidates: []
+  required: true
+oracle_types:
+- parser_reject_accept
+- full_consumption
+- return_code_semantics
+mutation_slots:
+- ASN1_NESTED_LENGTH
+- DER_BYTES
+- TRAILING_GARBAGE
+- NESTED_DEPTH
+- EXPECT_RET
+api_slots:
+- slot_name: wc_InitDecodedCert
+  source_api: wc_InitDecodedCert
+  allowed_target_apis:
+  - mbedtls:mbedtls_x509_crt_parse_der
+  - openssl:ASN1_item_d2i
+  blocked_target_apis: []
+  mapping_gate_status:
+  - usable_for_adapter
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: wc_ParseCert
+  source_api: wc_ParseCert
+  allowed_target_apis: []
+  blocked_target_apis:
+  - mbedtls:mbedtls_x509_crt_parse_der
+  - openssl:d2i_X509
+  mapping_gate_status:
+  - needs_manual_review
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: wc_FreeDecodedCert
+  source_api: wc_FreeDecodedCert
+  allowed_target_apis: []
+  blocked_target_apis: []
+  mapping_gate_status:
+  - not_in_mapping_gate
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: ASN1_item_d2i
+  source_api: ''
+  allowed_target_apis:
+  - openssl:ASN1_item_d2i
+  blocked_target_apis: []
+  mapping_gate_status:
+  - usable_for_adapter
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: mbedtls_x509_crt_parse_der
+  source_api: ''
+  allowed_target_apis:
+  - mbedtls:mbedtls_x509_crt_parse_der
+  blocked_target_apis:
+  - mbedtls:mbedtls_x509_crt_parse_der
+  mapping_gate_status:
+  - needs_manual_review
+  - usable_for_adapter
+  notes: candidate mapping only; not confirmed equivalence
+cleanup_slots:
+- slot_name: cleanup_call
+  source_cleanup: family-specific wolfSSL cleanup/free API
+  target_cleanup_candidates: []
+  required: true
+adapter_scope:
+  allowed_targets:
+    openssl:
+      allowed_apis:
+      - ASN1_item_d2i
+      candidate_only_apis: []
+    mbedtls:
+      allowed_apis:
+      - mbedtls_x509_crt_parse_der
+      candidate_only_apis: []
+  blocked_targets:
+  - target_library: mbedtls
+    target_api: mbedtls_x509_crt_parse_der
+    reason: needs_manual_review
+    source_api: wc_ParseCert
+  - target_library: openssl
+    target_api: d2i_X509
+    reason: needs_manual_review
+    source_api: wc_ParseCert
+  candidate_only_targets:
+    openssl: []
+    mbedtls: []
+mapping_gate_support:
+  status: candidate_mapping_only
+  no_confirmed_equivalence_claim: true
+tree_sitter_ast_mask_pipeline:
+  attempted: true
+  backend: tree-sitter
+  fallback_used: false
+  status: ok
+  tree_sitter_returncode: 0
+  select_returncode: 0
+  outputs:
+  - ast_mask_report.yaml
+  - selected_mask_units.yaml
+glm_policy:
+  allowed: false
+  allowed_later_for:
+  - adapter_slot_filling
+  - slot_bindings
+  forbidden_for:
+  - full_c_generation
+  - freeform_harness_generation
+risk_notes:
+- wc_ParseCert mappings require manual review before adapter generation
+- Do not report candidate mapping as confirmed equivalence or vulnerability.

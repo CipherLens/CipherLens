@@ -1,0 +1,21 @@
+schema: ccm_plaintext_length_triage_decision_v1
+family: cipher_aead_lifecycle_ccm
+case_id: ccm_plaintext_length_not_announced
+original_label: unexpected_success_after_invalid_state_candidate
+decision: downgrade_to_observation
+reason: minimal harness shows payload-only no-length path can succeed while AAD no-length path rejects;
+  original case was payload-only and the oracle was too strong
+documented_behavior_found: true
+doc_evidence_summary: 本地 manpage 写明 CCM total plaintext/ciphertext length MUST 通过 in/out 为 NULL 的 update
+  调用传入。同时，本地 provider 源码显示：AAD 路径在未设置 message length 且 AAD length 非零时返回错误；payload update 路径若尚未设置长度，会调用
+  ccm_set_iv(ctx, len) 使用当前 payload length。因此文档语义与 payload-only 本地实现行为存在张力：带 AAD 缺长度会被拒绝，无 AAD payload-only
+  缺长度可成功。
+valid_control_passed: true
+candidate_reproduced: true
+candidate_reproduced_in_minimal_harness: true
+asan_observed: false
+ubsan_observed: false
+crash_observed: false
+oracle_too_strong: true
+recommended_next_action: Reclassify original payload-only no-length case as observation and reserve candidate
+  label for AAD no-length success, invalid decrypt acceptance, sanitizer, or crash.

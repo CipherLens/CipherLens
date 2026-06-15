@@ -1,0 +1,48 @@
+sprint: cipher_aead_lifecycle_semantic_crosscheck_v1
+checked_candidates:
+- aead_006_final_without_update_gcm_encrypt
+- aead_009_set_tag_after_final_gcm_decrypt
+- aead_012_wrong_tag_length_gcm_decrypt
+openssl_doc_support: sufficient_for_three_targeted_questions
+mbedtls_completed: true
+botan_completed: false
+reclassification:
+- case_id: aead_006_final_without_update_gcm_encrypt
+  previous_classification: semantic_divergence_candidate
+  observed_cross_library_behavior: OpenSSL succeeds with empty plaintext/AAD-only
+    GCM final; mbedTLS PSA also succeeds with zero data updates and returns tag_len=16.
+  doc_support: 'sufficient: OpenSSL AEAD docs allow zero or more data updates before
+    finish; PSA docs also say update zero, one or more times before finish.'
+  new_classification: legal_semantics
+  claim_level: legal_semantics
+  next_action: downgrade; keep as negative feedback for AEAD lifecycle scheduler.
+- case_id: aead_009_set_tag_after_final_gcm_decrypt
+  previous_classification: permissive_behavior
+  observed_cross_library_behavior: OpenSSL final-before-set-tag fails authentication,
+    then post-final SET_TAG ctrl returns success; PSA has no post-final tag setter
+    and therefore maps to mapping_gap.
+  doc_support: 'sufficient for ordering rule: OpenSSL docs require SET_TAG before
+    decrypt final; source indicates ctrl success is state-permissive and not evidence
+    of authentication change.'
+  new_classification: permissive_but_harmless
+  claim_level: permissive_but_harmless
+  next_action: do not promote to A-path; optional version matrix only if older OpenSSL
+    state handling is suspected.
+- case_id: aead_012_wrong_tag_length_gcm_decrypt
+  previous_classification: semantic_divergence_candidate
+  observed_cross_library_behavior: OpenSSL accepts tag length 8; mbedTLS PSA shortened-tag
+    GCM with 8-byte tag encrypts and decrypts successfully.
+  doc_support: 'sufficient: OpenSSL GCM SET_TAG allows taglen 1..16; PSA exposes shortened-tag
+    AEAD algorithms.'
+  new_classification: legal_semantics
+  claim_level: legal_semantics
+  next_action: downgrade; rename future case from wrong_tag_length to truncated_tag_length
+    unless using truly invalid lengths.
+crash_candidate: false
+needs_asan_ubsan: false
+needs_version_matrix: optional only for historical OpenSSL ctrl-state behavior, not
+  required by current evidence
+supports_a_path_recipe_slot_migration: false
+confirmed_vulnerability_found: false
+next_recommendation: Return to scheduler or extend AEAD to CCM / ctx copy / init-failure;
+  do not promote these three GCM cases to vulnerability-path migration.

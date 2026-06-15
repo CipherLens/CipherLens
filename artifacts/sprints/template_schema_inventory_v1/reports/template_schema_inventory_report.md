@@ -1,0 +1,246 @@
+# Template Schema Inventory Report
+
+- read_template_directories:
+  - normalized_templates
+  - templates
+  - enriched_templates
+  - generated_templates
+  - adapter_recipes
+  - migration_candidates
+  - template_maker
+- existing_template_schema:
+  - template_meta_fields:
+    - ast_mask_selection_trace
+    - backend
+    - bug_behavior
+    - bug_class
+    - claim_boundary
+    - cross_generation_notes
+    - cross_library
+    - default_cases
+    - description
+    - execution_mode
+    - expected_buggy_behavior
+    - expected_fixed_behavior
+    - generation_policy
+    - harness_family
+    - internal_apis
+    - internal_path
+    - is_final_harness
+    - language
+    - llm_enrichment
+    - llm_freeform_c_allowed
+    - mask_slots
+    - mutation_points
+    - normalization
+    - notes
+    - operation
+    - oracle
+    - oracle_type
+    - pattern_id
+    - placeholders
+    - poc_source
+    - rag_requirements
+    - render_matrix_case
+    - required_observables
+    - safe_behavior
+    - schema_version
+    - seed_status
+    - semantic_projection
+    - slot_placeholders
+    - source_api
+    - source_api_detail
+    - source_api_name
+    - source_component
+    - source_internal_functions
+    - source_library
+    - source_pattern_id
+    - source_poc
+    - source_template
+    - source_template_id
+    - source_version
+    - status
+    - target_api
+    - target_library
+    - template_id
+    - template_name
+    - triage_behavior
+    - variant_of
+    - variant_type
+    - verdict
+    - vulnerability_class
+  - mask_report_fields:
+    - bug_behavior
+    - cross_generation_hints
+    - difference_from_copy_variant
+    - expected_oracle
+    - family
+    - harness_family
+    - immutable_structure
+    - includes
+    - key_vulnerability_fragments
+    - language
+    - mask_backend
+    - mask_strategy
+    - mask_units
+    - masking_design
+    - masking_levels
+    - must_preserve_features
+    - mutation_points
+    - mutation_relevance
+    - notes
+    - occlusion_candidates
+    - operation
+    - oracle
+    - oracle_type
+    - pattern_id
+    - poc_pattern
+    - rag_query_context
+    - roles
+    - safe_behavior
+    - schema_version
+    - semantic_projection
+    - source_api
+    - source_file
+    - source_library
+    - source_pattern_id
+    - source_template
+    - status
+    - target_api
+    - template_id
+    - template_name
+    - triage_behavior
+    - trigger_apis
+    - variant_of
+  - ast_mask_report_fields:
+    - ast_analysis
+    - ast_mask_units
+    - ast_units
+    - generated_by
+    - harness_family
+    - mask_level_summary
+    - pattern_id
+    - role_summary
+    - selected_high_value_nodes
+    - source_api
+    - source_library
+    - summary
+    - template_id
+    - template_name
+    - trigger_apis
+  - selected_mask_units_fields:
+    - family
+    - harness_family
+    - pattern_id
+    - rejected_summary
+    - schema_version
+    - selected_units
+    - selection_policy
+    - selection_summary
+    - source_api
+    - source_library
+    - template_id
+    - template_name
+    - trigger_apis
+  - adapter_fields:
+    - _adapter_mode
+    - _ignored_disallowed_fields
+    - _ignored_non_slot_fields
+    - _llm_raw_preview
+    - _llm_status
+    - adapter_mode
+    - adapter_ready_mapping_candidates
+    - adapter_recipe
+    - applicability
+    - ast_mask_selection
+    - candidate
+    - evidence_file
+    - family
+    - harness_family
+    - include_headers
+    - llm_freeform_c_allowed
+    - lost_or_weakened_features
+    - notes
+    - oracle_type
+    - preserved_features
+    - schema_version
+    - semantic_oracle
+    - slot_binding_rationale
+    - slot_bindings
+    - source_candidate_apis
+    - source_files
+    - source_library
+    - source_pattern_id
+    - status
+    - target_api
+    - target_candidate_apis
+    - target_library
+    - template_id
+    - validation
+    - validation_notes
+- top_family_template_support:
+  - has_tls_lifecycle_template: False
+  - has_asn1_x509_pkcs_templates: False
+  - has_secure_heap_template: False
+  - has_wolfssl_source_template: False
+  - families_can_enter_template_generalizer:
+  - families_need_template_recipe_first:
+    - tls_protocol_state_lifecycle
+    - x509_parsing
+    - secure_heap_state_lifecycle
+    - asn1_nested_boundary
+    - pkcs_container_parsing
+- priority_candidate_answers:
+  - WOLFSSL-POC-0007:
+    - candidate_id: template_generalizer_001
+    - poc_id: WOLFSSL-POC-0007
+    - source_library: wolfssl
+    - family: pkcs_container_parsing
+    - harness_family: x509_asn1_inner_boundary
+    - route_guess: C_app_level_validation_gap
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: high
+    - blocked_by_no_direct_counterpart: False
+    - recommended_generalization_mode: source_template_from_poc
+    - priority: high
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+  - WOLFSSL-POC-0006:
+    - candidate_id: template_generalizer_002
+    - poc_id: WOLFSSL-POC-0006
+    - source_library: wolfssl
+    - family: pkcs_container_parsing
+    - harness_family: x509_asn1_inner_boundary
+    - route_guess: C_app_level_validation_gap
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: high
+    - blocked_by_no_direct_counterpart: False
+    - recommended_generalization_mode: source_template_from_poc
+    - priority: high
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+  - WOLFSSL-POC-0004:
+    - candidate_id: template_generalizer_003
+    - poc_id: WOLFSSL-POC-0004
+    - source_library: wolfssl
+    - family: asn1_nested_boundary
+    - harness_family: x509_asn1_inner_boundary
+    - route_guess: C_app_level_validation_gap
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: high
+    - blocked_by_no_direct_counterpart: False
+    - recommended_generalization_mode: source_template_from_poc
+    - priority: high
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+- generated_new_templates: False
+- ran_poc: False
+- ran_glm: False
+- ran_render: False
+- modified_pattern_bank: False
+- modified_scheduler_seed: False
+- modified_knowledge_raw: False
+- next_task_name: template_generalizer_v1

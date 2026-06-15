@@ -1,0 +1,82 @@
+schema: family_mutation_slots_v1
+family: asn1_nested_boundary
+template_level: family
+seed_pocs:
+- WOLFSSL-POC-0004
+mutation_slots:
+- slot_name: ASN1_NESTED_LENGTH
+  slot_type: integer
+  examples:
+  - short
+  - exact
+  - long
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: RAG v2 wc_ParseCert recall is weaker; use as risk, not block
+- slot_name: DER_BYTES
+  slot_type: byte_array
+  examples:
+  - well_formed
+  - truncated
+  - malformed_tag
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: keep DER buffer and len paired
+- slot_name: TRAILING_GARBAGE
+  slot_type: byte_array
+  examples:
+  - none
+  - '00'
+  - random_tail
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: needs pointer/consumption observable
+- slot_name: NESTED_DEPTH
+  slot_type: integer
+  examples:
+  - '1'
+  - '2'
+  - '8'
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: deep nesting may trigger resource limits
+- slot_name: EXPECT_RET
+  slot_type: enum
+  examples:
+  - accept
+  - reject
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: semantic labels preferred over numeric codes
+ast_maskable_units:
+- unit_type: api_argument
+  slot_name: ASN1_NESTED_LENGTH
+  node_kind_hint: argument or literal
+  reason: RAG v2 wc_ParseCert recall is weaker; use as risk, not block
+- unit_type: api_argument
+  slot_name: DER_BYTES
+  node_kind_hint: argument or literal
+  reason: keep DER buffer and len paired
+- unit_type: api_argument
+  slot_name: TRAILING_GARBAGE
+  node_kind_hint: argument or literal
+  reason: needs pointer/consumption observable
+- unit_type: api_argument
+  slot_name: NESTED_DEPTH
+  node_kind_hint: argument or literal
+  reason: deep nesting may trigger resource limits
+- unit_type: api_argument
+  slot_name: EXPECT_RET
+  node_kind_hint: argument or literal
+  reason: semantic labels preferred over numeric codes
+semantic_policy: mutate slots, preserve trigger/cleanup/oracle shape

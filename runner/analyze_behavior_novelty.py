@@ -15,6 +15,8 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
+import yaml
+
 
 CRASH_PATTERNS = (
     "AddressSanitizer",
@@ -35,6 +37,12 @@ def _read_jsonl(path: Optional[Path]) -> Iterable[Dict[str, Any]]:
             line = line.strip()
             if line:
                 yield json.loads(line)
+
+
+def _read_yaml(path: Path) -> Dict[str, Any]:
+    with path.open("r", encoding="utf-8") as f:
+        data = yaml.safe_load(f) or {}
+    return data if isinstance(data, dict) else {}
 
 
 def _bool(value: Any) -> bool:
@@ -85,6 +93,113 @@ def _extract_int(pattern: str, text: str) -> Optional[int]:
         return None
 
 
+def _case_id_from_source(source: str) -> str:
+    path = Path(source)
+    for part in reversed(path.parts):
+        if part.startswith("mac_lifecycle_"):
+            return part
+    stem = path.stem
+    match = re.search(r"(mac_lifecycle_\d+)", stem)
+    return match.group(1) if match else stem
+
+
+def _find_manifest_for_source(source: str, manifest_by_case_id: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+    path = Path(source)
+    adjacent = path.parent / "render_matrix_case_manifest.yaml"
+    if adjacent.exists():
+        try:
+            return _read_yaml(adjacent)
+        except OSError:
+            pass
+    case_id = _case_id_from_source(source)
+    return manifest_by_case_id.get(case_id, {})
+
+
+def _index_manifests(root: Optional[Path]) -> Dict[str, Dict[str, Any]]:
+    if not root:
+        return {}
+    manifests: Dict[str, Dict[str, Any]] = {}
+    if not root.exists():
+        return manifests
+    for path in root.rglob("render_matrix_case_manifest.yaml"):
+        try:
+            data = _read_yaml(path)
+        except OSError:
+            continue
+        case_id = str(data.get("case_id") or path.parent.name)
+        if case_id:
+            manifests[case_id] = data
+    return manifests
+
+
+def _skipped_manifest_paths(root: Optional[Path]) -> List[Path]:
+    if not root:
+        return []
+    candidates = [
+        root / "render_matrix_skipped_cases.yaml",
+        root.parent / "render_matrix_skipped_cases.yaml",
+        root.parent / "expanded_cross_templates" / "render_matrix_skipped_cases.yaml",
+    ]
+    seen = set()
+    paths: List[Path] = []
+    for path in candidates:
+        if path.exists() and path not in seen:
+            seen.add(path)
+            paths.append(path)
+    return paths
+
+
+def _has_nonzero_failure_outlen(stdout: str) -> bool:
+    for match in re.finditer(r"returned\s+0\s+outl=(\d+)", stdout):
+        try:
+            if int(match.group(1)) != 0:
+                return True
+        except ValueError:
+            continue
+    return False
+
+
+def _openssl_second_final_success(stdout: str) -> bool:
+    return bool(re.search(r"second\s+EVP_MAC_final\s+returned\s+1\s+outl=16", stdout))
+
+
+def _mbedtls_second_finish_reject(stdout: str) -> bool:
+    return bool(re.search(r"second\s+psa_mac_sign_finish\s+status=-(?:\d+)", stdout))
+
+
+def _expected_has(expected_candidate_types: List[Any], value: str) -> bool:
+    return value in {str(item) for item in expected_candidate_types}
+
+
+def _openssl_cmac_update_after_final_accept(stdout: str) -> bool:
+    return (
+        "second EVP_MAC_update after final returned 1" in stdout
+        or "update after final accepted or unexpected state" in stdout
+    )
+
+
+def _openssl_cmac_third_final_accept(stdout: str) -> bool:
+    return bool(
+        re.search(r"second\s+EVP_MAC_final\s+returned\s+1\s+outl=\d+", stdout)
+        and re.search(r"third\s+EVP_MAC_final\s+returned\s+1\s+outl=\d+", stdout)
+    )
+
+
+def _openssl_cmac_update_after_second_final_accept(stdout: str) -> bool:
+    return (
+        "EVP_MAC_update after second final returned 1" in stdout
+        or "update after second final accepted or unexpected state" in stdout
+    )
+
+
+def _mbedtls_update_after_finish_reject(stdout: str) -> bool:
+    return bool(re.search(r"psa_mac_update after finish\s+status=-(?:\d+)", stdout))
+
+
+def _mbedtls_update_after_second_finish_reject(stdout: str) -> bool:
+    return bool(re.search(r"psa_mac_update after second finish\s+status=-(?:\d+)", stdout))
+
+
 def _classify_runner_case(obj: Dict[str, Any]) -> Tuple[str, str]:
     status = str(obj.get("status") or obj.get("raw_status") or "")
     verdict = str(obj.get("verdict") or "")
@@ -113,6 +228,123 @@ def _classify_runner_case(obj: Dict[str, Any]) -> Tuple[str, str]:
     if status == "run_ok":
         return "safe_negative", "run_ok without novelty marker"
     return "unknown_needs_triage", status or verdict or "unclassified"
+
+
+def _classify_manifest_runner_case(
+    obj: Dict[str, Any], manifest: Dict[str, Any]
+) -> Tuple[str, str, Dict[str, Any]]:
+    stdout = str((obj.get("run") or {}).get("stdout") or obj.get("stdout") or "")
+    stderr = str((obj.get("run") or {}).get("stderr") or obj.get("stderr") or "")
+    exit_code = (obj.get("run") or {}).get("returncode", obj.get("exit_code"))
+    sanitizer = _sanitizer_signal(exit_code, stdout, stderr)
+    if sanitizer:
+        return "crash_candidate", f"crash signal: {sanitizer}", {"sanitizer_signal": sanitizer}
+
+    unsupported_dimensions = manifest.get("unsupported_dimensions") or []
+    expected_candidate_types = list(manifest.get("expected_candidate_types") or [])
+    signature_mutation = str(manifest.get("signature_mutation") or "")
+    verify_api = str(manifest.get("verify_api") or "")
+    if signature_mutation or verify_api:
+        extra = {
+            "case_id": str(manifest.get("case_id") or ""),
+            "verify_api": verify_api,
+            "key_type": str(manifest.get("key_type") or ""),
+            "signature_mutation": signature_mutation,
+            "digest_mutation": str(manifest.get("digest_mutation") or ""),
+            "key_mutation": str(manifest.get("key_mutation") or ""),
+            "padding_mutation": str(manifest.get("padding_mutation") or ""),
+            "expected_candidate_types": expected_candidate_types,
+            "unsupported_dimensions": unsupported_dimensions,
+            "needs_doc_review": False,
+            "follow_up": "",
+        }
+        if unsupported_dimensions or manifest.get("unsupported_combo") or manifest.get("skipped"):
+            return "projection_limitation", "unsupported PKEY verify projection", extra
+        if "[BUG] unexpected verification success" in stdout:
+            extra["follow_up"] = "minimize invalid verification material and confirm this is not harness misuse"
+            return "unexpected_success_candidate", "invalid PKEY verification material was accepted", extra
+        if "[SAFE] rejected invalid signature" in stdout:
+            return "safe_negative", "invalid PKEY verification material was rejected", extra
+        if "[OK] baseline valid signature accepted" in stdout:
+            return "safe_negative", "baseline valid PKEY signature was accepted", extra
+        if "HARNESS_ERROR:" in stdout or "HARNESS_ERROR:" in stderr:
+            return "harness_error", "controlled PKEY verify harness setup failed", extra
+        if "[TRIAGE]" in stdout:
+            return "unknown_needs_triage", "controlled PKEY verify case needs triage", extra
+
+    lifecycle = str(manifest.get("lifecycle_sequence") or "")
+    mac_algorithm = str(manifest.get("mac_algorithm") or "")
+    digest_or_cipher = str(manifest.get("digest_or_cipher") or "")
+    library = str(obj.get("library") or "")
+    extra = {
+        "case_id": str(manifest.get("case_id") or ""),
+        "mac_algorithm": mac_algorithm,
+        "digest_or_cipher": digest_or_cipher,
+        "lifecycle_sequence": lifecycle,
+        "expected_candidate_types": expected_candidate_types,
+        "unsupported_dimensions": unsupported_dimensions,
+        "needs_doc_review": False,
+        "follow_up": "",
+    }
+
+    if unsupported_dimensions or manifest.get("unsupported_combo") or manifest.get("skipped"):
+        return "projection_limitation", "unsupported MAC lifecycle projection", extra
+
+    if mac_algorithm == "HMAC" and _has_nonzero_failure_outlen(stdout):
+        return "failure_path_output_state_triage", "HMAC failure path left nonzero outl", extra
+
+    if library == "openssl" and mac_algorithm == "CMAC" and digest_or_cipher.startswith("AES-"):
+        if lifecycle == "update_after_final" and _openssl_cmac_update_after_final_accept(stdout):
+            extra["needs_doc_review"] = True
+            extra["follow_up"] = "check update-after-final and final-after-update behavior"
+            return (
+                "lifecycle_semantic_divergence_candidate",
+                "OpenSSL CMAC accepted update after final; requires documentation review",
+                extra,
+            )
+        if lifecycle == "third_final" and _openssl_cmac_third_final_accept(stdout):
+            extra["needs_doc_review"] = True
+            extra["follow_up"] = "check whether OpenSSL CMAC repeated final is documented legacy semantics"
+            if _expected_has(expected_candidate_types, "allowed_legacy_semantics"):
+                return (
+                    "allowed_legacy_semantics",
+                    "OpenSSL CMAC repeated final matched documented allowed legacy semantics",
+                    extra,
+                )
+            return (
+                "allowed_legacy_semantics_needs_review",
+                "OpenSSL CMAC repeated final succeeded; documentation review needed",
+                extra,
+            )
+        if (
+            lifecycle == "update_after_second_final"
+            and _openssl_cmac_update_after_second_final_accept(stdout)
+        ):
+            extra["needs_doc_review"] = True
+            extra["follow_up"] = "check update-after-second-final continuation behavior"
+            return (
+                "lifecycle_semantic_divergence_candidate",
+                "OpenSSL CMAC accepted update after second final; requires documentation review",
+                extra,
+            )
+
+    if "[OK]" in stdout:
+        if "safe_reject_projection" in stdout or "safe_negative" in expected_candidate_types:
+            return "safe_negative", "manifest-backed safe rejection", extra
+        if _expected_has(expected_candidate_types, "allowed_legacy_semantics"):
+            return "allowed_legacy_semantics", "manifest-backed allowed lifecycle behavior", extra
+        return "safe_negative", "manifest-backed OK marker", extra
+
+    if _expected_has(expected_candidate_types, "allowed_legacy_semantics_needs_review"):
+        extra["needs_doc_review"] = True
+        return (
+            "allowed_legacy_semantics_needs_review",
+            "allowed legacy class produced non-OK behavior",
+            extra,
+        )
+    if _expected_has(expected_candidate_types, "allowed_legacy_semantics"):
+        return "allowed_legacy_semantics", "manifest-backed allowed lifecycle behavior", extra
+    return _classify_runner_case(obj)[0], "manifest present but no MAC-specific rule matched", extra
 
 
 def _command_has_issue_grade_output(row: Dict[str, Any]) -> bool:
@@ -199,18 +431,26 @@ def _case_from_command_row(
     }
 
 
-def _case_from_runner_obj(obj: Dict[str, Any], artifact: str) -> Dict[str, Any]:
+def _case_from_runner_obj(
+    obj: Dict[str, Any], artifact: str, manifest: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     stdout = str((obj.get("run") or {}).get("stdout") or obj.get("stdout") or "")
     stderr = str((obj.get("run") or {}).get("stderr") or obj.get("stderr") or "")
     exit_code = (obj.get("run") or {}).get("returncode", obj.get("exit_code"))
-    classification, _reason = _classify_runner_case(obj)
+    reason = ""
+    manifest_extra: Dict[str, Any] = {}
+    if manifest:
+        classification, reason, manifest_extra = _classify_manifest_runner_case(obj, manifest)
+    else:
+        classification, reason = _classify_runner_case(obj)
     consumed_len = _extract_int(r"consumed_len=(\d+)", stdout)
     der_len = _extract_int(r"der_len=(\d+)", stdout)
     trailing_len = None
     if consumed_len is not None and der_len is not None:
         trailing_len = max(der_len - consumed_len, 0)
-    return {
-        "case_id": str(obj.get("relative_source") or obj.get("source") or ""),
+    case_id = str(manifest_extra.get("case_id") or _case_id_from_source(str(obj.get("relative_source") or obj.get("source") or "")))
+    case = {
+        "case_id": case_id,
         "artifact": artifact,
         "library": str(obj.get("library") or ""),
         "api_or_command": str(obj.get("target_api") or (obj.get("template") or {}).get("target_api") or ""),
@@ -227,11 +467,137 @@ def _case_from_runner_obj(obj: Dict[str, Any], artifact: str) -> Dict[str, Any]:
         "caller_accept": classification not in {"safe_negative", "harness_error"},
         "output_file_created": False,
         "output_file_nonempty": False,
+        "reason": reason,
+        "_stdout": stdout,
     }
+    for key in (
+        "mac_algorithm",
+        "digest_or_cipher",
+        "lifecycle_sequence",
+        "expected_candidate_types",
+        "unsupported_dimensions",
+        "needs_doc_review",
+        "follow_up",
+    ):
+        if key in manifest_extra:
+            case[key] = manifest_extra[key]
+    return case
+
+
+def _case_from_skipped_manifest(manifest: Dict[str, Any], artifact: str) -> Dict[str, Any]:
+    return {
+        "case_id": str(manifest.get("case_id") or ""),
+        "artifact": artifact,
+        "library": "",
+        "api_or_command": "",
+        "input_kind": "",
+        "mutation": str(manifest.get("lifecycle_sequence") or ""),
+        "exit_code": None,
+        "verdict": "projection_limitation",
+        "migration_verdict": "",
+        "stdout_tags": [],
+        "stderr_tags": [],
+        "sanitizer_signal": "",
+        "consumed_len": None,
+        "trailing_len": None,
+        "caller_accept": False,
+        "output_file_created": False,
+        "output_file_nonempty": False,
+        "mac_algorithm": str(manifest.get("mac_algorithm") or ""),
+        "digest_or_cipher": str(manifest.get("digest_or_cipher") or ""),
+        "lifecycle_sequence": str(manifest.get("lifecycle_sequence") or ""),
+        "expected_candidate_types": list(manifest.get("expected_candidate_types") or ["projection_limitation"]),
+        "unsupported_dimensions": manifest.get("unsupported_dimensions") or [],
+        "needs_doc_review": False,
+        "reason": "skipped render-matrix case: unsupported projection",
+    }
+
+
+def _refine_mac_lifecycle_pairs(cases: List[Dict[str, Any]]) -> None:
+    grouped: Dict[str, Dict[str, Dict[str, Any]]] = defaultdict(dict)
+    for case in cases:
+        case_id = str(case.get("case_id") or "")
+        library = str(case.get("library") or "")
+        if case_id and library:
+            grouped[case_id][library] = case
+
+    for pair in grouped.values():
+        openssl = pair.get("openssl")
+        mbedtls = pair.get("mbedtls")
+        if not openssl or not mbedtls:
+            continue
+        lifecycle = str(openssl.get("lifecycle_sequence") or "")
+        openssl_stdout = str(openssl.get("_stdout") or "")
+        mbedtls_stdout = str(mbedtls.get("_stdout") or "")
+        if openssl.get("mac_algorithm") != "CMAC":
+            continue
+        if not str(openssl.get("digest_or_cipher") or "").startswith("AES-"):
+            continue
+        if lifecycle in {"setup_final_final", "setup_update_final_final"}:
+            peer_rejects = (
+                _openssl_second_final_success(openssl_stdout)
+                and _mbedtls_second_finish_reject(mbedtls_stdout)
+            )
+            if not peer_rejects:
+                continue
+            openssl["verdict"] = "lifecycle_semantic_divergence_candidate"
+            openssl["needs_doc_review"] = True
+            openssl["reason"] = "OpenSSL CMAC second final succeeded while mbedTLS PSA rejected second finish"
+            openssl["follow_up"] = "check repeated-final behavior against OpenSSL documentation"
+            openssl["peer_library"] = "mbedtls"
+            openssl["peer_verdict"] = str(mbedtls.get("verdict") or "")
+            mbedtls["verdict"] = "safe_negative"
+            mbedtls["reason"] = "mBedTLS PSA rejected repeated finish in CMAC double-final pair"
+            continue
+        if lifecycle == "update_after_final":
+            peer_rejects = (
+                _openssl_cmac_update_after_final_accept(openssl_stdout)
+                and _mbedtls_update_after_finish_reject(mbedtls_stdout)
+            )
+            if peer_rejects:
+                openssl["verdict"] = "lifecycle_semantic_divergence_candidate"
+                openssl["needs_doc_review"] = True
+                openssl["reason"] = "OpenSSL CMAC accepted update after final while mbedTLS PSA rejected update after finish"
+                openssl["follow_up"] = "check update-after-final and final-after-update behavior"
+                openssl["peer_library"] = "mbedtls"
+                openssl["peer_verdict"] = str(mbedtls.get("verdict") or "")
+                mbedtls["verdict"] = "safe_negative"
+                mbedtls["reason"] = "mBedTLS PSA rejected update after finish in CMAC lifecycle pair"
+            continue
+        if lifecycle == "third_final":
+            peer_rejects = (
+                _openssl_cmac_third_final_accept(openssl_stdout)
+                and _mbedtls_second_finish_reject(mbedtls_stdout)
+            )
+            if peer_rejects:
+                openssl["verdict"] = "allowed_legacy_semantics_needs_review"
+                openssl["needs_doc_review"] = True
+                openssl["reason"] = "OpenSSL CMAC repeated final succeeded while mbedTLS PSA rejected repeated finish"
+                openssl["follow_up"] = "check whether OpenSSL CMAC repeated final is documented legacy semantics"
+                openssl["peer_library"] = "mbedtls"
+                openssl["peer_verdict"] = str(mbedtls.get("verdict") or "")
+                mbedtls["verdict"] = "safe_negative"
+                mbedtls["reason"] = "mBedTLS PSA rejected repeated finish in CMAC lifecycle pair"
+            continue
+        if lifecycle == "update_after_second_final":
+            peer_rejects = (
+                _openssl_cmac_update_after_second_final_accept(openssl_stdout)
+                and _mbedtls_update_after_second_finish_reject(mbedtls_stdout)
+            )
+            if peer_rejects:
+                openssl["verdict"] = "lifecycle_semantic_divergence_candidate"
+                openssl["needs_doc_review"] = True
+                openssl["reason"] = "OpenSSL CMAC accepted update after second final while mbedTLS PSA rejected update after second finish"
+                openssl["follow_up"] = "check update-after-second-final continuation behavior"
+                openssl["peer_library"] = "mbedtls"
+                openssl["peer_verdict"] = str(mbedtls.get("verdict") or "")
+                mbedtls["verdict"] = "safe_negative"
+                mbedtls["reason"] = "mBedTLS PSA rejected update after second finish in CMAC lifecycle pair"
 
 
 def analyze(args: argparse.Namespace) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
     cases: List[Dict[str, Any]] = []
+    manifest_by_case_id = _index_manifests(args.case_manifest_root)
 
     verdict_by_case: Dict[str, Dict[str, Any]] = {}
     if args.verdicts_jsonl:
@@ -243,18 +609,24 @@ def analyze(args: argparse.Namespace) -> Tuple[Dict[str, Any], List[Dict[str, An
     if args.run_jsonl:
         for obj in _read_jsonl(args.run_jsonl):
             key = str(obj.get("relative_source") or obj.get("source") or "")
+            manifest = _find_manifest_for_source(
+                str(obj.get("source") or obj.get("relative_source") or ""), manifest_by_case_id
+            )
             if key and key in verdict_by_case:
                 merged = dict(obj)
                 verdict_obj = verdict_by_case[key]
                 for field in ("verdict", "migration_verdict", "reason", "raw_status"):
                     if field in verdict_obj:
                         merged[field] = verdict_obj[field]
-                cases.append(_case_from_runner_obj(merged, str(args.run_jsonl)))
+                cases.append(_case_from_runner_obj(merged, str(args.run_jsonl), manifest))
             else:
-                cases.append(_case_from_runner_obj(obj, str(args.run_jsonl)))
+                cases.append(_case_from_runner_obj(obj, str(args.run_jsonl), manifest))
     elif args.verdicts_jsonl:
         for obj in verdict_by_case.values():
-            cases.append(_case_from_runner_obj(obj, str(args.verdicts_jsonl)))
+            manifest = _find_manifest_for_source(
+                str(obj.get("source") or obj.get("relative_source") or ""), manifest_by_case_id
+            )
+            cases.append(_case_from_runner_obj(obj, str(args.verdicts_jsonl), manifest))
 
     if args.command_matrix_csv:
         rows = _read_command_rows(args.command_matrix_csv)
@@ -263,12 +635,25 @@ def analyze(args: argparse.Namespace) -> Tuple[Dict[str, Any], List[Dict[str, An
             key = (str(row.get("input_kind") or ""), str(row.get("command_name") or ""))
             cases.append(_case_from_command_row(row, str(args.command_matrix_csv), group_classes[key]))
 
+    if args.case_manifest_root:
+        for skipped_path in _skipped_manifest_paths(args.case_manifest_root):
+            skipped = _read_yaml(skipped_path).get("skipped_cases") or []
+            if isinstance(skipped, list):
+                for manifest in skipped:
+                    if isinstance(manifest, dict):
+                        cases.append(_case_from_skipped_manifest(manifest, str(skipped_path)))
+
+    _refine_mac_lifecycle_pairs(cases)
+    for case in cases:
+        case.pop("_stdout", None)
+
     verdict_counts = Counter(str(case.get("verdict") or "unknown_needs_triage") for case in cases)
     summary = {
         "inputs": {
             "run_jsonl": str(args.run_jsonl) if args.run_jsonl else "",
             "verdicts_jsonl": str(args.verdicts_jsonl) if args.verdicts_jsonl else "",
             "command_matrix_csv": str(args.command_matrix_csv) if args.command_matrix_csv else "",
+            "case_manifest_root": str(args.case_manifest_root) if args.case_manifest_root else "",
         },
         "total_cases": len(cases),
         "verdict_counts": dict(sorted(verdict_counts.items())),
@@ -286,6 +671,7 @@ def main() -> int:
     parser.add_argument("--run-jsonl", type=Path)
     parser.add_argument("--verdicts-jsonl", type=Path)
     parser.add_argument("--command-matrix-csv", type=Path)
+    parser.add_argument("--case-manifest-root", type=Path)
     parser.add_argument("--out-summary", type=Path, required=True)
     parser.add_argument("--out-cases", type=Path, required=True)
     args = parser.parse_args()

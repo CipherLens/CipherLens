@@ -1,0 +1,31 @@
+schema: family_mining_policy_v1
+mode: dry_run
+llm_policy:
+  glm_or_llm_allowed_stage: 09_llm_slot_filling
+  allowed_output:
+    - slot_bindings.yaml
+  forbidden_output:
+    - complete C harness
+    - adapter_recipes overwrite
+    - normalized_templates overwrite
+    - mapping gate bypass
+  validation_required:
+    - adapter_validate
+claim_policy:
+  confirmed_vulnerability: false
+  cve: false
+  exploitable: false
+dry_run_forbidden_actions:
+  - glm_called
+  - render_executed
+  - compile_executed
+  - run_executed
+  - feedback_written
+  - knowledge_modified
+  - pattern_bank_modified
+  - adapter_recipes_modified
+  - normalized_templates_modified
+family_priority:
+  x509_parsing: high
+  asn1_nested_boundary: external_pending
+  pkcs_container_parsing: external_pending

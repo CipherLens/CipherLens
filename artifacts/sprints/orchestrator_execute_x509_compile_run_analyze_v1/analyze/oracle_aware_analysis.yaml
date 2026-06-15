@@ -1,0 +1,118 @@
+schema: x509_oracle_aware_analysis_v1
+generated_at: '2026-06-13T04:23:14+00:00'
+cases:
+- case_id: x509_parsing__generic_mut_001__der_valid_plus_trailing_garbage
+  family: x509_parsing
+  target_library: openssl
+  mutation_strategy: der_valid_plus_trailing_garbage
+  run_status: exited
+  exit_code: 10
+  signal: ''
+  timeout: false
+  sanitizer_observed: false
+  oracle_event_count: 1
+  accepted_true: 1
+  accepted_false: 0
+  full_consumption_false: 1
+  semantic_observation: full_consumption_gap_candidate
+  candidate_label: full_consumption_gap_candidate
+  triage_required: true
+  reason: accepted path with full_consumption=false observed
+- case_id: x509_parsing__generic_mut_002__near_valid_der_length_delta
+  family: x509_parsing
+  target_library: openssl
+  mutation_strategy: near_valid_der_length_delta
+  run_status: exited
+  exit_code: 0
+  signal: ''
+  timeout: false
+  sanitizer_observed: false
+  oracle_event_count: 1
+  accepted_true: 0
+  accepted_false: 1
+  full_consumption_false: 1
+  semantic_observation: normal_reject
+  candidate_label: normal_reject
+  triage_required: false
+  reason: reject path observed
+- case_id: x509_parsing__generic_mut_003__pem_valid_plus_trailing_garbage
+  family: x509_parsing
+  target_library: openssl
+  mutation_strategy: pem_valid_plus_trailing_garbage
+  run_status: exited
+  exit_code: 0
+  signal: ''
+  timeout: false
+  sanitizer_observed: false
+  oracle_event_count: 1
+  accepted_true: 1
+  accepted_false: 0
+  full_consumption_false: 0
+  semantic_observation: normal_accept
+  candidate_label: normal_accept
+  triage_required: false
+  reason: accepted path observed without full-consumption gap
+- case_id: x509_parsing__generic_mut_004__malformed_only_control
+  family: x509_parsing
+  target_library: openssl
+  mutation_strategy: malformed_only_control
+  run_status: exited
+  exit_code: 0
+  signal: ''
+  timeout: false
+  sanitizer_observed: false
+  oracle_event_count: 1
+  accepted_true: 0
+  accepted_false: 1
+  full_consumption_false: 1
+  semantic_observation: normal_reject
+  candidate_label: normal_reject
+  triage_required: false
+  reason: reject path observed
+labels:
+- case_id: x509_parsing__generic_mut_001__der_valid_plus_trailing_garbage
+  family: x509_parsing
+  target_library: openssl
+  mutation_strategy: der_valid_plus_trailing_garbage
+  candidate_label: full_consumption_gap_candidate
+  triage_required: true
+  reason: accepted path with full_consumption=false observed
+- case_id: x509_parsing__generic_mut_002__near_valid_der_length_delta
+  family: x509_parsing
+  target_library: openssl
+  mutation_strategy: near_valid_der_length_delta
+  candidate_label: normal_reject
+  triage_required: false
+  reason: reject path observed
+- case_id: x509_parsing__generic_mut_003__pem_valid_plus_trailing_garbage
+  family: x509_parsing
+  target_library: openssl
+  mutation_strategy: pem_valid_plus_trailing_garbage
+  candidate_label: normal_accept
+  triage_required: false
+  reason: accepted path observed without full-consumption gap
+- case_id: x509_parsing__generic_mut_004__malformed_only_control
+  family: x509_parsing
+  target_library: openssl
+  mutation_strategy: malformed_only_control
+  candidate_label: normal_reject
+  triage_required: false
+  reason: reject path observed
+summary:
+  normal_reject: 2
+  normal_accept: 1
+  crash_candidate: 0
+  sanitizer_candidate: 0
+  full_consumption_gap_candidate: 1
+  semantic_divergence_candidate: 0
+  needs_triage: 0
+  oracle_incomplete: 0
+  external_validation_pending: 0
+  total_cases: 4
+  oracle_events: 4
+  asan_observed: 0
+  ubsan_observed: 0
+claim_policy:
+  confirmed_vulnerability: false
+  cve: false
+  exploitable: false

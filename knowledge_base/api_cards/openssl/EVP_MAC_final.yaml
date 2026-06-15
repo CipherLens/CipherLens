@@ -15,7 +15,7 @@ state_preconditions:
   - update sequence must be valid for the selected MAC
 valid_invalid_ranges:
   valid: initialized MAC context and sufficiently sized output buffer
-  invalid: final before setup, double final, undersized output
+  invalid: final before setup, update after final for strict lifecycle APIs, undersized output
 unsupported_conditions:
   - using ctx after invalid lifecycle transition
 related_apis:
@@ -25,6 +25,9 @@ related_apis:
 mutation_hints:
   - final before setup
   - double final
+  - update after final
+  - third final
+  - update after second final
   - abort then final
   - output buffer too small
 oracle_observables:
@@ -36,4 +39,14 @@ source_references:
   - openssl/evp.h
 notes:
   - "Known pitfall: failure paths must not expose unsafe outl or stale output state."
-
+  - "Feedback: OpenSSL CMAC repeated final may be allowed legacy/provider semantics rather than a vulnerability by itself."
+  - "Observed CMAC behavior: a second EVP_MAC_final() can succeed and return outl=16."
+  - "MAC lifecycle v2 minimal confirmation: CMAC AES-128-CBC and AES-256-CBC accepted EVP_MAC_update() after EVP_MAC_final(); a follow-up EVP_MAC_final() also succeeded and produced a different 16-byte output."
+  - "MAC lifecycle v2 minimal confirmation: CMAC third-final sequences returned success for final1/final2/final3, each with outl=16 and distinct output bytes."
+  - "MAC lifecycle v2 minimal confirmation: CMAC update-after-second-final sequences returned success for final1, final2, update-after-second-final, and final3."
+  - "High-value follow-up mutations are update-after-final and update-after-second-final because they show continuation after a terminal-looking finalization state."
+  - "Third-final is useful evidence but should be treated as allowed_legacy_semantics_needs_review until OpenSSL documentation confirms whether repeated finalization is intentional provider semantics."
+  - "Classification guidance: do not report these CMAC lifecycle observations as confirmed vulnerabilities without documentation review and caller-impact evidence."
+known_pitfalls:
+  - HMAC failure-path outl observations should be classified as failure_path_output_state_triage, not bug_candidate, without stronger output-state evidence.
+  - HMAC+AES and CMAC+SHA are invalid parameter projections; skip them or mark projection_limitation.

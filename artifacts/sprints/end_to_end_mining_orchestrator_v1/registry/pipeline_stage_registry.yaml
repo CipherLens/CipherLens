@@ -1,0 +1,280 @@
+schema: pipeline_stage_registry_v1
+generated_at: '2026-06-12T15:00:00+00:00'
+stage_count: 18
+stages:
+- stage_id: '01'
+  stage_name: ingestion
+  owner_module: analysis.pipeline_executor
+  input_artifacts:
+  - historical PoC / issue / CVE / regression test
+  output_artifacts:
+  - ingested PoC artifact
+  status: defined
+  blocked_by: []
+  uses_llm: false
+  llm_allowed_output: ''
+  allowed_to_execute_now: false
+  notes:
+  - dry-run registry definition
+  - no LLM required
+- stage_id: '02'
+  stage_name: family_correction
+  owner_module: analysis.pipeline_executor
+  input_artifacts:
+  - ingested PoC artifact
+  output_artifacts:
+  - family correction / scheduler seed review
+  status: defined
+  blocked_by: []
+  uses_llm: false
+  llm_allowed_output: ''
+  allowed_to_execute_now: false
+  notes:
+  - dry-run registry definition
+  - no LLM required
+- stage_id: '03'
+  stage_name: rag_lookup
+  owner_module: migration.evidence_collector
+  input_artifacts:
+  - family corrected artifact
+  output_artifacts:
+  - RAG evidence
+  status: defined
+  blocked_by: []
+  uses_llm: false
+  llm_allowed_output: ''
+  allowed_to_execute_now: false
+  notes:
+  - dry-run registry definition
+  - no LLM required
+- stage_id: '04'
+  stage_name: mapping_gate
+  owner_module: migration.candidate_mapper
+  input_artifacts:
+  - RAG evidence
+  - candidate APIs
+  output_artifacts:
+  - mapping gate decision
+  status: defined
+  blocked_by: []
+  uses_llm: false
+  llm_allowed_output: ''
+  allowed_to_execute_now: false
+  notes:
+  - dry-run registry definition
+  - no LLM required
+- stage_id: '05'
+  stage_name: family_template_recipe
+  owner_module: template_maker.family_render_plan
+  input_artifacts:
+  - mapping gate decision
+  output_artifacts:
+  - family template recipe
+  status: defined
+  blocked_by: []
+  uses_llm: false
+  llm_allowed_output: ''
+  allowed_to_execute_now: false
+  notes:
+  - dry-run registry definition
+  - no LLM required
+- stage_id: '06'
+  stage_name: family_template_generalization
+  owner_module: template_maker.family_render_plan
+  input_artifacts:
+  - family template recipe
+  output_artifacts:
+  - generalized family template
+  status: defined
+  blocked_by: []
+  uses_llm: false
+  llm_allowed_output: ''
+  allowed_to_execute_now: false
+  notes:
+  - dry-run registry definition
+  - no LLM required
+- stage_id: '07'
+  stage_name: adapter_recipe
+  owner_module: migration.adapter_filler
+  input_artifacts:
+  - generalized family template
+  output_artifacts:
+  - adapter recipe
+  status: defined
+  blocked_by: []
+  uses_llm: false
+  llm_allowed_output: ''
+  allowed_to_execute_now: false
+  notes:
+  - dry-run registry definition
+  - no LLM required
+- stage_id: 08
+  stage_name: slot_filling_plan
+  owner_module: migration.adapter_filler
+  input_artifacts:
+  - adapter recipe
+  output_artifacts:
+  - slot filling plan
+  status: defined
+  blocked_by: []
+  uses_llm: false
+  llm_allowed_output: ''
+  allowed_to_execute_now: false
+  notes:
+  - dry-run registry definition
+  - no LLM required
+- stage_id: 09
+  stage_name: llm_slot_filling
+  owner_module: migration.adapter_filler
+  input_artifacts:
+  - slot filling plan
+  - RAG evidence
+  output_artifacts:
+  - slot_bindings.yaml
+  status: defined
+  blocked_by: []
+  uses_llm: true
+  llm_allowed_output: slot_bindings.yaml
+  allowed_to_execute_now: false
+  notes:
+  - dry-run registry definition
+  - GLM/LLM stages may only produce slot_bindings.yaml
+- stage_id: '10'
+  stage_name: adapter_validate
+  owner_module: migration.adapter_validate
+  input_artifacts:
+  - slot_bindings.yaml
+  - adapter recipe
+  output_artifacts:
+  - validated adapter
+  status: defined
+  blocked_by: []
+  uses_llm: false
+  llm_allowed_output: ''
+  allowed_to_execute_now: false
+  notes:
+  - dry-run registry definition
+  - no LLM required
+- stage_id: '11'
+  stage_name: mutation_planner
+  owner_module: mutation
+  input_artifacts:
+  - validated adapter
+  - verified seeds
+  output_artifacts:
+  - mutation plan
+  status: defined
+  blocked_by: []
+  uses_llm: false
+  llm_allowed_output: ''
+  allowed_to_execute_now: false
+  notes:
+  - dry-run registry definition
+  - no LLM required
+- stage_id: '12'
+  stage_name: render_plan
+  owner_module: template_maker.family_render_plan
+  input_artifacts:
+  - mutation plan
+  output_artifacts:
+  - render plan
+  status: defined
+  blocked_by: []
+  uses_llm: false
+  llm_allowed_output: ''
+  allowed_to_execute_now: false
+  notes:
+  - dry-run registry definition
+  - no LLM required
+- stage_id: '13'
+  stage_name: render_cases
+  owner_module: template_maker.family_case_renderer
+  input_artifacts:
+  - render plan
+  output_artifacts:
+  - rendered cases
+  status: defined
+  blocked_by: []
+  uses_llm: false
+  llm_allowed_output: ''
+  allowed_to_execute_now: false
+  notes:
+  - dry-run registry definition
+  - no LLM required
+- stage_id: '14'
+  stage_name: compile_run
+  owner_module: runner.family_compile_runner
+  input_artifacts:
+  - rendered cases
+  output_artifacts:
+  - compile/run results
+  status: defined
+  blocked_by: []
+  uses_llm: false
+  llm_allowed_output: ''
+  allowed_to_execute_now: false
+  notes:
+  - dry-run registry definition
+  - no LLM required
+- stage_id: '15'
+  stage_name: oracle_aware_analyze
+  owner_module: analyzer.oracle_aware_analyzer
+  input_artifacts:
+  - compile/run results
+  output_artifacts:
+  - oracle-aware analysis
+  status: defined
+  blocked_by: []
+  uses_llm: false
+  llm_allowed_output: ''
+  allowed_to_execute_now: false
+  notes:
+  - dry-run registry definition
+  - no LLM required
+- stage_id: '16'
+  stage_name: triage
+  owner_module: analysis
+  input_artifacts:
+  - oracle-aware analysis
+  output_artifacts:
+  - triage report
+  status: defined
+  blocked_by: []
+  uses_llm: false
+  llm_allowed_output: ''
+  allowed_to_execute_now: false
+  notes:
+  - dry-run registry definition
+  - no LLM required
+- stage_id: '17'
+  stage_name: runtime_feedback
+  owner_module: analysis.runtime_feedback
+  input_artifacts:
+  - triage report
+  output_artifacts:
+  - runtime feedback
+  status: defined
+  blocked_by: []
+  uses_llm: false
+  llm_allowed_output: ''
+  allowed_to_execute_now: false
+  notes:
+  - dry-run registry definition
+  - no LLM required
+- stage_id: '18'
+  stage_name: scheduler_update
+  owner_module: analysis.scheduler_runtime_loop
+  input_artifacts:
+  - runtime feedback
+  - family status
+  output_artifacts:
+  - scheduler task queue
+  status: defined
+  blocked_by: []
+  uses_llm: false
+  llm_allowed_output: ''
+  allowed_to_execute_now: false
+  notes:
+  - dry-run registry definition
+  - no LLM required
+source_config: /home/wen/work/crypto-pattern-fuzz/config/end_to_end_pipeline_registry.yaml

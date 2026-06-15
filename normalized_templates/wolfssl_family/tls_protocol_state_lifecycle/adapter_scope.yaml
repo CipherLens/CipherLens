@@ -1,0 +1,38 @@
+schema: family_adapter_scope_v1
+family: tls_protocol_state_lifecycle
+template_level: family
+adapter_generation_in_this_sprint: false
+glm_usage_in_this_sprint: false
+scope:
+  allowed_targets:
+    openssl:
+      allowed_apis:
+      - SSL_CTX_new
+      - SSL_free
+      - SSL_new
+      candidate_only_apis:
+      - SSL_accept
+      - SSL_connect
+      - SSL_read
+      - SSL_write
+    mbedtls:
+      allowed_apis:
+      - mbedtls_ssl_config_init
+      - mbedtls_ssl_free
+      - mbedtls_ssl_init
+      candidate_only_apis:
+      - mbedtls_ssl_handshake
+      - mbedtls_ssl_read
+      - mbedtls_ssl_write
+  blocked_targets: []
+  candidate_only_targets:
+    openssl:
+    - SSL_accept
+    - SSL_connect
+    - SSL_read
+    - SSL_write
+    mbedtls:
+    - mbedtls_ssl_handshake
+    - mbedtls_ssl_read
+    - mbedtls_ssl_write
+policy: future adapters must bind slots through recipe-slot mode only

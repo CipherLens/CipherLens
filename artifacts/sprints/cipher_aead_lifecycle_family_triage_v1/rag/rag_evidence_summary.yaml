@@ -1,0 +1,34 @@
+rag_queries:
+  openssl_cipher_aead_lifecycle:
+    output: artifacts/sprints/cipher_aead_lifecycle_family_triage_v1/rag/openssl_cipher_aead_lifecycle.json
+    result_count: 20
+    key_hits:
+      - knowledge_raw/api_constraints/openssl/3.5.5/EVP_aes_128_gcm.md
+      - knowledge_raw/unit_tests/openssl/3.5.5/evp_aead_target_api_evidence.md
+      - knowledge_raw/api_constraints/openssl/3.5.5/EVP_DecryptInit_ex.md
+      - knowledge_raw/api_constraints/openssl/3.5.5/EVP_DecryptUpdate.md
+  mbedtls_aead_lifecycle:
+    output: artifacts/sprints/cipher_aead_lifecycle_family_triage_v1/rag/mbedtls_aead_lifecycle.json
+    result_count: 20
+    key_hits:
+      - knowledge_raw/poc_patterns/core10_patterns.md
+      - knowledge_raw/poc_patterns/unified_patterns.md
+      - knowledge_raw/api_constraints/openssl/3.5.5/EVP_DecryptUpdate.md
+  aead_lifecycle_oracle:
+    output: artifacts/sprints/cipher_aead_lifecycle_family_triage_v1/rag/aead_lifecycle_oracle.json
+    result_count: 20
+    key_hits:
+      - knowledge_raw/poc_patterns/unified_patterns.md
+      - knowledge_raw/poc_patterns/openssl_issue_patterns.md
+      - knowledge_raw/poc_patterns/core10_patterns.md
+answers:
+  recalls_openssl_evp_aead: true
+  recalls_mbedtls_or_psa_aead: true
+  cross_library_lifecycle_semantic_divergence_evidence: partial
+  supports_a_path: partial
+  better_initial_path: B_controlled_family_mutation
+notes:
+  - "RAG recalls OpenSSL GCM/CCM EVP API constraints and unit-test evidence."
+  - "RAG recalls MBEDTLS-POC-0028 and AEAD tag-length setup evidence."
+  - "Cross-library evidence exists but is not yet recipe-slot precise enough to run A-path immediately."
+  - "Use RAG as evidence only, not as a vulnerability conclusion."

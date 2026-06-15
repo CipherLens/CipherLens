@@ -1,0 +1,52 @@
+{
+  "poc_id": "WOLFSSL-POC-0003",
+  "source_library": "wolfSSL",
+  "issue_or_cve": "CVE-2026-5448",
+  "title": "wolfSSL X.509 date buffer overflow in wolfSSL_X509_notAfter / wolfSSL_X509_notBefore",
+  "bug_class": "X.509 date parsing buffer overflow",
+  "harness_family": "x509_date_parser_memory_safety",
+  "oracle_type": "crash_sanitizer_oracle",
+  "source_api": [
+    "wolfSSL_X509_set_notAfter",
+    "wolfSSL_X509_notAfter",
+    "wolfSSL_X509_set_notBefore",
+    "wolfSSL_X509_notBefore"
+  ],
+  "target_candidate_apis": {
+    "openssl": [
+      "X509_get0_notAfter",
+      "X509_get0_notBefore",
+      "ASN1_TIME_print"
+    ],
+    "mbedtls": [
+      "mbedtls_x509_crt_parse",
+      "mbedtls_x509_time"
+    ]
+  },
+  "affected_versions": [
+    "wolfSSL < 5.9.1"
+  ],
+  "candidate_vulnerable_version": "wolfSSL v5.9.0-stable",
+  "fixed_version": "wolfSSL v5.9.1-stable",
+  "fix_pr_or_commit": "PR 10071",
+  "input_provenance": "reconstructed_from_pr_10071_official_test_pattern",
+  "has_original_input": false,
+  "uses_placeholder_input": false,
+  "strict_reproduction": true,
+  "vulnerable_version_verified": true,
+  "fixed_version_verified": true,
+  "current_version_verified": true,
+  "expected_vulnerable_behavior": "On wolfSSL v5.9.0-stable with ASan/UBSan, an API-level harness using a crafted WOLFSSL_ASN1_TIME object with length 255 triggers AddressSanitizer heap-buffer-overflow with WRITE of size 255 through both wolfSSL_X509_notAfter and wolfSSL_X509_notBefore paths.",
+  "expected_fixed_behavior": "wolfSSL v5.9.1-stable rejects the crafted WOLFSSL_ASN1_TIME object with length 255 without ASan heap-buffer-overflow, WRITE of size 255 crash, or abort. The harness exits with code 1 because the oversized date length is rejected.",
+  "expected_current_behavior": "Current wolfSSL v5.9.1-stable-1373-g8fca95ce6 rejects the crafted WOLFSSL_ASN1_TIME object with length 255 in both notAfter and notBefore paths without ASan heap-buffer-overflow, WRITE of size 255 crash, or abort. The harness exits with code 1 because the oversized date length is rejected.",
+  "crash_signal": "ASan heap-buffer-overflow; WRITE of size 255; memcpy; notAfter exit code 134; notBefore exit code 134.",
+  "semantic_signal": "",
+  "migration_value": "High. X.509 date parsing behavior can be compared across wolfSSL, OpenSSL, and mbedTLS date/time parsing APIs.",
+  "quality_level": "Q1_strict_reproduction_candidate",
+  "recommended_usage": [
+    "candidate_for_input_reconstruction",
+    "x509_date_parser_seed",
+    "cross_library_migration_candidate"
+  ],
+  "notes": "API-level strict reproduction succeeded on wolfSSL v5.9.0-stable commit 922d04b3568c6428a9fb905ddee3ef5a68db3108 using a crafted WOLFSSL_ASN1_TIME object following PR 10071's official test pattern. Both notAfter and notBefore paths triggered ASan heap-buffer-overflow with WRITE of size 255. Fixed release candidate verified: wolfSSL v5.9.1-stable commit 1d363f3adceba9d1478230ede476a37b0dcdef24 rejects the oversized ASN1_TIME length in both notAfter and notBefore paths without sanitizer crash evidence. Current wolfSSL v5.9.1-stable-1373-g8fca95ce6 commit 8fca95ce651d6e370d91f5598786de4bc66aa2c2 was tested with the same API-level X.509 date harness. Both notAfter and notBefore paths safely rejected the oversized ASN1_TIME length without sanitizer crash evidence."
+}

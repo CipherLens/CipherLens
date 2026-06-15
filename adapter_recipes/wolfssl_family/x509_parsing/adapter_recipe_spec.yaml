@@ -1,0 +1,181 @@
+schema: family_adapter_recipe_spec_v1
+family: x509_parsing
+source_library: wolfssl
+template_level: family
+generation_mode: spec_only_no_canonical_template
+reason_no_concrete_adapter: Family package is spec-only or lacks canonical_tmpl_wolfssl.c
+  / selected_mask_units.yaml.
+required_future_inputs:
+- canonical_tmpl_wolfssl.c
+- selected_mask_units.yaml
+- family_template_meta.yaml
+allowed_targets:
+  openssl:
+    allowed_apis: []
+    candidate_only_apis:
+    - PEM_read_X509
+    - X509_free
+    - X509_verify
+  mbedtls:
+    allowed_apis:
+    - mbedtls_x509_crt_parse_der
+    candidate_only_apis:
+    - mbedtls_x509_crt_free
+    - mbedtls_x509_crt_parse_file
+    - mbedtls_x509_crt_verify
+candidate_only_targets:
+- family: x509_parsing
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wc_InitDecodedCert
+  target_api: mbedtls_x509_crt_parse_der
+  mapping_type: candidate_counterpart
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: parser input and object cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: x509_parsing
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_X509_free
+  target_api: mbedtls_x509_crt_free
+  mapping_type: cleanup_equivalent
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: parser input and object cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: x509_parsing
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_X509_free
+  target_api: X509_free
+  mapping_type: cleanup_equivalent
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: parser input and object cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: x509_parsing
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_X509_load_certificate_file
+  target_api: mbedtls_x509_crt_parse_file
+  mapping_type: parser_equivalent
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: parser input and object cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: x509_parsing
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_X509_load_certificate_file
+  target_api: PEM_read_X509
+  mapping_type: parser_equivalent
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: parser input and object cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: x509_parsing
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_X509_verify
+  target_api: mbedtls_x509_crt_verify
+  mapping_type: semantic_related
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: parser input and object cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: x509_parsing
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_X509_verify
+  target_api: X509_verify
+  mapping_type: semantic_related
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: parser input and object cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+blocked_targets:
+- family: x509_parsing
+  wolfssl_api: wc_ParseCert
+  target_library: mbedtls
+  target_api: mbedtls_x509_crt_parse_der
+  reason: needs_manual_review
+  recommendation: manual_review_before_adapter
+  notes: not adapter-ready under current evidence gate
+expected_api_slots:
+- slot_name: wolfSSL_X509_load_certificate_file
+  source_api: wolfSSL_X509_load_certificate_file
+  allowed_target_apis:
+  - mbedtls:mbedtls_x509_crt_parse_file
+  - openssl:PEM_read_X509
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: wolfSSL_X509_free
+  source_api: wolfSSL_X509_free
+  allowed_target_apis:
+  - mbedtls:mbedtls_x509_crt_free
+  - openssl:X509_free
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: d2i_X509
+  source_api: ''
+  allowed_target_apis: []
+  blocked_target_apis: []
+  mapping_gate_status:
+  - not_in_mapping_gate
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: X509_free
+  source_api: X509_free
+  allowed_target_apis:
+  - openssl:X509_free
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: mbedtls_x509_crt_parse_der
+  source_api: ''
+  allowed_target_apis:
+  - mbedtls:mbedtls_x509_crt_parse_der
+  blocked_target_apis:
+  - mbedtls:mbedtls_x509_crt_parse_der
+  mapping_gate_status:
+  - needs_manual_review
+  - usable_for_adapter
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: mbedtls_x509_crt_free
+  source_api: ''
+  allowed_target_apis:
+  - mbedtls:mbedtls_x509_crt_free
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+expected_cleanup_slots:
+- slot_name: cleanup_call
+  source_cleanup: family-specific wolfSSL cleanup/free API
+  target_cleanup_candidates:
+  - X509_free
+  - mbedtls_x509_crt_free
+  required: true
+expected_oracle_slots:
+- parser_reject_accept
+- return_code_semantics
+- cleanup_required
+glm_policy:
+  allowed_now: false
+  allowed_later_for:
+  - adapter_slot_filling
+notes:
+- Spec-only adapter recipe; do not render or compile.
+- Adapter-ready mappings remain candidate-only until a family canonical template exists.

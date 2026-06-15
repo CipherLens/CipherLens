@@ -1,0 +1,866 @@
+review_targets:
+- poc_id: MBEDTLS-POC-0001
+  source_library: mbedtls
+  artifact_path: data/pocs/core10/MBEDTLS-POC-0001
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: A_recipe_slot_cross_library_migration
+  reason_for_review:
+  - family=bignum_serialization_boundary
+  metadata_component: null
+  critical_api: null
+  api_call_sequence:
+  - memset
+  - mbedtls_mpi_init
+  - mbedtls_mpi_lset
+  - mbedtls_mpi_free
+  - mbedtls_mpi_write_string
+  - malloc
+  - free
+  trigger_behavior: null
+- poc_id: OPENSSL-ISSUE-11567
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_11567
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: C_app_level_validation_gap
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: X509/ASN1
+  critical_api:
+  - X509v3 Subject Key Identifier
+  - X509v3 Authority Key Identifier
+  - X509v3 Basic Constraints
+  - md5WithRSAEncryption
+  api_call_sequence:
+  - BIO_new_file
+  - X509_print_fp
+  - X509_free
+  - BIO_free
+  trigger_behavior: WRONG_RESULT
+- poc_id: OPENSSL-ISSUE-11772
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_11772
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: C_app_level_validation_gap
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: X509/X509V3/ASN1
+  critical_api:
+  - X509_cmp_time
+  - X509_get0_notAfter
+  api_call_sequence:
+  - BIO_new_file
+  - X509_get0_notAfter
+  - X509_cmp_time
+  - X509_free
+  - BIO_free
+  trigger_behavior: WRONG_RESULT
+- poc_id: OPENSSL-ISSUE-13860
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_13860
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: C_app_level_validation_gap
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: X509/X509V3/ASN1
+  critical_api:
+  - X509_parse
+  - X509_get_pubkey
+  api_call_sequence:
+  - BIO_new_file
+  - d2i_X509_bio
+  - X509_get_pubkey
+  - EVP_PKEY_free
+  - X509_free
+  - BIO_free
+  trigger_behavior: UNKNOWN
+- poc_id: OPENSSL-ISSUE-14457
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_14457
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: C_app_level_validation_gap
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: X509/X509V3/ASN1
+  critical_api:
+  - X509v3 extensions
+  - basicConstraints
+  - subjectKeyIdentifier
+  - authorityKeyIdentifier
+  - subjectAltName
+  - keyUsage
+  api_call_sequence:
+  - BIO_new_file
+  - X509_STORE_new
+  - X509_STORE_add_cert
+  - X509_STORE_CTX_new
+  - X509_STORE_CTX_init
+  - X509_verify_cert
+  - X509_STORE_CTX_get_error
+  - X509_verify_cert_error_string
+  - X509_STORE_CTX_free
+  - X509_STORE_free
+  - X509_free
+  - BIO_free
+  trigger_behavior: WRONG_OUTPUT
+- poc_id: OPENSSL-ISSUE-14675
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_14675
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: C_app_level_validation_gap
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: X509/VERIFY
+  critical_api:
+  - X509_verify_cert
+  api_call_sequence:
+  - BIO_new_file
+  - X509_STORE_new
+  - X509_STORE_add_cert
+  - X509_STORE_CTX_new
+  - X509_STORE_CTX_init
+  - X509_verify_cert
+  - X509_STORE_CTX_get_error
+  - X509_verify_cert_error_string
+  - X509_STORE_CTX_free
+  - X509_STORE_free
+  - X509_free
+  - BIO_free
+  trigger_behavior: WRONG_ALERT_OR_PROTOCOL_BEHAVIOR
+- poc_id: OPENSSL-ISSUE-15899
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_15899
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: C_app_level_validation_gap
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  metadata_component: BN/ASN1
+  critical_api:
+  - bn_expand_internal
+  - EVP_PKEY_get_bn_param
+  api_call_sequence:
+  - BIO_new_file
+  - X509_get_pubkey
+  - EVP_PKEY_get1_RSA
+  - RSA_get0_key
+  - BN_print_fp
+  - RSA_free
+  - EVP_PKEY_free
+  - X509_free
+  - BIO_free
+  trigger_behavior: NULL_DEREFERENCE_CRASH
+- poc_id: OPENSSL-ISSUE-16196
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_16196
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: D_crash_sanitizer_evidence_audit
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  metadata_component: REQ/ASN1
+  critical_api:
+  - BN_print
+  api_call_sequence:
+  - BIO_new_file
+  - X509_REQ_get_pubkey
+  - EVP_PKEY_get1_RSA
+  - RSA_get0_key
+  - BN_print_fp
+  - RSA_free
+  - EVP_PKEY_free
+  - X509_REQ_free
+  - BIO_free
+  trigger_behavior: NULL_DEREFERENCE_CRASH
+- poc_id: OPENSSL-ISSUE-17715
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_17715
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: C_app_level_validation_gap
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: RAND_DRBG/EVP_CIPHER_CTX
+  critical_api:
+  - RAND_DRBG_generate
+  - EVP_EncryptUpdate
+  - EVP_CipherUpdate
+  - drbg_ctr_generate
+  - aesni_ecb_encrypt
+  api_call_sequence:
+  - BIO_new_file
+  - X509_free
+  - BIO_free
+  - X509_REQ_free
+  - fopen
+  - d2i_PKCS12_fp
+  - PKCS12_parse
+  - EVP_PKEY_free
+  - PKCS12_free
+  - BIO_new_fp
+  trigger_behavior: NULL_DEREFERENCE_CRASH
+- poc_id: OPENSSL-ISSUE-18168
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_18168
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: A_recipe_slot_cross_library_migration
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: WPACKET/DER_WRITER/RSA
+  critical_api:
+  - WPACKET_put_bytes__
+  - int_der_w_integer
+  - ossl_DER_w_ulong
+  - ossl_DER_w_RSASSA_PSS_params
+  - prepare_rsa_params
+  - key_to_pki_pem_priv_bio
+  - key2any_encode
+  - rsapss_to_PrivateKeyInfo_pem_encode
+  api_call_sequence:
+  - BIO_new_file
+  - RSA_free
+  - BIO_free
+  trigger_behavior: ASSERTION_FAILURE
+- poc_id: OPENSSL-ISSUE-18659
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_18659
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: D_crash_sanitizer_evidence_audit
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: CONF/OPENSSL
+  critical_api:
+  - OPENSSL_cleanup
+  - CONF_modules_unload
+  api_call_sequence: []
+  trigger_behavior: SEGV
+- poc_id: OPENSSL-ISSUE-19524
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_19524
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: D_crash_sanitizer_evidence_audit
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: PKEY/ED25519/ED448
+  critical_api:
+  - EVP_PKEY_new_raw_public_key
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit
+  - EVP_DigestSign
+  - OPENSSL_hexstr2buf
+  - OPENSSL_zalloc
+  api_call_sequence:
+  - EVP_PKEY_new_raw_public_key
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit
+  - EVP_DigestSign
+  - EVP_MD_CTX_free
+  - EVP_PKEY_free
+  trigger_behavior: NULL_DEREFERENCE_CRASH
+- poc_id: OPENSSL-ISSUE-21935
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_21935
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: D_crash_sanitizer_evidence_audit
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  metadata_component: PKEY/RSA
+  critical_api:
+  - EVP_PKEY_new
+  - RSA_new
+  - RSA_set0_factors
+  - RSA_set0_key
+  - EVP_PKEY_assign
+  - EVP_DigestSignInit
+  - EVP_DigestSign
+  - EVP_MD_CTX_free
+  - EVP_PKEY_free
+  api_call_sequence:
+  - BN_new
+  - BN_dec2bn
+  - BN_free
+  - EVP_PKEY_new
+  - RSA_new
+  - EVP_MD_CTX_new
+  - RSA_set0_key
+  - EVP_PKEY_assign_RSA
+  - EVP_DigestSignInit
+  - EVP_sha256
+  - EVP_MD_CTX_free
+  - EVP_PKEY_free
+  - RSA_free
+  trigger_behavior: NULL_DEREFERENCE_CRASH
+- poc_id: OPENSSL-ISSUE-22388
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_22388
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: A_recipe_slot_cross_library_migration
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: CMS/X509
+  critical_api:
+  - evp_pkey_asym_cipher_init
+  - ossl_cms_pkey_get_ri_type
+  api_call_sequence:
+  - BIO_new_file
+  - BIO_free
+  - CMS_encrypt
+  - EVP_aes_128_cbc
+  - BIO_new_fp
+  - CMS_decrypt
+  - CMS_ContentInfo_free
+  - EVP_PKEY_free
+  - X509_free
+  trigger_behavior: WRONG_RESULT
+- poc_id: OPENSSL-ISSUE-23325
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_23325
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: C_app_level_validation_gap
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: X509/CRL
+  critical_api:
+  - X509_V_ERR_DIFFERENT_CRL_SCOPE
+  - crl_crldp_check
+  - get_crl_score
+  api_call_sequence:
+  - BIO_new_file
+  - BIO_free
+  - X509_STORE_new
+  - X509_STORE_add_cert
+  - X509_STORE_add_crl
+  - X509_STORE_set_flags
+  - X509_STORE_CTX_new
+  - X509_STORE_CTX_init
+  - X509_verify_cert
+  - X509_STORE_CTX_get_error
+  - X509_verify_cert_error_string
+  - X509_STORE_CTX_free
+  - X509_STORE_free
+  - X509_CRL_free
+  - X509_free
+  trigger_behavior: WRONG_RESULT
+- poc_id: OPENSSL-ISSUE-26106
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_26106
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: D_crash_sanitizer_evidence_audit
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: PKCS12/X509_ALGOR
+  critical_api:
+  - X509_ALGOR_get0
+  api_call_sequence:
+  - fopen
+  - d2i_PKCS12_fp
+  - PKCS12_parse
+  - X509_free
+  - EVP_PKEY_free
+  - PKCS12_free
+  trigger_behavior: NULL_DEREFERENCE_CRASH
+- poc_id: OPENSSL-ISSUE-27572
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_27572
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: A_recipe_slot_cross_library_migration
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: CMP/ASN1
+  critical_api:
+  - parse_name
+  api_call_sequence:
+  - BIO_new_file
+  - BIO_new_fp
+  - BIO_read
+  - memcpy
+  - ASN1_parse_dump
+  - free
+  - BIO_free
+  trigger_behavior: WRONG_OUTPUT
+- poc_id: OPENSSL-ISSUE-29418
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_29418
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: C_app_level_validation_gap
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: X509/X509V3/ASN1
+  critical_api:
+  - X509_get_ext_count
+  - X509_get_ext
+  - OBJ_nid2sn
+  - X509_EXTENSION_free
+  - X509_delete_ext
+  api_call_sequence:
+  - BIO_new_file
+  - X509_check_purpose
+  - X509_free
+  - BIO_free
+  trigger_behavior: WRONG_RESULT
+- poc_id: OPENSSL-ISSUE-29574
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_29574
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: C_app_level_validation_gap
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: X509/X509V3/ASN1
+  critical_api:
+  - SSL_CTX_use_PrivateKey_ASN1
+  - SSL_CTX_use_certificate_ASN1
+  - X509_Object::choose_sig_format
+  - X509_CA::make_cert
+  - PKCS8::PEM_encode
+  - PEM_encode
+  api_call_sequence:
+  - BIO_new_file
+  - BIO_free
+  - d2i_X509_bio
+  - X509_print_fp
+  - X509_free
+  trigger_behavior: CORRUPTED_STATE
+- poc_id: OPENSSL-ISSUE-29645
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_29645
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: D_crash_sanitizer_evidence_audit
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: BIO/CONF/ERR
+  critical_api:
+  - BIO_set_data
+  - BIO_free
+  api_call_sequence:
+  - BIO_new
+  - BIO_s_mem
+  - BIO_write
+  - BIO_get_data
+  - BIO_set_data
+  - BIO_free
+  trigger_behavior: NULL_DEREFERENCE_CRASH
+- poc_id: OPENSSL-ISSUE-30291
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_30291
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: A_recipe_slot_cross_library_migration
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: CMS/ED448
+  critical_api:
+  - CMS_sign
+  - CMS_verify
+  api_call_sequence:
+  - BIO_new_file
+  - BIO_free
+  - CMS_sign
+  - X509_STORE_new
+  - X509_STORE_add_cert
+  - BIO_new_fp
+  - CMS_verify
+  - X509_STORE_free
+  - CMS_ContentInfo_free
+  - EVP_PKEY_free
+  - X509_free
+  trigger_behavior: REGRESSION_TEST
+- poc_id: OPENSSL-ISSUE-30432
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_30432
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: C_app_level_validation_gap
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: PKEY/DSA/RSA
+  critical_api:
+  - openssl dsaparam
+  - openssl gendsa
+  - openssl req
+  - openssl x509
+  - openssl verify
+  api_call_sequence:
+  - BIO_new_file
+  - BIO_free
+  - X509_STORE_new
+  - X509_STORE_add_cert
+  - X509_STORE_CTX_new
+  - X509_STORE_CTX_init
+  - X509_verify_cert
+  - X509_STORE_CTX_get_error
+  - X509_verify_cert_error_string
+  - X509_STORE_CTX_free
+  - X509_STORE_free
+  - X509_free
+  trigger_behavior: VERIFY_ERROR
+- poc_id: OPENSSL-ISSUE-30581
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_30581
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: D_crash_sanitizer_evidence_audit
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: PKCS12/ASN1
+  critical_api:
+  - ASN1_STRING_length
+  - pkcs12_main
+  - do_cmd
+  - main
+  - BIO_puts
+  - BIO_printf
+  - ASN1_INTEGER_get
+  api_call_sequence:
+  - fopen
+  - d2i_PKCS12_fp
+  - PKCS12_mac_present
+  - PKCS12_verify_mac
+  - PKCS12_parse
+  - X509_free
+  - EVP_PKEY_free
+  - PKCS12_free
+  trigger_behavior: NULL_DEREFERENCE_CRASH
+- poc_id: OPENSSL-ISSUE-30889
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_30889
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: D_crash_sanitizer_evidence_audit
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: PKEY/ML-DSA/RSA
+  critical_api:
+  - pkey_main
+  - encode_private_key
+  api_call_sequence:
+  - memcpy
+  - BIO_new_file
+  - BIO_new_fp
+  - EVP_aes_256_cbc
+  - EVP_PKEY_free
+  - BIO_free
+  trigger_behavior: SEGV
+- poc_id: OPENSSL-ISSUE-6788
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_6788
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: C_app_level_validation_gap
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: CRL/X509
+  critical_api:
+  - X509_STORE_CTX_get_obj_by_subject
+  - X509_verify_cert
+  api_call_sequence:
+  - BIO_new_file
+  - X509_CRL_get_issuer
+  - X509_NAME_print_ex_fp
+  - X509_CRL_free
+  - BIO_free
+  trigger_behavior: WRONG_RESULT
+- poc_id: OPENSSL-ISSUE-8435
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_8435
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: A_recipe_slot_cross_library_migration
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: PKEY/ECC/SM2
+  critical_api:
+  - pkey
+  - pkeyutl
+  - sm2_id
+  api_call_sequence:
+  - fopen
+  - malloc
+  - fread
+  - free
+  - BIO_new_file
+  - BIO_free
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit
+  - EVP_sm3
+  - EVP_PKEY_CTX_set1_id
+  - EVP_DigestSign
+  - EVP_MD_CTX_free
+  - EVP_DigestVerifyInit
+  - EVP_DigestVerify
+  - EVP_PKEY_free
+  trigger_behavior: WRONG_RESULT
+- poc_id: OPENSSL-ISSUE-9043
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_9043
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: D_crash_sanitizer_evidence_audit
+  reason_for_review:
+  - OpenSSL issue in bignum bucket
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  metadata_component: X509/CSR/ASN1
+  critical_api:
+  - X509_ATTRIBUTE_get0_type
+  api_call_sequence:
+  - BIO_new_file
+  - X509_REQ_print_fp
+  - X509_REQ_free
+  - BIO_free
+  trigger_behavior: NULL_DEREFERENCE_CRASH
+- poc_id: WOLFSSL-POC-0002
+  source_library: wolfssl
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0002
+  current_family: bignum_serialization_boundary
+  current_harness_family: buffer_canary_boundary
+  current_route: D_crash_sanitizer_evidence_audit
+  reason_for_review:
+  - family=bignum_serialization_boundary
+  - previous correction suggestion
+  - wolfSSL bignum suspicious
+  metadata_component: null
+  critical_api:
+  - wolfSSL_X509_d2i
+  - wolfSSL_X509_get_subject_name
+  - wolfSSL_X509_NAME_get_text_by_NID
+  api_call_sequence:
+  - wolfSSL_X509_NAME_get_text_by_NID
+  - fopen
+  - malloc
+  - fread
+  - free
+  - wolfSSL_Init
+  - wolfSSL_Cleanup
+  - wolfSSL_X509_d2i
+  - wolfSSL_X509_get_subject_name
+  - wolfSSL_X509_free
+  trigger_behavior: X.509 certificate text parsing off-by-one out-of-bounds byte overwrite
+- poc_id: WOLFSSL-POC-0003
+  source_library: wolfssl
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0003
+  current_family: tls_protocol_state_lifecycle
+  current_harness_family: object_state_lifecycle
+  current_route: D_crash_sanitizer_evidence_audit
+  reason_for_review:
+  - scheduler top candidate
+  metadata_component: null
+  critical_api:
+  - wolfSSL_X509_set_notAfter
+  - wolfSSL_X509_notAfter
+  - wolfSSL_X509_set_notBefore
+  - wolfSSL_X509_notBefore
+  api_call_sequence:
+  - memset
+  - memcpy
+  - wolfSSL_X509_set_notAfter
+  - wolfSSL_X509_notAfter
+  - wolfSSL_X509_set_notBefore
+  - wolfSSL_X509_notBefore
+  - wolfSSL_Init
+  - X509_new
+  - wolfSSL_Cleanup
+  - X509_free
+  trigger_behavior: X.509 date parsing buffer overflow
+- poc_id: WOLFSSL-POC-0004
+  source_library: wolfssl
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0004
+  current_family: tls_protocol_state_lifecycle
+  current_harness_family: object_state_lifecycle
+  current_route: D_crash_sanitizer_evidence_audit
+  reason_for_review:
+  - scheduler top candidate
+  metadata_component: null
+  critical_api:
+  - wolfSSL_X509_d2i
+  - wolfSSL_i2d_X509_bio
+  - CertFromX509
+  api_call_sequence:
+  - fopen
+  - memcpy
+  - malloc
+  - free
+  - wolfSSL_Init
+  - wolfSSL_X509_d2i
+  - wolfSSL_Cleanup
+  - wolfSSL_BIO_new
+  - wolfSSL_BIO_s_mem
+  - wolfSSL_X509_free
+  - wolfSSL_i2d_X509_bio
+  - wolfSSL_BIO_free
+  trigger_behavior: X.509 AuthorityKeyIdentifier heap buffer overflow
+- poc_id: WOLFSSL-POC-0005
+  source_library: wolfssl
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0005
+  current_family: tls_protocol_state_lifecycle
+  current_harness_family: object_state_lifecycle
+  current_route: D_crash_sanitizer_evidence_audit
+  reason_for_review:
+  - scheduler top candidate
+  metadata_component: null
+  critical_api: null
+  api_call_sequence:
+  - wolfSSL_Init
+  - wolfSSL_read
+  - wolfSSL_get_error
+  - wolfSSL_free
+  - wolfSSL_CTX_free
+  - wolfSSL_Cleanup
+  trigger_behavior: DTLS 1.3 ACK record processing heap buffer overflow
+- poc_id: WOLFSSL-POC-0005
+  source_library: wolfssl
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0005-rejected-issue8353
+  current_family: x509_parsing
+  current_harness_family: x509_asn1_inner_boundary
+  current_route: D_crash_sanitizer_evidence_audit
+  reason_for_review:
+  - scheduler top candidate
+  metadata_component: null
+  critical_api: null
+  api_call_sequence:
+  - fopen
+  - malloc
+  - fread
+  - free
+  - wc_PemToDer
+  - wc_FreeDer
+  trigger_behavior: PEM / DER / Base64 decoding memory safety candidate
+- poc_id: WOLFSSL-POC-0006
+  source_library: wolfssl
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0006
+  current_family: pkcs_container_parsing
+  current_harness_family: x509_asn1_inner_boundary
+  current_route: A_recipe_slot_cross_library_migration
+  reason_for_review:
+  - scheduler top candidate
+  metadata_component: null
+  critical_api: null
+  api_call_sequence:
+  - fopen
+  - malloc
+  - fread
+  - free
+  - memset
+  - wc_PKCS7_Init
+  - wc_PKCS7_InitWithCert
+  - wc_PKCS7_EncodeSignedData
+  - wc_PKCS7_Free
+  trigger_behavior: PKCS7 SignedData encoding out-of-bounds write
+- poc_id: WOLFSSL-POC-0007
+  source_library: wolfssl
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0007
+  current_family: pkcs_container_parsing
+  current_harness_family: x509_asn1_inner_boundary
+  current_route: A_recipe_slot_cross_library_migration
+  reason_for_review:
+  - scheduler top candidate
+  metadata_component: null
+  critical_api: null
+  api_call_sequence:
+  - memset
+  - wc_PKCS7_New
+  - wc_PKCS7_SetOriDecryptCb
+  - wc_PKCS7_DecodeEnvelopedData
+  - wc_PKCS7_Free
+  trigger_behavior: PKCS7 ORI OID processing stack buffer overflow
+- poc_id: WOLFSSL-POC-0008
+  source_library: wolfssl
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0008
+  current_family: tls_protocol_state_lifecycle
+  current_harness_family: object_state_lifecycle
+  current_route: D_crash_sanitizer_evidence_audit
+  reason_for_review:
+  - scheduler top candidate
+  metadata_component: null
+  critical_api: null
+  api_call_sequence:
+  - wolfSSL_Init
+  - wolfSSL_CTX_new
+  - wolfTLSv1_3_client_method
+  - wolfSSL_SetIORecv
+  - wolfSSL_SetIOSend
+  - wolfSSL_new
+  - wolfSSL_CTX_free
+  - wolfSSL_UseKeyShare
+  - wolfSSL_free
+  - wolfSSL_SetIOReadCtx
+  - wolfSSL_connect_TLSv13
+  - wolfSSL_Cleanup
+  trigger_behavior: TLS 1.3 PQC hybrid KeyShare error cleanup double-free
+- poc_id: WOLFSSL-POC-0010
+  source_library: wolfssl
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0010
+  current_family: tls_protocol_state_lifecycle
+  current_harness_family: object_state_lifecycle
+  current_route: A_recipe_slot_cross_library_migration
+  reason_for_review:
+  - scheduler top candidate
+  metadata_component: null
+  critical_api: null
+  api_call_sequence:
+  - malloc
+  - free
+  - wolfSSL_select_next_proto
+  trigger_behavior: TLS ALPN extension parsing out-of-bounds read

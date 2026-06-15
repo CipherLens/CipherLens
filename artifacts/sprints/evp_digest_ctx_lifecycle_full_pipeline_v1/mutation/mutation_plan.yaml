@@ -1,0 +1,96 @@
+schema: lifecycle_mutation_plan_v1
+generated_at: '2026-06-13T15:49:06+00:00'
+family: evp_digest_ctx_lifecycle
+track: lifecycle
+archetype: evp_context_lifecycle
+target_library: openssl
+seed_manifest_schema: lifecycle_seed_manifest_v1
+mutation_case_count: 8
+enabled_case_count: 8
+unsafe_use_after_free_executed: false
+uses_der_parsing: false
+uses_trailing_garbage: false
+uses_full_consumption_oracle: false
+cases:
+- case_id: evp_digest_ctx_lifecycle_mut_valid_init_update_final_control
+  source_seed_id: evp_digest_ctx_lifecycle_valid_init_update_final_control
+  mutation_strategy: valid_init_update_final_control
+  case_group: valid_lifecycle_control
+  expected_behavior: success
+  oracle_rule: unexpected_failure_on_valid_sequence
+  enabled: true
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false
+- case_id: evp_digest_ctx_lifecycle_mut_update_before_init
+  source_seed_id: evp_digest_ctx_lifecycle_update_before_init_control
+  mutation_strategy: update_before_init
+  case_group: invalid_state_control
+  expected_behavior: error_or_documented
+  oracle_rule: unexpected_success_after_invalid_state
+  enabled: true
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false
+- case_id: evp_digest_ctx_lifecycle_mut_final_without_update
+  source_seed_id: evp_digest_ctx_lifecycle_final_without_update_control
+  mutation_strategy: final_without_update
+  case_group: observation
+  expected_behavior: observation
+  oracle_rule: state_transition_observation
+  enabled: true
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false
+  notes: Empty-message digest may be documented success; observe only.
+- case_id: evp_digest_ctx_lifecycle_mut_update_after_final
+  source_seed_id: evp_digest_ctx_lifecycle_update_after_final_control
+  mutation_strategy: update_after_final
+  case_group: observation
+  expected_behavior: observation
+  oracle_rule: state_transition_observation
+  enabled: true
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false
+  notes: Post-final update is API-contract boundary; observe only.
+- case_id: evp_digest_ctx_lifecycle_mut_reset_reuse
+  source_seed_id: evp_digest_ctx_lifecycle_reset_reuse_control
+  mutation_strategy: reset_reuse
+  case_group: valid_lifecycle_control
+  expected_behavior: success
+  oracle_rule: unexpected_failure_on_valid_sequence
+  enabled: true
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false
+- case_id: evp_digest_ctx_lifecycle_mut_reinit_without_reset
+  source_seed_id: evp_digest_ctx_lifecycle_valid_init_update_final_control
+  mutation_strategy: reinit_without_reset
+  case_group: valid_lifecycle_control
+  expected_behavior: success
+  oracle_rule: unexpected_failure_on_valid_sequence
+  enabled: true
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false
+- case_id: evp_digest_ctx_lifecycle_mut_double_final_observation
+  source_seed_id: evp_digest_ctx_lifecycle_final_without_update_control
+  mutation_strategy: double_final
+  case_group: observation
+  expected_behavior: observation
+  oracle_rule: state_transition_observation
+  enabled: true
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false
+- case_id: evp_digest_ctx_lifecycle_mut_reset_before_init_observation
+  source_seed_id: evp_digest_ctx_lifecycle_reset_reuse_control
+  mutation_strategy: reset_before_init
+  case_group: observation
+  expected_behavior: observation
+  oracle_rule: state_transition_observation
+  enabled: true
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false

@@ -1,0 +1,37 @@
+# Pipeline Status
+
+```yaml
+schema: valid_prefix_pipeline_status_v1
+generated_at: '2026-06-12T04:13:11+00:00'
+stages:
+  render_plan:
+    executed: true
+    status: pass
+    render_jobs: 6
+  render_cases:
+    executed: true
+    status: pass
+    rendered_cases: 6
+  compile_run:
+    executed: true
+    status: pass
+    compile_success: 6
+    compile_failed: 0
+    run_attempted: 6
+    oracle_events: 18
+  analyze:
+    executed: true
+    status: pass
+    cases_analyzed: 6
+    accepted_true: 5
+    accepted_false: 1
+    full_consumption_gap_candidates: 3
+blocked:
+  pkcs_pending_seed_cases: 4
+  mbedtls_cases: 0
+safety:
+  no_glm_called: true
+  no_feedback_written: true
+  no_confirmed_vulnerability_claim: true
+next_task: oracle_semantic_triage_v1
+```

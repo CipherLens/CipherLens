@@ -1,0 +1,96 @@
+                          int useIntermediateCertChain,
+                          int pkAlgoType)
+{
+    EXPECT_DECLS;
+    int ret = 0;
+    WC_RNG rng;
+    PKCS7* pkcs7 = NULL;
+
+    static byte messageTypeOid[] =
+               { 0x06, 0x0a, 0x60, 0x86, 0x48, 0x01, 0x86, 0xF8, 0x45, 0x01,
+                 0x09, 0x02 };
+    static byte messageType[] = { 0x13, 2, '1', '9' };
+
+    PKCS7Attrib attribs[] =
+    {
+        { messageTypeOid, sizeof(messageTypeOid), messageType,
+                                       sizeof(messageType) }
+    };
+
+    byte intCARoot[TWOK_BUF];
+    byte intCA1[TWOK_BUF];
+    byte intCA2[TWOK_BUF];
+    byte cert[TWOK_BUF];
+    byte key[TWOK_BUF];
+
+    word32 intCARootSz = sizeof(intCARoot);
+    word32 intCA1Sz    = sizeof(intCA1);
+    word32 intCA2Sz    = sizeof(intCA2);
+    word32 certSz      = sizeof(cert);
+    word32 keySz       = sizeof(key);
+
+    XMEMSET(intCARoot, 0, intCARootSz);
+    XMEMSET(intCA1, 0, intCA1Sz);
+    XMEMSET(intCA2, 0, intCA2Sz);
+    XMEMSET(cert, 0, certSz);
+    XMEMSET(key, 0, keySz);
+
+    ret = LoadPKCS7SignedDataCerts(useIntermediateCertChain, pkAlgoType,
+                intCARoot, &intCARootSz, intCA1, &intCA1Sz, intCA2, &intCA2Sz,
+                cert, &certSz, key, &keySz);
+    ExpectIntEQ(ret, 0);
+
+    XMEMSET(output, 0, outputSz);
+    ExpectIntEQ(wc_InitRng(&rng), 0);
+
+    ExpectNotNull(pkcs7 = wc_PKCS7_New(HEAP_HINT, testDevId));
+    ExpectIntEQ(wc_PKCS7_Init(pkcs7, HEAP_HINT, INVALID_DEVID), 0);
+    ExpectIntEQ(wc_PKCS7_InitWithCert(pkcs7, cert, certSz), 0);
+
+    if (useIntermediateCertChain == 1) {
+        /* Add intermediate and root CA certs into SignedData Certs SET */
+        ExpectIntEQ(wc_PKCS7_AddCertificate(pkcs7, intCA2, intCA2Sz), 0);
+        ExpectIntEQ(wc_PKCS7_AddCertificate(pkcs7, intCA1, intCA1Sz), 0);
+        ExpectIntEQ(wc_PKCS7_AddCertificate(pkcs7, intCARoot, intCARootSz), 0);
+    }
+
+    if (pkcs7 != NULL) {
+        pkcs7->content = data;
+        pkcs7->contentSz = dataSz;
+        pkcs7->privateKey = key;
+        pkcs7->privateKeySz = (word32)sizeof(key);
+        if (pkAlgoType == RSA_TYPE) {
+            pkcs7->encryptOID = RSAk;
+        }
+        else {
+            pkcs7->encryptOID = ECDSAk;
+        }
+    #ifdef NO_SHA
+        pkcs7->hashOID = SHA256h;
+    #else
+        pkcs7->hashOID = SHAh;
+    #endif
+        pkcs7->rng = &rng;
+        if (withAttribs) {
+            /* include a signed attribute */
+            pkcs7->signedAttribs   = attribs;
+            pkcs7->signedAttribsSz = (sizeof(attribs)/sizeof(PKCS7Attrib));
+        }
+    }
+
+    if (detachedSig) {
+        ExpectIntEQ(wc_PKCS7_SetDetached(pkcs7, 1), 0);
+    }
+
+    outputSz = wc_PKCS7_EncodeSignedData(pkcs7, output, (word32)outputSz);
+    ExpectIntGT(outputSz, 0);
+    wc_PKCS7_Free(pkcs7);
+    pkcs7 = NULL;
+    ExpectNotNull(pkcs7 = wc_PKCS7_New(HEAP_HINT, testDevId));
+    ExpectIntEQ(wc_PKCS7_InitWithCert(pkcs7, NULL, 0), 0);
+    if (detachedSig && (pkcs7 != NULL)) {
+        pkcs7->content = data;
+        pkcs7->contentSz = dataSz;
+    }
+    ExpectIntEQ(wc_PKCS7_VerifySignedData(pkcs7, output, (word32)outputSz), 0);
+

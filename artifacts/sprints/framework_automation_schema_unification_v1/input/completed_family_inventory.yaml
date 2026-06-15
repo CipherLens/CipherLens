@@ -1,0 +1,79 @@
+sprint: framework_automation_schema_unification_v1
+purpose: Unify representative family outputs into scheduler-ready schemas, gates,
+  scoring, and feedback contracts.
+families:
+- family: mac_lifecycle
+  representative_sprints:
+  - artifacts/sprints/mac_lifecycle_family_v1
+  execution_path: A_recipe_slot_cross_library_migration
+  outcome: migrated_safe
+  claim_level: needs_triage
+  evidence_strength: medium_to_strong
+  lessons_for_automation:
+  - A-path can be automated when source/target API mapping, cleanup mapping, and oracle
+    comparability are explicit.
+  - GLM is acceptable only as strict recipe-slot filler after recipe and allowed slots
+    exist.
+  - Generic analyzers must keep semantic divergence as triage unless cross-library
+    oracle evidence is strong.
+- family: der_full_consumption
+  representative_sprints:
+  - artifacts/triage/ossl_store_full_consumption
+  execution_path: C_app_level_validation_gap
+  outcome: app_level_validation_gap_candidate
+  claim_level: semantic_divergence_candidate
+  evidence_strength: strong_for_behavior_medium_for_security_claim
+  lessons_for_automation:
+  - Low-level prefix-parse behavior is expected for many d2i APIs; app-level acceptance
+    of malformed trailing data is a separate route.
+  - A valid-control plus malformed-only reject plus valid-prefix-with-malformed-tail
+    accept pattern is a useful C-path gate.
+  - This route should emit minimal reproducer/upstream-inquiry handoff rather than
+    direct vulnerability claim.
+- family: secure_heap_state_lifecycle
+  representative_sprints:
+  - artifacts/sprints/secure_heap_state_lifecycle_v1
+  - artifacts/sprints/secure_heap_state_lifecycle_pattern_expansion_v1
+  - artifacts/sprints/secure_heap_init_failed_then_query_candidate_validation
+  execution_path: B_controlled_family_mutation
+  outcome: validated_new_state_candidate
+  claim_level: validated_new_state_candidate
+  evidence_strength: strong_for_current_version_reproducer_limited_for_upstream_claim
+  lessons_for_automation:
+  - State-machine mutation needs normal controls, explicit precondition notes, and
+    external validation handoff.
+  - A current-version robustness candidate is not automatically a confirmed vulnerability.
+  - Once minimal reproducer and gdb evidence exist, scheduler should move the family
+    to external validation instead of keeping it top exploratory priority.
+- family: cipher_aead_lifecycle
+  representative_sprints:
+  - artifacts/sprints/cipher_aead_lifecycle_family_triage_v1
+  - artifacts/sprints/cipher_aead_lifecycle_mutation_v1
+  - artifacts/sprints/cipher_aead_lifecycle_gcm_closure_v1
+  execution_path: B_controlled_family_mutation
+  outcome: negative_feedback
+  claim_level: no_claim
+  evidence_strength: strong_negative_feedback_for_gcm_medium_for_remaining_non_gcm_spaces
+  lessons_for_automation:
+  - Cross-library semantic checks are essential before promoting permissive behavior.
+  - Legal GCM semantics such as empty plaintext or truncated allowed tags must demote
+    candidates.
+  - No A-path or GLM should be used when the mapping/oracle is still mutation-local
+    and candidate semantics may be legal.
+- family: asn1_nested_boundary
+  representative_sprints:
+  - artifacts/sprints/asn1_nested_boundary_d_path_audit_v1
+  - artifacts/sprints/asn1_nested_boundary_minimal_reproducer_v1
+  - artifacts/sprints/asn1_nested_boundary_seed_enrichment_v1
+  execution_path: blocked_seed_missing
+  outcome: blocked_seed_missing
+  claim_level: no_claim
+  evidence_strength: medium_metadata_but_insufficient_for_reproduction
+  lessons_for_automation:
+  - Placeholder input must block D-path reproduction and crash claims.
+  - Missing seed should prevent A-path escalation even if issue metadata looks promising.
+  - Seed enrichment can record related vectors, but high-uncertainty reconstruction
+    should not be treated as strict reproduction.
+no_new_experiments: true
+no_glm_used: true
+no_harness_render_or_run: true

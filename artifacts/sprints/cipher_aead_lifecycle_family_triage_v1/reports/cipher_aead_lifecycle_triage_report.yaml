@@ -1,0 +1,51 @@
+task: cipher_aead_lifecycle_family_triage_v1
+family: cipher_aead_lifecycle
+why_selected:
+  - "Scheduler rerank after secure_heap closure recommended cipher_aead_lifecycle."
+  - "The family has existing mbedTLS and OpenSSL seeds."
+  - "Lifecycle/state-machine lessons from MAC and secure_heap are reusable."
+historical_seeds:
+  - MBEDTLS-POC-0004
+  - MBEDTLS-POC-0028
+  - OPENSSL-ISSUE-17715
+  - OPENSSL-ISSUE-8980
+rag_evidence:
+  recalls_openssl_evp_aead: true
+  recalls_mbedtls_psa_aead: true
+  cross_library_semantic_divergence: partial
+api_groups:
+  openssl: "EVP init/update/final/tag ctrl/cleanup/reuse"
+  mbedtls: "PSA/GCM/CCM setup/update/finish/verify/cleanup"
+root_cause_hypotheses:
+  - terminal_state_reuse
+  - tag_order_mismatch
+  - aad_data_order_mismatch
+  - init_failure_followed_by_operation
+  - cleanup_free_followed_by_reuse
+  - mode_confusion_encrypt_decrypt
+  - invalid_tag_length_acceptance
+  - error_path_output_state_pollution
+mutation_points:
+  - operation_order
+  - tag_length
+  - tag_set_timing
+  - tag_get_timing
+  - aad_timing
+  - final_repetition
+  - ctx_reuse
+  - decrypt_verify_path
+  - cleanup_timing
+oracles:
+  - strict_bad_state_reject
+  - permissive_terminal_reuse
+  - crash_or_sanitizer
+  - unexpected_success
+  - semantic_divergence
+  - normal_defined_behavior
+recommended_path: B_controlled_family_mutation
+fallback_path: D_then_A
+glm_used: false
+cases_run: false
+draft_cases: 24
+vulnerability_conclusion: none
+next_task_name: cipher_aead_lifecycle_mutation_v1

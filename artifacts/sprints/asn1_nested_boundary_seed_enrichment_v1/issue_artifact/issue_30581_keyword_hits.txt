@@ -1,0 +1,47 @@
+datasets/openssl/poc_artifacts/issue_30581/run.sh:4:INPUTS=("inputs/test.p12")
+datasets/openssl/poc_artifacts/issue_30581/metadata.json:3:  "title": "NULL pointer dereference in openssl pkcs12 -info when printing PBMAC1 salt metadata",
+datasets/openssl/poc_artifacts/issue_30581/metadata.json:5:  "poc_type": "CLI+INPUT_SEED+CLI+SANITIZER_LOG",
+datasets/openssl/poc_artifacts/issue_30581/metadata.json:7:  "component": "PKCS12/ASN1",
+datasets/openssl/poc_artifacts/issue_30581/metadata.json:8:  "trigger_behavior": "NULL_DEREFERENCE_CRASH",
+datasets/openssl/poc_artifacts/issue_30581/metadata.json:12:    "pkcs12_main",
+datasets/openssl/poc_artifacts/issue_30581/metadata.json:19:  "root_cause": "Dereferencing a NULL pointer when decoding PBKDF2 salt as ASN.1 NULL in the CLI info path.",
+datasets/openssl/poc_artifacts/issue_30581/metadata.json:30:    "/tmp/openssl-asan/apps/openssl pkcs12 \\",
+datasets/openssl/poc_artifacts/issue_30581/metadata.json:31:    "  -in /tmp/pbmac1_null_salt.p12 -info -noout -passin pass:any"
+datasets/openssl/poc_artifacts/issue_30581/metadata.json:34:    "/tmp/pbmac1_null_salt.p12"
+datasets/openssl/poc_artifacts/issue_30581/metadata.json:39:  "translated_from_cli": "openssl pkcs12 -in test.p12 -info -noout -passin pass:testpassword",
+datasets/openssl/poc_artifacts/issue_30581/metadata.json:42:    "d2i_PKCS12_fp",
+datasets/openssl/poc_artifacts/issue_30581/metadata.json:43:    "PKCS12_mac_present",
+datasets/openssl/poc_artifacts/issue_30581/metadata.json:44:    "PKCS12_verify_mac",
+datasets/openssl/poc_artifacts/issue_30581/metadata.json:45:    "PKCS12_parse",
+datasets/openssl/poc_artifacts/issue_30581/metadata.json:46:    "PKCS12_free"
+datasets/openssl/poc_artifacts/issue_30581/metadata.json:49:    "inputs/test.p12"
+datasets/openssl/poc_artifacts/issue_30581/metadata.json:54:  "input_status": "placeholder_input_used",
+datasets/openssl/poc_artifacts/issue_30581/metadata.json:55:  "local_test_result": "compiled_and_executed_with_placeholder_input",
+datasets/openssl/poc_artifacts/issue_30581/metadata.json:56:  "template_name": "pkcs12_info_parse",
+datasets/openssl/poc_artifacts/issue_30581/metadata.json:66:  "validation_notes": "The generated C harness was translated from a CLI PoC candidate and compiled/executed using placeholder local inputs. This validates the harness structure and API path, but does not strictly reproduce the original issue because the original PoC input artifacts or environment have not been recovered."
+datasets/openssl/poc_artifacts/issue_30581/poc.c:2:#include <openssl/pkcs12.h>
+datasets/openssl/poc_artifacts/issue_30581/poc.c:11:    PKCS12 *p12 = NULL;
+datasets/openssl/poc_artifacts/issue_30581/poc.c:21:        fprintf(stderr, "Usage: %s <test.p12>\n", argv[0]);
+datasets/openssl/poc_artifacts/issue_30581/poc.c:31:    p12 = d2i_PKCS12_fp(fp, NULL);
+datasets/openssl/poc_artifacts/issue_30581/poc.c:32:    if (p12 == NULL) {
+datasets/openssl/poc_artifacts/issue_30581/poc.c:33:        fprintf(stderr, "d2i_PKCS12_fp failed\n");
+datasets/openssl/poc_artifacts/issue_30581/poc.c:38:    has_mac = PKCS12_mac_present(p12);
+datasets/openssl/poc_artifacts/issue_30581/poc.c:39:    printf("PKCS12_mac_present returned %d\n", has_mac);
+datasets/openssl/poc_artifacts/issue_30581/poc.c:41:        mac_ok = PKCS12_verify_mac(p12, passphrase, -1);
+datasets/openssl/poc_artifacts/issue_30581/poc.c:42:        printf("PKCS12_verify_mac returned %d\n", mac_ok);
+datasets/openssl/poc_artifacts/issue_30581/poc.c:48:    parse_ok = PKCS12_parse(p12, passphrase, &pkey, &cert, &ca);
+datasets/openssl/poc_artifacts/issue_30581/poc.c:49:    printf("PKCS12_parse returned %d\n", parse_ok);
+datasets/openssl/poc_artifacts/issue_30581/poc.c:60:    PKCS12_free(p12);
+datasets/openssl/poc_artifacts/issue_30581/README.md:6:- Title: NULL pointer dereference in openssl pkcs12 -info when printing PBMAC1 salt metadata
+datasets/openssl/poc_artifacts/issue_30581/README.md:7:- Template: pkcs12_info_parse
+datasets/openssl/poc_artifacts/issue_30581/README.md:11:openssl pkcs12 -in test.p12 -info -noout -passin pass:testpassword
+datasets/openssl/poc_artifacts/issue_30581/README.md:16:- d2i_PKCS12_fp
+datasets/openssl/poc_artifacts/issue_30581/README.md:17:- PKCS12_mac_present
+datasets/openssl/poc_artifacts/issue_30581/README.md:18:- PKCS12_verify_mac
+datasets/openssl/poc_artifacts/issue_30581/README.md:19:- PKCS12_parse
+datasets/openssl/poc_artifacts/issue_30581/README.md:20:- PKCS12_free
+datasets/openssl/poc_artifacts/issue_30581/README.md:24:- inputs/test.p12
+datasets/openssl/poc_artifacts/issue_30581/README.md:28:- Original PoC type: CLI+INPUT_SEED+CLI+SANITIZER_LOG
+datasets/openssl/poc_artifacts/issue_30581/README.md:29:- Component: PKCS12/ASN1
+datasets/openssl/poc_artifacts/issue_30581/README.md:30:- Trigger behavior: NULL_DEREFERENCE_CRASH
+datasets/openssl/poc_artifacts/issue_30581/README.md:36:Dereferencing a NULL pointer when decoding PBKDF2 salt as ASN.1 NULL in the CLI info path.

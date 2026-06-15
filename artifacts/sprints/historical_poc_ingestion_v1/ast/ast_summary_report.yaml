@@ -1,0 +1,721 @@
+parser: lightweight_regex
+record_count: 50
+success_count: 49
+source_files_analyzed: 54
+external_input_required_count: 32
+ast_mask_candidate_count: 47
+records:
+- poc_id: MBEDTLS-POC-0001
+  source_files:
+  - poc/poc_mpi_write_string_min.c
+  - poc/poc_mpi_write_string_scan.c
+  api_call_sequence:
+  - memset
+  - mbedtls_mpi_init
+  - mbedtls_mpi_lset
+  - mbedtls_mpi_free
+  - mbedtls_mpi_write_string
+  - malloc
+  - free
+  ast_ready: true
+  external_input_required: false
+  ast_mask_candidate: true
+- poc_id: MBEDTLS-POC-0002
+  source_files:
+  - poc/poc_mpi_sub_abs_min.c
+  api_call_sequence:
+  - memset
+  - mbedtls_mpi_init
+  - mbedtls_mpi_read_string
+  - mbedtls_mpi_sub_abs
+  - mbedtls_mpi_free
+  - free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: MBEDTLS-POC-0003
+  source_files:
+  - poc/poc_pk_verify_ext_null_deref.c
+  - poc/poc_pk_verify_ext_null_deref_v2.c
+  api_call_sequence:
+  - memset
+  - mbedtls_pk_init
+  - mbedtls_entropy_init
+  - mbedtls_ctr_drbg_init
+  - mbedtls_ctr_drbg_seed
+  - mbedtls_pk_setup
+  - mbedtls_pk_info_from_type
+  - mbedtls_rsa_gen_key
+  - mbedtls_pk_rsa
+  - mbedtls_pk_get_psa_attributes
+  - mbedtls_pk_import_into_psa
+  - mbedtls_pk_free
+  - mbedtls_pk_setup_opaque
+  - mbedtls_pk_get_type
+  - mbedtls_pk_sign_ext
+  - mbedtls_pk_verify_ext
+  - mbedtls_svc_key_id_is_null
+  - mbedtls_ctr_drbg_free
+  - mbedtls_entropy_free
+  - mbedtls_psa_crypto_free
+  - mbedtls_rsa_set_padding
+  ast_ready: true
+  external_input_required: false
+  ast_mask_candidate: true
+- poc_id: MBEDTLS-POC-0004
+  source_files:
+  - poc/poc_get_pkcs_padding_outlen.c
+  api_call_sequence:
+  - memcpy
+  - memset
+  - mbedtls_cipher_init
+  - mbedtls_cipher_info_from_type
+  - mbedtls_cipher_setup
+  - mbedtls_cipher_setkey
+  - mbedtls_cipher_set_padding_mode
+  - mbedtls_cipher_set_iv
+  - mbedtls_cipher_reset
+  - mbedtls_cipher_update
+  - mbedtls_cipher_finish
+  - mbedtls_cipher_free
+  ast_ready: true
+  external_input_required: false
+  ast_mask_candidate: true
+- poc_id: MBEDTLS-POC-0005
+  source_files:
+  - poc/poc_asn1_store_named_data_null_deref.c
+  api_call_sequence:
+  - mbedtls_asn1_store_named_data
+  - memcpy
+  - mbedtls_asn1_free_named_data_list
+  ast_ready: true
+  external_input_required: false
+  ast_mask_candidate: true
+- poc_id: MBEDTLS-POC-0011
+  source_files:
+  - poc/poc_pem_underflow.c
+  api_call_sequence:
+  - mbedtls_pem_init
+  - mbedtls_pem_read_buffer
+  - mbedtls_pem_free
+  ast_ready: true
+  external_input_required: false
+  ast_mask_candidate: true
+- poc_id: MBEDTLS-POC-0017
+  source_files:
+  - poc/poc_x509_asn1_bounds.c
+  api_call_sequence:
+  - mbedtls_x509_crt_init
+  - mbedtls_x509_crt_parse_der
+  - mbedtls_x509_crt_free
+  ast_ready: true
+  external_input_required: false
+  ast_mask_candidate: true
+- poc_id: MBEDTLS-POC-0020
+  source_files:
+  - poc/poc_rsa_trailing_garbage.c
+  api_call_sequence:
+  - mbedtls_rsa_parse_key
+  - mbedtls_rsa_parse_pubkey
+  - mbedtls_rsa_init
+  - mbedtls_rsa_free
+  ast_ready: true
+  external_input_required: false
+  ast_mask_candidate: true
+- poc_id: MBEDTLS-POC-0028
+  source_files:
+  - poc/poc_psa_aead_invalid_tag_setup.c
+  api_call_sequence: []
+  ast_ready: true
+  external_input_required: false
+  ast_mask_candidate: false
+- poc_id: OPENSSL-ISSUE-11567
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - BIO_new_file
+  - X509_print_fp
+  - X509_free
+  - BIO_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-11772
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - BIO_new_file
+  - X509_get0_notAfter
+  - X509_cmp_time
+  - X509_free
+  - BIO_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-13860
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - BIO_new_file
+  - d2i_X509_bio
+  - X509_get_pubkey
+  - EVP_PKEY_free
+  - X509_free
+  - BIO_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-14457
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - BIO_new_file
+  - X509_STORE_new
+  - X509_STORE_add_cert
+  - X509_STORE_CTX_new
+  - X509_STORE_CTX_init
+  - X509_verify_cert
+  - X509_STORE_CTX_get_error
+  - X509_verify_cert_error_string
+  - X509_STORE_CTX_free
+  - X509_STORE_free
+  - X509_free
+  - BIO_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-14675
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - BIO_new_file
+  - X509_STORE_new
+  - X509_STORE_add_cert
+  - X509_STORE_CTX_new
+  - X509_STORE_CTX_init
+  - X509_verify_cert
+  - X509_STORE_CTX_get_error
+  - X509_verify_cert_error_string
+  - X509_STORE_CTX_free
+  - X509_STORE_free
+  - X509_free
+  - BIO_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-15899
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - BIO_new_file
+  - X509_get_pubkey
+  - EVP_PKEY_get1_RSA
+  - RSA_get0_key
+  - BN_print_fp
+  - RSA_free
+  - EVP_PKEY_free
+  - X509_free
+  - BIO_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-16196
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - BIO_new_file
+  - X509_REQ_get_pubkey
+  - EVP_PKEY_get1_RSA
+  - RSA_get0_key
+  - BN_print_fp
+  - RSA_free
+  - EVP_PKEY_free
+  - X509_REQ_free
+  - BIO_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-17715
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - BIO_new_file
+  - X509_free
+  - BIO_free
+  - X509_REQ_free
+  - fopen
+  - d2i_PKCS12_fp
+  - PKCS12_parse
+  - EVP_PKEY_free
+  - PKCS12_free
+  - BIO_new_fp
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-18168
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - BIO_new_file
+  - RSA_free
+  - BIO_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-18659
+  source_files:
+  - poc.c
+  api_call_sequence: []
+  ast_ready: true
+  external_input_required: false
+  ast_mask_candidate: false
+- poc_id: OPENSSL-ISSUE-19524
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - EVP_PKEY_new_raw_public_key
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit
+  - EVP_DigestSign
+  - EVP_MD_CTX_free
+  - EVP_PKEY_free
+  ast_ready: true
+  external_input_required: false
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-21935
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - BN_new
+  - BN_dec2bn
+  - BN_free
+  - EVP_PKEY_new
+  - RSA_new
+  - EVP_MD_CTX_new
+  - RSA_set0_key
+  - EVP_PKEY_assign_RSA
+  - EVP_DigestSignInit
+  - EVP_sha256
+  - EVP_MD_CTX_free
+  - EVP_PKEY_free
+  - RSA_free
+  ast_ready: true
+  external_input_required: false
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-22388
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - BIO_new_file
+  - BIO_free
+  - CMS_encrypt
+  - EVP_aes_128_cbc
+  - BIO_new_fp
+  - CMS_decrypt
+  - CMS_ContentInfo_free
+  - EVP_PKEY_free
+  - X509_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-22842
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - EVP_MAC_fetch
+  - EVP_MAC_CTX_new
+  - EVP_MAC_init
+  - EVP_MAC_CTX_get_mac_size
+  - EVP_MAC_CTX_free
+  - EVP_MAC_free
+  ast_ready: true
+  external_input_required: false
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-23325
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - BIO_new_file
+  - BIO_free
+  - X509_STORE_new
+  - X509_STORE_add_cert
+  - X509_STORE_add_crl
+  - X509_STORE_set_flags
+  - X509_STORE_CTX_new
+  - X509_STORE_CTX_init
+  - X509_verify_cert
+  - X509_STORE_CTX_get_error
+  - X509_verify_cert_error_string
+  - X509_STORE_CTX_free
+  - X509_STORE_free
+  - X509_CRL_free
+  - X509_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-26106
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - fopen
+  - d2i_PKCS12_fp
+  - PKCS12_parse
+  - X509_free
+  - EVP_PKEY_free
+  - PKCS12_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-2630
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - BIO_new
+  - BIO_s_secmem
+  - CRYPTO_secure_malloc_init
+  - BIO_write
+  ast_ready: true
+  external_input_required: false
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-27572
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - BIO_new_file
+  - BIO_new_fp
+  - BIO_read
+  - memcpy
+  - ASN1_parse_dump
+  - free
+  - BIO_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-28669
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - CRYPTO_secure_used
+  ast_ready: true
+  external_input_required: false
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-29418
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - BIO_new_file
+  - X509_check_purpose
+  - X509_free
+  - BIO_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-29574
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - BIO_new_file
+  - BIO_free
+  - d2i_X509_bio
+  - X509_print_fp
+  - X509_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-29645
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - BIO_new
+  - BIO_s_mem
+  - BIO_write
+  - BIO_get_data
+  - BIO_set_data
+  - BIO_free
+  ast_ready: true
+  external_input_required: false
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-30291
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - BIO_new_file
+  - BIO_free
+  - CMS_sign
+  - X509_STORE_new
+  - X509_STORE_add_cert
+  - BIO_new_fp
+  - CMS_verify
+  - X509_STORE_free
+  - CMS_ContentInfo_free
+  - EVP_PKEY_free
+  - X509_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-30432
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - BIO_new_file
+  - BIO_free
+  - X509_STORE_new
+  - X509_STORE_add_cert
+  - X509_STORE_CTX_new
+  - X509_STORE_CTX_init
+  - X509_verify_cert
+  - X509_STORE_CTX_get_error
+  - X509_verify_cert_error_string
+  - X509_STORE_CTX_free
+  - X509_STORE_free
+  - X509_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-30581
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - fopen
+  - d2i_PKCS12_fp
+  - PKCS12_mac_present
+  - PKCS12_verify_mac
+  - PKCS12_parse
+  - X509_free
+  - EVP_PKEY_free
+  - PKCS12_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-30889
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - memcpy
+  - BIO_new_file
+  - BIO_new_fp
+  - EVP_aes_256_cbc
+  - EVP_PKEY_free
+  - BIO_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-6788
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - BIO_new_file
+  - X509_CRL_get_issuer
+  - X509_NAME_print_ex_fp
+  - X509_CRL_free
+  - BIO_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-8435
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - fopen
+  - malloc
+  - fread
+  - free
+  - BIO_new_file
+  - BIO_free
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit
+  - EVP_sm3
+  - EVP_PKEY_CTX_set1_id
+  - EVP_DigestSign
+  - EVP_MD_CTX_free
+  - EVP_DigestVerifyInit
+  - EVP_DigestVerify
+  - EVP_PKEY_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-8980
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - EVP_CIPHER_CTX_new
+  - EVP_aes_128_gcm
+  - EVP_EncryptInit_ex
+  - EVP_CIPHER_CTX_copy
+  - EVP_CIPHER_CTX_free
+  ast_ready: true
+  external_input_required: false
+  ast_mask_candidate: true
+- poc_id: OPENSSL-ISSUE-9043
+  source_files:
+  - poc.c
+  api_call_sequence:
+  - BIO_new_file
+  - X509_REQ_print_fp
+  - X509_REQ_free
+  - BIO_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: WOLFSSL-POC-0001
+  source_files: []
+  api_call_sequence: []
+  ast_ready: false
+  external_input_required: true
+  ast_mask_candidate: false
+- poc_id: WOLFSSL-POC-0002
+  source_files:
+  - poc/poc_certfields_min.c
+  api_call_sequence:
+  - wolfSSL_X509_NAME_get_text_by_NID
+  - fopen
+  - malloc
+  - fread
+  - free
+  - wolfSSL_Init
+  - wolfSSL_Cleanup
+  - wolfSSL_X509_d2i
+  - wolfSSL_X509_get_subject_name
+  - wolfSSL_X509_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: WOLFSSL-POC-0003
+  source_files:
+  - poc/poc_x509_date_min.c
+  api_call_sequence:
+  - memset
+  - memcpy
+  - wolfSSL_X509_set_notAfter
+  - wolfSSL_X509_notAfter
+  - wolfSSL_X509_set_notBefore
+  - wolfSSL_X509_notBefore
+  - wolfSSL_Init
+  - X509_new
+  - wolfSSL_Cleanup
+  - X509_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: WOLFSSL-POC-0004
+  source_files:
+  - poc/poc_akid_certfromx509_debug.c
+  - poc/poc_akid_certfromx509_long.c
+  - poc/poc_akid_certfromx509_min.c
+  api_call_sequence:
+  - fopen
+  - memcpy
+  - malloc
+  - free
+  - wolfSSL_Init
+  - wolfSSL_X509_d2i
+  - wolfSSL_Cleanup
+  - wolfSSL_BIO_new
+  - wolfSSL_BIO_s_mem
+  - wolfSSL_X509_free
+  - wolfSSL_i2d_X509_bio
+  - wolfSSL_BIO_free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: WOLFSSL-POC-0005
+  source_files:
+  - poc/poc_dtls13_ack_overflow_fixed_api.c
+  - poc/poc_dtls13_ack_overflow_min.c
+  api_call_sequence:
+  - wolfSSL_Init
+  - wolfSSL_read
+  - wolfSSL_get_error
+  - wolfSSL_free
+  - wolfSSL_CTX_free
+  - wolfSSL_Cleanup
+  ast_ready: true
+  external_input_required: false
+  ast_mask_candidate: true
+- poc_id: WOLFSSL-POC-0005
+  source_files:
+  - poc/poc_pem_to_der_min.c
+  api_call_sequence:
+  - fopen
+  - malloc
+  - fread
+  - free
+  - wc_PemToDer
+  - wc_FreeDer
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: WOLFSSL-POC-0006
+  source_files:
+  - poc/poc_pkcs7_signedattrs_overflow_min.c
+  api_call_sequence:
+  - fopen
+  - malloc
+  - fread
+  - free
+  - memset
+  - wc_PKCS7_Init
+  - wc_PKCS7_InitWithCert
+  - wc_PKCS7_EncodeSignedData
+  - wc_PKCS7_Free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: WOLFSSL-POC-0007
+  source_files:
+  - poc/poc_pkcs7_ori_oversized_oid_min.c
+  api_call_sequence:
+  - memset
+  - wc_PKCS7_New
+  - wc_PKCS7_SetOriDecryptCb
+  - wc_PKCS7_DecodeEnvelopedData
+  - wc_PKCS7_Free
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: WOLFSSL-POC-0008
+  source_files:
+  - poc/poc_tls13_pqc_hybrid_truncated_keyshare_min.c
+  api_call_sequence:
+  - wolfSSL_Init
+  - wolfSSL_CTX_new
+  - wolfTLSv1_3_client_method
+  - wolfSSL_SetIORecv
+  - wolfSSL_SetIOSend
+  - wolfSSL_new
+  - wolfSSL_CTX_free
+  - wolfSSL_UseKeyShare
+  - wolfSSL_free
+  - wolfSSL_SetIOReadCtx
+  - wolfSSL_connect_TLSv13
+  - wolfSSL_Cleanup
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true
+- poc_id: WOLFSSL-POC-0009
+  source_files:
+  - poc/poc_d2i_ssl_session_bounds_min.c
+  api_call_sequence:
+  - wolfSSL_SESSION_new
+  - wolfSSL_i2d_SSL_SESSION
+  - wolfSSL_SESSION_free
+  - malloc
+  - free
+  - memcpy
+  - memset
+  - wolfSSL_Init
+  - wolfSSL_Cleanup
+  - wolfSSL_d2i_SSL_SESSION
+  ast_ready: true
+  external_input_required: false
+  ast_mask_candidate: true
+- poc_id: WOLFSSL-POC-0010
+  source_files:
+  - poc/poc_select_next_proto_oob_read_min.c
+  api_call_sequence:
+  - malloc
+  - free
+  - wolfSSL_select_next_proto
+  ast_ready: true
+  external_input_required: true
+  ast_mask_candidate: true

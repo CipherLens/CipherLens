@@ -1,0 +1,71 @@
+schema: updated_scheduler_queue_v1
+generated_at: '2026-06-13T03:06:37+00:00'
+source_queue: artifacts/sprints/scheduler_runtime_loop_v1/queue/scheduler_task_queue.yaml
+tasks:
+- task_name: x509_render_plan_v1
+  family: x509_parsing
+  priority: high
+  status: ready
+  reason: Generic mutation planner produced X.509 mutation cases; next local step is render planning,
+    not direct render/compile/run.
+  required_inputs:
+  - artifacts/sprints/orchestrator_use_generic_mutation_engine_v1/mutation/generated_x509_case_matrix.yaml
+  - config/family_profiles.yaml
+  - config/mutation_operator_registry.yaml
+  blocked_by: []
+  allowed_to_run_now: true
+  owner: local
+- task_name: external_validation_import_gate_v1
+  family: asn1_nested_boundary
+  priority: high
+  status: external_pending
+  reason: ASN.1 full-consumption candidates are assigned to teammate validation.
+  required_inputs:
+  - artifacts/sprints/runtime_feedback_integration_v1/candidate_queue/external_validation_pending_candidates.yaml
+  - artifacts/sprints/family_loop_closure_report_v1/candidate_status/candidate_status.yaml
+  blocked_by:
+  - teammate_external_validation
+  allowed_to_run_now: false
+  owner: teammate
+- task_name: x509_family_template_seed_discovery_v1
+  family: x509_asn1_inner_boundary
+  priority: high
+  status: ready
+  reason: X.509 is adjacent to ASN.1 and can reuse current oracle instrumentation without waiting on PKCS
+    app-level validation.
+  required_inputs:
+  - docs/PROJECT_STRUCTURE.md
+  - artifacts/sprints/project_structure_refactor_phase7_docs_and_imports_v1/validation/docs_imports_quality_checks.yaml
+  blocked_by: []
+  allowed_to_run_now: true
+  owner: local
+- task_name: more_asn1_valid_prefix_cases_v1
+  family: asn1_nested_boundary
+  priority: medium
+  status: ready
+  reason: ASN.1 loop is closed enough for additional valid-prefix cases while external validation remains
+    pending.
+  required_inputs:
+  - artifacts/sprints/family_loop_closure_report_v1/family_status/family_status.yaml
+  - artifacts/sprints/runtime_feedback_integration_v1/candidate_queue/external_validation_pending_candidates.yaml
+  blocked_by: []
+  allowed_to_run_now: true
+  owner: local
+- task_name: wait_pkcs_app_level_consumption_check
+  family: pkcs_container_parsing
+  priority: high
+  status: external_pending
+  reason: PKCS local triage classified candidates as caller_must_check_consumption; app-level caller behavior
+    is teammate-owned.
+  required_inputs:
+  - artifacts/sprints/pkcs_candidate_external_validation_v1/triage/pkcs_candidate_triage.yaml
+  - artifacts/sprints/pkcs_candidate_external_validation_v1/triage/teammate_validation_notes.md
+  blocked_by:
+  - pkcs_app_level_consumption_check_v1
+  allowed_to_run_now: false
+  owner: teammate
+summary:
+  total_tasks: 5
+  ready: 3
+  external_pending: 2
+  missing_capability: 0

@@ -1,0 +1,11 @@
+# Existing Schema Summary
+
+{
+  "existing_card_count": 47,
+  "existing_constraint_api_count": 4072,
+  "api_card_roots": [
+    "knowledge_base/api_cards",
+    "knowledge_raw/api_knowledge_cards"
+  ],
+  "api_constraint_root": "knowledge_raw/api_constraints"
+}

@@ -1,0 +1,233 @@
+schema: pkey_oracle_aware_analysis_bundle_v1
+generated_at: '2026-06-13T12:16:28+00:00'
+case_analysis:
+  schema: oracle_aware_case_analysis_v1
+  generated_at: '2026-06-13T12:16:28+00:00'
+  cases:
+  - case_id: pkey_parsing__generic_mut_001__der_valid_plus_trailing_garbage
+    family: pkey_parsing
+    mutation_strategy: der_valid_plus_trailing_garbage
+    target_library: openssl
+    run_status: exited
+    exit_code: 0
+    signal: ''
+    timeout: false
+    sanitizer_observed: false
+    oracle_events:
+      total: 4
+      phases:
+        parse: 4
+        verify: 0
+        full_consumption_check: 0
+        cleanup: 0
+      accepted_values:
+        'true': 1
+        'false': 3
+        unknown: 0
+      full_consumption_values:
+        'true': 0
+        'false': 2
+        unknown: 2
+      openssl_errors: []
+      parser_revalidation:
+        parser: analyzer.oracle_event_parser.parse_oracle_event_line
+        raw_lines_reparsed: 0
+        mismatch_count: 0
+        mismatches: []
+    raw_observation:
+      raw_execution_label: normal_exit
+      normal_exit: true
+      sanitizer_kinds: []
+      baseline_analysis_label: ''
+      baseline_candidate_label: ''
+    semantic_observation: full_consumption_gap_candidate
+    candidate_label: full_consumption_gap_candidate
+    triage_required: true
+    reason: parser accepted at least one path while full_consumption=false was observed
+    expected_oracle: {}
+  - case_id: pkey_parsing__generic_mut_002__malformed_only_control
+    family: pkey_parsing
+    mutation_strategy: malformed_only_control
+    target_library: openssl
+    run_status: exited
+    exit_code: 1
+    signal: ''
+    timeout: false
+    sanitizer_observed: false
+    oracle_events:
+      total: 4
+      phases:
+        parse: 4
+        verify: 0
+        full_consumption_check: 0
+        cleanup: 0
+      accepted_values:
+        'true': 0
+        'false': 4
+        unknown: 0
+      full_consumption_values:
+        'true': 0
+        'false': 2
+        unknown: 2
+      openssl_errors: []
+      parser_revalidation:
+        parser: analyzer.oracle_event_parser.parse_oracle_event_line
+        raw_lines_reparsed: 0
+        mismatch_count: 0
+        mismatches: []
+    raw_observation:
+      raw_execution_label: nonzero_exit
+      normal_exit: false
+      sanitizer_kinds: []
+      baseline_analysis_label: ''
+      baseline_candidate_label: ''
+    semantic_observation: normal_reject_observed
+    candidate_label: normal_reject
+    triage_required: false
+    reason: accepted=false path observed; full_consumption=false on reject path is not a gap by itself
+    expected_oracle: {}
+  - case_id: pkey_parsing__generic_mut_003__near_valid_der_length_delta
+    family: pkey_parsing
+    mutation_strategy: near_valid_der_length_delta
+    target_library: openssl
+    run_status: exited
+    exit_code: 1
+    signal: ''
+    timeout: false
+    sanitizer_observed: false
+    oracle_events:
+      total: 4
+      phases:
+        parse: 4
+        verify: 0
+        full_consumption_check: 0
+        cleanup: 0
+      accepted_values:
+        'true': 0
+        'false': 4
+        unknown: 0
+      full_consumption_values:
+        'true': 0
+        'false': 2
+        unknown: 2
+      openssl_errors: []
+      parser_revalidation:
+        parser: analyzer.oracle_event_parser.parse_oracle_event_line
+        raw_lines_reparsed: 0
+        mismatch_count: 0
+        mismatches: []
+    raw_observation:
+      raw_execution_label: nonzero_exit
+      normal_exit: false
+      sanitizer_kinds: []
+      baseline_analysis_label: ''
+      baseline_candidate_label: ''
+    semantic_observation: normal_reject_observed
+    candidate_label: normal_reject
+    triage_required: false
+    reason: accepted=false path observed; full_consumption=false on reject path is not a gap by itself
+    expected_oracle: {}
+  summary:
+    total_cases: 3
+    normal_reject_observed: 2
+    normal_accept_observed: 0
+    full_consumption_gap_candidate: 1
+    oracle_event_incomplete: 0
+    sanitizer_crash_candidate: 0
+candidate_labels:
+  schema: oracle_aware_candidate_labels_v1
+  generated_at: '2026-06-13T12:16:28+00:00'
+  labels:
+  - case_id: pkey_parsing__generic_mut_001__der_valid_plus_trailing_garbage
+    family: pkey_parsing
+    mutation_strategy: der_valid_plus_trailing_garbage
+    raw_execution_label: normal_exit
+    oracle_semantic_label: full_consumption_gap_candidate
+    candidate_label: full_consumption_gap_candidate
+    confidence: medium
+    reason: parser accepted at least one path while full_consumption=false was observed
+    next_action: oracle semantic triage
+  - case_id: pkey_parsing__generic_mut_002__malformed_only_control
+    family: pkey_parsing
+    mutation_strategy: malformed_only_control
+    raw_execution_label: nonzero_exit
+    oracle_semantic_label: normal_reject_observed
+    candidate_label: normal_reject
+    confidence: high
+    reason: accepted=false path observed; full_consumption=false on reject path is not a gap by itself
+    next_action: generate valid-prefix or near-valid variants
+  - case_id: pkey_parsing__generic_mut_003__near_valid_der_length_delta
+    family: pkey_parsing
+    mutation_strategy: near_valid_der_length_delta
+    raw_execution_label: nonzero_exit
+    oracle_semantic_label: normal_reject_observed
+    candidate_label: normal_reject
+    confidence: high
+    reason: accepted=false path observed; full_consumption=false on reject path is not a gap by itself
+    next_action: generate valid-prefix or near-valid variants
+  summary:
+    normal_reject: 2
+    normal_accept: 0
+    full_consumption_gap_candidate: 1
+    semantic_divergence_candidate: 0
+    needs_triage: 0
+    oracle_incomplete: 0
+family_summary:
+  schema: oracle_aware_family_analysis_v1
+  generated_at: '2026-06-13T12:16:28+00:00'
+  families:
+  - family: pkey_parsing
+    target_library: openssl
+    total_cases: 3
+    mutation_strategies:
+    - der_valid_plus_trailing_garbage
+    - malformed_only_control
+    - near_valid_der_length_delta
+    parse_events: 12
+    verify_events: 0
+    full_consumption_events: 0
+    cleanup_events: 0
+    accepted_true: 1
+    accepted_false: 11
+    full_consumption_true: 0
+    full_consumption_false: 6
+    full_consumption_unknown: 6
+    sanitizer_observed: 0
+    crash_signal: 0
+    timeout: 0
+    preliminary_interpretation: accepted parser path exists; accepted=true/full_consumption=false cases
+      require semantic triage
+    limitations:
+    - bounded mutation matrix; not coverage-guided fuzzing
+    - no confirmed vulnerability claim is made
+  summary:
+    families_seen: 1
+    total_cases: 3
+oracle_semantics:
+  schema: oracle_semantics_summary_v1
+  generated_at: '2026-06-13T12:16:28+00:00'
+  raw_observations:
+    total_events: 12
+    cases_with_events: 3
+    parse_events: 12
+    verify_events: 0
+    full_consumption_events: 0
+    cleanup_events: 0
+    accepted_true: 1
+    accepted_false: 11
+    full_consumption_true: 0
+    full_consumption_false: 6
+    full_consumption_unknown: 6
+  semantic_outcome:
+    all_cases_rejected: false
+    any_success_accept: true
+    any_success_accept_with_trailing_unconsumed: true
+    full_consumption_gap_candidates:
+    - pkey_parsing__generic_mut_001__der_valid_plus_trailing_garbage
+    needs_more_valid_mutation_inputs: false
+    interpretation: No accepted=true parser path was observed; full_consumption=false occurs on reject/error
+      paths and is not a full-consumption validation gap by itself.
+  claim_policy:
+    confirmed_vulnerability: false
+    cve: false
+    exploitable: false

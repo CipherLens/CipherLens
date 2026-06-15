@@ -1,0 +1,21 @@
+task: family_template_generalization_v1
+direct_tree_sitter_backend_cli:
+  script: template_maker/ast_mask_tree_sitter.py
+  has_help_output: false
+  note: Backend module exposes run(root, output_name, template_files) but does not
+    provide standalone argparse help.
+recommended_cli:
+  script: template_maker/ast_mask.py
+  tree_sitter_command_shape: python3 -m template_maker.ast_mask --root <dir> --backend
+    tree-sitter --template-file canonical_tmpl_wolfssl.c --output-name ast_mask_report.yaml
+  output: ast_mask_report.yaml inside each template directory
+  can_generate_ast_mask_report_yaml: true
+selector_cli:
+  script: template_maker/ast_mask_select.py
+  command_shape: python3 -m template_maker.ast_mask_select --root <dir> --ast-report-name
+    ast_mask_report.yaml --output-name selected_mask_units.yaml
+  can_generate_selected_mask_units_yaml: true
+fallback:
+  script: template_maker/ast_mask_lite.py or template_maker.ast_mask --backend lite
+  needed_when: tree_sitter/tree_sitter_c dependencies or backend invocation fail
+  allowed: true

@@ -1,0 +1,21 @@
+next_task_name: x509_parsing_app_level_gap_triage_v1
+family: x509_parsing
+proposed_path: C_app_level_validation_gap
+reason: At least seven OpenSSL x509/verify/crl seeds expose app-visible wrong-result/wrong-output candidates,
+  while D and ASN.1 overlap seeds can be isolated.
+glm_allowed: false
+render_run_allowed: false
+handoff_conditions:
+- Use existing artifacts only
+- Do not claim confirmed vulnerability
+- Do not render or run until controls/oracles are approved
+- Keep OPENSSL-ISSUE-9043 and OPENSSL-ISSUE-29574 out of pure C-path counts
+deferred_paths:
+  D_crash_sanitizer_evidence_audit:
+  - OPENSSL-ISSUE-9043
+  overlap_asn1_nested_boundary:
+  - OPENSSL-ISSUE-29574
+  A_recipe_slot_cross_library_migration:
+  - MBEDTLS-POC-0027 requires TLS verify-result family
+  needs_more_evidence:
+  - OPENSSL-ISSUE-13860

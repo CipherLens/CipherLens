@@ -1,0 +1,41 @@
+candidate_id: pkcs_candidate_002
+case_id: pkcs_container_parsing_openssl__supp_003__preserve_outer_pkcs_mutate_inner_seed_required
+container_type: pkcs7
+seed_id: synthetic_pkcs7_valid_certbag
+mutation_strategy: valid_pkcs7_seed_plus_trailing_ff00
+input_path: /home/wen/work/crypto-pattern-fuzz/artifacts/sprints/pkcs_valid_prefix_pipeline_to_analyze_v1/rendered_cases/pkcs_valid_prefix__case_003/input.bin
+input_sha256: 36c42ade69351f861996c221a0ed0f2a7536e6f9ae710f76ab0a52902703ed38
+input_size_bytes: 870
+oracle_events:
+  accepted: true
+  full_consumption: false
+  full_consumption_gap: true
+  event_count: 3
+  parse_events: 1
+  raw_events:
+  - ORACLE_EVENT schema=oracle_event_v1 case_id=pkcs_container_parsing_openssl__supp_003__preserve_outer_pkcs_mutate_inner_seed_required
+    family=pkcs_container_parsing mutation_strategy=valid_pkcs7_seed_plus_trailing_ff00 target_library=openssl
+    phase=parse api=d2i_PKCS7 ret=1 accepted=1 input_len=870 consumed_len=868 full_consumption=0 openssl_error_code=0
+    openssl_error_reason="error:00000000:lib(0)::reason(0)"
+  - ORACLE_EVENT schema=oracle_event_v1 case_id=pkcs_container_parsing_openssl__supp_003__preserve_outer_pkcs_mutate_inner_seed_required
+    family=pkcs_container_parsing mutation_strategy=valid_pkcs7_seed_plus_trailing_ff00 target_library=openssl
+    phase=full_consumption_check api=d2i_PKCS7 input_len=870 consumed_len=868 full_consumption=0 notes=consumption_observed_from_d2i_PKCS7
+  - ORACLE_EVENT schema=oracle_event_v1 case_id=pkcs_container_parsing_openssl__supp_003__preserve_outer_pkcs_mutate_inner_seed_required
+    family=pkcs_container_parsing mutation_strategy=valid_pkcs7_seed_plus_trailing_ff00 target_library=openssl
+    phase=cleanup api=d2i_PKCS7 cleanup_executed=1
+local_replay:
+  openssl_command: /usr/bin/openssl pkcs7 -inform DER -in /home/wen/work/crypto-pattern-fuzz/artifacts/sprints/pkcs_valid_prefix_pipeline_to_analyze_v1/rendered_cases/pkcs_valid_prefix__case_003/input.bin
+    -noout
+  return_code: 0
+  accepted: true
+  stdout_excerpt: ''
+  stderr_excerpt: ''
+classification: caller_must_check_consumption
+reason: d2i-style parser accepted a prefix while trailing bytes remain; this is a caller-consumption-check
+  obligation rather than a standalone vulnerability claim
+next_action: external validation should determine whether any real app-level caller omits full-consumption
+  checks
+claim_policy:
+  confirmed_vulnerability: false
+  cve: false
+  exploitable: false

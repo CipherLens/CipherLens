@@ -1,0 +1,104 @@
+schema: slot_filling_plan_v1
+generated_at: '2026-06-13T08:53:19+00:00'
+families:
+- pkey_parsing
+- pkcs8_parsing
+- cms_container_parsing
+- x509_crl_parsing
+allowed_output: slot_bindings.yaml
+allowed_slots:
+  parser_api: Target parser API name
+  input_format: DER or PEM
+  object_type: Target OpenSSL object type
+  cleanup_api: Cleanup API
+  oracle_observable: Observable used for accepted/full-consumption oracle
+forbidden_outputs:
+- complete C harness
+- adapter_recipes
+- normalized_templates
+- knowledge main library writes
+- mutation engine code
+- renderer code
+mapping_gate_results:
+  schema: mapping_gate_results_v1
+  generated_at: '2026-06-13T08:53:19+00:00'
+  mapping_gate_passed: true
+  mapping_gate_bypassed: false
+  rag_result_count: 8
+  known_pattern_gate:
+    schema: known_pattern_gate_v1
+    patterns:
+    - pattern_id: der_single_object_trailing_garbage_full_consumption
+      status: known_semantic_family_candidate
+      families_observed:
+      - x509_parsing
+      - pkey_parsing
+      - pkcs8_parsing
+      families_pending:
+      - pkcs_container_parsing
+      - cms_container_parsing
+      description: Valid DER single object plus trailing garbage is accepted by parser/app path while
+        full_consumption is false.
+      default_action: deduplicate_and_external_pending
+      stop_campaign_on_repeat: false
+      stop_campaign_on_new_family: false
+      stop_campaign_on_crash_or_sanitizer: true
+      stop_campaign_on_new_semantic_class: true
+      claim_policy:
+        confirmed_vulnerability: false
+        cve: false
+        exploitable: false
+  results:
+  - family: pkey_parsing
+    decision: allow_slot_filling
+    operation_family: object_or_container_parsing
+    preserved_features:
+    - parser_accept
+    - full_consumption_gap
+    - malformed_only_reject
+    target_apis:
+    - PEM_read_bio_PrivateKey
+    - PEM_read_bio_PUBKEY
+    - d2i_AutoPrivateKey
+    - d2i_PUBKEY
+    - d2i_PrivateKey_bio
+    - d2i_PUBKEY_bio
+    - EVP_PKEY
+    known_pattern_gate: deduplicate_repeat_full_consumption_gap
+  - family: pkcs8_parsing
+    decision: allow_slot_filling
+    operation_family: object_or_container_parsing
+    preserved_features:
+    - parser_accept
+    - full_consumption_gap
+    - malformed_only_reject
+    target_apis:
+    - d2i_PKCS8_PRIV_KEY_INFO
+    - d2i_AutoPrivateKey
+    - PEM_read_bio_PrivateKey
+    - EVP_PKEY
+    known_pattern_gate: deduplicate_repeat_full_consumption_gap
+  - family: cms_container_parsing
+    decision: allow_slot_filling
+    operation_family: object_or_container_parsing
+    preserved_features:
+    - parser_accept
+    - full_consumption_gap
+    - malformed_only_reject
+    target_apis:
+    - CMS_ContentInfo
+    - d2i_CMS_bio
+    - PEM_read_bio_CMS
+    known_pattern_gate: deduplicate_repeat_full_consumption_gap
+  - family: x509_crl_parsing
+    decision: allow_slot_filling
+    operation_family: object_or_container_parsing
+    preserved_features:
+    - parser_accept
+    - full_consumption_gap
+    - malformed_only_reject
+    target_apis:
+    - X509_CRL
+    - d2i_X509_CRL_bio
+    - PEM_read_bio_X509_CRL
+    known_pattern_gate: deduplicate_repeat_full_consumption_gap

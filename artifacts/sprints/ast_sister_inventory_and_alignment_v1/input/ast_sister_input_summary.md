@@ -1,0 +1,31 @@
+# AST Sister Input Summary
+
+- inputs:
+  - template_schema_report:
+    - path: artifacts/sprints/template_schema_inventory_v1/reports/template_schema_inventory_report.yaml
+    - exists: True
+    - loaded: True
+  - template_schema_summary:
+    - path: artifacts/sprints/template_schema_inventory_v1/schema/template_schema_summary.yaml
+    - exists: True
+    - loaded: True
+  - template_examples_summary:
+    - path: artifacts/sprints/template_schema_inventory_v1/examples/template_examples_summary.yaml
+    - exists: True
+    - loaded: True
+  - template_family_coverage:
+    - path: artifacts/sprints/template_schema_inventory_v1/coverage/template_family_coverage.yaml
+    - exists: True
+    - loaded: True
+  - template_generalizer_candidates:
+    - path: artifacts/sprints/template_schema_inventory_v1/candidates/template_generalizer_candidate_selection.yaml
+    - exists: True
+    - loaded: True
+- template_schema_context:
+  - template_schema_observable: True
+  - template_examples_observable: True
+  - previous_next_task: template_generalizer_v1
+- purpose:
+  - Confirm AST-SISTER/AST-mask implementation before recipe design.
+  - Align future family recipes with ast_mask_report.yaml and selected_mask_units.yaml.
+  - Do not generate templates, render cases, run PoCs, or call GLM in this sprint.

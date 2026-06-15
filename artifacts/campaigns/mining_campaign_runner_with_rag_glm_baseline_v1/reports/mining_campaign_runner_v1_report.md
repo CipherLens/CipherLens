@@ -1,0 +1,43 @@
+# mining_campaign_runner_v1 Report
+
+## Campaign
+
+- selected_family: pkey_parsing
+- seed_manifest_reused: True
+- stages_executed: 3
+- stop_condition: render_cases_ready_for_resume
+- missing_capability: False
+
+## Stage Summary
+
+- generic_mutation_engine_used: True
+- render_plan_executed: True
+- render_cases_executed: False
+- compile_run_executed: False
+- oracle_aware_analyze_executed: False
+- candidate_queue_generated: true
+- candidates_found: 0
+
+## RAG/GLM Baseline
+
+- baseline_loaded: True
+- slot_bindings_schema_valid: True
+- adapter_validate_passed: True
+- mapping_gate_bypassed: False
+- glm_called: True
+
+## Known Pattern Gate
+
+- known_pattern: der_single_object_trailing_garbage_full_consumption
+- known_pattern_repeat_deduplicated: False
+- new_candidate_count: 0
+- stop_policy_applied: True
+
+## Policy
+
+No tools script, feedback, pattern-bank, adapter recipe, normalized template,
+git, CVE, exploitability, or confirmed vulnerability claim was produced.
+
+## Quality
+
+- quality_status: pass_no_candidate

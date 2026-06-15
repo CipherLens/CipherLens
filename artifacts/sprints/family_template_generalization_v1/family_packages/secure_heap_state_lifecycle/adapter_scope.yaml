@@ -1,0 +1,33 @@
+schema: family_adapter_scope_v1
+family: secure_heap_state_lifecycle
+source_library: wolfssl
+allowed_targets:
+  openssl:
+    allowed_apis: []
+    candidate_only_apis:
+    - CRYPTO_set_mem_functions
+    - OPENSSL_free
+    - OPENSSL_malloc
+  mbedtls:
+    allowed_apis:
+    - mbedtls_free
+    candidate_only_apis:
+    - mbedtls_calloc
+    - mbedtls_platform_set_calloc_free
+blocked_targets: []
+candidate_only_targets:
+  openssl:
+  - CRYPTO_set_mem_functions
+  - OPENSSL_free
+  - OPENSSL_malloc
+  mbedtls:
+  - mbedtls_calloc
+  - mbedtls_platform_set_calloc_free
+adapter_ready_mapping_count: 1
+candidate_only_mapping_count: 5
+manual_review_mapping_count: 0
+adapter_generation_in_this_sprint: false
+glm_usage_in_this_sprint: false
+notes:
+- Future adapters must bind slots through recipe-slot mode only.
+- Mappings are candidate evidence, not confirmed API equivalence.

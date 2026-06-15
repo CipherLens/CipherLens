@@ -1,0 +1,195 @@
+# Case Analysis
+
+```yaml
+schema: valid_prefix_oracle_aware_case_analysis_v1
+generated_at: '2026-06-12T04:13:11+00:00'
+cases:
+- case_id: asn1_nested_boundary_openssl__supp_001__valid_der_plus_trailing_garbage
+  family: asn1_nested_boundary
+  mutation_strategy: valid_prefix_valid_object_plus_trailing_garbage
+  target_library: openssl
+  run_status: exited
+  exit_code: 10
+  signal: ''
+  timeout: false
+  sanitizer_observed: false
+  oracle_events:
+    total: 3
+    phases:
+      parse: 1
+      full_consumption_check: 1
+      cleanup: 1
+    accepted_values:
+      'true': 1
+      'false': 0
+      unknown: 2
+    full_consumption_values:
+      'true': 0
+      'false': 2
+      unknown: 1
+  semantic_observation: full_consumption_gap_candidate
+  candidate_label: full_consumption_gap_candidate
+  source_render_case: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__001
+  claim_policy:
+    confirmed_vulnerability: false
+    cve: false
+    exploitable: false
+- case_id: asn1_nested_boundary_openssl__supp_002__valid_prefix_trailing_only_ff00
+  family: asn1_nested_boundary
+  mutation_strategy: valid_prefix_valid_prefix_trailing_only
+  target_library: openssl
+  run_status: exited
+  exit_code: 10
+  signal: ''
+  timeout: false
+  sanitizer_observed: false
+  oracle_events:
+    total: 3
+    phases:
+      parse: 1
+      full_consumption_check: 1
+      cleanup: 1
+    accepted_values:
+      'true': 1
+      'false': 0
+      unknown: 2
+    full_consumption_values:
+      'true': 0
+      'false': 2
+      unknown: 1
+  semantic_observation: full_consumption_gap_candidate
+  candidate_label: full_consumption_gap_candidate
+  source_render_case: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__002
+  claim_policy:
+    confirmed_vulnerability: false
+    cve: false
+    exploitable: false
+- case_id: asn1_nested_boundary_openssl__supp_003__outer_sequence_inner_length_plus_one
+  family: asn1_nested_boundary
+  mutation_strategy: valid_prefix_preserve_outer_container_mutate_inner
+  target_library: openssl
+  run_status: exited
+  exit_code: 0
+  signal: ''
+  timeout: false
+  sanitizer_observed: false
+  oracle_events:
+    total: 3
+    phases:
+      parse: 1
+      full_consumption_check: 1
+      cleanup: 1
+    accepted_values:
+      'true': 1
+      'false': 0
+      unknown: 2
+    full_consumption_values:
+      'true': 2
+      'false': 0
+      unknown: 1
+  semantic_observation: successful_accept_path_observed
+  candidate_label: normal_accept
+  source_render_case: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__003
+  claim_policy:
+    confirmed_vulnerability: false
+    cve: false
+    exploitable: false
+- case_id: asn1_nested_boundary_openssl__supp_004__outer_sequence_inner_length_minus_one
+  family: asn1_nested_boundary
+  mutation_strategy: valid_prefix_near_valid_small_length_delta
+  target_library: openssl
+  run_status: exited
+  exit_code: 0
+  signal: ''
+  timeout: false
+  sanitizer_observed: false
+  oracle_events:
+    total: 3
+    phases:
+      parse: 1
+      full_consumption_check: 1
+      cleanup: 1
+    accepted_values:
+      'true': 0
+      'false': 1
+      unknown: 2
+    full_consumption_values:
+      'true': 0
+      'false': 2
+      unknown: 1
+  semantic_observation: normal_reject_observed
+  candidate_label: normal_reject
+  source_render_case: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__004
+  claim_policy:
+    confirmed_vulnerability: false
+    cve: false
+    exploitable: false
+- case_id: asn1_nested_boundary_openssl__supp_005__valid_prefix_truncated_tail_one_byte
+  family: asn1_nested_boundary
+  mutation_strategy: valid_prefix_valid_prefix_trailing_only
+  target_library: openssl
+  run_status: exited
+  exit_code: 10
+  signal: ''
+  timeout: false
+  sanitizer_observed: false
+  oracle_events:
+    total: 3
+    phases:
+      parse: 1
+      full_consumption_check: 1
+      cleanup: 1
+    accepted_values:
+      'true': 1
+      'false': 0
+      unknown: 2
+    full_consumption_values:
+      'true': 0
+      'false': 2
+      unknown: 1
+  semantic_observation: full_consumption_gap_candidate
+  candidate_label: full_consumption_gap_candidate
+  source_render_case: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__005
+  claim_policy:
+    confirmed_vulnerability: false
+    cve: false
+    exploitable: false
+- case_id: asn1_nested_boundary_openssl__supp_006__nested_depth_near_valid
+  family: asn1_nested_boundary
+  mutation_strategy: valid_prefix_preserve_outer_container_mutate_inner
+  target_library: openssl
+  run_status: exited
+  exit_code: 0
+  signal: ''
+  timeout: false
+  sanitizer_observed: false
+  oracle_events:
+    total: 3
+    phases:
+      parse: 1
+      full_consumption_check: 1
+      cleanup: 1
+    accepted_values:
+      'true': 1
+      'false': 0
+      unknown: 2
+    full_consumption_values:
+      'true': 2
+      'false': 0
+      unknown: 1
+  semantic_observation: successful_accept_path_observed
+  candidate_label: normal_accept
+  source_render_case: artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/render_cases/rendered_cases/render_valid_prefix__asn1_nested_boundary__openssl__006
+  claim_policy:
+    confirmed_vulnerability: false
+    cve: false
+    exploitable: false
+summary:
+  total_cases: 6
+  successful_accept_path_observed: 2
+  normal_reject_observed: 1
+  full_consumption_gap_candidate: 3
+  oracle_event_incomplete: 0
+  sanitizer_crash_candidate: 0
+  valid_prefix_refinement_insufficient: false
+```

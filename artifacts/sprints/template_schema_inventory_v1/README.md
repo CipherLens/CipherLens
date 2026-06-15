@@ -1,0 +1,24 @@
+# template_schema_inventory_v1
+
+- sprint: template_schema_inventory_v1
+- purpose: Read existing template/schema/tooling artifacts and summarize compatibility for template_generalizer_v1.
+- strict_non_actions:
+  - run_poc: False
+  - compile_run: False
+  - glm: False
+  - render: False
+  - template_generation: False
+  - pattern_bank_modified: False
+  - scheduler_seed_modified: False
+  - knowledge_raw_modified: False
+- main_outputs:
+  - artifacts/sprints/template_schema_inventory_v1/input/template_inventory_input_summary.yaml
+  - artifacts/sprints/template_schema_inventory_v1/structure/template_directory_inventory.yaml
+  - artifacts/sprints/template_schema_inventory_v1/schema/template_schema_summary.yaml
+  - artifacts/sprints/template_schema_inventory_v1/examples/template_examples_summary.yaml
+  - artifacts/sprints/template_schema_inventory_v1/coverage/template_family_coverage.yaml
+  - artifacts/sprints/template_schema_inventory_v1/candidates/template_generalizer_candidate_selection.yaml
+  - artifacts/sprints/template_schema_inventory_v1/reports/template_generalizer_v1_plan.yaml
+  - artifacts/sprints/template_schema_inventory_v1/reports/next_action_after_template_inventory.yaml
+  - artifacts/sprints/template_schema_inventory_v1/reports/template_schema_inventory_report.yaml
+- next_task_name: template_generalizer_v1

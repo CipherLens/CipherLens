@@ -1,0 +1,4 @@
+# Next Action
+
+- next_task_name: `api_card_enrichment_for_cross_library_counterparts_v1`
+- why: OpenSSL/mbedTLS counterpart card and constraint gaps are obvious.

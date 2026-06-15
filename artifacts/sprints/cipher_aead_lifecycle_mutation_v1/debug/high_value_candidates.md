@@ -1,0 +1,5 @@
+# High Value AEAD Lifecycle Candidates
+
+- aead_006_final_without_update_gcm_encrypt `final_without_update`: semantic_divergence_candidate (mutation_allowed_but_may_match_documented_low_level_semantics)
+- aead_009_set_tag_after_final_gcm_decrypt `set_tag_after_final`: permissive_behavior (mutation_allowed_by_api)
+- aead_012_wrong_tag_length_gcm_decrypt `wrong_tag_length`: semantic_divergence_candidate (mutation_allowed_but_may_match_documented_low_level_semantics)

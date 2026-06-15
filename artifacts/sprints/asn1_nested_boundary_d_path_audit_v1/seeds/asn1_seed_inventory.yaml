@@ -1,0 +1,41 @@
+sprint: asn1_nested_boundary_d_path_audit_v1
+seeds:
+- seed_id: MBEDTLS-POC-0017
+  source: data/pocs/core10/MBEDTLS-POC-0017 and normalized_templates/x509/x509_asn1_inner_boundary
+  library: mbedtls
+  component: X509/ASN1
+  issue_or_poc: 'PoC/regression derived from mbedTLS PR #2442'
+  trigger_pattern: malformed issuer with empty inner AttributeTypeAndValue structures
+  suspected_root_cause: inner parser end pointer should obey nested substructure boundary
+    instead of parent boundary
+  boundary_type: inner_asn1_boundary
+  oracle_hint: historical buggy ret=-9186 vs fixed ret=-9184; current migration results
+    are safe_reject_behavior/migrated_safe
+  evidence_quality: medium
+  recommended_next: D_then_A
+- seed_id: OPENSSL-ISSUE-30581
+  source: datasets/openssl/poc_artifacts/issue_30581
+  library: openssl
+  component: PKCS12/ASN1
+  issue_or_poc: GitHub issue 30581 artifact
+  trigger_pattern: NULL pointer dereference when printing PBMAC1 salt metadata from
+    malformed PKCS12 input
+  suspected_root_cause: dereferencing NULL when decoding PBKDF2 salt as ASN.1 NULL
+    in CLI info path
+  boundary_type: malformed_child_object
+  oracle_hint: CLI+INPUT_SEED+CLI+SANITIZER_LOG metadata; local C harness uses d2i_PKCS12_fp
+    / PKCS12_parse path but strict reproduction missing original input
+  evidence_quality: strong
+  recommended_next: D_audit_only
+- seed_id: OPENSSL-ISSUE-9043
+  source: knowledge_raw/poc_patterns/openssl_issue_patterns.md
+  library: openssl
+  component: X509/CSR/ASN1
+  issue_or_poc: OpenSSL issue artifact reference
+  trigger_pattern: NULL pointer dereference in CSR text output code
+  suspected_root_cause: malformed or unexpected ASN.1 attribute state reaches text
+    output path
+  boundary_type: malformed_child_object
+  oracle_hint: crash_or_sanitizer candidate reference; needs source artifact audit
+  evidence_quality: medium
+  recommended_next: needs_more_evidence

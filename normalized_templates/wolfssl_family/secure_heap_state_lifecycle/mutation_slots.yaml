@@ -1,0 +1,80 @@
+schema: family_mutation_slots_v1
+family: secure_heap_state_lifecycle
+template_level: family
+seed_pocs: []
+mutation_slots:
+- slot_name: ALLOCATOR_INITIALIZED
+  slot_type: boolean
+  examples:
+  - 'true'
+  - 'false'
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: uninitialized allocator behavior may be expected safe rejection
+- slot_name: MALLOC_SIZE
+  slot_type: size_t
+  examples:
+  - '0'
+  - '1'
+  - '16'
+  - large
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: avoid unbounded allocation
+- slot_name: FREE_ORDER
+  slot_type: sequence
+  examples:
+  - free_once
+  - free_before_use
+  - free_after_replace
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: API misuse must be down-ranked
+- slot_name: DOUBLE_FREE_CANDIDATE
+  slot_type: boolean
+  examples:
+  - 'false'
+  - 'true'
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: requires explicit sanitizer evidence
+- slot_name: ALLOCATOR_REPLACEMENT
+  slot_type: enum
+  examples:
+  - default
+  - custom
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: custom allocator must be deterministic
+ast_maskable_units:
+- unit_type: api_argument
+  slot_name: ALLOCATOR_INITIALIZED
+  node_kind_hint: argument or literal
+  reason: uninitialized allocator behavior may be expected safe rejection
+- unit_type: api_argument
+  slot_name: MALLOC_SIZE
+  node_kind_hint: argument or literal
+  reason: avoid unbounded allocation
+- unit_type: api_argument
+  slot_name: FREE_ORDER
+  node_kind_hint: argument or literal
+  reason: API misuse must be down-ranked
+- unit_type: api_argument
+  slot_name: DOUBLE_FREE_CANDIDATE
+  node_kind_hint: argument or literal
+  reason: requires explicit sanitizer evidence
+- unit_type: api_argument
+  slot_name: ALLOCATOR_REPLACEMENT
+  node_kind_hint: argument or literal
+  reason: custom allocator must be deterministic
+semantic_policy: mutate slots, preserve trigger/cleanup/oracle shape

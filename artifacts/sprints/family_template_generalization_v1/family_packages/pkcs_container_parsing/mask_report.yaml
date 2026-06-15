@@ -1,0 +1,193 @@
+schema: family_mask_report_v1
+family_template_id: WOLFSSL-FAMILY-pkcs_container_parsing
+family: pkcs_container_parsing
+template_id: WOLFSSL-FAMILY-pkcs_container_parsing
+template_name: wolfssl family canonical template for pkcs_container_parsing
+template_level: family
+pattern_id: wolfssl_family::pkcs_container_parsing
+source_library: wolfssl
+source_api:
+- wc_PKCS12_parse
+- wc_PKCS7_VerifySignedData
+- wc_PKCS7_DecodeSignedData
+- PKCS12_parse
+- PKCS7_verify
+harness_family: x509_asn1_inner_boundary
+oracle_type:
+- parser_reject_accept
+- return_code_semantics
+- full_consumption
+- cleanup_required
+seed_pocs:
+- WOLFSSL-POC-0007
+- WOLFSSL-POC-0006
+roles:
+  input_construction:
+  - CONTAINER_BYTES
+  - DER_BYTES
+  - ASN1_NESTED_LENGTH
+  - ATTRIBUTE_COUNT
+  trigger_call:
+  - wc_PKCS12_parse
+  - wc_PKCS7_VerifySignedData
+  - wc_PKCS7_DecodeSignedData
+  - PKCS12_parse
+  - PKCS7_verify
+  oracle_check:
+  - parser_reject_accept
+  - return_code_semantics
+  - full_consumption
+  - cleanup_required
+  cleanup_call:
+  - slot_name: cleanup_call
+    source_cleanup: family-specific wolfSSL cleanup/free API
+    target_cleanup_candidates: []
+    required: true
+mask_units:
+- unit_id: pkcs_container_parsing.trigger_call.1
+  role: trigger_call
+  slot_name: wc_PKCS12_parse
+  original_text: wc_PKCS12_parse
+  replacement: wc_PKCS12_parse
+  reason: preserve source-library trigger call for family semantics
+  preserve: true
+- unit_id: pkcs_container_parsing.trigger_call.2
+  role: trigger_call
+  slot_name: wc_PKCS7_VerifySignedData
+  original_text: wc_PKCS7_VerifySignedData
+  replacement: wc_PKCS7_VerifySignedData
+  reason: preserve source-library trigger call for family semantics
+  preserve: true
+- unit_id: pkcs_container_parsing.trigger_call.3
+  role: trigger_call
+  slot_name: wc_PKCS7_DecodeSignedData
+  original_text: wc_PKCS7_DecodeSignedData
+  replacement: wc_PKCS7_DecodeSignedData
+  reason: preserve source-library trigger call for family semantics
+  preserve: true
+- unit_id: pkcs_container_parsing.trigger_call.4
+  role: trigger_call
+  slot_name: PKCS12_parse
+  original_text: PKCS12_parse
+  replacement: PKCS12_parse
+  reason: preserve source-library trigger call for family semantics
+  preserve: true
+- unit_id: pkcs_container_parsing.trigger_call.5
+  role: trigger_call
+  slot_name: PKCS7_verify
+  original_text: PKCS7_verify
+  replacement: PKCS7_verify
+  reason: preserve source-library trigger call for family semantics
+  preserve: true
+- unit_id: pkcs_container_parsing.slot.1
+  role: mutation_slot
+  slot_name: CONTAINER_BYTES
+  original_text: '[CONTAINER_BYTES]'
+  replacement: '[CONTAINER_BYTES]'
+  reason: family-level mutation slot
+  preserve: false
+- unit_id: pkcs_container_parsing.slot.2
+  role: mutation_slot
+  slot_name: CONTAINER_FORMAT
+  original_text: '[CONTAINER_FORMAT]'
+  replacement: '[CONTAINER_FORMAT]'
+  reason: family-level mutation slot
+  preserve: false
+- unit_id: pkcs_container_parsing.slot.3
+  role: mutation_slot
+  slot_name: TRAILING_BYTES
+  original_text: '[TRAILING_BYTES]'
+  replacement: '[TRAILING_BYTES]'
+  reason: family-level mutation slot
+  preserve: false
+- unit_id: pkcs_container_parsing.slot.4
+  role: mutation_slot
+  slot_name: NESTED_LENGTH_DELTA
+  original_text: '[NESTED_LENGTH_DELTA]'
+  replacement: '[NESTED_LENGTH_DELTA]'
+  reason: family-level mutation slot
+  preserve: false
+- unit_id: pkcs_container_parsing.slot.5
+  role: mutation_slot
+  slot_name: EXPECT_RET
+  original_text: '[EXPECT_RET]'
+  replacement: '[EXPECT_RET]'
+  reason: family-level mutation slot
+  preserve: false
+mutation_points:
+- slot_name: CONTAINER_BYTES
+  mutation_type: family_slot
+  examples: []
+  oracle:
+  - parser_reject_accept
+  - return_code_semantics
+  - full_consumption
+  - cleanup_required
+  mask_level: family_slot
+  suggested_use: mutation_slot_binding
+- slot_name: CONTAINER_FORMAT
+  mutation_type: family_slot
+  examples: []
+  oracle:
+  - parser_reject_accept
+  - return_code_semantics
+  - full_consumption
+  - cleanup_required
+  mask_level: family_slot
+  suggested_use: mutation_slot_binding
+- slot_name: TRAILING_BYTES
+  mutation_type: family_slot
+  examples: []
+  oracle:
+  - parser_reject_accept
+  - return_code_semantics
+  - full_consumption
+  - cleanup_required
+  mask_level: family_slot
+  suggested_use: mutation_slot_binding
+- slot_name: NESTED_LENGTH_DELTA
+  mutation_type: family_slot
+  examples: []
+  oracle:
+  - parser_reject_accept
+  - return_code_semantics
+  - full_consumption
+  - cleanup_required
+  mask_level: family_slot
+  suggested_use: mutation_slot_binding
+- slot_name: EXPECT_RET
+  mutation_type: family_slot
+  examples: []
+  oracle:
+  - parser_reject_accept
+  - return_code_semantics
+  - full_consumption
+  - cleanup_required
+  mask_level: family_slot
+  suggested_use: mutation_slot_binding
+must_preserve_features:
+- trigger_call
+- cleanup_call
+- oracle_check
+- input_loading
+- buffer_length_calculation
+seed_variant_notes:
+- seed_poc: WOLFSSL-POC-0007
+  differences: kept under seed_examples; not emitted as a separate final template
+- seed_poc: WOLFSSL-POC-0006
+  differences: kept under seed_examples; not emitted as a separate final template
+oracle:
+  primary:
+  - parser_reject_accept
+  secondary:
+  - return_code_semantics
+  - full_consumption
+  - cleanup_required
+notes:
+- This mask report is family-level and preserves seed-specific differences as variant
+  notes.
+masking_levels:
+- name: preserve
+  meaning: do not mutate trigger/cleanup/oracle structure
+- name: family_slot
+  meaning: planner may bind within family constraints

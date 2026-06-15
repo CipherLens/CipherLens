@@ -1,0 +1,40 @@
+# Tree-Sitter AST Mask Recipe Plan
+
+- tree_sitter_ast_mask_plan:
+  - expected_inputs:
+    - poc_original.c
+    - tmpl_wolfssl.c
+    - family_recipe.yaml
+    - mapping_gate_results.yaml
+    - rag_evidence
+  - expected_outputs:
+    - ast_mask_report.yaml
+    - selected_mask_units.yaml
+  - preserve_node_kinds:
+    - function_definition
+    - call_expression
+    - if_statement
+    - return_statement
+    - cleanup call_expression
+  - maskable_node_kinds:
+    - argument
+    - identifier
+    - number_literal
+    - string_literal
+    - array_initializer
+    - preproc_def
+  - mutation_node_kinds:
+    - byte array literals
+    - length constants
+    - enum constants
+    - parser mode arguments
+    - lifecycle sequence calls
+  - validation_rules:
+    - must include trigger_call selected unit
+    - must include oracle or preserve_oracle selected unit
+    - must include cleanup unit when family requires cleanup
+    - must preserve harness_family and trigger_apis compatibility
+    - must not allow GLM to freely rewrite AST or generate C
+  - fallback:
+    - lite_backend_allowed: True
+    - reason: tree-sitter dependencies are optional; AST-lite keeps deterministic role-aware extraction available

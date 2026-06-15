@@ -1,0 +1,70 @@
+schema: adapter_slot_bindings_v1
+adapter_id: asn1_nested_boundary.mbedtls.family_adapter_recipe_v1
+family: asn1_nested_boundary
+source_library: wolfssl
+target_library: mbedtls
+binding_status: blocked_by_mapping_gate
+mapping_gate:
+  status: blocked
+  reason: target family/library requires manual review or is blocked by the mapping
+    gate
+  blocked_records:
+  - family: asn1_nested_boundary
+    target_library: mbedtls
+    blocked_reason: needs_manual_review
+    blocked_apis:
+    - mbedtls_x509_crt_parse_der
+    why_not_slot_filling: blocked/no_direct/weak/manual-review target must not enter
+      slot filling
+    recommendation:
+    - manual_review_before_adapter
+    - manual_review_before_adapter
+    notes:
+    - not adapter-ready under current evidence gate
+    - candidate_only mappings are not confirmed equivalence.
+api_mapping:
+  selected_target_api: null
+  source_to_target: []
+  confirmed_equivalence: false
+  notes: No API binding generated because this requested target is blocked by the
+    slot-filling plan/evidence gate.
+type_mapping:
+  bindings: []
+cleanup_mapping:
+  bindings: []
+  required: true
+oracle_mapping:
+  bindings: []
+  required: true
+  source_oracles:
+  - parser_reject_accept
+  target_observables: []
+input_mapping:
+  bindings: []
+mutation_slot_mapping:
+  bindings:
+  - slot_name: ASN1_NESTED_LENGTH
+    target_binding: null
+    status: not_bound_blocked
+  - slot_name: DER_BYTES
+    target_binding: null
+    status: not_bound_blocked
+  - slot_name: TRAILING_GARBAGE
+    target_binding: null
+    status: not_bound_blocked
+  - slot_name: NESTED_DEPTH
+    target_binding: null
+    status: not_bound_blocked
+  - slot_name: EXPECT_RET
+    target_binding: null
+    status: not_bound_blocked
+  allowed_mutation_policy: bind existing family mutation slots only
+validation_notes:
+  no_confirmed_equivalence_claim: true
+  blocked_targets_respected: true
+  no_c_generation: true
+  cleanup_mapping_present: false
+  oracle_mapping_present: false
+risk_notes:
+- Target was requested for artifact completeness, but binding is intentionally blocked.
+- Manual review or stronger evidence is required before adapter generation.

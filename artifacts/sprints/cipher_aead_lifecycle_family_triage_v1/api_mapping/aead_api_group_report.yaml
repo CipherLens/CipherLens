@@ -1,0 +1,79 @@
+openssl_evp_aead:
+  evidence_file: artifacts/sprints/cipher_aead_lifecycle_family_triage_v1/evidence/openssl_evp_aead_api_hits.txt
+  evidence_hits: 505
+  init:
+    - EVP_EncryptInit_ex
+    - EVP_EncryptInit_ex2
+    - EVP_DecryptInit_ex
+    - EVP_DecryptInit_ex2
+  aad_update:
+    - "EVP_EncryptUpdate(ctx, NULL, &outlen, aad, aad_len)"
+    - "EVP_DecryptUpdate(ctx, NULL, &outlen, aad, aad_len)"
+  data_update:
+    - EVP_EncryptUpdate
+    - EVP_DecryptUpdate
+    - EVP_CipherUpdate
+  final:
+    - EVP_EncryptFinal_ex
+    - EVP_DecryptFinal_ex
+  tag_set:
+    - EVP_CIPHER_CTX_ctrl
+    - EVP_CTRL_AEAD_SET_TAG
+    - EVP_CTRL_GCM_SET_TAG
+    - EVP_CTRL_CCM_SET_TAG
+  tag_get:
+    - EVP_CIPHER_CTX_ctrl
+    - EVP_CTRL_AEAD_GET_TAG
+    - EVP_CTRL_GCM_GET_TAG
+    - EVP_CTRL_CCM_GET_TAG
+  cleanup:
+    - EVP_CIPHER_CTX_free
+    - EVP_CIPHER_CTX_reset
+  ctx_reuse:
+    - EVP_EncryptInit_ex with NULL cipher/key/iv
+    - EVP_CIPHER_CTX_copy
+    - EVP_CIPHER_CTX_reset
+mbedtls_gcm_ccm_or_psa_aead:
+  evidence_file: artifacts/sprints/cipher_aead_lifecycle_family_triage_v1/evidence/mbedtls_aead_api_hits.txt
+  evidence_hits: 1772
+  setup_or_init:
+    - psa_aead_encrypt_setup
+    - psa_aead_decrypt_setup
+    - mbedtls_gcm_init
+    - mbedtls_ccm_init
+  starts_or_operation_setup:
+    - mbedtls_gcm_starts
+    - psa_aead_encrypt_setup
+    - psa_aead_decrypt_setup
+  aad_update:
+    - psa_aead_update_ad
+    - mbedtls_gcm_update_ad
+  data_update:
+    - psa_aead_update
+    - mbedtls_gcm_update
+  finish_or_verify:
+    - psa_aead_finish
+    - psa_aead_verify
+    - mbedtls_gcm_finish
+    - mbedtls_gcm_auth_decrypt
+    - mbedtls_ccm_encrypt_and_tag
+    - mbedtls_ccm_auth_decrypt
+  tag_set_or_verify:
+    - psa_aead_verify
+    - mbedtls_gcm_auth_decrypt
+    - mbedtls_ccm_auth_decrypt
+  cleanup:
+    - psa_aead_abort
+    - mbedtls_gcm_free
+    - mbedtls_ccm_free
+  state_reuse:
+    - psa_aead_abort_then_reuse
+    - repeated_finish_or_verify
+    - setup_after_finish
+mapping_assessment:
+  a_path_feasibility: partial
+  b_path_readiness: high
+  notes:
+    - "OpenSSL EVP exposes explicit tag set/get controls."
+    - "PSA AEAD exposes explicit operation setup/update/finish/verify lifecycle."
+    - "CCM and GCM ordering rules differ, so recipe slots must preserve mode-specific constraints."

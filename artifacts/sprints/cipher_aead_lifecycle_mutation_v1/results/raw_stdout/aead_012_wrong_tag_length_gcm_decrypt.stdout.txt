@@ -1,0 +1,22 @@
+OPENSSL_VERSION=OpenSSL 3.5.5 27 Jan 2026
+CASE_ID=aead_012_wrong_tag_length_gcm_decrypt
+CASE_NAME=wrong_tag_length
+ALGORITHM=aes-128-gcm
+MODE=decrypt
+STATE_SEQUENCE=wrong_tag_length
+REF_STEP=EVP_CIPHER_CTX_new ret=1
+REF_STEP=EncryptInit ret=1
+REF_STEP=AAD_Update ret=1 outlen=14
+REF_STEP=Data_Update ret=1 outlen=30
+REF_STEP=Final ret=1 outlen=0
+REF_STEP=GetTag ret=1 tag_len=16
+REF_CIPHERTEXT=c9e95cde06a4526feb1c986c2f74d5032a8d4f6dae6751ce4c7e05fe3af9
+REF_TAG=c784af7de1e7bd8de41c08c793005da3
+STEP=EVP_CIPHER_CTX_new ret=1
+STEP=DecryptInit ret=1
+STEP=AAD_Update ret=1 outlen=14
+STEP=Data_Update ret=1 outlen=30
+MUTATION_STEP=SetTag_wrong_length_8 ret=1
+MUTATION_STEP=Final_with_wrong_tag_length ret=1 outlen=0
+CASE_RESULT=permissive_behavior
+HARNESS_RETURN=0

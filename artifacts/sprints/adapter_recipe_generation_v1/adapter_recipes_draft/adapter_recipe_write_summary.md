@@ -1,0 +1,8 @@
+# adapter recipe write summary
+
+- adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/adapter_recipe.yaml: written_new_adapter_recipe
+- adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/adapter_recipe.yaml: written_new_adapter_recipe
+- adapter_recipes/wolfssl_family/asn1_nested_boundary/mbedtls/adapter_recipe.yaml: written_new_adapter_recipe
+- adapter_recipes/wolfssl_family/x509_parsing/adapter_recipe_spec.yaml: written_new_adapter_recipe
+- adapter_recipes/wolfssl_family/tls_protocol_state_lifecycle/adapter_recipe_spec.yaml: written_new_adapter_recipe
+- adapter_recipes/wolfssl_family/secure_heap_state_lifecycle/adapter_recipe_spec.yaml: written_new_adapter_recipe

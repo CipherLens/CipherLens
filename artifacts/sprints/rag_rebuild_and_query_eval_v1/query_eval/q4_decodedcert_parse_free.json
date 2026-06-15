@@ -1,0 +1,184 @@
+{
+  "query": "wc_InitDecodedCert wc_ParseCert wc_FreeDecodedCert ASN.1 parse free",
+  "top_k": 8,
+  "results": [
+    {
+      "rank": 1,
+      "score": 0.8321686628318696,
+      "distance": 0.6072812080383301,
+      "base_score": 0.6221686628318697,
+      "rerank_score": 0.8321686628318696,
+      "rerank_reasons": [
+        "api_match:wc_FreeDecodedCert",
+        "keyword_overlap:wc_freedecodedcert,wc_initdecodedcert,wc_parsecert"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/wolfssl_call_sequences.md",
+      "text": "# wolfSSL call sequences\n\n- `wolfssl_decodedcert_parse_free_004:wc_InitDecodedCert -> wc_ParseCert -> wc_FreeDecodedCert`\n- `wolfssl_pkcs7_init_decode_free_005:wc_PKCS7_Init -> wc_PKCS7_Free`\n- `wolfssl_pkcs7_init_verify_free_006:wc_PKCS7_Init -> wc_PKCS7_Free`\n- `wolfssl_tls_accept_lifecycle_002:wolfSSL_CTX_new -> wolfSSL_new -> wolfSSL_read -> wolfSSL_write -> wolfSSL_free -> wolfSSL_CTX_free`\n- `wolfssl_tls_lifecycle_001:wolfSSL_CTX_new -> wolfSSL_new -> wolfSSL_connect -> wolfSSL_read -> wolfSSL_write -> wolfSSL_free -> wolfSSL_CTX_free`\n- `wolfssl_x509_load_inspect_free_003:wolfSSL_X509_load_certificate_file -> wolfSSL_X509_get_subject_name -> wolfSSL_X509_free`",
+      "metadata": {
+        "layer": "api_constraints",
+        "pattern_id": "",
+        "oracle_type": "",
+        "library": "",
+        "family": "",
+        "doc_type": "api_constraint",
+        "source_file": "knowledge_raw/api_constraints/wolfssl_call_sequences.md"
+      }
+    },
+    {
+      "rank": 2,
+      "score": 0.8091309302958329,
+      "distance": 0.6690842509269714,
+      "base_score": 0.599130930295833,
+      "rerank_score": 0.8091309302958329,
+      "rerank_reasons": [
+        "api_match:wc_FreeDecodedCert",
+        "keyword_overlap:wc_freedecodedcert,wc_initdecodedcert,wc_parsecert"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md",
+      "text": "# wolfSSL top-family API constraints\n\n- `DecodedCert:input_must_be_der_or_pem`\n- `DecodedCert:parser_must_reject_malformed`\n- `wc_FreeDecodedCert:cleanup_required`\n- `wc_FreeDecodedCert:input_must_be_der_or_pem`\n- `wc_FreeDecodedCert:parser_must_reject_malformed`\n- `wc_InitDecodedCert:input_must_be_der_or_pem`\n- `wc_InitDecodedCert:must_init_before_use`\n- `wc_InitDecodedCert:parser_must_reject_malformed`\n- `wc_ParseCert:input_must_be_der_or_pem`\n- `wc_ParseCert:parser_must_reject_malformed`\n- `wc_PKCS12_parse:input_must_be_der_or_pem`\n- `wc_PKCS12_parse:parser_must_reject_malformed`\n- `wc_PKCS7_Free:cleanup_required`\n- `wc_PKCS7_Free:input_must_be_der_or_pem`\n- `wc_PKCS7_Free:parser_must_reject_malformed`\n- `wc_PKCS7_Init:input_must_be_der_or_pem`\n- `wc_PKCS7_Init:must_init_before_use`\n- `wc_PKCS7_Init:parser_must_reject_malformed`\n- `wc_PKCS7_VerifySignedData:input_must_be_der_or_pem`\n- `wc_PKCS7_VerifySignedData:parser_must_reject_malformed`\n- `XFREE:cleanup_required`\n- `XFREE:owners",
+      "metadata": {
+        "family": "",
+        "doc_type": "api_constraint",
+        "layer": "api_constraints",
+        "oracle_type": "",
+        "pattern_id": "",
+        "source_file": "knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md",
+        "library": ""
+      }
+    },
+    {
+      "rank": 3,
+      "score": 0.6768518658054201,
+      "distance": 0.570223867893219,
+      "base_score": 0.6368518658054201,
+      "rerank_score": 0.6768518658054201,
+      "rerank_reasons": [
+        "keyword_overlap:asn,free"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/ASN1_item_d2i.md",
+      "text": "d with the matching item free routine.\n- Input bytes remain caller-owned.\n- `*in` is advanced on successful decode.\n\n## Harness Generation Notes\n\n- Use when target migration wants to isolate nested ASN.1 item parsing rather than full X.509 objects.\n- Requires selecting the correct `ASN1_ITEM` descriptor, e.g. `ASN1_ITEM_rptr(X509)`.\n\n## Vulnerability-Pattern Migration Notes\n\n- Strong generic target for `MBEDTLS-POC-0017` if a harness can select nested item descriptors.\n- Preserve child-length/end-boundary behavior and pointer advancement oracle.\n\n## Related Tests or Examples Found Locally\n\n- `crypto/x509/v3_lib.c`: decodes extension values with `ASN1_item_d2i`.\n- `crypto/x509/x_req.c`, `crypto/x509/x_all.c`, provider tests: internal uses through ASN.1 item decode wrappers.",
+      "metadata": {
+        "doc_type": "api_constraint",
+        "family": "",
+        "library": "openssl",
+        "oracle_type": "",
+        "pattern_id": "",
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/ASN1_item_d2i.md",
+        "layer": "api_constraints"
+      }
+    },
+    {
+      "rank": 4,
+      "score": 0.6594924764966563,
+      "distance": 0.6680776476860046,
+      "base_score": 0.5994924764966564,
+      "rerank_score": 0.6594924764966563,
+      "rerank_reasons": [
+        "keyword_overlap:asn,free,parse"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/ASN1_item_d2i.md",
+      "text": "# API Constraints: ASN1_item_d2i (OpenSSL 3.5.5)\n\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function name: `ASN1_item_d2i`\n- Header declaration: `include/openssl/asn1.h`\n- Implementation file: `crypto/asn1/tasn_dec.c`\n- Signature:\n\n```c\nASN1_VALUE *ASN1_item_d2i(ASN1_VALUE **val,\n                          const unsigned char **in,\n                          long len,\n                          const ASN1_ITEM *it);\n```\n\n## Semantics\n\n- Generic DER decoder for a supplied ASN.1 item descriptor.\n- `ASN1_item_d2i()` calls `ASN1_item_d2i_ex(..., NULL, NULL)`.\n- Recursive decoder enforces constructed nesting limits and ASN.1 template boundaries.\n\n## Return Value Semantics\n\n- Returns decoded `ASN1_VALUE *` on success.\n- Returns `NULL` on parse failure.\n\n## Ownership and Buffer Constraints\n\n- Returned value ownership depends on the ASN.1 item type and must be freed with the matching item free routine.\n- Input bytes remain caller-owned.\n- `*in` is advanced on suc",
+      "metadata": {
+        "doc_type": "api_constraint",
+        "library": "openssl",
+        "family": "",
+        "oracle_type": "",
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/ASN1_item_d2i.md",
+        "pattern_id": "",
+        "layer": "api_constraints"
+      }
+    },
+    {
+      "rank": 5,
+      "score": 0.6583323585935088,
+      "distance": 0.6713119149208069,
+      "base_score": 0.5983323585935088,
+      "rerank_score": 0.6583323585935088,
+      "rerank_reasons": [
+        "keyword_overlap:asn,free,parse"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md",
+      "text": "may be reused/replaced according to OpenSSL d2i conventions.\n\n## Harness Generation Notes\n\n- Use `BIO_new_mem_buf(cert_pem, len)`, call `PEM_read_bio_X509()`, assert NULL/non-NULL, then free.\n- For `MBEDTLS-POC-0017`, DER-level `d2i_X509()` gives tighter control over malformed nested ASN.1 bytes.\n\n## Vulnerability-Pattern Migration Notes\n\n- Candidate for X.509 parser boundary migration when input is PEM wrapped.\n- Preserve malformed nested ASN.1 structure and parse failure oracle; avoid treating it only as text armor failure.\n\n## Related Tests or Examples Found Locally\n\n- `test/x509_test.c`, `test/crltest.c`, `test/algorithmid_test.c`, `test/v3ext.c`, `test/x509_check_cert_pkey_test.c`: direct `PEM_read_bio_X509()` usage.",
+      "metadata": {
+        "pattern_id": "",
+        "family": "",
+        "doc_type": "api_constraint",
+        "layer": "api_constraints",
+        "library": "openssl",
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md",
+        "oracle_type": ""
+      }
+    },
+    {
+      "rank": 6,
+      "score": 0.6563288565298058,
+      "distance": 0.6225104331970215,
+      "base_score": 0.6163288565298057,
+      "rerank_score": 0.6563288565298058,
+      "rerank_reasons": [
+        "keyword_overlap:asn,parse"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_x509_crt_parse_der.md",
+      "text": "A`, `MBEDTLS_ERR_ASN1_LENGTH_MISMATCH`, and `MBEDTLS_ERR_ASN1_UNEXPECTED_TAG`.\n\n## Ownership and Buffer Constraints\n\n- `mbedtls_x509_crt_parse_der()` calls the internal parser with `make_copy = 1`, so it makes an internal copy of `buf`.\n- `mbedtls_x509_crt_parse_der_nocopy()` is the stricter lifetime variant.\n- On parse failure, temporary chain nodes are freed or detached.\n\n## Harness Generation Notes\n\n- Initialize with `mbedtls_x509_crt_init()`, call `psa_crypto_init()` if required by the build, parse DER, observe `ret`, then call `mbedtls_x509_crt_free()`.\n- For `MBEDTLS-POC-0017`, use malformed DER whose nested issuer `AttributeTypeAndValue` substructure is empty or shorter than the parent parser would allow.\n\n## Vulnerability-Pattern Migration Notes\n\n- Relevant to `MBEDTLS-POC-0017`.\n- The source path is nested ASN.1 parsing where inner substructure bounds must be `*p + len`, not the parent object end.\n- Good target candidates include DER/X.509 APIs exposing different parse error c",
+      "metadata": {
+        "oracle_type": "",
+        "pattern_id": "",
+        "source_file": "knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_x509_crt_parse_der.md",
+        "library": "mbedtls",
+        "layer": "api_constraints",
+        "family": "",
+        "doc_type": "api_constraint"
+      }
+    },
+    {
+      "rank": 7,
+      "score": 0.6319558410932522,
+      "distance": 0.6893151998519897,
+      "base_score": 0.5919558410932522,
+      "rerank_score": 0.6319558410932522,
+      "rerank_reasons": [
+        "keyword_overlap:asn,parse"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_rsa_parse_key.md",
+      "text": "SA consistency check failed.\n- `MBEDTLS_ERR_ASN1_*`: ASN.1 parse failure; trailing bytes inside the top-level sequence can yield `MBEDTLS_ERR_ASN1_LENGTH_MISMATCH`.\n\n## Ownership and Buffer Constraints\n\n- Does not own `key`; imports MPI values into `rsa`.\n- On error, the function frees the RSA context contents.\n- Current source verifies `end == p + len` immediately after reading the top-level SEQUENCE length, rejecting bytes outside the top-level DER object.\n\n## Harness Generation Notes\n\n- Initialize `mbedtls_rsa_context`, pass DER bytes, compare return code, then call `mbedtls_rsa_free()`.\n- For `MBEDTLS-POC-0020`, append an extra ASN.1 INTEGER outside the top-level PKCS#1 SEQUENCE and expect `MBEDTLS_ERR_RSA_BAD_INPUT_DATA` in fixed/current source.\n\n## Vulnerability-Pattern Migration Notes\n\n- Relevant to `MBEDTLS-POC-0020`.\n- The root feature is top-level DER object boundary enforcement: `end != p + len` must reject trailing garbage.\n- Strong target APIs should reject valid RSA priva",
+      "metadata": {
+        "oracle_type": "",
+        "pattern_id": "",
+        "doc_type": "api_constraint",
+        "source_file": "knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_rsa_parse_key.md",
+        "layer": "api_constraints",
+        "library": "mbedtls",
+        "family": ""
+      }
+    },
+    {
+      "rank": 8,
+      "score": 0.6308311732839704,
+      "distance": 0.6925308704376221,
+      "base_score": 0.5908311732839704,
+      "rerank_score": 0.6308311732839704,
+      "rerank_reasons": [
+        "keyword_overlap:asn,parse"
+      ],
+      "layer": "unit_tests",
+      "source_file": "knowledge_raw/unit_tests/mbedtls/4.1.0/MBEDTLS-POC-0017_x509_asn1_boundary_evidence.md",
+      "text": "# Unit Test / Example Evidence: MBEDTLS-POC-0017 X.509 ASN.1 Boundary\n\nSource version: `/home/wen/work/clean_sources/mbedtls-4.1.0`\n\nstatus: found_in_local_tests\n\n## APIs Covered\n\n- `mbedtls_x509_crt_parse_der`\n- `mbedtls_x509_crt_parse_der_nocopy`\n- `mbedtls_x509_crt_parse_der_with_ext_cb`\n- internal `x509_get_attr_type_value`\n- certificate/CRL extension parser boundary paths\n\n## Evidence\n\n- `tests/suites/test_suite_x509parse.function`\n  - Directly invokes all certificate DER parse variants with the same DER bytes and expected result.\n  - Relevant calls:\n\n```c\nres = mbedtls_x509_crt_parse_der(&crt, buf->x, buf->len);\nres = mbedtls_x509_crt_parse_der_nocopy(&crt, buf->x, buf->len);\nres = mbedtls_x509_crt_parse_der_with_ext_cb(&crt, buf->x, buf->len, 0, NULL, NULL);\nres = mbedtls_x509_crt_parse_der_with_ext_cb(&crt, buf->x, buf->len, 1, NULL, NULL);\n```\n\n- `tests/suites/test_suite_x509parse.data`\n  - Contains the regression-relevant case:\n    - `X509 CRT ASN1 (TBS, inv Issuer, 2nd Attri",
+      "metadata": {
+        "pattern_id": "",
+        "oracle_type": "",
+        "family": "",
+        "doc_type": "unit_test_call_pattern",
+        "source_file": "knowledge_raw/unit_tests/mbedtls/4.1.0/MBEDTLS-POC-0017_x509_asn1_boundary_evidence.md",
+        "layer": "unit_tests",
+        "library": "mbedtls"
+      }
+    }
+  ]
+}

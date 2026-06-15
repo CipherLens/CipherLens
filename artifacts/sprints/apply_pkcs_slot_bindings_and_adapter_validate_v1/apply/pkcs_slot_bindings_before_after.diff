@@ -1,0 +1,159 @@
+--- before/pkcs_slot_bindings.yaml
++++ after/pkcs_slot_bindings.yaml
+@@ -1,53 +1,119 @@
+ schema: adapter_slot_bindings_v1
+-adapter_id: pkcs_container_parsing.openssl.family_adapter_recipe_v1
++adapter_id: pkcs_container_parsing_openssl
+ family: pkcs_container_parsing
+ source_library: wolfssl
+ target_library: openssl
+-binding_status: glm_unavailable
+-mapping_gate:
+-  status: not_filled
+-  reason: GLM call failed
++binding_status: filled_by_glm
+ api_mapping:
+-  selected_target_api: null
+-  source_to_target: []
++- source_slot: wc_PKCS12_parse
++  source_api: wc_PKCS12_parse
++  target_api: PKCS12_parse
++  mapping_gate_status: usable_for_adapter
+   confirmed_equivalence: false
+-type_mapping:
+-  bindings: []
++  notes: candidate mapping only
++- source_slot: wc_PKCS7_VerifySignedData
++  source_api: wc_PKCS7_VerifySignedData
++  target_api: PKCS7_verify
++  mapping_gate_status: usable_for_adapter
++  confirmed_equivalence: false
++  notes: candidate mapping only
++type_mapping: []
+ cleanup_mapping:
+-  bindings: []
++- target_api: PKCS12_free
++  applies_to: PKCS12 object if allocated
++  required: true
++- target_api: PKCS7_free
++  applies_to: PKCS7 object if allocated
+   required: true
+ oracle_mapping:
+-  bindings: []
+-  required: true
+-  source_oracles:
+-  - parser_reject_accept
+-  target_observables: []
++  primary: parser_reject_accept
++  secondary:
++  - return_code_semantics
++  target_observables:
++  - return_code
++  - parser_result
++  - output_state
++  notes: candidate oracle only; no vulnerability claim
+ input_mapping:
+-  bindings: []
++  input_slots:
++  - '0'
++  - '256'
++  - '4096'
++  - ATTRIBUTE_COUNT
++  - ATTRIBUTE_OID_BYTES
++  - ATTRIBUTE_VALUE_BYTES
++  - CONTAINER_BYTES
++  - CONTAINER_FORMAT
++  - CONTAINER_OPERATION
++  - EXPECT_RET
++  - FAMILY_ATTRIBUTE_COUNT
++  - NESTED_LENGTH_DELTA
++  - TRAILING_BYTES
++  preservation_requirements:
++  - preserve family-level vulnerability path
++  - preserve input length/buffer pairing
++  - do not introduce blocked target API
++  notes: bind only existing family input slots
+ mutation_slot_mapping:
+-  bindings:
+-  - slot_name: CONTAINER_BYTES
+-    target_binding: null
+-    status: not_bound_glm_unavailable
+-  - slot_name: CONTAINER_FORMAT
+-    target_binding: null
+-    status: not_bound_glm_unavailable
+-  - slot_name: TRAILING_BYTES
+-    target_binding: null
+-    status: not_bound_glm_unavailable
+-  - slot_name: NESTED_LENGTH_DELTA
+-    target_binding: null
+-    status: not_bound_glm_unavailable
+-  - slot_name: EXPECT_RET
+-    target_binding: null
+-    status: not_bound_glm_unavailable
+-  allowed_mutation_policy: bind existing family mutation slots only
++- slot_name: CONTAINER_BYTES
++  slot_type: byte_array
++  examples:
++  - valid_pkcs12_der
++  - malformed_pkcs7_der
++  allowed_mutations:
++  - boundary
++  - malformed
++  - valid_control
++  safety_notes: container data must remain bounded
++- slot_name: CONTAINER_FORMAT
++  slot_type: enum
++  examples:
++  - DER
++  - PEM
++  allowed_mutations:
++  - boundary
++  - malformed
++  - valid_control
++  safety_notes: avoid format/API mismatch false positives
++- slot_name: TRAILING_BYTES
++  slot_type: byte_array
++  examples:
++  - empty
++  - '00'
++  - ff00
++  allowed_mutations:
++  - boundary
++  - malformed
++  - valid_control
++  safety_notes: only meaningful for APIs exposing consumption
++- slot_name: NESTED_LENGTH_DELTA
++  slot_type: integer
++  examples:
++  - '-1'
++  - '0'
++  - '+1'
++  - large
++  allowed_mutations:
++  - boundary
++  - malformed
++  - valid_control
++  safety_notes: nested length mutation can become generic parse failure
++- slot_name: EXPECT_RET
++  slot_type: enum
++  examples:
++  - success
++  - reject
++  allowed_mutations:
++  - boundary
++  - malformed
++  - valid_control
++  safety_notes: do not hard-code library numeric values
+ validation_notes:
+   no_confirmed_equivalence_claim: true
+   blocked_targets_respected: true
+   no_c_generation: true
+-  cleanup_mapping_present: false
+-  oracle_mapping_present: false
++  cleanup_mapping_present: true
++  oracle_mapping_present: true
+ risk_notes:
+-- GLM was unavailable; this is a placeholder and not a validated adapter binding.
+-glm_call_error: 'call_error: APIConnectionError: Connection error.'
++- candidate mapping only; adapter_validate/render/compile not run
++_parse_notes: []

@@ -1,0 +1,39 @@
+# Policy Refinement
+
+```yaml
+schema: mutation_policy_refinement_v1
+generated_at: '2026-06-12T08:08:52+00:00'
+reason:
+  accepted_true: 0
+  all_cases_rejected: true
+  current_policy_issue: mutation_too_strong_for_accept_path
+refinement_goals:
+- increase_successful_parse_path_probability
+- preserve_valid_prefix
+- mutate_trailing_region_only
+- preserve_outer_container_validity
+- reduce_length_corruption_strength
+family_policies:
+- family: pkcs_container_parsing
+  current_problem: existing PKCS mutations all rejected before useful accepted-path full-consumption observation
+  refined_strategies:
+  - valid_pkcs_container_plus_trailing_garbage
+  - preserve_outer_container_mutate_inner_optional_field
+  - valid_prefix_invalid_tail
+  - near_valid_length_delta_small
+  seed_requirement: requires verified valid PKCS12/PKCS7 seed before render_allowed cases
+  limitations:
+  - candidate .p12 sources exist but are not validated in this planning step
+  - seed_required_pending cases must not enter render plan
+- family: asn1_nested_boundary
+  current_problem: existing ASN.1 mutations all rejected; need valid DER prefix preservation
+  refined_strategies:
+  - valid_der_object_plus_trailing_garbage
+  - valid_outer_sequence_mutate_inner_length_small_delta
+  - valid_prefix_truncated_tail
+  - nested_depth_near_valid
+  seed_requirement: existing DER/certificate-like seeds are available for valid-prefix planning
+  limitations:
+  - render must preserve byte/length pairing
+  - accepted path still requires later compile/run observation
+```

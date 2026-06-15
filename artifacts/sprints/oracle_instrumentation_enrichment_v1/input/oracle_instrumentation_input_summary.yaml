@@ -1,0 +1,26 @@
+schema: oracle_instrumentation_input_summary_v1
+task: oracle_instrumentation_enrichment_v1
+generated_at: '2026-06-12T02:59:23+00:00'
+inputs:
+- artifacts/sprints/analyze_results_v1/oracle_analysis/oracle_analysis.yaml
+- artifacts/sprints/analyze_results_v1/limitations/analysis_limitations.yaml
+- artifacts/sprints/analyze_results_existing_pipeline_refactor_v1/reports/analyze_results_existing_pipeline_refactor_v1_report.yaml
+- artifacts/sprints/render_plan_v1/render_plan/render_plan.yaml
+- artifacts/sprints/render_plan_v1/case_manifest/case_manifest.yaml
+- artifacts/sprints/render_cases_v1/case_index/rendered_case_index.yaml
+- artifacts/sprints/family_adapter_mutation_planner_v1/mutation_case_matrix/mutation_case_matrix.yaml
+- artifacts/sprints/family_adapter_mutation_planner_v1/oracle_expectation_plan/oracle_expectation_plan.yaml
+- tools/render_cases_v1.py
+why_oracle_instrumentation_needed:
+- Previous analyze_results_v1 saw normal_exit/no_crash_observed for all 14 cases.
+- normal_exit only proves no observed crash/sanitizer in the bounded run, not parser accept/reject semantics.
+- Parser divergence and full-consumption require structured runtime observations from the harness.
+scope:
+  compile: false
+  run: false
+  analyze: false
+  write_runtime_feedback: false
+  generate_instrumented_rendered_cases_only: true
+  original_render_cases_v1_overwritten: false
+  glm_called: false
+output_root: artifacts/sprints/oracle_instrumentation_enrichment_v1/instrumented_cases

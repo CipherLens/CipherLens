@@ -1,0 +1,143 @@
+schema: semantic_api_card_lookup_v1
+generated_at: '2026-06-13T12:36:04+00:00'
+family: pkey_verify_semantic
+lookup_executed: true
+api_cards_used:
+- knowledge_base/api_cards/openssl/EVP_DigestVerify.yaml
+- knowledge_base/api_cards/openssl/EVP_DigestVerifyInit.yaml
+- knowledge_base/api_cards/openssl/EVP_PKEY_verify.yaml
+- knowledge_base/api_cards/openssl/EVP_PKEY_CTX_set_rsa_padding.yaml
+- knowledge_base/api_cards/openssl/EVP_PKEY_CTX_set_rsa_pss_saltlen.yaml
+- knowledge_base/api_cards/mbedtls/mbedtls_pk_verify.yaml
+preferred_algorithm: RSA + SHA256
+selection_reason: OpenSSL EVP_DigestSign/EVP_DigestVerify with RSA+SHA256 provides a high-level sign/verify
+  semantic control without DER parsing, trailing garbage, or a full-consumption oracle.
+cards:
+- source_path: knowledge_base/api_cards/openssl/EVP_DigestVerify.yaml
+  library: openssl
+  api: EVP_DigestVerify
+  family: pkey_verify
+  signature: int EVP_DigestVerify(EVP_MD_CTX *ctx, const unsigned char *sigret, size_t siglen, const unsigned
+    char *tbs, size_t tbslen)
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  mutation_hints:
+  - invalid signature acceptance
+  - bitflip signature
+  - wrong digest algorithm
+  - wrong hash length
+  - wrong public key
+  - RSA-PSS salt length mismatch
+  - padding mismatch
+  - wrong object type
+  - public-only key path
+  - malformed signature length
+  - unsupported digest/key pairing
+  known_pitfalls:
+  - success on intentionally invalid signature material is a high-value semantic candidate
+  - initialization or padding setup failure must not be treated as invalid signature acceptance
+- source_path: knowledge_base/api_cards/openssl/EVP_DigestVerifyInit.yaml
+  library: openssl
+  api: EVP_DigestVerifyInit
+  family: pkey_verify
+  signature: int EVP_DigestVerifyInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx, const EVP_MD *type, ENGINE
+    *e, EVP_PKEY *pkey)
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  mutation_hints:
+  - wrong digest algorithm
+  - mismatched key type
+  - public key without expected verification capability
+  - RSA-PSS setup on non-RSA key
+  - digest/key compatibility boundary
+  known_pitfalls:
+  - setup failure must not be collapsed with invalid signature rejection
+  - a failed initialization may leave pctx unset or unusable
+  - provider behavior can differ between unsupported operation and invalid signature
+- source_path: knowledge_base/api_cards/openssl/EVP_PKEY_verify.yaml
+  library: openssl
+  api: EVP_PKEY_verify
+  family: pkey_verify
+  signature: int EVP_PKEY_verify(EVP_PKEY_CTX *ctx, const unsigned char *sig, size_t siglen, const unsigned
+    char *tbs, size_t tbslen)
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  - signature_acceptance
+  mutation_hints:
+  - invalid signature acceptance
+  - bitflip signature
+  - wrong digest algorithm
+  - wrong hash length
+  - wrong public key
+  - RSA-PSS salt length mismatch
+  - padding mismatch
+  - wrong object type
+  - tiny RSA key
+  - public-only/private-only mismatch
+  - malformed signature length
+  known_pitfalls:
+  - tbs can mean digest bytes or message bytes depending on setup and algorithm
+  - padding/digest setup errors must be classified separately from invalid signature rejection
+- source_path: knowledge_base/api_cards/openssl/EVP_PKEY_CTX_set_rsa_padding.yaml
+  library: openssl
+  api: EVP_PKEY_CTX_set_rsa_padding
+  family: pkey_verify
+  signature: int EVP_PKEY_CTX_set_rsa_padding(EVP_PKEY_CTX *ctx, int pad)
+  oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+  mutation_hints:
+  - RSA-PSS requested on non-RSA key
+  - padding mismatch between signer and verifier
+  - RSA_PKCS1_PADDING versus RSA_PKCS1_PSS_PADDING
+  - unsupported padding setup should be safe rejection
+  known_pitfalls:
+  - padding setup failure is a setup error, not an invalid-signature result
+  - accepting a padding mismatch can indicate a high-value semantic divergence
+- source_path: knowledge_base/api_cards/openssl/EVP_PKEY_CTX_set_rsa_pss_saltlen.yaml
+  library: openssl
+  api: EVP_PKEY_CTX_set_rsa_pss_saltlen
+  family: pkey_verify
+  signature: int EVP_PKEY_CTX_set_rsa_pss_saltlen(EVP_PKEY_CTX *ctx, int len)
+  oracle_observables:
+  - return_code
+  - error_stack
+  - signature_acceptance
+  - sanitizer_signal
+  mutation_hints:
+  - pss_saltlen_mismatch
+  - RSA-PSS signature verified with wrong expected salt length
+  - zero salt versus digest-length salt
+  - setup error versus invalid signature distinction
+  known_pitfalls:
+  - mismatched salt length should usually reject the signature rather than succeed
+  - special salt length constants may have provider-specific semantics
+- source_path: knowledge_base/api_cards/mbedtls/mbedtls_pk_verify.yaml
+  library: mbedtls
+  api: mbedtls_pk_verify
+  family: pkey_verify
+  signature: int mbedtls_pk_verify(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg, const unsigned char
+    *hash, size_t hash_len, const unsigned char *sig, size_t sig_len)
+  oracle_observables:
+  - return_code
+  - sanitizer_signal
+  - signature_acceptance
+  mutation_hints:
+  - wrong digest algorithm
+  - wrong hash length
+  - all-zero signature
+  - truncated signature
+  - wrong public key
+  - RSA-PSS versus PKCS1 v1.5 padding mismatch through mbedtls_pk_verify_ext
+  known_pitfalls:
+  - mbedTLS negative returns must be separated into safe rejection, unsupported feature, and crash/sanitizer
+    evidence
+  - md_alg and hash_len mismatch can reject before reaching signature mathematics

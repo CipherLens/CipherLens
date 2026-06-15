@@ -1,0 +1,20 @@
+reconstruction_feasibility: feasible_but_high_uncertainty
+reconstruction_method: source_test_vector_adaptation
+risk_of_false_reproduction: high
+semantic_inference:
+  pbmac1_null_salt_filename: suggests a PKCS#12 PBMAC1 / PBKDF2 parameter where salt
+    is absent, NULL, wrong type, or malformed
+  likely_structures:
+  - PKCS12 MACData
+  - PBMAC1 AlgorithmIdentifier
+  - PBKDF2 params
+  - salt CHOICE / OCTET STRING
+  source_clues:
+  - PBMAC1_get1_pbkdf2_param
+  - PBMAC1_PBKDF2_HMAC salt validation
+  - pkcs12 -info printing path
+why_not_generate: Existing source test vectors provide hints, but without original
+  issue input or exact sanitizer stack, DER patching would be high-risk and could
+  create a different behavior.
+generated_seed_status: not_generated
+generated_seed_reason: not enough local evidence / high false reproduction risk

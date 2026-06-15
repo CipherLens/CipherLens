@@ -1,0 +1,29 @@
+medium_api_cards:
+- wolfSSL_Free
+- wolfSSL_Malloc
+- wolfSSL_SetAllocators
+not_found_api_cards:
+- wc_GetSubjectCN
+- wc_PKCS7_DecodeSignedData
+- wc_d2i_PKCS12_bio
+low_confidence_cross_library_mappings:
+- schema: cross_library_mapping_candidate_v0
+  family: pkcs_container_parsing
+  wolfssl_api: wc_PKCS7_DecodeSignedData
+  openssl_candidate_api: d2i_PKCS7
+  mbedtls_candidate_api: ''
+  mapping_type: parser_equivalent
+  confidence: low
+  evidence:
+    wolfssl_card_confidence: not_found_in_source
+    basis: static top-family mapping plus staged wolfSSL grep evidence
+  status: candidate_only
+  notes:
+  - Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG
+    evidence gate.
+  - Not confirmed equivalent; must pass candidate_mapper and RAG evidence gate.
+constraints_without_enough_evidence: []
+required_items_present:
+  wc_GetSubjectCN: true
+  wc_PKCS7_DecodeSignedData: true
+  wc_d2i_PKCS12_bio: true

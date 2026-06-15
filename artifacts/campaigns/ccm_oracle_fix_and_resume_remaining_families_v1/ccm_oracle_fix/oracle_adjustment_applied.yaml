@@ -1,0 +1,24 @@
+schema: ccm_oracle_adjustment_applied_v1
+source: /home/wen/work/crypto-pattern-fuzz/artifacts/triage/ccm_plaintext_length_not_announced_triage_v1/feedback_to_pipeline/oracle_adjustment_recommendation.yaml
+payload_only_no_length:
+  case_type: payload_only_without_explicit_plaintext_length
+  expected_behavior: observation
+  allowed_actual_behavior:
+  - success
+  - error
+  candidate: false
+  label: state_transition_observation
+with_aad_no_length:
+  case_type: with_aad_without_plaintext_length_announcement
+  expected_behavior: error_or_documented
+  candidate_condition: actual_behavior == success
+  candidate_label: unexpected_success_after_invalid_state_candidate
+decrypt_invalid_state:
+  candidate_condition: missing tag, wrong tag, missing required length, or invalid order accepts invalid
+    input
+  candidate_labels:
+  - unexpected_success_after_invalid_state_candidate
+  - semantic_divergence_candidate
+crash_or_sanitizer:
+  ASAN_or_UBSAN: sanitizer_candidate
+  SIGSEGV_or_SIGABRT: crash_candidate

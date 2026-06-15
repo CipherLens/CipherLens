@@ -1,0 +1,28 @@
+# Runtime Feedback Integration Report
+
+```yaml
+schema: runtime_feedback_integration_v1_report
+task: runtime_feedback_integration_v1
+generated_at: '2026-06-12T09:39:18+00:00'
+skipped_local_oracle_semantic_triage: true
+staged_feedback_generated: true
+mutation_policy_feedback_generated: true
+scheduler_proposal_generated: true
+full_consumption_candidates: 3
+all_candidates_external_validation_pending: true
+main_knowledge_written: false
+pattern_bank_written: false
+scheduler_seed_written: false
+render_executed: false
+compile_executed: false
+run_executed: false
+quality_status: pass
+next_task_name: family_loop_closure_report_v1
+secondary_next_task: valid_seed_discovery_pkcs_v1
+claim_policy:
+  count: 3
+  status: external_validation_pending
+  confirmed_vulnerability: false
+  cve: false
+  exploitable: false
+```

@@ -1,0 +1,173 @@
+{
+  "query": "wc_PKCS12_parse PKCS12_parse d2i_PKCS12 PKCS12_free",
+  "top_k": 8,
+  "results": [
+    {
+      "rank": 1,
+      "score": 0.7525700965830935,
+      "distance": 0.7165316343307495,
+      "base_score": 0.5825700965830934,
+      "rerank_score": 0.7525700965830935,
+      "rerank_reasons": [
+        "api_match:PKCS12_parse",
+        "keyword_overlap:pkcs12_parse"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/cross_library_counterpart_api_constraints.md",
+      "text": "ate_constraint |\n| mbedtls | mbedtls_x509_crt_init | x509_parsing | candidate_constraint |\n| mbedtls | mbedtls_x509_crt_parse | x509_parsing | candidate_constraint |\n| mbedtls | mbedtls_x509_crt_parse_der | x509_parsing | candidate_constraint |\n| openssl | ASN1_item_d2i | asn1_nested_boundary | candidate_constraint |\n| openssl | PKCS12_parse | pkcs_container_parsing | candidate_constraint |\n| openssl | PKCS7_verify | pkcs_container_parsing | candidate_constraint |\n| openssl | CRYPTO_secure_free | secure_heap_state_lifecycle | candidate_constraint |\n| openssl | CRYPTO_secure_malloc | secure_heap_state_lifecycle | candidate_constraint |\n| openssl | CRYPTO_secure_malloc_init | secure_heap_state_lifecycle | candidate_constraint |\n| openssl | OPENSSL_secure_free | secure_heap_state_lifecycle | candidate_constraint |\n| openssl | OPENSSL_secure_malloc | secure_heap_state_lifecycle | candidate_constraint |\n| openssl | SSL_CTX_free | tls_protocol_state_lifecycle | candidate_constraint |\n| opens",
+      "metadata": {
+        "library": "",
+        "pattern_id": "",
+        "source_file": "knowledge_raw/api_constraints/cross_library_counterpart_api_constraints.md",
+        "layer": "api_constraints",
+        "oracle_type": "",
+        "family": "",
+        "doc_type": "api_constraint"
+      }
+    },
+    {
+      "rank": 2,
+      "score": 0.7457374059021022,
+      "distance": 0.7369029521942139,
+      "base_score": 0.5757374059021023,
+      "rerank_score": 0.7457374059021022,
+      "rerank_reasons": [
+        "api_match:PKCS12_parse",
+        "keyword_overlap:wc_pkcs12_parse"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md",
+      "text": "# wolfSSL top-family API constraints\n\n- `DecodedCert:input_must_be_der_or_pem`\n- `DecodedCert:parser_must_reject_malformed`\n- `wc_FreeDecodedCert:cleanup_required`\n- `wc_FreeDecodedCert:input_must_be_der_or_pem`\n- `wc_FreeDecodedCert:parser_must_reject_malformed`\n- `wc_InitDecodedCert:input_must_be_der_or_pem`\n- `wc_InitDecodedCert:must_init_before_use`\n- `wc_InitDecodedCert:parser_must_reject_malformed`\n- `wc_ParseCert:input_must_be_der_or_pem`\n- `wc_ParseCert:parser_must_reject_malformed`\n- `wc_PKCS12_parse:input_must_be_der_or_pem`\n- `wc_PKCS12_parse:parser_must_reject_malformed`\n- `wc_PKCS7_Free:cleanup_required`\n- `wc_PKCS7_Free:input_must_be_der_or_pem`\n- `wc_PKCS7_Free:parser_must_reject_malformed`\n- `wc_PKCS7_Init:input_must_be_der_or_pem`\n- `wc_PKCS7_Init:must_init_before_use`\n- `wc_PKCS7_Init:parser_must_reject_malformed`\n- `wc_PKCS7_VerifySignedData:input_must_be_der_or_pem`\n- `wc_PKCS7_VerifySignedData:parser_must_reject_malformed`\n- `XFREE:cleanup_required`\n- `XFREE:owners",
+      "metadata": {
+        "layer": "api_constraints",
+        "oracle_type": "",
+        "family": "",
+        "library": "",
+        "doc_type": "api_constraint",
+        "source_file": "knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md",
+        "pattern_id": ""
+      }
+    },
+    {
+      "rank": 3,
+      "score": 0.7293374201470291,
+      "distance": 0.7261098027229309,
+      "base_score": 0.579337420147029,
+      "rerank_score": 0.7293374201470291,
+      "rerank_reasons": [
+        "layer:api_cards"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/openssl/d2i_PKCS8_PRIV_KEY_INFO.yaml",
+      "text": "Source: API Card\napi: d2i_PKCS8_PRIV_KEY_INFO\nlibrary: openssl\nfamily: der_parser\nsignature: PKCS8_PRIV_KEY_INFO *d2i_PKCS8_PRIV_KEY_INFO(PKCS8_PRIV_KEY_INFO **a, const unsigned char **ppin, long length)\nparameter_semantics: a: optional reuse/output PKCS8 info pointer\nppin: input DER pointer, advanced to consumed object end on success\nlength: available input length\nreturn_value_semantics: success: returns PKCS8_PRIV_KEY_INFO pointer\nfailure: returns NULL\nvalid_invalid_ranges: valid: DER PKCS#8 PrivateKeyInfo\ninvalid: malformed ASN.1 sequence, algorithm, or private key field\nunsupported_conditions: - full-input validation without comparing consumed pointer to end\nmutation_hints: - trailing garbage\n- malformed second object\n- oversized length\n- truncated private key octet string\noracle_observables: - parse_success\n- consumed_len\n- trailing_len\n- caller_accept\nnotes: - 'Known pitfall: low-level DER parser success is not equivalent to stream exhaustion.'\n",
+      "metadata": {
+        "doc_type": "api_card",
+        "library": "openssl",
+        "family": "der_parser",
+        "api": "d2i_PKCS8_PRIV_KEY_INFO",
+        "layer": "api_cards",
+        "source_file": "knowledge_base/api_cards/openssl/d2i_PKCS8_PRIV_KEY_INFO.yaml"
+      }
+    },
+    {
+      "rank": 4,
+      "score": 0.613767696399293,
+      "distance": 0.6292809247970581,
+      "base_score": 0.613767696399293,
+      "rerank_score": 0.613767696399293,
+      "rerank_reasons": [],
+      "layer": "unit_tests",
+      "source_file": "knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_rsa.function.md",
+      "text": "(&P); mbedtls_mpi_free(&Q);\n    mbedtls_mpi_free(&D); mbedtls_mpi_free(&E);\n}\n/* END_CASE */\n\n/* BEGIN_CASE */\nvoid rsa_parse_pkcs1_key(int is_public, data_t *input, int exp_ret_val)\n{\n    mbedtls_rsa_context rsa_ctx;\n\n    mbedtls_rsa_init(&rsa_ctx);\n\n    if (is_public) {\n        TEST_EQUAL(mbedtls_rsa_parse_pubkey(&rsa_ctx, input->x, input->len), exp_ret_val);\n    } else {\n        TEST_EQUAL(mbedtls_rsa_parse_key(&rsa_ctx, input->x, input->len), exp_ret_val);\n    }\n\nexit:\n    mbedtls_rsa_free(&rsa_ctx);\n}\n/* END_CASE */\n\n/* BEGIN_CASE */\nvoid rsa_parse_write_pkcs1_key(int is_public, data_t *input)\n{\n    mbedtls_rsa_context rsa_ctx;\n    unsigned char *output_buf = NULL;\n    unsigned char *output_end, *output_p;\n```",
+      "metadata": {
+        "library": "mbedtls",
+        "oracle_type": "",
+        "doc_type": "unit_test_call_pattern",
+        "family": "",
+        "pattern_id": "",
+        "source_file": "knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_rsa.function.md",
+        "layer": "unit_tests"
+      }
+    },
+    {
+      "rank": 5,
+      "score": 0.6104408529106451,
+      "distance": 0.6381603479385376,
+      "base_score": 0.6104408529106451,
+      "rerank_score": 0.6104408529106451,
+      "rerank_reasons": [],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md",
+      "text": "`wc_PKCS7_VerifySignedData:parser_must_reject_malformed`\n- `XFREE:cleanup_required`\n- `XFREE:ownership_transfer`\n- `XMALLOC:ownership_transfer`\n- `wolfSSL_Free:cleanup_required`\n- `wolfSSL_Free:ownership_transfer`\n- `wolfSSL_Malloc:ownership_transfer`\n- `wolfSSL_SetAllocators:must_init_before_use`\n- `wolfSSL_SetAllocators:ownership_transfer`\n- `wolfSSL_CTX_free:cleanup_required`\n- `wolfSSL_CTX_free:ctx_session_lifecycle`\n- `wolfSSL_CTX_free:return_code_check`\n- `wolfSSL_CTX_new:ctx_session_lifecycle`\n- `wolfSSL_CTX_new:must_init_before_use`\n- `wolfSSL_CTX_new:return_code_check`\n- `wolfSSL_CTX_set_verify:ctx_session_lifecycle`\n- `wolfSSL_CTX_set_verify:return_code_check`\n- `wolfSSL_accept:ctx_session_lifecycle`\n- `wolfSSL_accept:return_code_check`\n- `wolfSSL_connect:ctx_session_lifecycle`\n- `wolfSSL_connect:return_code_check`\n- `wolfSSL_dtls:ctx_session_lifecycle`\n- `wolfSSL_dtls:return_code_check`\n- `wolfSSL_dtls_set_peer:ctx_session_lifecycle`\n- `wolfSSL_dtls_set_peer:return_code_che",
+      "metadata": {
+        "library": "",
+        "oracle_type": "",
+        "doc_type": "api_constraint",
+        "layer": "api_constraints",
+        "source_file": "knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md",
+        "pattern_id": "",
+        "family": ""
+      }
+    },
+    {
+      "rank": 6,
+      "score": 0.5903968579200118,
+      "distance": 0.6937759518623352,
+      "base_score": 0.5903968579200118,
+      "rerank_score": 0.5903968579200118,
+      "rerank_reasons": [],
+      "layer": "unit_tests",
+      "source_file": "knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test2.c.md",
+      "text": "d(NULL, \"default\"))\n        && TEST_ptr(enc_bio = BIO_new(BIO_s_mem()))\n        && TEST_ptr(in = BIO_new_mem_buf(kExampleRSAKeyPKCS8,\n                        sizeof(kExampleRSAKeyPKCS8)))\n        && TEST_ptr(pkey = d2i_PrivateKey_ex_bio(in, NULL, NULL, NULL))\n        && TEST_int_eq(i2d_PKCS8PrivateKey_nid_bio(enc_bio, pkey, nid,\n                           pwd, sizeof(pwd) - 1,\n                           NULL, NULL),\n            1)\n        && TEST_int_gt(enc_datalen = BIO_get_mem_data(enc_bio, &enc_data), 0)\n```\n\n## Call pattern 4\n\n```c\nif (ak->evptype == EVP_PKEY_DH) {\n        if (!TEST_true(EVP_PKEY_get_bn_param(pkey, OSSL_PKEY_PARAM_FFC_P, &p_bn))\n            || !TEST_true(EVP_PKEY_get_bn_param(pkey, OSSL_PKEY_PARAM_FFC_G,\n                &g_bn)))\n            goto done;\n    }\n\n    ret = 1;\ndone:\n    BN_free(p_bn);\n    BN_free(g_bn);\n    BN_free(priv_bn);\n    EVP_PKEY_free(pkey);\n    return ret;\n}\n\n#ifndef OPENSSL_NO_DES\nstatic int test_pkcs8key_nid_bio(void)\n{\n    int ret;\n    const",
+      "metadata": {
+        "layer": "unit_tests",
+        "doc_type": "unit_test_call_pattern",
+        "oracle_type": "",
+        "library": "openssl",
+        "family": "",
+        "source_file": "knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test2.c.md",
+        "pattern_id": ""
+      }
+    },
+    {
+      "rank": 7,
+      "score": 0.5880182648171369,
+      "distance": 0.7006274461746216,
+      "base_score": 0.5880182648171369,
+      "rerank_score": 0.5880182648171369,
+      "rerank_reasons": [],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__rsa.c.md",
+      "text": "/* MBEDTLS_PKCS1_V15 */\n    return ret;\n}\n\n#endif /* MBEDTLS_SELF_TEST */\n\n#endif /* MBEDTLS_RSA_C */\n```",
+      "metadata": {
+        "doc_type": "api_constraint",
+        "layer": "api_constraints",
+        "family": "",
+        "source_file": "knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__rsa.c.md",
+        "oracle_type": "",
+        "pattern_id": "",
+        "library": "mbedtls"
+      }
+    },
+    {
+      "rank": 8,
+      "score": 0.5874358483984745,
+      "distance": 0.7023135423660278,
+      "base_score": 0.5874358483984745,
+      "rerank_score": 0.5874358483984745,
+      "rerank_reasons": [],
+      "layer": "unit_tests",
+      "source_file": "knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test2.c.md",
+      "text": "turn ret;\n}\n\n#ifndef OPENSSL_NO_DES\nstatic int test_pkcs8key_nid_bio(void)\n{\n    int ret;\n    const int nid = NID_pbe_WithSHA1And3_Key_TripleDES_CBC;\n    static const char pwd[] = \"PASSWORD\";\n    EVP_PKEY *pkey = NULL, *pkey_dec = NULL;\n    BIO *in = NULL, *enc_bio = NULL;\n    char *enc_data = NULL;\n    long enc_datalen = 0;\n    OSSL_PROVIDER *provider = NULL;\n\n    ret = TEST_ptr(provider = OSSL_PROVIDER_load(NULL, \"default\"))\n        && TEST_ptr(enc_bio = BIO_new(BIO_s_mem()))\n        && TEST_ptr(in = BIO_new_mem_buf(kExampleRSAKeyPKCS8,\n                        sizeof(kExampleRSAKeyPKCS8)))\n        && TEST_ptr(pkey = d2i_PrivateKey_ex_bio(in, NULL, NULL, NULL))\n        && TEST_int_eq(i2d_PKCS8PrivateKey_nid_bio(enc_bio, pkey, nid,\n                           pwd, sizeof(pwd) - 1,\n                           NULL, NULL),\n            1)\n        && TEST_int_gt(enc_datalen = BIO_get_mem_data(enc_bio, &enc_data), 0)\n        && TEST_ptr(pkey_dec = d2i_PKCS8PrivateKey_bio(enc_bio, NULL, NULL,",
+      "metadata": {
+        "oracle_type": "",
+        "source_file": "knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test2.c.md",
+        "pattern_id": "",
+        "doc_type": "unit_test_call_pattern",
+        "family": "",
+        "library": "openssl",
+        "layer": "unit_tests"
+      }
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+schema: campaign_auto_candidates_v1
+candidates:
+- &id001
+  case_id: ccm_plaintext_length_not_announced
+  family: cipher_aead_lifecycle_ccm
+  track: lifecycle
+  expected_behavior: error_or_documented
+  actual_behavior: success
+  label: unexpected_success_after_invalid_state_candidate
+  candidate: true
+  reason: invalid or documented-error state unexpectedly reported success
+  exit_code: 0
+  signal: ''
+  sanitizer_observed: false
+  sanitizer_kinds: []
+all_findings:
+- case_id: ccm_valid_encrypt_decrypt_control
+  family: cipher_aead_lifecycle_ccm
+  track: lifecycle
+  expected_behavior: success
+  actual_behavior: success
+  label: no_candidate
+  candidate: false
+  reason: behavior is expected or documented for this local oracle
+  exit_code: 0
+  signal: ''
+  sanitizer_observed: false
+  sanitizer_kinds: []
+- case_id: ccm_decrypt_without_tag
+  family: cipher_aead_lifecycle_ccm
+  track: lifecycle
+  expected_behavior: error_or_documented
+  actual_behavior: error
+  label: state_transition_observation
+  candidate: false
+  reason: documented success/error boundary; not a candidate by itself
+  exit_code: 0
+  signal: ''
+  sanitizer_observed: false
+  sanitizer_kinds: []
+- case_id: ccm_set_tag_after_decrypt_update
+  family: cipher_aead_lifecycle_ccm
+  track: lifecycle
+  expected_behavior: error_or_documented
+  actual_behavior: error
+  label: state_transition_observation
+  candidate: false
+  reason: documented success/error boundary; not a candidate by itself
+  exit_code: 0
+  signal: ''
+  sanitizer_observed: false
+  sanitizer_kinds: []
+- case_id: ccm_set_ivlen_after_key_iv_init
+  family: cipher_aead_lifecycle_ccm
+  track: lifecycle
+  expected_behavior: observation
+  actual_behavior: success
+  label: state_transition_observation
+  candidate: false
+  reason: observation-only behavior; not a candidate by itself
+  exit_code: 0
+  signal: ''
+  sanitizer_observed: false
+  sanitizer_kinds: []
+- *id001
+- case_id: ccm_aad_order_mutation
+  family: cipher_aead_lifecycle_ccm
+  track: lifecycle
+  expected_behavior: observation
+  actual_behavior: success
+  label: state_transition_observation
+  candidate: false
+  reason: observation-only behavior; not a candidate by itself
+  exit_code: 0
+  signal: ''
+  sanitizer_observed: false
+  sanitizer_kinds: []
+- case_id: ccm_zero_length_plaintext
+  family: cipher_aead_lifecycle_ccm
+  track: lifecycle
+  expected_behavior: observation
+  actual_behavior: error
+  label: state_transition_observation
+  candidate: false
+  reason: observation-only behavior; not a candidate by itself
+  exit_code: 0
+  signal: ''
+  sanitizer_observed: false
+  sanitizer_kinds: []
+- case_id: ccm_wrong_tag
+  family: cipher_aead_lifecycle_ccm
+  track: lifecycle
+  expected_behavior: error_or_documented
+  actual_behavior: error
+  label: state_transition_observation
+  candidate: false
+  reason: documented success/error boundary; not a candidate by itself
+  exit_code: 0
+  signal: ''
+  sanitizer_observed: false
+  sanitizer_kinds: []
+- case_id: ccm_truncated_tag_length
+  family: cipher_aead_lifecycle_ccm
+  track: lifecycle
+  expected_behavior: observation
+  actual_behavior: success
+  label: state_transition_observation
+  candidate: false
+  reason: observation-only behavior; not a candidate by itself
+  exit_code: 0
+  signal: ''
+  sanitizer_observed: false
+  sanitizer_kinds: []
+- case_id: ccm_reset_reuse
+  family: cipher_aead_lifecycle_ccm
+  track: lifecycle
+  expected_behavior: success
+  actual_behavior: success
+  label: no_candidate
+  candidate: false
+  reason: behavior is expected or documented for this local oracle
+  exit_code: 0
+  signal: ''
+  sanitizer_observed: false
+  sanitizer_kinds: []

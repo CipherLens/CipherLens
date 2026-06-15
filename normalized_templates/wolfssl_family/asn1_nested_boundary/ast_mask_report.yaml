@@ -1,0 +1,364 @@
+template_id: WOLFSSL-FAMILY-asn1_nested_boundary
+template_name: wolfssl family canonical template for asn1_nested_boundary
+source_api: wc_InitDecodedCert
+source_library: wolfssl
+template_file: canonical_tmpl_wolfssl.c
+template_library: wolfssl
+trigger_apis:
+- wc_InitDecodedCert
+- wc_ParseCert
+- wc_FreeDecodedCert
+- ASN1_item_d2i
+- mbedtls_x509_crt_parse_der
+harness_family: x509_asn1_inner_boundary
+summary:
+  method: tree_sitter_c_role_aware
+  backend: tree-sitter
+  template_dir: artifacts/sprints/family_template_generalization_v1/family_packages/asn1_nested_boundary
+  template_file: canonical_tmpl_wolfssl.c
+  template_library: wolfssl
+  unit_count: 13
+  parse_has_error: false
+  note: Tree-sitter C report generated from concrete syntax nodes. This backend is
+    optional and is intended to complement AST-lite.
+ast_mask_units:
+- unit_id: ASTLITE-0001
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[DER_BYTES]'
+  code: static const unsigned char der_bytes[] = { 0x30, 0x03, 0x02, 0x01, 0x00 /*
+    [DER_BYTES] [ASN1_NESTED_LENGTH] [NESTED_DEPTH] */ };
+  source: canonical_tmpl_wolfssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 19
+  line_start: 19
+  line_end: 22
+  column_start: 1
+  column_end: 3
+  node_type: declaration
+  enclosing_function: ''
+  placeholder_dependencies:
+  - '[DER_BYTES]'
+  - '[ASN1_NESTED_LENGTH]'
+  - '[NESTED_DEPTH]'
+  identifiers_read: []
+  identifiers_written:
+  - der_bytes
+  template_file: canonical_tmpl_wolfssl.c
+  template_library: wolfssl
+- unit_id: ASTLITE-0002
+  mask_level: block
+  role: entrypoint
+  placeholder: '[DER_LENGTH]'
+  code: 'int main(void) { const unsigned char* p = der_bytes; int der_len = (int)sizeof(der_bytes);
+    /* [DER_LENGTH] */ WOLFSSL_X509* x509 = NULL; WOLFSSL_BIO* bio = NULL; int ret
+    = -1; /* trigger_call: preserve source parser path and nested ASN.1 boundary.
+    */ x509 = wolfSSL_X509_d2i(NULL, &p, der_len); if (x509 == NULL) { return 0; /*
+    [EXPECT_RET]: safe reject */ } bio = wolfSSL_BIO_new(wolfSSL_BIO_s_mem()); if
+    (bio == NULL) { wolfSSL_X509_free(x509); return 2; } /* trigger_call: preserve
+    conversion path used by the seed evidence. */ ret = wolfSSL_i2d_X509_bio(bio,
+    x509); /* oracle_check: reject/accept/sanitizer observation, not exploit claim.
+    */ if (ret > 0) { wolfSSL_BIO_free(bio); wolfSSL_X509_free(x509); return 10; /*
+    [EXPECT_RET] */ } wolfSSL_BIO_free(bio); /* cleanup_call */ wolfSSL_X509_free(x509);
+    /* cleanup_call */ return 0; }'
+  source: canonical_tmpl_wolfssl.c.tree_sitter.function_definition
+  reason: Function definition identified by tree-sitter C parser.
+  priority: high
+  line: 24
+  line_start: 24
+  line_end: 57
+  column_start: 1
+  column_end: 2
+  node_type: function_definition
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[DER_LENGTH]'
+  - '[EXPECT_RET]'
+  identifiers_read:
+  - der_bytes
+  - wolfSSL_X509_d2i
+  - wolfSSL_BIO_new
+  - wolfSSL_BIO_s_mem
+  - wolfSSL_X509_free
+  - wolfSSL_i2d_X509_bio
+  - wolfSSL_BIO_free
+  identifiers_written:
+  - p
+  - der_len
+  - x509
+  - bio
+  - ret
+  function: main
+  template_file: canonical_tmpl_wolfssl.c
+  template_library: wolfssl
+- unit_id: ASTLITE-0003
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: wolfSSL_X509_d2i(NULL, &p, der_len)
+  source: canonical_tmpl_wolfssl.c.tree_sitter.call_expression
+  reason: Function call 'wolfSSL_X509_d2i' identified by tree-sitter C parser.
+  priority: medium
+  line: 33
+  line_start: 33
+  line_end: 33
+  column_start: 12
+  column_end: 47
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - p
+  - der_len
+  identifiers_written: []
+  called_function: wolfSSL_X509_d2i
+  function: wolfSSL_X509_d2i
+  call_node_code: wolfSSL_X509_d2i(NULL, &p, der_len)
+  template_file: canonical_tmpl_wolfssl.c
+  template_library: wolfssl
+- unit_id: ASTLITE-0004
+  mask_level: statement
+  role: mutation_point
+  placeholder: '[EXPECT_RET]'
+  code: 'if (x509 == NULL) { return 0; /* [EXPECT_RET]: safe reject */ }'
+  source: canonical_tmpl_wolfssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 34
+  line_start: 34
+  line_end: 36
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[EXPECT_RET]'
+  identifiers_read: []
+  identifiers_written:
+  - x509
+  template_file: canonical_tmpl_wolfssl.c
+  template_library: wolfssl
+- unit_id: ASTLITE-0005
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: wolfSSL_BIO_new(wolfSSL_BIO_s_mem())
+  source: canonical_tmpl_wolfssl.c.tree_sitter.call_expression
+  reason: Function call 'wolfSSL_BIO_new' identified by tree-sitter C parser.
+  priority: medium
+  line: 38
+  line_start: 38
+  line_end: 38
+  column_start: 11
+  column_end: 47
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - wolfSSL_BIO_s_mem
+  identifiers_written: []
+  called_function: wolfSSL_BIO_new
+  function: wolfSSL_BIO_new
+  call_node_code: wolfSSL_BIO_new(wolfSSL_BIO_s_mem())
+  template_file: canonical_tmpl_wolfssl.c
+  template_library: wolfssl
+- unit_id: ASTLITE-0006
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: wolfSSL_BIO_s_mem()
+  source: canonical_tmpl_wolfssl.c.tree_sitter.call_expression
+  reason: Function call 'wolfSSL_BIO_s_mem' identified by tree-sitter C parser.
+  priority: medium
+  line: 38
+  line_start: 38
+  line_end: 38
+  column_start: 27
+  column_end: 46
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read: []
+  identifiers_written: []
+  called_function: wolfSSL_BIO_s_mem
+  function: wolfSSL_BIO_s_mem
+  call_node_code: wolfSSL_BIO_s_mem()
+  template_file: canonical_tmpl_wolfssl.c
+  template_library: wolfssl
+- unit_id: ASTLITE-0007
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: if (bio == NULL) { wolfSSL_X509_free(x509); return 2; }
+  source: canonical_tmpl_wolfssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 39
+  line_start: 39
+  line_end: 42
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - wolfSSL_X509_free
+  - x509
+  identifiers_written:
+  - bio
+  template_file: canonical_tmpl_wolfssl.c
+  template_library: wolfssl
+- unit_id: ASTLITE-0008
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: wolfSSL_X509_free(x509);
+  source: canonical_tmpl_wolfssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 40
+  line_start: 40
+  line_end: 40
+  column_start: 9
+  column_end: 33
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - wolfSSL_X509_free
+  - x509
+  identifiers_written: []
+  template_file: canonical_tmpl_wolfssl.c
+  template_library: wolfssl
+- unit_id: ASTLITE-0009
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: wolfSSL_X509_free(x509)
+  source: canonical_tmpl_wolfssl.c.tree_sitter.call_expression
+  reason: Function call 'wolfSSL_X509_free' identified by tree-sitter C parser.
+  priority: medium
+  line: 40
+  line_start: 40
+  line_end: 40
+  column_start: 9
+  column_end: 32
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - x509
+  identifiers_written: []
+  called_function: wolfSSL_X509_free
+  function: wolfSSL_X509_free
+  call_node_code: wolfSSL_X509_free(x509)
+  template_file: canonical_tmpl_wolfssl.c
+  template_library: wolfssl
+- unit_id: ASTLITE-0010
+  mask_level: function_call
+  role: helper_function
+  placeholder: ''
+  code: wolfSSL_i2d_X509_bio(bio, x509)
+  source: canonical_tmpl_wolfssl.c.tree_sitter.call_expression
+  reason: Function call 'wolfSSL_i2d_X509_bio' identified by tree-sitter C parser.
+  priority: medium
+  line: 45
+  line_start: 45
+  line_end: 45
+  column_start: 11
+  column_end: 42
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - bio
+  - x509
+  identifiers_written: []
+  called_function: wolfSSL_i2d_X509_bio
+  function: wolfSSL_i2d_X509_bio
+  call_node_code: wolfSSL_i2d_X509_bio(bio, x509)
+  template_file: canonical_tmpl_wolfssl.c
+  template_library: wolfssl
+- unit_id: ASTLITE-0011
+  mask_level: statement
+  role: cleanup
+  placeholder: '[EXPECT_RET]'
+  code: if (ret > 0) { wolfSSL_BIO_free(bio); wolfSSL_X509_free(x509); return 10;
+    /* [EXPECT_RET] */ }
+  source: canonical_tmpl_wolfssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 48
+  line_start: 48
+  line_end: 52
+  column_start: 5
+  column_end: 6
+  node_type: if_statement
+  enclosing_function: main
+  placeholder_dependencies:
+  - '[EXPECT_RET]'
+  identifiers_read:
+  - ret
+  - wolfSSL_BIO_free
+  - bio
+  - wolfSSL_X509_free
+  - x509
+  identifiers_written: []
+  template_file: canonical_tmpl_wolfssl.c
+  template_library: wolfssl
+- unit_id: ASTLITE-0012
+  mask_level: statement
+  role: cleanup
+  placeholder: ''
+  code: wolfSSL_BIO_free(bio);
+  source: canonical_tmpl_wolfssl.c.tree_sitter.statement
+  reason: Statement selected by tree-sitter role and placeholder analysis.
+  priority: medium
+  line: 49
+  line_start: 49
+  line_end: 49
+  column_start: 9
+  column_end: 31
+  node_type: expression_statement
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - wolfSSL_BIO_free
+  - bio
+  identifiers_written: []
+  template_file: canonical_tmpl_wolfssl.c
+  template_library: wolfssl
+- unit_id: ASTLITE-0013
+  mask_level: function_call
+  role: cleanup
+  placeholder: ''
+  code: wolfSSL_BIO_free(bio)
+  source: canonical_tmpl_wolfssl.c.tree_sitter.call_expression
+  reason: Function call 'wolfSSL_BIO_free' identified by tree-sitter C parser.
+  priority: medium
+  line: 49
+  line_start: 49
+  line_end: 49
+  column_start: 9
+  column_end: 30
+  node_type: call_expression
+  enclosing_function: main
+  placeholder_dependencies: []
+  identifiers_read:
+  - bio
+  identifiers_written: []
+  called_function: wolfSSL_BIO_free
+  function: wolfSSL_BIO_free
+  call_node_code: wolfSSL_BIO_free(bio)
+  template_file: canonical_tmpl_wolfssl.c
+  template_library: wolfssl
+role_summary:
+  cleanup: 6
+  entrypoint: 1
+  helper_function: 4
+  mutation_point: 2
+mask_level_summary:
+  block: 1
+  function_call: 6
+  statement: 6

@@ -1,0 +1,33 @@
+schema: refactor_plan_v1
+generated_at: '2026-06-12T04:57:53+00:00'
+phases:
+- phase: 1
+  name: extract_reusable_runner_logic
+  actions:
+  - move compile/run shared logic into runner/family_compile_runner.py
+  - keep tools/* as CLI wrappers
+  risk: medium
+- phase: 2
+  name: extract_mutation_policy_logic
+  actions:
+  - move valid-prefix refinement logic into mutation/
+  risk: medium
+- phase: 3
+  name: extract_oracle_aware_analysis
+  actions:
+  - move semantic label logic into analyzer/
+  - keep report generation in analysis/
+  risk: medium
+- phase: 4
+  name: extract_feedback_and_scheduler_proposals
+  actions:
+  - move staged feedback logic into analysis/feedback/
+  - prepare scheduler_runtime_loop_v1 interface
+  risk: medium
+- phase: 5
+  name: cleanup_deprecated_wrappers
+  actions:
+  - only after dependency checks
+  - no deletion in this task
+  risk: high
+recommended_next_task: project_structure_refactor_phase1_runner_v1

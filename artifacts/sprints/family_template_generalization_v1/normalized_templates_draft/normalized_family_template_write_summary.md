@@ -1,0 +1,7 @@
+# normalized family template write summary
+
+- pkcs_container_parsing: collision_existing_target_not_overwritten -> normalized_templates/wolfssl_family/pkcs_container_parsing
+- asn1_nested_boundary: collision_existing_target_not_overwritten -> normalized_templates/wolfssl_family/asn1_nested_boundary
+- x509_parsing: collision_existing_target_not_overwritten -> normalized_templates/wolfssl_family/x509_parsing
+- tls_protocol_state_lifecycle: collision_existing_target_not_overwritten -> normalized_templates/wolfssl_family/tls_protocol_state_lifecycle
+- secure_heap_state_lifecycle: collision_existing_target_not_overwritten -> normalized_templates/wolfssl_family/secure_heap_state_lifecycle

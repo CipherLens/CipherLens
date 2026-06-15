@@ -1,0 +1,32 @@
+schema: family_card_v1
+family: provider_fetch_lifecycle
+track: lifecycle
+archetype: provider_fetch_context_lifecycle
+target_library: openssl
+main_apis:
+- OSSL_PROVIDER_load
+- EVP_MD_fetch
+- EVP_CIPHER_fetch
+- EVP_MAC_fetch
+- EVP_MD_free
+- EVP_CIPHER_free
+- EVP_MAC_free
+- OSSL_PROVIDER_unload
+valid_sequence: local minimal control sequence generated from manual audit feedback
+invalid_or_observation_sequences:
+- operation before required init
+- invalid algorithm/property or contract boundary
+- documented observation path
+oracle_labels:
+- unexpected_failure_on_valid_sequence
+- unexpected_success_after_invalid_state
+- state_transition_observation
+- semantic_divergence_candidate
+- crash_or_sanitizer
+avoid_patterns:
+- der_single_object_trailing_garbage_full_consumption
+- secure_heap_state_lifecycle_issue_28669
+claim_policy:
+  confirmed_vulnerability: false
+  cve: false
+  exploitable: false

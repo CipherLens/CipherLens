@@ -1,0 +1,50 @@
+api: EVP_DigestVerifyInit
+library: openssl
+family: pkey_verify
+signature: "int EVP_DigestVerifyInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx, const EVP_MD *type, ENGINE *e, EVP_PKEY *pkey)"
+parameter_semantics:
+  ctx: digest verification context allocated by EVP_MD_CTX_new or equivalent
+  pctx: optional output pointer for the initialized EVP_PKEY_CTX
+  type: digest algorithm such as EVP_sha256
+  e: legacy ENGINE parameter, normally NULL
+  pkey: public key or key object used for verification
+return_value_semantics:
+  success: 1
+  error: 0 or provider-specific failure
+state_preconditions:
+  - ctx must be non-NULL and initialized for EVP digest operations
+  - pkey must support the requested verification operation
+  - digest and key type must be algorithm-compatible
+valid_invalid_ranges:
+  valid: compatible digest and key type with a verification-capable key
+  invalid: NULL context, unsupported digest/key pairing, wrong key type, provider dispatch failure
+unsupported_conditions:
+  - requested digest is not valid for the key algorithm
+  - key does not support signature verification
+  - provider does not expose the requested verify operation
+related_apis:
+  - EVP_DigestVerify
+  - EVP_DigestVerifyUpdate
+  - EVP_DigestVerifyFinal
+  - EVP_MD_CTX_new
+  - EVP_MD_CTX_free
+  - EVP_PKEY_CTX_set_rsa_padding
+  - EVP_PKEY_CTX_set_rsa_pss_saltlen
+mutation_hints:
+  - wrong digest algorithm
+  - mismatched key type
+  - public key without expected verification capability
+  - RSA-PSS setup on non-RSA key
+  - digest/key compatibility boundary
+oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+known_pitfalls:
+  - setup failure must not be collapsed with invalid signature rejection
+  - a failed initialization may leave pctx unset or unusable
+  - provider behavior can differ between unsupported operation and invalid signature
+source_references:
+  - openssl/evp.h
+notes:
+  - Use this card for setup-stage evidence in signature verification migration, not as proof of signature acceptance by itself.

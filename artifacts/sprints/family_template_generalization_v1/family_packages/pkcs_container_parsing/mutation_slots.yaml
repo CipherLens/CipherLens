@@ -1,0 +1,119 @@
+schema: family_mutation_slots_v1
+family: pkcs_container_parsing
+template_level: family
+seed_pocs:
+- WOLFSSL-POC-0007
+- WOLFSSL-POC-0006
+mutation_slots:
+- slot_name: CONTAINER_BYTES
+  mutation_type: byte_array
+  seed_examples:
+  - valid_pkcs12_der
+  - malformed_pkcs7_der
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  expected_oracle:
+  - parser_reject_accept
+  - return_code_semantics
+  - full_consumption
+  - cleanup_required
+  risk: container data must remain bounded
+- slot_name: CONTAINER_FORMAT
+  mutation_type: enum
+  seed_examples:
+  - DER
+  - PEM
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  expected_oracle:
+  - parser_reject_accept
+  - return_code_semantics
+  - full_consumption
+  - cleanup_required
+  risk: avoid format/API mismatch false positives
+- slot_name: TRAILING_BYTES
+  mutation_type: byte_array
+  seed_examples:
+  - empty
+  - '00'
+  - ff00
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  expected_oracle:
+  - parser_reject_accept
+  - return_code_semantics
+  - full_consumption
+  - cleanup_required
+  risk: only meaningful for APIs exposing consumption
+- slot_name: NESTED_LENGTH_DELTA
+  mutation_type: integer
+  seed_examples:
+  - '-1'
+  - '0'
+  - '+1'
+  - large
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  expected_oracle:
+  - parser_reject_accept
+  - return_code_semantics
+  - full_consumption
+  - cleanup_required
+  risk: nested length mutation can become generic parse failure
+- slot_name: EXPECT_RET
+  mutation_type: enum
+  seed_examples:
+  - success
+  - reject
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  expected_oracle:
+  - parser_reject_accept
+  - return_code_semantics
+  - full_consumption
+  - cleanup_required
+  risk: do not hard-code library numeric values
+mutation_budget_hint:
+  small: 8
+  medium: 32
+  large: 96
+scheduler_features:
+- family
+- oracle_type
+- target_library
+- mapping_gate_status
+- seed_type
+ast_maskable_units:
+- unit_type: api_argument
+  slot_name: CONTAINER_BYTES
+  node_kind_hint: argument or literal
+  reason: container data must remain bounded
+- unit_type: api_argument
+  slot_name: CONTAINER_FORMAT
+  node_kind_hint: argument or literal
+  reason: avoid format/API mismatch false positives
+- unit_type: api_argument
+  slot_name: TRAILING_BYTES
+  node_kind_hint: argument or literal
+  reason: only meaningful for APIs exposing consumption
+- unit_type: api_argument
+  slot_name: NESTED_LENGTH_DELTA
+  node_kind_hint: argument or literal
+  reason: nested length mutation can become generic parse failure
+- unit_type: api_argument
+  slot_name: EXPECT_RET
+  node_kind_hint: argument or literal
+  reason: do not hard-code library numeric values
+semantic_policy: mutate slots, preserve trigger/cleanup/oracle shape
+notes:
+- Budget hints are deterministic defaults for family-level planning.

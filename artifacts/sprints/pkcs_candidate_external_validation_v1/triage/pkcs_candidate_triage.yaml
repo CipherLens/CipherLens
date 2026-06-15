@@ -1,0 +1,106 @@
+schema: pkcs_candidate_triage_v1
+generated_at: '2026-06-12T11:26:34+00:00'
+allowed_classifications:
+- app_level_validation_gap_candidate
+- caller_must_check_consumption
+- expected_prefix_parse_behavior
+- false_positive
+- needs_teammate_validation
+candidates:
+- candidate_id: pkcs_candidate_001
+  case_id: pkcs_container_parsing_openssl__supp_002__valid_pkcs12_plus_trailing_seed_required
+  container_type: pkcs12
+  seed_id: synthetic_pkcs12_valid_minimal
+  mutation_strategy: valid_seed_plus_trailing_00
+  input_path: /home/wen/work/crypto-pattern-fuzz/artifacts/sprints/pkcs_valid_prefix_pipeline_to_analyze_v1/rendered_cases/pkcs_valid_prefix__case_002/input.bin
+  input_sha256: 13d9c7ea0907c9b84a1698db3418b7cf7032525d0540285ce0903c66513e0169
+  input_size_bytes: 2564
+  oracle_events:
+    accepted: true
+    full_consumption: false
+    full_consumption_gap: true
+    event_count: 4
+    parse_events: 1
+    raw_events:
+    - ORACLE_EVENT schema=oracle_event_v1 case_id=pkcs_container_parsing_openssl__supp_002__valid_pkcs12_plus_trailing_seed_required
+      family=pkcs_container_parsing mutation_strategy=valid_seed_plus_trailing_00 target_library=openssl
+      phase=parse api=d2i_PKCS12 ret=1 accepted=1 input_len=2564 consumed_len=2563 full_consumption=0
+      openssl_error_code=0 openssl_error_reason="error:00000000:lib(0)::reason(0)"
+    - ORACLE_EVENT schema=oracle_event_v1 case_id=pkcs_container_parsing_openssl__supp_002__valid_pkcs12_plus_trailing_seed_required
+      family=pkcs_container_parsing mutation_strategy=valid_seed_plus_trailing_00 target_library=openssl
+      phase=verify api=PKCS12_parse ret=1 accepted=1 input_len=2564 consumed_len=2563 full_consumption=0
+      openssl_error_code=0 openssl_error_reason="error:00000000:lib(0)::reason(0)"
+    - ORACLE_EVENT schema=oracle_event_v1 case_id=pkcs_container_parsing_openssl__supp_002__valid_pkcs12_plus_trailing_seed_required
+      family=pkcs_container_parsing mutation_strategy=valid_seed_plus_trailing_00 target_library=openssl
+      phase=full_consumption_check api=d2i_PKCS12 input_len=2564 consumed_len=2563 full_consumption=0
+      notes=consumption_observed_from_d2i_PKCS12
+    - ORACLE_EVENT schema=oracle_event_v1 case_id=pkcs_container_parsing_openssl__supp_002__valid_pkcs12_plus_trailing_seed_required
+      family=pkcs_container_parsing mutation_strategy=valid_seed_plus_trailing_00 target_library=openssl
+      phase=cleanup api=PKCS12_parse cleanup_executed=1
+  local_replay:
+    openssl_command: '/usr/bin/openssl pkcs12 -in /home/wen/work/crypto-pattern-fuzz/artifacts/sprints/pkcs_valid_prefix_pipeline_to_analyze_v1/rendered_cases/pkcs_valid_prefix__case_002/input.bin
+      -noout -passin pass:'
+    return_code: 0
+    accepted: true
+    stdout_excerpt: ''
+    stderr_excerpt: ''
+  classification: caller_must_check_consumption
+  reason: d2i-style parser accepted a prefix while trailing bytes remain; this is a caller-consumption-check
+    obligation rather than a standalone vulnerability claim
+  next_action: external validation should determine whether any real app-level caller omits full-consumption
+    checks
+  claim_policy:
+    confirmed_vulnerability: false
+    cve: false
+    exploitable: false
+- candidate_id: pkcs_candidate_002
+  case_id: pkcs_container_parsing_openssl__supp_003__preserve_outer_pkcs_mutate_inner_seed_required
+  container_type: pkcs7
+  seed_id: synthetic_pkcs7_valid_certbag
+  mutation_strategy: valid_pkcs7_seed_plus_trailing_ff00
+  input_path: /home/wen/work/crypto-pattern-fuzz/artifacts/sprints/pkcs_valid_prefix_pipeline_to_analyze_v1/rendered_cases/pkcs_valid_prefix__case_003/input.bin
+  input_sha256: 36c42ade69351f861996c221a0ed0f2a7536e6f9ae710f76ab0a52902703ed38
+  input_size_bytes: 870
+  oracle_events:
+    accepted: true
+    full_consumption: false
+    full_consumption_gap: true
+    event_count: 3
+    parse_events: 1
+    raw_events:
+    - ORACLE_EVENT schema=oracle_event_v1 case_id=pkcs_container_parsing_openssl__supp_003__preserve_outer_pkcs_mutate_inner_seed_required
+      family=pkcs_container_parsing mutation_strategy=valid_pkcs7_seed_plus_trailing_ff00 target_library=openssl
+      phase=parse api=d2i_PKCS7 ret=1 accepted=1 input_len=870 consumed_len=868 full_consumption=0 openssl_error_code=0
+      openssl_error_reason="error:00000000:lib(0)::reason(0)"
+    - ORACLE_EVENT schema=oracle_event_v1 case_id=pkcs_container_parsing_openssl__supp_003__preserve_outer_pkcs_mutate_inner_seed_required
+      family=pkcs_container_parsing mutation_strategy=valid_pkcs7_seed_plus_trailing_ff00 target_library=openssl
+      phase=full_consumption_check api=d2i_PKCS7 input_len=870 consumed_len=868 full_consumption=0 notes=consumption_observed_from_d2i_PKCS7
+    - ORACLE_EVENT schema=oracle_event_v1 case_id=pkcs_container_parsing_openssl__supp_003__preserve_outer_pkcs_mutate_inner_seed_required
+      family=pkcs_container_parsing mutation_strategy=valid_pkcs7_seed_plus_trailing_ff00 target_library=openssl
+      phase=cleanup api=d2i_PKCS7 cleanup_executed=1
+  local_replay:
+    openssl_command: /usr/bin/openssl pkcs7 -inform DER -in /home/wen/work/crypto-pattern-fuzz/artifacts/sprints/pkcs_valid_prefix_pipeline_to_analyze_v1/rendered_cases/pkcs_valid_prefix__case_003/input.bin
+      -noout
+    return_code: 0
+    accepted: true
+    stdout_excerpt: ''
+    stderr_excerpt: ''
+  classification: caller_must_check_consumption
+  reason: d2i-style parser accepted a prefix while trailing bytes remain; this is a caller-consumption-check
+    obligation rather than a standalone vulnerability claim
+  next_action: external validation should determine whether any real app-level caller omits full-consumption
+    checks
+  claim_policy:
+    confirmed_vulnerability: false
+    cve: false
+    exploitable: false
+summary:
+  app_level_validation_gap_candidate: 0
+  caller_must_check_consumption: 2
+  expected_prefix_parse_behavior: 0
+  false_positive: 0
+  needs_teammate_validation: 0
+claim_policy:
+  confirmed_vulnerability: false
+  cve: false
+  exploitable: false

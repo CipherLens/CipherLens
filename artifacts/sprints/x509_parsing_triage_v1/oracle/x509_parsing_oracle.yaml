@@ -1,0 +1,36 @@
+family: x509_parsing
+allowed_oracle_labels:
+- safe_reject
+- app_level_validation_gap
+- no_crash
+- cross_library_semantic_divergence
+- verification_semantic_gap
+- full_consumption_delegate_only
+oracles:
+  safe_reject:
+    signal: malformed certificate/CRL/CSR is rejected without crash and without unsafe state
+    applies_to: parse and malformed-input controls
+  app_level_validation_gap:
+    signal: OpenSSL app-visible status/text/purpose/verify result differs from expected semantic outcome
+    applies_to: C-path seeds 11567/11772/14457/14675/23325/29418/6788
+  no_crash:
+    signal: sanitizer/SEGV evidence absent in current placeholder validation; nonzero harness/app exits
+      are not treated as crashes by themselves
+    applies_to: all local placeholder validations
+  cross_library_semantic_divergence:
+    signal: mbedTLS and OpenSSL expose comparable verifier/parse semantics and diverge under controlled
+      inputs
+    applies_to: future A/B only after mapping gate
+  verification_semantic_gap:
+    signal: chain/purpose/time/usage/CRL verification observable is inconsistent with documented or expected
+      behavior
+    applies_to: X509_verify_cert, openssl verify/x509, mbedtls_x509_crt_verify
+  full_consumption_delegate_only:
+    signal: top-level DER trailing garbage consumed_len < der_len; delegate to der_full_consumption unless
+      x509-specific app behavior is the primary oracle
+    applies_to: overlap only
+forbidden_labels:
+- confirmed_vulnerability
+- CVE
+- exploitable
+notes: This sprint only abstracts oracle candidates; it does not execute or validate vulnerability reproduction.

@@ -1,0 +1,24 @@
+# Compile Run Oracle Instrumented Quality Checks
+
+- schema: `compile_run_oracle_instrumented_quality_checks_v1`
+- generated_at: `2026-06-12T03:21:20+00:00`
+- expected_cases: `14`
+- compile_jobs_seen: `14`
+- compile_success: `14`
+- compile_failed: `0`
+- run_attempted: `14`
+- oracle_events_observed: `49`
+- cases_with_oracle_events: `14`
+- mbedtls_compile_attempted: `0`
+- mbedtls_run_attempted: `0`
+- all_jobs_target_openssl: `True`
+- all_binaries_under_sprint: `True`
+- all_logs_under_sprint: `True`
+- no_input_files_modified: `True`
+- no_adapter_files_modified: `True`
+- no_template_files_modified: `True`
+- no_glm_called: `True`
+- no_analysis_performed: `True`
+- no_feedback_written: `True`
+- no_confirmed_vulnerability_claim: `True`
+- quality_status: `pass`

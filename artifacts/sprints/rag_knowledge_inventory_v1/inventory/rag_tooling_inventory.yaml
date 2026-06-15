@@ -1,0 +1,34 @@
+rag_builder:
+  path: knowledge/rag_builder.py
+  exists: true
+  loads:
+    api_constraints: true
+    unit_tests: true
+    poc_patterns: true
+    cross_lib_equivalence: true
+    wycheproof_vectors: true
+    api_cards: true
+  supports_ingested_poc_patterns_md: true
+rag_query:
+  path: knowledge/rag_query.py
+  exists: true
+  cli_flags:
+    --query: true
+    --top-k: true
+    --json: true
+  rerank_features:
+    api_tokens: true
+    family_terms: true
+    library_match: true
+    api_cards_bonus: true
+    feedback_bonus: true
+knowledge_collectors:
+  exists: true
+  files:
+  - knowledge_collectors/__init__.py
+  - knowledge_collectors/collect_api_sources.py
+  - knowledge_collectors/collect_tests_examples.py
+  - knowledge_collectors/import_wycheproof.py
+  needs_new_collector: false
+  recommendation: Current builder can index files written under configured knowledge_raw
+    layers; collector is optional unless automated source harvesting is needed.

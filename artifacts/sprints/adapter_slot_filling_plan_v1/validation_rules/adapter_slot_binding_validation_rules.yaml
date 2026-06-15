@@ -1,0 +1,69 @@
+schema: adapter_slot_binding_validation_rules_v1
+global_rules:
+- no_full_c_generation
+- no_blocked_target_api
+- no_confirmed_equivalence_claim
+- all_required_bindings_present
+- cleanup_mapping_required
+- oracle_mapping_required
+- mapping_gate_status_recorded
+- candidate_mapping_must_remain_candidate
+adapter_specific_rules:
+- adapter_id: asn1_nested_boundary.mbedtls.family_adapter_recipe_v1
+  required_bindings:
+  - api_mapping
+  - type_mapping
+  - cleanup_mapping
+  - oracle_mapping
+  - input_mapping
+  - mutation_slot_mapping
+  forbidden_target_apis:
+  - mbedtls_x509_crt_parse_der
+  allowed_target_apis:
+  - mbedtls_x509_crt_parse_der
+  required_oracles:
+  - parser_reject_accept
+  required_cleanup:
+  - slot_name: cleanup_call
+    source_cleanup: family-specific wolfSSL cleanup/free API
+    target_cleanup_candidates: []
+    required: true
+- adapter_id: asn1_nested_boundary.openssl.family_adapter_recipe_v1
+  required_bindings:
+  - api_mapping
+  - type_mapping
+  - cleanup_mapping
+  - oracle_mapping
+  - input_mapping
+  - mutation_slot_mapping
+  forbidden_target_apis:
+  - d2i_X509
+  allowed_target_apis:
+  - ASN1_item_d2i
+  required_oracles:
+  - parser_reject_accept
+  required_cleanup:
+  - slot_name: cleanup_call
+    source_cleanup: family-specific wolfSSL cleanup/free API
+    target_cleanup_candidates: []
+    required: true
+- adapter_id: pkcs_container_parsing.openssl.family_adapter_recipe_v1
+  required_bindings:
+  - api_mapping
+  - type_mapping
+  - cleanup_mapping
+  - oracle_mapping
+  - input_mapping
+  - mutation_slot_mapping
+  forbidden_target_apis:
+  - d2i_PKCS7
+  allowed_target_apis:
+  - PKCS12_parse
+  - PKCS7_verify
+  required_oracles:
+  - parser_reject_accept
+  required_cleanup:
+  - slot_name: cleanup_call
+    source_cleanup: family-specific wolfSSL cleanup/free API
+    target_cleanup_candidates: []
+    required: true

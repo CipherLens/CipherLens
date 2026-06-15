@@ -1,0 +1,182 @@
+schema: family_mask_report_v1
+family_template_id: WOLFSSL-FAMILY-asn1_nested_boundary
+family: asn1_nested_boundary
+template_id: WOLFSSL-FAMILY-asn1_nested_boundary
+template_name: wolfssl family canonical template for asn1_nested_boundary
+template_level: family
+pattern_id: wolfssl_family::asn1_nested_boundary
+source_library: wolfssl
+source_api:
+- wc_InitDecodedCert
+- wc_ParseCert
+- wc_FreeDecodedCert
+- ASN1_item_d2i
+- mbedtls_x509_crt_parse_der
+harness_family: x509_asn1_inner_boundary
+oracle_type:
+- parser_reject_accept
+- full_consumption
+- return_code_semantics
+seed_pocs:
+- WOLFSSL-POC-0004
+roles:
+  input_construction:
+  - CONTAINER_BYTES
+  - DER_BYTES
+  - ASN1_NESTED_LENGTH
+  - ATTRIBUTE_COUNT
+  trigger_call:
+  - wc_InitDecodedCert
+  - wc_ParseCert
+  - wc_FreeDecodedCert
+  - ASN1_item_d2i
+  - mbedtls_x509_crt_parse_der
+  oracle_check:
+  - parser_reject_accept
+  - full_consumption
+  - return_code_semantics
+  cleanup_call:
+  - slot_name: cleanup_call
+    source_cleanup: family-specific wolfSSL cleanup/free API
+    target_cleanup_candidates: []
+    required: true
+mask_units:
+- unit_id: asn1_nested_boundary.trigger_call.1
+  role: trigger_call
+  slot_name: wc_InitDecodedCert
+  original_text: wc_InitDecodedCert
+  replacement: wc_InitDecodedCert
+  reason: preserve source-library trigger call for family semantics
+  preserve: true
+- unit_id: asn1_nested_boundary.trigger_call.2
+  role: trigger_call
+  slot_name: wc_ParseCert
+  original_text: wc_ParseCert
+  replacement: wc_ParseCert
+  reason: preserve source-library trigger call for family semantics
+  preserve: true
+- unit_id: asn1_nested_boundary.trigger_call.3
+  role: trigger_call
+  slot_name: wc_FreeDecodedCert
+  original_text: wc_FreeDecodedCert
+  replacement: wc_FreeDecodedCert
+  reason: preserve source-library trigger call for family semantics
+  preserve: true
+- unit_id: asn1_nested_boundary.trigger_call.4
+  role: trigger_call
+  slot_name: ASN1_item_d2i
+  original_text: ASN1_item_d2i
+  replacement: ASN1_item_d2i
+  reason: preserve source-library trigger call for family semantics
+  preserve: true
+- unit_id: asn1_nested_boundary.trigger_call.5
+  role: trigger_call
+  slot_name: mbedtls_x509_crt_parse_der
+  original_text: mbedtls_x509_crt_parse_der
+  replacement: mbedtls_x509_crt_parse_der
+  reason: preserve source-library trigger call for family semantics
+  preserve: true
+- unit_id: asn1_nested_boundary.slot.1
+  role: mutation_slot
+  slot_name: ASN1_NESTED_LENGTH
+  original_text: '[ASN1_NESTED_LENGTH]'
+  replacement: '[ASN1_NESTED_LENGTH]'
+  reason: family-level mutation slot
+  preserve: false
+- unit_id: asn1_nested_boundary.slot.2
+  role: mutation_slot
+  slot_name: DER_BYTES
+  original_text: '[DER_BYTES]'
+  replacement: '[DER_BYTES]'
+  reason: family-level mutation slot
+  preserve: false
+- unit_id: asn1_nested_boundary.slot.3
+  role: mutation_slot
+  slot_name: TRAILING_GARBAGE
+  original_text: '[TRAILING_GARBAGE]'
+  replacement: '[TRAILING_GARBAGE]'
+  reason: family-level mutation slot
+  preserve: false
+- unit_id: asn1_nested_boundary.slot.4
+  role: mutation_slot
+  slot_name: NESTED_DEPTH
+  original_text: '[NESTED_DEPTH]'
+  replacement: '[NESTED_DEPTH]'
+  reason: family-level mutation slot
+  preserve: false
+- unit_id: asn1_nested_boundary.slot.5
+  role: mutation_slot
+  slot_name: EXPECT_RET
+  original_text: '[EXPECT_RET]'
+  replacement: '[EXPECT_RET]'
+  reason: family-level mutation slot
+  preserve: false
+mutation_points:
+- slot_name: ASN1_NESTED_LENGTH
+  mutation_type: family_slot
+  examples: []
+  oracle:
+  - parser_reject_accept
+  - full_consumption
+  - return_code_semantics
+  mask_level: family_slot
+  suggested_use: mutation_slot_binding
+- slot_name: DER_BYTES
+  mutation_type: family_slot
+  examples: []
+  oracle:
+  - parser_reject_accept
+  - full_consumption
+  - return_code_semantics
+  mask_level: family_slot
+  suggested_use: mutation_slot_binding
+- slot_name: TRAILING_GARBAGE
+  mutation_type: family_slot
+  examples: []
+  oracle:
+  - parser_reject_accept
+  - full_consumption
+  - return_code_semantics
+  mask_level: family_slot
+  suggested_use: mutation_slot_binding
+- slot_name: NESTED_DEPTH
+  mutation_type: family_slot
+  examples: []
+  oracle:
+  - parser_reject_accept
+  - full_consumption
+  - return_code_semantics
+  mask_level: family_slot
+  suggested_use: mutation_slot_binding
+- slot_name: EXPECT_RET
+  mutation_type: family_slot
+  examples: []
+  oracle:
+  - parser_reject_accept
+  - full_consumption
+  - return_code_semantics
+  mask_level: family_slot
+  suggested_use: mutation_slot_binding
+must_preserve_features:
+- trigger_call
+- cleanup_call
+- oracle_check
+- input_loading
+- buffer_length_calculation
+seed_variant_notes:
+- seed_poc: WOLFSSL-POC-0004
+  differences: kept under seed_examples; not emitted as a separate final template
+oracle:
+  primary:
+  - parser_reject_accept
+  secondary:
+  - full_consumption
+  - return_code_semantics
+notes:
+- This mask report is family-level and preserves seed-specific differences as variant
+  notes.
+masking_levels:
+- name: preserve
+  meaning: do not mutate trigger/cleanup/oracle structure
+- name: family_slot
+  meaning: planner may bind within family constraints

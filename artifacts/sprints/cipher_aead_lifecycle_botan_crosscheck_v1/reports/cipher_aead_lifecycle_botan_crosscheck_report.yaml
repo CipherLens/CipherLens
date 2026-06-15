@@ -1,0 +1,116 @@
+sprint: cipher_aead_lifecycle_botan_crosscheck_v1
+botan_prefix: /home/wen/work/clean_sources/botan-3.10.0/_install
+botan_version: 3.10.0
+pkg_config: -I/home/wen/work/clean_sources/botan-3.10.0/_install/include/botan-3 -L/home/wen/work/clean_sources/botan-3.10.0/_install/lib
+  -lbotan-3 -fstack-protector -m64 -pthread
+compile_status: ok
+run_status: ok
+exit_code: 0
+checked_candidates:
+- aead_006_final_without_update_gcm_encrypt
+- aead_009_set_tag_after_final_gcm_decrypt
+- aead_012_wrong_tag_length_gcm_decrypt
+case_results:
+- case_name: botan_final_without_update_gcm_encrypt
+  case_id: aead_006_final_without_update_gcm_encrypt
+  state_sequence: final_without_update
+  observed_behavior: 'CASE_NAME=botan_final_without_update_gcm_encrypt
+
+    STEP=create_aead ok
+
+    STEP=set_key ok
+
+    STEP=set_associated_data ok
+
+    STEP=start ok
+
+    STEP=finish ok out_size=16
+
+    CASE_RESULT=legal_semantics'
+  case_result: legal_semantics
+  classification: legal_semantics
+  stdout_excerpt:
+  - CASE_NAME=botan_final_without_update_gcm_encrypt
+  - STEP=create_aead ok
+  - STEP=set_key ok
+  - STEP=set_associated_data ok
+  - STEP=start ok
+  - STEP=finish ok out_size=16
+  - CASE_RESULT=legal_semantics
+  stderr_excerpt: []
+- case_name: botan_set_tag_after_final_gcm_decrypt
+  case_id: aead_009_set_tag_after_final_gcm_decrypt
+  state_sequence: set_tag_after_final
+  observed_behavior: 'CASE_NAME=botan_set_tag_after_final_gcm_decrypt
+
+    STEP=api_mapping_check ok
+
+    MAPPING=Botan AEAD decryption passes ciphertext||tag to finish()
+
+    MAPPING=No OpenSSL EVP_CTRL_GCM_SET_TAG style post-final API is available in local
+    evidence
+
+    CASE_RESULT=mapping_gap'
+  case_result: mapping_gap
+  classification: mapping_gap
+  stdout_excerpt:
+  - CASE_NAME=botan_set_tag_after_final_gcm_decrypt
+  - STEP=api_mapping_check ok
+  - MAPPING=Botan AEAD decryption passes ciphertext||tag to finish()
+  - MAPPING=No OpenSSL EVP_CTRL_GCM_SET_TAG style post-final API is available in local
+    evidence
+  - CASE_RESULT=mapping_gap
+  stderr_excerpt: []
+- case_name: botan_wrong_tag_length_gcm_decrypt
+  case_id: aead_012_wrong_tag_length_gcm_decrypt
+  state_sequence: wrong_tag_length
+  observed_behavior: 'CASE_NAME=botan_wrong_tag_length_gcm_decrypt
+
+    REF_STEP=create_encrypt ok alg=AES-128/GCM(8)
+
+    REF_STEP=set_key ok
+
+    REF_STEP=set_associated_data ok
+
+    REF_STEP=start ok
+
+    REF_STEP=finish_encrypt ok out_size=37
+
+    STEP=create_decrypt ok alg=AES-128/GCM(8)
+
+    STEP=set_key ok
+
+    STEP=set_associated_data ok
+
+    STEP=start ok
+
+    STEP=finish_decrypt ok out_size=29
+
+    PLAINTEXT_MATCH=1
+
+    CASE_RESULT=legal_semantics
+
+    HARNESS_STATUS=0'
+  case_result: legal_semantics
+  classification: legal_semantics
+  stdout_excerpt:
+  - CASE_NAME=botan_wrong_tag_length_gcm_decrypt
+  - REF_STEP=create_encrypt ok alg=AES-128/GCM(8)
+  - REF_STEP=set_key ok
+  - REF_STEP=set_associated_data ok
+  - REF_STEP=start ok
+  - REF_STEP=finish_encrypt ok out_size=37
+  - STEP=create_decrypt ok alg=AES-128/GCM(8)
+  - STEP=set_key ok
+  - STEP=set_associated_data ok
+  - STEP=start ok
+  - STEP=finish_decrypt ok out_size=29
+  - PLAINTEXT_MATCH=1
+  stderr_excerpt: []
+semantic_divergence_candidate: false
+crash_candidate: false
+needs_d_path: false
+needs_a_path: false
+confirmed_vulnerability_found: false
+next_recommendation: Keep all three candidates downgraded; return to scheduler or
+  expand AEAD research to CCM / ctx copy / init-failure.

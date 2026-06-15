@@ -1,0 +1,166 @@
+1957-
+1958-    #ifdef HAVE_ECC
+1959-        case ECDSAk:
+1960-        {
+1961-        #ifndef WOLFSSL_SMALL_STACK
+1962-            ecc_key  privKey[1];
+1963-        #else
+1964-            ecc_key* privKey;
+1965-            privKey = (ecc_key*)XMALLOC(sizeof(ecc_key), pkcs7->heap,
+1966-                DYNAMIC_TYPE_TMP_BUFFER);
+1967-            if (privKey == NULL)
+1968-                return MEMORY_E;
+1969-        #endif
+1970-
+1971-            ret = wc_PKCS7_ImportECC(pkcs7, privKey);
+1972-            if (ret == 0) {
+1973-                ret = wc_ecc_sig_size(privKey);
+1974-            }
+1975-            wc_ecc_free(privKey);
+1976-            WC_FREE_VAR_EX(privKey, pkcs7->heap, DYNAMIC_TYPE_TMP_BUFFER);
+1977-        }
+1978-        break;
+1979-    #endif
+1980-    }
+1981-
+1982-    return ret;
+1983-}
+1984-
+1985-
+1986-/* builds up SignedData signed attributes, including default ones.
+1987- *
+1988- * pkcs7 - pointer to initialized PKCS7 structure
+1989- * esd   - pointer to initialized ESD structure, used for output
+1990- *
+1991- * return 0 on success, negative on error */
+1992:static int wc_PKCS7_BuildSignedAttributes(wc_PKCS7* pkcs7, ESD* esd,
+1993-                    const byte* contentType, word32 contentTypeSz,
+1994-                    const byte* contentTypeOid, word32 contentTypeOidSz,
+1995-                    const byte* messageDigestOid, word32 messageDigestOidSz,
+1996-                    const byte* signingTimeOid, word32 signingTimeOidSz,
+1997-                    byte* signingTime, word32 signingTimeSz)
+1998-{
+1999-    int hashSz;
+2000-#ifdef NO_ASN_TIME
+2001-    PKCS7Attrib cannedAttribs[2];
+2002-#else
+2003-    time_t tm;
+2004-    int timeSz;
+2005-    PKCS7Attrib cannedAttribs[3];
+2006-#endif
+2007-    word32 idx    = 0;
+2008-    word32 atrIdx = 0;
+2009-    word32 cannedAttribsCount;
+2010-
+2011-    if (pkcs7 == NULL || esd == NULL || contentType == NULL ||
+2012-        contentTypeOid == NULL || messageDigestOid == NULL ||
+2013-        signingTimeOid == NULL) {
+2014-        return BAD_FUNC_ARG;
+2015-    }
+2016-
+2017-    if (pkcs7->defaultSignedAttribs != WOLFSSL_NO_ATTRIBUTES) {
+2018-        hashSz = wc_HashGetDigestSize(esd->hashType);
+2019-        if (hashSz < 0)
+2020-            return hashSz;
+2021-
+2022-    #ifndef NO_ASN_TIME
+2023-        if (signingTime == NULL || signingTimeSz == 0)
+2024-            return BAD_FUNC_ARG;
+2025-
+2026-        tm = wc_Time(0);
+2027-        timeSz = GetAsnTimeString(&tm, signingTime, signingTimeSz);
+2028-        if (timeSz < 0)
+2029-            return timeSz;
+2030-    #endif
+2031-
+2032-        cannedAttribsCount = sizeof(cannedAttribs)/sizeof(PKCS7Attrib);
+2033-
+2034-        XMEMSET(&cannedAttribs[idx], 0, sizeof(cannedAttribs[idx]));
+2035-
+2036-        if ((pkcs7->defaultSignedAttribs & WOLFSSL_CONTENT_TYPE_ATTRIBUTE) ||
+2037-            pkcs7->defaultSignedAttribs == 0) {
+2038-            cannedAttribs[idx].oid     = contentTypeOid;
+2039-            cannedAttribs[idx].oidSz   = contentTypeOidSz;
+2040-            cannedAttribs[idx].value   = contentType;
+2041-            cannedAttribs[idx].valueSz = contentTypeSz;
+2042-            idx++;
+2043-        }
+2044-
+2045-    #ifndef NO_ASN_TIME
+2046-        if ((pkcs7->defaultSignedAttribs & WOLFSSL_SIGNING_TIME_ATTRIBUTE) ||
+2047-            pkcs7->defaultSignedAttribs == 0) {
+2048-            cannedAttribs[idx].oid     = signingTimeOid;
+2049-            cannedAttribs[idx].oidSz   = signingTimeOidSz;
+2050-            cannedAttribs[idx].value   = signingTime;
+2051-            cannedAttribs[idx].valueSz = (word32)timeSz;
+2052-            idx++;
+2053-        }
+2054-    #endif
+2055-
+2056-        if ((pkcs7->defaultSignedAttribs & WOLFSSL_MESSAGE_DIGEST_ATTRIBUTE) ||
+2057-            pkcs7->defaultSignedAttribs == 0) {
+2058-            cannedAttribs[idx].oid     = messageDigestOid;
+2059-            cannedAttribs[idx].oidSz   = messageDigestOidSz;
+2060-            cannedAttribs[idx].value   = esd->contentDigest;
+2061-            cannedAttribs[idx].valueSz = (word32)hashSz + 2;  /* ASN.1 heading */
+2062-            idx++;
+2063-        }
+2064-
+2065-        esd->signedAttribsCount += cannedAttribsCount;
+2066-        esd->signedAttribsSz += (word32)EncodeAttributes(
+2067-            &esd->signedAttribs[atrIdx], (int)idx, cannedAttribs,
+2068-            (int)cannedAttribsCount);
+2069-        atrIdx += idx;
+2070-    } else {
+2071-        esd->signedAttribsCount = 0;
+2072-        esd->signedAttribsSz = 0;
+2073-    }
+2074-
+2075-    /* add custom signed attributes if set */
+2076-    if (pkcs7->signedAttribsSz > 0 && pkcs7->signedAttribs != NULL) {
+2077-        esd->signedAttribsCount += pkcs7->signedAttribsSz;
+2078-        esd->signedAttribsSz += (word32)EncodeAttributes(
+2079-            &esd->signedAttribs[atrIdx], (int)esd->signedAttribsCount,
+2080-            pkcs7->signedAttribs, (int)pkcs7->signedAttribsSz);
+2081-    }
+2082-
+2083-#ifdef NO_ASN_TIME
+2084-    (void)signingTimeOidSz;
+2085-    (void)signingTime;
+2086-    (void)signingTimeSz;
+2087-#endif
+2088-
+2089-    return 0;
+2090-}
+2091-
+2092-
+2093-/* gets correct encryption algo ID for SignedData, either CTC_<hash>wRSA or
+2094- * CTC_<hash>wECDSA, from pkcs7->publicKeyOID and pkcs7->hashOID.
+2095- *
+2096- * pkcs7          - pointer to PKCS7 structure
+2097- * digEncAlgoId   - [OUT] output int to store correct algo ID in
+2098- * digEncAlgoType - [OUT] output for algo ID type
+2099- *
+2100- * return 0 on success, negative on error */
+2101-static int wc_PKCS7_SignedDataGetEncAlgoId(wc_PKCS7* pkcs7, int* digEncAlgoId,
+2102-                                           int* digEncAlgoType)
+2103-{
+2104-    int algoId   = 0;
+2105-    int algoType = 0;
+2106-
+2107-    if (pkcs7 == NULL || digEncAlgoId == NULL || digEncAlgoType == NULL)
+2108-        return BAD_FUNC_ARG;
+2109-
+2110-    if (pkcs7->publicKeyOID == RSAk) {
+2111-
+2112-        algoType = oidSigType;
+2113-
+2114-        switch (pkcs7->hashOID) {
+2115-        #ifndef NO_SHA
+2116-            case SHAh:
+2117-                algoId = CTC_SHAwRSA;
+2118-                break;
+2119-        #endif
+2120-        #ifdef WOLFSSL_SHA224
+2121-            case SHA224h:
+2122-                algoId = CTC_SHA224wRSA;

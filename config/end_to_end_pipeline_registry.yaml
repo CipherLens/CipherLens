@@ -1,0 +1,59 @@
+schema: end_to_end_pipeline_registry_v1
+mode: dry_run_capable
+stages:
+  - stage_id: '01'
+    stage_name: ingestion
+    owner_module: analysis.pipeline_executor
+  - stage_id: '02'
+    stage_name: family_correction
+    owner_module: analysis.pipeline_executor
+  - stage_id: '03'
+    stage_name: rag_lookup
+    owner_module: migration.evidence_collector
+  - stage_id: '04'
+    stage_name: mapping_gate
+    owner_module: migration.candidate_mapper
+  - stage_id: '05'
+    stage_name: family_template_recipe
+    owner_module: template_maker.family_render_plan
+  - stage_id: '06'
+    stage_name: family_template_generalization
+    owner_module: template_maker.family_render_plan
+  - stage_id: '07'
+    stage_name: adapter_recipe
+    owner_module: migration.adapter_filler
+  - stage_id: '08'
+    stage_name: slot_filling_plan
+    owner_module: migration.adapter_filler
+  - stage_id: '09'
+    stage_name: llm_slot_filling
+    owner_module: migration.adapter_filler
+    uses_llm: true
+    llm_allowed_output: slot_bindings.yaml
+  - stage_id: '10'
+    stage_name: adapter_validate
+    owner_module: migration.adapter_validate
+  - stage_id: '11'
+    stage_name: mutation_planner
+    owner_module: mutation.generic_mutation_engine
+  - stage_id: '12'
+    stage_name: render_plan
+    owner_module: template_maker.family_render_plan
+  - stage_id: '13'
+    stage_name: render_cases
+    owner_module: template_maker.family_case_renderer
+  - stage_id: '14'
+    stage_name: compile_run
+    owner_module: runner.family_compile_runner
+  - stage_id: '15'
+    stage_name: oracle_aware_analyze
+    owner_module: analyzer.oracle_aware_analyzer
+  - stage_id: '16'
+    stage_name: triage
+    owner_module: analysis
+  - stage_id: '17'
+    stage_name: runtime_feedback
+    owner_module: analysis.runtime_feedback
+  - stage_id: '18'
+    stage_name: scheduler_update
+    owner_module: analysis.scheduler_runtime_loop

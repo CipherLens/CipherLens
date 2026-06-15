@@ -1,0 +1,10 @@
+# template generalization after family correction plan
+
+| field | value |
+| --- | --- |
+| next_template_task | template_schema_inventory_v1 |
+| read_before_generalization | ['normalized_templates/', 'templates/', 'enriched_templates/', 'generated_templates/'] |
+| reference_template_files | ['template_meta.yaml', 'mask_report.yaml', 'ast_mask_report.yaml', 'selected_mask_units.yaml', 'tmpl_<source_library>.c', 'poc_original.c'] |
+| generate_templates_now | False |
+| call_ast_sister_now | False |
+| candidate_count_after_correction | 45 |

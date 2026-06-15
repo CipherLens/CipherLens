@@ -1,0 +1,34 @@
+template_id: CIPHER_AEAD_LIFECYCLE_TRIAGE_V1
+family: cipher_aead_lifecycle
+status: design_only
+mask_backend: manual_family_design
+mutation_relevance:
+  - lifecycle_api_calls
+  - state_sequence
+  - tag_length_and_timing
+  - aad_timing
+  - return_code_and_output_state_oracle
+mask_units:
+  - id: AEAD_INIT_API
+    role: lifecycle_init
+    examples:
+      - EVP_EncryptInit_ex
+      - EVP_DecryptInit_ex
+      - psa_aead_encrypt_setup
+      - psa_aead_decrypt_setup
+  - id: AEAD_AAD_UPDATE_API
+    role: aad_update
+  - id: AEAD_DATA_UPDATE_API
+    role: data_update
+  - id: AEAD_FINAL_API
+    role: terminal_state
+  - id: AEAD_TAG_SET_API
+    role: tag_set
+  - id: AEAD_TAG_GET_API
+    role: tag_get
+  - id: AEAD_CLEANUP_API
+    role: cleanup
+  - id: AEAD_STATE_SEQUENCE
+    role: state_transition
+  - id: AEAD_ORACLE
+    role: semantic_or_crash_oracle

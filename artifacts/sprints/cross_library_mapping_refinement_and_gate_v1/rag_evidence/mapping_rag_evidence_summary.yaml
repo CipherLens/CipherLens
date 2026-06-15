@@ -1,0 +1,682 @@
+mapping_rag_evidence:
+- mapping_id: map_001
+  wolfssl_api: wc_InitDecodedCert
+  target_library: mbedtls
+  target_api: mbedtls_x509_crt_parse_der
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: true
+    query_eval_hits:
+    - q3_x509_asn1_parse_mapping
+    query_eval_missing_terms:
+    - wc_InitDecodedCert
+    - asn1_nested_boundary
+  evidence_strength: strong
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_002
+  wolfssl_api: wc_InitDecodedCert
+  target_library: openssl
+  target_api: ASN1_item_d2i
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: true
+    query_eval_hits:
+    - q3_x509_asn1_parse_mapping
+    query_eval_missing_terms:
+    - wc_InitDecodedCert
+    - asn1_nested_boundary
+  evidence_strength: strong
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_003
+  wolfssl_api: wc_ParseCert
+  target_library: mbedtls
+  target_api: mbedtls_x509_crt_parse_der
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: true
+    query_eval_hits:
+    - q3_x509_asn1_parse_mapping
+    query_eval_missing_terms:
+    - asn1_nested_boundary
+  evidence_strength: strong
+  known_weaknesses:
+  - wc_ParseCert_recall_weak
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_004
+  wolfssl_api: wc_ParseCert
+  target_library: openssl
+  target_api: d2i_X509
+  evidence:
+    source_api_card: true
+    target_api_card: false
+    source_constraints: true
+    target_constraints: false
+    call_sequences: true
+    query_eval_hits:
+    - q3_x509_asn1_parse_mapping
+    query_eval_missing_terms:
+    - d2i_X509
+    - asn1_nested_boundary
+  evidence_strength: moderate
+  known_weaknesses:
+  - wc_ParseCert_recall_weak
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_005
+  wolfssl_api: wc_PKCS12_parse
+  target_library: mbedtls
+  target_api: ''
+  evidence:
+    source_api_card: true
+    target_api_card: false
+    source_constraints: true
+    target_constraints: false
+    call_sequences: true
+    query_eval_hits:
+    - q5_pkcs12_wolfssl_openssl
+    query_eval_missing_terms:
+    - pkcs_container_parsing
+  evidence_strength: none
+  known_weaknesses:
+  - no_direct_counterpart_label_recall_weak
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_006
+  wolfssl_api: wc_PKCS12_parse
+  target_library: openssl
+  target_api: PKCS12_parse
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: true
+    query_eval_hits:
+    - q5_pkcs12_wolfssl_openssl
+    query_eval_missing_terms:
+    - pkcs_container_parsing
+  evidence_strength: strong
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_007
+  wolfssl_api: wc_PKCS7_DecodeSignedData
+  target_library: mbedtls
+  target_api: ''
+  evidence:
+    source_api_card: true
+    target_api_card: false
+    source_constraints: false
+    target_constraints: false
+    call_sequences: false
+    query_eval_hits: []
+    query_eval_missing_terms:
+    - wc_PKCS7_DecodeSignedData
+    - pkcs_container_parsing
+  evidence_strength: none
+  known_weaknesses:
+  - no_direct_counterpart_label_recall_weak
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_008
+  wolfssl_api: wc_PKCS7_DecodeSignedData
+  target_library: openssl
+  target_api: d2i_PKCS7
+  evidence:
+    source_api_card: true
+    target_api_card: false
+    source_constraints: false
+    target_constraints: false
+    call_sequences: false
+    query_eval_hits: []
+    query_eval_missing_terms:
+    - wc_PKCS7_DecodeSignedData
+    - d2i_PKCS7
+    - pkcs_container_parsing
+  evidence_strength: weak
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_009
+  wolfssl_api: wc_PKCS7_VerifySignedData
+  target_library: mbedtls
+  target_api: ''
+  evidence:
+    source_api_card: true
+    target_api_card: false
+    source_constraints: true
+    target_constraints: false
+    call_sequences: true
+    query_eval_hits:
+    - q4_pkcs7_wolfssl_openssl
+    query_eval_missing_terms:
+    - pkcs_container_parsing
+  evidence_strength: none
+  known_weaknesses:
+  - no_direct_counterpart_label_recall_weak
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_010
+  wolfssl_api: wc_PKCS7_VerifySignedData
+  target_library: openssl
+  target_api: PKCS7_verify
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: true
+    query_eval_hits:
+    - q4_pkcs7_wolfssl_openssl
+    - q8_candidate_labels
+    query_eval_missing_terms:
+    - pkcs_container_parsing
+  evidence_strength: strong
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_011
+  wolfssl_api: wolfSSL_Free
+  target_library: mbedtls
+  target_api: mbedtls_free
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: true
+    query_eval_hits:
+    - q6_secure_heap_allocator
+    query_eval_missing_terms:
+    - wolfSSL_Free
+    - secure_heap_state_lifecycle
+  evidence_strength: strong
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_012
+  wolfssl_api: wolfSSL_Free
+  target_library: openssl
+  target_api: OPENSSL_free
+  evidence:
+    source_api_card: true
+    target_api_card: false
+    source_constraints: true
+    target_constraints: false
+    call_sequences: false
+    query_eval_hits: []
+    query_eval_missing_terms:
+    - wolfSSL_Free
+    - OPENSSL_free
+    - secure_heap_state_lifecycle
+  evidence_strength: moderate
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_013
+  wolfssl_api: wolfSSL_Malloc
+  target_library: mbedtls
+  target_api: mbedtls_calloc
+  evidence:
+    source_api_card: true
+    target_api_card: false
+    source_constraints: true
+    target_constraints: false
+    call_sequences: false
+    query_eval_hits: []
+    query_eval_missing_terms:
+    - wolfSSL_Malloc
+    - mbedtls_calloc
+    - secure_heap_state_lifecycle
+  evidence_strength: moderate
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_014
+  wolfssl_api: wolfSSL_Malloc
+  target_library: openssl
+  target_api: OPENSSL_malloc
+  evidence:
+    source_api_card: true
+    target_api_card: false
+    source_constraints: true
+    target_constraints: false
+    call_sequences: false
+    query_eval_hits: []
+    query_eval_missing_terms:
+    - wolfSSL_Malloc
+    - OPENSSL_malloc
+    - secure_heap_state_lifecycle
+  evidence_strength: moderate
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_015
+  wolfssl_api: wolfSSL_SetAllocators
+  target_library: mbedtls
+  target_api: mbedtls_platform_set_calloc_free
+  evidence:
+    source_api_card: true
+    target_api_card: false
+    source_constraints: true
+    target_constraints: false
+    call_sequences: false
+    query_eval_hits: []
+    query_eval_missing_terms:
+    - wolfSSL_SetAllocators
+    - mbedtls_platform_set_calloc_free
+    - secure_heap_state_lifecycle
+  evidence_strength: moderate
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_016
+  wolfssl_api: wolfSSL_SetAllocators
+  target_library: openssl
+  target_api: CRYPTO_set_mem_functions
+  evidence:
+    source_api_card: true
+    target_api_card: false
+    source_constraints: true
+    target_constraints: false
+    call_sequences: false
+    query_eval_hits: []
+    query_eval_missing_terms:
+    - wolfSSL_SetAllocators
+    - CRYPTO_set_mem_functions
+    - secure_heap_state_lifecycle
+  evidence_strength: moderate
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_017
+  wolfssl_api: wolfSSL_CTX_new
+  target_library: mbedtls
+  target_api: mbedtls_ssl_config_init
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: true
+    query_eval_hits:
+    - q1_tls_three_library_lifecycle
+    query_eval_missing_terms:
+    - tls_protocol_state_lifecycle
+  evidence_strength: strong
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_018
+  wolfssl_api: wolfSSL_CTX_new
+  target_library: openssl
+  target_api: SSL_CTX_new
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: true
+    query_eval_hits:
+    - q1_tls_three_library_lifecycle
+    query_eval_missing_terms:
+    - tls_protocol_state_lifecycle
+  evidence_strength: strong
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_019
+  wolfssl_api: wolfSSL_accept
+  target_library: mbedtls
+  target_api: mbedtls_ssl_handshake
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: false
+    query_eval_hits: []
+    query_eval_missing_terms:
+    - wolfSSL_accept
+    - mbedtls_ssl_handshake
+    - tls_protocol_state_lifecycle
+  evidence_strength: moderate
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_020
+  wolfssl_api: wolfSSL_accept
+  target_library: openssl
+  target_api: SSL_accept
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: false
+    query_eval_hits: []
+    query_eval_missing_terms:
+    - wolfSSL_accept
+    - SSL_accept
+    - tls_protocol_state_lifecycle
+  evidence_strength: moderate
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_021
+  wolfssl_api: wolfSSL_connect
+  target_library: mbedtls
+  target_api: mbedtls_ssl_handshake
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: false
+    query_eval_hits: []
+    query_eval_missing_terms:
+    - wolfSSL_connect
+    - mbedtls_ssl_handshake
+    - tls_protocol_state_lifecycle
+  evidence_strength: moderate
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_022
+  wolfssl_api: wolfSSL_connect
+  target_library: openssl
+  target_api: SSL_connect
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: false
+    query_eval_hits: []
+    query_eval_missing_terms:
+    - wolfSSL_connect
+    - SSL_connect
+    - tls_protocol_state_lifecycle
+  evidence_strength: moderate
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_023
+  wolfssl_api: wolfSSL_free
+  target_library: mbedtls
+  target_api: mbedtls_ssl_free
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: true
+    query_eval_hits:
+    - q2_tls_session_mapping
+    query_eval_missing_terms:
+    - wolfSSL_free
+    - tls_protocol_state_lifecycle
+  evidence_strength: strong
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_024
+  wolfssl_api: wolfSSL_free
+  target_library: openssl
+  target_api: SSL_free
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: true
+    query_eval_hits:
+    - q2_tls_session_mapping
+    query_eval_missing_terms:
+    - wolfSSL_free
+    - tls_protocol_state_lifecycle
+  evidence_strength: strong
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_025
+  wolfssl_api: wolfSSL_new
+  target_library: mbedtls
+  target_api: mbedtls_ssl_init
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: true
+    query_eval_hits:
+    - q1_tls_three_library_lifecycle
+    - q2_tls_session_mapping
+    query_eval_missing_terms:
+    - tls_protocol_state_lifecycle
+  evidence_strength: strong
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_026
+  wolfssl_api: wolfSSL_new
+  target_library: openssl
+  target_api: SSL_new
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: true
+    query_eval_hits:
+    - q2_tls_session_mapping
+    query_eval_missing_terms:
+    - tls_protocol_state_lifecycle
+  evidence_strength: strong
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_027
+  wolfssl_api: wolfSSL_read
+  target_library: mbedtls
+  target_api: mbedtls_ssl_read
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: false
+    query_eval_hits: []
+    query_eval_missing_terms:
+    - wolfSSL_read
+    - mbedtls_ssl_read
+    - tls_protocol_state_lifecycle
+  evidence_strength: moderate
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_028
+  wolfssl_api: wolfSSL_read
+  target_library: openssl
+  target_api: SSL_read
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: false
+    query_eval_hits: []
+    query_eval_missing_terms:
+    - wolfSSL_read
+    - SSL_read
+    - tls_protocol_state_lifecycle
+  evidence_strength: moderate
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_029
+  wolfssl_api: wolfSSL_write
+  target_library: mbedtls
+  target_api: mbedtls_ssl_write
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: false
+    query_eval_hits: []
+    query_eval_missing_terms:
+    - wolfSSL_write
+    - mbedtls_ssl_write
+    - tls_protocol_state_lifecycle
+  evidence_strength: moderate
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_030
+  wolfssl_api: wolfSSL_write
+  target_library: openssl
+  target_api: SSL_write
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: false
+    query_eval_hits: []
+    query_eval_missing_terms:
+    - wolfSSL_write
+    - SSL_write
+    - tls_protocol_state_lifecycle
+  evidence_strength: moderate
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_031
+  wolfssl_api: wc_InitDecodedCert
+  target_library: mbedtls
+  target_api: mbedtls_x509_crt_parse_der
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: true
+    query_eval_hits:
+    - q3_x509_asn1_parse_mapping
+    query_eval_missing_terms:
+    - wc_InitDecodedCert
+    - x509_parsing
+  evidence_strength: strong
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_032
+  wolfssl_api: wc_ParseCert
+  target_library: mbedtls
+  target_api: mbedtls_x509_crt_parse_der
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: true
+    query_eval_hits:
+    - q3_x509_asn1_parse_mapping
+    query_eval_missing_terms:
+    - x509_parsing
+  evidence_strength: strong
+  known_weaknesses:
+  - wc_ParseCert_recall_weak
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_033
+  wolfssl_api: wolfSSL_X509_free
+  target_library: mbedtls
+  target_api: mbedtls_x509_crt_free
+  evidence:
+    source_api_card: true
+    target_api_card: true
+    source_constraints: true
+    target_constraints: true
+    call_sequences: false
+    query_eval_hits: []
+    query_eval_missing_terms:
+    - wolfSSL_X509_free
+    - mbedtls_x509_crt_free
+    - x509_parsing
+  evidence_strength: moderate
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_034
+  wolfssl_api: wolfSSL_X509_free
+  target_library: openssl
+  target_api: X509_free
+  evidence:
+    source_api_card: true
+    target_api_card: false
+    source_constraints: true
+    target_constraints: false
+    call_sequences: false
+    query_eval_hits: []
+    query_eval_missing_terms:
+    - wolfSSL_X509_free
+    - X509_free
+    - x509_parsing
+  evidence_strength: moderate
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_035
+  wolfssl_api: wolfSSL_X509_load_certificate_file
+  target_library: mbedtls
+  target_api: mbedtls_x509_crt_parse_file
+  evidence:
+    source_api_card: true
+    target_api_card: false
+    source_constraints: true
+    target_constraints: false
+    call_sequences: false
+    query_eval_hits: []
+    query_eval_missing_terms:
+    - wolfSSL_X509_load_certificate_file
+    - mbedtls_x509_crt_parse_file
+    - x509_parsing
+  evidence_strength: moderate
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_036
+  wolfssl_api: wolfSSL_X509_load_certificate_file
+  target_library: openssl
+  target_api: PEM_read_X509
+  evidence:
+    source_api_card: true
+    target_api_card: false
+    source_constraints: true
+    target_constraints: false
+    call_sequences: false
+    query_eval_hits: []
+    query_eval_missing_terms:
+    - wolfSSL_X509_load_certificate_file
+    - PEM_read_X509
+    - x509_parsing
+  evidence_strength: moderate
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_037
+  wolfssl_api: wolfSSL_X509_verify
+  target_library: mbedtls
+  target_api: mbedtls_x509_crt_verify
+  evidence:
+    source_api_card: true
+    target_api_card: false
+    source_constraints: true
+    target_constraints: false
+    call_sequences: false
+    query_eval_hits: []
+    query_eval_missing_terms:
+    - wolfSSL_X509_verify
+    - mbedtls_x509_crt_verify
+    - x509_parsing
+  evidence_strength: moderate
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence
+- mapping_id: map_038
+  wolfssl_api: wolfSSL_X509_verify
+  target_library: openssl
+  target_api: X509_verify
+  evidence:
+    source_api_card: true
+    target_api_card: false
+    source_constraints: true
+    target_constraints: false
+    call_sequences: false
+    query_eval_hits: []
+    query_eval_missing_terms:
+    - wolfSSL_X509_verify
+    - X509_verify
+    - x509_parsing
+  evidence_strength: moderate
+  known_weaknesses: []
+  notes: candidate mapping evidence only; not confirmed equivalence

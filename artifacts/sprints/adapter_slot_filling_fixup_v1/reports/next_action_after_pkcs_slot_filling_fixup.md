@@ -1,0 +1,11 @@
+# Next Action After PKCS Slot Filling Fixup
+
+```yaml
+schema: next_action_after_pkcs_slot_filling_fixup_v1
+next_task_name: apply_pkcs_slot_bindings_and_adapter_validate_v1
+why: Fixed pkcs slot binding passed local structural validation.
+do_not_run_yet:
+- render_cases
+- compile_run
+- PoC execution
+```

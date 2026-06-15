@@ -23,6 +23,8 @@ mutation_hints:
   - get size after failed init
   - get size after final
   - get size after abort-like cleanup
+  - query after final
+  - query after abort
 oracle_observables:
   - returned_size
   - error_stack
@@ -31,4 +33,8 @@ source_references:
   - openssl/evp.h
 notes:
   - "Known pitfall: size query behavior depends on lifecycle state."
-
+  - "Feedback: query-after-final and query-after-abort are MAC lifecycle follow-up mutations, while PSA query-size-before-setup has no public equivalent."
+  - "Classification guidance: size-query differences after CMAC final/abort should be triaged as lifecycle_semantic_divergence_candidate, allowed_legacy_semantics_needs_review, or projection_limitation depending on source/target observability."
+known_pitfalls:
+  - Do not treat a nonzero returned_size alone as a crash or confirmed vulnerability.
+  - query_size_before_setup is a projection limitation for mbedTLS PSA MAC because there is no public pre-setup size query equivalent.

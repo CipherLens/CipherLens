@@ -1,0 +1,223 @@
+schema: family_template_spec_v1
+family_template_id: WOLFSSL-FAMILY-tls_protocol_state_lifecycle
+family: tls_protocol_state_lifecycle
+source_library: wolfssl
+template_level: family
+generation_mode: spec_only_no_source_seed
+canonical_c_template_generated: false
+reason_no_c_template: No explicit wolfSSL source template seed selected for this sprint.
+required_future_seed: Add a real wolfSSL source seed before generating C/AST/selected
+  units.
+template_files:
+  mutation_slots: mutation_slots.yaml
+  oracle_plan: oracle_plan.yaml
+  adapter_scope: adapter_scope.yaml
+expected_trigger_apis:
+- wolfSSL_CTX_new
+- wolfSSL_CTX_free
+- wolfSSL_new
+- wolfSSL_free
+- wolfSSL_connect
+- wolfSSL_accept
+- wolfSSL_read
+- wolfSSL_write
+- SSL_CTX_new
+- SSL_new
+- SSL_connect
+- SSL_accept
+- mbedtls_ssl_config_init
+- mbedtls_ssl_init
+- mbedtls_ssl_handshake
+expected_cleanup_apis:
+- slot_name: cleanup_call
+  source_cleanup: family-specific wolfSSL cleanup/free API
+  target_cleanup_candidates:
+  - SSL_free
+  - mbedtls_ssl_free
+  required: true
+oracle_types:
+- lifecycle_state
+- return_code_semantics
+- crash_or_sanitizer
+mutation_slots:
+- INIT_ORDER
+- SETUP_ORDER
+- HANDSHAKE_STATE
+- IO_BEFORE_HANDSHAKE
+- CLEANUP_REPEAT
+api_slots:
+- slot_name: wolfSSL_CTX_new
+  source_api: wolfSSL_CTX_new
+  allowed_target_apis:
+  - mbedtls:mbedtls_ssl_config_init
+  - openssl:SSL_CTX_new
+  blocked_target_apis: []
+  mapping_gate_status:
+  - usable_for_adapter
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: wolfSSL_CTX_free
+  source_api: wolfSSL_CTX_free
+  allowed_target_apis: []
+  blocked_target_apis: []
+  mapping_gate_status:
+  - not_in_mapping_gate
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: wolfSSL_new
+  source_api: wolfSSL_new
+  allowed_target_apis:
+  - mbedtls:mbedtls_ssl_init
+  - openssl:SSL_new
+  blocked_target_apis: []
+  mapping_gate_status:
+  - usable_for_adapter
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: wolfSSL_free
+  source_api: wolfSSL_free
+  allowed_target_apis:
+  - mbedtls:mbedtls_ssl_free
+  - openssl:SSL_free
+  blocked_target_apis: []
+  mapping_gate_status:
+  - usable_for_adapter
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: wolfSSL_connect
+  source_api: wolfSSL_connect
+  allowed_target_apis:
+  - mbedtls:mbedtls_ssl_handshake
+  - openssl:SSL_connect
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: wolfSSL_accept
+  source_api: wolfSSL_accept
+  allowed_target_apis:
+  - mbedtls:mbedtls_ssl_handshake
+  - openssl:SSL_accept
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: wolfSSL_read
+  source_api: wolfSSL_read
+  allowed_target_apis:
+  - mbedtls:mbedtls_ssl_read
+  - openssl:SSL_read
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: wolfSSL_write
+  source_api: wolfSSL_write
+  allowed_target_apis:
+  - mbedtls:mbedtls_ssl_write
+  - openssl:SSL_write
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: SSL_CTX_new
+  source_api: ''
+  allowed_target_apis:
+  - openssl:SSL_CTX_new
+  blocked_target_apis: []
+  mapping_gate_status:
+  - usable_for_adapter
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: SSL_new
+  source_api: ''
+  allowed_target_apis:
+  - openssl:SSL_new
+  blocked_target_apis: []
+  mapping_gate_status:
+  - usable_for_adapter
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: SSL_connect
+  source_api: ''
+  allowed_target_apis:
+  - openssl:SSL_connect
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: SSL_accept
+  source_api: ''
+  allowed_target_apis:
+  - openssl:SSL_accept
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: mbedtls_ssl_config_init
+  source_api: ''
+  allowed_target_apis:
+  - mbedtls:mbedtls_ssl_config_init
+  blocked_target_apis: []
+  mapping_gate_status:
+  - usable_for_adapter
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: mbedtls_ssl_init
+  source_api: ''
+  allowed_target_apis:
+  - mbedtls:mbedtls_ssl_init
+  blocked_target_apis: []
+  mapping_gate_status:
+  - usable_for_adapter
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: mbedtls_ssl_handshake
+  source_api: ''
+  allowed_target_apis:
+  - mbedtls:mbedtls_ssl_handshake
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+cleanup_slots:
+- slot_name: cleanup_call
+  source_cleanup: family-specific wolfSSL cleanup/free API
+  target_cleanup_candidates:
+  - SSL_free
+  - mbedtls_ssl_free
+  required: true
+adapter_scope:
+  allowed_targets:
+    openssl:
+      allowed_apis:
+      - SSL_CTX_new
+      - SSL_free
+      - SSL_new
+      candidate_only_apis:
+      - SSL_accept
+      - SSL_connect
+      - SSL_read
+      - SSL_write
+    mbedtls:
+      allowed_apis:
+      - mbedtls_ssl_config_init
+      - mbedtls_ssl_free
+      - mbedtls_ssl_init
+      candidate_only_apis:
+      - mbedtls_ssl_handshake
+      - mbedtls_ssl_read
+      - mbedtls_ssl_write
+  blocked_targets: []
+  candidate_only_targets:
+    openssl:
+    - SSL_accept
+    - SSL_connect
+    - SSL_read
+    - SSL_write
+    mbedtls:
+    - mbedtls_ssl_handshake
+    - mbedtls_ssl_read
+    - mbedtls_ssl_write
+glm_policy:
+  allowed: false
+  allowed_later_for:
+  - adapter_slot_filling
+  - slot_bindings
+  forbidden_for:
+  - full_c_generation
+  - freeform_harness_generation
+risk_notes:
+- Do not report candidate mapping as confirmed equivalence or vulnerability.

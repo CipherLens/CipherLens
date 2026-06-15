@@ -1,0 +1,76 @@
+schema: family_candidate_queue_v1
+generated_at: '2026-06-13T12:16:28+00:00'
+source_task: auto_pkey_parsing_compile_run_analyze_004
+family: pkey_parsing
+allowed_candidate_labels:
+- container_boundary_candidate
+- crash_candidate
+- external_validation_pending
+- full_consumption_gap_candidate
+- lifecycle_divergence_candidate
+- needs_triage
+- normal_accept
+- normal_reject
+- oracle_incomplete
+- sanitizer_candidate
+- semantic_divergence_candidate
+- unknown_new_candidate
+forbidden_labels:
+- confirmed vulnerability
+- CVE
+- exploitable
+candidates:
+- case_id: pkey_parsing__generic_mut_001__der_valid_plus_trailing_garbage
+  family: pkey_parsing
+  target_library: openssl
+  candidate_label: full_consumption_gap_candidate
+  mutation_strategy: der_valid_plus_trailing_garbage
+  reason: parser accepted at least one path while full_consumption=false was observed
+  triage_required: false
+  external_validation_status: pending
+  claim_policy:
+    confirmed_vulnerability: false
+    cve: false
+    exploitable: false
+- case_id: pkey_parsing__generic_mut_002__malformed_only_control
+  family: pkey_parsing
+  target_library: openssl
+  candidate_label: normal_reject
+  mutation_strategy: malformed_only_control
+  reason: accepted=false path observed; full_consumption=false on reject path is not a gap by itself
+  triage_required: false
+  external_validation_status: not_required
+  claim_policy:
+    confirmed_vulnerability: false
+    cve: false
+    exploitable: false
+- case_id: pkey_parsing__generic_mut_003__near_valid_der_length_delta
+  family: pkey_parsing
+  target_library: openssl
+  candidate_label: normal_reject
+  mutation_strategy: near_valid_der_length_delta
+  reason: accepted=false path observed; full_consumption=false on reject path is not a gap by itself
+  triage_required: false
+  external_validation_status: not_required
+  claim_policy:
+    confirmed_vulnerability: false
+    cve: false
+    exploitable: false
+summary:
+  total_candidates: 3
+  container_boundary_candidate: 0
+  crash_candidate: 0
+  external_validation_pending: 0
+  full_consumption_gap_candidate: 1
+  lifecycle_divergence_candidate: 0
+  needs_triage: 0
+  normal_accept: 0
+  normal_reject: 2
+  oracle_incomplete: 0
+  sanitizer_candidate: 0
+  semantic_divergence_candidate: 0
+  unknown_new_candidate: 0
+claim_policy:
+  confirmed_vulnerability: false
+  cve: false
+  exploitable: false

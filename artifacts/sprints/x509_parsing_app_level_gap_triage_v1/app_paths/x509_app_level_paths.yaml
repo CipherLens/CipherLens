@@ -1,0 +1,72 @@
+family: x509_parsing
+seed_count: 7
+paths:
+- seed_id: OPENSSL-ISSUE-11567
+  app_path: openssl x509
+  app_command_candidate: openssl x509 -in $PoC -text -noout
+  expected_app_observation: prints_meaningful_output_for_malformed_input
+  normal_control_available: true
+  malformed_input_available: false
+  oracle_observable_from_cli: true
+  oracle_type: malformed_accepted_with_output
+  notes: Original external certificate not bundled; command is clear but oracle depends on recovered malformed/nonconforming
+    cert.
+- seed_id: OPENSSL-ISSUE-11772
+  app_path: openssl x509
+  app_command_candidate: openssl x509 -in $PoC -checkend 0 -noout
+  expected_app_observation: verify_accepts_semantically_invalid_cert
+  normal_control_available: true
+  malformed_input_available: false
+  oracle_observable_from_cli: true
+  oracle_type: verify_semantic_gap
+  notes: PoC.zip is not bundled; X509_cmp_time oracle is clear once invalid-date cert is recovered.
+- seed_id: OPENSSL-ISSUE-14457
+  app_path: openssl verify
+  app_command_candidate: openssl verify -CAfile root.cer root.cer
+  expected_app_observation: inconsistent_reject_between_apps
+  normal_control_available: true
+  malformed_input_available: true
+  oracle_observable_from_cli: true
+  oracle_type: verify_semantic_gap
+  notes: Synthetic root.cer exists; original key/cert not bundled, but original command can generate input from
+    documented req options.
+- seed_id: OPENSSL-ISSUE-14675
+  app_path: openssl verify
+  app_command_candidate: openssl verify /tmp/poc.pem
+  expected_app_observation: verify_accepts_semantically_invalid_cert
+  normal_control_available: true
+  malformed_input_available: true
+  oracle_observable_from_cli: true
+  oracle_type: verify_semantic_gap
+  notes: Input can be reconstructed from a normal PEM plus appended unverifiable garbage, but local artifact still
+    marks placeholder and non-strict reproduction.
+- seed_id: OPENSSL-ISSUE-23325
+  app_path: openssl verify
+  app_command_candidate: openssl verify -trusted cacert.pem -crl_check -CRLfile crl.pem cert.pem
+  expected_app_observation: inconsistent_reject_between_apps
+  normal_control_available: true
+  malformed_input_available: false
+  oracle_observable_from_cli: true
+  oracle_type: verify_semantic_gap
+  notes: Multi-file CA/cert/CRL setup is semantically rich but missing original demoCA/CRL/cert files; higher recovery
+    cost.
+- seed_id: OPENSSL-ISSUE-29418
+  app_path: openssl x509
+  app_command_candidate: openssl x509 -in servercert.pem -noout -purpose
+  expected_app_observation: inconsistent_reject_between_apps
+  normal_control_available: true
+  malformed_input_available: false
+  oracle_observable_from_cli: true
+  oracle_type: inconsistent_app_behavior
+  notes: Original input references OpenSSL test cert servercert.pem; not bundled in artifact, but source-tree recovery
+    may be feasible.
+- seed_id: OPENSSL-ISSUE-6788
+  app_path: openssl crl
+  app_command_candidate: openssl crl -in crl.pem -noout -issuer
+  expected_app_observation: inconsistent_reject_between_apps
+  normal_control_available: false
+  malformed_input_available: false
+  oracle_observable_from_cli: true
+  oracle_type: inconsistent_app_behavior
+  notes: CRL/CA bundle case requires many generated files; local artifact only has partial placeholder inputs, so
+    reproduction cost is high.

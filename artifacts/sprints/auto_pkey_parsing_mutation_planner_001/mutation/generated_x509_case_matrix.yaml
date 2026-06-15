@@ -1,0 +1,83 @@
+schema: generic_mutation_case_matrix_v1
+generated_at: '2026-06-13T11:48:47+00:00'
+family: pkey_parsing
+source_seed_manifest: artifacts/sprints/pkey_parsing_seed_discovery_v1/manifests/verified_pkey_seed_manifest.yaml
+profile: pkey_parsing
+cases:
+- case_id: pkey_parsing__generic_mut_001__der_valid_plus_trailing_garbage
+  family: pkey_parsing
+  seed_id: pkey_seed_0001
+  seed_format: der
+  operator: valid_object_plus_trailing_garbage
+  mutation_strategy: der_valid_plus_trailing_garbage
+  input_path: /home/wen/work/crypto-pattern-fuzz/artifacts/sprints/auto_pkey_parsing_mutation_planner_001/inputs/mutated/pkey_parsing__der_valid_plus_trailing_garbage.der
+  input_size_bytes: 295
+  input_sha256: b3c9e30d6c715235def6456b4df261c99b03529eca8625da6305c2e88ff6eef5
+  expected_oracle:
+    parser_accept_expected: true
+    full_consumption_check_required: true
+    malformed_only_control: false
+  render_allowed: true
+  notes:
+  - valid DER object plus trailing garbage for full-consumption oracle probing
+- case_id: pkey_parsing__generic_mut_002__malformed_only_control
+  family: pkey_parsing
+  seed_id: pkey_seed_0001
+  seed_format: der
+  operator: malformed_only_control
+  mutation_strategy: malformed_only_control
+  input_path: /home/wen/work/crypto-pattern-fuzz/artifacts/sprints/auto_pkey_parsing_mutation_planner_001/inputs/mutated/pkey_parsing__malformed_only_control.der
+  input_size_bytes: 7
+  input_sha256: e98ea14e2b79b3393b9743ec9c439635c3f4570135d8c12f8b41a495fe1afc73
+  expected_oracle:
+    parser_accept_expected: false
+    full_consumption_check_required: false
+    malformed_only_control: true
+  render_allowed: true
+  notes:
+  - malformed-only control to calibrate reject-path oracle
+- case_id: pkey_parsing__generic_mut_003__near_valid_der_length_delta
+  family: pkey_parsing
+  seed_id: pkey_seed_0001
+  seed_format: der
+  operator: near_valid_length_delta
+  mutation_strategy: near_valid_der_length_delta
+  input_path: /home/wen/work/crypto-pattern-fuzz/artifacts/sprints/auto_pkey_parsing_mutation_planner_001/inputs/mutated/pkey_parsing__near_valid_der_length_delta.der
+  input_size_bytes: 294
+  input_sha256: 9a2d7bd8d34a82939e57ff64ecc4ddde5cfa1947a916845fcb68672b909565d4
+  expected_oracle:
+    parser_accept_expected: false
+    full_consumption_check_required: true
+    malformed_only_control: false
+  render_allowed: true
+  notes:
+  - near-valid DER with a small length mutation
+- case_id: pkey_parsing__generic_mut_004__format_toggle_der_pem
+  family: pkey_parsing
+  seed_id: pkey_seed_0003
+  seed_format: pem
+  operator: format_toggle_der_pem
+  mutation_strategy: format_toggle_der_pem
+  input_path: /home/wen/work/crypto-pattern-fuzz/artifacts/sprints/auto_pkey_parsing_mutation_planner_001/inputs/mutated/pkey_parsing__format_toggle_der_pem.der
+  input_size_bytes: 451
+  input_sha256: d2c645a3339f80a374870f10a74b9084c3029555aff2a85427aeb9d0f6f05760
+  expected_oracle:
+    parser_accept_expected: false
+    full_consumption_check_required: false
+    malformed_only_control: true
+  render_allowed: false
+  notes:
+  - format-toggle placeholder requires a converter before render readiness
+summary:
+  mutation_case_count: 4
+  strategies:
+  - der_valid_plus_trailing_garbage
+  - format_toggle_der_pem
+  - malformed_only_control
+  - near_valid_der_length_delta
+  render_allowed: 3
+  controls: 2
+claim_policy:
+  confirmed_vulnerability: false
+  cve: false
+  exploitable: false

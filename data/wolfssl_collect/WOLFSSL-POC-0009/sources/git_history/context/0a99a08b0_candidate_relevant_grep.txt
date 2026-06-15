@@ -1,0 +1,11 @@
+5:    ssl_sess: check fields in wolfSSL_d2i_SSL_SESSION.
+14:@@ -2795,6 +2795,10 @@ WOLFSSL_SESSION* wolfSSL_d2i_SSL_SESSION(WOLFSSL_SESSION** sess,
+17:     s->sessionIDSz = data[idx++];
+18:+    if (s->sessionIDSz > ID_LEN) {
+19:+        ret = BUFFER_ERROR;
+23:     /* sessionID | secret | haveEMS | haveAltSessionID */
+24:     if (i - idx < s->sessionIDSz + SECRET_LEN + OPAQUE8_LEN + OPAQUE8_LEN) {
+25:@@ -2877,6 +2881,10 @@ WOLFSSL_SESSION* wolfSSL_d2i_SSL_SESSION(WOLFSSL_SESSION** sess,
+30:+        ret = BUFFER_ERROR;
+36:@@ -2892,6 +2900,10 @@ WOLFSSL_SESSION* wolfSSL_d2i_SSL_SESSION(WOLFSSL_SESSION** sess,
+41:+        ret = BUFFER_ERROR;

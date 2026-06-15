@@ -1,0 +1,201 @@
+family: x509_parsing
+seed_count: 11
+seeds:
+- seed_id: MBEDTLS-POC-0027
+  source: core10_pattern
+  library: mbedtls
+  artifact_path: data/pocs/core10/MBEDTLS-POC-0027
+  component: TLS/X509 verify result propagation
+  issue_or_poc: MBEDTLS-POC-0027
+  input_type: certificate_chain
+  suspected_root_cause: TLS 1.3 certificate keyUsage/extKeyUsage validation failure flags are not propagated
+    to mbedtls_ssl_get_verify_result().
+  trigger_pattern: caller-visible verify_result flag missing after TLS 1.3 optional client-auth certificate
+    validation
+  evidence_quality: strong
+  overlap_type: app_level_x509_behavior
+  recommended_route: A
+  route_classification: A_recipe_slot_cross_library_migration
+  notes: Not a standalone X509 parser bug; A-path would require a new TLS verify-result semantic family
+    with memory BIO handshake infrastructure, so not allowed in this sprint.
+- seed_id: OPENSSL-ISSUE-11567
+  source: openssl_issue_artifact
+  library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_11567
+  component: unknown
+  issue_or_poc: https://github.com/openssl/openssl/issues/11567
+  input_type: der_certificate
+  suspected_root_cause: semantic certificate text/verification behavior differs for certificate file
+  trigger_pattern: openssl x509 -text app-visible wrong result
+  evidence_quality: medium
+  overlap_type: app_level_x509_behavior
+  recommended_route: C
+  route_classification: C_app_level_validation_gap
+  title: ''
+  trigger_behavior: ''
+  poc_type: ''
+  api_trace: ''
+  validation_notes: ''
+- seed_id: OPENSSL-ISSUE-11772
+  source: openssl_issue_artifact
+  library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_11772
+  component: unknown
+  issue_or_poc: https://github.com/openssl/openssl/issues/11772
+  input_type: pem_certificate
+  suspected_root_cause: certificate date check reports success when invalid date should fail
+  trigger_pattern: openssl x509 -checkend app-visible wrong result
+  evidence_quality: medium
+  overlap_type: app_level_x509_behavior
+  recommended_route: C
+  route_classification: C_app_level_validation_gap
+  title: ''
+  trigger_behavior: ''
+  poc_type: ''
+  api_trace: ''
+  validation_notes: ''
+- seed_id: OPENSSL-ISSUE-13860
+  source: openssl_issue_artifact
+  library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_13860
+  component: unknown
+  issue_or_poc: https://github.com/openssl/openssl/issues/13860
+  input_type: der_certificate
+  suspected_root_cause: public key output behavior changed across versions; bug semantics unclear
+  trigger_pattern: openssl x509 DER-to-PEM/pubkey behavior delta
+  evidence_quality: weak
+  overlap_type: needs_review
+  recommended_route: needs_more_evidence
+  route_classification: needs_more_evidence
+  title: ''
+  trigger_behavior: ''
+  poc_type: ''
+  api_trace: ''
+  validation_notes: ''
+- seed_id: OPENSSL-ISSUE-14457
+  source: openssl_issue_artifact
+  library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_14457
+  component: unknown
+  issue_or_poc: https://github.com/openssl/openssl/issues/14457
+  input_type: certificate_chain
+  suspected_root_cause: self-signed certificate verification output differs from expected trust behavior
+  trigger_pattern: openssl verify app-visible wrong output
+  evidence_quality: medium
+  overlap_type: app_level_x509_behavior
+  recommended_route: C
+  route_classification: C_app_level_validation_gap
+  title: ''
+  trigger_behavior: ''
+  poc_type: ''
+  api_trace: ''
+  validation_notes: ''
+- seed_id: OPENSSL-ISSUE-14675
+  source: openssl_issue_artifact
+  library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_14675
+  component: unknown
+  issue_or_poc: https://github.com/openssl/openssl/issues/14675
+  input_type: certificate_chain
+  suspected_root_cause: verify command ignores all but first certificate argument/bundle member
+  trigger_pattern: openssl verify certificate bundle handling semantic gap
+  evidence_quality: medium
+  overlap_type: app_level_x509_behavior
+  recommended_route: C
+  route_classification: C_app_level_validation_gap
+  title: ''
+  trigger_behavior: ''
+  poc_type: ''
+  api_trace: ''
+  validation_notes: ''
+- seed_id: OPENSSL-ISSUE-23325
+  source: openssl_issue_artifact
+  library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_23325
+  component: unknown
+  issue_or_poc: https://github.com/openssl/openssl/issues/23325
+  input_type: crl
+  suspected_root_cause: CRL IDP/CDP matching causes wrong rejection of certificate without CDP
+  trigger_pattern: openssl verify -crl_check app-visible wrong result
+  evidence_quality: medium
+  overlap_type: app_level_x509_behavior
+  recommended_route: C
+  route_classification: C_app_level_validation_gap
+  title: ''
+  trigger_behavior: ''
+  poc_type: ''
+  api_trace: ''
+  validation_notes: ''
+- seed_id: OPENSSL-ISSUE-29418
+  source: openssl_issue_artifact
+  library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_29418
+  component: unknown
+  issue_or_poc: https://github.com/openssl/openssl/issues/29418
+  input_type: pem_certificate
+  suspected_root_cause: x509 -purpose result depends on parsing options
+  trigger_pattern: openssl x509 purpose app-visible inconsistency
+  evidence_quality: medium
+  overlap_type: app_level_x509_behavior
+  recommended_route: C
+  route_classification: C_app_level_validation_gap
+  title: ''
+  trigger_behavior: ''
+  poc_type: ''
+  api_trace: ''
+  validation_notes: ''
+- seed_id: OPENSSL-ISSUE-29574
+  source: openssl_issue_artifact
+  library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_29574
+  component: unknown
+  issue_or_poc: https://github.com/openssl/openssl/issues/29574
+  input_type: der_certificate
+  suspected_root_cause: short certificate accepted with later corrupted state; malformed structure may
+    cross parser/state boundary
+  trigger_pattern: short certificate corrupted-state candidate
+  evidence_quality: medium
+  overlap_type: overlaps_asn1_nested_boundary
+  recommended_route: D
+  route_classification: overlap_asn1_nested_boundary
+  title: ''
+  trigger_behavior: ''
+  poc_type: ''
+  api_trace: ''
+  validation_notes: ''
+- seed_id: OPENSSL-ISSUE-6788
+  source: openssl_issue_artifact
+  library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_6788
+  component: unknown
+  issue_or_poc: https://github.com/openssl/openssl/issues/6788
+  input_type: crl
+  suspected_root_cause: CRL issuer/CAfile lookup behavior with duplicate CA subjects is unstable/wrong
+  trigger_pattern: openssl crl app-visible wrong result
+  evidence_quality: medium
+  overlap_type: app_level_x509_behavior
+  recommended_route: C
+  route_classification: C_app_level_validation_gap
+  title: ''
+  trigger_behavior: ''
+  poc_type: ''
+  api_trace: ''
+  validation_notes: ''
+- seed_id: OPENSSL-ISSUE-9043
+  source: openssl_issue_artifact
+  library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_9043
+  component: unknown
+  issue_or_poc: https://github.com/openssl/openssl/issues/9043
+  input_type: unknown
+  suspected_root_cause: CSR text output NULL dereference candidate; x509-related but CSR/ASN.1 crash-oriented
+  trigger_pattern: X509_REQ_print_fp NULL dereference audit seed
+  evidence_quality: medium
+  overlap_type: crash_sanitizer_seed
+  recommended_route: D
+  route_classification: D_crash_sanitizer_evidence_audit
+  title: ''
+  trigger_behavior: ''
+  poc_type: ''
+  api_trace: ''
+  validation_notes: ''

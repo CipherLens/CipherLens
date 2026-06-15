@@ -1,0 +1,6 @@
+# Directory normalization recommendations
+
+- Keep original corpus directories immutable and ingest through adapter-specific readers.
+- Normalize logical IDs and retain original artifact_path for traceability.
+- Use metadata_summary plus artifact_files as ingestion input; avoid executing run.sh during ingestion.
+- Represent missing metadata/source as review statuses instead of dropping artifacts.

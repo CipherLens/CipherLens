@@ -1,0 +1,24 @@
+# Source Roots Inventory
+
+{
+  "openssl": [
+    {
+      "path": "/home/wen/work/clean_sources/openssl-3.5.5",
+      "exists": true
+    },
+    {
+      "path": "/home/wen/work/openssl-3.5.5-clean",
+      "exists": true
+    }
+  ],
+  "mbedtls": [
+    {
+      "path": "/home/wen/work/clean_sources/mbedtls-4.1.0",
+      "exists": true
+    },
+    {
+      "path": "/home/wen/work/mbedtls-4.1-clean",
+      "exists": true
+    }
+  ]
+}

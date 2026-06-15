@@ -1,0 +1,112 @@
+schema: family_mutation_slots_v1
+family: secure_heap_state_lifecycle
+template_level: family
+seed_pocs: []
+mutation_slots:
+- slot_name: ALLOCATOR_INITIALIZED
+  mutation_type: boolean
+  seed_examples:
+  - 'true'
+  - 'false'
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  expected_oracle:
+  - cleanup_required
+  - lifecycle_state
+  - crash_or_sanitizer
+  risk: uninitialized allocator behavior may be expected safe rejection
+- slot_name: MALLOC_SIZE
+  mutation_type: size_t
+  seed_examples:
+  - '0'
+  - '1'
+  - '16'
+  - large
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  expected_oracle:
+  - cleanup_required
+  - lifecycle_state
+  - crash_or_sanitizer
+  risk: avoid unbounded allocation
+- slot_name: FREE_ORDER
+  mutation_type: sequence
+  seed_examples:
+  - free_once
+  - free_before_use
+  - free_after_replace
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  expected_oracle:
+  - cleanup_required
+  - lifecycle_state
+  - crash_or_sanitizer
+  risk: API misuse must be down-ranked
+- slot_name: DOUBLE_FREE_CANDIDATE
+  mutation_type: boolean
+  seed_examples:
+  - 'false'
+  - 'true'
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  expected_oracle:
+  - cleanup_required
+  - lifecycle_state
+  - crash_or_sanitizer
+  risk: requires explicit sanitizer evidence
+- slot_name: ALLOCATOR_REPLACEMENT
+  mutation_type: enum
+  seed_examples:
+  - default
+  - custom
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  expected_oracle:
+  - cleanup_required
+  - lifecycle_state
+  - crash_or_sanitizer
+  risk: custom allocator must be deterministic
+mutation_budget_hint:
+  small: 8
+  medium: 32
+  large: 96
+scheduler_features:
+- family
+- oracle_type
+- target_library
+- mapping_gate_status
+- seed_type
+ast_maskable_units:
+- unit_type: api_argument
+  slot_name: ALLOCATOR_INITIALIZED
+  node_kind_hint: argument or literal
+  reason: uninitialized allocator behavior may be expected safe rejection
+- unit_type: api_argument
+  slot_name: MALLOC_SIZE
+  node_kind_hint: argument or literal
+  reason: avoid unbounded allocation
+- unit_type: api_argument
+  slot_name: FREE_ORDER
+  node_kind_hint: argument or literal
+  reason: API misuse must be down-ranked
+- unit_type: api_argument
+  slot_name: DOUBLE_FREE_CANDIDATE
+  node_kind_hint: argument or literal
+  reason: requires explicit sanitizer evidence
+- unit_type: api_argument
+  slot_name: ALLOCATOR_REPLACEMENT
+  node_kind_hint: argument or literal
+  reason: custom allocator must be deterministic
+semantic_policy: mutate slots, preserve trigger/cleanup/oracle shape
+notes:
+- Budget hints are deterministic defaults for family-level planning.

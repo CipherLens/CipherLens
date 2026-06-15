@@ -1,0 +1,134 @@
+families:
+- family: pkcs_container_parsing
+  source_library: wolfssl
+  allowed_targets:
+    openssl:
+      allowed_apis:
+      - PKCS12_parse
+      - PKCS7_verify
+      candidate_only_apis: []
+    mbedtls:
+      allowed_apis: []
+      candidate_only_apis: []
+  blocked_targets:
+  - target_library: mbedtls
+    target_api: ''
+    reason: no_direct_counterpart
+    source_api: wc_PKCS12_parse
+  - target_library: mbedtls
+    target_api: ''
+    reason: no_direct_counterpart
+    source_api: wc_PKCS7_DecodeSignedData
+  - target_library: mbedtls
+    target_api: ''
+    reason: no_direct_counterpart
+    source_api: wc_PKCS7_VerifySignedData
+  - target_library: openssl
+    target_api: d2i_PKCS7
+    reason: weak_evidence
+    source_api: wc_PKCS7_DecodeSignedData
+  adapter_ready_mapping_count: 2
+  candidate_only_mapping_count: 0
+  manual_review_mapping_count: 0
+  notes:
+  - usable_for_adapter remains candidate mapping, not confirmed equivalence
+- family: asn1_nested_boundary
+  source_library: wolfssl
+  allowed_targets:
+    openssl:
+      allowed_apis:
+      - ASN1_item_d2i
+      candidate_only_apis: []
+    mbedtls:
+      allowed_apis:
+      - mbedtls_x509_crt_parse_der
+      candidate_only_apis: []
+  blocked_targets:
+  - target_library: mbedtls
+    target_api: mbedtls_x509_crt_parse_der
+    reason: needs_manual_review
+    source_api: wc_ParseCert
+  - target_library: openssl
+    target_api: d2i_X509
+    reason: needs_manual_review
+    source_api: wc_ParseCert
+  adapter_ready_mapping_count: 2
+  candidate_only_mapping_count: 0
+  manual_review_mapping_count: 2
+  notes:
+  - usable_for_adapter remains candidate mapping, not confirmed equivalence
+- family: x509_parsing
+  source_library: wolfssl
+  allowed_targets:
+    openssl:
+      allowed_apis: []
+      candidate_only_apis:
+      - PEM_read_X509
+      - X509_free
+      - X509_verify
+    mbedtls:
+      allowed_apis:
+      - mbedtls_x509_crt_parse_der
+      candidate_only_apis:
+      - mbedtls_x509_crt_free
+      - mbedtls_x509_crt_parse_file
+      - mbedtls_x509_crt_verify
+  blocked_targets:
+  - target_library: mbedtls
+    target_api: mbedtls_x509_crt_parse_der
+    reason: needs_manual_review
+    source_api: wc_ParseCert
+  adapter_ready_mapping_count: 7
+  candidate_only_mapping_count: 6
+  manual_review_mapping_count: 1
+  notes:
+  - usable_for_adapter remains candidate mapping, not confirmed equivalence
+- family: tls_protocol_state_lifecycle
+  source_library: wolfssl
+  allowed_targets:
+    openssl:
+      allowed_apis:
+      - SSL_CTX_new
+      - SSL_free
+      - SSL_new
+      candidate_only_apis:
+      - SSL_accept
+      - SSL_connect
+      - SSL_read
+      - SSL_write
+    mbedtls:
+      allowed_apis:
+      - mbedtls_ssl_config_init
+      - mbedtls_ssl_free
+      - mbedtls_ssl_init
+      candidate_only_apis:
+      - mbedtls_ssl_handshake
+      - mbedtls_ssl_read
+      - mbedtls_ssl_write
+  blocked_targets: []
+  adapter_ready_mapping_count: 14
+  candidate_only_mapping_count: 8
+  manual_review_mapping_count: 0
+  notes:
+  - usable_for_adapter remains candidate mapping, not confirmed equivalence
+- family: secure_heap_state_lifecycle
+  source_library: wolfssl
+  allowed_targets:
+    openssl:
+      allowed_apis: []
+      candidate_only_apis:
+      - CRYPTO_set_mem_functions
+      - OPENSSL_free
+      - OPENSSL_malloc
+    mbedtls:
+      allowed_apis:
+      - mbedtls_free
+      candidate_only_apis:
+      - mbedtls_calloc
+      - mbedtls_platform_set_calloc_free
+  blocked_targets: []
+  adapter_ready_mapping_count: 6
+  candidate_only_mapping_count: 5
+  manual_review_mapping_count: 0
+  notes:
+  - usable_for_adapter remains candidate mapping, not confirmed equivalence

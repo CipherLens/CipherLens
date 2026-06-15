@@ -1,0 +1,17 @@
+schema: decodeblock_oracle_adjustment_applied_v1
+source_triage: /home/wen/work/crypto-pattern-fuzz/artifacts/triage/canary_decode_short_output_triage_v1
+family: buffer_canary_boundary
+trigger_api: EVP_DecodeBlock
+case_id: canary_decode_short_output
+rule: EVP_DecodeBlock short-output and overclaimed-input-length cases are contract-boundary observations
+  unless exact-size controls still show sanitizer/canary evidence.
+short_output_policy: contract_boundary_observation
+input_len_mismatch_policy: harness_fault_or_invalid_contract_observation
+exact_output_valid_input_policy: control
+candidate_promotion_requires:
+- output buffer capacity is sufficient for the decoded output
+- input_len matches readable input bytes
+- ASAN, UBSAN, crash, hang, or canary evidence remains after valid-contract controls
+evp_decodeblock_short_output_downgraded: true
+evp_decodeblock_input_len_mismatch_downgraded: true
+candidate_blocking: false

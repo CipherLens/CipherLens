@@ -1,0 +1,26 @@
+available_sources:
+  openssl: /home/wen/work/clean_sources/openssl-3.5.5
+  mbedtls:
+  - /home/wen/work/clean_sources/mbedtls-4.1.0
+  - /home/wen/work/clean_sources/mbedtls-3.6.4
+  botan_source: /home/wen/work/clean_sources/botan-3.10.0
+mbedtls:
+  available: true
+  chosen_api: PSA AEAD multipart
+  mappings:
+    final_without_update: psa_aead_finish after setup/nonce/AAD with zero data updates
+    set_tag_after_final: 'mapping_gap: PSA has psa_aead_verify(tag) as finalization,
+      no post-final SET_TAG ctrl'
+    wrong_tag_length: PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_GCM, 8) decrypt with
+      8-byte tag
+botan:
+  source_available: true
+  build_artifacts_available: false
+  attempt_harness: false
+  reason: No build/include or libbotan artifact found under botan-3.10.0; runner config
+    expects build/include/public and libbotan-3.
+a_path_recipe_slot_suitability: not_yet; semantic cross-check first, no stable vulnerability-path
+  candidate
+semantic_crosscheck_suitability: 'yes'
+mapping_gaps:
+- OpenSSL EVP_CTRL_GCM_SET_TAG after final has no strict PSA AEAD equivalent

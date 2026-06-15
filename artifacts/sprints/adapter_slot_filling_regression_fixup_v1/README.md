@@ -1,0 +1,131 @@
+# adapter_slot_filling_regression_fixup_v1
+
+```yaml
+schema: adapter_slot_filling_regression_fixup_v1_report
+generated_at: '2026-06-11T15:32:23+00:00'
+only_fixed_asn1_nested_boundary_openssl: true
+regression_reason: pass_candidate_not_applied
+previous_pass_candidate_found: true
+old_placeholder_backed_up: true
+pass_candidate_applied: true
+adapter_validate_results:
+- adapter_id: pkcs_container_parsing_openssl
+  family: pkcs_container_parsing
+  target_library: openssl
+  adapter_recipe_exists: true
+  slot_filling_plan_exists: true
+  slot_bindings_exists: true
+  binding_status: filled_by_glm
+  render_ready: true
+  required_top_level_fields_present: true
+  api_mapping_nonempty: true
+  cleanup_mapping_nonempty: true
+  oracle_mapping_nonempty: true
+  input_mapping_present: true
+  mutation_slot_mapping_present: true
+  blocked_targets_respected: true
+  allowed_target_apis_only: true
+  no_confirmed_equivalence_claim: true
+  no_c_generation_detected: true
+  candidate_mapping_not_promoted: true
+  adapter_recipe_not_modified: true
+  slot_filling_plan_not_modified: true
+  selected_target_apis:
+  - PKCS12_parse
+  - PKCS7_verify
+  cleanup_apis:
+  - PKCS12_free
+  - PKCS7_free
+  forbidden_apis_used: []
+  validation_status: pass
+  notes: []
+- adapter_id: asn1_nested_boundary_openssl
+  family: asn1_nested_boundary
+  target_library: openssl
+  adapter_recipe_exists: true
+  slot_filling_plan_exists: true
+  slot_bindings_exists: true
+  binding_status: candidate
+  render_ready: true
+  required_top_level_fields_present: true
+  api_mapping_nonempty: true
+  cleanup_mapping_nonempty: true
+  oracle_mapping_nonempty: true
+  input_mapping_present: true
+  mutation_slot_mapping_present: true
+  blocked_targets_respected: true
+  allowed_target_apis_only: true
+  no_confirmed_equivalence_claim: true
+  no_c_generation_detected: true
+  candidate_mapping_not_promoted: true
+  adapter_recipe_not_modified: true
+  slot_filling_plan_not_modified: true
+  selected_target_apis:
+  - ASN1_item_d2i
+  cleanup_apis: []
+  forbidden_apis_used: []
+  validation_status: pass
+  notes: []
+- adapter_id: asn1_nested_boundary_mbedtls
+  family: asn1_nested_boundary
+  target_library: mbedtls
+  adapter_recipe_exists: true
+  slot_filling_plan_exists: true
+  slot_bindings_exists: true
+  binding_status: blocked_by_mapping_gate
+  render_ready: false
+  required_top_level_fields_present: true
+  api_mapping_nonempty: true
+  cleanup_mapping_nonempty: false
+  oracle_mapping_nonempty: false
+  input_mapping_present: false
+  mutation_slot_mapping_present: true
+  blocked_targets_respected: true
+  allowed_target_apis_only: true
+  no_confirmed_equivalence_claim: true
+  no_c_generation_detected: true
+  candidate_mapping_not_promoted: true
+  adapter_recipe_not_modified: true
+  slot_filling_plan_not_modified: true
+  selected_target_apis: []
+  cleanup_apis: []
+  forbidden_apis_used: []
+  validation_status: blocked_expected
+  notes: []
+render_ready_adapters:
+- adapter_id: pkcs_container_parsing_openssl
+  family: pkcs_container_parsing
+  target_library: openssl
+  reason: validation pass; render may be planned next but not run in this sprint
+- adapter_id: asn1_nested_boundary_openssl
+  family: asn1_nested_boundary
+  target_library: openssl
+  reason: validation pass; render may be planned next but not run in this sprint
+blocked_expected_adapters:
+- adapter_id: asn1_nested_boundary_mbedtls
+  family: asn1_nested_boundary
+  target_library: mbedtls
+  reason: blocked placeholder preserved; render_ready=false
+not_ready_adapters: []
+run_poc: false
+render: false
+compile_run: false
+generated_c: false
+glm: false
+next_task_name: render_plan_v1
+safety_checks:
+  schema: regression_fixup_safety_checks_v1
+  pkcs_unchanged: true
+  pkcs_sha_before: 1ce86365a084d2aa8331721560a59085430efefb7bab49a465fbd114d4e5ffae
+  pkcs_sha_after: 1ce86365a084d2aa8331721560a59085430efefb7bab49a465fbd114d4e5ffae
+  asn1_mbedtls_unchanged: true
+  asn1_mbedtls_sha_before: 133699b6a6e844f3c1ff8f55f759d8c2b37d52a4514f3f1adcd54097e60eb7c7
+  asn1_mbedtls_sha_after: 133699b6a6e844f3c1ff8f55f759d8c2b37d52a4514f3f1adcd54097e60eb7c7
+  adapter_recipe_yaml_modified: false
+  slot_filling_plan_yaml_modified: false
+  no_c_generation: true
+  no_render_compile_run: true
+  no_confirmed_equivalence_claim: true
+  blocked_target_not_render_ready: true
+  blocked_targets_respected: true
+```

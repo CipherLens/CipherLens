@@ -1,0 +1,230 @@
+schema: lifecycle_render_plan_v1
+generated_at: '2026-06-14T03:03:20+00:00'
+family: mac_lifecycle
+track: lifecycle
+archetype: mac_context_lifecycle
+target_library: openssl
+render_mode: lifecycle_harness
+render_plan_generated: true
+render_case_count: 8
+uses_der_parsing: false
+uses_trailing_garbage: false
+uses_full_consumption_oracle: false
+cases:
+- case_id: valid_hmac_init_update_final_control
+  family: mac_lifecycle
+  track: lifecycle
+  archetype: mac_context_lifecycle
+  target_library: openssl
+  mutation_strategy: valid_hmac_init_update_final_control
+  case_group: valid_lifecycle_control
+  expected_behavior: success
+  oracle_rule: unexpected_failure_on_valid_sequence
+  ctx_allocation: EVP_MD_CTX_new
+  digest: EVP_sha256
+  sequence:
+  - mac = EVP_MAC_fetch(NULL, "HMAC", NULL)
+  - ctx = EVP_MAC_CTX_new(mac)
+  - params = digest=SHA256
+  - key = fixed byte string
+  - message = fixed byte string
+  - EVP_MAC_init(ctx, key, key_len, params)
+  - EVP_MAC_update(ctx, message, message_len)
+  - EVP_MAC_final(ctx, mac_out, &mac_out_len, sizeof(mac_out))
+  cleanup:
+  - EVP_MD_CTX_reset if ctx is allocated
+  - EVP_MD_CTX_free
+  render_mode: lifecycle_harness
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false
+- case_id: update_before_init
+  family: mac_lifecycle
+  track: lifecycle
+  archetype: mac_context_lifecycle
+  target_library: openssl
+  mutation_strategy: update_before_init
+  case_group: invalid_state_control
+  expected_behavior: error_or_documented
+  oracle_rule: unexpected_success_after_invalid_state
+  ctx_allocation: EVP_MD_CTX_new
+  digest: EVP_sha256
+  sequence:
+  - mac = EVP_MAC_fetch(NULL, "HMAC", NULL)
+  - ctx = EVP_MAC_CTX_new(mac)
+  - params = digest=SHA256
+  - key = fixed byte string
+  - message = fixed byte string
+  - EVP_MAC_update(ctx, message, message_len)
+  cleanup:
+  - EVP_MD_CTX_reset if ctx is allocated
+  - EVP_MD_CTX_free
+  render_mode: lifecycle_harness
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false
+- case_id: final_without_update_after_init
+  family: mac_lifecycle
+  track: lifecycle
+  archetype: mac_context_lifecycle
+  target_library: openssl
+  mutation_strategy: final_without_update_after_init
+  case_group: observation
+  expected_behavior: observation
+  oracle_rule: state_transition_observation
+  ctx_allocation: EVP_MD_CTX_new
+  digest: EVP_sha256
+  sequence:
+  - mac = EVP_MAC_fetch(NULL, "HMAC", NULL)
+  - ctx = EVP_MAC_CTX_new(mac)
+  - params = digest=SHA256
+  - key = fixed byte string
+  - message = fixed byte string
+  - EVP_MAC_init(ctx, key, key_len, params)
+  - EVP_MAC_final(ctx, mac_out, &mac_out_len, sizeof(mac_out))
+  cleanup:
+  - EVP_MD_CTX_reset if ctx is allocated
+  - EVP_MD_CTX_free
+  render_mode: lifecycle_harness
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false
+- case_id: repeated_final
+  family: mac_lifecycle
+  track: lifecycle
+  archetype: mac_context_lifecycle
+  target_library: openssl
+  mutation_strategy: repeated_final
+  case_group: observation
+  expected_behavior: observation
+  oracle_rule: state_transition_observation
+  ctx_allocation: EVP_MD_CTX_new
+  digest: EVP_sha256
+  sequence:
+  - mac = EVP_MAC_fetch(NULL, "HMAC", NULL)
+  - ctx = EVP_MAC_CTX_new(mac)
+  - params = digest=SHA256
+  - key = fixed byte string
+  - message = fixed byte string
+  - EVP_MAC_init(ctx, key, key_len, params)
+  - EVP_MAC_update(ctx, message, message_len)
+  - EVP_MAC_final(ctx, mac_out, &mac_out_len, sizeof(mac_out))
+  - EVP_MAC_final(ctx, mac_out_2, &mac_out_len_2, sizeof(mac_out_2))
+  cleanup:
+  - EVP_MD_CTX_reset if ctx is allocated
+  - EVP_MD_CTX_free
+  render_mode: lifecycle_harness
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false
+- case_id: update_after_final
+  family: mac_lifecycle
+  track: lifecycle
+  archetype: mac_context_lifecycle
+  target_library: openssl
+  mutation_strategy: update_after_final
+  case_group: observation
+  expected_behavior: observation
+  oracle_rule: state_transition_observation
+  ctx_allocation: EVP_MD_CTX_new
+  digest: EVP_sha256
+  sequence:
+  - mac = EVP_MAC_fetch(NULL, "HMAC", NULL)
+  - ctx = EVP_MAC_CTX_new(mac)
+  - params = digest=SHA256
+  - key = fixed byte string
+  - message = fixed byte string
+  - EVP_MAC_init(ctx, key, key_len, params)
+  - EVP_MAC_update(ctx, message, message_len)
+  - EVP_MAC_final(ctx, mac_out, &mac_out_len, sizeof(mac_out))
+  - EVP_MAC_update(ctx, message, message_len)
+  cleanup:
+  - EVP_MD_CTX_reset if ctx is allocated
+  - EVP_MD_CTX_free
+  render_mode: lifecycle_harness
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false
+- case_id: reinit_reuse
+  family: mac_lifecycle
+  track: lifecycle
+  archetype: mac_context_lifecycle
+  target_library: openssl
+  mutation_strategy: reinit_reuse
+  case_group: valid_lifecycle_control
+  expected_behavior: success
+  oracle_rule: unexpected_failure_on_valid_sequence
+  ctx_allocation: EVP_MD_CTX_new
+  digest: EVP_sha256
+  sequence:
+  - mac = EVP_MAC_fetch(NULL, "HMAC", NULL)
+  - ctx = EVP_MAC_CTX_new(mac)
+  - params = digest=SHA256
+  - key = fixed byte string
+  - message = fixed byte string
+  - EVP_MAC_init(ctx, key, key_len, params)
+  - EVP_MAC_update(ctx, message, message_len)
+  - EVP_MAC_final(ctx, mac_out, &mac_out_len, sizeof(mac_out))
+  - EVP_MAC_init(ctx, key, key_len, params)
+  - EVP_MAC_update(ctx, message, message_len)
+  - EVP_MAC_final(ctx, mac_out_2, &mac_out_len_2, sizeof(mac_out_2))
+  cleanup:
+  - EVP_MD_CTX_reset if ctx is allocated
+  - EVP_MD_CTX_free
+  render_mode: lifecycle_harness
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false
+- case_id: wrong_key_length_observation
+  family: mac_lifecycle
+  track: lifecycle
+  archetype: mac_context_lifecycle
+  target_library: openssl
+  mutation_strategy: wrong_key_length_observation
+  case_group: observation
+  expected_behavior: observation
+  oracle_rule: state_transition_observation
+  ctx_allocation: EVP_MD_CTX_new
+  digest: EVP_sha256
+  sequence:
+  - mac = EVP_MAC_fetch(NULL, "HMAC", NULL)
+  - ctx = EVP_MAC_CTX_new(mac)
+  - params = digest=SHA256
+  - key = fixed byte string
+  - message = fixed byte string
+  - EVP_MAC_init(ctx, empty_key, 0, params)
+  - EVP_MAC_update(ctx, message, message_len)
+  - EVP_MAC_final(ctx, mac_out, &mac_out_len, sizeof(mac_out))
+  cleanup:
+  - EVP_MD_CTX_reset if ctx is allocated
+  - EVP_MD_CTX_free
+  render_mode: lifecycle_harness
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false
+- case_id: empty_message_observation
+  family: mac_lifecycle
+  track: lifecycle
+  archetype: mac_context_lifecycle
+  target_library: openssl
+  mutation_strategy: empty_message_observation
+  case_group: observation
+  expected_behavior: observation
+  oracle_rule: state_transition_observation
+  ctx_allocation: EVP_MD_CTX_new
+  digest: EVP_sha256
+  sequence:
+  - mac = EVP_MAC_fetch(NULL, "HMAC", NULL)
+  - ctx = EVP_MAC_CTX_new(mac)
+  - params = digest=SHA256
+  - key = fixed byte string
+  - message = fixed byte string
+  - EVP_MAC_init(ctx, key, key_len, params)
+  - EVP_MAC_final(ctx, mac_out, &mac_out_len, sizeof(mac_out))
+  cleanup:
+  - EVP_MD_CTX_reset if ctx is allocated
+  - EVP_MD_CTX_free
+  render_mode: lifecycle_harness
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false

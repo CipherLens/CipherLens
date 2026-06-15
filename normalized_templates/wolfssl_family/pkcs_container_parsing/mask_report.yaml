@@ -1,0 +1,63 @@
+template_id: WOLFSSL-FAMILY-pkcs_container_parsing
+template_name: wolfssl family canonical template for pkcs_container_parsing
+template_level: family
+pattern_id: wolfssl_family::pkcs_container_parsing
+source_library: wolfssl
+source_api:
+- wc_PKCS12_parse
+- wc_PKCS7_VerifySignedData
+- wc_PKCS7_DecodeSignedData
+- PKCS12_parse
+- PKCS7_verify
+harness_family: x509_asn1_inner_boundary
+oracle_type:
+- parser_reject_accept
+- return_code_semantics
+- full_consumption
+- cleanup_required
+seed_pocs:
+- WOLFSSL-POC-0007
+- WOLFSSL-POC-0006
+roles:
+  input_construction:
+  - CONTAINER_BYTES
+  - DER_BYTES
+  - ASN1_NESTED_LENGTH
+  - ATTRIBUTE_COUNT
+  trigger_call:
+  - wc_PKCS12_parse
+  - wc_PKCS7_VerifySignedData
+  - wc_PKCS7_DecodeSignedData
+  - PKCS12_parse
+  - PKCS7_verify
+  oracle_check:
+  - parser_reject_accept
+  - return_code_semantics
+  - full_consumption
+  - cleanup_required
+  cleanup_call:
+  - slot_name: cleanup_call
+    source_cleanup: family-specific wolfSSL cleanup/free API
+    target_cleanup_candidates: []
+    required: true
+mutation_points:
+- slot_name: CONTAINER_BYTES
+  mask_level: family_slot
+  suggested_use: mutation_slot_binding
+- slot_name: CONTAINER_FORMAT
+  mask_level: family_slot
+  suggested_use: mutation_slot_binding
+- slot_name: TRAILING_BYTES
+  mask_level: family_slot
+  suggested_use: mutation_slot_binding
+- slot_name: NESTED_LENGTH_DELTA
+  mask_level: family_slot
+  suggested_use: mutation_slot_binding
+- slot_name: EXPECT_RET
+  mask_level: family_slot
+  suggested_use: mutation_slot_binding
+masking_levels:
+- name: preserve
+  meaning: do not mutate trigger/cleanup/oracle structure
+- name: family_slot
+  meaning: planner may bind within family constraints

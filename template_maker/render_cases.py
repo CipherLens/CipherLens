@@ -149,6 +149,8 @@ def copy_metadata_files(template_dir: Path, out_dir: Path) -> None:
         "mask_report.yaml",
         "ast_mask_report.yaml",
         "selected_mask_units.yaml",
+        "render_matrix_case_manifest.yaml",
+        "render_matrix_application_report.yaml",
         "README.md",
     ]
     for name in metadata_names:
@@ -350,6 +352,10 @@ def generate_case_mappings(meta: Dict[str, Any], max_cases: int) -> List[Dict[st
 def render_template_dir(template_dir: Path, root: Path, out_root: Path, global_max_cases: int) -> int:
     meta = load_yaml(template_dir / "template_meta.yaml")
     template_id = meta.get("template_id", "")
+    case_id_prefix = ""
+    matrix_case = meta.get("render_matrix_case", {})
+    if isinstance(matrix_case, dict) and matrix_case.get("case_id"):
+        case_id_prefix = str(matrix_case.get("case_id"))
 
     max_cases = int(meta.get("generation_policy", {}).get("max_cases", global_max_cases))
     max_cases = min(max_cases, global_max_cases)
@@ -369,7 +375,7 @@ def render_template_dir(template_dir: Path, root: Path, out_root: Path, global_m
     count = 0
 
     for idx, case in enumerate(case_mappings):
-        case_id = f"case_{idx:04d}"
+        case_id = case_id_prefix if case_id_prefix and len(case_mappings) == 1 else f"case_{idx:04d}"
         mapping = case["mapping"]
 
         rendered_files = []

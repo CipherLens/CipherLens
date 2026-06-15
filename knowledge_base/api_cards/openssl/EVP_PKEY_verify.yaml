@@ -26,6 +26,13 @@ related_apis:
   - EVP_PKEY_verify_init
   - EVP_PKEY_CTX_free
 mutation_hints:
+  - invalid signature acceptance
+  - bitflip signature
+  - wrong digest algorithm
+  - wrong hash length
+  - wrong public key
+  - RSA-PSS salt length mismatch
+  - padding mismatch
   - wrong object type
   - tiny RSA key
   - public-only/private-only mismatch
@@ -34,8 +41,11 @@ oracle_observables:
   - return_code
   - error_stack
   - sanitizer_signal
+  - signature_acceptance
+known_pitfalls:
+  - tbs can mean digest bytes or message bytes depending on setup and algorithm
+  - padding/digest setup errors must be classified separately from invalid signature rejection
 source_references:
   - openssl/evp.h
 notes:
   - "Known pitfall: setup errors should not be collapsed with invalid signature results."
-

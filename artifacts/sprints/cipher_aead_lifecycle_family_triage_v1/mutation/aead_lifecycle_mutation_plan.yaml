@@ -1,0 +1,37 @@
+family: cipher_aead_lifecycle
+status: draft_not_executed
+algorithms:
+  - aes-128-gcm
+  - aes-256-gcm
+  - aes-128-ccm
+operation_mode:
+  - encrypt
+  - decrypt
+state_sequences:
+  safety_controls:
+    - normal_encrypt_control
+    - normal_decrypt_control
+  mutation_cases:
+    - repeated_final
+    - update_after_final
+    - final_without_update
+    - get_tag_before_final
+    - set_tag_after_update
+    - set_tag_after_final
+    - aad_after_data_update
+    - decrypt_without_set_tag
+    - wrong_tag_length
+    - ctx_reuse_after_final
+    - cleanup_then_update
+    - init_failure_then_update
+oracle_modes:
+  - return_code
+  - crash_signal
+  - sanitizer_if_available
+  - semantic_divergence
+  - output_integrity
+execution_policy:
+  max_draft_cases: 32
+  run_now: false
+  compile_now: false
+  note: "This sprint only drafts the matrix."

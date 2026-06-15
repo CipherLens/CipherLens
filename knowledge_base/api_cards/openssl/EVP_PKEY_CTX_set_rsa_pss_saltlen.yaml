@@ -1,0 +1,42 @@
+api: EVP_PKEY_CTX_set_rsa_pss_saltlen
+library: openssl
+family: pkey_verify
+signature: "int EVP_PKEY_CTX_set_rsa_pss_saltlen(EVP_PKEY_CTX *ctx, int len)"
+parameter_semantics:
+  ctx: initialized EVP_PKEY_CTX configured for RSA-PSS
+  len: expected RSA-PSS salt length or special OpenSSL salt length constant
+return_value_semantics:
+  success: positive value
+  error: zero or negative value depending on provider/path
+state_preconditions:
+  - ctx must be initialized for RSA-PSS signing or verification
+  - RSA-PSS padding should be configured before salt length expectations matter
+valid_invalid_ranges:
+  valid: compatible salt length for the signature and digest
+  invalid: mismatched salt length, non-RSA context, unsupported special salt length constant
+unsupported_conditions:
+  - non-RSA key context
+  - provider does not support RSA-PSS salt length control
+related_apis:
+  - EVP_PKEY_CTX_set_rsa_padding
+  - EVP_PKEY_CTX_set_signature_md
+  - EVP_PKEY_verify
+  - EVP_DigestVerify
+mutation_hints:
+  - pss_saltlen_mismatch
+  - RSA-PSS signature verified with wrong expected salt length
+  - zero salt versus digest-length salt
+  - setup error versus invalid signature distinction
+oracle_observables:
+  - return_code
+  - error_stack
+  - signature_acceptance
+  - sanitizer_signal
+known_pitfalls:
+  - mismatched salt length should usually reject the signature rather than succeed
+  - special salt length constants may have provider-specific semantics
+source_references:
+  - openssl/evp.h
+  - openssl/rsa.h
+notes:
+  - This card is specifically useful for PKEY verify behavior-divergence exploration.

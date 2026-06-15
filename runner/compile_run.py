@@ -151,8 +151,11 @@ def load_yaml_if_exists(path: Optional[Path]) -> Dict[str, Any]:
 def infer_target_from_cross_mapping(cross_mapping: Dict[str, Any], library: str) -> Dict[str, str]:
     target = cross_mapping.get("target", {}) if isinstance(cross_mapping.get("target"), dict) else {}
     if target:
+        target_library = str(target.get("library") or library or "")
+        if target_library in {"cross_library", "cross-library", "library_pair"}:
+            target_library = library or target_library
         return {
-            "target_library": str(target.get("library") or library or ""),
+            "target_library": target_library,
             "target_api": str(target.get("candidate_api") or target.get("api") or ""),
         }
     return {"target_library": library or "", "target_api": ""}
@@ -168,8 +171,11 @@ def infer_target_from_template_meta(template_meta: Dict[str, Any], library: str)
             }
         for lib, meta in cross_library.items():
             if isinstance(meta, dict):
+                target_library = str(lib)
+                if target_library in {"cross_library", "cross-library", "library_pair"}:
+                    target_library = library or target_library
                 return {
-                    "target_library": str(lib),
+                    "target_library": target_library,
                     "target_api": str(meta.get("target_api") or ""),
                 }
     return {"target_library": library or "", "target_api": ""}

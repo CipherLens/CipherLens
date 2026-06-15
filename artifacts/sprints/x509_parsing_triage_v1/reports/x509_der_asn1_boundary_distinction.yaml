@@ -1,0 +1,29 @@
+family: x509_parsing
+distinction:
+  x509_parsing: Certificate/CRL/CSR parsing and verification behavior visible through OpenSSL app commands
+    or X509 APIs, including purpose, time, chain, CRL, and verification-result semantics.
+  der_full_consumption: Top-level DER object trailing-data/full-consumption semantics; only belongs here
+    if the oracle is consumed_len vs input_len or accepted prefix DER.
+  asn1_nested_boundary: Inner ASN.1 child/length/optional field malformed structure, sanitizer crash,
+    or nested parse boundary behavior; x509 seeds with malformed short cert/CSR crash should be routed
+    as overlap or D-path audit.
+routing_rules:
+- rule: If oracle is consumed pointer / trailing top-level DER bytes, route to der_full_consumption.
+- rule: If oracle is inner ASN.1 length/optional-field crash or malformed nested structure, route to asn1_nested_boundary
+    or D-path audit.
+- rule: If observable is x509/verify/crl/req app output, verification result, purpose/time/chain/CRL behavior,
+    keep in x509_parsing.
+- rule: If behavior requires TLS handshake verify_result propagation, split to a future tls_verify_result_semantic
+    family.
+seed_boundary_labels:
+  MBEDTLS-POC-0027: app_level_x509_behavior
+  OPENSSL-ISSUE-11567: app_level_x509_behavior
+  OPENSSL-ISSUE-11772: app_level_x509_behavior
+  OPENSSL-ISSUE-13860: needs_review
+  OPENSSL-ISSUE-14457: app_level_x509_behavior
+  OPENSSL-ISSUE-14675: app_level_x509_behavior
+  OPENSSL-ISSUE-23325: app_level_x509_behavior
+  OPENSSL-ISSUE-29418: app_level_x509_behavior
+  OPENSSL-ISSUE-29574: overlaps_asn1_nested_boundary
+  OPENSSL-ISSUE-6788: app_level_x509_behavior
+  OPENSSL-ISSUE-9043: crash_sanitizer_seed

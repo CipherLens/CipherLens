@@ -1,0 +1,23 @@
+schema: memory_candidate_closed_candidates_v1
+closed_candidates:
+- family: memory_length_boundary
+  case_id: memlen_null_input_nonzero
+  trigger_api: EVP_EncodeBlock
+  original_label: sanitizer_candidate
+  decision: downgrade_to_contract_observation
+  reason: NULL input with nonzero length is invalid API use.
+  source_triage: /home/wen/work/crypto-pattern-fuzz/artifacts/triage/memlen_null_input_nonzero_triage_v1/candidate/triage_decision.yaml
+- family: buffer_canary_boundary
+  case_id: canary_decode_short_output
+  trigger_api: EVP_DecodeBlock
+  original_label: sanitizer_candidate
+  decision: downgrade_to_contract_observation
+  reason: Short output buffer and input_len mismatch are invalid contract / harness-fault observations.
+  source_triage: /home/wen/work/crypto-pattern-fuzz/artifacts/triage/canary_decode_short_output_triage_v1/candidate/triage_decision.yaml
+- family: null_deref_dispatch
+  case_id: nullderef_null_mac_ctx_init
+  trigger_api: EVP_MAC_init
+  original_label: sanitizer_candidate
+  decision: downgrade_to_contract_observation
+  reason: EVP_MAC_init(NULL, ...) is outside the documented MAC context lifecycle.
+  source_triage: /home/wen/work/crypto-pattern-fuzz/artifacts/triage/nullderef_null_mac_ctx_init_triage_v1/candidate/triage_decision.yaml

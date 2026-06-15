@@ -1,0 +1,18 @@
+# RAG Rebuild Plan
+
+{
+  "recommended_next_task": "rag_rebuild_and_query_eval_v2",
+  "reason": [
+    "knowledge_raw added OpenSSL / mbedTLS counterpart API cards",
+    "knowledge_raw added cross-library candidate constraints / sequences / mappings",
+    "knowledge_base index needs rebuild",
+    "query eval should verify wolfSSL to OpenSSL / mbedTLS counterpart retrieval"
+  ],
+  "queries_to_eval": [
+    "wolfSSL wc_ParseCert OpenSSL ASN1_item_d2i mbedTLS x509_crt_parse_der",
+    "wolfSSL PKCS7 VerifySignedData OpenSSL PKCS7_verify",
+    "wolfSSL TLS context lifecycle OpenSSL SSL_CTX_new mbedTLS ssl_config_init",
+    "wolfSSL secure heap OpenSSL secure malloc mbedTLS platform calloc free",
+    "cross library candidate mapping no_direct_counterpart PKCS7 mbedTLS"
+  ]
+}

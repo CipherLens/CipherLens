@@ -1,0 +1,1502 @@
+runner/analyze_results.py:11:ASAN_PATTERNS = [
+runner/analyze_results.py:21:UBSAN_PATTERNS = [
+runner/analyze_results.py:207:    "[INFO] invalid_parameter_setup_oracle:",
+runner/analyze_results.py:232:    compile_part = record.get("compile", {}) or {}
+runner/analyze_results.py:236:        str(compile_part.get("stdout", "")),
+runner/analyze_results.py:237:        str(compile_part.get("stderr", "")),
+runner/analyze_results.py:262:def record_oracle_type(record: Dict[str, Any], result: Dict[str, Any] | None = None) -> str:
+runner/analyze_results.py:264:    if tmpl.get("oracle_type"):
+runner/analyze_results.py:265:        return str(tmpl.get("oracle_type"))
+runner/analyze_results.py:266:    if result and result.get("oracle_type"):
+runner/analyze_results.py:267:        return str(result.get("oracle_type"))
+runner/analyze_results.py:314:    if record_oracle_type(record, result) == "inner_asn1_boundary_semantic_oracle":
+runner/analyze_results.py:335:    if record_oracle_type(record, result) == "invalid_padding_output_length_oracle":
+runner/analyze_results.py:340:        or "invalid_padding_output_length_oracle" in joined
+runner/analyze_results.py:357:    if record_oracle_type(record, result) == "bignum_negative_result_rejection_oracle":
+runner/analyze_results.py:362:        or "bignum_negative_result_rejection_oracle" in joined
+runner/analyze_results.py:411:    if record_oracle_type(record, result) in {
+runner/analyze_results.py:412:        "bignum_serialization_buffer_boundary_oracle",
+runner/analyze_results.py:419:        or "bignum_serialization_buffer_boundary_oracle" in joined
+runner/analyze_results.py:463:    if record_oracle_type(record, result) in {"stale_pointer_length_state_oracle", "object_lifecycle_state_oracle"}:
+runner/analyze_results.py:490:    if record_oracle_type(record, result) == "mac_context_size_lifecycle_oracle":
+runner/analyze_results.py:496:        or "mac_context_size_lifecycle_oracle" in joined
+runner/analyze_results.py:517:    if record_oracle_type(record, result) == "lifecycle_state_transition_semantic_oracle":
+runner/analyze_results.py:522:        or "lifecycle_state_transition_semantic_oracle" in joined
+runner/analyze_results.py:539:    if record_harness_family(record, result) == "invalid_parameter_setup_oracle":
+runner/analyze_results.py:541:    if record_oracle_type(record, result) in {"invalid_aead_tag_length_oracle", "invalid_parameter_return_code_oracle"}:
+runner/analyze_results.py:546:        or "invalid_parameter_setup_oracle" in joined
+runner/analyze_results.py:564:    if record_oracle_type(record, result) == "signature_acceptance_semantic_oracle":
+runner/analyze_results.py:577:    if record_oracle_type(record, result) == "pointer_consumption_semantic_oracle":
+runner/analyze_results.py:663:    compile_part = record.get("compile", {}) or {}
+runner/analyze_results.py:678:        "oracle_type": tmpl.get("oracle_type", ""),
+runner/analyze_results.py:685:        "compile_returncode": compile_part.get("returncode"),
+runner/analyze_results.py:686:        "run_timeout": run_part.get("timeout", False),
+runner/analyze_results.py:687:        "compile_timeout": compile_part.get("timeout", False),
+runner/analyze_results.py:701:        result["reason"] = "Dry-run compile command was recorded but the harness was not compiled or executed."
+runner/analyze_results.py:714:    if status == "compile_error":
+runner/analyze_results.py:716:        result["reason"] = "Compilation failed. This usually indicates an invalid template, missing API, wrong library version, or missing compile flags."
+runner/analyze_results.py:719:    if status == "run_timeout":
+runner/analyze_results.py:720:        result["verdict"] = "timeout"
+runner/analyze_results.py:724:    if contains_any(text, ASAN_PATTERNS):
+runner/analyze_results.py:726:        result["reason"] = "ASAN-like crash pattern found in output."
+runner/analyze_results.py:729:    if contains_any(text, UBSAN_PATTERNS):
+runner/analyze_results.py:731:        result["reason"] = "UBSAN-like runtime error pattern found in output."
+runner/analyze_results.py:771:            result["reason"] = "Controlled PKEY verify oracle reported success on intentionally invalid verification material."
+runner/analyze_results.py:928:            "MAC lifecycle state-transition oracle observed safe behavior: normal "
+runner/analyze_results.py:939:            "MAC lifecycle state-transition oracle observed permissive or unexpected "
+runner/analyze_results.py:991:            "(rsa_invalid_key_sign_rejection_oracle: import/init/sign returned an error without crash)."
+runner/analyze_results.py:999:            "(capability mismatch oracle: PSA_ERROR_NOT_PERMITTED or equivalent error return)."
+runner/analyze_results.py:1007:            "to verify oracle correctness and key construction."
+runner/analyze_results.py:1015:            "Manual review required to verify oracle correctness."
+runner/analyze_results.py:1026:        result["reason"] = "Program exited normally, but no strong safe/fixed oracle pattern was found."
+runner/analyze_results.py:1072:    oracle_type_counter = Counter(c.get("oracle_type", "") for c in cases if c.get("oracle_type"))
+runner/analyze_results.py:1082:        "oracle_type_counts": dict(oracle_type_counter),
+runner/analyze_secure_heap_state.py:47:    compile_part = record.get("compile", {}) or {}
+runner/analyze_secure_heap_state.py:50:        str(compile_part.get("stdout", "")),
+runner/analyze_secure_heap_state.py:51:        str(compile_part.get("stderr", "")),
+runner/analyze_secure_heap_state.py:95:    if status == "compile_error":
+runner/analyze_secure_heap_state.py:98:    elif status == "run_timeout":
+tools/render_cases_v1.py:5:metadata. It intentionally does not compile, run, analyze, rebuild RAG, or call
+tools/render_cases_v1.py:120:def oracle_event_enabled(profile: str) -> bool:
+tools/render_cases_v1.py:121:    return profile == "oracle_event_v1"
+tools/render_cases_v1.py:124:def oracle_instrumentation_meta(profile: str, family: str) -> dict[str, Any]:
+tools/render_cases_v1.py:125:    enabled = oracle_event_enabled(profile)
+tools/render_cases_v1.py:143:    if oracle_event_enabled(instrumentation_profile):
+tools/render_cases_v1.py:148:    printf("ORACLE_EVENT schema=oracle_event_v1 case_id={job['case_id']} family={job['family']} mutation_strategy={job['mutation_strategy']} target_library=openssl phase=parse api=d2i_PKCS12 ret=%d accepted=%d input_len=%ld consumed_len=%ld full_consumption=%d openssl_error_code=%lu openssl_error_reason=\\\"%s\\\"\\n",
+tools/render_cases_v1.py:151:    printf("ORACLE_EVENT schema=oracle_event_v1 case_id={job['case_id']} family={job['family']} mutation_strategy={job['mutation_strategy']} target_library=openssl phase=verify api=PKCS12_parse ret=%d accepted=%d input_len=%ld consumed_len=%ld full_consumption=%d openssl_error_code=%lu openssl_error_reason=\\\"%s\\\"\\n",
+tools/render_cases_v1.py:154:    printf("ORACLE_EVENT schema=oracle_event_v1 case_id={job['case_id']} family={job['family']} mutation_strategy={job['mutation_strategy']} target_library=openssl phase=full_consumption_check api=d2i_PKCS12 input_len=%ld consumed_len=%ld full_consumption=%d notes=consumption_observed_from_d2i_PKCS12\\n",
+tools/render_cases_v1.py:201:     * oracle / return check: parser accept/reject plus consumption signal.
+tools/render_cases_v1.py:202:     * A nonzero return here is an oracle classification signal only.
+tools/render_cases_v1.py:221:{f'''    printf("ORACLE_EVENT schema=oracle_event_v1 case_id={job['case_id']} family={job['family']} mutation_strategy={job['mutation_strategy']} target_library=openssl phase=cleanup api=PKCS12_parse cleanup_executed=1\\n");
+tools/render_cases_v1.py:222:''' if oracle_event_enabled(instrumentation_profile) else ''}
+tools/render_cases_v1.py:231:    if oracle_event_enabled(instrumentation_profile):
+tools/render_cases_v1.py:236:    printf("ORACLE_EVENT schema=oracle_event_v1 case_id={job['case_id']} family={job['family']} mutation_strategy={job['mutation_strategy']} target_library=openssl phase=parse api=ASN1_item_d2i ret=%d accepted=%d input_len=%ld consumed_len=%ld full_consumption=%d openssl_error_code=%lu openssl_error_reason=\\\"%s\\\"\\n",
+tools/render_cases_v1.py:239:    printf("ORACLE_EVENT schema=oracle_event_v1 case_id={job['case_id']} family={job['family']} mutation_strategy={job['mutation_strategy']} target_library=openssl phase=full_consumption_check api=ASN1_item_d2i input_len=%ld consumed_len=%ld full_consumption=%d notes=consumption_observed_from_ASN1_item_d2i\\n",
+tools/render_cases_v1.py:276:     * oracle / return check: parser accept/reject plus consumption signal.
+tools/render_cases_v1.py:277:     * A nonzero return here is an oracle classification signal only.
+tools/render_cases_v1.py:290:{f'''    printf("ORACLE_EVENT schema=oracle_event_v1 case_id={job['case_id']} family={job['family']} mutation_strategy={job['mutation_strategy']} target_library=openssl phase=cleanup api=ASN1_item_d2i cleanup_executed=1\\n");
+tools/render_cases_v1.py:291:''' if oracle_event_enabled(instrumentation_profile) else ''}
+tools/render_cases_v1.py:306:def find_oracle_entry(oracle_plan: dict[str, Any], family: str, target_library: str) -> dict[str, Any]:
+tools/render_cases_v1.py:307:    for item in oracle_plan.get("families", []):
+tools/render_cases_v1.py:335:    oracle_plan: dict[str, Any],
+tools/render_cases_v1.py:355:                "oracle_metadata": rel(case_dir / "oracle_metadata.yaml"),
+tools/render_cases_v1.py:383:                "oracle_metadata": rel(case_dir / "oracle_metadata.yaml"),
+tools/render_cases_v1.py:407:                "oracle_metadata": rel(case_dir / "oracle_metadata.yaml"),
+tools/render_cases_v1.py:424:    oracle_entry = find_oracle_entry(oracle_plan, job["family"], job["target_library"])
+tools/render_cases_v1.py:437:        "compile_policy": {
+tools/render_cases_v1.py:438:            "compile_now": False,
+tools/render_cases_v1.py:439:            "compile_allowed_next_stage": True,
+tools/render_cases_v1.py:444:            "target_library_version": "resolved_by_compile_plan_v1",
+tools/render_cases_v1.py:449:            "Metadata only; no compile was executed in render_cases_v1.",
+tools/render_cases_v1.py:453:    oracle_metadata = {
+tools/render_cases_v1.py:454:        "schema": "render_oracle_metadata_v1",
+tools/render_cases_v1.py:459:        "primary_oracle": (job.get("oracle") or {}).get("primary"),
+tools/render_cases_v1.py:460:        "secondary_oracles": (job.get("oracle") or {}).get("secondary", []),
+tools/render_cases_v1.py:462:        "candidate_label_policy": oracle_entry.get(
+tools/render_cases_v1.py:472:            for item in oracle_entry.get("oracle_interpretation_rules", [])
+tools/render_cases_v1.py:476:            "No compile/run/analyze result exists yet.",
+tools/render_cases_v1.py:477:            "Nonzero harness return codes are oracle signals, not crash evidence.",
+tools/render_cases_v1.py:495:            "oracle_expectation": job["inputs"]["oracle_expectation"],
+tools/render_cases_v1.py:524:                "slot_name": "oracle_check",
+tools/render_cases_v1.py:525:                "source": "oracle_expectation_plan",
+tools/render_cases_v1.py:536:        "oracle_instrumentation": oracle_instrumentation_meta(instrumentation_profile, job["family"]),
+tools/render_cases_v1.py:544:    dump_yaml(case_dir / "oracle_metadata.yaml", oracle_metadata)
+tools/render_cases_v1.py:555:        "This case was rendered only. It has not been compiled, run, or analyzed.\n",
+tools/render_cases_v1.py:568:        "oracle_metadata": rel(case_dir / "oracle_metadata.yaml"),
+tools/render_cases_v1.py:573:    if oracle_event_enabled(instrumentation_profile):
+tools/render_cases_v1.py:574:        index_entry["oracle_instrumentation"] = oracle_instrumentation_meta(instrumentation_profile, job["family"])
+tools/render_cases_v1.py:592:        "compile_run_executed": False,
+tools/render_cases_v1.py:612:        "- compile/run/analyze: `false`\n"
+tools/render_cases_v1.py:628:        f"- compile/run: `no`\n\n"
+tools/render_cases_v1.py:670:        f"- no_compile_executed: `{quality['no_compile_executed']}`\n"
+tools/render_cases_v1.py:693:        f"- compile_run_analyze: `false`\n"
+tools/render_cases_v1.py:704:        "It does not compile, run, analyze, rebuild RAG, or call GLM/LLM.\n\n"
+tools/render_cases_v1.py:711:                "rendered_cases/<render_job_id>/oracle_metadata.yaml",
+tools/render_cases_v1.py:740:        "all_rendered_have_oracle_metadata": all(Path(c["oracle_metadata"]).exists() for c in rendered),
+tools/render_cases_v1.py:746:        "no_compile_executed": True,
+tools/render_cases_v1.py:750:            "No compile/run/analyze command was executed by render_cases_v1.",
+tools/render_cases_v1.py:761:        checks["all_rendered_have_oracle_metadata"],
+tools/render_cases_v1.py:767:        checks["no_compile_executed"],
+tools/render_cases_v1.py:785:    parser.add_argument("--oracle-expectation-plan", required=True)
+tools/render_cases_v1.py:790:        "--oracle-instrumentation-profile",
+tools/render_cases_v1.py:792:        choices=["", "oracle_event_v1"],
+tools/render_cases_v1.py:793:        help="Optional oracle instrumentation profile. Default keeps legacy render output unchanged.",
+tools/render_cases_v1.py:806:    oracle_plan_path = Path(args.oracle_expectation_plan)
+tools/render_cases_v1.py:813:    oracle_plan = load_yaml(oracle_plan_path)
+tools/render_cases_v1.py:822:            rel(oracle_plan_path),
+tools/render_cases_v1.py:829:            "compile": False,
+tools/render_cases_v1.py:854:            oracle_plan=oracle_plan,
+tools/render_cases_v1.py:856:            instrumentation_profile=args.oracle_instrumentation_profile,
+tools/render_cases_v1.py:915:        and quality["all_rendered_have_oracle_metadata"]
+tools/render_cases_v1.py:921:        next_task = "compile_plan_v1"
+tools/render_cases_v1.py:922:        reason = "all 14 OpenSSL cases rendered with required metadata; compile should be planned next"
+tools/render_cases_v1.py:950:                    quality["all_rendered_have_oracle_metadata"],
+tools/render_cases_v1.py:955:            "compile": False,
+tools/render_cases_v1.py:966:            "build/oracle/case metadata and render_trace generated for every rendered case.",
+tools/render_cases_v1.py:967:            "compile/run/analyze were not executed.",
+tools/adapter_slot_filling_plan_v1.py:31:    "oracle_mapping",
+tools/adapter_slot_filling_plan_v1.py:44:    "oracle_mapping",
+tools/adapter_slot_filling_plan_v1.py:55:    "oracle_mapping_present",
+tools/adapter_slot_filling_plan_v1.py:66:    "oracle_mapping_required",
+tools/adapter_slot_filling_plan_v1.py:177:def oracle_slots(recipe: dict[str, Any]) -> list[Any]:
+tools/adapter_slot_filling_plan_v1.py:178:    primary = recipe.get("oracle_strategy", {}).get("primary", []) or []
+tools/adapter_slot_filling_plan_v1.py:179:    secondary = recipe.get("oracle_strategy", {}).get("secondary", []) or []
+tools/adapter_slot_filling_plan_v1.py:233:            "oracle_mapping": {
+tools/adapter_slot_filling_plan_v1.py:235:                "source_oracles": oracle_slots(recipe),
+tools/adapter_slot_filling_plan_v1.py:236:                "target_oracle_candidates": ["return_code", "output_state", "parser_result", "sanitizer_signal"],
+tools/adapter_slot_filling_plan_v1.py:287:            "oracle_mapping": {
+tools/adapter_slot_filling_plan_v1.py:322:        "oracle_mapping": {
+tools/adapter_slot_filling_plan_v1.py:373:        f"- primary/secondary: `{recipe.get('oracle_strategy', {})}`",
+tools/adapter_slot_filling_plan_v1.py:397:        "required_oracles": plan["slot_groups"]["oracle_mapping"]["source_oracles"],
+tools/adapter_slot_filling_plan_v1.py:450:        "render_compile_run": False,
+tools/adapter_slot_filling_plan_v1.py:469:- 本轮不 render / compile / run。
+tools/adapter_slot_filling_plan_v1.py:608:            "compile_disabled_now": True,
+tools/adapter_slot_filling_plan_v1.py:632:            "compile_disabled_now": True,
+tools/adapter_slot_filling_plan_v1.py:733:            "render_compile_run": False,
+tools/adapter_slot_filling_plan_v1.py:745:            "compile_run": False,
+tools/adapter_slot_filling_plan_v1.py:768:        "- render/compile/run: no",
+tools/adapter_slot_filling_plan_v1.py:775:not call GLM, generate C, render, compile, run PoCs, or modify adapter recipes.
+tools/adapter_slot_filling_v1.py:5:render C, compile harnesses, run PoCs, or update recipe/template inputs.
+tools/adapter_slot_filling_v1.py:14:import subprocess
+tools/adapter_slot_filling_v1.py:37:    "oracle_mapping",
+tools/adapter_slot_filling_v1.py:49:    r"\bgcc\b",
+tools/adapter_slot_filling_v1.py:50:    r"\bclang\b",
+tools/adapter_slot_filling_v1.py:89:        proc = subprocess.run(
+tools/adapter_slot_filling_v1.py:94:            stdout=subprocess.PIPE,
+tools/adapter_slot_filling_v1.py:95:            stderr=subprocess.PIPE,
+tools/adapter_slot_filling_v1.py:195:        "oracle_mapping": {
+tools/adapter_slot_filling_v1.py:198:            "source_oracles": (plan.get("slot_groups", {}).get("oracle_mapping", {}).get("source_oracles", [])),
+tools/adapter_slot_filling_v1.py:216:            "oracle_mapping_present": False,
+tools/adapter_slot_filling_v1.py:247:        "oracle_mapping": {
+tools/adapter_slot_filling_v1.py:250:            "source_oracles": (plan.get("slot_groups", {}).get("oracle_mapping", {}).get("source_oracles", [])),
+tools/adapter_slot_filling_v1.py:268:            "oracle_mapping_present": False,
+tools/adapter_slot_filling_v1.py:291:            "oracle_mapping": {"bindings": [], "required": True, "target_observables": []},
+tools/adapter_slot_filling_v1.py:314:    obj.setdefault("oracle_mapping", {"bindings": []})
+tools/adapter_slot_filling_v1.py:395:    oracle_mapping = obj.get("oracle_mapping", {})
+tools/adapter_slot_filling_v1.py:396:    if isinstance(oracle_mapping, dict) and "bindings" in oracle_mapping:
+tools/adapter_slot_filling_v1.py:397:        oracle_bindings = oracle_mapping.get("bindings")
+tools/adapter_slot_filling_v1.py:399:        oracle_bindings = oracle_mapping
+tools/adapter_slot_filling_v1.py:400:    oracle_present = bool(oracle_bindings)
+tools/adapter_slot_filling_v1.py:405:        if not oracle_present:
+tools/adapter_slot_filling_v1.py:406:            errors.append("oracle_mapping is required but empty")
+tools/adapter_slot_filling_v1.py:442:        "oracle_mapping_present": oracle_present,
+tools/adapter_slot_filling_v1.py:466:- Do not generate C code, C snippets, harnesses, compiler commands, or renderable templates.
+tools/adapter_slot_filling_v1.py:471:- Preserve cleanup, oracle, input, and mutation-slot mappings as structured YAML.
+tools/adapter_slot_filling_v1.py:476:`oracle_mapping`, `input_mapping`, `mutation_slot_mapping`,
+tools/adapter_slot_filling_v1.py:519:                "Never emit C code, compiler commands, markdown explanation, or confirmed-equivalence claims."
+tools/adapter_slot_filling_v1.py:753:            "no_compile_run",
+tools/adapter_slot_filling_v1.py:795:        "oracle_mapping_present": all(v["oracle_mapping_present"] for v in validations if v["validation_status"] == "pass"),
+tools/adapter_slot_filling_v1.py:849:            "compile_run",
+tools/adapter_slot_filling_v1.py:867:            "compile_run": False,
+tools/adapter_slot_filling_v1.py:885:It does not generate C, render cases, compile, run PoCs, modify Pattern Bank,
+tools/api_card_enrichment_for_cross_library_counterparts_v1.py:588:        "compile_run": False,
+tools/analyze_results_oracle_aware_v1.py:2:"""Oracle-aware analysis for instrumented compile/run outputs.
+tools/analyze_results_oracle_aware_v1.py:4:This script is intentionally offline: it reads prior compile/run/oracle-event
+tools/analyze_results_oracle_aware_v1.py:18:from analyzer.oracle_event_parser import parse_oracle_event_line
+tools/analyze_results_oracle_aware_v1.py:94:        parsed = parse_oracle_event_line(raw)
+tools/analyze_results_oracle_aware_v1.py:102:        "parser": "analyzer.oracle_event_parser.parse_oracle_event_line",
+tools/analyze_results_oracle_aware_v1.py:125:    if run.get("timeout"):
+tools/analyze_results_oracle_aware_v1.py:126:        return ("timeout_candidate", "needs_triage", True, "case timed out", "timeout triage")
+tools/analyze_results_oracle_aware_v1.py:137:            "oracle_event_incomplete",
+tools/analyze_results_oracle_aware_v1.py:138:            "oracle_incomplete",
+tools/analyze_results_oracle_aware_v1.py:141:            "oracle instrumentation output fixup",
+tools/analyze_results_oracle_aware_v1.py:149:            "oracle semantic triage",
+tools/analyze_results_oracle_aware_v1.py:168:        "oracle_event_incomplete",
+tools/analyze_results_oracle_aware_v1.py:169:        "oracle_incomplete",
+tools/analyze_results_oracle_aware_v1.py:172:        "oracle instrumentation output fixup",
+tools/analyze_results_oracle_aware_v1.py:195:    return ("oracle events are incomplete for accept/reject semantics", limitations)
+tools/analyze_results_oracle_aware_v1.py:207:    run_results: dict[str, Any],
+tools/analyze_results_oracle_aware_v1.py:222:    for run in run_results.get("run_results", []):
+tools/analyze_results_oracle_aware_v1.py:252:            "timeout": bool(run.get("timeout")),
+tools/analyze_results_oracle_aware_v1.py:254:            "oracle_events": {
+tools/analyze_results_oracle_aware_v1.py:273:            "expected_oracle": mutation.get("expected_oracle", {}),
+tools/analyze_results_oracle_aware_v1.py:277:        if candidate in {"oracle_incomplete", "needs_triage"}:
+tools/analyze_results_oracle_aware_v1.py:285:                "oracle_semantic_label": semantic,
+tools/analyze_results_oracle_aware_v1.py:295:        "schema": "oracle_aware_case_analysis_v1",
+tools/analyze_results_oracle_aware_v1.py:303:            "oracle_event_incomplete": semantic_counts.get("oracle_event_incomplete", 0),
+tools/analyze_results_oracle_aware_v1.py:309:        "schema": "oracle_aware_candidate_labels_v1",
+tools/analyze_results_oracle_aware_v1.py:318:            "oracle_incomplete": label_counts.get("oracle_incomplete", 0),
+tools/analyze_results_oracle_aware_v1.py:331:        parse_events = sum(c["oracle_events"]["phases"]["parse"] for c in cases)
+tools/analyze_results_oracle_aware_v1.py:332:        verify_events = sum(c["oracle_events"]["phases"]["verify"] for c in cases)
+tools/analyze_results_oracle_aware_v1.py:333:        full_events = sum(c["oracle_events"]["phases"]["full_consumption_check"] for c in cases)
+tools/analyze_results_oracle_aware_v1.py:334:        cleanup_events = sum(c["oracle_events"]["phases"]["cleanup"] for c in cases)
+tools/analyze_results_oracle_aware_v1.py:335:        accepted_true = sum(c["oracle_events"]["accepted_values"]["true"] for c in cases)
+tools/analyze_results_oracle_aware_v1.py:336:        accepted_false = sum(c["oracle_events"]["accepted_values"]["false"] for c in cases)
+tools/analyze_results_oracle_aware_v1.py:337:        full_true = sum(c["oracle_events"]["full_consumption_values"]["true"] for c in cases)
+tools/analyze_results_oracle_aware_v1.py:338:        full_false = sum(c["oracle_events"]["full_consumption_values"]["false"] for c in cases)
+tools/analyze_results_oracle_aware_v1.py:339:        full_unknown = sum(c["oracle_events"]["full_consumption_values"]["unknown"] for c in cases)
+tools/analyze_results_oracle_aware_v1.py:358:                "timeout": len([c for c in cases if c["timeout"]]),
+tools/analyze_results_oracle_aware_v1.py:364:        "schema": "oracle_aware_family_analysis_v1",
+tools/analyze_results_oracle_aware_v1.py:374:def build_oracle_semantics(events_doc: dict[str, Any], case_doc: dict[str, Any]) -> dict[str, Any]:
+tools/analyze_results_oracle_aware_v1.py:385:        "schema": "oracle_semantics_summary_v1",
+tools/analyze_results_oracle_aware_v1.py:411:                "interpretation": "no crash; semantic outcome depends on oracle event",
+tools/analyze_results_oracle_aware_v1.py:437:        accepted = case["oracle_events"]["accepted_values"]
+tools/analyze_results_oracle_aware_v1.py:448:                "timeout": int(case["timeout"]),
+tools/analyze_results_oracle_aware_v1.py:474:        "schema": "oracle_aware_limitations_v1",
+tools/analyze_results_oracle_aware_v1.py:499:                "compile_attempted": bool(item.get("compile_attempted")),
+tools/analyze_results_oracle_aware_v1.py:501:                "reason": item.get("reason") or "blocked_expected / no instrumented case / no compile job",
+tools/analyze_results_oracle_aware_v1.py:505:        "schema": "oracle_aware_blocked_summary_v1",
+tools/analyze_results_oracle_aware_v1.py:511:            "compile_attempted": any(e["compile_attempted"] for e in entries),
+tools/analyze_results_oracle_aware_v1.py:529:        "schema": "oracle_aware_analysis_quality_checks_v1",
+tools/analyze_results_oracle_aware_v1.py:533:        "oracle_events_loaded": sem_doc["raw_observations"]["total_events"],
+tools/analyze_results_oracle_aware_v1.py:542:        "no_compile_executed": True,
+tools/analyze_results_oracle_aware_v1.py:548:            "offline oracle-aware analysis only",
+tools/analyze_results_oracle_aware_v1.py:560:        in {"sanitizer_crash_candidate", "crash_signal_candidate", "timeout_candidate"}
+tools/analyze_results_oracle_aware_v1.py:563:    has_incomplete = any(c["semantic_observation"] == "oracle_event_incomplete" for c in case_doc["cases"])
+tools/analyze_results_oracle_aware_v1.py:565:        task = "oracle_semantic_triage_v1"
+tools/analyze_results_oracle_aware_v1.py:569:        reason = "sanitizer/crash/timeout candidate was observed."
+tools/analyze_results_oracle_aware_v1.py:574:        task = "oracle_instrumentation_output_fixup_v1"
+tools/analyze_results_oracle_aware_v1.py:580:        "schema": "next_action_after_oracle_aware_analysis_v1",
+tools/analyze_results_oracle_aware_v1.py:594:    lines.append(f"- oracle_event_incomplete: {s['oracle_event_incomplete']}")
+tools/analyze_results_oracle_aware_v1.py:636:        "schema": "analyze_results_oracle_aware_v1_report",
+tools/analyze_results_oracle_aware_v1.py:637:        "task": "analyze_results_oracle_aware_v1",
+tools/analyze_results_oracle_aware_v1.py:642:        "oracle_events_all_parsed": raw["cases_with_events"] == case_doc["summary"]["total_cases"],
+tools/analyze_results_oracle_aware_v1.py:649:        "sanitizer_crash_timeout_observed": 0,
+tools/analyze_results_oracle_aware_v1.py:666:    parser.add_argument("--compile-results", required=True)
+tools/analyze_results_oracle_aware_v1.py:668:    parser.add_argument("--oracle-events", required=True)
+tools/analyze_results_oracle_aware_v1.py:672:    parser.add_argument("--oracle-expectation-plan", required=True)
+tools/analyze_results_oracle_aware_v1.py:683:    compile_doc = load_yaml(Path(args.compile_results))
+tools/analyze_results_oracle_aware_v1.py:684:    run_doc = load_yaml(Path(args.run_results))
+tools/analyze_results_oracle_aware_v1.py:685:    events_doc = load_yaml(Path(args.oracle_events))
+tools/analyze_results_oracle_aware_v1.py:689:    oracle_plan_doc = load_yaml(Path(args.oracle_expectation_plan))
+tools/analyze_results_oracle_aware_v1.py:692:        Path("artifacts/sprints/compile_run_oracle_instrumented_v1/blocked_cases/blocked_cases.yaml")
+tools/analyze_results_oracle_aware_v1.py:696:        "schema": "oracle_aware_analysis_input_summary_v1",
+tools/analyze_results_oracle_aware_v1.py:699:            "compile_results": args.compile_results,
+tools/analyze_results_oracle_aware_v1.py:700:            "run_results": args.run_results,
+tools/analyze_results_oracle_aware_v1.py:701:            "oracle_events": args.oracle_events,
+tools/analyze_results_oracle_aware_v1.py:705:            "oracle_expectation_plan": args.oracle_expectation_plan,
+tools/analyze_results_oracle_aware_v1.py:708:        "compile_results_seen": len(compile_doc.get("compile_results", [])),
+tools/analyze_results_oracle_aware_v1.py:709:        "oracle_expectation_schema": oracle_plan_doc.get("schema", ""),
+tools/analyze_results_oracle_aware_v1.py:710:        "no_compile_executed": True,
+tools/analyze_results_oracle_aware_v1.py:719:    sem_doc = build_oracle_semantics(events_doc, case_doc)
+tools/analyze_results_oracle_aware_v1.py:727:    dump_yaml(out / "case_analysis/oracle_aware_case_analysis.yaml", case_doc)
+tools/analyze_results_oracle_aware_v1.py:728:    write_text(out / "case_analysis/oracle_aware_case_analysis.md", md_case_summary(case_doc))
+tools/analyze_results_oracle_aware_v1.py:729:    dump_yaml(out / "family_analysis/oracle_aware_family_analysis.yaml", family_doc)
+tools/analyze_results_oracle_aware_v1.py:730:    write_text(out / "family_analysis/oracle_aware_family_analysis.md", md_family_summary(family_doc))
+tools/analyze_results_oracle_aware_v1.py:731:    dump_yaml(out / "oracle_semantics/oracle_semantics_summary.yaml", sem_doc)
+tools/analyze_results_oracle_aware_v1.py:732:    write_text(out / "oracle_semantics/oracle_semantics_summary.md", md_dict("Oracle Semantics Summary", sem_doc))
+tools/analyze_results_oracle_aware_v1.py:735:    dump_yaml(out / "candidate_labels/oracle_aware_candidate_labels.yaml", label_doc)
+tools/analyze_results_oracle_aware_v1.py:736:    write_text(out / "candidate_labels/oracle_aware_candidate_labels.md", md_dict("Oracle-Aware Candidate Labels", label_doc))
+tools/analyze_results_oracle_aware_v1.py:737:    dump_yaml(out / "limitations/oracle_aware_limitations.yaml", limitations_doc)
+tools/analyze_results_oracle_aware_v1.py:738:    write_text(out / "limitations/oracle_aware_limitations.md", md_dict("Oracle-Aware Limitations", limitations_doc))
+tools/analyze_results_oracle_aware_v1.py:741:    dump_yaml(out / "validation/oracle_aware_analysis_quality_checks.yaml", quality_doc)
+tools/analyze_results_oracle_aware_v1.py:742:    write_text(out / "validation/oracle_aware_analysis_quality_checks.md", md_dict("Quality Checks", quality_doc))
+tools/analyze_results_oracle_aware_v1.py:743:    dump_yaml(out / "reports/next_action_after_oracle_aware_analysis.yaml", next_doc)
+tools/analyze_results_oracle_aware_v1.py:744:    write_text(out / "reports/next_action_after_oracle_aware_analysis.md", md_dict("Next Action", next_doc))
+tools/analyze_results_oracle_aware_v1.py:745:    dump_yaml(out / "reports/analyze_results_oracle_aware_v1_report.yaml", report_doc)
+tools/analyze_results_oracle_aware_v1.py:746:    write_text(out / "reports/analyze_results_oracle_aware_v1_report.md", md_dict("Analyze Results Oracle-Aware Report", report_doc))
+tools/analyze_results_oracle_aware_v1.py:751:                "# analyze_results_oracle_aware_v1",
+tools/analyze_results_oracle_aware_v1.py:753:                "Offline oracle-aware analysis of prior instrumented OpenSSL compile/run results.",
+tools/analyze_results_oracle_aware_v1.py:758:                f"- oracle_events_all_parsed: {report_doc['oracle_events_all_parsed']}",
+tools/analyze_results_oracle_aware_v1.py:765:                "No compile, rerun, GLM call, feedback write, or vulnerability claim was performed.",
+tools/analyze_results_oracle_aware_v1.py:771:    print(f"[OK] wrote oracle-aware analysis artifacts to {out}")
+tools/api_card_enrichment_for_top_families_v1.py:15:import subprocess
+tools/api_card_enrichment_for_top_families_v1.py:113:        return subprocess.check_output(["git", *args], cwd=root, text=True, stderr=subprocess.DEVNULL).strip()
+tools/api_card_enrichment_for_top_families_v1.py:143:    patterns = {name: re.compile(r"\b" + re.escape(name) + r"\b") for name in api_names}
+tools/api_card_enrichment_for_top_families_v1.py:294:            "postconditions": ["return value and output state must be checked by harness oracle where observable"],
+runner/analyze_cipher_aead_semantic_crosscheck.py:17:    "compile_error",
+runner/analyze_cipher_aead_semantic_crosscheck.py:88:    if status == "compile_error":
+runner/analyze_cipher_aead_semantic_crosscheck.py:89:        return "compile_error"
+runner/analyze_cipher_aead_lifecycle.py:20:    "compile_error",
+runner/analyze_cipher_aead_lifecycle.py:77:    compile_info = record.get("compile") or {}
+runner/analyze_cipher_aead_lifecycle.py:82:            compile_info.get("stderr") or "",
+runner/analyze_cipher_aead_lifecycle.py:123:    if status == "compile_error":
+runner/analyze_cipher_aead_lifecycle.py:124:        label = "compile_error"
+runner/analyze_cipher_aead_lifecycle.py:125:        observed = "compile_error"
+runner/analyze_cipher_aead_lifecycle.py:131:    elif status in {"run_timeout", "timeout"}:
+runner/analyze_cipher_aead_lifecycle.py:133:        observed = "run_timeout"
+runner/analyze_cipher_aead_lifecycle.py:134:        next_action = "check_harness_timeout_or_library_hang"
+runner/analyze_cipher_aead_lifecycle.py:168:        next_action = "inspect stdout stderr and strengthen oracle"
+runner/analyze_cipher_aead_lifecycle.py:224:            "`semantic_divergence_candidate` 都不是漏洞确认。需要跨库对照、文档语义核查和更强 oracle "
+runner/analyze_cipher_aead_lifecycle.py:278:                "expected_oracle": manifest.get("expected_oracle") or "",
+runner/analyze_secure_heap_state_expansion.py:50:    compile_part = record.get("compile", {}) or {}
+runner/analyze_secure_heap_state_expansion.py:53:        str(compile_part.get("stdout", "")),
+runner/analyze_secure_heap_state_expansion.py:54:        str(compile_part.get("stderr", "")),
+runner/analyze_secure_heap_state_expansion.py:112:    if status == "compile_error":
+runner/analyze_secure_heap_state_expansion.py:116:    elif status == "run_timeout":
+tools/family_template_generalization_v1.py:14:import subprocess
+tools/family_template_generalization_v1.py:50:    "artifacts/sprints/template_recipe_design_for_top_wolfssl_families_v1/oracle_plan/family_oracle_plan.yaml",
+tools/family_template_generalization_v1.py:235:    /* oracle_check: return-code/sanitizer/full-consumption classification. */
+tools/family_template_generalization_v1.py:276:    /* oracle_check: return-code/sanitizer classification, not a crash claim. */
+tools/family_template_generalization_v1.py:359:    /* oracle_check: reject/accept/sanitizer observation, not exploit claim. */
+tools/family_template_generalization_v1.py:384:        "oracle_type": recipe.get("oracle_types", []),
+tools/family_template_generalization_v1.py:409:        "oracle_type": recipe.get("oracle_types", []),
+tools/family_template_generalization_v1.py:414:            "oracle_check": recipe.get("oracle_types", []),
+tools/family_template_generalization_v1.py:445:                "oracle": recipe.get("oracle_types", []),
+tools/family_template_generalization_v1.py:454:            "oracle_check",
+tools/family_template_generalization_v1.py:465:        "oracle": {
+tools/family_template_generalization_v1.py:466:            "primary": recipe.get("oracle_types", [])[:1],
+tools/family_template_generalization_v1.py:467:            "secondary": recipe.get("oracle_types", [])[1:],
+tools/family_template_generalization_v1.py:473:            {"name": "preserve", "meaning": "do not mutate trigger/cleanup/oracle structure"},
+tools/family_template_generalization_v1.py:500:            "oracle_plan": "oracle_plan.yaml",
+tools/family_template_generalization_v1.py:505:        "oracle_types": recipe.get("oracle_types", []),
+tools/family_template_generalization_v1.py:547:            "oracle_type": meta.get("oracle_type", ""),
+tools/family_template_generalization_v1.py:628:            "expected_oracle": recipe.get("oracle_types", []),
+tools/family_template_generalization_v1.py:663:            "oracle_type",
+tools/family_template_generalization_v1.py:669:        "semantic_policy": "mutate slots, preserve trigger/cleanup/oracle shape",
+tools/family_template_generalization_v1.py:674:    dump_yaml(pkg_dir / "oracle_plan.yaml", {
+tools/family_template_generalization_v1.py:675:        "schema": "family_oracle_plan_v1",
+tools/family_template_generalization_v1.py:678:        "primary_oracles": recipe.get("oracle_types", [])[:1],
+tools/family_template_generalization_v1.py:679:        "secondary_oracles": recipe.get("oracle_types", [])[1:],
+tools/family_template_generalization_v1.py:680:        "unsafe_oracles": [
+tools/family_template_generalization_v1.py:681:            "ASAN",
+tools/family_template_generalization_v1.py:682:            "UBSAN",
+tools/family_template_generalization_v1.py:748:    def run_one(name: str, cmd: list[str]) -> subprocess.CompletedProcess[str]:
+tools/family_template_generalization_v1.py:749:        proc = subprocess.run(cmd, text=True, capture_output=True, check=False)
+tools/family_template_generalization_v1.py:811:- PoC/render/compile/run performed here: no
+tools/family_template_generalization_v1.py:840:            "oracle_plan": "oracle_plan.yaml",
+tools/family_template_generalization_v1.py:845:        "oracle_types": recipe.get("oracle_types", []),
+tools/family_template_generalization_v1.py:869:- PoC/render/compile/run performed here: no
+tools/family_template_generalization_v1.py:919:        "oracle_plan_exists": (pkg / "oracle_plan.yaml").exists(),
+tools/family_template_generalization_v1.py:926:        "oracle_check_preserved": True,
+tools/family_template_generalization_v1.py:937:    row["notes"] = "family-level package; no adapter/render/compile/run performed"
+tools/family_template_generalization_v1.py:1024:        "render_compile_run": False,
+tools/family_template_generalization_v1.py:1036:- 本轮不运行 PoC，不 render case，不 compile/run harness。
+tools/family_template_generalization_v1.py:1178:            "poc_or_render_or_compile_run": False,
+tools/family_template_generalization_v1.py:1188:            "compile_run": False,
+tools/family_template_generalization_v1.py:1213:        "- PoC/render/compile-run performed: no",
+tools/family_template_generalization_v1.py:1219:        "No PoC execution, render, compile/run, GLM call, adapter generation, RAG rebuild, commit, or push was performed.",
+tools/family_template_generalization_v1.py:1228:No adapter generation, GLM call, PoC execution, render, compile/run, RAG rebuild,
+tools/adapter_slot_filling_fixup_v1.py:5:compiles, runs PoCs, or mutates adapter_recipe/slot_filling_plan inputs.
+tools/adapter_slot_filling_fixup_v1.py:40:    "oracle_mapping",
+tools/adapter_slot_filling_fixup_v1.py:52:    r"\bgcc\b",
+tools/adapter_slot_filling_fixup_v1.py:53:    r"\bclang\b",
+tools/adapter_slot_filling_fixup_v1.py:160:            "oracle_mapping": {"primary": None, "secondary": [], "target_observables": [], "notes": ""},
+tools/adapter_slot_filling_fixup_v1.py:168:                "oracle_mapping_present": False,
+tools/adapter_slot_filling_fixup_v1.py:187:    obj.setdefault("oracle_mapping", {"primary": None, "secondary": [], "target_observables": [], "notes": ""})
+tools/adapter_slot_filling_fixup_v1.py:241:    oracle_nonempty = nonempty_mapping(binding.get("oracle_mapping"))
+tools/adapter_slot_filling_fixup_v1.py:265:        oracle_nonempty,
+tools/adapter_slot_filling_fixup_v1.py:296:        "oracle_mapping_present": "oracle_mapping" in binding,
+tools/adapter_slot_filling_fixup_v1.py:297:        "oracle_mapping_nonempty": oracle_nonempty,
+tools/adapter_slot_filling_fixup_v1.py:325:        "oracle_mapping": {"primary": None, "secondary": [], "target_observables": [], "notes": ""},
+tools/adapter_slot_filling_fixup_v1.py:333:            "oracle_mapping_present": False,
+tools/adapter_slot_filling_fixup_v1.py:359:- any C code, #include, int main, function body, compiler command
+tools/adapter_slot_filling_fixup_v1.py:389:oracle_mapping:
+tools/adapter_slot_filling_fixup_v1.py:397:  notes: candidate oracle only; no vulnerability claim
+tools/adapter_slot_filling_fixup_v1.py:411:  oracle_mapping_present: true
+tools/adapter_slot_filling_fixup_v1.py:413:  - candidate mapping only; adapter_validate/render/compile not run
+tools/adapter_slot_filling_fixup_v1.py:428:family oracle plan:
+tools/adapter_slot_filling_fixup_v1.py:429:{yaml.safe_dump(family_files.get("oracle_plan", {}), sort_keys=False)}
+tools/adapter_slot_filling_fixup_v1.py:499:        "oracle_plan": load_yaml(family_template / "oracle_plan.yaml") or {},
+tools/adapter_slot_filling_fixup_v1.py:509:    previous_oracle_missing = not nonempty_mapping(previous_bindings.get("oracle_mapping"))
+tools/adapter_slot_filling_fixup_v1.py:530:            "no_compile_run",
+tools/adapter_slot_filling_fixup_v1.py:553:        "previous_failure": "GLM echoed the slot filling plan and did not form valid api/cleanup/oracle bindings.",
+tools/adapter_slot_filling_fixup_v1.py:572:                ("missing_oracle_mapping", previous_oracle_missing),
+tools/adapter_slot_filling_fixup_v1.py:581:        "oracle_mapping_missing": previous_oracle_missing,
+tools/adapter_slot_filling_fixup_v1.py:711:        "do_not_run_yet": ["render_cases", "compile_run", "PoC execution"],
+tools/adapter_slot_filling_fixup_v1.py:740:            "compile_run": False,
+tools/adapter_slot_filling_fixup_v1.py:757:        "no_render_compile_run_or_c_generation": True,
+runner/analyze_mac_lifecycle.py:141:            "compile": row.get("compile", {}),
+tools/auto_scheduler_v1.py:395:    oracle_clarity = 2
+tools/auto_scheduler_v1.py:397:        oracle_clarity = 5
+tools/auto_scheduler_v1.py:399:        oracle_clarity = 4
+tools/auto_scheduler_v1.py:401:        oracle_clarity = 3
+tools/auto_scheduler_v1.py:403:        oracle_clarity = 2
+tools/auto_scheduler_v1.py:405:        oracle_clarity = 1
+tools/auto_scheduler_v1.py:467:            oracle_clarity,
+tools/auto_scheduler_v1.py:483:        "oracle_clarity": oracle_clarity,
+tools/auto_scheduler_v1.py:562:        and score["oracle_clarity"] >= 3
+tools/auto_scheduler_v1.py:578:            "reason": "passed" if a_path_passed else "not an eligible A-path family or evidence/mapping/oracle gate did not pass",
+tools/auto_scheduler_v1.py:740:        "No Pattern Bank write-back, GLM call, harness render, harness compile/run, or vulnerability claim is performed.\n",
+tools/ingestion_review_and_import_v1.py:91:    oracle = (record.get("pattern_candidate") or {}).get("oracle_candidate")
+tools/ingestion_review_and_import_v1.py:94:    if family in (None, "", "needs_review") or oracle in (None, "", "needs_review"):
+tools/ingestion_review_and_import_v1.py:111:        "oracle_candidate_confident": pattern.get("oracle_candidate") not in (None, "", "needs_review"),
+tools/ingestion_review_and_import_v1.py:270:        "oracle_candidate": pattern.get("oracle_candidate"),
+tools/ingestion_review_and_import_v1.py:378:            parts.append(f"- `{s['poc_id']}`: family=`{s['family_guess']}`, oracle=`{s['oracle_candidate']}`, import_status=`{s['import_status']}`\n")
+runner/run_app_cases.py:5:import subprocess
+runner/run_app_cases.py:18:def run_case(case_dir: Path, timeout: int) -> dict[str, Any]:
+runner/run_app_cases.py:24:    proc = subprocess.run(
+runner/run_app_cases.py:27:        stdout=subprocess.PIPE,
+runner/run_app_cases.py:28:        stderr=subprocess.PIPE,
+runner/run_app_cases.py:31:        timeout=timeout,
+runner/run_app_cases.py:58:    parser.add_argument("--timeout", type=int, default=30)
+runner/run_app_cases.py:68:                row = run_case(case_dir, args.timeout)
+runner/run_app_cases.py:69:            except subprocess.TimeoutExpired as exc:
+runner/run_app_cases.py:75:                    "status": "timeout",
+tools/compile_run_v1.py:4:This is an execution-recording step only. It records raw compile/run/sanitizer
+tools/compile_run_v1.py:15:import subprocess
+tools/compile_run_v1.py:36:    "timeout",
+tools/compile_run_v1.py:102:    compile_success: bool,
+tools/compile_run_v1.py:103:    timeout: bool,
+tools/compile_run_v1.py:107:    if not compile_success:
+tools/compile_run_v1.py:108:        return "compile_failed_not_run"
+tools/compile_run_v1.py:109:    if timeout:
+tools/compile_run_v1.py:110:        return "timeout_observed"
+tools/compile_run_v1.py:122:        "gcc",
+tools/compile_run_v1.py:142:    prior = env.get("LD_LIBRARY_PATH", "")
+tools/compile_run_v1.py:143:    env["LD_LIBRARY_PATH"] = f"{lib_dir}:{prior}" if prior else rel(lib_dir)
+tools/compile_run_v1.py:144:    env["OPENSSL_MODULES"] = rel(lib_dir / "ossl-modules")
+tools/compile_run_v1.py:145:    env["ASAN_OPTIONS"] = "detect_leaks=0:abort_on_error=1:symbolize=1"
+tools/compile_run_v1.py:146:    env["UBSAN_OPTIONS"] = "halt_on_error=1:print_stacktrace=1"
+tools/compile_run_v1.py:160:    timeout_seconds: int,
+tools/compile_run_v1.py:162:    compile_job_id = job["compile_job_id"]
+tools/compile_run_v1.py:169:    case_out = out_dir / "compiled_cases" / compile_job_id
+tools/compile_run_v1.py:171:    compile_stdout = case_out / "compile.stdout.log"
+tools/compile_run_v1.py:172:    compile_stderr = case_out / "compile.stderr.log"
+tools/compile_run_v1.py:177:    compile_cmd = command_for(harness, binary, include_dir, lib_dir)
+tools/compile_run_v1.py:178:    compile_command_str = " ".join(compile_cmd)
+tools/compile_run_v1.py:180:    compile_status = "compile_failed"
+tools/compile_run_v1.py:181:    compile_returncode: int | None = None
+tools/compile_run_v1.py:182:    compile_notes: list[str] = []
+tools/compile_run_v1.py:184:        compile_status = "compile_skipped_collision"
+tools/compile_run_v1.py:185:        compile_notes.append("non-openssl job blocked before compile")
+tools/compile_run_v1.py:186:        compile_stdout.write_text("", encoding="utf-8")
+tools/compile_run_v1.py:187:        compile_stderr.write_text("blocked: non-openssl target\n", encoding="utf-8")
+tools/compile_run_v1.py:189:        compile_status = "compile_skipped_collision"
+tools/compile_run_v1.py:190:        compile_notes.append("binary already exists; not overwritten")
+tools/compile_run_v1.py:191:        compile_stdout.write_text("", encoding="utf-8")
+tools/compile_run_v1.py:192:        compile_stderr.write_text("collision: binary already exists\n", encoding="utf-8")
+tools/compile_run_v1.py:194:        compile_status = "compile_failed"
+tools/compile_run_v1.py:195:        compile_notes.append("missing harness.c")
+tools/compile_run_v1.py:196:        compile_stdout.write_text("", encoding="utf-8")
+tools/compile_run_v1.py:197:        compile_stderr.write_text("missing harness.c\n", encoding="utf-8")
+tools/compile_run_v1.py:199:        proc = subprocess.run(compile_cmd, text=True, capture_output=True)
+tools/compile_run_v1.py:200:        compile_returncode = proc.returncode
+tools/compile_run_v1.py:201:        compile_stdout.write_text(proc.stdout, encoding="utf-8")
+tools/compile_run_v1.py:202:        compile_stderr.write_text(proc.stderr, encoding="utf-8")
+tools/compile_run_v1.py:204:            compile_status = "compile_success"
+tools/compile_run_v1.py:206:            compile_status = "compile_failed"
+tools/compile_run_v1.py:208:    compile_result = {
+tools/compile_run_v1.py:209:        "compile_job_id": compile_job_id,
+tools/compile_run_v1.py:216:        "compile_command": compile_command_str,
+tools/compile_run_v1.py:217:        "compile_status": compile_status,
+tools/compile_run_v1.py:218:        "stdout_log": rel(compile_stdout),
+tools/compile_run_v1.py:219:        "stderr_log": rel(compile_stderr),
+tools/compile_run_v1.py:220:        "return_code": compile_returncode,
+tools/compile_run_v1.py:221:        "notes": compile_notes,
+tools/compile_run_v1.py:224:    run_status = "not_run_compile_failed"
+tools/compile_run_v1.py:230:    if compile_status == "compile_success":
+tools/compile_run_v1.py:233:            proc = subprocess.run(
+tools/compile_run_v1.py:237:                timeout=timeout_seconds,
+tools/compile_run_v1.py:249:        except subprocess.TimeoutExpired as exc:
+tools/compile_run_v1.py:252:            run_status = "timeout"
+tools/compile_run_v1.py:254:            run_stderr.write_text((exc.stderr or "") + "\ntimeout\n", encoding="utf-8")
+tools/compile_run_v1.py:255:            run_notes.append(f"timeout after {timeout_seconds} seconds")
+tools/compile_run_v1.py:259:        run_notes.append("not run because compile did not succeed")
+tools/compile_run_v1.py:270:        compile_success=compile_status == "compile_success",
+tools/compile_run_v1.py:271:        timeout=timed_out,
+tools/compile_run_v1.py:277:        "compile_job_id": compile_job_id,
+tools/compile_run_v1.py:286:        "timeout": timed_out,
+tools/compile_run_v1.py:297:        "compile_job_id": compile_job_id,
+tools/compile_run_v1.py:314:    return compile_result, run_result, observation
+tools/compile_run_v1.py:317:def summarize_compile(results: list[dict[str, Any]]) -> dict[str, int]:
+tools/compile_run_v1.py:318:    counts = Counter(item["compile_status"] for item in results)
+tools/compile_run_v1.py:321:        "compile_success": counts.get("compile_success", 0),
+tools/compile_run_v1.py:322:        "compile_failed": counts.get("compile_failed", 0),
+tools/compile_run_v1.py:323:        "compile_skipped": counts.get("compile_skipped_collision", 0),
+tools/compile_run_v1.py:332:        "run_attempted": len([r for r in results if r["run_status"] != "not_run_compile_failed"]),
+tools/compile_run_v1.py:336:        "timeout": statuses.get("timeout", 0),
+tools/compile_run_v1.py:338:        "not_run_compile_failed": statuses.get("not_run_compile_failed", 0),
+tools/compile_run_v1.py:345:        out_dir / "input" / "compile_run_input_summary.md",
+tools/compile_run_v1.py:346:        "# compile_run_v1 Input Summary\n\n"
+tools/compile_run_v1.py:347:        "- consumes: `compile_plan_v1`\n"
+tools/compile_run_v1.py:348:        "- real compile: `true`\n"
+tools/compile_run_v1.py:360:        out_dir / "environment" / "compile_run_environment.md",
+tools/compile_run_v1.py:366:        f"- OPENSSL_MODULES: `{env['openssl_modules']}`\n"
+tools/compile_run_v1.py:367:        f"- gcc: `{env['gcc']}`\n",
+tools/compile_run_v1.py:370:    compile_results = docs["compile_results"]
+tools/compile_run_v1.py:372:        out_dir / "compile_results" / "compile_results.md",
+tools/compile_run_v1.py:374:        f"- total_jobs: `{compile_results['summary']['total_jobs']}`\n"
+tools/compile_run_v1.py:375:        f"- compile_success: `{compile_results['summary']['compile_success']}`\n"
+tools/compile_run_v1.py:376:        f"- compile_failed: `{compile_results['summary']['compile_failed']}`\n"
+tools/compile_run_v1.py:377:        f"- compile_skipped: `{compile_results['summary']['compile_skipped']}`\n",
+tools/compile_run_v1.py:380:    run_results = docs["run_results"]
+tools/compile_run_v1.py:382:        out_dir / "run_results" / "run_results.md",
+tools/compile_run_v1.py:384:        f"- run_attempted: `{run_results['summary']['run_attempted']}`\n"
+tools/compile_run_v1.py:385:        f"- normal_exit: `{run_results['summary']['normal_exit']}`\n"
+tools/compile_run_v1.py:386:        f"- nonzero_exit: `{run_results['summary']['nonzero_exit']}`\n"
+tools/compile_run_v1.py:387:        f"- signaled: `{run_results['summary']['signaled']}`\n"
+tools/compile_run_v1.py:388:        f"- timeout: `{run_results['summary']['timeout']}`\n"
+tools/compile_run_v1.py:389:        f"- sanitizer_output_observed: `{run_results['summary']['sanitizer_output_observed']}`\n",
+tools/compile_run_v1.py:399:        f"- timeout_count: `{sanitizer['summary']['timeout_count']}`\n\n"
+tools/compile_run_v1.py:405:        out_dir / "blocked_cases" / "compile_run_blocked_cases.md",
+tools/compile_run_v1.py:409:                f"{item['family']} -> {item['target_library']}: compile_attempted={item['compile_attempted']} run_attempted={item['run_attempted']}"
+tools/compile_run_v1.py:417:        out_dir / "validation" / "compile_run_quality_checks.md",
+tools/compile_run_v1.py:420:        f"- compile_jobs_seen: `{quality['compile_jobs_seen']}`\n"
+tools/compile_run_v1.py:421:        f"- mbedtls_compile_attempted: `{quality['mbedtls_compile_attempted']}`\n"
+tools/compile_run_v1.py:430:        out_dir / "reports" / "next_action_after_compile_run.md",
+tools/compile_run_v1.py:438:        out_dir / "reports" / "compile_run_v1_report.md",
+tools/compile_run_v1.py:439:        "# compile_run_v1 Report\n\n"
+tools/compile_run_v1.py:441:        f"- compile_jobs: `{report['summary']['compile_jobs']}`\n"
+tools/compile_run_v1.py:442:        f"- compile_success: `{report['summary']['compile_success']}`\n"
+tools/compile_run_v1.py:443:        f"- compile_failed: `{report['summary']['compile_failed']}`\n"
+tools/compile_run_v1.py:454:        "# compile_run_v1\n\n"
+tools/compile_run_v1.py:455:        "This sprint compiles and runs the 14 rendered OpenSSL harnesses against the ASan/UBSan OpenSSL install.\n"
+tools/compile_run_v1.py:477:    parser = argparse.ArgumentParser(description="Compile and run compile_plan_v1 jobs.")
+tools/compile_run_v1.py:478:    parser.add_argument("--compile-plan", required=True)
+tools/compile_run_v1.py:479:    parser.add_argument("--compile-manifest", required=True)
+tools/compile_run_v1.py:483:    parser.add_argument("--timeout-seconds", type=int, default=10)
+tools/compile_run_v1.py:489:    compile_plan_path = Path(args.compile_plan)
+tools/compile_run_v1.py:490:    compile_manifest_path = Path(args.compile_manifest)
+tools/compile_run_v1.py:494:    timeout_seconds = args.timeout_seconds
+tools/compile_run_v1.py:497:    plan = load_yaml(compile_plan_path)
+tools/compile_run_v1.py:498:    manifest = load_yaml(compile_manifest_path)
+tools/compile_run_v1.py:500:    jobs = [j for j in plan.get("compile_jobs", []) if j.get("target_library") == "openssl"]
+tools/compile_run_v1.py:505:        "schema": "compile_run_environment_v1",
+tools/compile_run_v1.py:516:        "gcc": shutil.which("gcc") or "",
+tools/compile_run_v1.py:517:        "timeout_seconds": timeout_seconds,
+tools/compile_run_v1.py:523:        "schema": "compile_run_input_summary_v1",
+tools/compile_run_v1.py:526:            rel(compile_plan_path),
+tools/compile_run_v1.py:527:            rel(compile_manifest_path),
+tools/compile_run_v1.py:532:            "consumes_compile_plan_v1": True,
+tools/compile_run_v1.py:533:            "real_compile": True,
+tools/compile_run_v1.py:545:    compile_commands = []
+tools/compile_run_v1.py:546:    compile_results = []
+tools/compile_run_v1.py:547:    run_results = []
+tools/compile_run_v1.py:550:        compile_job_id = job["compile_job_id"]
+tools/compile_run_v1.py:551:        binary = out_dir / "compiled_cases" / compile_job_id / "case.bin"
+tools/compile_run_v1.py:553:        compile_commands.append(
+tools/compile_run_v1.py:555:                "compile_job_id": compile_job_id,
+tools/compile_run_v1.py:570:            timeout_seconds=timeout_seconds,
+tools/compile_run_v1.py:572:        compile_results.append(c_result)
+tools/compile_run_v1.py:573:        run_results.append(r_result)
+tools/compile_run_v1.py:576:    compile_summary = summarize_compile(compile_results)
+tools/compile_run_v1.py:577:    run_summary = summarize_run(run_results)
+tools/compile_run_v1.py:579:    compile_results_doc = {
+tools/compile_run_v1.py:580:        "schema": "compile_results_v1",
+tools/compile_run_v1.py:582:        "compile_results": compile_results,
+tools/compile_run_v1.py:583:        "summary": compile_summary,
+tools/compile_run_v1.py:585:    run_results_doc = {
+tools/compile_run_v1.py:586:        "schema": "run_results_v1",
+tools/compile_run_v1.py:588:        "run_results": run_results,
+tools/compile_run_v1.py:598:            "crash_signal_count": len([r for r in run_results if r["signal"]]),
+tools/compile_run_v1.py:599:            "timeout_count": len([r for r in run_results if r["timeout"]]),
+tools/compile_run_v1.py:603:        "schema": "compile_run_blocked_cases_v1",
+tools/compile_run_v1.py:610:                "compile_attempted": False,
+tools/compile_run_v1.py:612:                "reason": "blocked_expected / no rendered case / no compile job",
+tools/compile_run_v1.py:618:    for item in compile_results:
+tools/compile_run_v1.py:620:    for item in run_results:
+tools/compile_run_v1.py:622:    mbedtls_compile_attempted = len([r for r in compile_results if r["target_library"] == "mbedtls"])
+tools/compile_run_v1.py:623:    mbedtls_run_attempted = len([r for r in run_results if r["target_library"] == "mbedtls"])
+tools/compile_run_v1.py:625:        len(compile_results) == 14,
+tools/compile_run_v1.py:626:        mbedtls_compile_attempted == 0,
+tools/compile_run_v1.py:628:        all(r["target_library"] == "openssl" for r in compile_results + run_results),
+tools/compile_run_v1.py:631:    quality_status = "pass" if all(quality_conditions) else ("partial" if compile_results else "fail")
+tools/compile_run_v1.py:633:        "schema": "compile_run_quality_checks_v1",
+tools/compile_run_v1.py:634:        "expected_compile_jobs": 14,
+tools/compile_run_v1.py:635:        "compile_jobs_seen": len(compile_results),
+tools/compile_run_v1.py:636:        "compile_success": compile_summary["compile_success"],
+tools/compile_run_v1.py:637:        "compile_failed": compile_summary["compile_failed"],
+tools/compile_run_v1.py:639:        "not_run_compile_failed": run_summary["not_run_compile_failed"],
+tools/compile_run_v1.py:640:        "mbedtls_compile_attempted": mbedtls_compile_attempted,
+tools/compile_run_v1.py:642:        "all_jobs_target_openssl": all(r["target_library"] == "openssl" for r in compile_results + run_results),
+tools/compile_run_v1.py:643:        "all_binaries_under_sprint": all_under([r["binary_path"] for r in compile_results], out_dir),
+tools/compile_run_v1.py:645:            [r["stdout_log"] for r in compile_results + run_results]
+tools/compile_run_v1.py:646:            + [r["stderr_log"] for r in compile_results + run_results],
+tools/compile_run_v1.py:656:            "Raw compile/run execution only.",
+tools/compile_run_v1.py:661:    if mbedtls_compile_attempted or mbedtls_run_attempted:
+tools/compile_run_v1.py:662:        next_task = "compile_run_blocking_policy_fixup_v1"
+tools/compile_run_v1.py:663:        reason = "mbedTLS compile or run was attempted"
+tools/compile_run_v1.py:664:    elif compile_summary["compile_failed"] >= 8:
+tools/compile_run_v1.py:665:        next_task = "render_cases_compile_fixup_v1"
+tools/compile_run_v1.py:666:        reason = "most cases failed to compile"
+tools/compile_run_v1.py:667:    elif compile_summary["compile_success"] == 0:
+tools/compile_run_v1.py:668:        next_task = "compile_environment_fixup_v1"
+tools/compile_run_v1.py:669:        reason = "no cases compiled successfully; likely environment/link issue"
+tools/compile_run_v1.py:674:        next_task = "render_cases_compile_fixup_v1"
+tools/compile_run_v1.py:678:        "schema": "next_action_after_compile_run_v1",
+tools/compile_run_v1.py:684:        "schema": "compile_run_v1_report",
+tools/compile_run_v1.py:688:            "compile_jobs": len(compile_results),
+tools/compile_run_v1.py:689:            "compile_success": compile_summary["compile_success"],
+tools/compile_run_v1.py:690:            "compile_failed": compile_summary["compile_failed"],
+tools/compile_run_v1.py:691:            "compile_skipped": compile_summary["compile_skipped"],
+tools/compile_run_v1.py:696:            "timeout": run_summary["timeout"],
+tools/compile_run_v1.py:698:            "mbedtls_attempted": bool(mbedtls_compile_attempted or mbedtls_run_attempted),
+tools/compile_run_v1.py:704:            f"Compile jobs: {len(compile_results)}.",
+tools/compile_run_v1.py:705:            f"Compile success: {compile_summary['compile_success']}.",
+tools/compile_run_v1.py:706:            f"Compile failed: {compile_summary['compile_failed']}.",
+tools/compile_run_v1.py:708:            f"normal/nonzero/signaled/timeout: {run_summary['normal_exit']}/{run_summary['nonzero_exit']}/{run_summary['signaled']}/{run_summary['timeout']}.",
+tools/compile_run_v1.py:710:            f"mbedTLS compile/run attempted: {bool(mbedtls_compile_attempted or mbedtls_run_attempted)}.",
+tools/compile_run_v1.py:718:    compile_commands_doc = {
+tools/compile_run_v1.py:719:        "schema": "compile_commands_v1",
+tools/compile_run_v1.py:721:        "compile_commands": compile_commands,
+tools/compile_run_v1.py:722:        "summary": {"total_commands": len(compile_commands)},
+tools/compile_run_v1.py:727:        "compile_results": compile_results_doc,
+tools/compile_run_v1.py:728:        "run_results": run_results_doc,
+tools/compile_run_v1.py:736:    dump_yaml(out_dir / "input" / "compile_run_input_summary.yaml", input_summary)
+tools/compile_run_v1.py:737:    dump_yaml(out_dir / "environment" / "compile_run_environment.yaml", env_doc)
+tools/compile_run_v1.py:738:    dump_yaml(out_dir / "compile_commands" / "compile_commands.yaml", compile_commands_doc)
+tools/compile_run_v1.py:739:    dump_yaml(out_dir / "compile_results" / "compile_results.yaml", compile_results_doc)
+tools/compile_run_v1.py:740:    dump_yaml(out_dir / "run_results" / "run_results.yaml", run_results_doc)
+tools/compile_run_v1.py:742:    dump_yaml(out_dir / "blocked_cases" / "compile_run_blocked_cases.yaml", blocked_doc)
+tools/compile_run_v1.py:743:    dump_yaml(out_dir / "validation" / "compile_run_quality_checks.yaml", quality_doc)
+tools/compile_run_v1.py:744:    dump_yaml(out_dir / "reports" / "next_action_after_compile_run.yaml", next_action)
+tools/compile_run_v1.py:745:    dump_yaml(out_dir / "reports" / "compile_run_v1_report.yaml", report)
+tools/compile_run_v1.py:748:    print(f"[OK] wrote compile/run artifacts to {out_dir}")
+tools/compile_run_v1.py:750:        "[SUMMARY] compile_success={compile_success} compile_failed={compile_failed} run_attempted={run_attempted} sanitizer={sanitizer}".format(
+tools/compile_run_v1.py:751:            compile_success=compile_summary["compile_success"],
+tools/compile_run_v1.py:752:            compile_failed=compile_summary["compile_failed"],
+runner/analyze_behavior_novelty.py:70:        tags.append("oracle_bug_marker")
+runner/analyze_behavior_novelty.py:72:        tags.append("oracle_ok_marker")
+runner/analyze_behavior_novelty.py:209:    compile_stderr = str((obj.get("compile") or {}).get("stderr") or "")
+runner/analyze_behavior_novelty.py:214:    if "compile_error" in status or (obj.get("compile") or {}).get("returncode") not in (None, 0):
+runner/analyze_behavior_novelty.py:215:        if "undefined reference" in compile_stderr or "ld:" in compile_stderr:
+runner/analyze_behavior_novelty.py:216:            return "harness_error", "link-like compile failure"
+runner/analyze_behavior_novelty.py:217:        return "harness_error", "compile failure"
+runner/analyze_behavior_novelty.py:224:            return "low_level_d2i_prefix_parse", "pointer-consumption oracle"
+tools/ast_sister_inventory_and_alignment_v1.py:202:        "oracle_fields": sorted(
+tools/ast_sister_inventory_and_alignment_v1.py:204:            if "oracle" in field or field in {"safe_behavior", "bug_behavior", "triage_behavior", "verdict"}
+tools/ast_sister_inventory_and_alignment_v1.py:293:    if "libclang" in "\n".join(script_text.values()).lower():
+tools/ast_sister_inventory_and_alignment_v1.py:294:        parser_backend.append("libclang reference found")
+tools/ast_sister_inventory_and_alignment_v1.py:364:            "oracle_fields": mask["oracle_fields"],
+tools/ast_sister_inventory_and_alignment_v1.py:391:            "oracle_fields": meta["oracle_fields"],
+tools/ast_sister_inventory_and_alignment_v1.py:403:                "Include suggested_use with migrate_api_call and preserve_oracle/oracle coverage.",
+tools/ast_sister_inventory_and_alignment_v1.py:537:                "oracle_types",
+tools/ast_sister_inventory_and_alignment_v1.py:546:                "oracle variables/functions",
+tools/ast_sister_inventory_and_alignment_v1.py:566:                "forbidden_stage": ["ast_selection", "full_c_generation", "source_template_generation", "oracle_rewrite"],
+tools/ast_sister_inventory_and_alignment_v1.py:647:            "compile_run": False,
+tools/historical_poc_ingestion_v1.py:5:It does not run PoCs, compile harnesses, render cases, call GLM/LLM, or update
+tools/historical_poc_ingestion_v1.py:191:def oracle_candidate(row: dict[str, Any], ast: dict[str, Any], family: str) -> str:
+tools/historical_poc_ingestion_v1.py:195:        return "crash_sanitizer_oracle"
+tools/historical_poc_ingestion_v1.py:197:        return "pointer_consumption_semantic_oracle"
+tools/historical_poc_ingestion_v1.py:246:def route_guess(row: dict[str, Any], ast: dict[str, Any], seed: dict[str, Any], oracle: str, family: str) -> str:
+tools/historical_poc_ingestion_v1.py:253:    if oracle == "crash_sanitizer_oracle":
+tools/historical_poc_ingestion_v1.py:267:    compiled = meta.get("local_compile") is True or "true" == flatten_text(meta.get("local_compile")).lower()
+tools/historical_poc_ingestion_v1.py:270:    if (compiled or ast.get("ast_ready")) and family != "needs_review":
+tools/historical_poc_ingestion_v1.py:330:    oracle = oracle_candidate(row, ast, family)
+tools/historical_poc_ingestion_v1.py:332:    route = route_guess(row, ast, seed, oracle, family)
+tools/historical_poc_ingestion_v1.py:350:                "local_compile",
+tools/historical_poc_ingestion_v1.py:366:            "oracle_candidate": oracle,
+tools/historical_poc_ingestion_v1.py:631:        "This sprint did not run PoCs, compile/run harnesses, render cases, call GLM/LLM, or modify Pattern Bank / scheduler seed files.\n",
+runner/analyze_cross_results.py:24:    "compile_error",
+runner/analyze_cross_results.py:25:    "timeout",
+runner/analyze_cross_results.py:67:def case_oracle_type(case: Dict[str, Any] | None) -> str:
+runner/analyze_cross_results.py:69:    return str(case.get("oracle_type") or tmpl.get("oracle_type") or "") if case else ""
+runner/analyze_cross_results.py:150:        groups[key]["oracle_type"] = case_oracle_type(c)
+runner/analyze_cross_results.py:252:        oracle_type = first_present(case_oracle_type(source), case_oracle_type(target), group.get("oracle_type", ""))
+runner/analyze_cross_results.py:263:            "oracle_type": oracle_type,
+runner/analyze_cross_results.py:283:    oracle_counts = Counter(p.get("oracle_type", "") for p in pair_results if p.get("oracle_type"))
+runner/analyze_cross_results.py:292:        "oracle_type_counts": dict(oracle_counts),
+tools/api_card_import_to_knowledge_raw_v1.py:112:def oracle_observables_for(family: str) -> list[str]:
+tools/api_card_import_to_knowledge_raw_v1.py:130:    notes.append("parser_must_reject_malformed and similar constraints are oracle candidates, not confirmed bugs.")
+tools/api_card_import_to_knowledge_raw_v1.py:155:        "oracle_observables": oracle_observables_for(family),
+tools/api_card_import_to_knowledge_raw_v1.py:183:        "oracle_relevance": "constraint_candidate_not_confirmed",
+tools/api_card_import_to_knowledge_raw_v1.py:373:            "oracle_observables",
+tools/compile_run_oracle_instrumented_v1.py:2:"""Compile and run oracle-instrumented OpenSSL harnesses.
+tools/compile_run_oracle_instrumented_v1.py:4:This wrapper records raw compile/run output and parsed ORACLE_EVENT records.
+tools/compile_run_oracle_instrumented_v1.py:11:import subprocess
+tools/compile_run_oracle_instrumented_v1.py:19:from analyzer.oracle_event_parser import parse_oracle_event_line
+tools/compile_run_oracle_instrumented_v1.py:20:from tools.compile_run_v1 import (
+tools/compile_run_oracle_instrumented_v1.py:38:    base = root / "compiled_cases" / case_id
+tools/compile_run_oracle_instrumented_v1.py:42:        candidate = root / "compiled_cases" / f"{case_id}__rerun_{idx:03d}"
+tools/compile_run_oracle_instrumented_v1.py:48:def compile_status_for(returncode: int | None, binary: Path) -> str:
+tools/compile_run_oracle_instrumented_v1.py:50:        return "compile_success"
+tools/compile_run_oracle_instrumented_v1.py:51:    return "compile_failed"
+tools/compile_run_oracle_instrumented_v1.py:54:def parse_oracle_events_with_context(text: str, case: dict[str, Any]) -> list[dict[str, Any]]:
+tools/compile_run_oracle_instrumented_v1.py:57:        parsed = parse_oracle_event_line(line)
+tools/compile_run_oracle_instrumented_v1.py:95:    timeout_seconds: int,
+tools/compile_run_oracle_instrumented_v1.py:106:    compile_stdout = case_out / "compile.stdout.log"
+tools/compile_run_oracle_instrumented_v1.py:107:    compile_stderr = case_out / "compile.stderr.log"
+tools/compile_run_oracle_instrumented_v1.py:110:    compile_cmd = command_for(harness, binary, include_dir, lib_dir)
+tools/compile_run_oracle_instrumented_v1.py:111:    compile_command = " ".join(compile_cmd)
+tools/compile_run_oracle_instrumented_v1.py:112:    write_text(out_dir / "compile_commands" / f"{case_id}.cmd", compile_command + "\n")
+tools/compile_run_oracle_instrumented_v1.py:114:    compile_returncode: int | None = None
+tools/compile_run_oracle_instrumented_v1.py:115:    compile_notes: list[str] = []
+tools/compile_run_oracle_instrumented_v1.py:117:        compile_notes.append("binary collision avoided by using unique output directory")
+tools/compile_run_oracle_instrumented_v1.py:119:        compile_status = "compile_skipped_collision"
+tools/compile_run_oracle_instrumented_v1.py:120:        compile_notes.append("non-openssl case blocked before compile")
+tools/compile_run_oracle_instrumented_v1.py:121:        write_text(compile_stdout, "")
+tools/compile_run_oracle_instrumented_v1.py:122:        write_text(compile_stderr, "blocked: non-openssl target\n")
+tools/compile_run_oracle_instrumented_v1.py:124:        compile_status = "compile_failed"
+tools/compile_run_oracle_instrumented_v1.py:125:        compile_notes.append("missing harness.c")
+tools/compile_run_oracle_instrumented_v1.py:126:        write_text(compile_stdout, "")
+tools/compile_run_oracle_instrumented_v1.py:127:        write_text(compile_stderr, "missing harness.c\n")
+tools/compile_run_oracle_instrumented_v1.py:129:        compile_status = "compile_failed"
+tools/compile_run_oracle_instrumented_v1.py:130:        compile_notes.append("harness.c missing ORACLE_EVENT instrumentation")
+tools/compile_run_oracle_instrumented_v1.py:131:        write_text(compile_stdout, "")
+tools/compile_run_oracle_instrumented_v1.py:132:        write_text(compile_stderr, "missing ORACLE_EVENT instrumentation\n")
+tools/compile_run_oracle_instrumented_v1.py:134:        proc = subprocess.run(compile_cmd, text=True, capture_output=True)
+tools/compile_run_oracle_instrumented_v1.py:135:        compile_returncode = proc.returncode
+tools/compile_run_oracle_instrumented_v1.py:136:        write_text(compile_stdout, proc.stdout)
+tools/compile_run_oracle_instrumented_v1.py:137:        write_text(compile_stderr, proc.stderr)
+tools/compile_run_oracle_instrumented_v1.py:138:        compile_status = compile_status_for(proc.returncode, binary)
+tools/compile_run_oracle_instrumented_v1.py:140:    compile_result = {
+tools/compile_run_oracle_instrumented_v1.py:147:        "compile_command": compile_command,
+tools/compile_run_oracle_instrumented_v1.py:148:        "compile_status": compile_status,
+tools/compile_run_oracle_instrumented_v1.py:149:        "stdout_log": rel(compile_stdout),
+tools/compile_run_oracle_instrumented_v1.py:150:        "stderr_log": rel(compile_stderr),
+tools/compile_run_oracle_instrumented_v1.py:151:        "return_code": compile_returncode,
+tools/compile_run_oracle_instrumented_v1.py:152:        "notes": compile_notes,
+tools/compile_run_oracle_instrumented_v1.py:155:    run_status = "not_run_compile_failed"
+tools/compile_run_oracle_instrumented_v1.py:160:    if compile_status == "compile_success":
+tools/compile_run_oracle_instrumented_v1.py:163:            proc = subprocess.run(
+tools/compile_run_oracle_instrumented_v1.py:167:                timeout=timeout_seconds,
+tools/compile_run_oracle_instrumented_v1.py:179:        except subprocess.TimeoutExpired as exc:
+tools/compile_run_oracle_instrumented_v1.py:182:            run_status = "timeout"
+tools/compile_run_oracle_instrumented_v1.py:184:            write_text(run_stderr, (exc.stderr or "") + "\ntimeout\n")
+tools/compile_run_oracle_instrumented_v1.py:192:    events = [event_record(event) for event in parse_oracle_events_with_context(combined, case)]
+tools/compile_run_oracle_instrumented_v1.py:199:        compile_success=compile_status == "compile_success",
+tools/compile_run_oracle_instrumented_v1.py:200:        timeout=timed_out,
+tools/compile_run_oracle_instrumented_v1.py:213:        "timeout": timed_out,
+tools/compile_run_oracle_instrumented_v1.py:217:        "oracle_event_count": len(events),
+tools/compile_run_oracle_instrumented_v1.py:238:    return compile_result, run_result, events, sanitizer_observation
+tools/compile_run_oracle_instrumented_v1.py:247:        "schema": "compile_run_oracle_instrumented_input_summary_v1",
+tools/compile_run_oracle_instrumented_v1.py:252:            "analyzer/oracle_event_parser.py",
+tools/compile_run_oracle_instrumented_v1.py:253:            "artifacts/sprints/compile_run_v1/compile_results/compile_results.yaml",
+tools/compile_run_oracle_instrumented_v1.py:254:            "artifacts/sprints/compile_run_v1/run_results/run_results.yaml",
+tools/compile_run_oracle_instrumented_v1.py:255:            "artifacts/sprints/compile_run_v1/sanitizer_observations/sanitizer_observations.yaml",
+tools/compile_run_oracle_instrumented_v1.py:256:            "artifacts/sprints/oracle_instrumentation_enrichment_v1/compatibility/oracle_instrumentation_compatibility.yaml",
+tools/compile_run_oracle_instrumented_v1.py:261:            "compile": True,
+tools/compile_run_oracle_instrumented_v1.py:265:            "parse_oracle_event": True,
+tools/compile_run_oracle_instrumented_v1.py:284:        "schema": "blocked_cases_oracle_instrumented_v1",
+tools/compile_run_oracle_instrumented_v1.py:291:                "compile_attempted": False,
+tools/compile_run_oracle_instrumented_v1.py:298:            "mbedtls_compile_attempted": 0,
+tools/compile_run_oracle_instrumented_v1.py:305:    parser = argparse.ArgumentParser(description="Compile/run oracle-instrumented OpenSSL harnesses.")
+tools/compile_run_oracle_instrumented_v1.py:310:    parser.add_argument("--timeout-seconds", type=int, default=10)
+tools/compile_run_oracle_instrumented_v1.py:325:    dump_yaml(out_dir / "input" / "compile_run_oracle_instrumented_input_summary.yaml", input_summary)
+tools/compile_run_oracle_instrumented_v1.py:327:        out_dir / "input" / "compile_run_oracle_instrumented_input_summary.md",
+tools/compile_run_oracle_instrumented_v1.py:331:            "- compile/run: `true`",
+tools/compile_run_oracle_instrumented_v1.py:340:        "schema": "compile_run_oracle_instrumented_environment_v1",
+tools/compile_run_oracle_instrumented_v1.py:351:    compile_results: list[dict[str, Any]] = []
+tools/compile_run_oracle_instrumented_v1.py:352:    run_results: list[dict[str, Any]] = []
+tools/compile_run_oracle_instrumented_v1.py:356:        compile_result, run_result, events, sanitizer_observation = execute_case(
+tools/compile_run_oracle_instrumented_v1.py:362:            timeout_seconds=args.timeout_seconds,
+tools/compile_run_oracle_instrumented_v1.py:364:        compile_results.append(compile_result)
+tools/compile_run_oracle_instrumented_v1.py:365:        run_results.append(run_result)
+tools/compile_run_oracle_instrumented_v1.py:369:    compile_counts = Counter(item["compile_status"] for item in compile_results)
+tools/compile_run_oracle_instrumented_v1.py:370:    compile_doc = {
+tools/compile_run_oracle_instrumented_v1.py:371:        "schema": "compile_results_oracle_instrumented_v1",
+tools/compile_run_oracle_instrumented_v1.py:373:        "compile_results": compile_results,
+tools/compile_run_oracle_instrumented_v1.py:375:            "total_jobs": len(compile_results),
+tools/compile_run_oracle_instrumented_v1.py:376:            "compile_success": compile_counts.get("compile_success", 0),
+tools/compile_run_oracle_instrumented_v1.py:377:            "compile_failed": compile_counts.get("compile_failed", 0),
+tools/compile_run_oracle_instrumented_v1.py:378:            "compile_skipped": compile_counts.get("compile_skipped_collision", 0),
+tools/compile_run_oracle_instrumented_v1.py:381:    dump_yaml(out_dir / "compile_results" / "compile_results.yaml", compile_doc)
+tools/compile_run_oracle_instrumented_v1.py:383:        out_dir / "compile_results" / "compile_results.md",
+tools/compile_run_oracle_instrumented_v1.py:385:        [f"- {k}: `{v}`" for k, v in compile_doc["summary"].items()],
+tools/compile_run_oracle_instrumented_v1.py:388:    raw_counts = Counter(item["raw_observation_label"] for item in run_results)
+tools/compile_run_oracle_instrumented_v1.py:390:        "schema": "run_results_oracle_instrumented_v1",
+tools/compile_run_oracle_instrumented_v1.py:392:        "run_results": run_results,
+tools/compile_run_oracle_instrumented_v1.py:394:            "total_jobs": len(run_results),
+tools/compile_run_oracle_instrumented_v1.py:395:            "run_attempted": len([r for r in run_results if r["run_status"] != "not_run_compile_failed"]),
+tools/compile_run_oracle_instrumented_v1.py:398:            "signaled": len([r for r in run_results if r["run_status"] == "signaled"]),
+tools/compile_run_oracle_instrumented_v1.py:399:            "timeout": raw_counts.get("timeout_observed", 0),
+tools/compile_run_oracle_instrumented_v1.py:401:            "oracle_events_observed": len(all_events),
+tools/compile_run_oracle_instrumented_v1.py:402:            "not_run_compile_failed": raw_counts.get("compile_failed_not_run", 0),
+tools/compile_run_oracle_instrumented_v1.py:405:    dump_yaml(out_dir / "run_results" / "run_results.yaml", run_doc)
+tools/compile_run_oracle_instrumented_v1.py:407:        out_dir / "run_results" / "run_results.md",
+tools/compile_run_oracle_instrumented_v1.py:415:    oracle_doc = {
+tools/compile_run_oracle_instrumented_v1.py:416:        "schema": "oracle_events_results_v1",
+tools/compile_run_oracle_instrumented_v1.py:433:            "Raw oracle observations only; no semantic interpretation is performed here.",
+tools/compile_run_oracle_instrumented_v1.py:438:    dump_yaml(out_dir / "oracle_events" / "oracle_events.yaml", oracle_doc)
+tools/compile_run_oracle_instrumented_v1.py:440:        out_dir / "oracle_events" / "oracle_events.md",
+tools/compile_run_oracle_instrumented_v1.py:442:        [f"- {k}: `{v}`" for k, v in oracle_doc["summary"].items()],
+tools/compile_run_oracle_instrumented_v1.py:446:        "schema": "sanitizer_observations_oracle_instrumented_v1",
+tools/compile_run_oracle_instrumented_v1.py:452:            "crash_signal_count": len([r for r in run_results if r["run_status"] == "signaled"]),
+tools/compile_run_oracle_instrumented_v1.py:453:            "timeout_count": len([r for r in run_results if r["timeout"]]),
+tools/compile_run_oracle_instrumented_v1.py:468:        ["- asn1_nested_boundary -> mbedTLS: compile_attempted=false, run_attempted=false"],
+tools/compile_run_oracle_instrumented_v1.py:473:        for item in compile_results + run_results
+tools/compile_run_oracle_instrumented_v1.py:477:    all_bins = all(str(item.get("binary_path", "")).startswith(rel(out_dir)) for item in compile_results)
+tools/compile_run_oracle_instrumented_v1.py:479:        "schema": "compile_run_oracle_instrumented_quality_checks_v1",
+tools/compile_run_oracle_instrumented_v1.py:482:        "compile_jobs_seen": len(compile_results),
+tools/compile_run_oracle_instrumented_v1.py:483:        "compile_success": compile_doc["summary"]["compile_success"],
+tools/compile_run_oracle_instrumented_v1.py:484:        "compile_failed": compile_doc["summary"]["compile_failed"],
+tools/compile_run_oracle_instrumented_v1.py:486:        "oracle_events_observed": len(all_events),
+tools/compile_run_oracle_instrumented_v1.py:487:        "cases_with_oracle_events": oracle_doc["summary"]["cases_with_events"],
+tools/compile_run_oracle_instrumented_v1.py:488:        "mbedtls_compile_attempted": len([c for c in compile_results if c.get("target_library") == "mbedtls"]),
+tools/compile_run_oracle_instrumented_v1.py:489:        "mbedtls_run_attempted": len([r for r in run_results if r.get("target_library") == "mbedtls"]),
+tools/compile_run_oracle_instrumented_v1.py:490:        "all_jobs_target_openssl": all(c.get("target_library") == "openssl" for c in compile_results + run_results),
+tools/compile_run_oracle_instrumented_v1.py:501:            "This sprint records raw compile/run/oracle-event output only.",
+tools/compile_run_oracle_instrumented_v1.py:507:        if quality["compile_jobs_seen"] == 14
+tools/compile_run_oracle_instrumented_v1.py:509:        and quality["mbedtls_compile_attempted"] == 0
+tools/compile_run_oracle_instrumented_v1.py:511:        and quality["cases_with_oracle_events"] >= 10
+tools/compile_run_oracle_instrumented_v1.py:520:        if quality["compile_jobs_seen"]
+tools/compile_run_oracle_instrumented_v1.py:523:    dump_yaml(out_dir / "validation" / "compile_run_oracle_instrumented_quality_checks.yaml", quality)
+tools/compile_run_oracle_instrumented_v1.py:525:        out_dir / "validation" / "compile_run_oracle_instrumented_quality_checks.md",
+tools/compile_run_oracle_instrumented_v1.py:530:    if quality["mbedtls_compile_attempted"] or quality["mbedtls_run_attempted"]:
+tools/compile_run_oracle_instrumented_v1.py:531:        next_task = "compile_run_blocking_policy_fixup_v1"
+tools/compile_run_oracle_instrumented_v1.py:532:        reason = "mbedTLS was compiled or run unexpectedly"
+tools/compile_run_oracle_instrumented_v1.py:533:    elif compile_doc["summary"]["compile_failed"] > 7:
+tools/compile_run_oracle_instrumented_v1.py:534:        next_task = "oracle_instrumentation_compile_fixup_v1"
+tools/compile_run_oracle_instrumented_v1.py:535:        reason = "most instrumented cases failed to compile"
+tools/compile_run_oracle_instrumented_v1.py:536:    elif oracle_doc["summary"]["total_events"] == 0:
+tools/compile_run_oracle_instrumented_v1.py:537:        next_task = "oracle_instrumentation_output_fixup_v1"
+tools/compile_run_oracle_instrumented_v1.py:539:    elif compile_doc["summary"]["compile_success"] == 14 and run_doc["summary"]["run_attempted"] == 14:
+tools/compile_run_oracle_instrumented_v1.py:540:        next_task = "analyze_results_oracle_aware_v1"
+tools/compile_run_oracle_instrumented_v1.py:541:        reason = "14 cases compiled and ran with parseable ORACLE_EVENT records"
+tools/compile_run_oracle_instrumented_v1.py:543:        next_task = "oracle_instrumentation_compile_fixup_v1"
+tools/compile_run_oracle_instrumented_v1.py:544:        reason = "compile/run quality did not fully pass"
+tools/compile_run_oracle_instrumented_v1.py:546:        "schema": "next_action_after_compile_run_oracle_instrumented_v1",
+tools/compile_run_oracle_instrumented_v1.py:551:    dump_yaml(out_dir / "reports" / "next_action_after_compile_run_oracle_instrumented.yaml", next_action)
+tools/compile_run_oracle_instrumented_v1.py:553:        out_dir / "reports" / "next_action_after_compile_run_oracle_instrumented.md",
+tools/compile_run_oracle_instrumented_v1.py:559:        "schema": "compile_run_oracle_instrumented_v1_report",
+tools/compile_run_oracle_instrumented_v1.py:560:        "task": "compile_run_oracle_instrumented_v1",
+tools/compile_run_oracle_instrumented_v1.py:562:        "instrumented_compile_jobs": len(compile_results),
+tools/compile_run_oracle_instrumented_v1.py:563:        "compile_success": compile_doc["summary"]["compile_success"],
+tools/compile_run_oracle_instrumented_v1.py:564:        "compile_failed": compile_doc["summary"]["compile_failed"],
+tools/compile_run_oracle_instrumented_v1.py:566:        "oracle_events_parsed": oracle_doc["summary"]["total_events"],
+tools/compile_run_oracle_instrumented_v1.py:567:        "cases_with_events": oracle_doc["summary"]["cases_with_events"],
+tools/compile_run_oracle_instrumented_v1.py:568:        "accepted_true": oracle_doc["summary"]["accepted_true"],
+tools/compile_run_oracle_instrumented_v1.py:569:        "accepted_false": oracle_doc["summary"]["accepted_false"],
+tools/compile_run_oracle_instrumented_v1.py:570:        "full_consumption_true": oracle_doc["summary"]["full_consumption_true"],
+tools/compile_run_oracle_instrumented_v1.py:571:        "full_consumption_false": oracle_doc["summary"]["full_consumption_false"],
+tools/compile_run_oracle_instrumented_v1.py:572:        "full_consumption_unknown": oracle_doc["summary"]["full_consumption_unknown"],
+tools/compile_run_oracle_instrumented_v1.py:575:        "timeouts": sanitizer_doc["summary"]["timeout_count"],
+tools/compile_run_oracle_instrumented_v1.py:576:        "mbedtls_compile_attempted": quality["mbedtls_compile_attempted"],
+tools/compile_run_oracle_instrumented_v1.py:589:    dump_yaml(out_dir / "reports" / "compile_run_oracle_instrumented_v1_report.yaml", report)
+tools/compile_run_oracle_instrumented_v1.py:591:        out_dir / "reports" / "compile_run_oracle_instrumented_v1_report.md",
+tools/compile_run_oracle_instrumented_v1.py:592:        "compile_run_oracle_instrumented_v1 Report",
+tools/compile_run_oracle_instrumented_v1.py:597:        "# compile_run_oracle_instrumented_v1\n\n"
+tools/compile_run_oracle_instrumented_v1.py:598:        "This sprint compiles and runs the 14 OpenSSL oracle-instrumented harnesses, "
+tools/compile_run_oracle_instrumented_v1.py:601:        f"- compile_success: `{compile_doc['summary']['compile_success']}`\n"
+tools/compile_run_oracle_instrumented_v1.py:603:        f"- oracle_events_parsed: `{oracle_doc['summary']['total_events']}`\n"
+tools/compile_run_oracle_instrumented_v1.py:606:    print(f"[OK] wrote compile/run oracle instrumented artifacts to {out_dir}")
+tools/compile_run_oracle_instrumented_v1.py:608:        f"[SUMMARY] compile_success={compile_doc['summary']['compile_success']} run_attempted={run_doc['summary']['run_attempted']} events={oracle_doc['summary']['total_events']} quality={quality['quality_status']}"
+runner/render_repair_prompt.py:51:- Do not modify or remove the oracle.
+runner/build_repair_queue.py:12:REPAIRABLE = {"compile_error", "link_error", "template_render_error", "harness_error"}
+runner/build_repair_queue.py:32:    "remove_oracle",
+runner/build_repair_queue.py:66:    compile_obj = obj.get("compile") or {}
+runner/build_repair_queue.py:68:    compile_stderr = str(compile_obj.get("stderr") or "")
+runner/build_repair_queue.py:70:    combined = f"{compile_stderr}\n{run_stderr}"
+runner/build_repair_queue.py:76:    if "compile_error" in status or compile_obj.get("returncode") not in (None, 0):
+runner/build_repair_queue.py:77:        if "undefined reference" in compile_stderr or "ld:" in compile_stderr:
+runner/build_repair_queue.py:79:        return "compile_error"
+runner/build_repair_queue.py:98:    compile_obj = obj.get("compile") or {}
+runner/build_repair_queue.py:105:            str(compile_obj.get("stderr") or ""),
+tools/mutation_policy_refinement_for_valid_prefix_v1.py:4:This is a planning-only tool. It does not render, compile, run, analyze runtime
+tools/mutation_policy_refinement_for_valid_prefix_v1.py:52:        Path("artifacts/sprints/oracle_instrumentation_enrichment_v1/instrumented_cases"),
+tools/mutation_policy_refinement_for_valid_prefix_v1.py:144:            "oracle_plan": (base / "oracle_plan.yaml").exists(),
+tools/mutation_policy_refinement_for_valid_prefix_v1.py:156:            "oracle_aware_analysis": args.oracle_aware_analysis,
+tools/mutation_policy_refinement_for_valid_prefix_v1.py:157:            "oracle_semantics": args.oracle_semantics,
+tools/mutation_policy_refinement_for_valid_prefix_v1.py:174:            "compile": False,
+tools/mutation_policy_refinement_for_valid_prefix_v1.py:228:                    "accepted path still requires later compile/run observation",
+tools/mutation_policy_refinement_for_valid_prefix_v1.py:362:                "oracle_focus": ["accepted", "full_consumption", "consumed_len", "openssl_error"],
+tools/mutation_policy_refinement_for_valid_prefix_v1.py:366:                    "supplemental planning case only; no render/compile/run performed",
+tools/mutation_policy_refinement_for_valid_prefix_v1.py:374:        "base_reason": "accepted_true_zero_in_oracle_aware_analysis",
+tools/mutation_policy_refinement_for_valid_prefix_v1.py:404:                        "oracle_expectation",
+tools/mutation_policy_refinement_for_valid_prefix_v1.py:448:        "compile_executed": False,
+tools/mutation_policy_refinement_for_valid_prefix_v1.py:506:        "compile_executed": False,
+tools/mutation_policy_refinement_for_valid_prefix_v1.py:523:    parser.add_argument("--oracle-aware-analysis", required=True)
+tools/mutation_policy_refinement_for_valid_prefix_v1.py:524:    parser.add_argument("--oracle-semantics", required=True)
+tools/mutation_policy_refinement_for_valid_prefix_v1.py:539:    sem_doc = load_yaml(Path(args.oracle_semantics))
+tools/mutation_policy_refinement_for_valid_prefix_v1.py:540:    load_yaml(Path(args.oracle_aware_analysis))
+tools/mutation_policy_refinement_for_valid_prefix_v1.py:577:                "Planning-only mutation policy refinement after oracle-aware analysis observed accepted_true=0.",
+tools/mutation_policy_refinement_for_valid_prefix_v1.py:586:                "No render, compile, run, feedback, GLM call, or vulnerability claim was performed.",
+tools/template_schema_inventory_v1.py:293:                "oracle_type",
+tools/template_schema_inventory_v1.py:295:                "oracle or safe_behavior/bug_behavior",
+tools/template_schema_inventory_v1.py:300:            "oracle_fields": ["oracle_type", "oracle", "safe_behavior", "bug_behavior", "triage_behavior", "verdict"],
+tools/template_schema_inventory_v1.py:337:            "oracle_mapping": ["oracle_type", "oracle_strategy", "safe_behavior", "bug_behavior", "return_value_semantics"],
+tools/template_schema_inventory_v1.py:472:                "observed_oracles": [
+tools/template_schema_inventory_v1.py:475:                        meta.get("oracle_type"),
+tools/template_schema_inventory_v1.py:476:                        "oracle" if "oracle" in meta else None,
+tools/template_schema_inventory_v1.py:750:            "compile_run": False,
+tools/apply_pkcs_slot_bindings_and_adapter_validate_v1.py:4:No GLM, no render, no compile/run, no C generation.
+tools/apply_pkcs_slot_bindings_and_adapter_validate_v1.py:65:    "oracle_mapping",
+tools/apply_pkcs_slot_bindings_and_adapter_validate_v1.py:78:    r"\bgcc\b",
+tools/apply_pkcs_slot_bindings_and_adapter_validate_v1.py:79:    r"\bclang\b",
+tools/apply_pkcs_slot_bindings_and_adapter_validate_v1.py:203:    oracle_nonempty = nonempty(bindings.get("oracle_mapping"))
+tools/apply_pkcs_slot_bindings_and_adapter_validate_v1.py:229:            oracle_nonempty,
+tools/apply_pkcs_slot_bindings_and_adapter_validate_v1.py:246:        if not oracle_nonempty:
+tools/apply_pkcs_slot_bindings_and_adapter_validate_v1.py:247:            notes.append("oracle_mapping empty")
+tools/apply_pkcs_slot_bindings_and_adapter_validate_v1.py:263:        "oracle_mapping_nonempty": oracle_nonempty,
+tools/apply_pkcs_slot_bindings_and_adapter_validate_v1.py:319:        "no_render_compile_run": True,
+tools/apply_pkcs_slot_bindings_and_adapter_validate_v1.py:419:        "why_lightweight_validator": "existing adapter_validate validates adapter.yaml flows; this sprint validates slot_bindings.yaml policy without render/compile",
+tools/apply_pkcs_slot_bindings_and_adapter_validate_v1.py:420:        "scope": "structure and policy validation only; no render/compile/run",
+tools/apply_pkcs_slot_bindings_and_adapter_validate_v1.py:436:        "no_render_compile_run": True,
+tools/apply_pkcs_slot_bindings_and_adapter_validate_v1.py:524:        "compile_run": False,
+tools/runtime_feedback_integration_v1.py:100:                "category": "oracle",
+tools/runtime_feedback_integration_v1.py:101:                "recommendation": "keep_oracle_event_instrumentation",
+tools/runtime_feedback_integration_v1.py:193:                "reason": "x509 is adjacent to ASN.1 and can reuse oracle instrumentation",
+tools/runtime_feedback_integration_v1.py:267:        "oracle_semantic_triage_performed": False,
+tools/runtime_feedback_integration_v1.py:269:        "compile_executed": False,
+tools/runtime_feedback_integration_v1.py:306:        "skipped_local_oracle_semantic_triage": True,
+tools/runtime_feedback_integration_v1.py:317:        "compile_executed": False,
+tools/runtime_feedback_integration_v1.py:331:    parser.add_argument("--valid-prefix-oracle-semantics", required=True)
+tools/runtime_feedback_integration_v1.py:334:    parser.add_argument("--previous-oracle-aware-mutation-effectiveness", required=True)
+tools/runtime_feedback_integration_v1.py:352:    load_yaml(Path(args.valid_prefix_oracle_semantics))
+tools/runtime_feedback_integration_v1.py:355:    previous_mut = load_yaml(Path(args.previous_oracle_aware_mutation_effectiveness))
+tools/runtime_feedback_integration_v1.py:370:            "oracle_semantic_triage_performed": False,
+tools/runtime_feedback_integration_v1.py:409:                "本轮未做本地 oracle semantic triage，未确认漏洞、CVE 或 exploitable 状态。",
+tools/runtime_feedback_integration_v1.py:430:                f"- skipped_local_oracle_semantic_triage: {report['skipped_local_oracle_semantic_triage']}",
+tools/runtime_feedback_integration_v1.py:437:                "No render, compile, run, GLM, main knowledge write, Pattern Bank write, scheduler_seed write, or vulnerability claim was performed.",
+tools/manual_review_counterpart_staged_cards_before_import_v1.py:89:    pattern = re.compile(rf"\b{re.escape(api)}\b")
+tools/manual_review_counterpart_staged_cards_before_import_v1.py:113:    pattern = re.compile(rf"\b{re.escape(api)}\b")
+tools/manual_review_counterpart_staged_cards_before_import_v1.py:532:        "compile_run": False,
+tools/analyze_results_v1.py:2:"""Analyze raw compile_run_v1 outputs without rerun or triage."""
+tools/analyze_results_v1.py:70:def oracle_by_family(plan: dict[str, Any]) -> dict[tuple[str, str], dict[str, Any]]:
+tools/analyze_results_v1.py:78:    compile_results: dict[str, Any],
+tools/analyze_results_v1.py:79:    run_results: dict[str, Any],
+tools/analyze_results_v1.py:83:    oracle_plan: dict[str, Any],
+tools/analyze_results_v1.py:85:    compile_by_job = by_key(compile_results.get("compile_results", []), "compile_job_id")
+tools/analyze_results_v1.py:86:    sanitizer_by_job = by_key(sanitizer.get("observations", []), "compile_job_id")
+tools/analyze_results_v1.py:89:    oracles = oracle_by_family(oracle_plan)
+tools/analyze_results_v1.py:92:    for run in run_results.get("run_results", []):
+tools/analyze_results_v1.py:95:        compile_job_id = run.get("compile_job_id")
+tools/analyze_results_v1.py:96:        compile_result = compile_by_job.get(compile_job_id, {})
+tools/analyze_results_v1.py:99:        oracle_entry = oracles.get((run.get("family", ""), run.get("target_library", "")), {})
+tools/analyze_results_v1.py:100:        expected_oracle = {
+tools/analyze_results_v1.py:101:            "primary": (mutation.get("expected_oracle") or {}).get(
+tools/analyze_results_v1.py:102:                "primary", (oracle_entry.get("primary_oracles") or [""])[0]
+tools/analyze_results_v1.py:104:            "secondary": (mutation.get("expected_oracle") or {}).get(
+tools/analyze_results_v1.py:105:                "secondary", oracle_entry.get("secondary_oracles", [])
+tools/analyze_results_v1.py:107:            "expected_result_label": (mutation.get("expected_oracle") or {}).get("expected_result_label", ""),
+tools/analyze_results_v1.py:109:        s_obs = sanitizer_by_job.get(compile_job_id, {})
+tools/analyze_results_v1.py:110:        existing = classify_family_run(run, compile_result)
+tools/analyze_results_v1.py:113:            existing, expected_oracle.get("expected_result_label", "")
+tools/analyze_results_v1.py:117:            "compile_job_id": compile_job_id,
+tools/analyze_results_v1.py:122:            "compile_status": compile_result.get("compile_status"),
+tools/analyze_results_v1.py:126:            "timeout": run.get("timeout"),
+tools/analyze_results_v1.py:129:            "expected_oracle": expected_oracle,
+tools/analyze_results_v1.py:130:            "oracle_metadata": {
+tools/analyze_results_v1.py:131:                "path": rendered_case.get("oracle_metadata", ""),
+tools/analyze_results_v1.py:179:            "tools/analyze_results_v1 keeps family/mutation/oracle enrichment only",
+tools/analyze_results_v1.py:187:            "timeout_candidate": counts.get("timeout_candidate", 0),
+tools/analyze_results_v1.py:189:            "oracle_semantics_needs_review": counts.get("oracle_semantics_needs_review", 0),
+tools/analyze_results_v1.py:223:                "compile_success": len([c for c in cases if c["compile_status"] == "compile_success"]),
+tools/analyze_results_v1.py:229:                "timeout": len([c for c in cases if c["timeout"]]),
+tools/analyze_results_v1.py:230:                "preliminary_conclusion": "bounded mutation matrix did not observe crash/sanitizer output; semantic oracle review remains separate",
+tools/analyze_results_v1.py:248:def build_oracle_analysis(case_doc: dict[str, Any]) -> dict[str, Any]:
+tools/analyze_results_v1.py:255:        primary[case["expected_oracle"].get("primary", "")] += 1
+tools/analyze_results_v1.py:256:        for item in case["expected_oracle"].get("secondary", []):
+tools/analyze_results_v1.py:258:        expected[case["expected_oracle"].get("expected_result_label", "")] += 1
+tools/analyze_results_v1.py:270:        "schema": "oracle_analysis_v1",
+tools/analyze_results_v1.py:272:        "oracle_summary": {
+tools/analyze_results_v1.py:273:            "primary_oracles": dict(primary),
+tools/analyze_results_v1.py:274:            "secondary_oracles": dict(secondary),
+tools/analyze_results_v1.py:277:            "oracle_interpretation": {
+tools/analyze_results_v1.py:289:    case_by_job = by_key(case_doc["cases"], "compile_job_id")
+tools/analyze_results_v1.py:292:        case = case_by_job.get(obs.get("compile_job_id"), {})
+tools/analyze_results_v1.py:316:            "timeouts": len([c for c in case_doc["cases"] if c["timeout"]]),
+tools/analyze_results_v1.py:328:        "parser accept/reject divergence 需要 harness 输出或更细 oracle 才能判断。",
+tools/analyze_results_v1.py:346:                "compile_attempted": False,
+tools/analyze_results_v1.py:349:                "reason": "blocked_expected / no rendered case / no compile job",
+tools/analyze_results_v1.py:362:    oracle_doc = docs["oracle"]
+tools/analyze_results_v1.py:375:        "- consumes: `compile_run_v1`\n"
+tools/analyze_results_v1.py:376:        "- rerun/compile: `false`\n"
+tools/analyze_results_v1.py:387:        f"- timeout_candidate: `{case_doc['summary']['timeout_candidate']}`\n",
+tools/analyze_results_v1.py:400:        out_dir / "oracle_analysis" / "oracle_analysis.md",
+tools/analyze_results_v1.py:402:        f"- semantic_review_needed: `{oracle_doc['summary']['semantic_review_needed']}`\n"
+tools/analyze_results_v1.py:403:        "- limitation: run_status normal_exit only shows no crash; parser accept/reject divergence needs richer oracle output.\n",
+tools/analyze_results_v1.py:412:        f"- timeouts: `{sanitizer_doc['summary']['timeouts']}`\n",
+tools/analyze_results_v1.py:428:                f"{b['family']} -> {b['target_library']}: compile_attempted={b['compile_attempted']}, run_attempted={b['run_attempted']}"
+tools/analyze_results_v1.py:463:        "This sprint analyzes existing compile_run_v1 raw outputs. It does not recompile, rerun, triage, or write feedback.\n",
+tools/analyze_results_v1.py:468:    parser = argparse.ArgumentParser(description="Analyze compile_run_v1 raw results.")
+tools/analyze_results_v1.py:469:    parser.add_argument("--compile-results", required=True)
+tools/analyze_results_v1.py:474:    parser.add_argument("--oracle-expectation-plan", required=True)
+tools/analyze_results_v1.py:481:    compile_results_path = Path(args.compile_results)
+tools/analyze_results_v1.py:482:    run_results_path = Path(args.run_results)
+tools/analyze_results_v1.py:486:    oracle_plan_path = Path(args.oracle_expectation_plan)
+tools/analyze_results_v1.py:490:    compile_results = load_yaml(compile_results_path)
+tools/analyze_results_v1.py:491:    run_results = load_yaml(run_results_path)
+tools/analyze_results_v1.py:495:    oracle_plan = load_yaml(oracle_plan_path)
+tools/analyze_results_v1.py:501:            rel(compile_results_path),
+tools/analyze_results_v1.py:502:            rel(run_results_path),
+tools/analyze_results_v1.py:506:            rel(oracle_plan_path),
+tools/analyze_results_v1.py:507:            "artifacts/sprints/compile_run_v1/blocked_cases/compile_run_blocked_cases.yaml",
+tools/analyze_results_v1.py:508:            "artifacts/sprints/compile_plan_v1/compile_plan/compile_plan.yaml",
+tools/analyze_results_v1.py:509:            "artifacts/sprints/compile_plan_v1/compile_manifest/compile_manifest.yaml",
+tools/analyze_results_v1.py:513:            "recompile": False,
+tools/analyze_results_v1.py:522:        compile_results=compile_results,
+tools/analyze_results_v1.py:523:        run_results=run_results,
+tools/analyze_results_v1.py:527:        oracle_plan=oracle_plan,
+tools/analyze_results_v1.py:530:    oracle_doc = build_oracle_analysis(case_doc)
+tools/analyze_results_v1.py:544:        "compile_results_loaded": bool(compile_results.get("compile_results")),
+tools/analyze_results_v1.py:545:        "run_results_loaded": bool(run_results.get("run_results")),
+tools/analyze_results_v1.py:555:        "no_compile_executed": True,
+tools/analyze_results_v1.py:575:        and q["no_compile_executed"]
+tools/analyze_results_v1.py:587:        + case_doc["summary"]["timeout_candidate"]
+tools/analyze_results_v1.py:589:    semantic_review_needed = oracle_doc["summary"]["semantic_review_needed"]
+tools/analyze_results_v1.py:595:        next_task = "oracle_instrumentation_enrichment_v1"
+tools/analyze_results_v1.py:627:            "timeouts": sanitizer_doc["summary"]["timeouts"],
+tools/analyze_results_v1.py:630:            "recompile_or_rerun": False,
+tools/analyze_results_v1.py:639:            f"Crash/signal/timeouts: {sanitizer_doc['summary']['crash_signals']}/{sanitizer_doc['summary']['timeouts']}.",
+tools/analyze_results_v1.py:642:            "No recompile/rerun was executed.",
+tools/analyze_results_v1.py:655:        "oracle": oracle_doc,
+tools/analyze_results_v1.py:667:    dump_yaml(out_dir / "oracle_analysis" / "oracle_analysis.yaml", oracle_doc)
+tools/render_plan_v1.py:4:This tool intentionally does not render C, compile, run PoCs, or call an LLM.
+tools/render_plan_v1.py:63:def oracle_pointer(path: Path, family: str, target_library: str) -> str:
+tools/render_plan_v1.py:108:    oracle_plan_path: Path,
+tools/render_plan_v1.py:169:            "oracle_expectation": oracle_pointer(oracle_plan_path, family, target_library),
+tools/render_plan_v1.py:182:            "expected_result_label": (case.get("expected_oracle") or {}).get("expected_result_label", ""),
+tools/render_plan_v1.py:183:            "oracle": case.get("expected_oracle", {}),
+tools/render_plan_v1.py:190:                "oracle_metadata": f"{planned_case_dir}/oracle_metadata.yaml",
+tools/render_plan_v1.py:207:                "compiled": False,
+tools/render_plan_v1.py:226:        if any(term in line for term in ("render", "cross_generator", "compile_run", "analyze_results"))
+tools/render_plan_v1.py:240:            "runner.compile_run": Path("runner/compile_run.py").exists(),
+tools/render_plan_v1.py:295:        "- scope: plan only; no C render, compile, run, or LLM call.\n\n"
+tools/render_plan_v1.py:383:        "It does not render C, compile, run PoCs, or call GLM/LLM.\n\n"
+tools/render_plan_v1.py:415:    parser.add_argument("--oracle-expectation-plan", required=True)
+tools/render_plan_v1.py:431:    oracle_plan_path = Path(args.oracle_expectation_plan)
+tools/render_plan_v1.py:439:    oracle_plan = load_yaml(oracle_plan_path)
+tools/render_plan_v1.py:453:        oracle_plan_path=oracle_plan_path,
+tools/render_plan_v1.py:486:            rel(oracle_plan_path),
+tools/render_plan_v1.py:495:            "no_compile": True,
+tools/render_plan_v1.py:504:            "oracle_family_entries": len(oracle_plan.get("families", [])),
+tools/render_plan_v1.py:517:            "compile": False,
+tools/render_plan_v1.py:608:        "no_render_compile_run_or_llm": all(
+tools/render_plan_v1.py:612:                    job["render_execution"]["compiled"],
+tools/render_plan_v1.py:629:        checks["no_render_compile_run_or_llm"],
+tools/render_plan_v1.py:638:            "Actual render/compile/run remains reserved for render_cases_v1 or later.",
+tools/render_plan_v1.py:675:            "no_c_render_compile_run_or_llm": checks["no_render_compile_run_or_llm"],
+tools/render_plan_v1.py:681:            "Each job records family template, adapter_recipe, slot_filling_plan, slot_bindings, mutation_case, and oracle expectation references.",
+tools/render_plan_v1.py:684:            "No C harness, compile result, run result, or LLM output is generated by this tool.",
+tools/manual_review_family_corrections_v1.py:389:        "allowed_import_fields": ["poc_id", "family", "critical_api", "root_cause_hypothesis", "mutation_points", "oracle_candidate", "seed_status", "evidence_strength"],
+tools/family_loop_closure_report_v1.py:5:render, compile, run, analyze new results, write feedback, or update knowledge.
+tools/family_loop_closure_report_v1.py:117:                "compile_run_status": "pass",
+tools/family_loop_closure_report_v1.py:118:                "oracle_aware_analysis_status": "pass",
+tools/family_loop_closure_report_v1.py:137:                "compile_run_status": "not_run_for_valid_prefix",
+tools/family_loop_closure_report_v1.py:138:                "oracle_aware_analysis_status": "not_available_for_valid_prefix",
+tools/family_loop_closure_report_v1.py:160:        "compile_run",
+tools/family_loop_closure_report_v1.py:162:        "oracle_instrumentation",
+tools/family_loop_closure_report_v1.py:163:        "oracle_aware_analysis",
+tools/family_loop_closure_report_v1.py:205:            "oracle_event_instrumentation_used": True,
+tools/family_loop_closure_report_v1.py:257:                "reason": "x509 is adjacent to ASN.1 and can reuse DER/full-consumption oracle",
+tools/family_loop_closure_report_v1.py:289:        "compile_executed": False,
+tools/family_loop_closure_report_v1.py:358:            "compile_executed": False,
+tools/family_loop_closure_report_v1.py:408:            "- Chain covered: family template -> adapter recipe -> slot filling -> adapter validate -> mutation planning -> render planning -> render cases -> compile/run -> analyzer refactor -> oracle instrumentation -> oracle-aware analyze -> mutation policy refinement -> valid-prefix supplemental pipeline -> staged runtime feedback.",
+tools/family_loop_closure_report_v1.py:450:            "- render/compile/run/analyze executed: false.",
+tools/api_card_import_cross_library_counterparts_to_knowledge_raw_v1.py:132:        "oracle_observables": card.get("observables", []),
+tools/api_card_import_cross_library_counterparts_to_knowledge_raw_v1.py:162:        "oracle_relevance": item.get("required_observables", []),
+tools/api_card_import_cross_library_counterparts_to_knowledge_raw_v1.py:432:        "compile_run": False,
+runner/compile_run.py:5:import subprocess
+runner/compile_run.py:51:def build_compile_command(
+runner/compile_run.py:57:    compiler_cfg = cfg.get("compiler", {})
+runner/compile_run.py:60:    compiler = compiler_cfg.get("cxx" if is_cpp_file(source_file) else "cc", "clang")
+runner/compile_run.py:61:    flags = compiler_cfg.get("common_flags", [])
+runner/compile_run.py:65:    cmd = [compiler]
+runner/compile_run.py:87:def run_subprocess(
+runner/compile_run.py:89:    timeout: int,
+runner/compile_run.py:97:        p = subprocess.run(
+runner/compile_run.py:99:            stdout=subprocess.PIPE,
+runner/compile_run.py:100:            stderr=subprocess.PIPE,
+runner/compile_run.py:102:            timeout=timeout,
+runner/compile_run.py:106:    except subprocess.TimeoutExpired as e:
+runner/compile_run.py:216:            "oracle_type": template_meta.get("oracle_type") or cross_mapping.get("oracle_type") or "",
+runner/compile_run.py:236:    parser.add_argument("--dry-run", action="store_true", help="Only print compile commands.")
+runner/compile_run.py:237:    parser.add_argument("--keep-going", action="store_true", help="Continue after compile/run failures.")
+runner/compile_run.py:258:    timeout = int(runtime_cfg.get("timeout_seconds", 20))
+runner/compile_run.py:273:            compile_cmd = build_compile_command(src, output_bin, cfg, library)
+runner/compile_run.py:284:                "compile_cmd": compile_cmd,
+runner/compile_run.py:285:                "compile_cmd_str": shell_join(compile_cmd),
+runner/compile_run.py:286:                "compile": {},
+runner/compile_run.py:300:            print(f"[CMD]  {record['compile_cmd_str']}")
+runner/compile_run.py:307:            code, stdout, stderr, timed_out = run_subprocess(
+runner/compile_run.py:308:                compile_cmd,
+runner/compile_run.py:309:                timeout=timeout,
+runner/compile_run.py:313:            record["compile"] = {
+runner/compile_run.py:315:                "timeout": timed_out,
+runner/compile_run.py:321:                record["status"] = "compile_error"
+runner/compile_run.py:332:            code, stdout, stderr, timed_out = run_subprocess(
+runner/compile_run.py:334:                timeout=timeout,
+runner/compile_run.py:340:                "timeout": timed_out,
+runner/compile_run.py:346:                record["status"] = "run_timeout"
+runner/compile_run.py:347:                print("[RUN] timeout")
+tools/adapter_slot_filling_regression_fixup_v1.py:4:This script does not call GLM, render cases, compile, run PoCs, or generate C.
+tools/adapter_slot_filling_regression_fixup_v1.py:62:    "oracle_mapping",
+tools/adapter_slot_filling_regression_fixup_v1.py:75:    r"\bgcc\b",
+tools/adapter_slot_filling_regression_fixup_v1.py:76:    r"\bclang\b",
+tools/adapter_slot_filling_regression_fixup_v1.py:221:    oracle_nonempty = nonempty(bindings.get("oracle_mapping"))
+tools/adapter_slot_filling_regression_fixup_v1.py:244:            oracle_nonempty,
+tools/adapter_slot_filling_regression_fixup_v1.py:261:        if not oracle_nonempty:
+tools/adapter_slot_filling_regression_fixup_v1.py:262:            notes.append("oracle_mapping empty")
+tools/adapter_slot_filling_regression_fixup_v1.py:280:        "oracle_mapping_nonempty": oracle_nonempty,
+tools/adapter_slot_filling_regression_fixup_v1.py:341:        "no_render_compile_run": True,
+tools/adapter_slot_filling_regression_fixup_v1.py:456:        "no_render_compile_run": True,
+tools/adapter_slot_filling_regression_fixup_v1.py:520:        "no_render_compile_run": True,
+tools/adapter_slot_filling_regression_fixup_v1.py:570:        "compile_run": False,
+tools/cross_library_counterpart_api_gap_analysis_v1.py:457:                        "oracle_observables",
+tools/cross_library_mapping_refinement_and_gate_v1.py:198:def oracle_style(family: str, mapping_type: str, target_api: str) -> str:
+tools/cross_library_mapping_refinement_and_gate_v1.py:343:        "required_oracle_style": oracle_style(family, inv["mapping_type"], target),
+tools/cross_library_mapping_refinement_and_gate_v1.py:431:                "required_oracle_style": item["required_oracle_style"],
+tools/cross_library_mapping_refinement_and_gate_v1.py:433:                "cleanup_mapping_hint": "cleanup required" if item["required_oracle_style"] == "cleanup_required" else "family-specific cleanup if object allocated",
+tools/cross_library_mapping_refinement_and_gate_v1.py:435:                "risk_notes": "candidate mapping only; compile/run/analyze still required",
+tools/cross_library_mapping_refinement_and_gate_v1.py:501:        "compile_run": False,
+tools/cross_library_mapping_refinement_and_gate_v1.py:510:    write_pair(out / "gate_results/cross_library_mapping_gate_results.yaml", out / "gate_results/cross_library_mapping_gate_results.md", "gate_results", gates, ["mapping_id", "family", "wolfssl_api", "target_library", "target_api", "gate_status", "required_oracle_style"])
+tools/cross_library_mapping_refinement_and_gate_v1.py:511:    write_pair(out / "adapter_ready/adapter_ready_mapping_candidates.yaml", out / "adapter_ready/adapter_ready_mapping_candidates.md", "adapter_ready_mapping_candidates", adapter_ready, ["family", "wolfssl_api", "target_library", "target_api", "required_oracle_style"])
+tools/family_adapter_mutation_planner_v1.py:4:This emits case specifications only. It does not render C, compile, run PoCs,
+tools/family_adapter_mutation_planner_v1.py:110:    oracle_types: list[str],
+tools/family_adapter_mutation_planner_v1.py:112:    primary = oracle_types[0] if oracle_types else "parser_reject_accept"
+tools/family_adapter_mutation_planner_v1.py:113:    secondary = oracle_types[1:] if len(oracle_types) > 1 else []
+tools/family_adapter_mutation_planner_v1.py:126:                "source": "family_mutation_slots" if slot in slot_lookup else "oracle_plan",
+tools/family_adapter_mutation_planner_v1.py:131:        "expected_oracle": {
+tools/family_adapter_mutation_planner_v1.py:165:        "oracle_expectation_plan",
+tools/family_adapter_mutation_planner_v1.py:193:        "no_render_compile_run": True,
+tools/family_adapter_mutation_planner_v1.py:209:    oracle_families: list[dict[str, Any]] = []
+tools/family_adapter_mutation_planner_v1.py:221:        oracle_plan = load_yaml(template_dir / "oracle_plan.yaml") or {}
+tools/family_adapter_mutation_planner_v1.py:225:        oracle_types = oracle_plan.get("oracle_types", [])
+tools/family_adapter_mutation_planner_v1.py:236:                "oracle_types": oracle_types,
+tools/family_adapter_mutation_planner_v1.py:246:            cases.append(build_case(idx, adapter_id, family, target, strategy, slot_specs, label, slot_lookup, oracle_types))
+tools/family_adapter_mutation_planner_v1.py:248:        oracle_families.append(
+tools/family_adapter_mutation_planner_v1.py:252:                "primary_oracles": oracle_types[:1] or ["parser_reject_accept"],
+tools/family_adapter_mutation_planner_v1.py:253:                "secondary_oracles": oracle_types[1:],
+tools/family_adapter_mutation_planner_v1.py:255:                    {case["expected_oracle"]["expected_result_label"] for case in cases if case["base_adapter"] == adapter_id}
+tools/family_adapter_mutation_planner_v1.py:257:                "oracle_interpretation_rules": [
+tools/family_adapter_mutation_planner_v1.py:320:    oracle_expectation = {"schema": "oracle_expectation_plan_v1", "families": oracle_families}
+tools/family_adapter_mutation_planner_v1.py:321:    dump_yaml(out / "oracle_expectation_plan" / "oracle_expectation_plan.yaml", oracle_expectation)
+tools/family_adapter_mutation_planner_v1.py:322:    write_md(out / "oracle_expectation_plan" / "oracle_expectation_plan.md", "Oracle Expectation Plan", oracle_expectation)
+tools/family_adapter_mutation_planner_v1.py:337:                "oracle_expectation",
+tools/family_adapter_mutation_planner_v1.py:372:    all_have_oracle = all(bool(c.get("expected_oracle", {}).get("primary")) for c in cases)
+tools/family_adapter_mutation_planner_v1.py:373:    all_have_label = all(bool(c.get("expected_oracle", {}).get("expected_result_label")) for c in cases)
+tools/family_adapter_mutation_planner_v1.py:380:        and all_have_oracle
+tools/family_adapter_mutation_planner_v1.py:393:        "all_cases_have_oracle": all_have_oracle,
+tools/family_adapter_mutation_planner_v1.py:398:        "no_compile_executed": True,
+tools/family_adapter_mutation_planner_v1.py:408:    elif not all_have_oracle:
+tools/family_adapter_mutation_planner_v1.py:409:        next_task = "oracle_expectation_plan_fixup_v1"
+tools/family_adapter_mutation_planner_v1.py:410:        why = "one or more cases lack oracle expectations"
+tools/family_adapter_mutation_planner_v1.py:439:        "compile_run": False,
+tools/valid_prefix_pipeline_to_analyze_v1.py:2:"""Run the valid-prefix supplemental pipeline through oracle-aware analysis.
+tools/valid_prefix_pipeline_to_analyze_v1.py:7:3. compile_run_valid_prefix_oracle_instrumented
+tools/valid_prefix_pipeline_to_analyze_v1.py:8:4. analyze_results_valid_prefix_oracle_aware
+tools/valid_prefix_pipeline_to_analyze_v1.py:26:from tools.compile_run_oracle_instrumented_v1 import execute_case
+tools/valid_prefix_pipeline_to_analyze_v1.py:27:from tools.compile_run_v1 import dump_yaml, lib_dir_for_install, load_yaml, now_iso, rel, write_text
+tools/valid_prefix_pipeline_to_analyze_v1.py:120:    printf("ORACLE_EVENT schema=oracle_event_v1 case_id={case_id} family=asn1_nested_boundary mutation_strategy={mutation_strategy} target_library=openssl phase=parse api=ASN1_item_d2i ret=%d accepted=%d input_len=%ld consumed_len=%ld full_consumption=%d openssl_error_code=%lu openssl_error_reason=\\"%s\\"\\n",
+tools/valid_prefix_pipeline_to_analyze_v1.py:123:    printf("ORACLE_EVENT schema=oracle_event_v1 case_id={case_id} family=asn1_nested_boundary mutation_strategy={mutation_strategy} target_library=openssl phase=full_consumption_check api=ASN1_item_d2i input_len=%ld consumed_len=%ld full_consumption=%d notes=consumption_observed_from_ASN1_item_d2i\\n",
+tools/valid_prefix_pipeline_to_analyze_v1.py:136:    printf("ORACLE_EVENT schema=oracle_event_v1 case_id={case_id} family=asn1_nested_boundary mutation_strategy={mutation_strategy} target_library=openssl phase=cleanup api=ASN1_item_d2i cleanup_executed=1\\n");
+tools/valid_prefix_pipeline_to_analyze_v1.py:314:        oracle_meta = {
+tools/valid_prefix_pipeline_to_analyze_v1.py:315:            "schema": "valid_prefix_oracle_metadata_v1",
+tools/valid_prefix_pipeline_to_analyze_v1.py:317:            "oracle_event_profile": "oracle_event_v1",
+tools/valid_prefix_pipeline_to_analyze_v1.py:318:            "oracle_focus": ["accepted", "full_consumption", "consumed_len", "openssl_error"],
+tools/valid_prefix_pipeline_to_analyze_v1.py:329:        dump_yaml(case_dir / "oracle_metadata.yaml", oracle_meta)
+tools/valid_prefix_pipeline_to_analyze_v1.py:340:                "oracle_instrumentation": {
+tools/valid_prefix_pipeline_to_analyze_v1.py:342:                    "profile": "oracle_event_v1",
+tools/valid_prefix_pipeline_to_analyze_v1.py:365:def build_compile_run_stage(
+tools/valid_prefix_pipeline_to_analyze_v1.py:369:    timeout_seconds: int,
+tools/valid_prefix_pipeline_to_analyze_v1.py:371:    root = out_dir / "compile_run"
+tools/valid_prefix_pipeline_to_analyze_v1.py:374:    compile_results = []
+tools/valid_prefix_pipeline_to_analyze_v1.py:375:    run_results = []
+tools/valid_prefix_pipeline_to_analyze_v1.py:379:        compile_result, run_result, events, sanitizer_observation = execute_case(
+tools/valid_prefix_pipeline_to_analyze_v1.py:385:            timeout_seconds=timeout_seconds,
+tools/valid_prefix_pipeline_to_analyze_v1.py:387:        compile_results.append(compile_result)
+tools/valid_prefix_pipeline_to_analyze_v1.py:388:        run_results.append(run_result)
+tools/valid_prefix_pipeline_to_analyze_v1.py:391:    compile_counts = Counter(c["compile_status"] for c in compile_results)
+tools/valid_prefix_pipeline_to_analyze_v1.py:392:    raw_counts = Counter(r["raw_observation_label"] for r in run_results)
+tools/valid_prefix_pipeline_to_analyze_v1.py:396:    compile_doc = {
+tools/valid_prefix_pipeline_to_analyze_v1.py:397:        "schema": "compile_results_valid_prefix_oracle_instrumented_v1",
+tools/valid_prefix_pipeline_to_analyze_v1.py:399:        "compile_results": compile_results,
+tools/valid_prefix_pipeline_to_analyze_v1.py:401:            "total_jobs": len(compile_results),
+tools/valid_prefix_pipeline_to_analyze_v1.py:402:            "compile_success": compile_counts.get("compile_success", 0),
+tools/valid_prefix_pipeline_to_analyze_v1.py:403:            "compile_failed": compile_counts.get("compile_failed", 0),
+tools/valid_prefix_pipeline_to_analyze_v1.py:404:            "compile_skipped": 0,
+tools/valid_prefix_pipeline_to_analyze_v1.py:408:        "schema": "run_results_valid_prefix_oracle_instrumented_v1",
+tools/valid_prefix_pipeline_to_analyze_v1.py:410:        "run_results": run_results,
+tools/valid_prefix_pipeline_to_analyze_v1.py:412:            "total_jobs": len(run_results),
+tools/valid_prefix_pipeline_to_analyze_v1.py:413:            "run_attempted": len([r for r in run_results if r["run_status"] != "not_run_compile_failed"]),
+tools/valid_prefix_pipeline_to_analyze_v1.py:416:            "signaled": len([r for r in run_results if r["run_status"] == "signaled"]),
+tools/valid_prefix_pipeline_to_analyze_v1.py:417:            "timeout": raw_counts.get("timeout_observed", 0),
+tools/valid_prefix_pipeline_to_analyze_v1.py:418:            "not_run_compile_failed": raw_counts.get("compile_failed_not_run", 0),
+tools/valid_prefix_pipeline_to_analyze_v1.py:421:    oracle_doc = {
+tools/valid_prefix_pipeline_to_analyze_v1.py:422:        "schema": "oracle_events_valid_prefix_results_v1",
+tools/valid_prefix_pipeline_to_analyze_v1.py:445:            "asan_observed": len([o for o in sanitizer_observations if "ASAN" in o.get("sanitizer_kinds", [])]),
+tools/valid_prefix_pipeline_to_analyze_v1.py:446:            "ubsan_observed": len([o for o in sanitizer_observations if "UBSAN" in o.get("sanitizer_kinds", [])]),
+tools/valid_prefix_pipeline_to_analyze_v1.py:447:            "crash_signal_count": len([r for r in run_results if r["run_status"] == "signaled"]),
+tools/valid_prefix_pipeline_to_analyze_v1.py:448:            "timeout_count": len([r for r in run_results if r["timeout"]]),
+tools/valid_prefix_pipeline_to_analyze_v1.py:452:        "schema": "compile_run_valid_prefix_blocked_cases_v1",
+tools/valid_prefix_pipeline_to_analyze_v1.py:458:        "schema": "compile_run_valid_prefix_quality_checks_v1",
+tools/valid_prefix_pipeline_to_analyze_v1.py:460:        "compile_jobs_seen": len(compile_results),
+tools/valid_prefix_pipeline_to_analyze_v1.py:461:        "compile_success": compile_doc["summary"]["compile_success"],
+tools/valid_prefix_pipeline_to_analyze_v1.py:462:        "compile_failed": compile_doc["summary"]["compile_failed"],
+tools/valid_prefix_pipeline_to_analyze_v1.py:464:        "oracle_events": oracle_doc["summary"]["total_events"],
+tools/valid_prefix_pipeline_to_analyze_v1.py:465:        "openssl_only": all(c.get("target_library") == "openssl" for c in compile_results + run_results),
+tools/valid_prefix_pipeline_to_analyze_v1.py:470:        if len(compile_results) == 6 and run_doc["summary"]["run_attempted"] == 6
+tools/valid_prefix_pipeline_to_analyze_v1.py:473:    dump_yaml(root / "compile_results" / "compile_results.yaml", compile_doc)
+tools/valid_prefix_pipeline_to_analyze_v1.py:474:    dump_yaml(root / "run_results" / "run_results.yaml", run_doc)
+tools/valid_prefix_pipeline_to_analyze_v1.py:475:    dump_yaml(root / "oracle_events" / "oracle_events.yaml", oracle_doc)
+tools/valid_prefix_pipeline_to_analyze_v1.py:478:    dump_yaml(root / "validation" / "compile_run_valid_prefix_quality_checks.yaml", quality)
+tools/valid_prefix_pipeline_to_analyze_v1.py:479:    write_md(root / "validation" / "compile_run_valid_prefix_quality_checks.md", "Compile Run Quality", quality)
+tools/valid_prefix_pipeline_to_analyze_v1.py:480:    return quality["quality_status"], compile_doc, run_doc, oracle_doc, sanitizer_doc, blocked_doc
+tools/valid_prefix_pipeline_to_analyze_v1.py:487:    oracle_doc: dict[str, Any],
+tools/valid_prefix_pipeline_to_analyze_v1.py:492:    for event in oracle_doc.get("events", []):
+tools/valid_prefix_pipeline_to_analyze_v1.py:498:    for run in run_doc.get("run_results", []):
+tools/valid_prefix_pipeline_to_analyze_v1.py:507:        elif run.get("timeout"):
+tools/valid_prefix_pipeline_to_analyze_v1.py:508:            semantic = "timeout_candidate"
+tools/valid_prefix_pipeline_to_analyze_v1.py:523:            semantic = "oracle_event_incomplete"
+tools/valid_prefix_pipeline_to_analyze_v1.py:524:            label = "oracle_incomplete"
+tools/valid_prefix_pipeline_to_analyze_v1.py:534:            "timeout": run.get("timeout", False),
+tools/valid_prefix_pipeline_to_analyze_v1.py:536:            "oracle_events": {
+tools/valid_prefix_pipeline_to_analyze_v1.py:553:                "oracle_semantic_label": semantic,
+tools/valid_prefix_pipeline_to_analyze_v1.py:558:                else "oracle-aware valid-prefix execution result",
+tools/valid_prefix_pipeline_to_analyze_v1.py:563:    raw = oracle_doc["summary"]
+tools/valid_prefix_pipeline_to_analyze_v1.py:565:        "schema": "valid_prefix_oracle_aware_case_analysis_v1",
+tools/valid_prefix_pipeline_to_analyze_v1.py:573:            "oracle_event_incomplete": semantic_counts.get("oracle_event_incomplete", 0),
+tools/valid_prefix_pipeline_to_analyze_v1.py:579:        "schema": "valid_prefix_oracle_aware_family_analysis_v1",
+tools/valid_prefix_pipeline_to_analyze_v1.py:599:        "schema": "valid_prefix_oracle_semantics_summary_v1",
+tools/valid_prefix_pipeline_to_analyze_v1.py:615:            "useful_accept_path": len([c for c in case_rows if c["oracle_events"]["accepted_values"]["true"] > 0]),
+tools/valid_prefix_pipeline_to_analyze_v1.py:616:            "too_strong_all_reject": len([c for c in case_rows if c["oracle_events"]["accepted_values"]["true"] == 0]),
+tools/valid_prefix_pipeline_to_analyze_v1.py:621:        "schema": "valid_prefix_oracle_aware_candidate_labels_v1",
+tools/valid_prefix_pipeline_to_analyze_v1.py:629:            "oracle_incomplete": label_counts.get("oracle_incomplete", 0),
+tools/valid_prefix_pipeline_to_analyze_v1.py:633:        "schema": "valid_prefix_oracle_aware_limitations_v1",
+tools/valid_prefix_pipeline_to_analyze_v1.py:650:        "no_compile": True,
+tools/valid_prefix_pipeline_to_analyze_v1.py:655:    dump_yaml(root / "case_analysis" / "oracle_aware_case_analysis.yaml", case_doc)
+tools/valid_prefix_pipeline_to_analyze_v1.py:656:    dump_yaml(root / "family_analysis" / "oracle_aware_family_analysis.yaml", family_doc)
+tools/valid_prefix_pipeline_to_analyze_v1.py:657:    dump_yaml(root / "oracle_semantics" / "oracle_semantics_summary.yaml", semantics_doc)
+tools/valid_prefix_pipeline_to_analyze_v1.py:659:    dump_yaml(root / "candidate_labels" / "oracle_aware_candidate_labels.yaml", labels_doc)
+tools/valid_prefix_pipeline_to_analyze_v1.py:660:    dump_yaml(root / "limitations" / "oracle_aware_limitations.yaml", limitations_doc)
+tools/valid_prefix_pipeline_to_analyze_v1.py:663:        ("case_analysis/oracle_aware_case_analysis.md", "Case Analysis", case_doc),
+tools/valid_prefix_pipeline_to_analyze_v1.py:664:        ("family_analysis/oracle_aware_family_analysis.md", "Family Analysis", family_doc),
+tools/valid_prefix_pipeline_to_analyze_v1.py:665:        ("oracle_semantics/oracle_semantics_summary.md", "Oracle Semantics", semantics_doc),
+tools/valid_prefix_pipeline_to_analyze_v1.py:666:        ("candidate_labels/oracle_aware_candidate_labels.md", "Candidate Labels", labels_doc),
+tools/valid_prefix_pipeline_to_analyze_v1.py:683:        + sanitizer_doc["summary"]["timeout_count"]
+tools/valid_prefix_pipeline_to_analyze_v1.py:686:        task = "oracle_semantic_triage_v1"
+tools/valid_prefix_pipeline_to_analyze_v1.py:690:        reason = "sanitizer/crash/timeout evidence was observed."
+tools/valid_prefix_pipeline_to_analyze_v1.py:714:    compile_summary = stage_status.get("compile_run", {})
+tools/valid_prefix_pipeline_to_analyze_v1.py:734:        "compile_run_completed": stage_status["compile_run"]["status"] in {"pass", "partial"},
+tools/valid_prefix_pipeline_to_analyze_v1.py:738:        "compile_success": stage_status["compile_run"].get("compile_success", 0),
+tools/valid_prefix_pipeline_to_analyze_v1.py:739:        "run_attempted": stage_status["compile_run"].get("run_attempted", 0),
+tools/valid_prefix_pipeline_to_analyze_v1.py:740:        "oracle_events": stage_status["compile_run"].get("oracle_events", 0),
+tools/valid_prefix_pipeline_to_analyze_v1.py:744:        "sanitizer_crash_timeout_observed": 0 if sanitizer_doc is None else (
+tools/valid_prefix_pipeline_to_analyze_v1.py:747:            + sanitizer_doc["summary"]["timeout_count"]
+tools/valid_prefix_pipeline_to_analyze_v1.py:770:                f"- compile_success: {report['compile_success']}",
+tools/valid_prefix_pipeline_to_analyze_v1.py:772:                f"- oracle_events: {report['oracle_events']}",
+tools/valid_prefix_pipeline_to_analyze_v1.py:793:    parser.add_argument("--timeout-seconds", type=int, default=10)
+tools/valid_prefix_pipeline_to_analyze_v1.py:836:    compile_status, compile_doc, run_doc, oracle_doc, sanitizer_doc, blocked_doc = build_compile_run_stage(
+tools/valid_prefix_pipeline_to_analyze_v1.py:840:        args.timeout_seconds,
+tools/valid_prefix_pipeline_to_analyze_v1.py:842:    stage_status["compile_run"] = {
+tools/valid_prefix_pipeline_to_analyze_v1.py:844:        "status": compile_status,
+tools/valid_prefix_pipeline_to_analyze_v1.py:845:        "compile_success": compile_doc["summary"]["compile_success"],
+tools/valid_prefix_pipeline_to_analyze_v1.py:846:        "compile_failed": compile_doc["summary"]["compile_failed"],
+tools/valid_prefix_pipeline_to_analyze_v1.py:848:        "oracle_events": oracle_doc["summary"]["total_events"],
+tools/valid_prefix_pipeline_to_analyze_v1.py:851:    if not oracle_doc.get("events"):
+tools/valid_prefix_pipeline_to_analyze_v1.py:852:        next_doc = {"schema": "next_action_after_valid_prefix_pipeline_v1", "next_task_name": "compile_run_oracle_output_fixup_v1", "secondary_next_task": "valid_seed_discovery_pkcs_v1", "reason": "compile_run produced no ORACLE_EVENT records"}
+tools/valid_prefix_pipeline_to_analyze_v1.py:858:        out_dir, rendered_cases, run_doc, oracle_doc, sanitizer_doc
+tools/valid_prefix_pipeline_to_analyze_v1.py:877:        f"compile_success={compile_doc['summary']['compile_success']} "
+tools/valid_prefix_pipeline_to_analyze_v1.py:879:        f"oracle_events={oracle_doc['summary']['total_events']} "
+tools/adapter_recipe_generation_v1.py:5:LLM, render C, compile, run PoCs, or promote candidate mappings to confirmed
+tools/adapter_recipe_generation_v1.py:49:    "artifacts/sprints/template_recipe_design_for_top_wolfssl_families_v1/oracle_plan/family_oracle_plan.yaml",
+tools/adapter_recipe_generation_v1.py:139:        "oracle_plan_file": str(base / "oracle_plan.yaml") if (base / "oracle_plan.yaml").exists() else "",
+tools/adapter_recipe_generation_v1.py:148:    oracle_obj = load_yaml(Path(facts["oracle_plan_file"])) if facts.get("oracle_plan_file") else {}
+tools/adapter_recipe_generation_v1.py:160:        "oracle_slots": oracle_obj.get("primary_oracles", recipe.get("oracle_types", [])),
+tools/adapter_recipe_generation_v1.py:226:                "oracle_mapping",
+tools/adapter_recipe_generation_v1.py:234:            "require_oracle_check": True,
+tools/adapter_recipe_generation_v1.py:238:        "oracle_strategy": {
+tools/adapter_recipe_generation_v1.py:239:            "primary": slots.get("oracle_slots", [])[:1],
+tools/adapter_recipe_generation_v1.py:240:            "secondary": slots.get("oracle_slots", [])[1:],
+tools/adapter_recipe_generation_v1.py:251:        "compile_policy": {
+tools/adapter_recipe_generation_v1.py:252:            "compile_allowed_now": False,
+tools/adapter_recipe_generation_v1.py:265:            "No GLM, render, compile, run, or C generation in this sprint.",
+tools/adapter_recipe_generation_v1.py:289:        "expected_oracle_slots": recipe.get("oracle_types", []),
+tools/adapter_recipe_generation_v1.py:295:            "Spec-only adapter recipe; do not render or compile.",
+tools/adapter_recipe_generation_v1.py:317:        "oracle_plan_file": facts["oracle_plan_file"],
+tools/adapter_recipe_generation_v1.py:348:        "render_compile_run": False,
+tools/adapter_recipe_generation_v1.py:359:- 本轮不 render / compile / run。
+tools/adapter_recipe_generation_v1.py:393:    parser.add_argument("--oracle-plan", required=True)
+tools/adapter_recipe_generation_v1.py:460:                        "oracle_mapping": obj["oracle_strategy"],
+tools/adapter_recipe_generation_v1.py:483:                    "compile_disabled_now": obj["compile_policy"].get("compile_allowed_now") is False,
+tools/adapter_recipe_generation_v1.py:507:                "compile_disabled_now": True,
+tools/adapter_recipe_generation_v1.py:634:            "render_compile_run": False,
+tools/adapter_recipe_generation_v1.py:643:            "compile_run": False,
+tools/adapter_recipe_generation_v1.py:665:        "- render/compile/run: no",
+tools/adapter_recipe_generation_v1.py:672:call GLM, render cases, compile, run PoCs, or claim confirmed API equivalence.
+tools/project_structure_inventory_and_refactor_plan_v1.py:166:    if "compile_run" in lowered or lowered.startswith("compile_"):
+tools/project_structure_inventory_and_refactor_plan_v1.py:170:            "compile/run and execution capture belong in runner/",
+tools/project_structure_inventory_and_refactor_plan_v1.py:173:    if "analyze" in lowered or "oracle_aware" in lowered:
+tools/project_structure_inventory_and_refactor_plan_v1.py:177:            "oracle parsing and semantic labels belong in analyzer/; report aggregation can live in analysis/",
+tools/project_structure_inventory_and_refactor_plan_v1.py:243:                    "compile/run",
+tools/project_structure_inventory_and_refactor_plan_v1.py:248:                or ["tools/compile_run_v1.py", "tools/compile_run_oracle_instrumented_v1.py"],
+tools/project_structure_inventory_and_refactor_plan_v1.py:252:                    "oracle event parsing",
+tools/project_structure_inventory_and_refactor_plan_v1.py:257:                or ["tools/analyze_results_oracle_aware_v1.py"],
+tools/project_structure_inventory_and_refactor_plan_v1.py:405:            "analyzer_oracle_event_parser_imported_by": sorted(set(reverse.get("analyzer.oracle_event_parser", []))),
+tools/project_structure_inventory_and_refactor_plan_v1.py:494:                    "move compile/run shared logic into runner/family_compile_runner.py",
+tools/project_structure_inventory_and_refactor_plan_v1.py:509:                "name": "extract_oracle_aware_analysis",
+tools/project_structure_inventory_and_refactor_plan_v1.py:544:            "oracle_aware_refinement_loop",
+tools/project_structure_inventory_and_refactor_plan_v1.py:581:        "compile_executed": False,
+tools/project_structure_inventory_and_refactor_plan_v1.py:607:            "phase 1 should extract compile/run logic first because it is shared and high-leverage",
+tools/project_structure_inventory_and_refactor_plan_v1.py:652:            f"- `analyzer.oracle_event_parser` imported by: {dependency_map['summary']['analyzer_oracle_event_parser_imported_by'] or 'none'}",
+tools/project_structure_inventory_and_refactor_plan_v1.py:673:            "- `runner/`: compile/run, sanitizer setup, execution result capture.",
+tools/project_structure_inventory_and_refactor_plan_v1.py:674:            "- `analyzer/`: oracle event parsing, family result adaptation, semantic labels.",
+tools/project_structure_inventory_and_refactor_plan_v1.py:695:            "3. Extract oracle-aware analysis.",
+tools/project_structure_inventory_and_refactor_plan_v1.py:707:            "- Achieved loops: family execution, oracle-aware refinement, staged runtime feedback.",
+tools/project_structure_inventory_and_refactor_plan_v1.py:720:            "- render/compile/run/GLM/git add/commit/push: false.",
+tools/project_structure_inventory_and_refactor_plan_v1.py:738:            "- Move compile/run logic to `runner/`.",
+tools/project_structure_inventory_and_refactor_plan_v1.py:739:            "- Move oracle parsing and semantic labels to `analyzer/`.",
+tools/poc_corpus_inventory_v1.py:164:        "local_compile": _stringify(_first(metadata, "local_compile")),
+tools/poc_corpus_inventory_v1.py:353:            "Metadata key fallback across mbedTLS traceability/classification, wolfSSL harness/oracle fields, and OpenSSL issue artifact fields.",
+tools/poc_corpus_inventory_v1.py:450:            "compile/run harnesses",
+tools/poc_corpus_inventory_v1.py:489:            "Do not execute run.sh or compile poc.c during ingestion.",
+tools/poc_corpus_inventory_v1.py:541:        "This sprint did not run PoCs, compile harnesses, call GLM/LLM, or modify Pattern Bank data.\n",
+tools/route_planner_v1.py:6:not render, compile, run, call GLM, or claim vulnerabilities.
+tools/route_planner_v1.py:221:        "A-path is premature until seed inventory, API grouping, and oracle comparability are explicit.",
+tools/route_planner_v1.py:233:        "oracle_candidates": [
+tools/route_planner_v1.py:252:            "compile_run",
+tools/route_planner_v1.py:265:            "define controls and oracle candidates before any render/run",
+tools/route_planner_v1.py:268:        "next_task_goal": "Create seed inventory, route disambiguation, API group map, and oracle candidates for x509_parsing without render/run.",
+tools/route_planner_v1.py:288:                "A_recipe_slot_cross_library_migration": "Blocked until source/target API mapping and oracle comparability are explicit.",
+tools/route_planner_v1.py:294:            "reason": "No validated cross-library recipe-slot mapping or comparable oracle yet.",
+tools/route_planner_v1.py:346:        "goal": "Decide whether x509_parsing should follow C, D, A, or B route using seed inventory, API grouping, and oracle abstraction.",
+tools/route_planner_v1.py:351:            "define_oracle_candidates": True,
+tools/route_planner_v1.py:353:            "compile_run": False,
+tools/route_planner_v1.py:360:            "Abstract oracle candidates for wrong-result, wrong-output, safe rejection, and crash-audit seeds.",
+tools/route_planner_v1.py:381:        + "The contract accepts the scheduler top-1 selection for triage only. It keeps `C_app_level_validation_gap` as a tentative route, while explicitly preserving D/A/B alternatives until seed inventory and oracle abstraction are complete.\n"
+tools/route_planner_v1.py:507:        "Read-only route planner sprint. It consumes `auto_scheduler_v1` output and emits x509 route/gate/task contracts. It does not modify Pattern Bank, render cases, compile/run harnesses, call GLM, or claim vulnerabilities.\n",
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:28:        "must_preserve": ["input_loading", "buffer_length_calculation", "target_api_call", "return_code_check", "cleanup_call", "oracle_observable"],
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:38:        "oracle_types": ["parser_reject_accept", "return_code_semantics", "full_consumption", "cleanup_required"],
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:43:        "must_preserve": ["input_loading", "buffer_length_calculation", "target_api_call", "return_code_check", "cleanup_call", "oracle_observable"],
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:53:        "oracle_types": ["parser_reject_accept", "full_consumption", "return_code_semantics"],
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:58:        "must_preserve": ["input_loading", "buffer_length_calculation", "target_api_call", "return_code_check", "cleanup_call", "oracle_observable"],
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:68:        "oracle_types": ["parser_reject_accept", "return_code_semantics", "cleanup_required"],
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:73:        "must_preserve": ["input_loading", "target_api_call", "return_code_check", "cleanup_call", "oracle_observable"],
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:83:        "oracle_types": ["lifecycle_state", "return_code_semantics", "crash_or_sanitizer"],
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:88:        "must_preserve": ["target_api_call", "return_code_check", "cleanup_call", "oracle_observable"],
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:98:        "oracle_types": ["cleanup_required", "lifecycle_state", "crash_or_sanitizer"],
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:198:            "Family recipe defines must-preserve semantics, mutation slots, oracle style, and AST mask expectations before source template generation.",
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:205:            "compile_run": False,
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:293:            {"unit_type": "trigger_call", "node_kind_hint": "call_expression", "reason": "preserve source API path and oracle trigger"},
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:295:            {"unit_type": "oracle_check", "node_kind_hint": "if_statement or return_statement", "reason": "preserve observable safe/bug/triage classification"},
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:303:            for name, typ, examples, _oracle, notes in spec["mutation_slots"]
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:309:        "oracle_types": spec["oracle_types"],
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:343:                "must include oracle or preserve_oracle selected unit",
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:353:def oracle_plan(recipes: dict[str, dict[str, Any]]) -> dict[str, Any]:
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:356:        oracles = recipes[family]["oracle_types"]
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:359:            "primary_oracles": oracles[:2],
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:360:            "secondary_oracles": oracles[2:],
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:361:            "unsafe_oracles": ["crash_or_sanitizer without ASAN/UBSAN/SEGV evidence", "nonzero return code treated as crash"],
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:378:                        "expected_oracle": next((x[3] for x in FAMILY_SPEC[family]["mutation_slots"] if x[0] == slot["slot_name"]), ""),
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:384:                "scheduler_features": ["family", "oracle_type", "target_library", "mapping_gate_status", "seed_type"],
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:385:                "notes": "Slots support controlled variants around API semantics and oracle observables, not only replay of historical PoC bytes.",
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:432:                "oracle_types": recipe["oracle_types"],
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:455:        "strict_non_actions": {"run_poc": False, "compile_run": False, "render": False, "glm": False, "template_generation": False},
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:481:    for sub in ["input", "existing_schema", "family_recipes", "ast_mask_plan", "oracle_plan", "adapter_scope", "mutation_plan", "candidates", "reports", "logs", "validation"]:
+tools/template_recipe_design_for_top_wolfssl_families_v1.py:502:    write_pair(out / "oracle_plan/family_oracle_plan", "Family Oracle Plan", oracle_plan(recipes))
+tools/compile_plan_v1.py:2:"""Generate compile_plan_v1 from rendered OpenSSL cases.
+tools/compile_plan_v1.py:4:This tool only plans compile jobs. It does not invoke gcc/clang, run binaries,
+tools/compile_plan_v1.py:13:import subprocess
+tools/compile_plan_v1.py:21:SPRINT_NAME = "compile_plan_v1"
+tools/compile_plan_v1.py:52:        proc = subprocess.run(args, check=False, text=True, capture_output=True)
+tools/compile_plan_v1.py:77:        "schema": "compile_environment_inventory_v1",
+tools/compile_plan_v1.py:79:        "compilers": {
+tools/compile_plan_v1.py:80:            "gcc": {"path": shutil.which("gcc") or "", "available": shutil.which("gcc") is not None},
+tools/compile_plan_v1.py:81:            "clang": {"path": shutil.which("clang") or "", "available": shutil.which("clang") is not None},
+tools/compile_plan_v1.py:108:            "Environment inventory only; no compiler was invoked.",
+tools/compile_plan_v1.py:109:            "OpenSSL paths are compile candidates for the next compile_run_v1 stage.",
+tools/compile_plan_v1.py:114:def compile_tool_inventory(out_dir: Path) -> dict[str, Any]:
+tools/compile_plan_v1.py:115:    rg_file = out_dir / "compile_tool_inventory" / "compile_related_rg.txt"
+tools/compile_plan_v1.py:116:    tooling_file = out_dir / "compile_tool_inventory" / "tooling_files.txt"
+tools/compile_plan_v1.py:120:    for candidate in ["runner/compile_run.py", "runner/analyze_results.py", "template_maker/render_cases.py"]:
+tools/compile_plan_v1.py:124:        "schema": "compile_tool_inventory_v1",
+tools/compile_plan_v1.py:126:        "existing_compile_run_tool_found": Path("runner/compile_run.py").exists(),
+tools/compile_plan_v1.py:127:        "likely_compile_script": "runner/compile_run.py" if Path("runner/compile_run.py").exists() else "",
+tools/compile_plan_v1.py:128:        "likely_next_wrapper": "tools/compile_run_v1.py or runner.compile_run with compile_plan_v1 manifest",
+tools/compile_plan_v1.py:131:            "compile_related_rg": rel(rg_file),
+tools/compile_plan_v1.py:135:        "compile_executed": False,
+tools/compile_plan_v1.py:138:            "Inventory only; compile/run tooling was not invoked.",
+tools/compile_plan_v1.py:139:            "compile_run_v1 should either wrap runner.compile_run or consume compile_plan_v1 directly.",
+tools/compile_plan_v1.py:166:    return f"${{CC:-gcc}} {cflags} {inc} {harness_c} -o {binary_path} {lib_dirs} {libs} {ldflags}".strip()
+tools/compile_plan_v1.py:169:def build_compile_jobs(
+tools/compile_plan_v1.py:186:                    "compile_allowed": False,
+tools/compile_plan_v1.py:199:                    "compile_allowed": False,
+tools/compile_plan_v1.py:207:        compile_job_id = f"compile__{render_job_id.removeprefix('render__')}"
+tools/compile_plan_v1.py:208:        build_dir = out_dir / "planned_build" / compile_job_id
+tools/compile_plan_v1.py:210:        compile_stdout = build_dir / "compile.stdout.log"
+tools/compile_plan_v1.py:211:        compile_stderr = build_dir / "compile.stderr.log"
+tools/compile_plan_v1.py:212:        compile_metadata = build_dir / "compile_metadata.yaml"
+tools/compile_plan_v1.py:214:        oracle_meta = load_yaml(Path(case["oracle_metadata"]))
+tools/compile_plan_v1.py:219:            "compile_job_id": compile_job_id,
+tools/compile_plan_v1.py:229:                "oracle_metadata": case["oracle_metadata"],
+tools/compile_plan_v1.py:236:                "compile_stdout": rel(compile_stdout),
+tools/compile_plan_v1.py:237:                "compile_stderr": rel(compile_stderr),
+tools/compile_plan_v1.py:238:                "compile_metadata": rel(compile_metadata),
+tools/compile_plan_v1.py:240:            "compile_command_plan": {
+tools/compile_plan_v1.py:241:                "compiler_preference": "gcc",
+tools/compile_plan_v1.py:257:            "compile_policy": {
+tools/compile_plan_v1.py:258:                "compile_allowed_next_stage": True,
+tools/compile_plan_v1.py:259:                "compile_now": False,
+tools/compile_plan_v1.py:268:            "expected_result_label": oracle_meta.get("expected_result_label", ""),
+tools/compile_plan_v1.py:285:        out_dir / "input" / "compile_plan_input_summary.md",
+tools/compile_plan_v1.py:286:        "# compile_plan_v1 Input Summary\n\n"
+tools/compile_plan_v1.py:288:        "- output: compile plan only\n"
+tools/compile_plan_v1.py:289:        "- compile: `false`\n"
+tools/compile_plan_v1.py:292:        "- mbedTLS compile jobs: `false`\n"
+tools/compile_plan_v1.py:300:        out_dir / "compile_tool_inventory" / "compile_tool_inventory.md",
+tools/compile_plan_v1.py:302:        f"- existing compile/run tool found: `{inv['existing_compile_run_tool_found']}`\n"
+tools/compile_plan_v1.py:303:        f"- likely compile script: `{inv['likely_compile_script']}`\n"
+tools/compile_plan_v1.py:305:        f"- compile executed: `{inv['compile_executed']}`\n"
+tools/compile_plan_v1.py:311:        out_dir / "environment_inventory" / "compile_environment_inventory.md",
+tools/compile_plan_v1.py:313:        f"- gcc: `{env['compilers']['gcc']['path']}` available={env['compilers']['gcc']['available']}\n"
+tools/compile_plan_v1.py:314:        f"- clang: `{env['compilers']['clang']['path']}` available={env['compilers']['clang']['available']}\n"
+tools/compile_plan_v1.py:325:    plan = docs["compile_plan"]
+tools/compile_plan_v1.py:326:    rows = ["| compile_job_id | family | mutation_strategy | target |", "|---|---|---|---|"]
+tools/compile_plan_v1.py:327:    for job in plan["compile_jobs"]:
+tools/compile_plan_v1.py:329:            f"| {job['compile_job_id']} | {job['family']} | {job['mutation_strategy']} | {job['target_library']} |"
+tools/compile_plan_v1.py:332:        out_dir / "compile_plan" / "compile_plan.md",
+tools/compile_plan_v1.py:334:        f"- total_compile_jobs: `{plan['summary']['total_compile_jobs']}`\n"
+tools/compile_plan_v1.py:336:        "- compile_now: `false`\n\n"
+tools/compile_plan_v1.py:343:        out_dir / "compile_manifest" / "compile_manifest.md",
+tools/compile_plan_v1.py:348:        "- compile_status: `planned_only`\n",
+tools/compile_plan_v1.py:353:        out_dir / "preflight" / "compile_preflight_plan.md",
+tools/compile_plan_v1.py:357:        "- required_files: harness, build/oracle/case metadata, render trace\n"
+tools/compile_plan_v1.py:358:        "- required_environment: compiler, OpenSSL include, OpenSSL library\n",
+tools/compile_plan_v1.py:363:        out_dir / "blocked_cases" / "blocked_compile_cases.md",
+tools/compile_plan_v1.py:367:                f"{item['family']} -> {item['target_library']}: compile_allowed={item['compile_allowed']} reason={item['blocked_reason']}"
+tools/compile_plan_v1.py:375:        out_dir / "validation" / "compile_plan_quality_checks.md",
+tools/compile_plan_v1.py:378:        f"- total_compile_jobs: `{quality['total_compile_jobs']}`\n"
+tools/compile_plan_v1.py:383:        f"- no_compile_executed: `{quality['no_compile_executed']}`\n"
+tools/compile_plan_v1.py:389:        out_dir / "reports" / "next_action_after_compile_plan.md",
+tools/compile_plan_v1.py:397:        out_dir / "reports" / "compile_plan_v1_report.md",
+tools/compile_plan_v1.py:398:        "# compile_plan_v1 Report\n\n"
+tools/compile_plan_v1.py:400:        f"- compile_jobs: `{report['summary']['compile_jobs']}`\n"
+tools/compile_plan_v1.py:404:        f"- compile_executed: `false`\n"
+tools/compile_plan_v1.py:414:        "# compile_plan_v1\n\n"
+tools/compile_plan_v1.py:415:        "This sprint creates compile jobs for rendered OpenSSL cases. It does not compile or run anything.\n\n"
+tools/compile_plan_v1.py:419:                "compile_plan/compile_plan.yaml",
+tools/compile_plan_v1.py:420:                "compile_manifest/compile_manifest.yaml",
+tools/compile_plan_v1.py:421:                "preflight/compile_preflight_plan.yaml",
+tools/compile_plan_v1.py:422:                "validation/compile_plan_quality_checks.yaml",
+tools/compile_plan_v1.py:423:                "reports/compile_plan_v1_report.yaml",
+tools/compile_plan_v1.py:432:        oracle_meta = load_yaml(Path(job["inputs"]["oracle_metadata"]))
+tools/compile_plan_v1.py:435:                "compile_job_id": job["compile_job_id"],
+tools/compile_plan_v1.py:442:                "compile_status": "planned_only",
+tools/compile_plan_v1.py:445:                    "oracle_metadata": job["inputs"]["oracle_metadata"],
+tools/compile_plan_v1.py:449:                "expected_oracle": {
+tools/compile_plan_v1.py:450:                    "primary": oracle_meta.get("primary_oracle"),
+tools/compile_plan_v1.py:451:                    "secondary": oracle_meta.get("secondary_oracles", []),
+tools/compile_plan_v1.py:452:                    "expected_result_label": oracle_meta.get("expected_result_label"),
+tools/compile_plan_v1.py:457:        "schema": "compile_manifest_v1",
+tools/compile_plan_v1.py:469:    compiler_available = env["compilers"]["gcc"]["available"] or env["compilers"]["clang"]["available"]
+tools/compile_plan_v1.py:477:            job["inputs"]["oracle_metadata"],
+tools/compile_plan_v1.py:483:                "compile_job_id": job["compile_job_id"],
+tools/compile_plan_v1.py:488:                    "compiler_available": compiler_available,
+tools/compile_plan_v1.py:495:                    "compile_now": False,
+tools/compile_plan_v1.py:502:        "schema": "compile_preflight_plan_v1",
+tools/compile_plan_v1.py:512:        "schema": "compile_plan_quality_checks_v1",
+tools/compile_plan_v1.py:513:        "total_compile_jobs": len(jobs),
+tools/compile_plan_v1.py:514:        "expected_compile_jobs": 14,
+tools/compile_plan_v1.py:521:        "all_jobs_have_oracle_metadata": all(Path(j["inputs"]["oracle_metadata"]).exists() for j in jobs),
+tools/compile_plan_v1.py:524:        "all_jobs_compile_now_false": all(j["compile_policy"]["compile_now"] is False for j in jobs),
+tools/compile_plan_v1.py:525:        "all_jobs_run_now_false": all(j["compile_policy"]["run_now"] is False for j in jobs),
+tools/compile_plan_v1.py:527:        "no_compile_executed": True,
+tools/compile_plan_v1.py:532:            "Preflight remains pending for compile_run_v1.",
+tools/compile_plan_v1.py:536:        q["total_compile_jobs"] == 14,
+tools/compile_plan_v1.py:542:        q["all_jobs_have_oracle_metadata"],
+tools/compile_plan_v1.py:545:        q["all_jobs_compile_now_false"],
+tools/compile_plan_v1.py:548:        q["no_compile_executed"],
+tools/compile_plan_v1.py:557:    parser = argparse.ArgumentParser(description="Generate compile_plan_v1 artifacts.")
+tools/compile_plan_v1.py:582:    tool_inv = compile_tool_inventory(out_dir)
+tools/compile_plan_v1.py:583:    jobs, blocked_from_cases = build_compile_jobs(case_index, out_dir, env)
+tools/compile_plan_v1.py:586:        "schema": "blocked_compile_cases_v1",
+tools/compile_plan_v1.py:594:                "blocked_reason": "blocked_expected; not rendered; not allowed in compile_plan_v1",
+tools/compile_plan_v1.py:595:                "compile_allowed": False,
+tools/compile_plan_v1.py:601:            "Blocked mbedTLS adapter remains outside compile jobs.",
+tools/compile_plan_v1.py:606:    compile_plan = {
+tools/compile_plan_v1.py:607:        "schema": "compile_plan_v1",
+tools/compile_plan_v1.py:609:        "compile_jobs": jobs,
+tools/compile_plan_v1.py:611:            "total_compile_jobs": len(jobs),
+tools/compile_plan_v1.py:621:        (env["compilers"]["gcc"]["available"] or env["compilers"]["clang"]["available"])
+tools/compile_plan_v1.py:626:        next_task = "compile_plan_blocking_policy_fixup_v1"
+tools/compile_plan_v1.py:627:        reason = "mbedTLS compile job was planned"
+tools/compile_plan_v1.py:631:        and q["all_jobs_have_oracle_metadata"]
+tools/compile_plan_v1.py:634:        next_task = "compile_plan_dependency_fixup_v1"
+tools/compile_plan_v1.py:635:        reason = "one or more compile jobs lacks harness or metadata"
+tools/compile_plan_v1.py:637:        next_task = "compile_environment_setup_v1"
+tools/compile_plan_v1.py:638:        reason = "OpenSSL compile environment is missing compiler/include/library candidates"
+tools/compile_plan_v1.py:640:        next_task = "compile_run_v1"
+tools/compile_plan_v1.py:641:        reason = "compile plan has 14 rendered OpenSSL jobs and environment candidates are present"
+tools/compile_plan_v1.py:644:        "schema": "next_action_after_compile_plan_v1",
+tools/compile_plan_v1.py:651:        "schema": "compile_plan_input_summary_v1",
+tools/compile_plan_v1.py:665:            "compile_plan_only": True,
+tools/compile_plan_v1.py:666:            "compile_executed": False,
+tools/compile_plan_v1.py:677:        "schema": "compile_plan_v1_report",
+tools/compile_plan_v1.py:681:            "compile_plan_generated": True,
+tools/compile_plan_v1.py:682:            "compile_jobs": len(jobs),
+tools/compile_plan_v1.py:686:            "compile_executed": False,
+tools/compile_plan_v1.py:708:        "compile_plan": compile_plan,
+tools/compile_plan_v1.py:717:    dump_yaml(out_dir / "input" / "compile_plan_input_summary.yaml", input_summary)
+tools/compile_plan_v1.py:718:    dump_yaml(out_dir / "compile_tool_inventory" / "compile_tool_inventory.yaml", tool_inv)
+tools/compile_plan_v1.py:719:    dump_yaml(out_dir / "environment_inventory" / "compile_environment_inventory.yaml", env)
+tools/compile_plan_v1.py:720:    dump_yaml(out_dir / "compile_plan" / "compile_plan.yaml", compile_plan)
+tools/compile_plan_v1.py:721:    dump_yaml(out_dir / "compile_manifest" / "compile_manifest.yaml", manifest)
+tools/compile_plan_v1.py:722:    dump_yaml(out_dir / "preflight" / "compile_preflight_plan.yaml", preflight)
+tools/compile_plan_v1.py:723:    dump_yaml(out_dir / "blocked_cases" / "blocked_compile_cases.yaml", blocked)
+tools/compile_plan_v1.py:724:    dump_yaml(out_dir / "validation" / "compile_plan_quality_checks.yaml", q)
+tools/compile_plan_v1.py:725:    dump_yaml(out_dir / "reports" / "next_action_after_compile_plan.yaml", next_action)
+tools/compile_plan_v1.py:726:    dump_yaml(out_dir / "reports" / "compile_plan_v1_report.yaml", report)
+tools/compile_plan_v1.py:729:    print(f"[OK] wrote compile plan artifacts to {out_dir}")
+tools/compile_plan_v1.py:730:    print(f"[SUMMARY] compile_jobs={len(jobs)} quality={q['quality_status']} env_usable={env_usable}")

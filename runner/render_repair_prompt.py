@@ -60,7 +60,7 @@ Requirements:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Render constrained repair prompt from queue.")
-    parser.add_argument("--queue-jsonl", type=Path, required=True)
+    parser.add_argument("--queue-jsonl", "--repair-queue", dest="queue_jsonl", type=Path, required=True)
     parser.add_argument("--out", type=Path)
     parser.add_argument("--max-tasks", type=int, default=20)
     args = parser.parse_args()
@@ -78,4 +78,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

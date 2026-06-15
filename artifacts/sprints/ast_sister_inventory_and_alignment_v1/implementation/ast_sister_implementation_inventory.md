@@ -1,0 +1,69 @@
+# AST Sister Implementation Inventory
+
+- ast_sister_inventory:
+  - explicit_ast_sister_found: True
+  - equivalent_ast_mask_pipeline_found: True
+  - parser_backend:
+    - tree-sitter optional C backend
+    - regex/template-aware AST-lite fallback
+  - relevant_scripts:
+    - wrapper: template_maker/ast_mask.py
+    - lite_backend: template_maker/ast_mask_lite.py
+    - tree_sitter_backend: template_maker/ast_mask_tree_sitter.py
+    - selector: template_maker/ast_mask_select.py
+    - validator: template_maker/validate_template.py
+    - cross_generator: template_maker/cross_generator_from_adapters.py
+    - family_rules: config/harness_family_ast_rules.yaml
+  - relevant_functions:
+    - cross_generator.build_cross_mapping
+    - cross_generator.build_cross_meta
+    - cross_generator.selected_trace_for_meta
+    - cross_generator.selected_units_by_use
+    - cross_generator.selected_units_summary
+    - cross_generator.validate_selected_units_for_cross_generation
+    - lite_backend.build_report
+    - lite_backend.collect_trigger_apis
+    - selector.add_selected
+    - selector.build_selected_report
+    - selector.clone_selected
+    - selector.collect_trigger_apis
+    - selector.select_units
+    - selector.selection_reason_for
+    - tree_sitter_backend.build_report
+    - tree_sitter_backend.collect_trigger_apis
+    - tree_sitter_backend.collect_units_from_tree
+    - tree_sitter_backend.output_path_for
+    - tree_sitter_backend.run
+    - validator.validate_ast_mask_report
+    - validator.validate_mask_artifacts
+    - validator.validate_mask_report
+    - validator.validate_meta_fields
+    - validator.validate_placeholders
+    - validator.validate_readme
+    - validator.validate_report_identity
+    - validator.validate_required_files
+    - validator.validate_selected_mask_units
+    - validator.validate_template_dir
+    - validator.validate_trigger_api_consistency
+    - wrapper.output_path_for
+    - wrapper.run_lite_backend
+    - wrapper.run_tree_sitter_backend
+  - expected_inputs:
+    - template_meta.yaml
+    - mask_report.yaml
+    - tmpl_<library>.c, default tmpl_mbedtls.c
+    - config/harness_family_ast_rules.yaml for selection
+  - expected_outputs:
+    - ast_mask_report.yaml
+    - ast_mask_report.tree_sitter.yaml or backend-qualified output when requested
+    - selected_mask_units.yaml
+  - current_limitations:
+    - No module literally named ast_sister was found; implementation is under template_maker.ast_mask*.
+    - tree-sitter backend requires optional tree_sitter and tree_sitter_c dependencies.
+    - AST-lite is regex/template-aware, not a full C parser.
+    - Current default template file is tmpl_mbedtls.c unless --template-file is provided.
+    - Observed historical reports include multiple schema variants.
+  - notes:
+    - template_maker.ast_mask selects lite or tree-sitter backend.
+    - template_maker.ast_mask_select converts ast_mask_units into selected_units using family-aware rules.
+    - cross_generator_from_adapters validates selected_mask_units before cross-template generation.

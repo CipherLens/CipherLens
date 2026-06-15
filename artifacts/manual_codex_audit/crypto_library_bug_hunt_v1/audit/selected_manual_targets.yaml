@@ -1,0 +1,21 @@
+schema: manual_codex_selected_targets_v1
+generated_at: '2026-06-14T03:18:23+00:00'
+selection_policy:
+  local_only: true
+  non_parsing: true
+  avoid_historical_tested: true
+  avoid_completed_no_candidate: true
+  max_harnesses_per_target: 3
+targets:
+- family: provider_fetch_lifecycle
+  track: lifecycle
+  target_library: openssl
+  reason: EVP fetch APIs have local success/error behavior and no parser dependency.
+- family: evp_pkey_context_lifecycle
+  track: lifecycle
+  target_library: openssl
+  reason: EVP_PKEY_CTX operation ordering is locally testable with return-code oracle.
+- family: bn_usub_semantic
+  track: semantic
+  target_library: openssl
+  reason: BN arithmetic edge cases are local and deterministic under ASAN/UBSAN.

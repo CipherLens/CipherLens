@@ -1,0 +1,85 @@
+schema: family_template_spec_v1
+family_template_id: WOLFSSL-FAMILY-x509_parsing
+family: x509_parsing
+source_library: wolfssl
+template_level: family
+generation_mode: spec_only_no_source_seed
+canonical_c_template_generated: false
+reason: No explicit wolfSSL source template seed selected for this sprint.
+trigger_apis:
+- wolfSSL_X509_load_certificate_file
+- wolfSSL_X509_free
+- d2i_X509
+- X509_free
+- mbedtls_x509_crt_parse_der
+- mbedtls_x509_crt_free
+oracle_types:
+- parser_reject_accept
+- return_code_semantics
+- cleanup_required
+mutation_slots:
+- CERT_INPUT
+- SUBJECT_FIELD
+- ISSUER_FIELD
+- TRAILING_DATA
+- INVALID_LENGTH
+api_slots:
+- slot_name: wolfSSL_X509_load_certificate_file
+  source_api: wolfSSL_X509_load_certificate_file
+  allowed_target_apis:
+  - mbedtls:mbedtls_x509_crt_parse_file
+  - openssl:PEM_read_X509
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: wolfSSL_X509_free
+  source_api: wolfSSL_X509_free
+  allowed_target_apis:
+  - mbedtls:mbedtls_x509_crt_free
+  - openssl:X509_free
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: d2i_X509
+  source_api: ''
+  allowed_target_apis: []
+  blocked_target_apis: []
+  mapping_gate_status:
+  - not_in_mapping_gate
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: X509_free
+  source_api: X509_free
+  allowed_target_apis:
+  - openssl:X509_free
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: mbedtls_x509_crt_parse_der
+  source_api: ''
+  allowed_target_apis:
+  - mbedtls:mbedtls_x509_crt_parse_der
+  blocked_target_apis:
+  - mbedtls:mbedtls_x509_crt_parse_der
+  mapping_gate_status:
+  - needs_manual_review
+  - usable_for_adapter
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: mbedtls_x509_crt_free
+  source_api: ''
+  allowed_target_apis:
+  - mbedtls:mbedtls_x509_crt_free
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+glm_policy:
+  allowed: false
+  allowed_later_for:
+  - adapter_slot_filling
+  - slot_bindings
+  forbidden_for:
+  - full_c_generation
+  - freeform_harness_generation

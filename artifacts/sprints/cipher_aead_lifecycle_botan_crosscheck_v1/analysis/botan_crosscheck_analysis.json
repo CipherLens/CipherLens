@@ -1,0 +1,86 @@
+{
+  "allowed_labels": [
+    "legal_semantics",
+    "expected_reject",
+    "permissive_but_harmless",
+    "semantic_divergence_candidate",
+    "mapping_gap",
+    "compile_error",
+    "harness_error",
+    "crash_candidate",
+    "needs_doc_confirmation",
+    "needs_sanitizer",
+    "needs_version_matrix"
+  ],
+  "cases": [
+    {
+      "case_id": "aead_006_final_without_update_gcm_encrypt",
+      "case_name": "botan_final_without_update_gcm_encrypt",
+      "case_result": "legal_semantics",
+      "classification": "legal_semantics",
+      "observed_behavior": "CASE_NAME=botan_final_without_update_gcm_encrypt\nSTEP=create_aead ok\nSTEP=set_key ok\nSTEP=set_associated_data ok\nSTEP=start ok\nSTEP=finish ok out_size=16\nCASE_RESULT=legal_semantics",
+      "state_sequence": "final_without_update",
+      "stderr_excerpt": [],
+      "stdout_excerpt": [
+        "CASE_NAME=botan_final_without_update_gcm_encrypt",
+        "STEP=create_aead ok",
+        "STEP=set_key ok",
+        "STEP=set_associated_data ok",
+        "STEP=start ok",
+        "STEP=finish ok out_size=16",
+        "CASE_RESULT=legal_semantics"
+      ]
+    },
+    {
+      "case_id": "aead_009_set_tag_after_final_gcm_decrypt",
+      "case_name": "botan_set_tag_after_final_gcm_decrypt",
+      "case_result": "mapping_gap",
+      "classification": "mapping_gap",
+      "observed_behavior": "CASE_NAME=botan_set_tag_after_final_gcm_decrypt\nSTEP=api_mapping_check ok\nMAPPING=Botan AEAD decryption passes ciphertext||tag to finish()\nMAPPING=No OpenSSL EVP_CTRL_GCM_SET_TAG style post-final API is available in local evidence\nCASE_RESULT=mapping_gap",
+      "state_sequence": "set_tag_after_final",
+      "stderr_excerpt": [],
+      "stdout_excerpt": [
+        "CASE_NAME=botan_set_tag_after_final_gcm_decrypt",
+        "STEP=api_mapping_check ok",
+        "MAPPING=Botan AEAD decryption passes ciphertext||tag to finish()",
+        "MAPPING=No OpenSSL EVP_CTRL_GCM_SET_TAG style post-final API is available in local evidence",
+        "CASE_RESULT=mapping_gap"
+      ]
+    },
+    {
+      "case_id": "aead_012_wrong_tag_length_gcm_decrypt",
+      "case_name": "botan_wrong_tag_length_gcm_decrypt",
+      "case_result": "legal_semantics",
+      "classification": "legal_semantics",
+      "observed_behavior": "CASE_NAME=botan_wrong_tag_length_gcm_decrypt\nREF_STEP=create_encrypt ok alg=AES-128/GCM(8)\nREF_STEP=set_key ok\nREF_STEP=set_associated_data ok\nREF_STEP=start ok\nREF_STEP=finish_encrypt ok out_size=37\nSTEP=create_decrypt ok alg=AES-128/GCM(8)\nSTEP=set_key ok\nSTEP=set_associated_data ok\nSTEP=start ok\nSTEP=finish_decrypt ok out_size=29\nPLAINTEXT_MATCH=1\nCASE_RESULT=legal_semantics\nHARNESS_STATUS=0",
+      "state_sequence": "wrong_tag_length",
+      "stderr_excerpt": [],
+      "stdout_excerpt": [
+        "CASE_NAME=botan_wrong_tag_length_gcm_decrypt",
+        "REF_STEP=create_encrypt ok alg=AES-128/GCM(8)",
+        "REF_STEP=set_key ok",
+        "REF_STEP=set_associated_data ok",
+        "REF_STEP=start ok",
+        "REF_STEP=finish_encrypt ok out_size=37",
+        "STEP=create_decrypt ok alg=AES-128/GCM(8)",
+        "STEP=set_key ok",
+        "STEP=set_associated_data ok",
+        "STEP=start ok",
+        "STEP=finish_decrypt ok out_size=29",
+        "PLAINTEXT_MATCH=1"
+      ]
+    }
+  ],
+  "reclassification": {
+    "aead_006_final_without_update_gcm_encrypt": "legal_semantics",
+    "aead_009_set_tag_after_final_gcm_decrypt": "mapping_gap / permissive_but_harmless remains appropriate cross-library classification",
+    "aead_012_wrong_tag_length_gcm_decrypt": "legal_semantics"
+  },
+  "summary": {
+    "confirmed_vulnerability_found": false,
+    "crash_candidate_count": 0,
+    "needs_a_path": false,
+    "needs_d_path": false,
+    "semantic_divergence_candidate_count": 0
+  }
+}

@@ -1,0 +1,36 @@
+# Analysis/Feedback Inventory
+
+```yaml
+schema: analysis_feedback_inventory_v1
+task: project_structure_refactor_phase5_analysis_feedback_v1
+analysis_existing_files:
+- analysis/analysis_records.py
+- analysis/audit_crash_sanitizer_candidates.py
+- analysis/build_candidate_queue.py
+- analysis/candidate_queue.py
+- analysis/check_a_path_compliance.py
+- analysis/family_loop_closure.py
+- analysis/mutation_feedback.py
+- analysis/plan_execution_paths.py
+- analysis/runtime_feedback.py
+- analysis/scheduler_proposal.py
+analysis_feedback_file_count: 78
+analysis_feedback_rg_match_count: 10023
+new_core_modules:
+- analysis/runtime_feedback.py
+- analysis/candidate_queue.py
+- analysis/mutation_feedback.py
+- analysis/scheduler_proposal.py
+- analysis/family_loop_closure.py
+- analysis/analysis_records.py
+tools_entrypoints:
+- tools/runtime_feedback_integration_v1.py
+- tools/family_loop_closure_report_v1.py
+reusable_old_logic:
+  runtime_feedback_integration: staged runtime feedback, external validation queue, mutation policy feedback,
+    scheduler proposal, handoff and quality outputs
+  family_loop_closure_report: read-only closure summary, framework milestone, candidate status and roadmap
+    outputs
+conflict_risk: 'low: target module names did not exist before this sprint; existing analysis scripts were
+  preserved'
+```

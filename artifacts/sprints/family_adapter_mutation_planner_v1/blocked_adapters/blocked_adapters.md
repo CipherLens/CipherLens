@@ -1,0 +1,15 @@
+# Blocked Adapters
+
+```yaml
+schema: blocked_adapters_v1
+blocked_adapters:
+- adapter_id: asn1_nested_boundary_mbedtls
+  family: asn1_nested_boundary
+  target_library: mbedtls
+  blocked_status: blocked_by_mapping_gate
+  reason: blocked_expected / needs_manual_review / mapping gate not render-ready
+  mutation_allowed: false
+  render_allowed: false
+  notes:
+  - must not enter render candidates
+```

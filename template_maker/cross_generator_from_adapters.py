@@ -162,6 +162,54 @@ def load_optional_yaml_path(path: Optional[Path]) -> Dict[str, Any]:
     return load_yaml(path)
 
 
+def infer_sprint_source_template_dir(mask_report_path: Path) -> Optional[Path]:
+    """
+    Locate sprint-local source_template directories from a mask_report path.
+
+    Standard normalized templates keep template_meta.yaml next to mask_report.yaml.
+    Sprint artifacts often use:
+
+      <sprint_root>/mask/mask_report.yaml
+      <sprint_root>/source_template/template_meta.yaml
+
+    This helper keeps the generator data-driven for sprint-local artifacts without
+    hard-coding a particular PoC or issue id.
+    """
+    candidates = [
+        mask_report_path.parent / "source_template",
+        mask_report_path.parent.parent / "source_template",
+        mask_report_path.parent.parent / "template",
+    ]
+    for candidate in candidates:
+        if (candidate / "template_meta.yaml").exists():
+            return candidate
+    return None
+
+
+def resolve_source_template_dir(
+    source_files: Dict[str, Any],
+    mask_report_path: Path,
+) -> Path:
+    template_meta_path = optional_path(source_files.get("template_meta"))
+    if template_meta_path is not None and template_meta_path.exists():
+        return template_meta_path.parent
+
+    source_template_path = optional_path(source_files.get("source_template"))
+    if source_template_path is not None and source_template_path.exists():
+        return source_template_path.parent
+
+    if (mask_report_path.parent / "template_meta.yaml").exists():
+        return mask_report_path.parent
+
+    inferred = infer_sprint_source_template_dir(mask_report_path)
+    if inferred is not None:
+        return inferred
+
+    raise FileNotFoundError(
+        f"template_meta.yaml not found next to mask_report or in sprint source_template for {mask_report_path}"
+    )
+
+
 def unit_compact(unit: Dict[str, Any]) -> Dict[str, Any]:
     keep = [
         "unit_id",
@@ -526,6 +574,375 @@ def is_object_state_lifecycle_recipe(
             "mac_context_size_lifecycle_oracle",
         }
     )
+
+
+def is_mac_lifecycle_recipe(
+    adapter: Dict[str, Any],
+    recipe: Optional[Dict[str, Any]] = None,
+) -> bool:
+    if not is_recipe_adapter(adapter):
+        return False
+    recipe = recipe or load_adapter_recipe(adapter)
+    return (
+        recipe.get("harness_family") == "mac_lifecycle"
+        and recipe.get("oracle_type") == "lifecycle_state_transition_semantic_oracle"
+    )
+
+
+def render_mac_lifecycle_openssl_from_recipe(
+    adapter: Dict[str, Any],
+    source_template_dir: Path,
+    source_meta: Dict[str, Any],
+    mask_report: Dict[str, Any],
+) -> str:
+    recipe = load_adapter_recipe(adapter)
+    if not is_mac_lifecycle_recipe(adapter, recipe):
+        raise ValueError("recipe must be mac_lifecycle with lifecycle_state_transition_semantic_oracle")
+
+    mac_fetch = slot(adapter, recipe, "openssl_MAC_FETCH_API")
+    ctx_new = slot(adapter, recipe, "openssl_MAC_CTX_NEW_API")
+    mac_init = slot(adapter, recipe, "openssl_MAC_INIT_API")
+    mac_update = slot(adapter, recipe, "openssl_MAC_UPDATE_API")
+    mac_final = slot(adapter, recipe, "openssl_MAC_FINAL_API")
+    ctx_free = slot(adapter, recipe, "openssl_MAC_FREE_API")
+    mac_algorithm = slot(adapter, recipe, "openssl_MAC_ALGORITHM")
+
+    include_lines = render_include_lines(
+        {"include_headers": (recipe.get("include_headers") or {}).get("openssl", [])},
+        ["openssl/evp.h", "openssl/core_names.h", "openssl/params.h", "stdio.h", "signal.h", "stdlib.h", "string.h"],
+    )
+
+    return f'''{include_lines}
+
+#define LIFECYCLE_SEQUENCE_ID [LIFECYCLE_SEQUENCE_ID]
+#define MAC_BUFFER_LEN 32
+
+/*
+ * Harness: mac_lifecycle
+ * Oracle: lifecycle_state_transition_semantic_oracle
+ * Library: OpenSSL EVP_MAC
+ *
+ * The sequence id is rendered by template_maker.render_cases:
+ *   0 normal_init_update_final
+ *   1 repeated_final
+ *   2 update_after_final
+ *   3 abort_then_update (projected as free-then-update guard)
+ */
+
+static void bug_signal_handler(int signo)
+{{
+    fprintf(stderr, "[BUG] mac_lifecycle: crash or sanitizer signal: %d\\n", signo);
+    fflush(stderr);
+    _Exit(128 + signo);
+}}
+
+static const char *sequence_name(void)
+{{
+    switch (LIFECYCLE_SEQUENCE_ID) {{
+    case 0: return "normal_init_update_final";
+    case 1: return "repeated_final";
+    case 2: return "update_after_final";
+    case 3: return "abort_then_update";
+    default: return "unknown";
+    }}
+}}
+
+int main(void)
+{{
+    static const unsigned char key[16] = {{
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+        0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
+    }};
+    static const unsigned char msg[] = "mac-lifecycle-message";
+    unsigned char mac[MAC_BUFFER_LEN];
+    size_t mac_len = 0;
+    EVP_MAC *mac_impl = NULL;
+    EVP_MAC_CTX *ctx = NULL;
+    OSSL_PARAM params[2];
+    int init_ret = 0;
+    int update_ret = 0;
+    int final_ret = 0;
+    int after_ret = 0;
+    int ret = 0;
+
+    setbuf(stdout, NULL);
+    signal(SIGSEGV, bug_signal_handler);
+    signal(SIGABRT, bug_signal_handler);
+    signal(SIGBUS, bug_signal_handler);
+    signal(SIGILL, bug_signal_handler);
+    memset(mac, 0, sizeof(mac));
+
+    printf("template_mutation LIFECYCLE_SEQUENCE_ID=%d sequence=%s\\n",
+           LIFECYCLE_SEQUENCE_ID, sequence_name());
+
+    mac_impl = {mac_fetch}(NULL, "{mac_algorithm}", NULL);
+    if (mac_impl == NULL) {{
+        printf("[TRIAGE] mac_lifecycle: OpenSSL MAC fetch failed for {mac_algorithm}\\n");
+        return 2;
+    }}
+
+    ctx = {ctx_new}(mac_impl);
+    if (ctx == NULL) {{
+        printf("[TRIAGE] mac_lifecycle: OpenSSL MAC ctx allocation failed\\n");
+        EVP_MAC_free(mac_impl);
+        return 2;
+    }}
+
+    params[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_CIPHER, "AES-128-CBC", 0);
+    params[1] = OSSL_PARAM_construct_end();
+
+    init_ret = {mac_init}(ctx, key, sizeof(key), params);
+    update_ret = init_ret > 0 ? {mac_update}(ctx, msg, sizeof(msg) - 1) : 0;
+    final_ret = update_ret > 0 ? {mac_final}(ctx, mac, &mac_len, sizeof(mac)) : 0;
+    printf("openssl init_ret=%d update_ret=%d final_ret=%d mac_len=%zu\\n",
+           init_ret, update_ret, final_ret, mac_len);
+
+    if (init_ret <= 0 || update_ret <= 0 || final_ret <= 0) {{
+        printf("[TRIAGE] mac_lifecycle: normal setup/update/final failed before state transition\\n");
+        ret = 2;
+        goto end;
+    }}
+
+    if (LIFECYCLE_SEQUENCE_ID == 0) {{
+        printf("[OK] mac_lifecycle: normal_init_update_final completed successfully\\n");
+        ret = 0;
+    }} else if (LIFECYCLE_SEQUENCE_ID == 1) {{
+        mac_len = 0;
+        after_ret = {mac_final}(ctx, mac, &mac_len, sizeof(mac));
+        printf("openssl repeated_final ret=%d mac_len=%zu\\n", after_ret, mac_len);
+        if (after_ret <= 0) {{
+            printf("[OK] mac_lifecycle: repeated_final rejected after terminal finalization\\n");
+        }} else {{
+            printf("[TRIAGE] mac_lifecycle: repeated_final accepted after terminal finalization\\n");
+        }}
+        ret = 0;
+    }} else if (LIFECYCLE_SEQUENCE_ID == 2) {{
+        after_ret = {mac_update}(ctx, msg, sizeof(msg) - 1);
+        printf("openssl update_after_final ret=%d\\n", after_ret);
+        if (after_ret <= 0) {{
+            printf("[OK] mac_lifecycle: update_after_final rejected after terminal finalization\\n");
+        }} else {{
+            printf("[TRIAGE] mac_lifecycle: update_after_final accepted after terminal finalization\\n");
+        }}
+        ret = 0;
+    }} else if (LIFECYCLE_SEQUENCE_ID == 3) {{
+        {ctx_free}(ctx);
+        ctx = NULL;
+        printf("[OK] mac_lifecycle: abort_then_update projected as no-call-after-free guard\\n");
+        ret = 0;
+    }} else {{
+        printf("[TRIAGE] mac_lifecycle: unknown lifecycle sequence id=%d\\n", LIFECYCLE_SEQUENCE_ID);
+        ret = 2;
+    }}
+
+end:
+    if (ctx != NULL)
+        {ctx_free}(ctx);
+    EVP_MAC_free(mac_impl);
+    return ret;
+}}
+'''
+
+
+def render_mac_lifecycle_mbedtls_from_recipe(
+    adapter: Dict[str, Any],
+    source_template_dir: Path,
+    source_meta: Dict[str, Any],
+    mask_report: Dict[str, Any],
+) -> str:
+    recipe = load_adapter_recipe(adapter)
+    if not is_mac_lifecycle_recipe(adapter, recipe):
+        raise ValueError("recipe must be mac_lifecycle with lifecycle_state_transition_semantic_oracle")
+
+    setup_api = slot(adapter, recipe, "mbedtls_psa_MAC_SETUP_API")
+    update_api = slot(adapter, recipe, "mbedtls_psa_MAC_UPDATE_API")
+    final_api = slot(adapter, recipe, "mbedtls_psa_MAC_FINAL_API")
+    abort_api = slot(adapter, recipe, "mbedtls_psa_MAC_ABORT_API")
+    psa_algorithm = slot(adapter, recipe, "mbedtls_psa_MAC_ALGORITHM")
+
+    include_lines = render_include_lines(
+        {"include_headers": (recipe.get("include_headers") or {}).get("mbedtls_psa", [])},
+        ["psa/crypto.h", "stdio.h", "signal.h", "stdlib.h", "string.h"],
+    )
+
+    return f'''{include_lines}
+
+#define LIFECYCLE_SEQUENCE_ID [LIFECYCLE_SEQUENCE_ID]
+#define MAC_BUFFER_LEN 32
+
+/*
+ * Harness: mac_lifecycle
+ * Oracle: lifecycle_state_transition_semantic_oracle
+ * Library: mbedTLS PSA MAC
+ */
+
+static void bug_signal_handler(int signo)
+{{
+    fprintf(stderr, "[BUG] mac_lifecycle: crash or sanitizer signal: %d\\n", signo);
+    fflush(stderr);
+    _Exit(128 + signo);
+}}
+
+static const char *sequence_name(void)
+{{
+    switch (LIFECYCLE_SEQUENCE_ID) {{
+    case 0: return "normal_init_update_final";
+    case 1: return "repeated_final";
+    case 2: return "update_after_final";
+    case 3: return "abort_then_update";
+    default: return "unknown";
+    }}
+}}
+
+int main(void)
+{{
+    static const unsigned char key_bytes[16] = {{
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+        0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
+    }};
+    static const unsigned char msg[] = "mac-lifecycle-message";
+    unsigned char mac[MAC_BUFFER_LEN];
+    size_t mac_len = 0;
+    psa_status_t status;
+    psa_status_t setup_status;
+    psa_status_t update_status;
+    psa_status_t final_status;
+    psa_status_t after_status;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key_id = 0;
+    psa_mac_operation_t operation = PSA_MAC_OPERATION_INIT;
+    int ret = 0;
+
+    setbuf(stdout, NULL);
+    signal(SIGSEGV, bug_signal_handler);
+    signal(SIGABRT, bug_signal_handler);
+    signal(SIGBUS, bug_signal_handler);
+    signal(SIGILL, bug_signal_handler);
+    memset(mac, 0, sizeof(mac));
+
+    printf("template_mutation LIFECYCLE_SEQUENCE_ID=%d sequence=%s\\n",
+           LIFECYCLE_SEQUENCE_ID, sequence_name());
+
+    status = psa_crypto_init();
+    printf("psa_crypto_init status=%d\\n", (int) status);
+    if (status != PSA_SUCCESS) {{
+        printf("[TRIAGE] mac_lifecycle: psa_crypto_init failed\\n");
+        return 2;
+    }}
+
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_AES);
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_MESSAGE);
+    psa_set_key_algorithm(&attributes, {psa_algorithm});
+
+    status = psa_import_key(&attributes, key_bytes, sizeof(key_bytes), &key_id);
+    printf("psa_import_key status=%d\\n", (int) status);
+    if (status != PSA_SUCCESS) {{
+        printf("[TRIAGE] mac_lifecycle: psa_import_key failed\\n");
+        ret = 2;
+        goto end;
+    }}
+
+    setup_status = {setup_api}(&operation, key_id, {psa_algorithm});
+    update_status = setup_status == PSA_SUCCESS ? {update_api}(&operation, msg, sizeof(msg) - 1) : setup_status;
+    final_status = update_status == PSA_SUCCESS ? {final_api}(&operation, mac, sizeof(mac), &mac_len) : update_status;
+    printf("psa setup_status=%d update_status=%d final_status=%d mac_len=%zu\\n",
+           (int) setup_status, (int) update_status, (int) final_status, mac_len);
+
+    if (setup_status != PSA_SUCCESS || update_status != PSA_SUCCESS || final_status != PSA_SUCCESS) {{
+        printf("[TRIAGE] mac_lifecycle: normal setup/update/final failed before state transition\\n");
+        ret = 2;
+        goto end;
+    }}
+
+    if (LIFECYCLE_SEQUENCE_ID == 0) {{
+        printf("[OK] mac_lifecycle: normal_init_update_final completed successfully\\n");
+        ret = 0;
+    }} else if (LIFECYCLE_SEQUENCE_ID == 1) {{
+        mac_len = 0;
+        after_status = {final_api}(&operation, mac, sizeof(mac), &mac_len);
+        printf("psa repeated_final status=%d mac_len=%zu\\n", (int) after_status, mac_len);
+        if (after_status != PSA_SUCCESS) {{
+            printf("[OK] mac_lifecycle: repeated_final rejected after terminal finalization\\n");
+        }} else {{
+            printf("[TRIAGE] mac_lifecycle: repeated_final accepted after terminal finalization\\n");
+        }}
+        ret = 0;
+    }} else if (LIFECYCLE_SEQUENCE_ID == 2) {{
+        after_status = {update_api}(&operation, msg, sizeof(msg) - 1);
+        printf("psa update_after_final status=%d\\n", (int) after_status);
+        if (after_status != PSA_SUCCESS) {{
+            printf("[OK] mac_lifecycle: update_after_final rejected after terminal finalization\\n");
+        }} else {{
+            printf("[TRIAGE] mac_lifecycle: update_after_final accepted after terminal finalization\\n");
+        }}
+        ret = 0;
+    }} else if (LIFECYCLE_SEQUENCE_ID == 3) {{
+        after_status = {abort_api}(&operation);
+        printf("psa abort status=%d\\n", (int) after_status);
+        after_status = {update_api}(&operation, msg, sizeof(msg) - 1);
+        printf("psa abort_then_update status=%d\\n", (int) after_status);
+        if (after_status != PSA_SUCCESS) {{
+            printf("[OK] mac_lifecycle: abort_then_update rejected after abort\\n");
+        }} else {{
+            printf("[TRIAGE] mac_lifecycle: abort_then_update accepted after abort\\n");
+        }}
+        ret = 0;
+    }} else {{
+        printf("[TRIAGE] mac_lifecycle: unknown lifecycle sequence id=%d\\n", LIFECYCLE_SEQUENCE_ID);
+        ret = 2;
+    }}
+
+end:
+    {abort_api}(&operation);
+    if (key_id != 0)
+        psa_destroy_key(key_id);
+    mbedtls_psa_crypto_free();
+    return ret;
+}}
+'''
+
+
+def mac_lifecycle_meta(source_meta: Dict[str, Any], adapter: Dict[str, Any]) -> Dict[str, Any]:
+    meta = copy.deepcopy(source_meta)
+    meta["harness_family"] = "mac_lifecycle"
+    meta["oracle_type"] = "lifecycle_state_transition_semantic_oracle"
+    meta["description"] = (
+        "Cross-library MAC lifecycle state-transition template generated from "
+        "a strict recipe-slot adapter. The harness compares OpenSSL EVP_MAC and "
+        "mbedTLS PSA MAC behavior for normal finalization, repeated finalization, "
+        "update after finalization, and abort-then-update state transitions."
+    )
+    meta["mutation_points"] = [
+        {
+            "name": "LIFECYCLE_SEQUENCE_ID",
+            "placeholder": "[LIFECYCLE_SEQUENCE_ID]",
+            "type": "int",
+            "default": 0,
+            "values": [0, 1, 2, 3],
+            "priority": "high",
+        },
+    ]
+    meta["generation_policy"] = {
+        "max_cases": 4,
+        "priority": ["LIFECYCLE_SEQUENCE_ID"],
+    }
+    meta["required_observables"] = [
+        "return_code",
+        "output_length",
+        "operation_state",
+        "sanitizer_signal",
+    ]
+    meta["safe_behavior"] = {
+        "normal_init_update_final": "valid lifecycle completes successfully",
+        "terminal_state_reuse": "repeated final/update after final or abort is rejected without crash",
+    }
+    meta["triage_behavior"] = {
+        "permissive_terminal_state_reuse": (
+            "API accepts repeated final/update after final or abort. This is recorded "
+            "as semantic divergence or API-specific permissive behavior, not a confirmed vulnerability."
+        ),
+    }
+    return meta
 
 
 def is_mac_context_size_lifecycle_recipe(
@@ -3237,6 +3654,13 @@ def render_target_c_from_adapter(
                 source_meta,
                 mask_report,
             )
+        if harness_family == "mac_lifecycle" and is_mac_lifecycle_recipe(adapter, recipe):
+            return render_mac_lifecycle_openssl_from_recipe(
+                adapter,
+                source_template_dir,
+                source_meta,
+                mask_report,
+            )
         if (
             harness_family == "pkey_capability_mismatch_oracle"
             and is_rsa_invalid_key_sign_rejection_recipe(adapter, recipe)
@@ -3382,7 +3806,6 @@ def generate_one(adapter_file: Path, adapter_root: Path, out_root: Path) -> bool
     is_bignum_projection = is_bignum_arithmetic_semantic_recipe(adapter, recipe) if recipe else False
 
     source_files = adapter_meta.get("source_files", {})
-    template_meta_path = optional_path(source_files.get("template_meta"))
     mask_report_path = optional_path(source_files.get("mask_report"))
     selected_units_path = optional_path(source_files.get("selected_mask_units"))
 
@@ -3390,12 +3813,8 @@ def generate_one(adapter_file: Path, adapter_root: Path, out_root: Path) -> bool
         print(f"[FAIL] missing mask_report for adapter: {adapter_file}")
         return False
 
-    if template_meta_path is not None and template_meta_path.exists():
-        source_template_dir = template_meta_path.parent
-        source_meta = load_yaml(template_meta_path)
-    else:
-        source_template_dir = mask_report_path.parent
-        source_meta = load_yaml(source_template_dir / "template_meta.yaml")
+    source_template_dir = resolve_source_template_dir(source_files, mask_report_path)
+    source_meta = load_yaml(source_template_dir / "template_meta.yaml")
     mask_report = load_yaml(mask_report_path)
     if selected_units_path is None:
         selected_units_path = source_template_dir / "selected_mask_units.yaml"
@@ -3451,6 +3870,8 @@ def generate_one(adapter_file: Path, adapter_root: Path, out_root: Path) -> bool
     target_lib = adapter.get("target_library", "target")
 
     cross_meta = build_cross_meta(source_meta, adapter, selected_report, selected_units_path)
+    if recipe and is_mac_lifecycle_recipe(adapter, recipe):
+        cross_meta = mac_lifecycle_meta(cross_meta, adapter)
     if recipe and is_mac_context_size_lifecycle_recipe(adapter, recipe):
         cross_meta = mac_context_size_lifecycle_meta(cross_meta, adapter)
     if recipe and is_rsa_invalid_key_sign_rejection_recipe(adapter, recipe):
@@ -3459,10 +3880,20 @@ def generate_one(adapter_file: Path, adapter_root: Path, out_root: Path) -> bool
         cross_meta = bignum_semantic_projection_meta(cross_meta, adapter)
     dump_yaml(out_dir / "template_meta.yaml", cross_meta)
 
-    write_text(
-        out_dir / f"tmpl_{target_lib}.c",
-        render_target_c_from_adapter(adapter, source_template_dir, source_meta, mask_report),
-    )
+    if recipe and is_mac_lifecycle_recipe(adapter, recipe):
+        write_text(
+            out_dir / "tmpl_openssl.c",
+            render_mac_lifecycle_openssl_from_recipe(adapter, source_template_dir, source_meta, mask_report),
+        )
+        write_text(
+            out_dir / "tmpl_mbedtls.c",
+            render_mac_lifecycle_mbedtls_from_recipe(adapter, source_template_dir, source_meta, mask_report),
+        )
+    else:
+        write_text(
+            out_dir / f"tmpl_{target_lib}.c",
+            render_target_c_from_adapter(adapter, source_template_dir, source_meta, mask_report),
+        )
 
     cross_mapping = build_cross_mapping(source_meta, mask_report, adapter, adapter_meta, selected_report, selected_units_path)
     if is_bignum_projection:
@@ -3554,6 +3985,20 @@ Safe behavior:
 - the harness maps this to `ret != 0`, meaning the target rejected the malformed DER.
 
 The harness also records `consumed_len` for pointer-consumption analysis, but it does not require OpenSSL to reproduce mbedTLS numeric error codes.
+"""
+    elif harness_family == "mac_lifecycle":
+        oracle_text = """The migrated harness uses a MAC lifecycle state-transition semantic oracle.
+
+Safe behavior:
+
+- normal init/update/final completes successfully;
+- repeated final, update-after-final, or abort-then-update is rejected without crash.
+
+Triage behavior:
+
+- a library accepts a terminal-state reuse sequence. This is recorded as semantic divergence or API-specific permissive behavior, not a confirmed vulnerability.
+
+Bug candidate behavior requires explicit crash/sanitizer evidence or unsafe output-state evidence.
 """
     else:
         oracle_text = """The migrated harness uses a memory-safety oracle inherited from the source PoC pattern. The target API is executed with a caller-provided output buffer followed by a canary region.

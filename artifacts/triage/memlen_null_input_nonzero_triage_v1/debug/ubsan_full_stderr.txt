@@ -1,0 +1,76 @@
+===== null_input_nonzero_len_original =====
+../openssl-3.5.5-asan-src/crypto/evp/encode.c:466:35: runtime error: load of null pointer of type 'const unsigned char'
+    #0 0x70136f64376f in evp_encodeblock_int ../openssl-3.5.5-asan-src/crypto/evp/encode.c:466
+    #1 0x70136f6459c7 in EVP_EncodeBlock ../openssl-3.5.5-asan-src/crypto/evp/encode.c:491
+    #2 0x652bfa7b3688 in run_variant artifacts/triage/memlen_null_input_nonzero_triage_v1/cases/memlen_null_input_nonzero_triage.c:22
+    #3 0x652bfa7b3ba6 in main artifacts/triage/memlen_null_input_nonzero_triage_v1/cases/memlen_null_input_nonzero_triage.c:59
+    #4 0x70136de2a1c9 in __libc_start_call_main ../sysdeps/nptl/libc_start_call_main.h:58
+    #5 0x70136de2a28a in __libc_start_main_impl ../csu/libc-start.c:360
+    #6 0x652bfa7b3404 in _start (/home/wen/work/crypto-pattern-fuzz/artifacts/triage/memlen_null_input_nonzero_triage_v1/work/memlen_null_input_nonzero_triage.bin+0x2404) (BuildId: c35224c44bcc1ecf786fccdac64d4860e89dc8dc)
+
+
+===== short_input_claimed_larger_len =====
+=================================================================
+==17==ERROR: AddressSanitizer: stack-buffer-overflow on address 0x785fb9000031 at pc 0x785fbca437a0 bp 0x7ffce0dd10b0 sp 0x7ffce0dd10a0
+READ of size 1 at 0x785fb9000031 thread T0
+    #0 0x785fbca4379f in evp_encodeblock_int ../openssl-3.5.5-asan-src/crypto/evp/encode.c:466
+    #1 0x785fbca459c7 in EVP_EncodeBlock ../openssl-3.5.5-asan-src/crypto/evp/encode.c:491
+    #2 0x63c409eb773e in run_variant artifacts/triage/memlen_null_input_nonzero_triage_v1/cases/memlen_null_input_nonzero_triage.c:26
+    #3 0x63c409eb7ba6 in main artifacts/triage/memlen_null_input_nonzero_triage_v1/cases/memlen_null_input_nonzero_triage.c:59
+    #4 0x785fbb22a1c9 in __libc_start_call_main ../sysdeps/nptl/libc_start_call_main.h:58
+    #5 0x785fbb22a28a in __libc_start_main_impl ../csu/libc-start.c:360
+    #6 0x63c409eb7404 in _start (/home/wen/work/crypto-pattern-fuzz/artifacts/triage/memlen_null_input_nonzero_triage_v1/work/memlen_null_input_nonzero_triage.bin+0x2404) (BuildId: c35224c44bcc1ecf786fccdac64d4860e89dc8dc)
+
+Address 0x785fb9000031 is located in stack of thread T0 at offset 49 in frame
+    #0 0x63c409eb74d8 in run_variant artifacts/triage/memlen_null_input_nonzero_triage_v1/cases/memlen_null_input_nonzero_triage.c:11
+
+  This frame has 3 object(s):
+    [48, 49) 'short_in' (line 14) <== Memory access at offset 49 overflows this variable
+    [64, 80) 'in' (line 13)
+    [96, 224) 'out' (line 12)
+HINT: this may be a false positive if your program uses some custom stack unwind mechanism, swapcontext or vfork
+      (longjmp and C++ exceptions *are* supported)
+SUMMARY: AddressSanitizer: stack-buffer-overflow ../openssl-3.5.5-asan-src/crypto/evp/encode.c:466 in evp_encodeblock_int
+Shadow bytes around the buggy address:
+  0x785fb8fffd80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x785fb8fffe00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x785fb8fffe80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x785fb8ffff00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x785fb8ffff80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+=>0x785fb9000000: f1 f1 f1 f1 f1 f1[01]f2 00 00 f2 f2 00 00 00 00
+  0x785fb9000080: 00 00 00 00 00 00 00 00 00 00 00 00 f3 f3 f3 f3
+  0x785fb9000100: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x785fb9000180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x785fb9000200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x785fb9000280: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           00
+  Partially addressable: 01 02 03 04 05 06 07 
+  Heap left redzone:       fa
+  Freed heap region:       fd
+  Stack left redzone:      f1
+  Stack mid redzone:       f2
+  Stack right redzone:     f3
+  Stack after return:      f5
+  Stack use after scope:   f8
+  Global redzone:          f9
+  Global init order:       f6
+  Poisoned by user:        f7
+  Container overflow:      fc
+  Array cookie:            ac
+  Intra object redzone:    bb
+  ASan internal:           fe
+  Left alloca redzone:     ca
+  Right alloca redzone:    cb
+==17==ABORTING
+
+===== null_output_zero_len_boundary =====
+../openssl-3.5.5-asan-src/crypto/evp/encode.c:485:8: runtime error: store to null pointer of type 'unsigned char'
+    #0 0x781f5cc441f3 in evp_encodeblock_int ../openssl-3.5.5-asan-src/crypto/evp/encode.c:485
+    #1 0x781f5cc459c7 in EVP_EncodeBlock ../openssl-3.5.5-asan-src/crypto/evp/encode.c:491
+    #2 0x62d22ce5b790 in run_variant artifacts/triage/memlen_null_input_nonzero_triage_v1/cases/memlen_null_input_nonzero_triage.c:28
+    #3 0x62d22ce5bba6 in main artifacts/triage/memlen_null_input_nonzero_triage_v1/cases/memlen_null_input_nonzero_triage.c:59
+    #4 0x781f5b42a1c9 in __libc_start_call_main ../sysdeps/nptl/libc_start_call_main.h:58
+    #5 0x781f5b42a28a in __libc_start_main_impl ../csu/libc-start.c:360
+    #6 0x62d22ce5b404 in _start (/home/wen/work/crypto-pattern-fuzz/artifacts/triage/memlen_null_input_nonzero_triage_v1/work/memlen_null_input_nonzero_triage.bin+0x2404) (BuildId: c35224c44bcc1ecf786fccdac64d4860e89dc8dc)
+

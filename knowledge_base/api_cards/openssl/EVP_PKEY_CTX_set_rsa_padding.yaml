@@ -1,0 +1,41 @@
+api: EVP_PKEY_CTX_set_rsa_padding
+library: openssl
+family: pkey_verify
+signature: "int EVP_PKEY_CTX_set_rsa_padding(EVP_PKEY_CTX *ctx, int pad)"
+parameter_semantics:
+  ctx: initialized EVP_PKEY_CTX associated with an RSA-capable operation
+  pad: RSA padding mode such as RSA_PKCS1_PADDING or RSA_PKCS1_PSS_PADDING
+return_value_semantics:
+  success: positive value
+  error: zero or negative value depending on provider/path
+state_preconditions:
+  - ctx must be initialized for an RSA operation
+  - padding mode must be supported by the key type and provider
+valid_invalid_ranges:
+  valid: RSA key context with supported RSA padding mode
+  invalid: non-RSA key context, unsupported padding mode, uninitialized context
+unsupported_conditions:
+  - EC/EdDSA/other non-RSA key context
+  - provider does not support requested padding for operation
+related_apis:
+  - EVP_PKEY_verify
+  - EVP_DigestVerifyInit
+  - EVP_PKEY_CTX_set_signature_md
+  - EVP_PKEY_CTX_set_rsa_pss_saltlen
+mutation_hints:
+  - RSA-PSS requested on non-RSA key
+  - padding mismatch between signer and verifier
+  - RSA_PKCS1_PADDING versus RSA_PKCS1_PSS_PADDING
+  - unsupported padding setup should be safe rejection
+oracle_observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+known_pitfalls:
+  - padding setup failure is a setup error, not an invalid-signature result
+  - accepting a padding mismatch can indicate a high-value semantic divergence
+source_references:
+  - openssl/evp.h
+  - openssl/rsa.h
+notes:
+  - This card supports pkey verify mutation planning around padding compatibility and dispatch boundaries.

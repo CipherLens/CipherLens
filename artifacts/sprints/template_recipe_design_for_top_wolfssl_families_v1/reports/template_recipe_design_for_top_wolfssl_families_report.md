@@ -1,0 +1,333 @@
+# Template Recipe Design For Top wolfSSL Families Report
+
+- generated_recipes_for_top_families:
+  - asn1_nested_boundary
+  - pkcs_container_parsing
+  - secure_heap_state_lifecycle
+  - tls_protocol_state_lifecycle
+  - x509_parsing
+- recipe_summaries:
+  - pkcs_container_parsing:
+    - must_preserve_semantics:
+      - input_loading
+      - buffer_length_calculation
+      - target_api_call
+      - return_code_check
+      - cleanup_call
+      - oracle_observable
+    - maskable_slots:
+      - CONTAINER_BYTES
+      - CONTAINER_FORMAT
+      - TRAILING_BYTES
+      - NESTED_LENGTH_DELTA
+      - EXPECT_RET
+    - oracle_types:
+      - parser_reject_accept
+      - return_code_semantics
+      - full_consumption
+      - cleanup_required
+  - asn1_nested_boundary:
+    - must_preserve_semantics:
+      - input_loading
+      - buffer_length_calculation
+      - target_api_call
+      - return_code_check
+      - cleanup_call
+      - oracle_observable
+    - maskable_slots:
+      - ASN1_NESTED_LENGTH
+      - DER_BYTES
+      - TRAILING_GARBAGE
+      - NESTED_DEPTH
+      - EXPECT_RET
+    - oracle_types:
+      - parser_reject_accept
+      - full_consumption
+      - return_code_semantics
+  - x509_parsing:
+    - must_preserve_semantics:
+      - input_loading
+      - buffer_length_calculation
+      - target_api_call
+      - return_code_check
+      - cleanup_call
+      - oracle_observable
+    - maskable_slots:
+      - CERT_INPUT
+      - SUBJECT_FIELD
+      - ISSUER_FIELD
+      - TRAILING_DATA
+      - INVALID_LENGTH
+    - oracle_types:
+      - parser_reject_accept
+      - return_code_semantics
+      - cleanup_required
+  - tls_protocol_state_lifecycle:
+    - must_preserve_semantics:
+      - input_loading
+      - target_api_call
+      - return_code_check
+      - cleanup_call
+      - oracle_observable
+    - maskable_slots:
+      - INIT_ORDER
+      - SETUP_ORDER
+      - HANDSHAKE_STATE
+      - IO_BEFORE_HANDSHAKE
+      - CLEANUP_REPEAT
+    - oracle_types:
+      - lifecycle_state
+      - return_code_semantics
+      - crash_or_sanitizer
+  - secure_heap_state_lifecycle:
+    - must_preserve_semantics:
+      - target_api_call
+      - return_code_check
+      - cleanup_call
+      - oracle_observable
+    - maskable_slots:
+      - ALLOCATOR_INITIALIZED
+      - MALLOC_SIZE
+      - FREE_ORDER
+      - DOUBLE_FREE_CANDIDATE
+      - ALLOCATOR_REPLACEMENT
+    - oracle_types:
+      - cleanup_required
+      - lifecycle_state
+      - crash_or_sanitizer
+- tree_sitter_ast_mask_pipeline_usage: template_generalizer_v1 should run tree-sitter AST mask pipeline after source template creation, then ast_mask_select.py to produce selected_mask_units.yaml.
+- adapter_scope:
+  - pkcs_container_parsing:
+    - family: pkcs_container_parsing
+    - source_library: wolfssl
+    - allowed_targets:
+      - openssl:
+        - allowed_apis:
+          - PKCS12_parse
+          - PKCS7_verify
+        - candidate_only_apis:
+      - mbedtls:
+        - allowed_apis:
+        - candidate_only_apis:
+    - blocked_targets:
+      -
+        - target_library: mbedtls
+        - target_api: 
+        - reason: no_direct_counterpart
+        - source_api: wc_PKCS12_parse
+      -
+        - target_library: mbedtls
+        - target_api: 
+        - reason: no_direct_counterpart
+        - source_api: wc_PKCS7_DecodeSignedData
+      -
+        - target_library: mbedtls
+        - target_api: 
+        - reason: no_direct_counterpart
+        - source_api: wc_PKCS7_VerifySignedData
+      -
+        - target_library: openssl
+        - target_api: d2i_PKCS7
+        - reason: weak_evidence
+        - source_api: wc_PKCS7_DecodeSignedData
+    - adapter_ready_mapping_count: 2
+    - candidate_only_mapping_count: 0
+    - manual_review_mapping_count: 0
+    - notes:
+      - usable_for_adapter remains candidate mapping, not confirmed equivalence
+  - asn1_nested_boundary:
+    - family: asn1_nested_boundary
+    - source_library: wolfssl
+    - allowed_targets:
+      - openssl:
+        - allowed_apis:
+          - ASN1_item_d2i
+        - candidate_only_apis:
+      - mbedtls:
+        - allowed_apis:
+          - mbedtls_x509_crt_parse_der
+        - candidate_only_apis:
+    - blocked_targets:
+      -
+        - target_library: mbedtls
+        - target_api: mbedtls_x509_crt_parse_der
+        - reason: needs_manual_review
+        - source_api: wc_ParseCert
+      -
+        - target_library: openssl
+        - target_api: d2i_X509
+        - reason: needs_manual_review
+        - source_api: wc_ParseCert
+    - adapter_ready_mapping_count: 2
+    - candidate_only_mapping_count: 0
+    - manual_review_mapping_count: 2
+    - notes:
+      - usable_for_adapter remains candidate mapping, not confirmed equivalence
+  - x509_parsing:
+    - family: x509_parsing
+    - source_library: wolfssl
+    - allowed_targets:
+      - openssl:
+        - allowed_apis:
+        - candidate_only_apis:
+          - PEM_read_X509
+          - X509_free
+          - X509_verify
+      - mbedtls:
+        - allowed_apis:
+          - mbedtls_x509_crt_parse_der
+        - candidate_only_apis:
+          - mbedtls_x509_crt_free
+          - mbedtls_x509_crt_parse_file
+          - mbedtls_x509_crt_verify
+    - blocked_targets:
+      -
+        - target_library: mbedtls
+        - target_api: mbedtls_x509_crt_parse_der
+        - reason: needs_manual_review
+        - source_api: wc_ParseCert
+    - adapter_ready_mapping_count: 7
+    - candidate_only_mapping_count: 6
+    - manual_review_mapping_count: 1
+    - notes:
+      - usable_for_adapter remains candidate mapping, not confirmed equivalence
+  - tls_protocol_state_lifecycle:
+    - family: tls_protocol_state_lifecycle
+    - source_library: wolfssl
+    - allowed_targets:
+      - openssl:
+        - allowed_apis:
+          - SSL_CTX_new
+          - SSL_free
+          - SSL_new
+        - candidate_only_apis:
+          - SSL_accept
+          - SSL_connect
+          - SSL_read
+          - SSL_write
+      - mbedtls:
+        - allowed_apis:
+          - mbedtls_ssl_config_init
+          - mbedtls_ssl_free
+          - mbedtls_ssl_init
+        - candidate_only_apis:
+          - mbedtls_ssl_handshake
+          - mbedtls_ssl_read
+          - mbedtls_ssl_write
+    - blocked_targets:
+    - adapter_ready_mapping_count: 14
+    - candidate_only_mapping_count: 8
+    - manual_review_mapping_count: 0
+    - notes:
+      - usable_for_adapter remains candidate mapping, not confirmed equivalence
+  - secure_heap_state_lifecycle:
+    - family: secure_heap_state_lifecycle
+    - source_library: wolfssl
+    - allowed_targets:
+      - openssl:
+        - allowed_apis:
+        - candidate_only_apis:
+          - CRYPTO_set_mem_functions
+          - OPENSSL_free
+          - OPENSSL_malloc
+      - mbedtls:
+        - allowed_apis:
+          - mbedtls_free
+        - candidate_only_apis:
+          - mbedtls_calloc
+          - mbedtls_platform_set_calloc_free
+    - blocked_targets:
+    - adapter_ready_mapping_count: 6
+    - candidate_only_mapping_count: 5
+    - manual_review_mapping_count: 0
+    - notes:
+      - usable_for_adapter remains candidate mapping, not confirmed equivalence
+- template_generalizer_candidates:
+  -
+    - poc_id: WOLFSSL-POC-0007
+    - family: pkcs_container_parsing
+    - source_library: wolfssl
+    - recommended_recipe: family_recipes/pkcs_container_parsing_recipe.yaml
+    - recommended_first_target: openssl:PKCS12_parse
+    - blocked_targets:
+      -
+        - target_library: mbedtls
+        - target_api: 
+        - reason: no_direct_counterpart
+        - source_api: wc_PKCS12_parse
+      -
+        - target_library: mbedtls
+        - target_api: 
+        - reason: no_direct_counterpart
+        - source_api: wc_PKCS7_DecodeSignedData
+      -
+        - target_library: mbedtls
+        - target_api: 
+        - reason: no_direct_counterpart
+        - source_api: wc_PKCS7_VerifySignedData
+      -
+        - target_library: openssl
+        - target_api: d2i_PKCS7
+        - reason: weak_evidence
+        - source_api: wc_PKCS7_DecodeSignedData
+    - why_selected: priority wolfSSL PoC with adapter-ready support and source_template_from_poc mode
+    - expected_template_mode: source_template_from_poc
+    - priority: high
+  -
+    - poc_id: WOLFSSL-POC-0006
+    - family: pkcs_container_parsing
+    - source_library: wolfssl
+    - recommended_recipe: family_recipes/pkcs_container_parsing_recipe.yaml
+    - recommended_first_target: openssl:PKCS12_parse
+    - blocked_targets:
+      -
+        - target_library: mbedtls
+        - target_api: 
+        - reason: no_direct_counterpart
+        - source_api: wc_PKCS12_parse
+      -
+        - target_library: mbedtls
+        - target_api: 
+        - reason: no_direct_counterpart
+        - source_api: wc_PKCS7_DecodeSignedData
+      -
+        - target_library: mbedtls
+        - target_api: 
+        - reason: no_direct_counterpart
+        - source_api: wc_PKCS7_VerifySignedData
+      -
+        - target_library: openssl
+        - target_api: d2i_PKCS7
+        - reason: weak_evidence
+        - source_api: wc_PKCS7_DecodeSignedData
+    - why_selected: priority wolfSSL PoC with adapter-ready support and source_template_from_poc mode
+    - expected_template_mode: source_template_from_poc
+    - priority: high
+  -
+    - poc_id: WOLFSSL-POC-0004
+    - family: asn1_nested_boundary
+    - source_library: wolfssl
+    - recommended_recipe: family_recipes/asn1_nested_boundary_recipe.yaml
+    - recommended_first_target: openssl:ASN1_item_d2i
+    - blocked_targets:
+      -
+        - target_library: mbedtls
+        - target_api: mbedtls_x509_crt_parse_der
+        - reason: needs_manual_review
+        - source_api: wc_ParseCert
+      -
+        - target_library: openssl
+        - target_api: d2i_X509
+        - reason: needs_manual_review
+        - source_api: wc_ParseCert
+    - why_selected: priority wolfSSL PoC with adapter-ready support and source_template_from_poc mode
+    - expected_template_mode: source_template_from_poc
+    - priority: high
+- generated_new_templates: False
+- ran_poc: False
+- ran_glm: False
+- ran_render: False
+- modified_pattern_bank: False
+- modified_scheduler_seed: False
+- modified_knowledge_raw: False
+- next_task_name: template_generalizer_v1

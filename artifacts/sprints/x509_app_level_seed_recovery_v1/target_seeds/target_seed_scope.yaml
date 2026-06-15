@@ -1,0 +1,65 @@
+family: x509_parsing
+sprint: x509_app_level_seed_recovery_v1
+seeds:
+- seed_id: OPENSSL-ISSUE-14457
+  priority: high
+  previous_rank: 1
+  app_path: openssl verify
+  input_status: synthetic_only
+  artifact_path: datasets/openssl/poc_artifacts/issue_14457
+  expected_oracle: verify_semantic_gap
+  reason_for_recovery: Synthetic root.cer exists; original key/cert not bundled, but original command can generate
+    input from documented req options.
+- seed_id: OPENSSL-ISSUE-29418
+  priority: high
+  previous_rank: 2
+  app_path: openssl x509
+  input_status: placeholder_only
+  artifact_path: datasets/openssl/poc_artifacts/issue_29418
+  expected_oracle: inconsistent_app_behavior
+  reason_for_recovery: Original input references OpenSSL test cert servercert.pem; not bundled in artifact, but
+    source-tree recovery may be feasible.
+- seed_id: OPENSSL-ISSUE-14675
+  priority: high
+  previous_rank: 3
+  app_path: openssl verify
+  input_status: placeholder_only
+  artifact_path: datasets/openssl/poc_artifacts/issue_14675
+  expected_oracle: verify_semantic_gap
+  reason_for_recovery: Input can be reconstructed from a normal PEM plus appended unverifiable garbage, but local
+    artifact still marks placeholder and non-strict reproduction.
+- seed_id: OPENSSL-ISSUE-11567
+  priority: low
+  previous_rank: 6
+  app_path: openssl x509
+  input_status: placeholder_only
+  artifact_path: datasets/openssl/poc_artifacts/issue_11567
+  expected_oracle: malformed_accepted_with_output
+  reason_for_recovery: Original external certificate not bundled; command is clear but oracle depends on recovered
+    malformed/nonconforming cert.
+- seed_id: OPENSSL-ISSUE-11772
+  priority: low
+  previous_rank: 5
+  app_path: openssl x509
+  input_status: placeholder_only
+  artifact_path: datasets/openssl/poc_artifacts/issue_11772
+  expected_oracle: verify_semantic_gap
+  reason_for_recovery: PoC.zip is not bundled; X509_cmp_time oracle is clear once invalid-date cert is recovered.
+- seed_id: OPENSSL-ISSUE-23325
+  priority: low
+  previous_rank: 4
+  app_path: openssl verify
+  input_status: synthetic_only
+  artifact_path: datasets/openssl/poc_artifacts/issue_23325
+  expected_oracle: verify_semantic_gap
+  reason_for_recovery: Multi-file CA/cert/CRL setup is semantically rich but missing original demoCA/CRL/cert files;
+    higher recovery cost.
+- seed_id: OPENSSL-ISSUE-6788
+  priority: low
+  previous_rank: 7
+  app_path: openssl crl
+  input_status: synthetic_only
+  artifact_path: datasets/openssl/poc_artifacts/issue_6788
+  expected_oracle: inconsistent_app_behavior
+  reason_for_recovery: CRL/CA bundle case requires many generated files; local artifact only has partial placeholder
+    inputs, so reproduction cost is high.

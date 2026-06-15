@@ -1,0 +1,24 @@
+# Oracle Instrumentation Quality Checks
+
+- schema: `oracle_instrumentation_quality_checks_v1`
+- generated_at: `2026-06-12T02:59:23+00:00`
+- expected_cases: `14`
+- instrumented_cases: `14`
+- pkcs_cases: `7`
+- asn1_cases: `7`
+- mbedtls_cases: `0`
+- all_harnesses_exist: `True`
+- all_harnesses_have_oracle_event: `True`
+- all_harnesses_have_case_id_in_event: `True`
+- all_harnesses_have_family_in_event: `True`
+- all_harnesses_have_mutation_strategy_in_event: `True`
+- all_harnesses_have_full_consumption: `True`
+- all_harnesses_have_cleanup_event: `True`
+- all_render_traces_have_oracle_instrumentation: `True`
+- original_render_cases_preserved: `True`
+- no_mbedtls_api_in_harnesses: `True`
+- no_compile_executed: `True`
+- no_run_executed: `True`
+- no_glm_called: `True`
+- no_confirmed_vulnerability_claim: `True`
+- quality_status: `pass`

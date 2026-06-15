@@ -1,0 +1,53 @@
+{
+  "poc_id": "WOLFSSL-POC-0002",
+  "source_library": "wolfSSL",
+  "issue_or_cve": "CVE-2017-2800 / TALOS-2017-0293 / EDB-41984",
+  "title": "wolfSSL 3.10.2 X.509 certificate text parsing off-by-one",
+  "bug_class": "X.509 certificate text parsing off-by-one out-of-bounds byte overwrite",
+  "harness_family": "x509_text_field_parser_memory_safety",
+  "oracle_type": "crash_sanitizer_oracle",
+  "source_api": [
+    "wolfSSL_X509_d2i",
+    "wolfSSL_X509_get_subject_name",
+    "wolfSSL_X509_NAME_get_text_by_NID"
+  ],
+  "target_candidate_apis": {
+    "openssl": [
+      "PEM_read_bio_X509",
+      "X509_print",
+      "X509_NAME_print_ex",
+      "SSL_CTX_use_certificate_file"
+    ],
+    "mbedtls": [
+      "mbedtls_x509_crt_parse_file",
+      "mbedtls_x509_crt_parse",
+      "mbedtls_x509_dn_gets"
+    ]
+  },
+  "affected_versions": [
+    "wolfSSL <= 3.10.2"
+  ],
+  "fixed_version": "wolfSSL v3.11.0-stable",
+  "fix_pr_or_commit": "",
+  "input_provenance": "reconstructed_from_exploitdb_talos_poc_command",
+  "has_original_input": false,
+  "uses_placeholder_input": false,
+  "strict_reproduction": true,
+  "vulnerable_version_verified": true,
+  "fixed_version_verified": true,
+  "current_version_verified": true,
+  "expected_vulnerable_behavior": "On wolfSSL v3.10.2-stable with ASan/UBSan and --enable-opensslextra, the reconstructed PoC certificate triggers AddressSanitizer stack-buffer-overflow: WRITE of size 1 in wolfSSL_X509_NAME_get_text_by_NID at src/ssl.c:12471, overflowing the 80-byte localityName stack buffer.",
+  "expected_fixed_behavior": "wolfSSL v3.11.0-stable executes the minimal certfields harness on the reconstructed CVE-2017-2800 certificate without ASan stack-buffer-overflow, WRITE of size 1, or abort. Exit code is 0.",
+  "expected_current_behavior": "Current wolfSSL v5.9.1-stable-1299-geeab53205 executes the minimal certfields harness on the reconstructed CVE-2017-2800 certificate without ASan stack-buffer-overflow, WRITE of size 1, or abort. Exit code is 0.",
+  "crash_signal": "ASan stack-buffer-overflow; WRITE of size 1; wolfSSL_X509_NAME_get_text_by_NID src/ssl.c:12471; localityName stack buffer overflow; exit code 134.",
+  "semantic_signal": "",
+  "migration_value": "High. X.509 certificate string-field parsing can be migrated to OpenSSL and mbedTLS X.509 name/text printing and parsing APIs.",
+  "quality_level": "Q1_strict_reproduction_candidate",
+  "recommended_usage": [
+    "discovery_seed",
+    "regression_test",
+    "x509_text_field_parser_memory_safety_seed",
+    "cross_library_migration_candidate"
+  ],
+  "notes": "Strict reproduction succeeded on wolfSSL v3.10.2-stable using a reconstructed certificate generated from the public Exploit-DB/Talos PoC OpenSSL command. The input is not the original attached certificate bytes, but it preserves the published trigger structure and reproduces the reported ASan stack-buffer-overflow in wolfSSL_X509_NAME_get_text_by_NID. Fixed release candidate verified: wolfSSL v3.11.0-stable does not reproduce the ASan stack-buffer-overflow observed on v3.10.2-stable under the same minimal certfields harness and ASan/UBSan configuration. The first build attempt failed because -Werror promoted compiler warnings to errors; after removing -Werror from Makefile, the library built successfully. These build warnings are unrelated to the CVE-2017-2800 runtime PoC behavior. Current wolfSSL v5.9.1-stable-1299-geeab53205 commit eeab53205ab57451778f7a76aad25f5349547ce5 was tested with the same reconstructed CVE-2017-2800 certificate and minimal certfields harness under ASan/UBSan. No ASan stack-buffer-overflow, WRITE of size 1, or abort was observed."
+}

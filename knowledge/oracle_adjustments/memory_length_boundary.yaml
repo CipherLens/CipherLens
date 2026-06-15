@@ -1,0 +1,22 @@
+schema: oracle_adjustment_v1
+family: memory_length_boundary
+source_task: memory_safety_v2_oracle_fix_continue_canary_null_v1
+source_triage: /home/wen/work/crypto-pattern-fuzz/artifacts/triage/memlen_null_input_nonzero_triage_v1
+adjustments:
+- schema: memory_length_oracle_adjustment_applied_v1
+  source_triage: /home/wen/work/crypto-pattern-fuzz/artifacts/triage/memlen_null_input_nonzero_triage_v1
+  family: memory_length_boundary
+  trigger_api: EVP_EncodeBlock
+  case_id: memlen_null_input_nonzero
+  rule: EVP_EncodeBlock(NULL, nonzero length) is contract_boundary_observation, not a promoted sanitizer_candidate.
+  evp_encodeblock_null_nonzero_downgraded: true
+  candidate_blocking: false
+- schema: memory_length_mutation_rule_adjustment_applied_v1
+  source_triage: /home/wen/work/crypto-pattern-fuzz/artifacts/triage/memlen_null_input_nonzero_triage_v1
+  family: memory_length_boundary
+  rule: NULL input with nonzero length defaults to invalid-contract observation unless API docs explicitly
+    allow NULL input.
+  null_zero_length_policy: observation_no_candidate
+  short_input_claimed_larger_length_policy: sanitizer_candidate_needs_separate_triage_if_internal
+main_feedback_written: false
+pattern_bank_modified: false

@@ -1,0 +1,9 @@
+| sequence_name | family | review.call_sequence_review_status | review.import_recommendation |
+| --- | --- | --- | --- |
+| openssl_pkcs7_der_verify_lifecycle | pkcs_container_parsing | synthetic_lifecycle_sequence | import_as_candidate |
+| openssl_secure_heap_alloc_free_lifecycle | secure_heap_state_lifecycle | synthetic_lifecycle_sequence | import_as_candidate |
+| openssl_tls_context_session_io_lifecycle | tls_protocol_state_lifecycle | synthetic_lifecycle_sequence | import_as_candidate |
+| openssl_x509_der_parse_lifecycle | x509_parsing | synthetic_lifecycle_sequence | import_as_candidate |
+| mbedtls_allocator_hook_lifecycle | secure_heap_state_lifecycle | synthetic_lifecycle_sequence | import_as_candidate |
+| mbedtls_tls_config_session_io_lifecycle | tls_protocol_state_lifecycle | synthetic_lifecycle_sequence | import_as_candidate |
+| mbedtls_x509_der_parse_lifecycle | x509_parsing | synthetic_lifecycle_sequence | import_as_candidate |

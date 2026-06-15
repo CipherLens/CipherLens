@@ -129,6 +129,22 @@ MAC_CONTEXT_LIFECYCLE_TRIAGE_PATTERNS = [
     "[TRIAGE] mac_context_lifecycle: unexpected size/state",
 ]
 
+MAC_LIFECYCLE_BUG_PATTERNS = [
+    "[BUG] mac_lifecycle: crash or sanitizer signal",
+]
+
+MAC_LIFECYCLE_SAFE_PATTERNS = [
+    "[OK] mac_lifecycle: normal_init_update_final completed successfully",
+    "[OK] mac_lifecycle: repeated_final rejected after terminal finalization",
+    "[OK] mac_lifecycle: update_after_final rejected after terminal finalization",
+    "[OK] mac_lifecycle: abort_then_update rejected after abort",
+    "[OK] mac_lifecycle: abort_then_update projected as no-call-after-free guard",
+]
+
+MAC_LIFECYCLE_TRIAGE_PATTERNS = [
+    "[TRIAGE] mac_lifecycle:",
+]
+
 INVALID_PARAM_SETUP_BUG_PATTERNS = [
     "[BUG] source accepted invalid CCM shortened tag length",
     "[BUG] target accepted invalid CCM tag length",
@@ -159,6 +175,22 @@ RSA_INVALID_KEY_SIGN_TRIAGE_PATTERNS = [
     "[WARNING] invalid RSA key signing succeeded",
 ]
 
+PKEY_VERIFY_BUG_PATTERNS = [
+    "[BUG] unexpected verification success",
+]
+
+PKEY_VERIFY_SAFE_REJECT_PATTERNS = [
+    "[SAFE] rejected invalid signature",
+]
+
+PKEY_VERIFY_BASELINE_SAFE_PATTERNS = [
+    "[OK] baseline valid signature accepted",
+]
+
+PKEY_VERIFY_TRIAGE_PATTERNS = [
+    "[TRIAGE] baseline valid signature rejected",
+]
+
 INVALID_PARAM_SETUP_SAFE_REJECT_PATTERNS = [
     "[OK] source rejected invalid CCM",
     "[OK] target rejected invalid CCM",
@@ -182,6 +214,7 @@ HARNESS_ERROR_PATTERNS = [
     "mbedtls_mpi_lset failed",
     "input construction failed",
     "BN_new failed",
+    "HARNESS_ERROR:",
 ]
 
 
@@ -466,6 +499,30 @@ def is_mac_context_lifecycle_record(
     )
 
 
+def is_mac_lifecycle_record(
+    record: Dict[str, Any],
+    text: str,
+    result: Dict[str, Any],
+) -> bool:
+    markers = [
+        str(record.get("relative_source", "")),
+        str(record.get("source", "")),
+        str(result.get("template_id", "")),
+        str(result.get("case_name", "")),
+        text,
+    ]
+    joined = "\n".join(markers)
+    if record_harness_family(record, result) == "mac_lifecycle":
+        return True
+    if record_oracle_type(record, result) == "lifecycle_state_transition_semantic_oracle":
+        return True
+    return (
+        "mac_lifecycle" in joined
+        or "MAC_LIFECYCLE" in joined
+        or "lifecycle_state_transition_semantic_oracle" in joined
+    )
+
+
 def is_invalid_param_setup_record(
     record: Dict[str, Any],
     text: str,
@@ -490,6 +547,27 @@ def is_invalid_param_setup_record(
         or "EVP_CIPHER_CTX_ctrl" in joined
         or "CCM shortened tag length" in joined
         or "CCM tag length" in joined
+    )
+
+
+def is_pkey_verify_semantic_record(record: Dict[str, Any], text: str, result: Dict[str, Any]) -> bool:
+    markers = [
+        str(record.get("relative_source", "")),
+        str(record.get("source", "")),
+        str(result.get("template_id", "")),
+        str(result.get("case_name", "")),
+        text,
+    ]
+    joined = "\n".join(markers)
+    if record_harness_family(record, result) in {"pkey_verify_semantic", "pkey_verify"}:
+        return True
+    if record_oracle_type(record, result) == "signature_acceptance_semantic_oracle":
+        return True
+    return (
+        "PKEY_VERIFY_SEMANTIC" in joined
+        or "PKEY verify controlled case" in joined
+        or "unexpected verification success" in joined
+        or "rejected invalid signature" in joined
     )
 
 
@@ -545,7 +623,15 @@ def load_manifest_for_record(record: Dict[str, Any]) -> Dict[str, Any]:
     # Supported forms:
     #   default_mbedtls.c     -> default_manifest.yaml
     #   case_0000_mbedtls.c   -> case_0000_manifest.yaml
+    #   pkey_verify_0000_openssl.c -> pkey_verify_0000_manifest.yaml
     stem = src_path.stem
+    adjacent = src_path.parent / "render_matrix_case_manifest.yaml"
+    if adjacent.exists():
+        try:
+            with adjacent.open("r", encoding="utf-8") as f:
+                return yaml.safe_load(f) or {}
+        except Exception:
+            pass
 
     if stem.startswith("case_"):
         parts = stem.split("_")
@@ -553,6 +639,8 @@ def load_manifest_for_record(record: Dict[str, Any]) -> Dict[str, Any]:
             prefix = "_".join(parts[:2])
         else:
             prefix = parts[0]
+    elif stem.endswith("_openssl") or stem.endswith("_mbedtls") or stem.endswith("_botan"):
+        prefix = stem.rsplit("_", 1)[0]
     else:
         prefix = stem.split("_", 1)[0]
 
@@ -669,7 +757,19 @@ def classify_record(record: Dict[str, Any]) -> Dict[str, Any]:
         result["reason"] = "MAC context lifecycle crashed or reported a sanitizer signal during state use."
         return result
 
+    if (
+        contains_any(text, MAC_LIFECYCLE_BUG_PATTERNS)
+        and is_mac_lifecycle_record(record, text, result)
+    ):
+        result["verdict"] = "bug_candidate"
+        result["reason"] = "MAC lifecycle state-transition harness reported a crash or sanitizer signal."
+        return result
+
     if contains_any(text, BUG_PATTERNS):
+        if is_pkey_verify_semantic_record(record, text, result):
+            result["verdict"] = "unexpected_success_candidate"
+            result["reason"] = "Controlled PKEY verify oracle reported success on intentionally invalid verification material."
+            return result
         result["verdict"] = "bug_candidate"
         result["reason"] = "Harness reported explicit BUG/canary corruption pattern."
         return result
@@ -677,6 +777,21 @@ def classify_record(record: Dict[str, Any]) -> Dict[str, Any]:
     if contains_any(text, HARNESS_ERROR_PATTERNS):
         result["verdict"] = "harness_input_error"
         result["reason"] = "The generated case failed during input construction or harness setup."
+        return result
+
+    if contains_any(text, PKEY_VERIFY_SAFE_REJECT_PATTERNS) and is_pkey_verify_semantic_record(record, text, result):
+        result["verdict"] = "safe_reject_behavior"
+        result["reason"] = "Controlled PKEY verify case rejected intentionally invalid signature material."
+        return result
+
+    if contains_any(text, PKEY_VERIFY_BASELINE_SAFE_PATTERNS) and is_pkey_verify_semantic_record(record, text, result):
+        result["verdict"] = "normal_expected_behavior"
+        result["reason"] = "Controlled PKEY verify baseline accepted a valid signature."
+        return result
+
+    if contains_any(text, PKEY_VERIFY_TRIAGE_PATTERNS) and is_pkey_verify_semantic_record(record, text, result):
+        result["verdict"] = "normal_behavior_needs_triage"
+        result["reason"] = "Controlled PKEY verify baseline failed and needs harness/API setup triage."
         return result
 
     if (
@@ -801,6 +916,28 @@ def classify_record(record: Dict[str, Any]) -> Dict[str, Any]:
         result["reason"] = (
             "MAC context lifecycle semantic projection behaved safely: pre-setup "
             "use was rejected without crash and/or initialized size matched."
+        )
+        return result
+
+    if (
+        contains_any(text, MAC_LIFECYCLE_SAFE_PATTERNS)
+        and is_mac_lifecycle_record(record, text, result)
+    ):
+        result["verdict"] = "safe_reject_behavior"
+        result["reason"] = (
+            "MAC lifecycle state-transition oracle observed safe behavior: normal "
+            "finalization completed or terminal-state reuse was rejected/guarded without crash."
+        )
+        return result
+
+    if (
+        contains_any(text, MAC_LIFECYCLE_TRIAGE_PATTERNS)
+        and is_mac_lifecycle_record(record, text, result)
+    ):
+        result["verdict"] = "normal_behavior_needs_triage"
+        result["reason"] = (
+            "MAC lifecycle state-transition oracle observed permissive or unexpected "
+            "terminal-state behavior that needs semantic triage, not automatic vulnerability classification."
         )
         return result
 

@@ -1,0 +1,89 @@
+```yaml
+schema: slot_bindings_schema_v1
+adapter_id: asn1_nested_boundary.openssl.family_adapter_recipe_v1
+family: asn1_nested_boundary
+source_library: wolfssl
+target_library: openssl
+binding_status: candidate
+mapping_gate: needs_manual_review
+api_mapping:
+  wc_InitDecodedCert:
+    source_api: wc_InitDecodedCert
+    target_api: ASN1_item_d2i
+    notes: candidate mapping only; not confirmed equivalence
+  wc_ParseCert:
+    source_api: wc_ParseCert
+    target_api: 
+    notes: candidate mapping only; not confirmed equivalence
+  wc_FreeDecodedCert:
+    source_api: wc_FreeDecodedCert
+    target_api: 
+    notes: candidate mapping only; not confirmed equivalence
+  ASN1_item_d2i:
+    source_api: ASN1_item_d2i
+    target_api: ASN1_item_d2i
+    notes: candidate mapping only; not confirmed equivalence
+  mbedtls_x509_crt_parse_der:
+    source_api: mbedtls_x509_crt_parse_der
+    target_api: ASN1_item_d2i
+    notes: candidate mapping only; not confirmed equivalence
+type_mapping:
+  family_source_types_from_template:
+    target_type_candidates: to_be_filled_as_slot_bindings
+cleanup_mapping:
+  cleanup_call:
+    source_cleanup: family-specific wolfSSL cleanup/free API
+    target_cleanup_candidates: 
+    required: true
+oracle_mapping:
+  parser_reject_accept:
+    target_oracle_candidates:
+    - return_code
+    - output_state
+    - parser_result
+    - sanitizer_signal
+input_mapping:
+  ASN1_NESTED_LENGTH:
+    preservation_requirements:
+    - preserve family-level vulnerability path
+    - preserve input length/buffer pairing
+    - do not introduce blocked target API
+  DER_BYTES:
+    preservation_requirements:
+    - preserve family-level vulnerability path
+    - preserve input length/buffer pairing
+    - do not introduce blocked target API
+  DER_LENGTH:
+    preservation_requirements:
+    - preserve family-level vulnerability path
+    - preserve input length/buffer pairing
+    - do not introduce blocked target API
+  EXPECT_RET:
+    preservation_requirements:
+    - preserve family-level vulnerability path
+    - preserve input length/buffer pairing
+    - do not introduce blocked target API
+  NESTED_DEPTH:
+    preservation_requirements:
+    - preserve family-level vulnerability path
+    - preserve input length/buffer pairing
+    - do not introduce blocked target API
+  TRAILING_GARBAGE:
+    preservation_requirements:
+    - preserve family-level vulnerability path
+    - preserve input length/buffer pairing
+    - do not introduce blocked target API
+mutation_slot_mapping:
+  ASN1_NESTED_LENGTH:
+    allowed_mutation_policy: bind existing family mutation slots only
+  DER_BYTES:
+    allowed_mutation_policy: bind existing family mutation slots only
+  TRAILING_GARBAGE:
+    allowed_mutation_policy: bind existing family mutation slots only
+  NESTED_DEPTH:
+    allowed_mutation_policy: bind existing family mutation slots only
+  EXPECT_RET:
+    allowed_mutation_policy: bind existing family mutation slots only
+validation_notes: No confirmed equivalence claimed; all mappings are candidate only.
+risk_notes: Candidate mappings require further analysis and verification.
+```

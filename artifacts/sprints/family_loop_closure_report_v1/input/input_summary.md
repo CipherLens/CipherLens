@@ -1,0 +1,6 @@
+# Family Loop Closure Input Summary
+
+- Valid prefix pipeline report: `artifacts/sprints/valid_prefix_pipeline_to_analyze_v1/reports/valid_prefix_pipeline_to_analyze_v1_report.yaml`
+- Runtime feedback: `artifacts/sprints/runtime_feedback_integration_v1/feedback/runtime_feedback_staged.yaml`
+- Candidate queue: `artifacts/sprints/runtime_feedback_integration_v1/candidate_queue/external_validation_pending_candidates.yaml`
+- Seed inventory: `artifacts/sprints/mutation_policy_refinement_for_valid_prefix_v1/seed_inventory/seed_inventory.yaml`

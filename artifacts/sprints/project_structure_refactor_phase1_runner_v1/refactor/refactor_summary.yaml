@@ -1,0 +1,37 @@
+schema: runner_refactor_phase1_summary_v1
+generated_at: '2026-06-12T05:13:49+00:00'
+new_core_modules:
+- runner/sanitizer_env.py
+- runner/run_records.py
+- runner/family_compile_runner.py
+tools_wrappers_updated:
+- tools/compile_run_v1.py
+- tools/compile_run_oracle_instrumented_v1.py
+tools_wrappers_preserved: true
+cli_backward_compatible: true
+old_runner_files_overwritten: false
+files_deleted: false
+core_logic_extracted:
+  sanitizer_env: OpenSSL lib64/lib fallback and sanitizer runtime env helpers
+  run_records: compile/run/sanitizer record builders and raw observation classifier
+  family_compile_runner: compile command generation, compile execution, run execution,
+    timeout/sanitizer/crash capture, one-case instrumented execution
+wrapper_behavior:
+  tools/compile_run_v1.py: keeps original CLI/report schema and delegates per-job
+    execution to runner.family_compile_runner.execute_compile_plan_job
+  tools/compile_run_oracle_instrumented_v1.py: keeps original CLI/report schema and
+    delegates per-case execution to runner.family_compile_runner.execute_instrumented_case
+  tools/valid_prefix_pipeline_to_analyze_v1.py: unchanged; continues importing execute_case
+    from the oracle wrapper
+  tools/compile_plan_v1.py: unchanged planning wrapper; candidate for later extraction
+    if needed
+smoke_test:
+  executed: false
+  compile: not_run
+  run: not_run
+  quality: partial
+  dry_run_compile_command_generated: true
+  case_id: pkcs_container_parsing_openssl__mut_001__seed_preserving_baseline
+  reason_if_not_executed: smoke test skipped because gcc or OpenSSL install paths
+    are missing; dry-run compile command generated through runner.family_compile_runner.command_for
+next_task: project_structure_refactor_phase2_analyzer_or_mutation_v1

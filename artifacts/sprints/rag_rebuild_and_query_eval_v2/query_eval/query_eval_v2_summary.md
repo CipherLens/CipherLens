@@ -1,0 +1,17 @@
+# Query Eval v2 Summary
+
+```yaml
+total_queries: 8
+passed: 7
+failed: 1
+critical_queries_passed: 3
+verdict: pass
+openssl_counterpart_recall: true
+mbedtls_counterpart_recall: true
+candidate_mappings_recall: true
+no_direct_counterpart_recall: false
+candidate_constraint_recall: true
+synthetic_lifecycle_sequence_recall: true
+weak_points:
+- q3_x509_asn1_parse_mapping
+```

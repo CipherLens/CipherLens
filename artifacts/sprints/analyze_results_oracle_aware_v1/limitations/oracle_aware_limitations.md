@@ -1,0 +1,17 @@
+# Oracle-Aware Limitations
+
+```yaml
+schema: oracle_aware_limitations_v1
+generated_at: '2026-06-12T03:39:14+00:00'
+limitations:
+- This is a bounded mutation matrix, not complete fuzzing.
+- accepted_true=0 prevents judging successful parser-path full consumption gaps.
+- full_consumption=false on a reject path must not be interpreted as a vulnerability.
+- Current mutations may be too strong and may drive all parsers into reject paths.
+- Follow-up should generate valid-prefix / near-valid / trailing-only variants.
+- Only the OpenSSL target was covered in this sprint.
+- mbedTLS was blocked and not run.
+- No repeated reproduction was performed.
+- No minimization was performed.
+- No runtime feedback was written.
+```

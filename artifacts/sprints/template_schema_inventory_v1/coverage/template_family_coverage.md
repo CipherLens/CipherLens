@@ -1,0 +1,81 @@
+# Template Family Coverage
+
+- families:
+  - tls_protocol_state_lifecycle:
+    - existing_templates:
+    - template_count: 0
+    - source_libraries:
+    - target_libraries:
+    - adapter_ready_mapping_count: 14
+    - corrected_candidate_count: 13
+    - recipes:
+    - ready_for_generalization: True
+    - gaps:
+      - no_existing_template_directory_for_family
+      - no_adapter_recipe_named_for_family
+      - no_wolfssl_source_template_observed
+  - x509_parsing:
+    - existing_templates:
+    - template_count: 0
+    - source_libraries:
+    - target_libraries:
+    - adapter_ready_mapping_count: 7
+    - corrected_candidate_count: 4
+    - recipes:
+    - ready_for_generalization: True
+    - gaps:
+      - no_existing_template_directory_for_family
+      - no_adapter_recipe_named_for_family
+      - no_wolfssl_source_template_observed
+  - secure_heap_state_lifecycle:
+    - existing_templates:
+    - template_count: 0
+    - source_libraries:
+    - target_libraries:
+    - adapter_ready_mapping_count: 6
+    - corrected_candidate_count: 2
+    - recipes:
+    - ready_for_generalization: True
+    - gaps:
+      - no_existing_template_directory_for_family
+      - no_adapter_recipe_named_for_family
+      - no_wolfssl_source_template_observed
+  - asn1_nested_boundary:
+    - existing_templates:
+    - template_count: 0
+    - source_libraries:
+    - target_libraries:
+    - adapter_ready_mapping_count: 2
+    - corrected_candidate_count: 11
+    - recipes:
+    - ready_for_generalization: True
+    - gaps:
+      - no_existing_template_directory_for_family
+      - no_adapter_recipe_named_for_family
+      - no_wolfssl_source_template_observed
+  - pkcs_container_parsing:
+    - existing_templates:
+    - template_count: 0
+    - source_libraries:
+    - target_libraries:
+    - adapter_ready_mapping_count: 2
+    - corrected_candidate_count: 8
+    - recipes:
+    - ready_for_generalization: True
+    - gaps:
+      - no_existing_template_directory_for_family
+      - no_adapter_recipe_named_for_family
+      - no_wolfssl_source_template_observed
+- direct_answers:
+  - has_tls_lifecycle_template: False
+  - has_asn1_x509_pkcs_templates: False
+  - has_secure_heap_template: False
+  - has_wolfssl_source_template: False
+  - families_can_enter_template_generalizer:
+  - families_need_template_recipe_first:
+    - tls_protocol_state_lifecycle
+    - x509_parsing
+    - secure_heap_state_lifecycle
+    - asn1_nested_boundary
+    - pkcs_container_parsing
+- wolfssl_template_dirs:

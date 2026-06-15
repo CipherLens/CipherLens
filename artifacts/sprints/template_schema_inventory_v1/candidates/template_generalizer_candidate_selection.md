@@ -1,0 +1,307 @@
+# Template Generalizer Candidate Selection
+
+- top_candidates:
+  -
+    - candidate_id: template_generalizer_001
+    - poc_id: WOLFSSL-POC-0007
+    - source_library: wolfssl
+    - family: pkcs_container_parsing
+    - harness_family: x509_asn1_inner_boundary
+    - route_guess: C_app_level_validation_gap
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: high
+    - blocked_by_no_direct_counterpart: False
+    - recommended_generalization_mode: source_template_from_poc
+    - priority: high
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+  -
+    - candidate_id: template_generalizer_002
+    - poc_id: WOLFSSL-POC-0006
+    - source_library: wolfssl
+    - family: pkcs_container_parsing
+    - harness_family: x509_asn1_inner_boundary
+    - route_guess: C_app_level_validation_gap
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: high
+    - blocked_by_no_direct_counterpart: False
+    - recommended_generalization_mode: source_template_from_poc
+    - priority: high
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+  -
+    - candidate_id: template_generalizer_003
+    - poc_id: WOLFSSL-POC-0004
+    - source_library: wolfssl
+    - family: asn1_nested_boundary
+    - harness_family: x509_asn1_inner_boundary
+    - route_guess: C_app_level_validation_gap
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: high
+    - blocked_by_no_direct_counterpart: False
+    - recommended_generalization_mode: source_template_from_poc
+    - priority: high
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+  -
+    - candidate_id: template_generalizer_004
+    - poc_id: OPENSSL-ISSUE-11567
+    - source_library: openssl
+    - family: asn1_nested_boundary
+    - harness_family: x509_asn1_inner_boundary
+    - route_guess: C_app_level_validation_gap
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: medium
+    - blocked_by_no_direct_counterpart: True
+    - recommended_generalization_mode: needs_manual_review
+    - priority: medium
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+  -
+    - candidate_id: template_generalizer_005
+    - poc_id: OPENSSL-ISSUE-11772
+    - source_library: openssl
+    - family: asn1_nested_boundary
+    - harness_family: x509_asn1_inner_boundary
+    - route_guess: C_app_level_validation_gap
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: medium
+    - blocked_by_no_direct_counterpart: True
+    - recommended_generalization_mode: needs_manual_review
+    - priority: medium
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+  -
+    - candidate_id: template_generalizer_006
+    - poc_id: OPENSSL-ISSUE-13860
+    - source_library: openssl
+    - family: asn1_nested_boundary
+    - harness_family: x509_asn1_inner_boundary
+    - route_guess: C_app_level_validation_gap
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: medium
+    - blocked_by_no_direct_counterpart: False
+    - recommended_generalization_mode: source_template_from_poc
+    - priority: medium
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+  -
+    - candidate_id: template_generalizer_007
+    - poc_id: OPENSSL-ISSUE-14457
+    - source_library: openssl
+    - family: asn1_nested_boundary
+    - harness_family: x509_asn1_inner_boundary
+    - route_guess: C_app_level_validation_gap
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: medium
+    - blocked_by_no_direct_counterpart: False
+    - recommended_generalization_mode: source_template_from_poc
+    - priority: medium
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+  -
+    - candidate_id: template_generalizer_008
+    - poc_id: OPENSSL-ISSUE-27572
+    - source_library: openssl
+    - family: asn1_nested_boundary
+    - harness_family: x509_asn1_inner_boundary
+    - route_guess: C_app_level_validation_gap
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: medium
+    - blocked_by_no_direct_counterpart: False
+    - recommended_generalization_mode: source_template_from_poc
+    - priority: medium
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+  -
+    - candidate_id: template_generalizer_009
+    - poc_id: OPENSSL-ISSUE-29418
+    - source_library: openssl
+    - family: asn1_nested_boundary
+    - harness_family: x509_asn1_inner_boundary
+    - route_guess: C_app_level_validation_gap
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: medium
+    - blocked_by_no_direct_counterpart: True
+    - recommended_generalization_mode: needs_manual_review
+    - priority: medium
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+  -
+    - candidate_id: template_generalizer_010
+    - poc_id: OPENSSL-ISSUE-29574
+    - source_library: openssl
+    - family: asn1_nested_boundary
+    - harness_family: x509_asn1_inner_boundary
+    - route_guess: C_app_level_validation_gap
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: medium
+    - blocked_by_no_direct_counterpart: False
+    - recommended_generalization_mode: source_template_from_poc
+    - priority: medium
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+  -
+    - candidate_id: template_generalizer_011
+    - poc_id: OPENSSL-ISSUE-9043
+    - source_library: openssl
+    - family: asn1_nested_boundary
+    - harness_family: x509_asn1_inner_boundary
+    - route_guess: C_app_level_validation_gap
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: medium
+    - blocked_by_no_direct_counterpart: True
+    - recommended_generalization_mode: needs_manual_review
+    - priority: medium
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+  -
+    - candidate_id: template_generalizer_012
+    - poc_id: WOLFSSL-POC-0002
+    - source_library: wolfssl
+    - family: asn1_nested_boundary
+    - harness_family: x509_asn1_inner_boundary
+    - route_guess: C_app_level_validation_gap
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: high
+    - blocked_by_no_direct_counterpart: False
+    - recommended_generalization_mode: source_template_from_poc
+    - priority: medium
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+  -
+    - candidate_id: template_generalizer_013
+    - poc_id: WOLFSSL-POC-0003
+    - source_library: wolfssl
+    - family: asn1_nested_boundary
+    - harness_family: x509_asn1_inner_boundary
+    - route_guess: C_app_level_validation_gap
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: high
+    - blocked_by_no_direct_counterpart: False
+    - recommended_generalization_mode: source_template_from_poc
+    - priority: medium
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+  -
+    - candidate_id: template_generalizer_014
+    - poc_id: OPENSSL-ISSUE-17715
+    - source_library: openssl
+    - family: pkcs_container_parsing
+    - harness_family: x509_asn1_inner_boundary
+    - route_guess: C_app_level_validation_gap
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: medium
+    - blocked_by_no_direct_counterpart: True
+    - recommended_generalization_mode: needs_manual_review
+    - priority: medium
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+  -
+    - candidate_id: template_generalizer_015
+    - poc_id: OPENSSL-ISSUE-22388
+    - source_library: openssl
+    - family: pkcs_container_parsing
+    - harness_family: x509_asn1_inner_boundary
+    - route_guess: C_app_level_validation_gap
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: medium
+    - blocked_by_no_direct_counterpart: False
+    - recommended_generalization_mode: source_template_from_poc
+    - priority: medium
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+  -
+    - candidate_id: template_generalizer_016
+    - poc_id: OPENSSL-ISSUE-26106
+    - source_library: openssl
+    - family: pkcs_container_parsing
+    - harness_family: x509_asn1_inner_boundary
+    - route_guess: C_app_level_validation_gap
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: medium
+    - blocked_by_no_direct_counterpart: False
+    - recommended_generalization_mode: source_template_from_poc
+    - priority: medium
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+  -
+    - candidate_id: template_generalizer_017
+    - poc_id: OPENSSL-ISSUE-30291
+    - source_library: openssl
+    - family: pkcs_container_parsing
+    - harness_family: x509_asn1_inner_boundary
+    - route_guess: C_app_level_validation_gap
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: medium
+    - blocked_by_no_direct_counterpart: False
+    - recommended_generalization_mode: source_template_from_poc
+    - priority: medium
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+  -
+    - candidate_id: template_generalizer_018
+    - poc_id: OPENSSL-ISSUE-30432
+    - source_library: openssl
+    - family: pkcs_container_parsing
+    - harness_family: x509_asn1_inner_boundary
+    - route_guess: C_app_level_validation_gap
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: medium
+    - blocked_by_no_direct_counterpart: False
+    - recommended_generalization_mode: source_template_from_poc
+    - priority: medium
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+  -
+    - candidate_id: template_generalizer_019
+    - poc_id: OPENSSL-ISSUE-30581
+    - source_library: openssl
+    - family: pkcs_container_parsing
+    - harness_family: x509_asn1_inner_boundary
+    - route_guess: C_app_level_validation_gap
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: medium
+    - blocked_by_no_direct_counterpart: False
+    - recommended_generalization_mode: source_template_from_poc
+    - priority: medium
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+  -
+    - candidate_id: template_generalizer_020
+    - poc_id: OPENSSL-ISSUE-2630
+    - source_library: openssl
+    - family: secure_heap_state_lifecycle
+    - harness_family: object_state_lifecycle
+    - route_guess: B_controlled_family_mutation
+    - template_candidate_available: True
+    - existing_template_support: False
+    - adapter_ready_support: True
+    - rag_support: medium
+    - blocked_by_no_direct_counterpart: False
+    - recommended_generalization_mode: source_template_from_poc
+    - priority: medium
+    - reason: Selected from corrected candidates, adapter-ready mapping gate, and existing template coverage.
+- priority_pocs:
+  - WOLFSSL-POC-0007
+  - WOLFSSL-POC-0006
+  - WOLFSSL-POC-0004

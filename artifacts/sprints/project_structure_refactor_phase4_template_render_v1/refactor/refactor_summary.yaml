@@ -1,0 +1,36 @@
+schema: template_render_refactor_summary_v1
+task: project_structure_refactor_phase4_template_render_v1
+new_modules:
+- template_maker/family_render_plan.py
+- template_maker/family_case_renderer.py
+- template_maker/oracle_instrumentation.py
+- template_maker/render_records.py
+tools_wrappers_preserved:
+- tools/render_plan_v1.py
+- tools/render_cases_v1.py
+valid_prefix_pipeline_compatible: true
+modified_files:
+- tools/render_plan_v1.py
+- tools/render_cases_v1.py
+- tools/project_structure_inventory_and_refactor_plan_v1.py
+deleted_files: []
+logic_moved:
+  render_plan: template_maker/family_render_plan.py
+  render_cases: template_maker/family_case_renderer.py
+  oracle_event_helpers: template_maker/oracle_instrumentation.py
+  render_record_helpers: template_maker/render_records.py
+compatibility:
+  tools_render_plan_v1_cli_wrapper: true
+  tools_render_cases_v1_cli_wrapper: true
+  no_original_render_artifacts_modified: true
+  dry_run_only: true
+smoke_test:
+  schema: template_render_phase4_smoke_test_v1
+  inputs:
+    render_plan: artifacts/sprints/render_plan_v1/render_plan/render_plan.yaml
+    supplemental_mutation_case_matrix: artifacts/sprints/mutation_policy_refinement_for_valid_prefix_v1/supplemental_cases/supplemental_mutation_case_matrix.yaml
+  original_render_jobs: 14
+  valid_prefix_render_allowed: 6
+  harness_generated: false
+  generated_harness_paths: []
+  smoke_test_pass: true

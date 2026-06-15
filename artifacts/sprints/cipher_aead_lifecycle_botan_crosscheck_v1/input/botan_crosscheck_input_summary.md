@@ -1,0 +1,11 @@
+# Botan Crosscheck Input Summary
+
+- source sprint: `artifacts/sprints/cipher_aead_lifecycle_semantic_crosscheck_v1`
+- botan prefix: `/home/wen/work/clean_sources/botan-3.10.0/_install`
+- botan version: `3.10.0`
+
+## Candidates
+
+- `aead_006_final_without_update_gcm_encrypt`: `legal_semantics`; Botan AES-128/GCM encryption with AAD but empty plaintext: legal empty-message encryption?
+- `aead_009_set_tag_after_final_gcm_decrypt`: `permissive_but_harmless`; Does Botan have an equivalent post-final SET_TAG operation, or is this an API mapping gap?
+- `aead_012_wrong_tag_length_gcm_decrypt`: `legal_semantics`; Does Botan accept or reject 8-byte truncated GCM authentication tag?

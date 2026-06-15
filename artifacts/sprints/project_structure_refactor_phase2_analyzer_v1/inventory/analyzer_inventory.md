@@ -1,0 +1,94 @@
+# Analyzer Inventory
+
+```yaml
+schema: analyzer_inventory_v1
+generated_at: '2026-06-12T07:44:40+00:00'
+analyzer_related_files:
+- analysis/audit_crash_sanitizer_candidates.py
+- analysis/build_candidate_queue.py
+- analysis/check_a_path_compliance.py
+- analysis/plan_execution_paths.py
+- analyzer/__init__.py
+- analyzer/analyze_poc.py
+- analyzer/family_result_adapter.py
+- analyzer/oracle_event_parser.py
+- runner/__init__.py
+- runner/analyze_behavior_novelty.py
+- runner/analyze_cipher_aead_lifecycle.py
+- runner/analyze_cipher_aead_semantic_crosscheck.py
+- runner/analyze_cross_results.py
+- runner/analyze_der_full_consumption.py
+- runner/analyze_mac_lifecycle.py
+- runner/analyze_results.py
+- runner/analyze_secure_heap_state.py
+- runner/analyze_secure_heap_state_expansion.py
+- runner/build_repair_queue.py
+- runner/compile_run.py
+- runner/family_compile_runner.py
+- runner/render_repair_prompt.py
+- runner/run_app_cases.py
+- runner/run_records.py
+- runner/sanitizer_env.py
+- tools/adapter_recipe_generation_v1.py
+- tools/adapter_slot_filling_fixup_v1.py
+- tools/adapter_slot_filling_plan_v1.py
+- tools/adapter_slot_filling_regression_fixup_v1.py
+- tools/adapter_slot_filling_v1.py
+- tools/analyze_results_oracle_aware_v1.py
+- tools/analyze_results_v1.py
+- tools/api_card_enrichment_for_cross_library_counterparts_v1.py
+- tools/api_card_enrichment_for_top_families_v1.py
+- tools/api_card_import_cross_library_counterparts_to_knowledge_raw_v1.py
+- tools/api_card_import_to_knowledge_raw_v1.py
+- tools/apply_pkcs_slot_bindings_and_adapter_validate_v1.py
+- tools/ast_sister_inventory_and_alignment_v1.py
+- tools/auto_scheduler_rerun_with_ingestion_v1.py
+- tools/auto_scheduler_v1.py
+- tools/compile_plan_v1.py
+- tools/compile_run_oracle_instrumented_v1.py
+- tools/compile_run_v1.py
+- tools/cross_library_counterpart_api_gap_analysis_v1.py
+- tools/cross_library_mapping_refinement_and_gate_v1.py
+- tools/family_adapter_mutation_planner_v1.py
+- tools/family_loop_closure_report_v1.py
+- tools/family_template_generalization_v1.py
+- tools/historical_poc_ingestion_v1.py
+- tools/ingestion_review_and_import_v1.py
+- tools/manual_review_counterpart_staged_cards_before_import_v1.py
+- tools/manual_review_family_corrections_v1.py
+- tools/mutation_policy_refinement_for_valid_prefix_v1.py
+- tools/poc_corpus_inventory_v1.py
+- tools/project_structure_inventory_and_refactor_plan_v1.py
+- tools/rag_knowledge_inventory_v1.py
+- tools/render_cases_v1.py
+- tools/render_plan_v1.py
+- tools/route_planner_v1.py
+- tools/runtime_feedback_integration_v1.py
+- tools/template_recipe_design_for_top_wolfssl_families_v1.py
+- tools/template_schema_inventory_v1.py
+- tools/valid_prefix_pipeline_to_analyze_v1.py
+analyzer_existing_files_after_refactor:
+- analyzer/__init__.py
+- analyzer/candidate_labels.py
+- analyzer/family_result_adapter.py
+- analyzer/oracle_aware_analyzer.py
+- analyzer/oracle_event_parser.py
+- analyzer/semantic_labels.py
+new_core_modules:
+- analyzer/oracle_aware_analyzer.py
+- analyzer/semantic_labels.py
+- analyzer/candidate_labels.py
+preserved_modules:
+- analyzer/oracle_event_parser.py
+- analyzer/family_result_adapter.py
+removed_legacy_modules:
+- analyzer/analyze_poc.py
+tools_wrappers:
+- tools/analyze_results_v1.py
+- tools/analyze_results_oracle_aware_v1.py
+notes:
+- analyzer/analyze_poc.py was a PoC-level C metadata extractor and is not part of
+  the current family-level runtime/oracle-aware pipeline.
+- oracle_event_parser.py and family_result_adapter.py were preserved and reused.
+- tools wrappers preserve CLI compatibility and output schemas.
+```

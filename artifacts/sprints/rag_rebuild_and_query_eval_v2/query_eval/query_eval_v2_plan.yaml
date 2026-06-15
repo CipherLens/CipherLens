@@ -1,0 +1,55 @@
+queries:
+- id: q1_tls_three_library_lifecycle
+  query: wolfSSL_CTX_new SSL_CTX_new mbedtls_ssl_config_init TLS context lifecycle
+    cleanup
+  expected_terms:
+  - wolfSSL_CTX_new
+  - SSL_CTX_new
+  - mbedtls_ssl_config_init
+  - lifecycle
+- id: q2_tls_session_mapping
+  query: wolfSSL_new SSL_new mbedtls_ssl_setup handshake read write free
+  expected_terms:
+  - wolfSSL_new
+  - SSL_new
+  - mbedtls_ssl_setup
+  - mbedtls_ssl_free
+- id: q3_x509_asn1_parse_mapping
+  query: wc_ParseCert ASN1_item_d2i mbedtls_x509_crt_parse_der X509 parsing
+  expected_terms:
+  - wc_ParseCert
+  - ASN1_item_d2i
+  - mbedtls_x509_crt_parse_der
+- id: q4_pkcs7_wolfssl_openssl
+  query: wc_PKCS7_VerifySignedData PKCS7_verify PKCS7_free cross library mapping
+  expected_terms:
+  - wc_PKCS7_VerifySignedData
+  - PKCS7_verify
+  - PKCS7_free
+  - candidate_mapping
+- id: q5_pkcs12_wolfssl_openssl
+  query: wc_PKCS12_parse PKCS12_parse d2i_PKCS12 PKCS12_free
+  expected_terms:
+  - wc_PKCS12_parse
+  - PKCS12_parse
+- id: q6_secure_heap_allocator
+  query: wolfSSL secure heap OpenSSL CRYPTO_secure_malloc OPENSSL_secure_free mbedtls
+    calloc free allocator
+  expected_terms:
+  - CRYPTO_secure_malloc
+  - OPENSSL_secure_free
+  - mbedtls_free
+- id: q7_no_direct_counterpart_mbedtls_pkcs
+  query: mbedTLS no direct counterpart PKCS7 PKCS12 wolfSSL wc_PKCS7 wc_PKCS12
+  expected_terms:
+  - no_direct_counterpart
+  - PKCS7
+  - PKCS12
+  - mbedTLS
+- id: q8_candidate_labels
+  query: candidate_constraint synthetic_lifecycle_sequence candidate_mapping confirmed_equivalence
+    false positive
+  expected_terms:
+  - candidate_constraint
+  - synthetic_lifecycle_sequence
+  - candidate_mapping

@@ -1,0 +1,62 @@
+# Template Inventory Input Summary
+
+- input_paths:
+  - mapping_report:
+    - path: artifacts/sprints/cross_library_mapping_refinement_and_gate_v1/reports/cross_library_mapping_refinement_and_gate_report.yaml
+    - exists: True
+    - loaded: True
+  - adapter_ready:
+    - path: artifacts/sprints/cross_library_mapping_refinement_and_gate_v1/adapter_ready/adapter_ready_mapping_candidates.yaml
+    - exists: True
+    - loaded: True
+  - blocked_mappings:
+    - path: artifacts/sprints/cross_library_mapping_refinement_and_gate_v1/blocked_mappings/blocked_or_no_direct_counterpart_mappings.yaml
+    - exists: True
+    - loaded: True
+  - rag_report:
+    - path: artifacts/sprints/rag_rebuild_and_query_eval_v2/reports/rag_rebuild_and_query_eval_v2_report.yaml
+    - exists: True
+    - loaded: True
+  - rag_query_eval_summary:
+    - path: artifacts/sprints/rag_rebuild_and_query_eval_v2/query_eval/query_eval_v2_summary.yaml
+    - exists: True
+    - loaded: True
+  - corrected_candidates:
+    - path: artifacts/sprints/manual_review_family_corrections_v1/scheduler/corrected_reviewed_scheduler_seed_candidates.yaml
+    - exists: True
+    - loaded: True
+  - corrected_family_distribution:
+    - path: artifacts/sprints/manual_review_family_corrections_v1/corrections/corrected_family_distribution.yaml
+    - exists: True
+    - loaded: True
+- adapter_ready_mapping_count: 31
+- adapter_ready_family_counts:
+  - asn1_nested_boundary: 2
+  - pkcs_container_parsing: 2
+  - secure_heap_state_lifecycle: 6
+  - tls_protocol_state_lifecycle: 14
+  - x509_parsing: 7
+- corrected_candidate_count: 50
+- corrected_candidate_family_counts:
+  - asn1_nested_boundary: 11
+  - bignum_arithmetic_precondition: 1
+  - bignum_serialization_boundary: 4
+  - cipher_aead_lifecycle: 2
+  - cipher_padding_output_length: 2
+  - mac_lifecycle: 1
+  - needs_review: 2
+  - pkcs_container_parsing: 8
+  - secure_heap_state_lifecycle: 2
+  - tls_protocol_state_lifecycle: 13
+  - x509_parsing: 4
+- top_families:
+  - tls_protocol_state_lifecycle
+  - x509_parsing
+  - secure_heap_state_lifecycle
+  - asn1_nested_boundary
+  - pkcs_container_parsing
+- interpretation:
+  - adapter-ready mappings are sufficient to enter the template inventory stage
+  - existing template directories must be read before generalization to avoid schema incompatibility
+  - priority families are driven by corrected candidates, mapping gate, and RAG evaluation
+  - this sprint performs schema inventory only; it does not generate new templates

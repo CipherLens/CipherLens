@@ -1,0 +1,47 @@
+# A-path and GLM Gate
+
+MAC lifecycle passes this gate because the API roles, cleanup, error behavior, recipe slots, and validator all exist. AEAD-GCM does not pass because the tested behaviors were legal semantics or mapping gaps, so there is no stable cross-library vulnerability oracle.
+
+```yaml
+schema_version: 1
+a_path_gate:
+  required:
+    source_api_known: true
+    target_api_known: true
+    lifecycle_or_semantic_mapping_clear: true
+    cleanup_mapping_clear: true
+    error_code_mapping_clear: true
+    oracle_cross_library_comparable: true
+    rag_evidence_strength:
+      one_of:
+      - strong
+      - medium
+    adapter_validate_required: true
+  deny_if:
+  - seed_missing
+  - placeholder_only
+  - mapping_gap
+  - oracle_not_comparable
+  - recipe_missing
+  - adapter_validate_failed
+glm_gate:
+  allowed_only_if:
+  - route == A_recipe_slot_cross_library_migration
+  - a_path_gate_passed == true
+  - slot_schema_defined == true
+  allowed_role:
+  - strict_slot_bindings
+  - adapter_recipe_completion
+  forbidden_role:
+  - free_form_c_generation
+  - vulnerability_claim
+  - API_contract_guessing
+  - sanitizer_interpretation
+examples:
+  mac_lifecycle: 'Allowed: API mapping EVP_MAC <-> PSA MAC is explicit, recipe slots
+    exist, GLM produced slot_bindings only, adapter_validate passed, and generic A-path
+    tail ran.'
+  cipher_aead_gcm: 'Denied: candidate behaviors were mutation-local and later classified
+    as legal semantics or mapping gaps; no stable cross-library vulnerability oracle,
+    so no A-path and no GLM.'
+```

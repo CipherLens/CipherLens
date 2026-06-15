@@ -1,0 +1,101 @@
+# Manual Review Counterpart Report
+
+{
+  "openssl_review": {
+    "total": 24,
+    "import_recommendation_counts": {
+      "import_now": 16,
+      "skip_manual_review": 8
+    },
+    "review_status_counts": {
+      "import_ready": 16,
+      "needs_manual_review": 8
+    },
+    "strong_evidence_apis": [
+      "ASN1_item_d2i",
+      "PKCS12_parse",
+      "PKCS7_verify",
+      "CRYPTO_secure_free",
+      "CRYPTO_secure_malloc",
+      "CRYPTO_secure_malloc_init",
+      "OPENSSL_secure_free",
+      "OPENSSL_secure_malloc",
+      "SSL_CTX_free",
+      "SSL_CTX_new",
+      "SSL_accept",
+      "SSL_connect",
+      "SSL_free",
+      "SSL_new",
+      "SSL_read",
+      "SSL_write"
+    ],
+    "remaining_weak_apis": [
+      "d2i_ASN1_SEQUENCE_ANY",
+      "PKCS12_free",
+      "PKCS7_free",
+      "d2i_PKCS12",
+      "d2i_PKCS7",
+      "PEM_read_bio_X509",
+      "X509_free",
+      "d2i_X509"
+    ]
+  },
+  "mbedtls_review": {
+    "total": 19,
+    "import_recommendation_counts": {
+      "skip_no_direct_counterpart": 4,
+      "skip_manual_review": 1,
+      "import_now": 13,
+      "skip_not_found": 1
+    },
+    "review_status_counts": {
+      "no_direct_counterpart": 4,
+      "needs_manual_review": 1,
+      "import_ready": 13,
+      "reject_not_found": 1
+    },
+    "strong_evidence_apis": [
+      "mbedtls_free",
+      "mbedtls_ssl_config_free",
+      "mbedtls_ssl_config_init",
+      "mbedtls_ssl_free",
+      "mbedtls_ssl_handshake",
+      "mbedtls_ssl_init",
+      "mbedtls_ssl_read",
+      "mbedtls_ssl_setup",
+      "mbedtls_ssl_write",
+      "mbedtls_x509_crt_free",
+      "mbedtls_x509_crt_init",
+      "mbedtls_x509_crt_parse",
+      "mbedtls_x509_crt_parse_der"
+    ],
+    "remaining_weak_apis": [
+      "mbedtls_calloc",
+      "mbedtls_platform_set_calloc_free"
+    ]
+  },
+  "constraints_review": {
+    "weak_candidate_constraint": 10,
+    "candidate_constraint": 29
+  },
+  "call_sequences_review": {
+    "synthetic_lifecycle_sequence": 7
+  },
+  "mapping_review": {
+    "import_ready_candidate_mapping": 21,
+    "no_direct_counterpart": 3,
+    "needs_manual_review": 5,
+    "weak_evidence": 7
+  },
+  "knowledge_raw_modified": false,
+  "knowledge_base_modified": false,
+  "rag_rebuild": false,
+  "pattern_bank_modified": false,
+  "scheduler_seed_modified": false,
+  "poc_run": false,
+  "compile_run": false,
+  "glm": false,
+  "render": false,
+  "template_generated": false,
+  "next_task_name": "api_card_import_cross_library_counterparts_to_knowledge_raw_v1"
+}

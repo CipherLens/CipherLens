@@ -1,0 +1,29 @@
+schema: family_card_v1
+family: evp_pkey_context_lifecycle
+track: lifecycle
+archetype: pkey_context_operation_lifecycle
+target_library: openssl
+main_apis:
+- EVP_PKEY_CTX_new_id
+- EVP_PKEY_keygen_init
+- EVP_PKEY_keygen
+- EVP_PKEY_CTX_free
+- EVP_PKEY_free
+valid_sequence: local minimal control sequence generated from manual audit feedback
+invalid_or_observation_sequences:
+- operation before required init
+- invalid algorithm/property or contract boundary
+- documented observation path
+oracle_labels:
+- unexpected_failure_on_valid_sequence
+- unexpected_success_after_invalid_state
+- state_transition_observation
+- semantic_divergence_candidate
+- crash_or_sanitizer
+avoid_patterns:
+- der_single_object_trailing_garbage_full_consumption
+- secure_heap_state_lifecycle_issue_28669
+claim_policy:
+  confirmed_vulnerability: false
+  cve: false
+  exploitable: false

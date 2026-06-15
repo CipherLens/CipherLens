@@ -1,0 +1,7 @@
+# Next Action After Regression Fixup
+
+```yaml
+schema: next_action_after_regression_fixup_v1
+next_task_name: render_plan_v1
+why: pkcs and asn1 OpenSSL pass; mbedTLS remains blocked_expected
+```

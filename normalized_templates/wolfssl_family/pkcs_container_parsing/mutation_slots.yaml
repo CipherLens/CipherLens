@@ -1,0 +1,82 @@
+schema: family_mutation_slots_v1
+family: pkcs_container_parsing
+template_level: family
+seed_pocs:
+- WOLFSSL-POC-0007
+- WOLFSSL-POC-0006
+mutation_slots:
+- slot_name: CONTAINER_BYTES
+  slot_type: byte_array
+  examples:
+  - valid_pkcs12_der
+  - malformed_pkcs7_der
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: container data must remain bounded
+- slot_name: CONTAINER_FORMAT
+  slot_type: enum
+  examples:
+  - DER
+  - PEM
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: avoid format/API mismatch false positives
+- slot_name: TRAILING_BYTES
+  slot_type: byte_array
+  examples:
+  - empty
+  - '00'
+  - ff00
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: only meaningful for APIs exposing consumption
+- slot_name: NESTED_LENGTH_DELTA
+  slot_type: integer
+  examples:
+  - '-1'
+  - '0'
+  - '+1'
+  - large
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: nested length mutation can become generic parse failure
+- slot_name: EXPECT_RET
+  slot_type: enum
+  examples:
+  - success
+  - reject
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: do not hard-code library numeric values
+ast_maskable_units:
+- unit_type: api_argument
+  slot_name: CONTAINER_BYTES
+  node_kind_hint: argument or literal
+  reason: container data must remain bounded
+- unit_type: api_argument
+  slot_name: CONTAINER_FORMAT
+  node_kind_hint: argument or literal
+  reason: avoid format/API mismatch false positives
+- unit_type: api_argument
+  slot_name: TRAILING_BYTES
+  node_kind_hint: argument or literal
+  reason: only meaningful for APIs exposing consumption
+- unit_type: api_argument
+  slot_name: NESTED_LENGTH_DELTA
+  node_kind_hint: argument or literal
+  reason: nested length mutation can become generic parse failure
+- unit_type: api_argument
+  slot_name: EXPECT_RET
+  node_kind_hint: argument or literal
+  reason: do not hard-code library numeric values
+semantic_policy: mutate slots, preserve trigger/cleanup/oracle shape

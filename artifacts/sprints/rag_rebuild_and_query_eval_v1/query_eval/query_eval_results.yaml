@@ -1,0 +1,336 @@
+query_eval_results:
+- query_id: q1_tls_ctx_lifecycle
+  query: wolfSSL_CTX_new wolfSSL_CTX_free TLS context lifecycle
+  success: true
+  expected_terms_found:
+  - wolfSSL_CTX_new
+  - wolfSSL_CTX_free
+  - tls_protocol_state_lifecycle
+  missing_expected_terms: []
+  top_hits_summary:
+  - rank: 1
+    source_file: knowledge_raw/api_constraints/wolfssl_call_sequences.md
+    layer: api_constraints
+    snippet: '# wolfSSL call sequences  - `wolfssl_decodedcert_parse_free_004:wc_InitDecodedCert
+      -> wc_ParseCert -> wc_FreeDecodedCert` - `wolfssl_pkcs7_init_decode_free_005:wc_PKCS7_Init
+      -> wc_PKCS7_Free` - `wolfssl_pkcs7_init_verify_free_006:wc_PKCS7_I'
+  - rank: 2
+    source_file: knowledge_base/api_cards/openssl/EVP_MAC_final.yaml
+    layer: api_cards
+    snippet: 'Source: API Card api: EVP_MAC_final library: openssl family: mac_lifecycle
+      signature: int EVP_MAC_final(EVP_MAC_CTX *ctx, unsigned char *out, size_t *outl,
+      size_t outsize) parameter_semantics: ctx: MAC context out: output buffer outl:
+      calle'
+  - rank: 3
+    source_file: knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+    layer: api_constraints
+    snippet: '`wc_PKCS7_VerifySignedData:parser_must_reject_malformed` - `XFREE:cleanup_required`
+      - `XFREE:ownership_transfer` - `XMALLOC:ownership_transfer` - `wolfSSL_Free:cleanup_required`
+      - `wolfSSL_Free:ownership_transfer` - `wolfSSL_Malloc:ownershi'
+  - rank: 4
+    source_file: knowledge_base/api_cards/openssl/EVP_DigestVerifyInit.yaml
+    layer: api_cards
+    snippet: 'Source: API Card api: EVP_DigestVerifyInit library: openssl family:
+      pkey_verify signature: int EVP_DigestVerifyInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX
+      **pctx, const EVP_MD *type, ENGINE *e, EVP_PKEY *pkey) parameter_semantics:
+      ctx: digest verifi'
+  - rank: 5
+    source_file: knowledge_raw/cross_lib_equivalence/wolfssl_cross_library_mapping_candidates.yaml
+    layer: cross_lib_equivalence
+    snippet: 'wolfssl_cross_library_mapping_candidates: - schema: cross_library_mapping_candidate_v0   family:
+      asn1_nested_boundary   wolfssl_api: wc_InitDecodedCert   openssl_candidate_api:
+      ASN1_item_d2i   mbedtls_candidate_api: mbedtls_x509_crt_parse_d'
+  retrieved_sources:
+  - knowledge_raw/api_constraints/wolfssl_call_sequences.md
+  - knowledge_base/api_cards/openssl/EVP_MAC_final.yaml
+  - knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+  - knowledge_base/api_cards/openssl/EVP_DigestVerifyInit.yaml
+  - knowledge_raw/cross_lib_equivalence/wolfssl_cross_library_mapping_candidates.yaml
+  - knowledge_base/api_cards/openssl/EVP_PKEY_CTX_set_rsa_pss_saltlen.yaml
+  notes: Evaluated over top-k JSON output from rag_query.py.
+- query_id: q2_tls_session_lifecycle
+  query: wolfSSL_new wolfSSL_free wolfSSL_connect wolfSSL_read wolfSSL_write
+  success: true
+  expected_terms_found:
+  - wolfSSL_new
+  - wolfSSL_free
+  - wolfSSL_connect
+  missing_expected_terms: []
+  top_hits_summary:
+  - rank: 1
+    source_file: knowledge_raw/api_constraints/wolfssl_call_sequences.md
+    layer: api_constraints
+    snippet: '# wolfSSL call sequences  - `wolfssl_decodedcert_parse_free_004:wc_InitDecodedCert
+      -> wc_ParseCert -> wc_FreeDecodedCert` - `wolfssl_pkcs7_init_decode_free_005:wc_PKCS7_Init
+      -> wc_PKCS7_Free` - `wolfssl_pkcs7_init_verify_free_006:wc_PKCS7_I'
+  - rank: 2
+    source_file: knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+    layer: api_constraints
+    snippet: code_check` - `wolfSSL_dtls_set_peer:ctx_session_lifecycle` - `wolfSSL_dtls_set_peer:return_code_check`
+      - `wolfSSL_free:cleanup_required` - `wolfSSL_free:ctx_session_lifecycle` - `wolfSSL_free:return_code_check`
+      - `wolfSSL_new:ctx_session_l
+  - rank: 3
+    source_file: knowledge_raw/cross_lib_equivalence/wolfssl_cross_library_mapping_candidates.yaml
+    layer: cross_lib_equivalence
+    snippet: 'wolfssl_cross_library_mapping_candidates: - schema: cross_library_mapping_candidate_v0   family:
+      asn1_nested_boundary   wolfssl_api: wc_InitDecodedCert   openssl_candidate_api:
+      ASN1_item_d2i   mbedtls_candidate_api: mbedtls_x509_crt_parse_d'
+  - rank: 4
+    source_file: knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+    layer: api_constraints
+    snippet: '`wc_PKCS7_VerifySignedData:parser_must_reject_malformed` - `XFREE:cleanup_required`
+      - `XFREE:ownership_transfer` - `XMALLOC:ownership_transfer` - `wolfSSL_Free:cleanup_required`
+      - `wolfSSL_Free:ownership_transfer` - `wolfSSL_Malloc:ownershi'
+  - rank: 5
+    source_file: knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+    layer: api_constraints
+    snippet: '# wolfSSL top-family API constraints  - `DecodedCert:input_must_be_der_or_pem`
+      - `DecodedCert:parser_must_reject_malformed` - `wc_FreeDecodedCert:cleanup_required`
+      - `wc_FreeDecodedCert:input_must_be_der_or_pem` - `wc_FreeDecodedCert:parser'
+  retrieved_sources:
+  - knowledge_raw/api_constraints/wolfssl_call_sequences.md
+  - knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+  - knowledge_raw/cross_lib_equivalence/wolfssl_cross_library_mapping_candidates.yaml
+  - knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_asn1write.function.md
+  - knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_ecp.function.md
+  notes: Evaluated over top-k JSON output from rag_query.py.
+- query_id: q3_x509_load_free
+  query: wolfSSL_X509_load_certificate_file wolfSSL_X509_free certificate lifecycle
+  success: true
+  expected_terms_found:
+  - wolfSSL_X509_load_certificate_file
+  - wolfSSL_X509_free
+  - x509_parsing
+  missing_expected_terms: []
+  top_hits_summary:
+  - rank: 1
+    source_file: knowledge_raw/api_constraints/wolfssl_call_sequences.md
+    layer: api_constraints
+    snippet: '# wolfSSL call sequences  - `wolfssl_decodedcert_parse_free_004:wc_InitDecodedCert
+      -> wc_ParseCert -> wc_FreeDecodedCert` - `wolfssl_pkcs7_init_decode_free_005:wc_PKCS7_Init
+      -> wc_PKCS7_Free` - `wolfssl_pkcs7_init_verify_free_006:wc_PKCS7_I'
+  - rank: 2
+    source_file: knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+    layer: api_constraints
+    snippet: code_check` - `wolfSSL_dtls_set_peer:ctx_session_lifecycle` - `wolfSSL_dtls_set_peer:return_code_check`
+      - `wolfSSL_free:cleanup_required` - `wolfSSL_free:ctx_session_lifecycle` - `wolfSSL_free:return_code_check`
+      - `wolfSSL_new:ctx_session_l
+  - rank: 3
+    source_file: knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+    layer: api_constraints
+    snippet: '- `wolfSSL_X509_get_der:input_must_be_der_or_pem` - `wolfSSL_X509_get_der:parser_must_reject_malformed`
+      - `wolfSSL_X509_get_issuer_name:input_must_be_der_or_pem` - `wolfSSL_X509_get_issuer_name:parser_must_reject_malformed`
+      - `wolfSSL_X509_'
+  - rank: 4
+    source_file: knowledge_raw/cross_lib_equivalence/wolfssl_cross_library_mapping_candidates.yaml
+    layer: cross_lib_equivalence
+    snippet: 'wolfssl_cross_library_mapping_candidates: - schema: cross_library_mapping_candidate_v0   family:
+      asn1_nested_boundary   wolfssl_api: wc_InitDecodedCert   openssl_candidate_api:
+      ASN1_item_d2i   mbedtls_candidate_api: mbedtls_x509_crt_parse_d'
+  - rank: 5
+    source_file: knowledge_raw/poc_patterns/unified_patterns.md
+    layer: poc_patterns
+    snippet: '## OPENSSL-ISSUE-29574  - Source: datasets/openssl/poc_artifacts/issue_29574
+      - Family: x509_parsing - Oracle type: behavior_divergence - Root cause: unknown
+      - Source API: SSL_CTX_use_PrivateKey_ASN1, SSL_CTX_use_certificate_ASN1, X509_Objec'
+  retrieved_sources:
+  - knowledge_raw/api_constraints/wolfssl_call_sequences.md
+  - knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+  - knowledge_raw/cross_lib_equivalence/wolfssl_cross_library_mapping_candidates.yaml
+  - knowledge_raw/poc_patterns/unified_patterns.md
+  - knowledge_raw/poc_patterns/openssl_issue_patterns.md
+  notes: Evaluated over top-k JSON output from rag_query.py.
+- query_id: q4_decodedcert_parse_free
+  query: wc_InitDecodedCert wc_ParseCert wc_FreeDecodedCert ASN.1 parse free
+  success: true
+  expected_terms_found:
+  - wc_InitDecodedCert
+  - wc_ParseCert
+  - wc_FreeDecodedCert
+  missing_expected_terms: []
+  top_hits_summary:
+  - rank: 1
+    source_file: knowledge_raw/api_constraints/wolfssl_call_sequences.md
+    layer: api_constraints
+    snippet: '# wolfSSL call sequences  - `wolfssl_decodedcert_parse_free_004:wc_InitDecodedCert
+      -> wc_ParseCert -> wc_FreeDecodedCert` - `wolfssl_pkcs7_init_decode_free_005:wc_PKCS7_Init
+      -> wc_PKCS7_Free` - `wolfssl_pkcs7_init_verify_free_006:wc_PKCS7_I'
+  - rank: 2
+    source_file: knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+    layer: api_constraints
+    snippet: '# wolfSSL top-family API constraints  - `DecodedCert:input_must_be_der_or_pem`
+      - `DecodedCert:parser_must_reject_malformed` - `wc_FreeDecodedCert:cleanup_required`
+      - `wc_FreeDecodedCert:input_must_be_der_or_pem` - `wc_FreeDecodedCert:parser'
+  - rank: 3
+    source_file: knowledge_raw/api_constraints/openssl/3.5.5/ASN1_item_d2i.md
+    layer: api_constraints
+    snippet: 'd with the matching item free routine. - Input bytes remain caller-owned.
+      - `*in` is advanced on successful decode.  ## Harness Generation Notes  - Use
+      when target migration wants to isolate nested ASN.1 item parsing rather than
+      full X.509 '
+  - rank: 4
+    source_file: knowledge_raw/api_constraints/openssl/3.5.5/ASN1_item_d2i.md
+    layer: api_constraints
+    snippet: '# API Constraints: ASN1_item_d2i (OpenSSL 3.5.5)  Source version: `/home/wen/work/clean_sources/openssl-3.5.5`  ##
+      API  - API/function name: `ASN1_item_d2i` - Header declaration: `include/openssl/asn1.h`
+      - Implementation file: `crypto/asn1/'
+  - rank: 5
+    source_file: knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md
+    layer: api_constraints
+    snippet: 'may be reused/replaced according to OpenSSL d2i conventions.  ## Harness
+      Generation Notes  - Use `BIO_new_mem_buf(cert_pem, len)`, call `PEM_read_bio_X509()`,
+      assert NULL/non-NULL, then free. - For `MBEDTLS-POC-0017`, DER-level `d2i_X509()`'
+  retrieved_sources:
+  - knowledge_raw/api_constraints/wolfssl_call_sequences.md
+  - knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+  - knowledge_raw/api_constraints/openssl/3.5.5/ASN1_item_d2i.md
+  - knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md
+  - knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_x509_crt_parse_der.md
+  - knowledge_raw/api_constraints/mbedtls/4.1.0/mbedtls_rsa_parse_key.md
+  - knowledge_raw/unit_tests/mbedtls/4.1.0/MBEDTLS-POC-0017_x509_asn1_boundary_evidence.md
+  notes: Evaluated over top-k JSON output from rag_query.py.
+- query_id: q5_pkcs7_verify_cleanup
+  query: wc_PKCS7_Init wc_PKCS7_VerifySignedData wc_PKCS7_Free cleanup
+  success: true
+  expected_terms_found:
+  - wc_PKCS7_Init
+  - wc_PKCS7_VerifySignedData
+  - wc_PKCS7_Free
+  missing_expected_terms: []
+  top_hits_summary:
+  - rank: 1
+    source_file: knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+    layer: api_constraints
+    snippet: '`wc_PKCS7_VerifySignedData:parser_must_reject_malformed` - `XFREE:cleanup_required`
+      - `XFREE:ownership_transfer` - `XMALLOC:ownership_transfer` - `wolfSSL_Free:cleanup_required`
+      - `wolfSSL_Free:ownership_transfer` - `wolfSSL_Malloc:ownershi'
+  - rank: 2
+    source_file: knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+    layer: api_constraints
+    snippet: '# wolfSSL top-family API constraints  - `DecodedCert:input_must_be_der_or_pem`
+      - `DecodedCert:parser_must_reject_malformed` - `wc_FreeDecodedCert:cleanup_required`
+      - `wc_FreeDecodedCert:input_must_be_der_or_pem` - `wc_FreeDecodedCert:parser'
+  - rank: 3
+    source_file: knowledge_raw/api_constraints/wolfssl_call_sequences.md
+    layer: api_constraints
+    snippet: '# wolfSSL call sequences  - `wolfssl_decodedcert_parse_free_004:wc_InitDecodedCert
+      -> wc_ParseCert -> wc_FreeDecodedCert` - `wolfssl_pkcs7_init_decode_free_005:wc_PKCS7_Init
+      -> wc_PKCS7_Free` - `wolfssl_pkcs7_init_verify_free_006:wc_PKCS7_I'
+  - rank: 4
+    source_file: knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__ecjpake.c.md
+    layer: api_constraints
+    snippet: 'X  */ static int ecjpake_kkp_read(const mbedtls_md_type_t md_type,                             const
+      mbedtls_ecp_group *grp,                             const int pf, ```  ## Snippet
+      14  ```c ret = MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL;         '
+  - rank: 5
+    source_file: knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__ecjpake.c.md
+    layer: api_constraints
+    snippet: '# Snippet 9  ```c &VV, &h, X, &r, G));      if (mbedtls_ecp_point_cmp(&VV,
+      &V) != 0) {         ret = MBEDTLS_ERR_ECP_VERIFY_FAILED;         goto cleanup;     }  cleanup:     mbedtls_ecp_point_free(&V);     mbedtls_ecp_point_free(&VV);     m'
+  retrieved_sources:
+  - knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+  - knowledge_raw/api_constraints/wolfssl_call_sequences.md
+  - knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__ecjpake.c.md
+  - knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__keymgmt_internal_test.c.md
+  - knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__psa_crypto_ecp.c.md
+  - knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test2.c.md
+  notes: Evaluated over top-k JSON output from rag_query.py.
+- query_id: q6_cross_mapping_pkcs7
+  query: wolfSSL OpenSSL PKCS7 cross library mapping VerifySignedData d2i_PKCS7
+  success: true
+  expected_terms_found:
+  - wc_PKCS7_VerifySignedData
+  - PKCS7
+  - OpenSSL
+  missing_expected_terms: []
+  top_hits_summary:
+  - rank: 1
+    source_file: knowledge_raw/cross_lib_equivalence/wolfssl_cross_library_mapping_candidates.yaml
+    layer: cross_lib_equivalence
+    snippet: 'wolfssl_cross_library_mapping_candidates: - schema: cross_library_mapping_candidate_v0   family:
+      asn1_nested_boundary   wolfssl_api: wc_InitDecodedCert   openssl_candidate_api:
+      ASN1_item_d2i   mbedtls_candidate_api: mbedtls_x509_crt_parse_d'
+  - rank: 2
+    source_file: knowledge_base/api_cards/openssl/d2i_PKCS8_PRIV_KEY_INFO.yaml
+    layer: api_cards
+    snippet: 'Source: API Card api: d2i_PKCS8_PRIV_KEY_INFO library: openssl family:
+      der_parser signature: PKCS8_PRIV_KEY_INFO *d2i_PKCS8_PRIV_KEY_INFO(PKCS8_PRIV_KEY_INFO
+      **a, const unsigned char **ppin, long length) parameter_semantics: a: optional
+      reu'
+  - rank: 3
+    source_file: knowledge_base/api_cards/openssl/d2i_PUBKEY.yaml
+    layer: api_cards
+    snippet: 'Source: API Card api: d2i_PUBKEY library: openssl family: der_parser
+      signature: EVP_PKEY *d2i_PUBKEY(EVP_PKEY **a, const unsigned char **ppin, long
+      length) parameter_semantics: a: optional reuse/output key pointer ppin: input
+      DER pointer, a'
+  - rank: 4
+    source_file: knowledge_base/api_cards/openssl/EVP_PKEY_verify.yaml
+    layer: api_cards
+    snippet: 'Source: API Card api: EVP_PKEY_verify library: openssl family: pkey_verify
+      signature: int EVP_PKEY_verify(EVP_PKEY_CTX *ctx, const unsigned char *sig,
+      size_t siglen, const unsigned char *tbs, size_t tbslen) parameter_semantics:
+      ctx: initial'
+  - rank: 5
+    source_file: knowledge_base/api_cards/openssl/EVP_DigestVerify.yaml
+    layer: api_cards
+    snippet: 'Source: API Card api: EVP_DigestVerify library: openssl family: pkey_verify
+      signature: int EVP_DigestVerify(EVP_MD_CTX *ctx, const unsigned char *sigret,
+      size_t siglen, const unsigned char *tbs, size_t tbslen) parameter_semantics:
+      ctx: init'
+  retrieved_sources:
+  - knowledge_raw/cross_lib_equivalence/wolfssl_cross_library_mapping_candidates.yaml
+  - knowledge_base/api_cards/openssl/d2i_PKCS8_PRIV_KEY_INFO.yaml
+  - knowledge_base/api_cards/openssl/d2i_PUBKEY.yaml
+  - knowledge_base/api_cards/openssl/EVP_PKEY_verify.yaml
+  - knowledge_base/api_cards/openssl/EVP_DigestVerify.yaml
+  - knowledge_base/api_cards/openssl/d2i_X509.yaml
+  - knowledge_base/api_cards/openssl/EVP_DigestVerifyInit.yaml
+  - knowledge_raw/poc_patterns/unified_patterns.md
+  notes: Evaluated over top-k JSON output from rag_query.py.
+- query_id: q7_false_positive_risk
+  query: wolfSSL API constraints false positive misuse cleanup required
+  success: false
+  expected_terms_found:
+  - cleanup_required
+  missing_expected_terms:
+  - false_positive_risk
+  top_hits_summary:
+  - rank: 1
+    source_file: knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+    layer: api_constraints
+    snippet: '# wolfSSL top-family API constraints  - `DecodedCert:input_must_be_der_or_pem`
+      - `DecodedCert:parser_must_reject_malformed` - `wc_FreeDecodedCert:cleanup_required`
+      - `wc_FreeDecodedCert:input_must_be_der_or_pem` - `wc_FreeDecodedCert:parser'
+  - rank: 2
+    source_file: knowledge_base/api_cards/openssl/OSSL_STORE_load.yaml
+    layer: api_cards
+    snippet: 'Source: API Card api: OSSL_STORE_load library: openssl family: der_store_loader
+      signature: OSSL_STORE_INFO *OSSL_STORE_load(OSSL_STORE_CTX *ctx) parameter_semantics:
+      ctx: store loading context created by OSSL_STORE_open_ex or related helper'
+  - rank: 3
+    source_file: knowledge_raw/poc_patterns/openssl_issue_patterns.md
+    layer: poc_patterns
+    snippet: '## ASN1_NESTED_BOUNDARY_MINIMAL_REPRODUCER_V1  - Source: artifacts/sprints/asn1_nested_boundary_minimal_reproducer_v1
+      - Family: asn1_nested_boundary - Seed: OPENSSL-ISSUE-30581 - Oracle type: PKCS12/ASN1
+      no-crash / strict reproduction check'
+  - rank: 4
+    source_file: knowledge_raw/cross_lib_equivalence/wolfssl_cross_library_mapping_candidates.yaml
+    layer: cross_lib_equivalence
+    snippet: 'wolfssl_cross_library_mapping_candidates: - schema: cross_library_mapping_candidate_v0   family:
+      asn1_nested_boundary   wolfssl_api: wc_InitDecodedCert   openssl_candidate_api:
+      ASN1_item_d2i   mbedtls_candidate_api: mbedtls_x509_crt_parse_d'
+  - rank: 5
+    source_file: knowledge_raw/api_constraints/wolfssl_call_sequences.md
+    layer: api_constraints
+    snippet: '# wolfSSL call sequences  - `wolfssl_decodedcert_parse_free_004:wc_InitDecodedCert
+      -> wc_ParseCert -> wc_FreeDecodedCert` - `wolfssl_pkcs7_init_decode_free_005:wc_PKCS7_Init
+      -> wc_PKCS7_Free` - `wolfssl_pkcs7_init_verify_free_006:wc_PKCS7_I'
+  retrieved_sources:
+  - knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+  - knowledge_base/api_cards/openssl/OSSL_STORE_load.yaml
+  - knowledge_raw/poc_patterns/openssl_issue_patterns.md
+  - knowledge_raw/cross_lib_equivalence/wolfssl_cross_library_mapping_candidates.yaml
+  - knowledge_raw/api_constraints/wolfssl_call_sequences.md
+  - knowledge_raw/poc_patterns/unified_patterns.md
+  notes: Evaluated over top-k JSON output from rag_query.py.

@@ -1,0 +1,23 @@
+# Scheduler Feedback Proposal
+
+```yaml
+schema: scheduler_feedback_proposal_v1
+generated_at: '2026-06-12T04:30:42+00:00'
+proposals:
+- priority: high
+  task: valid_seed_discovery_pkcs_v1
+  reason: pkcs_container_parsing has pending seed requirement
+- priority: high
+  task: more_asn1_valid_prefix_cases_v1
+  reason: accepted path observed and full-consumption candidates appeared
+- priority: medium
+  task: x509_family_template_seed_discovery_v1
+  reason: x509 is adjacent to ASN.1 and can reuse oracle instrumentation
+- priority: medium
+  task: external_validation_import_gate_v1
+  reason: full_consumption candidates are pending teammate validation
+do_not_schedule_yet:
+- cross_library_differential_run_v1
+- pattern_bank_import_v1
+- confirmed_vulnerability_report_v1
+```

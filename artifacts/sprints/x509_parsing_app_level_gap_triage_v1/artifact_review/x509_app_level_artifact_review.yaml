@@ -1,0 +1,209 @@
+family: x509_parsing
+seed_count: 7
+reviews:
+- seed_id: OPENSSL-ISSUE-11567
+  artifact_found: true
+  metadata_found: true
+  readme_found: true
+  run_sh_found: true
+  poc_code_found: true
+  input_files_found: []
+  input_status: placeholder_only
+  app_command_found: true
+  app_command: openssl x509 -in $PoC -text -noout
+  sanitizer_log_found: false
+  sanitizer_logs: []
+  prior_run_log_found: true
+  evidence_strength: weak
+  blockers:
+  - missing_original_input
+  - placeholder_only
+  - no_sanitizer_log_required_for_c_path
+  - strict_reproduction_false
+  metadata_input_status: placeholder_input_used
+  strict_reproduction: false
+  local_compile: true
+  local_run: true
+  validation_notes: Translated from CLI command `openssl x509 -in $PoC -text -noout`. The generated C harness compiled
+    and executed successfully using a system certificate copied to inputs/poc.pem. Valgrind reported 0 errors. This
+    validates the harness structure, but does not strictly reproduce the original issue because the original PoC
+    certificate has not been recovered.
+  title: semantic bug when verifying certificate file
+- seed_id: OPENSSL-ISSUE-11772
+  artifact_found: true
+  metadata_found: true
+  readme_found: true
+  run_sh_found: true
+  poc_code_found: true
+  input_files_found: []
+  input_status: placeholder_only
+  app_command_found: true
+  app_command: openssl x509 -in $PoC -checkend 0 -noout
+  sanitizer_log_found: false
+  sanitizer_logs: []
+  prior_run_log_found: true
+  evidence_strength: weak
+  blockers:
+  - missing_original_input
+  - placeholder_only
+  - no_sanitizer_log_required_for_c_path
+  - strict_reproduction_false
+  metadata_input_status: placeholder_input_used
+  strict_reproduction: false
+  local_compile: true
+  local_run: true
+  validation_notes: The generated C harness was translated from the original CLI command and compiled/executed using
+    a placeholder local input. This validates the harness structure but does not strictly reproduce the original
+    issue because the original PoC input artifact has not been recovered.
+  title: openssl x509 returns 0 even though the date of certificate is invalid
+- seed_id: OPENSSL-ISSUE-14457
+  artifact_found: true
+  metadata_found: true
+  readme_found: true
+  run_sh_found: true
+  poc_code_found: true
+  input_files_found:
+  - datasets/openssl/poc_artifacts/issue_14457/inputs/root.cer
+  input_status: synthetic_only
+  app_command_found: true
+  app_command: openssl verify -CAfile root.cer root.cer
+  sanitizer_log_found: false
+  sanitizer_logs: []
+  prior_run_log_found: true
+  evidence_strength: medium
+  blockers:
+  - missing_original_input
+  - synthetic_only
+  - no_sanitizer_log_required_for_c_path
+  - strict_reproduction_false
+  metadata_input_status: placeholder_input_used
+  strict_reproduction: false
+  local_compile: true
+  local_run: true
+  validation_notes: X509 self-verification harness compiled and executed with generated self-signed certificate
+    placeholder input. Valgrind reported 0 errors. This validates the generated C harness structure and API path,
+    but does not strictly reproduce the original issue because the original PoC input artifacts have not been recovered.
+  title: 'Self-signed certificates generated with a single `openssl req` command fail to verify (error 20 at 0 depth
+    lookup: unable to get local issuer certificate)'
+- seed_id: OPENSSL-ISSUE-14675
+  artifact_found: true
+  metadata_found: true
+  readme_found: true
+  run_sh_found: true
+  poc_code_found: true
+  input_files_found: []
+  input_status: placeholder_only
+  app_command_found: true
+  app_command: openssl verify /tmp/poc.pem
+  sanitizer_log_found: false
+  sanitizer_logs: []
+  prior_run_log_found: true
+  evidence_strength: medium
+  blockers:
+  - missing_original_input
+  - placeholder_only
+  - no_sanitizer_log_required_for_c_path
+  - strict_reproduction_false
+  metadata_input_status: placeholder_input_used
+  strict_reproduction: false
+  local_compile: true
+  local_run: true
+  validation_notes: The generated C harness was translated from the CLI command `openssl verify /tmp/poc.pem`. It
+    compiled and executed using a placeholder certificate bundle with appended garbage. This validates the X509
+    verification API path, but does not strictly reproduce the original issue semantics.
+  title: openssl verify silently ignores any but the first certificate in the certificates argument
+- seed_id: OPENSSL-ISSUE-23325
+  artifact_found: true
+  metadata_found: true
+  readme_found: true
+  run_sh_found: true
+  poc_code_found: true
+  input_files_found:
+  - datasets/openssl/poc_artifacts/issue_23325/inputs/cert.csr
+  - datasets/openssl/poc_artifacts/issue_23325/inputs/cacert.srl
+  - datasets/openssl/poc_artifacts/issue_23325/inputs/ca.cnf
+  - datasets/openssl/poc_artifacts/issue_23325/inputs/demoCA/crlnumber
+  - datasets/openssl/poc_artifacts/issue_23325/inputs/demoCA/serial
+  - datasets/openssl/poc_artifacts/issue_23325/inputs/demoCA/index.txt
+  - datasets/openssl/poc_artifacts/issue_23325/inputs/demoCA/crlnumber.old
+  input_status: synthetic_only
+  app_command_found: true
+  app_command: openssl verify -trusted cacert.pem -crl_check -CRLfile crl.pem cert.pem
+  sanitizer_log_found: false
+  sanitizer_logs: []
+  prior_run_log_found: true
+  evidence_strength: medium
+  blockers:
+  - missing_original_input
+  - synthetic_only
+  - no_sanitizer_log_required_for_c_path
+  - strict_reproduction_false
+  metadata_input_status: placeholder_input_used
+  strict_reproduction: false
+  local_compile: true
+  local_run: true
+  validation_notes: The generated C harness was translated from an OpenSSL verify command using CRL checking. It
+    compiled and executed with generated placeholder CA, end-entity certificate, and CRL inputs. Valgrind reported
+    0 errors. This validates the X509_STORE CRL verification API path, but does not strictly reproduce the original
+    issue because the original CA/CRL/certificate inputs have not been recovered.
+  title: 'X509: wrongly rejects cert without CDP if CRL contains IDP with name matching cert issuer'
+- seed_id: OPENSSL-ISSUE-29418
+  artifact_found: true
+  metadata_found: true
+  readme_found: true
+  run_sh_found: true
+  poc_code_found: true
+  input_files_found: []
+  input_status: placeholder_only
+  app_command_found: true
+  app_command: openssl x509 -in servercert.pem -noout -purpose
+  sanitizer_log_found: false
+  sanitizer_logs: []
+  prior_run_log_found: true
+  evidence_strength: medium
+  blockers:
+  - missing_original_input
+  - placeholder_only
+  - no_sanitizer_log_required_for_c_path
+  - strict_reproduction_false
+  metadata_input_status: placeholder_input_used
+  strict_reproduction: false
+  local_compile: true
+  local_run: true
+  validation_notes: The generated C harness was translated from the original CLI command and compiled/executed using
+    a placeholder local input. This validates the harness structure but does not strictly reproduce the original
+    issue because the original PoC input artifact has not been recovered.
+  title: openssl x509 -purpose produces inconsistent results depending on parsing options
+- seed_id: OPENSSL-ISSUE-6788
+  artifact_found: true
+  metadata_found: true
+  readme_found: true
+  run_sh_found: true
+  poc_code_found: true
+  input_files_found:
+  - datasets/openssl/poc_artifacts/issue_6788/inputs/ca.crt
+  - datasets/openssl/poc_artifacts/issue_6788/inputs/ca.cnf
+  - datasets/openssl/poc_artifacts/issue_6788/inputs/demoCA/crlnumber
+  - datasets/openssl/poc_artifacts/issue_6788/inputs/demoCA/serial
+  - datasets/openssl/poc_artifacts/issue_6788/inputs/demoCA/index.txt
+  - datasets/openssl/poc_artifacts/issue_6788/inputs/demoCA/crlnumber.old
+  input_status: synthetic_only
+  app_command_found: true
+  app_command: openssl crl -in crl.pem -noout -issuer
+  sanitizer_log_found: false
+  sanitizer_logs: []
+  prior_run_log_found: true
+  evidence_strength: medium
+  blockers:
+  - missing_original_input
+  - synthetic_only
+  - no_sanitizer_log_required_for_c_path
+  - strict_reproduction_false
+  metadata_input_status: placeholder_input_used
+  strict_reproduction: false
+  local_compile: true
+  local_run: true
+  validation_notes: CRL parse harness compiled and executed with generated CRL placeholder input. Valgrind reported
+    0 errors. This validates the generated C harness structure and API path, but does not strictly reproduce the
+    original issue because the original PoC input artifacts have not been recovered.
+  title: openssl crl does not work properly if -CAfile contains multiple CA certs with the same subject

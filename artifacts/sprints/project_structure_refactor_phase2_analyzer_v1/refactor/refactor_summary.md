@@ -1,0 +1,46 @@
+# Analyzer Refactor Summary
+
+```yaml
+schema: analyzer_refactor_phase2_summary_v1
+generated_at: '2026-06-12T07:44:40+00:00'
+new_core_modules:
+- analyzer/oracle_aware_analyzer.py
+- analyzer/semantic_labels.py
+- analyzer/candidate_labels.py
+tools_wrappers_updated:
+- tools/analyze_results_v1.py
+- tools/analyze_results_oracle_aware_v1.py
+tools_wrappers_preserved: true
+cli_backward_compatible: true
+oracle_parser_reused: true
+family_result_adapter_reused: true
+analyze_poc_deleted: true
+delete_decision:
+  file: analyzer/analyze_poc.py
+  delete_allowed: true
+  deleted: true
+  reason: superseded_by_family_level_analyzer
+  generated_at: '2026-06-12T07:43:15+00:00'
+  dependency_check:
+    imports: 0
+    cli_refs: 0
+    active_doc_refs: 0
+    active_pipeline_refs: 0
+  migrated_or_recorded_logic:
+  - PoC C source extraction logic recorded in this review; not needed by current runtime/oracle-aware
+    analyzer path
+  - family-level semantic labels migrated to analyzer/semantic_labels.py
+  - candidate labels migrated to analyzer/candidate_labels.py
+  - oracle-aware case/family analysis migrated to analyzer/oracle_aware_analyzer.py
+smoke_test:
+  executed: true
+  input: artifacts/sprints/compile_run_oracle_instrumented_v1/ + artifacts/sprints/analyze_results_oracle_aware_v1/
+  cases_analyzed: 14
+  accepted_true: 0
+  full_consumption_gap_candidate: 0
+  original_cases_analyzed: 14
+  original_accepted_true: 0
+  original_full_consumption_gap_candidate: 0
+  consistent_with_original: true
+next_task: project_structure_refactor_phase3_mutation_or_analysis_v1
+```

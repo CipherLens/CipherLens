@@ -1,0 +1,54 @@
+===== f94eb68ea relevant grep =====
+5:    add missing checks in wolfSSL_d2i_SSL_SESSION
+14:@@ -2827,12 +2827,20 @@ WOLFSSL_SESSION* wolfSSL_d2i_SSL_SESSION(WOLFSSL_SESSION** sess,
+17:     s->chain.count = data[idx++];
+18:+    if (s->chain.count > MAX_CHAIN_DEPTH) {
+19:+        ret = BUFFER_ERROR;
+22:     for (j = 0; j < s->chain.count; j++) {
+24:             ret = BUFFER_ERROR;
+27:         ato16(data + idx, &length); idx += OPAQUE16_LEN;
+28:+        if (length > MAX_X509_SIZE) {
+29:+            ret = BUFFER_ERROR;
+32:         s->chain.certs[j].length = length;
+33:         if (i - idx < length) {
+34:             ret = BUFFER_ERROR;
+===== 86212fd33 relevant grep =====
+5:    add test for session deserialization input validation
+18:+static int test_wolfSSL_d2i_SSL_SESSION_bounds_check(void)
+22:+    defined(SESSION_CERTS)
+31:+    int sessionIDSz = 0;
+38:+    ExpectNotNull(sess = wolfSSL_SESSION_new());
+40:+    ExpectNotNull(sessDer = (unsigned char*)XMALLOC(sz, NULL,
+47:+    /* Calculate offset to chain.count field:
+48:+     *   side(1) + bornOn(4) + timeout(4) + sessionIDSz(1) + sessionID(var)
+53:+        sessionIDSz = sessDer[idx++];
+54:+        idx += sessionIDSz + SECRET_LEN + 1;
+62:+     * The deserialization must reject this with a BUFFER_ERROR (return NULL).
+65:+    ExpectNotNull(modData = (unsigned char*)XMALLOC(newLen, NULL,
+68:+        XMEMCPY(modData, sessDer, chainOffset);
+69:+        modData[chainOffset] = MAX_CHAIN_DEPTH + 1;
+73:+    ExpectNull(restored = wolfSSL_d2i_SSL_SESSION(NULL, &ptr, (long)newLen));
+78:+     * chain.count is valid (1), but the cert length field is too large.
+81:+    ExpectNotNull(modData = (unsigned char*)XMALLOC(newLen, NULL,
+84:+        XMEMCPY(modData, sessDer, chainOffset);
+86:+        modData[idx++] = 1;  /* chain.count = 1 */
+93:+    ExpectNull(restored = wolfSSL_d2i_SSL_SESSION(NULL, &ptr, (long)newLen));
+109:+    TEST_DECL(test_wolfSSL_d2i_SSL_SESSION_bounds_check),
+===== 0a99a08b0 relevant grep =====
+5:    ssl_sess: check fields in wolfSSL_d2i_SSL_SESSION.
+14:@@ -2795,6 +2795,10 @@ WOLFSSL_SESSION* wolfSSL_d2i_SSL_SESSION(WOLFSSL_SESSION** sess,
+17:     s->sessionIDSz = data[idx++];
+18:+    if (s->sessionIDSz > ID_LEN) {
+19:+        ret = BUFFER_ERROR;
+23:     /* sessionID | secret | haveEMS | haveAltSessionID */
+24:     if (i - idx < s->sessionIDSz + SECRET_LEN + OPAQUE8_LEN + OPAQUE8_LEN) {
+25:@@ -2877,6 +2881,10 @@ WOLFSSL_SESSION* wolfSSL_d2i_SSL_SESSION(WOLFSSL_SESSION** sess,
+30:+        ret = BUFFER_ERROR;
+36:@@ -2892,6 +2900,10 @@ WOLFSSL_SESSION* wolfSSL_d2i_SSL_SESSION(WOLFSSL_SESSION** sess,
+41:+        ret = BUFFER_ERROR;
+===== 7245ad02b relevant grep =====
+===== 211124950 relevant grep =====
+6:    Merge pull request #9759 from gasbytes/test_wolfSSL_d2i_SSL_SESSION
+8:    add test for session deserialization input validation
+===== 67abcc6f2 relevant grep =====
+8:    ssl_sess: check fields in wolfSSL_d2i_SSL_SESSION.

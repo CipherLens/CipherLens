@@ -1,0 +1,1457 @@
+correction_summary:
+  total_reviewed: 36
+  changed: 27
+  unchanged: 23
+  needs_review: 2
+  bignum_before: 28
+  bignum_after: 4
+  pkcs_container_after: 8
+  x509_after: 15
+  tls_after: 13
+  family_counts_after:
+    bignum_serialization_boundary: 4
+    bignum_arithmetic_precondition: 1
+    cipher_padding_output_length: 2
+    tls_protocol_state_lifecycle: 13
+    cipher_aead_lifecycle: 2
+    asn1_nested_boundary: 11
+    x509_parsing: 4
+    pkcs_container_parsing: 8
+    mac_lifecycle: 1
+    secure_heap_state_lifecycle: 2
+    needs_review: 2
+items:
+- poc_id: MBEDTLS-POC-0001
+  source_library: mbedtls
+  artifact_path: data/pocs/core10/MBEDTLS-POC-0001
+  original_family: bignum_serialization_boundary
+  corrected_family: bignum_serialization_boundary
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: buffer_canary_boundary
+  original_route: A_recipe_slot_cross_library_migration
+  corrected_route: A_recipe_slot_cross_library_migration
+  confidence: high
+  correction_reason: API/component evidence contains BN/BIGNUM/MPI terms
+  evidence:
+    component: null
+    critical_api: null
+    api_call_sequence:
+    - memset
+    - mbedtls_mpi_init
+    - mbedtls_mpi_lset
+    - mbedtls_mpi_free
+    - mbedtls_mpi_write_string
+    - malloc
+    - free
+    source_file_names:
+    - poc/poc_mpi_write_string_min.c
+    - poc/poc_mpi_write_string_scan.c
+    - poc/poc_mpi_write_string_min.c
+    - poc/poc_mpi_write_string_scan.c
+    trigger_behavior: null
+- poc_id: MBEDTLS-POC-0002
+  source_library: mbedtls
+  artifact_path: data/pocs/core10/MBEDTLS-POC-0002
+  original_family: bignum_arithmetic_precondition
+  corrected_family: bignum_arithmetic_precondition
+  original_harness_family: return_code_outlen_semantic
+  corrected_harness_family: return_code_outlen_semantic
+  original_route: A_recipe_slot_cross_library_migration
+  corrected_route: A_recipe_slot_cross_library_migration
+  confidence: medium
+  correction_reason: not in targeted correction set; preserved original staging family
+  evidence:
+    component: null
+    critical_api: null
+    api_call_sequence:
+    - memset
+    - mbedtls_mpi_init
+    - mbedtls_mpi_read_string
+    - mbedtls_mpi_sub_abs
+    - mbedtls_mpi_free
+    - free
+    source_file_names:
+    - poc/poc_mpi_sub_abs_min.c
+    - poc/poc_mpi_sub_abs_min.c
+    trigger_behavior: null
+- poc_id: MBEDTLS-POC-0003
+  source_library: mbedtls
+  artifact_path: data/pocs/core10/MBEDTLS-POC-0003
+  original_family: cipher_padding_output_length
+  corrected_family: cipher_padding_output_length
+  original_harness_family: return_code_outlen_semantic
+  corrected_harness_family: return_code_outlen_semantic
+  original_route: D_crash_sanitizer_evidence_audit
+  corrected_route: A_recipe_slot_cross_library_migration
+  confidence: medium
+  correction_reason: not in targeted correction set; preserved original staging family
+  evidence:
+    component: null
+    critical_api: null
+    api_call_sequence:
+    - memset
+    - mbedtls_pk_init
+    - mbedtls_entropy_init
+    - mbedtls_ctr_drbg_init
+    - mbedtls_ctr_drbg_seed
+    - mbedtls_pk_setup
+    - mbedtls_pk_info_from_type
+    - mbedtls_rsa_gen_key
+    - mbedtls_pk_rsa
+    - mbedtls_pk_get_psa_attributes
+    - mbedtls_pk_import_into_psa
+    - mbedtls_pk_free
+    - mbedtls_pk_setup_opaque
+    - mbedtls_pk_get_type
+    - mbedtls_pk_sign_ext
+    - mbedtls_pk_verify_ext
+    - mbedtls_svc_key_id_is_null
+    - mbedtls_ctr_drbg_free
+    - mbedtls_entropy_free
+    - mbedtls_psa_crypto_free
+    - mbedtls_rsa_set_padding
+    source_file_names:
+    - poc/poc_pk_verify_ext_null_deref.c
+    - poc/poc_pk_verify_ext_null_deref_v2.c
+    - poc/poc_pk_verify_ext_null_deref.c
+    - poc/poc_pk_verify_ext_null_deref_v2.c
+    trigger_behavior: null
+- poc_id: MBEDTLS-POC-0004
+  source_library: mbedtls
+  artifact_path: data/pocs/core10/MBEDTLS-POC-0004
+  original_family: cipher_padding_output_length
+  corrected_family: cipher_padding_output_length
+  original_harness_family: return_code_outlen_semantic
+  corrected_harness_family: return_code_outlen_semantic
+  original_route: A_recipe_slot_cross_library_migration
+  corrected_route: A_recipe_slot_cross_library_migration
+  confidence: medium
+  correction_reason: not in targeted correction set; preserved original staging family
+  evidence:
+    component: null
+    critical_api: null
+    api_call_sequence:
+    - memcpy
+    - memset
+    - mbedtls_cipher_init
+    - mbedtls_cipher_info_from_type
+    - mbedtls_cipher_setup
+    - mbedtls_cipher_setkey
+    - mbedtls_cipher_set_padding_mode
+    - mbedtls_cipher_set_iv
+    - mbedtls_cipher_reset
+    - mbedtls_cipher_update
+    - mbedtls_cipher_finish
+    - mbedtls_cipher_free
+    source_file_names:
+    - poc/poc_get_pkcs_padding_outlen.c
+    - poc/poc_get_pkcs_padding_outlen.c
+    trigger_behavior: null
+- poc_id: MBEDTLS-POC-0005
+  source_library: mbedtls
+  artifact_path: data/pocs/core10/MBEDTLS-POC-0005
+  original_family: tls_protocol_state_lifecycle
+  corrected_family: tls_protocol_state_lifecycle
+  original_harness_family: object_state_lifecycle
+  corrected_harness_family: object_state_lifecycle
+  original_route: D_crash_sanitizer_evidence_audit
+  corrected_route: B_controlled_family_mutation
+  confidence: medium
+  correction_reason: not in targeted correction set; preserved original staging family
+  evidence:
+    component: null
+    critical_api: null
+    api_call_sequence:
+    - mbedtls_asn1_store_named_data
+    - memcpy
+    - mbedtls_asn1_free_named_data_list
+    source_file_names:
+    - poc/poc_asn1_store_named_data_null_deref.c
+    - poc/poc_asn1_store_named_data_null_deref.c
+    trigger_behavior: null
+- poc_id: MBEDTLS-POC-0011
+  source_library: mbedtls
+  artifact_path: data/pocs/core10/MBEDTLS-POC-0011
+  original_family: tls_protocol_state_lifecycle
+  corrected_family: tls_protocol_state_lifecycle
+  original_harness_family: object_state_lifecycle
+  corrected_harness_family: object_state_lifecycle
+  original_route: A_recipe_slot_cross_library_migration
+  corrected_route: B_controlled_family_mutation
+  confidence: medium
+  correction_reason: not in targeted correction set; preserved original staging family
+  evidence:
+    component: null
+    critical_api: null
+    api_call_sequence:
+    - mbedtls_pem_init
+    - mbedtls_pem_read_buffer
+    - mbedtls_pem_free
+    source_file_names:
+    - poc/poc_pem_underflow.c
+    - poc/poc_pem_underflow.c
+    trigger_behavior: null
+- poc_id: MBEDTLS-POC-0017
+  source_library: mbedtls
+  artifact_path: data/pocs/core10/MBEDTLS-POC-0017
+  original_family: tls_protocol_state_lifecycle
+  corrected_family: tls_protocol_state_lifecycle
+  original_harness_family: object_state_lifecycle
+  corrected_harness_family: object_state_lifecycle
+  original_route: A_recipe_slot_cross_library_migration
+  corrected_route: B_controlled_family_mutation
+  confidence: medium
+  correction_reason: not in targeted correction set; preserved original staging family
+  evidence:
+    component: null
+    critical_api: null
+    api_call_sequence:
+    - mbedtls_x509_crt_init
+    - mbedtls_x509_crt_parse_der
+    - mbedtls_x509_crt_free
+    source_file_names:
+    - poc/poc_x509_asn1_bounds.c
+    - poc/poc_x509_asn1_bounds.c
+    trigger_behavior: null
+- poc_id: MBEDTLS-POC-0020
+  source_library: mbedtls
+  artifact_path: data/pocs/core10/MBEDTLS-POC-0020
+  original_family: tls_protocol_state_lifecycle
+  corrected_family: tls_protocol_state_lifecycle
+  original_harness_family: object_state_lifecycle
+  corrected_harness_family: object_state_lifecycle
+  original_route: A_recipe_slot_cross_library_migration
+  corrected_route: B_controlled_family_mutation
+  confidence: medium
+  correction_reason: not in targeted correction set; preserved original staging family
+  evidence:
+    component: null
+    critical_api: null
+    api_call_sequence:
+    - mbedtls_rsa_parse_key
+    - mbedtls_rsa_parse_pubkey
+    - mbedtls_rsa_init
+    - mbedtls_rsa_free
+    source_file_names:
+    - poc/poc_rsa_trailing_garbage.c
+    - poc/poc_rsa_trailing_garbage.c
+    trigger_behavior: null
+- poc_id: MBEDTLS-POC-0028
+  source_library: mbedtls
+  artifact_path: data/pocs/core10/MBEDTLS-POC-0028
+  original_family: cipher_aead_lifecycle
+  corrected_family: cipher_aead_lifecycle
+  original_harness_family: object_state_lifecycle
+  corrected_harness_family: object_state_lifecycle
+  original_route: needs_more_evidence
+  corrected_route: B_controlled_family_mutation
+  confidence: medium
+  correction_reason: not in targeted correction set; preserved original staging family
+  evidence:
+    component: null
+    critical_api: null
+    api_call_sequence: []
+    source_file_names:
+    - poc/poc_psa_aead_invalid_tag_setup.c
+    - poc/poc_psa_aead_invalid_tag_setup.c
+    trigger_behavior: null
+- poc_id: OPENSSL-ISSUE-11567
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_11567
+  original_family: bignum_serialization_boundary
+  corrected_family: asn1_nested_boundary
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: C_app_level_validation_gap
+  corrected_route: C_app_level_validation_gap
+  confidence: medium
+  correction_reason: certificate/ASN.1 evidence suggests nested parser boundary
+  evidence:
+    component: X509/ASN1
+    critical_api:
+    - X509v3 Subject Key Identifier
+    - X509v3 Authority Key Identifier
+    - X509v3 Basic Constraints
+    - md5WithRSAEncryption
+    api_call_sequence:
+    - BIO_new_file
+    - X509_print_fp
+    - X509_free
+    - BIO_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: WRONG_RESULT
+- poc_id: OPENSSL-ISSUE-11772
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_11772
+  original_family: bignum_serialization_boundary
+  corrected_family: asn1_nested_boundary
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: C_app_level_validation_gap
+  corrected_route: C_app_level_validation_gap
+  confidence: medium
+  correction_reason: certificate/ASN.1 evidence suggests nested parser boundary
+  evidence:
+    component: X509/X509V3/ASN1
+    critical_api:
+    - X509_cmp_time
+    - X509_get0_notAfter
+    api_call_sequence:
+    - BIO_new_file
+    - X509_get0_notAfter
+    - X509_cmp_time
+    - X509_free
+    - BIO_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: WRONG_RESULT
+- poc_id: OPENSSL-ISSUE-13860
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_13860
+  original_family: bignum_serialization_boundary
+  corrected_family: asn1_nested_boundary
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: C_app_level_validation_gap
+  corrected_route: C_app_level_validation_gap
+  confidence: medium
+  correction_reason: certificate/ASN.1 evidence suggests nested parser boundary
+  evidence:
+    component: X509/X509V3/ASN1
+    critical_api:
+    - X509_parse
+    - X509_get_pubkey
+    api_call_sequence:
+    - BIO_new_file
+    - d2i_X509_bio
+    - X509_get_pubkey
+    - EVP_PKEY_free
+    - X509_free
+    - BIO_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: UNKNOWN
+- poc_id: OPENSSL-ISSUE-14457
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_14457
+  original_family: bignum_serialization_boundary
+  corrected_family: asn1_nested_boundary
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: C_app_level_validation_gap
+  corrected_route: C_app_level_validation_gap
+  confidence: medium
+  correction_reason: certificate/ASN.1 evidence suggests nested parser boundary
+  evidence:
+    component: X509/X509V3/ASN1
+    critical_api:
+    - X509v3 extensions
+    - basicConstraints
+    - subjectKeyIdentifier
+    - authorityKeyIdentifier
+    - subjectAltName
+    - keyUsage
+    api_call_sequence:
+    - BIO_new_file
+    - X509_STORE_new
+    - X509_STORE_add_cert
+    - X509_STORE_CTX_new
+    - X509_STORE_CTX_init
+    - X509_verify_cert
+    - X509_STORE_CTX_get_error
+    - X509_verify_cert_error_string
+    - X509_STORE_CTX_free
+    - X509_STORE_free
+    - X509_free
+    - BIO_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: WRONG_OUTPUT
+- poc_id: OPENSSL-ISSUE-14675
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_14675
+  original_family: bignum_serialization_boundary
+  corrected_family: x509_parsing
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: C_app_level_validation_gap
+  corrected_route: C_app_level_validation_gap
+  confidence: medium
+  correction_reason: API/component evidence contains X509/certificate/verify terms
+  evidence:
+    component: X509/VERIFY
+    critical_api:
+    - X509_verify_cert
+    api_call_sequence:
+    - BIO_new_file
+    - X509_STORE_new
+    - X509_STORE_add_cert
+    - X509_STORE_CTX_new
+    - X509_STORE_CTX_init
+    - X509_verify_cert
+    - X509_STORE_CTX_get_error
+    - X509_verify_cert_error_string
+    - X509_STORE_CTX_free
+    - X509_STORE_free
+    - X509_free
+    - BIO_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: WRONG_ALERT_OR_PROTOCOL_BEHAVIOR
+- poc_id: OPENSSL-ISSUE-15899
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_15899
+  original_family: bignum_serialization_boundary
+  corrected_family: bignum_serialization_boundary
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: buffer_canary_boundary
+  original_route: C_app_level_validation_gap
+  corrected_route: C_app_level_validation_gap
+  confidence: high
+  correction_reason: API/component evidence contains BN/BIGNUM/MPI terms
+  evidence:
+    component: BN/ASN1
+    critical_api:
+    - bn_expand_internal
+    - EVP_PKEY_get_bn_param
+    api_call_sequence:
+    - BIO_new_file
+    - X509_get_pubkey
+    - EVP_PKEY_get1_RSA
+    - RSA_get0_key
+    - BN_print_fp
+    - RSA_free
+    - EVP_PKEY_free
+    - X509_free
+    - BIO_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+- poc_id: OPENSSL-ISSUE-16196
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_16196
+  original_family: bignum_serialization_boundary
+  corrected_family: bignum_serialization_boundary
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: buffer_canary_boundary
+  original_route: D_crash_sanitizer_evidence_audit
+  corrected_route: D_crash_sanitizer_evidence_audit
+  confidence: high
+  correction_reason: API/component evidence contains BN/BIGNUM/MPI terms
+  evidence:
+    component: REQ/ASN1
+    critical_api:
+    - BN_print
+    api_call_sequence:
+    - BIO_new_file
+    - X509_REQ_get_pubkey
+    - EVP_PKEY_get1_RSA
+    - RSA_get0_key
+    - BN_print_fp
+    - RSA_free
+    - EVP_PKEY_free
+    - X509_REQ_free
+    - BIO_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+- poc_id: OPENSSL-ISSUE-17715
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_17715
+  original_family: bignum_serialization_boundary
+  corrected_family: pkcs_container_parsing
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: C_app_level_validation_gap
+  corrected_route: C_app_level_validation_gap
+  confidence: high
+  correction_reason: API/component evidence contains PKCS/CMS/OID container terms
+  evidence:
+    component: RAND_DRBG/EVP_CIPHER_CTX
+    critical_api:
+    - RAND_DRBG_generate
+    - EVP_EncryptUpdate
+    - EVP_CipherUpdate
+    - drbg_ctr_generate
+    - aesni_ecb_encrypt
+    api_call_sequence:
+    - BIO_new_file
+    - X509_free
+    - BIO_free
+    - X509_REQ_free
+    - fopen
+    - d2i_PKCS12_fp
+    - PKCS12_parse
+    - EVP_PKEY_free
+    - PKCS12_free
+    - BIO_new_fp
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+- poc_id: OPENSSL-ISSUE-18168
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_18168
+  original_family: bignum_serialization_boundary
+  corrected_family: tls_protocol_state_lifecycle
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: object_state_lifecycle
+  original_route: A_recipe_slot_cross_library_migration
+  corrected_route: B_controlled_family_mutation
+  confidence: high
+  correction_reason: API/component evidence contains TLS/DTLS state terms
+  evidence:
+    component: WPACKET/DER_WRITER/RSA
+    critical_api:
+    - WPACKET_put_bytes__
+    - int_der_w_integer
+    - ossl_DER_w_ulong
+    - ossl_DER_w_RSASSA_PSS_params
+    - prepare_rsa_params
+    - key_to_pki_pem_priv_bio
+    - key2any_encode
+    - rsapss_to_PrivateKeyInfo_pem_encode
+    api_call_sequence:
+    - BIO_new_file
+    - RSA_free
+    - BIO_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: ASSERTION_FAILURE
+- poc_id: OPENSSL-ISSUE-18659
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_18659
+  original_family: bignum_serialization_boundary
+  corrected_family: tls_protocol_state_lifecycle
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: object_state_lifecycle
+  original_route: D_crash_sanitizer_evidence_audit
+  corrected_route: B_controlled_family_mutation
+  confidence: high
+  correction_reason: API/component evidence contains TLS/DTLS state terms
+  evidence:
+    component: CONF/OPENSSL
+    critical_api:
+    - OPENSSL_cleanup
+    - CONF_modules_unload
+    api_call_sequence: []
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: SEGV
+- poc_id: OPENSSL-ISSUE-19524
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_19524
+  original_family: bignum_serialization_boundary
+  corrected_family: tls_protocol_state_lifecycle
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: object_state_lifecycle
+  original_route: D_crash_sanitizer_evidence_audit
+  corrected_route: B_controlled_family_mutation
+  confidence: high
+  correction_reason: API/component evidence contains TLS/DTLS state terms
+  evidence:
+    component: PKEY/ED25519/ED448
+    critical_api:
+    - EVP_PKEY_new_raw_public_key
+    - EVP_MD_CTX_new
+    - EVP_DigestSignInit
+    - EVP_DigestSign
+    - OPENSSL_hexstr2buf
+    - OPENSSL_zalloc
+    api_call_sequence:
+    - EVP_PKEY_new_raw_public_key
+    - EVP_MD_CTX_new
+    - EVP_DigestSignInit
+    - EVP_DigestSign
+    - EVP_MD_CTX_free
+    - EVP_PKEY_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+- poc_id: OPENSSL-ISSUE-21935
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_21935
+  original_family: bignum_serialization_boundary
+  corrected_family: bignum_serialization_boundary
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: buffer_canary_boundary
+  original_route: D_crash_sanitizer_evidence_audit
+  corrected_route: D_crash_sanitizer_evidence_audit
+  confidence: high
+  correction_reason: API/component evidence contains BN/BIGNUM/MPI terms
+  evidence:
+    component: PKEY/RSA
+    critical_api:
+    - EVP_PKEY_new
+    - RSA_new
+    - RSA_set0_factors
+    - RSA_set0_key
+    - EVP_PKEY_assign
+    - EVP_DigestSignInit
+    - EVP_DigestSign
+    - EVP_MD_CTX_free
+    - EVP_PKEY_free
+    api_call_sequence:
+    - BN_new
+    - BN_dec2bn
+    - BN_free
+    - EVP_PKEY_new
+    - RSA_new
+    - EVP_MD_CTX_new
+    - RSA_set0_key
+    - EVP_PKEY_assign_RSA
+    - EVP_DigestSignInit
+    - EVP_sha256
+    - EVP_MD_CTX_free
+    - EVP_PKEY_free
+    - RSA_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+- poc_id: OPENSSL-ISSUE-22388
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_22388
+  original_family: bignum_serialization_boundary
+  corrected_family: pkcs_container_parsing
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: A_recipe_slot_cross_library_migration
+  corrected_route: C_app_level_validation_gap
+  confidence: high
+  correction_reason: API/component evidence contains PKCS/CMS/OID container terms
+  evidence:
+    component: CMS/X509
+    critical_api:
+    - evp_pkey_asym_cipher_init
+    - ossl_cms_pkey_get_ri_type
+    api_call_sequence:
+    - BIO_new_file
+    - BIO_free
+    - CMS_encrypt
+    - EVP_aes_128_cbc
+    - BIO_new_fp
+    - CMS_decrypt
+    - CMS_ContentInfo_free
+    - EVP_PKEY_free
+    - X509_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: WRONG_RESULT
+- poc_id: OPENSSL-ISSUE-22842
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_22842
+  original_family: mac_lifecycle
+  corrected_family: mac_lifecycle
+  original_harness_family: object_state_lifecycle
+  corrected_harness_family: object_state_lifecycle
+  original_route: D_crash_sanitizer_evidence_audit
+  corrected_route: B_controlled_family_mutation
+  confidence: medium
+  correction_reason: not in targeted correction set; preserved original staging family
+  evidence:
+    component: EVP/MAC
+    critical_api:
+    - EVP_MAC_CTX_new()
+    - EVP_MAC_CTX_get_mac_size()
+    - EVP_MAC_init()
+    api_call_sequence:
+    - EVP_MAC_fetch
+    - EVP_MAC_CTX_new
+    - EVP_MAC_init
+    - EVP_MAC_CTX_get_mac_size
+    - EVP_MAC_CTX_free
+    - EVP_MAC_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+- poc_id: OPENSSL-ISSUE-23325
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_23325
+  original_family: bignum_serialization_boundary
+  corrected_family: x509_parsing
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: C_app_level_validation_gap
+  corrected_route: C_app_level_validation_gap
+  confidence: medium
+  correction_reason: API/component evidence contains X509/certificate/verify terms
+  evidence:
+    component: X509/CRL
+    critical_api:
+    - X509_V_ERR_DIFFERENT_CRL_SCOPE
+    - crl_crldp_check
+    - get_crl_score
+    api_call_sequence:
+    - BIO_new_file
+    - BIO_free
+    - X509_STORE_new
+    - X509_STORE_add_cert
+    - X509_STORE_add_crl
+    - X509_STORE_set_flags
+    - X509_STORE_CTX_new
+    - X509_STORE_CTX_init
+    - X509_verify_cert
+    - X509_STORE_CTX_get_error
+    - X509_verify_cert_error_string
+    - X509_STORE_CTX_free
+    - X509_STORE_free
+    - X509_CRL_free
+    - X509_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: WRONG_RESULT
+- poc_id: OPENSSL-ISSUE-26106
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_26106
+  original_family: bignum_serialization_boundary
+  corrected_family: pkcs_container_parsing
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: D_crash_sanitizer_evidence_audit
+  corrected_route: C_app_level_validation_gap
+  confidence: high
+  correction_reason: API/component evidence contains PKCS/CMS/OID container terms
+  evidence:
+    component: PKCS12/X509_ALGOR
+    critical_api:
+    - X509_ALGOR_get0
+    api_call_sequence:
+    - fopen
+    - d2i_PKCS12_fp
+    - PKCS12_parse
+    - X509_free
+    - EVP_PKEY_free
+    - PKCS12_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+- poc_id: OPENSSL-ISSUE-2630
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_2630
+  original_family: secure_heap_state_lifecycle
+  corrected_family: secure_heap_state_lifecycle
+  original_harness_family: object_state_lifecycle
+  corrected_harness_family: object_state_lifecycle
+  original_route: D_crash_sanitizer_evidence_audit
+  corrected_route: B_controlled_family_mutation
+  confidence: medium
+  correction_reason: not in targeted correction set; preserved original staging family
+  evidence:
+    component: BIO/SECURE_HEAP
+    critical_api:
+    - CRYPTO_secure_malloc_init
+    - BIO_new
+    - BIO_write
+    api_call_sequence:
+    - BIO_new
+    - BIO_s_secmem
+    - CRYPTO_secure_malloc_init
+    - BIO_write
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: SEGV
+- poc_id: OPENSSL-ISSUE-27572
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_27572
+  original_family: bignum_serialization_boundary
+  corrected_family: asn1_nested_boundary
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: A_recipe_slot_cross_library_migration
+  corrected_route: C_app_level_validation_gap
+  confidence: medium
+  correction_reason: certificate/ASN.1 evidence suggests nested parser boundary
+  evidence:
+    component: CMP/ASN1
+    critical_api:
+    - parse_name
+    api_call_sequence:
+    - BIO_new_file
+    - BIO_new_fp
+    - BIO_read
+    - memcpy
+    - ASN1_parse_dump
+    - free
+    - BIO_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: WRONG_OUTPUT
+- poc_id: OPENSSL-ISSUE-28669
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_28669
+  original_family: secure_heap_state_lifecycle
+  corrected_family: secure_heap_state_lifecycle
+  original_harness_family: object_state_lifecycle
+  corrected_harness_family: object_state_lifecycle
+  original_route: D_crash_sanitizer_evidence_audit
+  corrected_route: B_controlled_family_mutation
+  confidence: medium
+  correction_reason: not in targeted correction set; preserved original staging family
+  evidence:
+    component: CRYPTO/MEM_SEC
+    critical_api:
+    - CRYPTO_secure_used
+    api_call_sequence:
+    - CRYPTO_secure_used
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+- poc_id: OPENSSL-ISSUE-29418
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_29418
+  original_family: bignum_serialization_boundary
+  corrected_family: asn1_nested_boundary
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: C_app_level_validation_gap
+  corrected_route: C_app_level_validation_gap
+  confidence: medium
+  correction_reason: certificate/ASN.1 evidence suggests nested parser boundary
+  evidence:
+    component: X509/X509V3/ASN1
+    critical_api:
+    - X509_get_ext_count
+    - X509_get_ext
+    - OBJ_nid2sn
+    - X509_EXTENSION_free
+    - X509_delete_ext
+    api_call_sequence:
+    - BIO_new_file
+    - X509_check_purpose
+    - X509_free
+    - BIO_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: WRONG_RESULT
+- poc_id: OPENSSL-ISSUE-29574
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_29574
+  original_family: bignum_serialization_boundary
+  corrected_family: asn1_nested_boundary
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: C_app_level_validation_gap
+  corrected_route: C_app_level_validation_gap
+  confidence: medium
+  correction_reason: certificate/ASN.1 evidence suggests nested parser boundary
+  evidence:
+    component: X509/X509V3/ASN1
+    critical_api:
+    - SSL_CTX_use_PrivateKey_ASN1
+    - SSL_CTX_use_certificate_ASN1
+    - X509_Object::choose_sig_format
+    - X509_CA::make_cert
+    - PKCS8::PEM_encode
+    - PEM_encode
+    api_call_sequence:
+    - BIO_new_file
+    - BIO_free
+    - d2i_X509_bio
+    - X509_print_fp
+    - X509_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: CORRUPTED_STATE
+- poc_id: OPENSSL-ISSUE-29645
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_29645
+  original_family: bignum_serialization_boundary
+  corrected_family: needs_review
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: needs_review
+  original_route: D_crash_sanitizer_evidence_audit
+  corrected_route: D_crash_sanitizer_evidence_audit
+  confidence: needs_review
+  correction_reason: insufficient evidence to keep or correct original family=bignum_serialization_boundary
+  evidence:
+    component: BIO/CONF/ERR
+    critical_api:
+    - BIO_set_data
+    - BIO_free
+    api_call_sequence:
+    - BIO_new
+    - BIO_s_mem
+    - BIO_write
+    - BIO_get_data
+    - BIO_set_data
+    - BIO_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+- poc_id: OPENSSL-ISSUE-30291
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_30291
+  original_family: bignum_serialization_boundary
+  corrected_family: pkcs_container_parsing
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: A_recipe_slot_cross_library_migration
+  corrected_route: C_app_level_validation_gap
+  confidence: high
+  correction_reason: API/component evidence contains PKCS/CMS/OID container terms
+  evidence:
+    component: CMS/ED448
+    critical_api:
+    - CMS_sign
+    - CMS_verify
+    api_call_sequence:
+    - BIO_new_file
+    - BIO_free
+    - CMS_sign
+    - X509_STORE_new
+    - X509_STORE_add_cert
+    - BIO_new_fp
+    - CMS_verify
+    - X509_STORE_free
+    - CMS_ContentInfo_free
+    - EVP_PKEY_free
+    - X509_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: REGRESSION_TEST
+- poc_id: OPENSSL-ISSUE-30432
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_30432
+  original_family: bignum_serialization_boundary
+  corrected_family: pkcs_container_parsing
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: C_app_level_validation_gap
+  corrected_route: C_app_level_validation_gap
+  confidence: high
+  correction_reason: API/component evidence contains PKCS/CMS/OID container terms
+  evidence:
+    component: PKEY/DSA/RSA
+    critical_api:
+    - openssl dsaparam
+    - openssl gendsa
+    - openssl req
+    - openssl x509
+    - openssl verify
+    api_call_sequence:
+    - BIO_new_file
+    - BIO_free
+    - X509_STORE_new
+    - X509_STORE_add_cert
+    - X509_STORE_CTX_new
+    - X509_STORE_CTX_init
+    - X509_verify_cert
+    - X509_STORE_CTX_get_error
+    - X509_verify_cert_error_string
+    - X509_STORE_CTX_free
+    - X509_STORE_free
+    - X509_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: VERIFY_ERROR
+- poc_id: OPENSSL-ISSUE-30581
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_30581
+  original_family: bignum_serialization_boundary
+  corrected_family: pkcs_container_parsing
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: D_crash_sanitizer_evidence_audit
+  corrected_route: C_app_level_validation_gap
+  confidence: high
+  correction_reason: API/component evidence contains PKCS/CMS/OID container terms
+  evidence:
+    component: PKCS12/ASN1
+    critical_api:
+    - ASN1_STRING_length
+    - pkcs12_main
+    - do_cmd
+    - main
+    - BIO_puts
+    - BIO_printf
+    - ASN1_INTEGER_get
+    api_call_sequence:
+    - fopen
+    - d2i_PKCS12_fp
+    - PKCS12_mac_present
+    - PKCS12_verify_mac
+    - PKCS12_parse
+    - X509_free
+    - EVP_PKEY_free
+    - PKCS12_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+- poc_id: OPENSSL-ISSUE-30889
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_30889
+  original_family: bignum_serialization_boundary
+  corrected_family: needs_review
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: needs_review
+  original_route: D_crash_sanitizer_evidence_audit
+  corrected_route: D_crash_sanitizer_evidence_audit
+  confidence: needs_review
+  correction_reason: insufficient evidence to keep or correct original family=bignum_serialization_boundary
+  evidence:
+    component: PKEY/ML-DSA/RSA
+    critical_api:
+    - pkey_main
+    - encode_private_key
+    api_call_sequence:
+    - memcpy
+    - BIO_new_file
+    - BIO_new_fp
+    - EVP_aes_256_cbc
+    - EVP_PKEY_free
+    - BIO_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: SEGV
+- poc_id: OPENSSL-ISSUE-6788
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_6788
+  original_family: bignum_serialization_boundary
+  corrected_family: x509_parsing
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: C_app_level_validation_gap
+  corrected_route: C_app_level_validation_gap
+  confidence: medium
+  correction_reason: API/component evidence contains X509/certificate/verify terms
+  evidence:
+    component: CRL/X509
+    critical_api:
+    - X509_STORE_CTX_get_obj_by_subject
+    - X509_verify_cert
+    api_call_sequence:
+    - BIO_new_file
+    - X509_CRL_get_issuer
+    - X509_NAME_print_ex_fp
+    - X509_CRL_free
+    - BIO_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: WRONG_RESULT
+- poc_id: OPENSSL-ISSUE-8435
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_8435
+  original_family: bignum_serialization_boundary
+  corrected_family: x509_parsing
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: A_recipe_slot_cross_library_migration
+  corrected_route: C_app_level_validation_gap
+  confidence: medium
+  correction_reason: API/component evidence contains X509/certificate/verify terms
+  evidence:
+    component: PKEY/ECC/SM2
+    critical_api:
+    - pkey
+    - pkeyutl
+    - sm2_id
+    api_call_sequence:
+    - fopen
+    - malloc
+    - fread
+    - free
+    - BIO_new_file
+    - BIO_free
+    - EVP_MD_CTX_new
+    - EVP_DigestSignInit
+    - EVP_sm3
+    - EVP_PKEY_CTX_set1_id
+    - EVP_DigestSign
+    - EVP_MD_CTX_free
+    - EVP_DigestVerifyInit
+    - EVP_DigestVerify
+    - EVP_PKEY_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: WRONG_RESULT
+- poc_id: OPENSSL-ISSUE-8980
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_8980
+  original_family: cipher_aead_lifecycle
+  corrected_family: cipher_aead_lifecycle
+  original_harness_family: object_state_lifecycle
+  corrected_harness_family: object_state_lifecycle
+  original_route: D_crash_sanitizer_evidence_audit
+  corrected_route: B_controlled_family_mutation
+  confidence: medium
+  correction_reason: not in targeted correction set; preserved original staging family
+  evidence:
+    component: EVP/AES_GCM
+    critical_api:
+    - EVP_CIPHER_CTX_new
+    - EVP_aes_128_gcm
+    - EVP_EncryptInit_ex
+    - EVP_CIPHER_CTX_copy
+    api_call_sequence:
+    - EVP_CIPHER_CTX_new
+    - EVP_aes_128_gcm
+    - EVP_EncryptInit_ex
+    - EVP_CIPHER_CTX_copy
+    - EVP_CIPHER_CTX_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+- poc_id: OPENSSL-ISSUE-9043
+  source_library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_9043
+  original_family: bignum_serialization_boundary
+  corrected_family: asn1_nested_boundary
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: D_crash_sanitizer_evidence_audit
+  corrected_route: C_app_level_validation_gap
+  confidence: medium
+  correction_reason: certificate/ASN.1 evidence suggests nested parser boundary
+  evidence:
+    component: X509/CSR/ASN1
+    critical_api:
+    - X509_ATTRIBUTE_get0_type
+    api_call_sequence:
+    - BIO_new_file
+    - X509_REQ_print_fp
+    - X509_REQ_free
+    - BIO_free
+    source_file_names:
+    - poc.c
+    - poc.c
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+- poc_id: WOLFSSL-POC-0001
+  source_library: wolfssl
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0001
+  original_family: tls_protocol_state_lifecycle
+  corrected_family: tls_protocol_state_lifecycle
+  original_harness_family: object_state_lifecycle
+  corrected_harness_family: object_state_lifecycle
+  original_route: needs_more_evidence
+  corrected_route: B_controlled_family_mutation
+  confidence: medium
+  correction_reason: not in targeted correction set; preserved original staging family
+  evidence:
+    component: null
+    critical_api:
+    - wolfSSL_CTX_use_certificate_chain_file
+    - ProcessFile
+    - ProcessBuffer
+    - FreeDecodedCert
+    api_call_sequence: []
+    source_file_names: []
+    trigger_behavior: X.509 certificate parsing heap-buffer-overflow
+- poc_id: WOLFSSL-POC-0002
+  source_library: wolfssl
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0002
+  original_family: bignum_serialization_boundary
+  corrected_family: asn1_nested_boundary
+  original_harness_family: buffer_canary_boundary
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: D_crash_sanitizer_evidence_audit
+  corrected_route: C_app_level_validation_gap
+  confidence: medium
+  correction_reason: certificate/ASN.1 evidence suggests nested parser boundary
+  evidence:
+    component: null
+    critical_api:
+    - wolfSSL_X509_d2i
+    - wolfSSL_X509_get_subject_name
+    - wolfSSL_X509_NAME_get_text_by_NID
+    api_call_sequence:
+    - wolfSSL_X509_NAME_get_text_by_NID
+    - fopen
+    - malloc
+    - fread
+    - free
+    - wolfSSL_Init
+    - wolfSSL_Cleanup
+    - wolfSSL_X509_d2i
+    - wolfSSL_X509_get_subject_name
+    - wolfSSL_X509_free
+    source_file_names:
+    - poc/poc_certfields_min.c
+    - poc/poc_certfields_min.c
+    trigger_behavior: X.509 certificate text parsing off-by-one out-of-bounds byte
+      overwrite
+- poc_id: WOLFSSL-POC-0003
+  source_library: wolfssl
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0003
+  original_family: tls_protocol_state_lifecycle
+  corrected_family: asn1_nested_boundary
+  original_harness_family: object_state_lifecycle
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: D_crash_sanitizer_evidence_audit
+  corrected_route: C_app_level_validation_gap
+  confidence: medium
+  correction_reason: certificate/ASN.1 evidence suggests nested parser boundary
+  evidence:
+    component: null
+    critical_api:
+    - wolfSSL_X509_set_notAfter
+    - wolfSSL_X509_notAfter
+    - wolfSSL_X509_set_notBefore
+    - wolfSSL_X509_notBefore
+    api_call_sequence:
+    - memset
+    - memcpy
+    - wolfSSL_X509_set_notAfter
+    - wolfSSL_X509_notAfter
+    - wolfSSL_X509_set_notBefore
+    - wolfSSL_X509_notBefore
+    - wolfSSL_Init
+    - X509_new
+    - wolfSSL_Cleanup
+    - X509_free
+    source_file_names:
+    - poc/poc_x509_date_min.c
+    - poc/poc_x509_date_min.c
+    trigger_behavior: X.509 date parsing buffer overflow
+- poc_id: WOLFSSL-POC-0004
+  source_library: wolfssl
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0004
+  original_family: tls_protocol_state_lifecycle
+  corrected_family: asn1_nested_boundary
+  original_harness_family: object_state_lifecycle
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: D_crash_sanitizer_evidence_audit
+  corrected_route: C_app_level_validation_gap
+  confidence: medium
+  correction_reason: certificate/ASN.1 evidence suggests nested parser boundary
+  evidence:
+    component: null
+    critical_api:
+    - wolfSSL_X509_d2i
+    - wolfSSL_i2d_X509_bio
+    - CertFromX509
+    api_call_sequence:
+    - fopen
+    - memcpy
+    - malloc
+    - free
+    - wolfSSL_Init
+    - wolfSSL_X509_d2i
+    - wolfSSL_Cleanup
+    - wolfSSL_BIO_new
+    - wolfSSL_BIO_s_mem
+    - wolfSSL_X509_free
+    - wolfSSL_i2d_X509_bio
+    - wolfSSL_BIO_free
+    source_file_names:
+    - poc/poc_akid_certfromx509_debug.c
+    - poc/poc_akid_certfromx509_long.c
+    - poc/poc_akid_certfromx509_min.c
+    - poc/poc_akid_certfromx509_debug.c
+    - poc/poc_akid_certfromx509_long.c
+    - poc/poc_akid_certfromx509_min.c
+    trigger_behavior: X.509 AuthorityKeyIdentifier heap buffer overflow
+- poc_id: WOLFSSL-POC-0005
+  source_library: wolfssl
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0005
+  original_family: tls_protocol_state_lifecycle
+  corrected_family: tls_protocol_state_lifecycle
+  original_harness_family: object_state_lifecycle
+  corrected_harness_family: object_state_lifecycle
+  original_route: D_crash_sanitizer_evidence_audit
+  corrected_route: B_controlled_family_mutation
+  confidence: high
+  correction_reason: API/component evidence contains TLS/DTLS state terms
+  evidence:
+    component: null
+    critical_api: null
+    api_call_sequence:
+    - wolfSSL_Init
+    - wolfSSL_read
+    - wolfSSL_get_error
+    - wolfSSL_free
+    - wolfSSL_CTX_free
+    - wolfSSL_Cleanup
+    source_file_names:
+    - poc/poc_dtls13_ack_overflow_fixed_api.c
+    - poc/poc_dtls13_ack_overflow_min.c
+    - poc/poc_dtls13_ack_overflow_fixed_api.c
+    - poc/poc_dtls13_ack_overflow_min.c
+    trigger_behavior: DTLS 1.3 ACK record processing heap buffer overflow
+- poc_id: WOLFSSL-POC-0005
+  source_library: wolfssl
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0005-rejected-issue8353
+  original_family: x509_parsing
+  corrected_family: tls_protocol_state_lifecycle
+  original_harness_family: x509_asn1_inner_boundary
+  corrected_harness_family: object_state_lifecycle
+  original_route: D_crash_sanitizer_evidence_audit
+  corrected_route: B_controlled_family_mutation
+  confidence: high
+  correction_reason: API/component evidence contains TLS/DTLS state terms
+  evidence:
+    component: null
+    critical_api: null
+    api_call_sequence:
+    - fopen
+    - malloc
+    - fread
+    - free
+    - wc_PemToDer
+    - wc_FreeDer
+    source_file_names:
+    - poc/poc_pem_to_der_min.c
+    - poc/poc_pem_to_der_min.c
+    trigger_behavior: PEM / DER / Base64 decoding memory safety candidate
+- poc_id: WOLFSSL-POC-0006
+  source_library: wolfssl
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0006
+  original_family: pkcs_container_parsing
+  corrected_family: pkcs_container_parsing
+  original_harness_family: x509_asn1_inner_boundary
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: A_recipe_slot_cross_library_migration
+  corrected_route: C_app_level_validation_gap
+  confidence: high
+  correction_reason: API/component evidence contains PKCS/CMS/OID container terms
+  evidence:
+    component: null
+    critical_api: null
+    api_call_sequence:
+    - fopen
+    - malloc
+    - fread
+    - free
+    - memset
+    - wc_PKCS7_Init
+    - wc_PKCS7_InitWithCert
+    - wc_PKCS7_EncodeSignedData
+    - wc_PKCS7_Free
+    source_file_names:
+    - poc/poc_pkcs7_signedattrs_overflow_min.c
+    - poc/poc_pkcs7_signedattrs_overflow_min.c
+    trigger_behavior: PKCS7 SignedData encoding out-of-bounds write
+- poc_id: WOLFSSL-POC-0007
+  source_library: wolfssl
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0007
+  original_family: pkcs_container_parsing
+  corrected_family: pkcs_container_parsing
+  original_harness_family: x509_asn1_inner_boundary
+  corrected_harness_family: x509_asn1_inner_boundary
+  original_route: A_recipe_slot_cross_library_migration
+  corrected_route: C_app_level_validation_gap
+  confidence: high
+  correction_reason: API/component evidence contains PKCS/CMS/OID container terms
+  evidence:
+    component: null
+    critical_api: null
+    api_call_sequence:
+    - memset
+    - wc_PKCS7_New
+    - wc_PKCS7_SetOriDecryptCb
+    - wc_PKCS7_DecodeEnvelopedData
+    - wc_PKCS7_Free
+    source_file_names:
+    - poc/poc_pkcs7_ori_oversized_oid_min.c
+    - poc/poc_pkcs7_ori_oversized_oid_min.c
+    trigger_behavior: PKCS7 ORI OID processing stack buffer overflow
+- poc_id: WOLFSSL-POC-0008
+  source_library: wolfssl
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0008
+  original_family: tls_protocol_state_lifecycle
+  corrected_family: tls_protocol_state_lifecycle
+  original_harness_family: object_state_lifecycle
+  corrected_harness_family: object_state_lifecycle
+  original_route: D_crash_sanitizer_evidence_audit
+  corrected_route: B_controlled_family_mutation
+  confidence: high
+  correction_reason: API/component evidence contains TLS/DTLS state terms
+  evidence:
+    component: null
+    critical_api: null
+    api_call_sequence:
+    - wolfSSL_Init
+    - wolfSSL_CTX_new
+    - wolfTLSv1_3_client_method
+    - wolfSSL_SetIORecv
+    - wolfSSL_SetIOSend
+    - wolfSSL_new
+    - wolfSSL_CTX_free
+    - wolfSSL_UseKeyShare
+    - wolfSSL_free
+    - wolfSSL_SetIOReadCtx
+    - wolfSSL_connect_TLSv13
+    - wolfSSL_Cleanup
+    source_file_names:
+    - poc/poc_tls13_pqc_hybrid_truncated_keyshare_min.c
+    - poc/poc_tls13_pqc_hybrid_truncated_keyshare_min.c
+    trigger_behavior: TLS 1.3 PQC hybrid KeyShare error cleanup double-free
+- poc_id: WOLFSSL-POC-0009
+  source_library: wolfssl
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0009
+  original_family: tls_protocol_state_lifecycle
+  corrected_family: tls_protocol_state_lifecycle
+  original_harness_family: object_state_lifecycle
+  corrected_harness_family: object_state_lifecycle
+  original_route: D_crash_sanitizer_evidence_audit
+  corrected_route: B_controlled_family_mutation
+  confidence: medium
+  correction_reason: not in targeted correction set; preserved original staging family
+  evidence:
+    component: null
+    critical_api: null
+    api_call_sequence:
+    - wolfSSL_SESSION_new
+    - wolfSSL_i2d_SSL_SESSION
+    - wolfSSL_SESSION_free
+    - malloc
+    - free
+    - memcpy
+    - memset
+    - wolfSSL_Init
+    - wolfSSL_Cleanup
+    - wolfSSL_d2i_SSL_SESSION
+    source_file_names:
+    - poc/poc_d2i_ssl_session_bounds_min.c
+    - poc/poc_d2i_ssl_session_bounds_min.c
+    trigger_behavior: SSL_SESSION deserialization heap-buffer-overflow
+- poc_id: WOLFSSL-POC-0010
+  source_library: wolfssl
+  artifact_path: data/wolfssl_collect/WOLFSSL-POC-0010
+  original_family: tls_protocol_state_lifecycle
+  corrected_family: tls_protocol_state_lifecycle
+  original_harness_family: object_state_lifecycle
+  corrected_harness_family: object_state_lifecycle
+  original_route: A_recipe_slot_cross_library_migration
+  corrected_route: B_controlled_family_mutation
+  confidence: high
+  correction_reason: API/component evidence contains TLS/DTLS state terms
+  evidence:
+    component: null
+    critical_api: null
+    api_call_sequence:
+    - malloc
+    - free
+    - wolfSSL_select_next_proto
+    source_file_names:
+    - poc/poc_select_next_proto_oob_read_min.c
+    - poc/poc_select_next_proto_oob_read_min.c
+    trigger_behavior: TLS ALPN extension parsing out-of-bounds read

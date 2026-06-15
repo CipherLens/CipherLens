@@ -1,0 +1,27 @@
+family: cipher_aead_lifecycle
+proposed_execution_path: B_controlled_family_mutation
+fallback_path: D_then_A
+a_path_feasibility:
+  status: partial
+  reason:
+    - "OpenSSL EVP AEAD and mbedTLS PSA/GCM/CCM have recognizable lifecycle counterparts."
+    - "Mode-specific ordering and tag semantics need strict recipe slots before rendering."
+b_path_readiness:
+  status: high
+  reason:
+    - "State sequence mutations can be expressed without cross-library adapter ambiguity."
+    - "Normal controls and invalid-order cases can be kept under 32 cases."
+d_path_need:
+  status: targeted
+  reason:
+    - "OPENSSL-ISSUE-17715 and OPENSSL-ISSUE-8980 are crash/sanitizer oriented and need evidence audit before they are reused as proof."
+c_path_need:
+  status: low_currently
+  reason:
+    - "Current evidence is library API lifecycle focused rather than CLI/app-level."
+glm_usage:
+  use_now: false
+  later_for_a_path: true
+decision_boundary:
+  - "Do not render/run large matrices until lifecycle controls and expected oracles are finalized."
+  - "Do not use LLM/GLM for free-form C."

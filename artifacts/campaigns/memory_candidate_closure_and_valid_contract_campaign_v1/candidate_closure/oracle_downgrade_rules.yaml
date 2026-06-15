@@ -1,0 +1,23 @@
+schema: memory_candidate_oracle_downgrade_rules_v1
+rules:
+- api: EVP_EncodeBlock
+  condition: input == NULL && length > 0
+  label: contract_boundary_observation
+  promote: false
+- api: EVP_DecodeBlock
+  condition: short output buffer
+  label: contract_boundary_observation
+  promote: false
+- api: EVP_DecodeBlock
+  condition: input_len > actual readable input length
+  label: harness_fault_or_invalid_contract_observation
+  promote: false
+- api: EVP_MAC_init
+  condition: ctx == NULL
+  label: contract_boundary_observation
+  promote: false
+- api: '*'
+  condition: NULL ctx passed to API requiring allocated ctx
+  label: invalid_contract_observation
+  promote: false
+  unless: documentation explicitly promises safe reject

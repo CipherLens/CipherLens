@@ -1,0 +1,95 @@
+schema_version: 1
+scheduler_score_schema:
+  family: family id
+  historical_seed_quality: 0_to_5
+  oracle_clarity: 0_to_5
+  api_mapping_clarity: 0_to_5
+  mutation_space_quality: 0_to_5
+  prior_positive_signal: 0_to_5
+  novelty_potential: 0_to_5
+  execution_cost: 0_to_negative_3
+  negative_feedback_penalty: 0_to_negative_5
+  seed_missing_penalty: 0_to_negative_5
+  external_validation_penalty: 0_to_negative_3
+  final_score: sum of normalized components
+  recommended_route: route id
+  recommended_next_task: task id
+example_scores:
+- family: mac_lifecycle
+  historical_seed_quality: 4
+  oracle_clarity: 4
+  api_mapping_clarity: 4
+  mutation_space_quality: 3
+  prior_positive_signal: 3
+  novelty_potential: 3
+  execution_cost: -1
+  negative_feedback_penalty: 0
+  seed_missing_penalty: 0
+  external_validation_penalty: 0
+  final_score: 20
+  recommended_route: A_recipe_slot_cross_library_migration
+  recommended_next_task: mac_lifecycle_documentation_and_caller_impact_triage
+- family: der_full_consumption
+  historical_seed_quality: 4
+  oracle_clarity: 5
+  api_mapping_clarity: 3
+  mutation_space_quality: 3
+  prior_positive_signal: 4
+  novelty_potential: 4
+  execution_cost: -1
+  negative_feedback_penalty: 0
+  seed_missing_penalty: 0
+  external_validation_penalty: -1
+  final_score: 21
+  recommended_route: C_app_level_validation_gap
+  recommended_next_task: minimal_reproducer_or_upstream_inquiry
+- family: secure_heap_state_lifecycle
+  historical_seed_quality: 4
+  oracle_clarity: 4
+  api_mapping_clarity: 5
+  mutation_space_quality: 4
+  prior_positive_signal: 5
+  novelty_potential: 3
+  execution_cost: -2
+  negative_feedback_penalty: 0
+  seed_missing_penalty: 0
+  external_validation_penalty: -3
+  final_score: 20
+  recommended_route: B_controlled_family_mutation_to_external_validation
+  recommended_next_task: secure_heap_external_validation_track
+- family: cipher_aead_lifecycle
+  historical_seed_quality: 3
+  oracle_clarity: 3
+  api_mapping_clarity: 3
+  mutation_space_quality: 4
+  prior_positive_signal: 1
+  novelty_potential: 3
+  execution_cost: -2
+  negative_feedback_penalty: -4
+  seed_missing_penalty: 0
+  external_validation_penalty: 0
+  final_score: 11
+  recommended_route: B_controlled_family_mutation_later_for_non_gcm_only
+  recommended_next_task: scheduler_rerank_or_non_gcm_triage_later
+- family: asn1_nested_boundary
+  historical_seed_quality: 1
+  oracle_clarity: 3
+  api_mapping_clarity: 3
+  mutation_space_quality: 2
+  prior_positive_signal: 1
+  novelty_potential: 3
+  execution_cost: -2
+  negative_feedback_penalty: 0
+  seed_missing_penalty: -5
+  external_validation_penalty: 0
+  final_score: 6
+  recommended_route: blocked_seed_missing
+  recommended_next_task: framework_automation_schema_unification_v1
+policy_notes:
+- AEAD-GCM is lowered because repeated cross-library evidence produced negative feedback.
+- ASN.1 is blocked or heavily penalized because the real seed is missing and placeholder-only
+  evidence cannot support D-path.
+- secure_heap moves to external validation and should not remain top exploratory priority.
+- DER app-level gap remains a minimal reproducer/upstream inquiry track.
+- The next automated stage should build auto_scheduler_v1 rather than immediately
+  selecting a new family.

@@ -1,0 +1,239 @@
+schema: adapter_slot_filling_plan_report_v1
+task: adapter_slot_filling_plan_v1
+answers:
+  generated_by_family_adapter: true
+  avoided_one_poc_one_slot_filling: true
+  concrete_slot_filling_plan_count: 3
+  spec_only_future_plan_count: 3
+  blocked_no_direct_excluded: true
+  glm_called: false
+  generated_c: false
+  render_compile_run: false
+  next_task_name: adapter_slot_filling_v1
+plans:
+- artifacts/sprints/adapter_slot_filling_plan_v1/slot_filling_plans/asn1_nested_boundary/mbedtls/slot_filling_plan.yaml
+- artifacts/sprints/adapter_slot_filling_plan_v1/slot_filling_plans/asn1_nested_boundary/openssl/slot_filling_plan.yaml
+- artifacts/sprints/adapter_slot_filling_plan_v1/slot_filling_plans/pkcs_container_parsing/openssl/slot_filling_plan.yaml
+schemas:
+- artifacts/sprints/adapter_slot_filling_plan_v1/schemas/asn1_nested_boundary_mbedtls_slot_bindings_schema.yaml
+- artifacts/sprints/adapter_slot_filling_plan_v1/schemas/asn1_nested_boundary_openssl_slot_bindings_schema.yaml
+- artifacts/sprints/adapter_slot_filling_plan_v1/schemas/pkcs_container_parsing_openssl_slot_bindings_schema.yaml
+prompt_contexts:
+- artifacts/sprints/adapter_slot_filling_plan_v1/prompt_contexts/asn1_nested_boundary_mbedtls_prompt_context.md
+- artifacts/sprints/adapter_slot_filling_plan_v1/prompt_contexts/asn1_nested_boundary_openssl_prompt_context.md
+- artifacts/sprints/adapter_slot_filling_plan_v1/prompt_contexts/pkcs_container_parsing_openssl_prompt_context.md
+examples:
+- artifacts/sprints/adapter_slot_filling_plan_v1/examples/asn1_nested_boundary_mbedtls_expected_slot_bindings_example.yaml
+- artifacts/sprints/adapter_slot_filling_plan_v1/examples/asn1_nested_boundary_openssl_expected_slot_bindings_example.yaml
+- artifacts/sprints/adapter_slot_filling_plan_v1/examples/pkcs_container_parsing_openssl_expected_slot_bindings_example.yaml
+blocked_targets:
+- family: pkcs_container_parsing
+  target_library: mbedtls
+  blocked_reason: no_direct_counterpart
+  blocked_apis:
+  - wc_PKCS12_parse
+  why_not_slot_filling: blocked/no_direct/weak/manual-review target must not enter
+    slot filling
+  recommendation:
+  - do_not_generate_adapter
+  - requires_new_target_strategy
+  notes:
+  - not adapter-ready under current evidence gate
+  - candidate_only mappings are not confirmed equivalence.
+- family: pkcs_container_parsing
+  target_library: mbedtls
+  blocked_reason: no_direct_counterpart
+  blocked_apis:
+  - wc_PKCS7_DecodeSignedData
+  why_not_slot_filling: blocked/no_direct/weak/manual-review target must not enter
+    slot filling
+  recommendation:
+  - do_not_generate_adapter
+  - requires_new_target_strategy
+  notes:
+  - not adapter-ready under current evidence gate
+  - candidate_only mappings are not confirmed equivalence.
+- family: pkcs_container_parsing
+  target_library: openssl
+  blocked_reason: weak_evidence
+  blocked_apis:
+  - d2i_PKCS7
+  why_not_slot_filling: blocked/no_direct/weak/manual-review target must not enter
+    slot filling
+  recommendation:
+  - do_not_generate_adapter
+  - manual_review_before_adapter
+  notes:
+  - not adapter-ready under current evidence gate
+  - candidate_only mappings are not confirmed equivalence.
+- family: pkcs_container_parsing
+  target_library: mbedtls
+  blocked_reason: no_direct_counterpart
+  blocked_apis:
+  - wc_PKCS7_VerifySignedData
+  why_not_slot_filling: blocked/no_direct/weak/manual-review target must not enter
+    slot filling
+  recommendation:
+  - do_not_generate_adapter
+  - requires_new_target_strategy
+  notes:
+  - not adapter-ready under current evidence gate
+  - candidate_only mappings are not confirmed equivalence.
+- family: asn1_nested_boundary
+  target_library: mbedtls
+  blocked_reason: needs_manual_review
+  blocked_apis:
+  - mbedtls_x509_crt_parse_der
+  why_not_slot_filling: blocked/no_direct/weak/manual-review target must not enter
+    slot filling
+  recommendation:
+  - manual_review_before_adapter
+  - manual_review_before_adapter
+  notes:
+  - not adapter-ready under current evidence gate
+  - candidate_only mappings are not confirmed equivalence.
+- family: asn1_nested_boundary
+  target_library: openssl
+  blocked_reason: needs_manual_review
+  blocked_apis:
+  - d2i_X509
+  why_not_slot_filling: blocked/no_direct/weak/manual-review target must not enter
+    slot filling
+  recommendation:
+  - manual_review_before_adapter
+  - manual_review_before_adapter
+  notes:
+  - not adapter-ready under current evidence gate
+  - candidate_only mappings are not confirmed equivalence.
+- family: x509_parsing
+  target_library: mbedtls
+  blocked_reason: needs_manual_review
+  blocked_apis:
+  - mbedtls_x509_crt_parse_der
+  why_not_slot_filling: blocked/no_direct/weak/manual-review target must not enter
+    slot filling
+  recommendation:
+  - manual_review_before_adapter
+  - manual_review_before_adapter
+  notes:
+  - not adapter-ready under current evidence gate
+  - candidate_only mappings are not confirmed equivalence.
+write_summary:
+- source: artifacts/sprints/adapter_slot_filling_plan_v1/slot_filling_plans/asn1_nested_boundary/mbedtls/slot_filling_plan.yaml
+  target: adapter_recipes/wolfssl_family/asn1_nested_boundary/mbedtls/slot_filling_plan.yaml
+  status: written_new_slot_filling_plan
+  draft_written: ''
+- source: artifacts/sprints/adapter_slot_filling_plan_v1/slot_filling_plans/asn1_nested_boundary/openssl/slot_filling_plan.yaml
+  target: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_filling_plan.yaml
+  status: written_new_slot_filling_plan
+  draft_written: ''
+- source: artifacts/sprints/adapter_slot_filling_plan_v1/slot_filling_plans/pkcs_container_parsing/openssl/slot_filling_plan.yaml
+  target: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_filling_plan.yaml
+  status: written_new_slot_filling_plan
+  draft_written: ''
+quality_checks:
+- adapter_id: asn1_nested_boundary.mbedtls.family_adapter_recipe_v1
+  family: asn1_nested_boundary
+  target_library: mbedtls
+  slot_filling_plan_exists: true
+  slot_bindings_schema_exists: true
+  prompt_context_exists: true
+  validation_rules_exists: true
+  required_bindings_present: true
+  forbidden_targets_recorded: true
+  glm_disabled_now: true
+  c_generation_forbidden: true
+  render_disabled_now: true
+  compile_disabled_now: true
+  quality_status: pass
+  notes: concrete adapter slot filling plan
+- adapter_id: asn1_nested_boundary.openssl.family_adapter_recipe_v1
+  family: asn1_nested_boundary
+  target_library: openssl
+  slot_filling_plan_exists: true
+  slot_bindings_schema_exists: true
+  prompt_context_exists: true
+  validation_rules_exists: true
+  required_bindings_present: true
+  forbidden_targets_recorded: true
+  glm_disabled_now: true
+  c_generation_forbidden: true
+  render_disabled_now: true
+  compile_disabled_now: true
+  quality_status: pass
+  notes: concrete adapter slot filling plan
+- adapter_id: pkcs_container_parsing.openssl.family_adapter_recipe_v1
+  family: pkcs_container_parsing
+  target_library: openssl
+  slot_filling_plan_exists: true
+  slot_bindings_schema_exists: true
+  prompt_context_exists: true
+  validation_rules_exists: true
+  required_bindings_present: true
+  forbidden_targets_recorded: true
+  glm_disabled_now: true
+  c_generation_forbidden: true
+  render_disabled_now: true
+  compile_disabled_now: true
+  quality_status: pass
+  notes: concrete adapter slot filling plan
+- adapter_id: x509_parsing.future_slot_filling_plan
+  family: x509_parsing
+  target_library: spec_only
+  slot_filling_plan_exists: true
+  slot_bindings_schema_exists: false
+  prompt_context_exists: false
+  validation_rules_exists: true
+  required_bindings_present: true
+  forbidden_targets_recorded: true
+  glm_disabled_now: true
+  c_generation_forbidden: true
+  render_disabled_now: true
+  compile_disabled_now: true
+  quality_status: spec_only_pass
+  notes: spec-only future plan; concrete slot filling blocked until canonical template
+    exists
+- adapter_id: tls_protocol_state_lifecycle.future_slot_filling_plan
+  family: tls_protocol_state_lifecycle
+  target_library: spec_only
+  slot_filling_plan_exists: true
+  slot_bindings_schema_exists: false
+  prompt_context_exists: false
+  validation_rules_exists: true
+  required_bindings_present: true
+  forbidden_targets_recorded: true
+  glm_disabled_now: true
+  c_generation_forbidden: true
+  render_disabled_now: true
+  compile_disabled_now: true
+  quality_status: spec_only_pass
+  notes: spec-only future plan; concrete slot filling blocked until canonical template
+    exists
+- adapter_id: secure_heap_state_lifecycle.future_slot_filling_plan
+  family: secure_heap_state_lifecycle
+  target_library: spec_only
+  slot_filling_plan_exists: true
+  slot_bindings_schema_exists: false
+  prompt_context_exists: false
+  validation_rules_exists: true
+  required_bindings_present: true
+  forbidden_targets_recorded: true
+  glm_disabled_now: true
+  c_generation_forbidden: true
+  render_disabled_now: true
+  compile_disabled_now: true
+  quality_status: spec_only_pass
+  notes: spec-only future plan; concrete slot filling blocked until canonical template
+    exists
+forbidden_actions_observed:
+  poc_execution: false
+  compile_run: false
+  render_cases: false
+  glm_call: false
+  c_generation: false
+  adapter_recipe_yaml_modified: false
+  knowledge_raw_modified: false
+  knowledge_base_modified: false
+  rag_rebuild: false
+  commit_or_push: false
+next_task: adapter_slot_filling_v1

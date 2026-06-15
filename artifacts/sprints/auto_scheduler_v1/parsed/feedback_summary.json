@@ -1,0 +1,221 @@
+{
+  "feedback_summary": {
+    "asn1_nested_boundary": {
+      "block_count": 2,
+      "close_count": 0,
+      "demote_count": 1,
+      "dominant_scheduler_action": "block",
+      "external_validation_count": 0,
+      "family": "asn1_nested_boundary",
+      "keep_count": 2,
+      "latest_feedback": {
+        "_feedback_file": "artifacts/feedback/asn1_nested_boundary_seed_enrichment_feedback.jsonl",
+        "_feedback_line": 1,
+        "classification": [
+          "real_seed_not_found",
+          "equivalent_seed_not_generated",
+          "generated_seed_parse_error_no_crash",
+          "blocked_seed_missing",
+          "blocked_high_uncertainty_reconstruction",
+          "not_enough_for_claim"
+        ],
+        "family": "asn1_nested_boundary",
+        "generated_seed_status": "equivalent_seed_not_generated",
+        "next_action": "framework_automation_schema_unification_v1",
+        "notes": "Original /tmp/pbmac1_null_salt.p12 not found; related PBMAC1 no-salt/bad-salt vectors do not crash and are not original issue reproductions.",
+        "real_seed_status": "real_seed_not_found",
+        "seed_id": "OPENSSL-ISSUE-30581",
+        "source": "datasets/openssl/poc_artifacts/issue_30581 plus OpenSSL 3.5.5 PBMAC1 test vectors",
+        "validation_result": "generated_seed_parse_error_no_crash_for_source_test_vector_candidates"
+      },
+      "promote_count": 0,
+      "record_count": 5
+    },
+    "cipher_aead_lifecycle": {
+      "block_count": 0,
+      "close_count": 1,
+      "demote_count": 7,
+      "dominant_scheduler_action": "close",
+      "external_validation_count": 0,
+      "family": "cipher_aead_lifecycle",
+      "keep_count": 12,
+      "latest_feedback": {
+        "_feedback_file": "artifacts/feedback/cipher_aead_lifecycle_semantic_crosscheck_feedback.jsonl",
+        "_feedback_line": 3,
+        "algorithm": "aes-128-gcm",
+        "case_id": "aead_012_wrong_tag_length_gcm_decrypt",
+        "classification": "legal_semantics",
+        "cross_library_result": "legal_semantics",
+        "doc_support": "sufficient: OpenSSL GCM SET_TAG allows taglen 1..16; PSA exposes shortened-tag AEAD algorithms.",
+        "family": "cipher_aead_lifecycle",
+        "library": "openssl+mbedtls",
+        "next_action": "downgrade; rename future case from wrong_tag_length to truncated_tag_length unless using truly invalid lengths.",
+        "observed_behavior": "OpenSSL accepts tag length 8; mbedTLS PSA shortened-tag GCM with 8-byte tag encrypts and decrypts successfully.",
+        "state_sequence": "aead_012_wrong_tag_length_gcm_decrypt"
+      },
+      "promote_count": 1,
+      "record_count": 21
+    },
+    "der_full_consumption": {
+      "block_count": 0,
+      "close_count": 0,
+      "demote_count": 0,
+      "dominant_scheduler_action": "promote",
+      "external_validation_count": 0,
+      "family": "der_full_consumption",
+      "keep_count": 0,
+      "latest_feedback": {
+        "_feedback_file": "artifacts/feedback/der_full_consumption_feedback.jsonl",
+        "_feedback_line": 30,
+        "case_id": "derv2_062",
+        "family": "der_full_consumption",
+        "interpretation": "OpenSSL app accepted valid DER prefix with malformed trailing bytes and produced output artifact; not crash, not confirmed CVE.",
+        "mutation_dimensions": {
+          "input_shape": "valid_der_plus_malformed_tail",
+          "parser_target": "openssl_app_pkcs8",
+          "trailing_content": "random",
+          "trailing_length": 255
+        },
+        "pattern_id": "MBEDTLS-POC-0020",
+        "signals": {
+          "exit_code": 0,
+          "output_artifact_created": true,
+          "output_artifact_nonempty": true
+        },
+        "source": "artifacts/sprints/der_full_consumption_v2/results/run.verdicts.jsonl",
+        "sprint": "der_full_consumption_v2",
+        "verdict": "app_level_validation_gap_candidate"
+      },
+      "promote_count": 30,
+      "record_count": 30
+    },
+    "mac_lifecycle": {
+      "block_count": 0,
+      "close_count": 0,
+      "demote_count": 0,
+      "dominant_scheduler_action": "keep",
+      "external_validation_count": 0,
+      "family": "mac_lifecycle",
+      "keep_count": 48,
+      "latest_feedback": {
+        "_feedback_file": "artifacts/feedback/mac_lifecycle_feedback.jsonl",
+        "_feedback_line": 48,
+        "case_id": "mac_lifecycle_0047",
+        "family": "mac_lifecycle",
+        "mutation_dimensions": {
+          "algorithm": "cmac_aes",
+          "input_length": 64,
+          "key_length": "short",
+          "lifecycle_sequence": "abort_then_update"
+        },
+        "signals": {
+          "mbedtls_psa": {
+            "abort_status": -137,
+            "crypto_init_status": 0,
+            "final1_status": -137,
+            "final2_status": -137,
+            "import_status": -135,
+            "out1_len": 0,
+            "out2_len": 0,
+            "setup_status": -137,
+            "update1_status": -137,
+            "update_after_abort_status": -137,
+            "update_after_final_status": -137
+          },
+          "openssl": {
+            "final1_ok": 0,
+            "final2_ok": -1,
+            "init_ok": 0,
+            "out1_len": 0,
+            "out2_len": 0,
+            "projection_limitation": 0,
+            "update1_ok": 0,
+            "update_after_final_ok": -1
+          },
+          "openssl_output_mac": false,
+          "openssl_status": "run_ok",
+          "psa_error_code": -137,
+          "psa_status": "run_ok"
+        },
+        "verdict": "needs_manual_triage"
+      },
+      "promote_count": 0,
+      "record_count": 48
+    },
+    "pkey_verify_semantic": {
+      "block_count": 0,
+      "close_count": 0,
+      "demote_count": 0,
+      "dominant_scheduler_action": "keep",
+      "external_validation_count": 0,
+      "family": "pkey_verify_semantic",
+      "keep_count": 80,
+      "latest_feedback": {
+        "_feedback_file": "artifacts/feedback/mutation_feedback.jsonl",
+        "_feedback_line": 80,
+        "behavior_summary": {
+          "path": "artifacts/sprints/pkey_verify_family_v0/results/behavior_summary.json",
+          "verdict_counts": {
+            "safe_negative": 80
+          }
+        },
+        "case_id": "pkey_verify_semantic_0179",
+        "expected_verdict_class": "unexpected_success_candidate",
+        "family": "pkey_verify_semantic",
+        "feedback_category": "safe_negative",
+        "high_value": true,
+        "manifest": "artifacts/sprints/pkey_verify_family_v0/rendered_cases/pkey_verify_semantic_0179/render_matrix_case_manifest.yaml",
+        "mutation_values": {
+          "digest_mutation": "wrong_hash_length",
+          "key_mutation": "wrong_key",
+          "key_type": "rsa",
+          "padding_mutation": "pss_saltlen_mismatch",
+          "signature_mutation": "bitflip_signature",
+          "verify_api": "EVP_PKEY_verify"
+        },
+        "novelty_score": -0.2,
+        "raw_status": "run_ok",
+        "reason": "Controlled PKEY verify case rejected intentionally invalid signature material.",
+        "repairable": false,
+        "source": "artifacts/sprints/pkey_verify_family_v0/rendered_cases/pkey_verify_semantic_0179/pkey_verify_semantic_0179_openssl.c",
+        "target_api": "EVP_PKEY_verify",
+        "target_library": "openssl",
+        "verdict": "safe_reject_behavior"
+      },
+      "promote_count": 0,
+      "record_count": 80
+    },
+    "secure_heap_state_lifecycle": {
+      "block_count": 0,
+      "close_count": 0,
+      "demote_count": 0,
+      "dominant_scheduler_action": "external_validation",
+      "external_validation_count": 1,
+      "family": "secure_heap_state_lifecycle",
+      "keep_count": 24,
+      "latest_feedback": {
+        "_feedback_file": "artifacts/feedback/secure_heap_state_lifecycle_pattern_expansion_feedback.jsonl",
+        "_feedback_line": 19,
+        "api_role": "lifecycle_init",
+        "api_under_test": "CRYPTO_secure_malloc_init",
+        "case_id": "secure_heap_exp_0018_reinit_after_done",
+        "crash_signal": {
+          "asan": false,
+          "exit_code": 0,
+          "has_crash_signal": false,
+          "signal": null,
+          "ubsan": false,
+          "valgrind_invalid_read": false
+        },
+        "family": "secure_heap_state_lifecycle",
+        "is_seed_case": false,
+        "novelty_label": "normal_defined_behavior",
+        "seed_issue": "OPENSSL-ISSUE-28669",
+        "state_sequence": "reinit_after_done",
+        "verdict": "normal_defined_behavior"
+      },
+      "promote_count": 0,
+      "record_count": 25
+    }
+  }
+}

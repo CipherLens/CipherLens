@@ -1,0 +1,101 @@
+family: x509_parsing
+sprint: x509_parsing_app_level_gap_triage_v1
+seed_count: 7
+seeds:
+- seed_id: OPENSSL-ISSUE-11567
+  source: openssl_issue_artifact
+  library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_11567
+  component: unknown
+  issue_or_poc: https://github.com/openssl/openssl/issues/11567
+  input_type: der_certificate
+  suspected_root_cause: semantic certificate text/verification behavior differs for certificate file
+  trigger_pattern: openssl x509 -text app-visible wrong result
+  evidence_quality: medium
+  overlap_type: app_level_x509_behavior
+  previous_route: C_app_level_validation_gap
+- seed_id: OPENSSL-ISSUE-11772
+  source: openssl_issue_artifact
+  library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_11772
+  component: unknown
+  issue_or_poc: https://github.com/openssl/openssl/issues/11772
+  input_type: pem_certificate
+  suspected_root_cause: certificate date check reports success when invalid date should fail
+  trigger_pattern: openssl x509 -checkend app-visible wrong result
+  evidence_quality: medium
+  overlap_type: app_level_x509_behavior
+  previous_route: C_app_level_validation_gap
+- seed_id: OPENSSL-ISSUE-14457
+  source: openssl_issue_artifact
+  library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_14457
+  component: unknown
+  issue_or_poc: https://github.com/openssl/openssl/issues/14457
+  input_type: certificate_chain
+  suspected_root_cause: self-signed certificate verification output differs from expected trust behavior
+  trigger_pattern: openssl verify app-visible wrong output
+  evidence_quality: medium
+  overlap_type: app_level_x509_behavior
+  previous_route: C_app_level_validation_gap
+- seed_id: OPENSSL-ISSUE-14675
+  source: openssl_issue_artifact
+  library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_14675
+  component: unknown
+  issue_or_poc: https://github.com/openssl/openssl/issues/14675
+  input_type: certificate_chain
+  suspected_root_cause: verify command ignores all but first certificate argument/bundle member
+  trigger_pattern: openssl verify certificate bundle handling semantic gap
+  evidence_quality: medium
+  overlap_type: app_level_x509_behavior
+  previous_route: C_app_level_validation_gap
+- seed_id: OPENSSL-ISSUE-23325
+  source: openssl_issue_artifact
+  library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_23325
+  component: unknown
+  issue_or_poc: https://github.com/openssl/openssl/issues/23325
+  input_type: crl
+  suspected_root_cause: CRL IDP/CDP matching causes wrong rejection of certificate without CDP
+  trigger_pattern: openssl verify -crl_check app-visible wrong result
+  evidence_quality: medium
+  overlap_type: app_level_x509_behavior
+  previous_route: C_app_level_validation_gap
+- seed_id: OPENSSL-ISSUE-29418
+  source: openssl_issue_artifact
+  library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_29418
+  component: unknown
+  issue_or_poc: https://github.com/openssl/openssl/issues/29418
+  input_type: pem_certificate
+  suspected_root_cause: x509 -purpose result depends on parsing options
+  trigger_pattern: openssl x509 purpose app-visible inconsistency
+  evidence_quality: medium
+  overlap_type: app_level_x509_behavior
+  previous_route: C_app_level_validation_gap
+- seed_id: OPENSSL-ISSUE-6788
+  source: openssl_issue_artifact
+  library: openssl
+  artifact_path: datasets/openssl/poc_artifacts/issue_6788
+  component: unknown
+  issue_or_poc: https://github.com/openssl/openssl/issues/6788
+  input_type: crl
+  suspected_root_cause: CRL issuer/CAfile lookup behavior with duplicate CA subjects is unstable/wrong
+  trigger_pattern: openssl crl app-visible wrong result
+  evidence_quality: medium
+  overlap_type: app_level_x509_behavior
+  previous_route: C_app_level_validation_gap
+excluded:
+- seed_id: MBEDTLS-POC-0027
+  route_classification: A_recipe_slot_cross_library_migration
+  reason: A-path potential, blocked in current sprint; needs future tls_verify_result_semantic family.
+- seed_id: OPENSSL-ISSUE-13860
+  route_classification: needs_more_evidence
+  reason: oracle or issue semantics unclear; not C-path candidate yet.
+- seed_id: OPENSSL-ISSUE-29574
+  route_classification: overlap_asn1_nested_boundary
+  reason: ASN.1 nested-boundary/corrupted-state overlap, removed from pure x509 C-path.
+- seed_id: OPENSSL-ISSUE-9043
+  route_classification: D_crash_sanitizer_evidence_audit
+  reason: D-path crash/sanitizer audit, not app-level validation-gap C-path.

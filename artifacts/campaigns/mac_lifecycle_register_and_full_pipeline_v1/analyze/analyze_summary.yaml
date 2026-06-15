@@ -1,0 +1,145 @@
+schema: lifecycle_analyze_summary_v1
+oracle_analyze_executed: true
+oracle_events_parsed: true
+oracle_events_parsed_count: 8
+valid_lifecycle_control_passed: true
+invalid_state_controls: 1
+observation_cases: 5
+baseline_control_failed: false
+case_classifications:
+- case_id: valid_hmac_init_update_final_control
+  family: mac_lifecycle
+  track: lifecycle
+  target_library: openssl
+  case_group: valid_lifecycle_control
+  mutation_strategy: valid_hmac_init_update_final_control
+  oracle_rule: unexpected_failure_on_valid_sequence
+  expected_behavior: success
+  actual_behavior: success
+  label: normal_expected_behavior
+  candidate: false
+  reason: lifecycle behavior matched oracle policy
+  raw_observation_label: normal_exit
+  exit_code: 0
+  signal: ''
+  sanitizer_observed: false
+  sanitizer_kinds: []
+- case_id: update_before_init
+  family: mac_lifecycle
+  track: lifecycle
+  target_library: openssl
+  case_group: invalid_state_control
+  mutation_strategy: update_before_init
+  oracle_rule: unexpected_success_after_invalid_state
+  expected_behavior: error_or_documented
+  actual_behavior: error
+  label: normal_expected_behavior
+  candidate: false
+  reason: lifecycle behavior matched oracle policy
+  raw_observation_label: normal_exit
+  exit_code: 0
+  signal: ''
+  sanitizer_observed: false
+  sanitizer_kinds: []
+- case_id: final_without_update_after_init
+  family: mac_lifecycle
+  track: lifecycle
+  target_library: openssl
+  case_group: observation
+  mutation_strategy: final_without_update_after_init
+  oracle_rule: state_transition_observation
+  expected_behavior: observation
+  actual_behavior: success
+  label: state_transition_observation
+  candidate: false
+  reason: documented/observation case; not a candidate by itself
+  raw_observation_label: normal_exit
+  exit_code: 0
+  signal: ''
+  sanitizer_observed: false
+  sanitizer_kinds: []
+- case_id: repeated_final
+  family: mac_lifecycle
+  track: lifecycle
+  target_library: openssl
+  case_group: observation
+  mutation_strategy: repeated_final
+  oracle_rule: state_transition_observation
+  expected_behavior: observation
+  actual_behavior: error
+  label: state_transition_observation
+  candidate: false
+  reason: documented/observation case; not a candidate by itself
+  raw_observation_label: normal_exit
+  exit_code: 0
+  signal: ''
+  sanitizer_observed: false
+  sanitizer_kinds: []
+- case_id: update_after_final
+  family: mac_lifecycle
+  track: lifecycle
+  target_library: openssl
+  case_group: observation
+  mutation_strategy: update_after_final
+  oracle_rule: state_transition_observation
+  expected_behavior: observation
+  actual_behavior: error
+  label: state_transition_observation
+  candidate: false
+  reason: documented/observation case; not a candidate by itself
+  raw_observation_label: normal_exit
+  exit_code: 0
+  signal: ''
+  sanitizer_observed: false
+  sanitizer_kinds: []
+- case_id: reinit_reuse
+  family: mac_lifecycle
+  track: lifecycle
+  target_library: openssl
+  case_group: valid_lifecycle_control
+  mutation_strategy: reinit_reuse
+  oracle_rule: unexpected_failure_on_valid_sequence
+  expected_behavior: success
+  actual_behavior: success
+  label: normal_expected_behavior
+  candidate: false
+  reason: lifecycle behavior matched oracle policy
+  raw_observation_label: normal_exit
+  exit_code: 0
+  signal: ''
+  sanitizer_observed: false
+  sanitizer_kinds: []
+- case_id: wrong_key_length_observation
+  family: mac_lifecycle
+  track: lifecycle
+  target_library: openssl
+  case_group: observation
+  mutation_strategy: wrong_key_length_observation
+  oracle_rule: state_transition_observation
+  expected_behavior: observation
+  actual_behavior: success
+  label: state_transition_observation
+  candidate: false
+  reason: documented/observation case; not a candidate by itself
+  raw_observation_label: normal_exit
+  exit_code: 0
+  signal: ''
+  sanitizer_observed: false
+  sanitizer_kinds: []
+- case_id: empty_message_observation
+  family: mac_lifecycle
+  track: lifecycle
+  target_library: openssl
+  case_group: observation
+  mutation_strategy: empty_message_observation
+  oracle_rule: state_transition_observation
+  expected_behavior: observation
+  actual_behavior: success
+  label: state_transition_observation
+  candidate: false
+  reason: documented/observation case; not a candidate by itself
+  raw_observation_label: normal_exit
+  exit_code: 0
+  signal: ''
+  sanitizer_observed: false
+  sanitizer_kinds: []

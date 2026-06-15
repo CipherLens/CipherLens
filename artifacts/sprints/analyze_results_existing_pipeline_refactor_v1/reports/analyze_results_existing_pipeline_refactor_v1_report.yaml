@@ -1,0 +1,41 @@
+schema: analyze_results_existing_pipeline_refactor_report_v1
+task: analyze_results_existing_pipeline_refactor_v1
+generated_at: '2026-06-12T02:25:12+00:00'
+refactored_file: tools/analyze_results_v1.py
+helper_added: analyzer/family_result_adapter.py
+reused_existing_pipeline: true
+reused_modules:
+- runner.analyze_results.classify_record
+- runner.analyze_results.ASAN_PATTERNS
+- runner.analyze_results.UBSAN_PATTERNS
+- runner.analyze_results.BUG_PATTERNS
+- runner.analyze_results.SAFE_PATTERNS
+existing_analyzer_entrypoints:
+- analyzer/analyze_poc.py
+- runner/analyze_results.py
+- analysis/audit_crash_sanitizer_candidates.py
+- analysis/build_candidate_queue.py
+- analysis/plan_execution_paths.py
+duplicated_logic_reduced:
+- crash/sanitizer verdict mapping is delegated to analyzer.family_result_adapter
+- analyzer.family_result_adapter delegates base verdicts to runner.analyze_results.classify_record
+- tools/analyze_results_v1 keeps family/mutation/oracle enrichment only
+family_layer_added:
+- family
+- mutation_strategy
+- oracle_metadata
+- compile_job_id
+- render_job_id
+outputs_regenerated:
+- artifacts/sprints/analyze_results_v1/case_analysis/case_analysis.yaml
+- artifacts/sprints/analyze_results_v1/family_analysis/family_analysis.yaml
+- artifacts/sprints/analyze_results_v1/oracle_analysis/oracle_analysis.yaml
+- artifacts/sprints/analyze_results_v1/sanitizer_analysis/sanitizer_analysis.yaml
+- artifacts/sprints/analyze_results_v1/candidate_labels/candidate_labels.yaml
+quality_status: pass
+notes:
+- The wrapper reads existing compile_run_v1 YAML artifacts only.
+- Base verdict classification is delegated through analyzer.family_result_adapter to runner.analyze_results.classify_record.
+- The sprint wrapper enriches records with family/mutation/oracle metadata and preserves analyze_results_v1
+  output schemas.
+- No compile/run/GLM/feedback step was executed.

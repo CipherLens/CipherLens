@@ -1,0 +1,30 @@
+schema: family_oracle_plan_v1
+family: tls_protocol_state_lifecycle
+template_level: family
+primary_oracles:
+- lifecycle_state
+secondary_oracles:
+- return_code_semantics
+- crash_or_sanitizer
+unsafe_oracles:
+- ASAN
+- UBSAN
+- SEGV
+- heap-buffer-overflow
+- stack-buffer-overflow
+- use-after-free
+false_positive_risks:
+- API misuse
+- format mismatch
+- weak cross-library counterpart evidence
+- non-equivalent low-level parser semantics
+expected_result_labels:
+- migrated_safe
+- semantic_divergence_candidate
+- migrated_bug_candidate
+- api_misuse_false_positive
+- blocked_no_direct_counterpart
+- needs_triage
+notes:
+- Do not treat a nonzero harness return as crash evidence by itself.
+- No vulnerability or exploitability claim is made in this sprint.

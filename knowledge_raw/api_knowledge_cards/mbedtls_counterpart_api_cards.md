@@ -1,0 +1,15 @@
+| library | api | family | confidence |
+| --- | --- | --- | --- |
+| mbedtls | mbedtls_free | secure_heap_state_lifecycle | high |
+| mbedtls | mbedtls_ssl_config_free | tls_protocol_state_lifecycle | high |
+| mbedtls | mbedtls_ssl_config_init | tls_protocol_state_lifecycle | high |
+| mbedtls | mbedtls_ssl_free | tls_protocol_state_lifecycle | high |
+| mbedtls | mbedtls_ssl_handshake | tls_protocol_state_lifecycle | high |
+| mbedtls | mbedtls_ssl_init | tls_protocol_state_lifecycle | high |
+| mbedtls | mbedtls_ssl_read | tls_protocol_state_lifecycle | high |
+| mbedtls | mbedtls_ssl_setup | tls_protocol_state_lifecycle | high |
+| mbedtls | mbedtls_ssl_write | tls_protocol_state_lifecycle | high |
+| mbedtls | mbedtls_x509_crt_free | x509_parsing | high |
+| mbedtls | mbedtls_x509_crt_init | x509_parsing | high |
+| mbedtls | mbedtls_x509_crt_parse | x509_parsing | high |
+| mbedtls | mbedtls_x509_crt_parse_der | x509_parsing | high |

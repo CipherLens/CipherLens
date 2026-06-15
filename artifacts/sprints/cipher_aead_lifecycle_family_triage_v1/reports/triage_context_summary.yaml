@@ -1,0 +1,31 @@
+task: cipher_aead_lifecycle_family_triage_v1
+purpose: family_triage_not_execution
+scheduler_recommendation:
+  recommended_family: cipher_aead_lifecycle
+  score: 0.76
+  proposed_execution_path: B_controlled_family_mutation
+  fallback_path: D_then_A
+why_recommended:
+  - "secure_heap_state_lifecycle moved to external validation, so the main exploration line needs a new family."
+  - "cipher_aead_lifecycle has multiple existing seeds across mbedTLS and OpenSSL."
+  - "Lifecycle/state-machine lessons from MAC and secure_heap can transfer to AEAD init/update/final/tag/cleanup sequences."
+  - "AEAD exposes strong semantic observables: return code, tag verification, output length/state, and sanitizer signal."
+reusable_experience:
+  mac_lifecycle:
+    - "terminal-looking finalization may be strict in one API and permissive in another."
+    - "Repeated final/update-after-final must be classified as semantic divergence or allowed legacy semantics until contract evidence is clear."
+    - "Output length and output buffer state are important failure-path observables."
+  secure_heap_state_lifecycle:
+    - "State expansion can discover non-seed state combinations without claiming a confirmed vulnerability."
+    - "Safe controls are necessary for lifecycle mutation interpretation."
+    - "Contract, multi-version, and sanitizer evidence must remain separate validation tracks."
+possible_execution_paths:
+  A_recipe_slot_cross_library_migration: "Feasible later if OpenSSL EVP AEAD and mbedTLS PSA/GCM/CCM mappings are made recipe-slot precise."
+  B_controlled_family_mutation: "Recommended first path for operation-order, tag-order, and context-reuse mutations."
+  C_app_level_validation_gap: "Only if evidence shifts to CLI/app-layer AEAD handling."
+  D_crash_sanitizer_evidence_audit: "Useful for OpenSSL issue seeds with crash/sanitizer claims, especially issue_17715 and issue_8980."
+why_triage_first:
+  - "The family spans both non-AEAD cipher finalization and AEAD tag/order/state semantics."
+  - "Root cause and oracle choices must be separated before render/run."
+  - "Direct rendering now would risk mixing CBC padding, AEAD setup, and crash-sanitizer patterns."
+  - "GLM should only fill strict recipe slots after the family route is chosen."

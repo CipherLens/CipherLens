@@ -1,0 +1,29 @@
+schema: canary_decode_short_output_triage_decision_v1
+family: buffer_canary_boundary
+case_id: canary_decode_short_output
+original_label: sanitizer_candidate
+decision: downgrade_to_contract_observation
+reason: Exact-size control did not show ASAN or canary corruption. Short-output variants only fail when
+  the caller deliberately provides less than the documented maximum output capacity, and the original
+  ASAN is an input length mismatch read over the harness b64 object. EVP_DecodeBlock has no output-size
+  parameter, so short output buffers are caller contract violations.
+trigger_api: EVP_DecodeBlock
+asan_location: openssl_internal
+stacktrace_available: true
+candidate_reproduced: true
+candidate_reproduced_in_minimal_harness: true
+exact_output_control_passed: true
+short_output_only_failure: true
+canary_corruption_reproduced: true
+api_contract_checked: true
+api_contract_summary: EVP_DecodeBlock produces exactly 3 output bytes for every 4 input bytes and has
+  no output buffer size parameter; caller must provide enough t capacity. Short output buffers are invalid
+  API use. The original ASAN is also tied to an overclaimed input length.
+short_output_documented_invalid: true
+asan_observed: true
+ubsan_observed: false
+crash_observed: true
+harness_fault: true
+recommended_next_action: Downgrade canary_decode_short_output to contract-boundary observation; add a
+  mutation rule requiring EVP_DecodeBlock input_len to match readable input bytes and output buffer capacity
+  to be at least 3*(input_len/4) before promoting sanitizer/canary findings.

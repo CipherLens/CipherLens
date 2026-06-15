@@ -100,6 +100,10 @@ def load_summary(path: Path) -> Dict[str, Any]:
 
 def extract_case_id(relative_source: str) -> str:
     name = Path(relative_source).name
+    m = re.search(r"^(.*)_(mbedtls|openssl)\.c$", name)
+    if m:
+        return m.group(1)
+
     m = re.search(r"(case_\d+)", name)
     if m:
         return m.group(1)

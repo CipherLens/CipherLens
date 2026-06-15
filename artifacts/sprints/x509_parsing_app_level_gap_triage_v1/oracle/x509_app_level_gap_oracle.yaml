@@ -1,0 +1,39 @@
+family: x509_parsing
+sprint: x509_parsing_app_level_gap_triage_v1
+principle: C-path 的核心不是没有 crash，而是 app 对 malformed/semantically invalid x509 输入产生可观察且可疑的接受行为或语义差异。
+app_level_oracles:
+  malformed_accepted_with_output:
+    description: Malformed or nonconforming certificate is parsed/printed as meaningful output rather than rejected.
+    required_observation:
+    - malformed_or_nonconforming_input
+    - app_success_or_meaningful_output
+    - normal/malformed contrast
+  verify_semantic_gap:
+    description: Verification app returns success or wrong failure class for semantically invalid certificate/chain/CRL/time
+      condition.
+    required_observation:
+    - clear expected verify outcome
+    - actual app status/output differs
+    - normal control where applicable
+  inconsistent_app_behavior:
+    description: Two app options or equivalent app paths produce inconsistent purpose/CRL/extension-derived output
+      for the same logical input.
+    required_observation:
+    - same input or controlled input pair
+    - option/path delta
+    - observable output/status mismatch
+  safe_reject_control:
+    description: Control case demonstrating malformed input is rejected safely under expected path.
+    required_observation:
+    - negative/malformed input
+    - nonzero or reject output
+    - no crash required
+  no_crash_only:
+    description: Only demonstrates no sanitizer/SEGV/crash.
+    required_observation:
+    - absence of crash evidence
+    note: not sufficient for C-path gap
+forbidden_claims:
+- confirmed_vulnerability
+- CVE
+- exploitable

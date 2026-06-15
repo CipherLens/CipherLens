@@ -1,0 +1,61 @@
+--- a/src/x509.c
++++ b/src/x509.c
+@@ -4419,8 +4419,14 @@ const byte* wolfSSL_X509_notBefore(WOLFSSL_X509* x509)
+ {
+     WOLFSSL_ENTER("wolfSSL_X509_notBefore");
+ 
+-    if (x509 == NULL)
++    if (x509 == NULL) {
+         return NULL;
++    }
++
++    if (x509->notBefore.length < 0 ||
++            x509->notBefore.length > (int)sizeof(x509->notBeforeData) - 2) {
++        return NULL;
++    }
+ 
+     XMEMSET(x509->notBeforeData, 0, sizeof(x509->notBeforeData));
+     x509->notBeforeData[0] = (byte)x509->notBefore.type;
+@@ -4437,8 +4443,14 @@ const byte* wolfSSL_X509_notAfter(WOLFSSL_X509* x509)
+ {
+     WOLFSSL_ENTER("wolfSSL_X509_notAfter");
+ 
+-    if (x509 == NULL)
++    if (x509 == NULL) {
++        return NULL;
++    }
++
++    if (x509->notAfter.length < 0 ||
++            x509->notAfter.length > (int)sizeof(x509->notAfterData) - 2) {
+         return NULL;
++    }
+ 
+     XMEMSET(x509->notAfterData, 0, sizeof(x509->notAfterData));
+     x509->notAfterData[0] = (byte)x509->notAfter.type;
+@@ -16060,6 +16072,10 @@ int wolfSSL_X509_set_notAfter(WOLFSSL_X509* x509, const WOLFSSL_ASN1_TIME* t)
+         return WOLFSSL_FAILURE;
+     }
+ 
++    if (t->length < 0 || t->length > CTC_DATE_SIZE - 2) {
++        return WOLFSSL_FAILURE;
++    }
++
+     x509->notAfter.type = t->type;
+     x509->notAfter.length = t->length;
+ 
+@@ -16074,6 +16090,10 @@ int wolfSSL_X509_set_notBefore(WOLFSSL_X509* x509, const WOLFSSL_ASN1_TIME* t)
+         return WOLFSSL_FAILURE;
+     }
+ 
++    if (t->length < 0 || t->length > CTC_DATE_SIZE - 2) {
++        return WOLFSSL_FAILURE;
++    }
++
+     x509->notBefore.type = t->type;
+     x509->notBefore.length = t->length;
+ 
+diff --git a/wolfssl/internal.h b/wolfssl/internal.h
+index 216b75bde1c..53981450e88 100644
+--- a/wolfssl/internal.h
++++ b/wolfssl/internal.h
+@@ -2471,10 +2471,6 @@ struct WOLFSSL_OCSP {

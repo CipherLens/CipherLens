@@ -1,0 +1,199 @@
+cross_library_api_mapping_candidates:
+- family: asn1_nested_boundary
+  wolfssl_api: wc_InitDecodedCert
+  openssl_candidate_api: ASN1_item_d2i
+  mbedtls_candidate_api: mbedtls_x509_crt_parse_der
+  mapping_type: semantic_related
+  confidence: medium
+  evidence:
+    wolfssl_card_confidence: high
+    basis: static top-family mapping plus staged wolfSSL grep evidence
+  notes: Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG
+    evidence gate.
+- family: asn1_nested_boundary
+  wolfssl_api: wc_ParseCert
+  openssl_candidate_api: d2i_X509
+  mbedtls_candidate_api: mbedtls_x509_crt_parse_der
+  mapping_type: parser_equivalent
+  confidence: medium
+  evidence:
+    wolfssl_card_confidence: high
+    basis: static top-family mapping plus staged wolfSSL grep evidence
+  notes: Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG
+    evidence gate.
+- family: pkcs_container_parsing
+  wolfssl_api: wc_PKCS12_parse
+  openssl_candidate_api: PKCS12_parse
+  mbedtls_candidate_api: ''
+  mapping_type: parser_equivalent
+  confidence: medium
+  evidence:
+    wolfssl_card_confidence: high
+    basis: static top-family mapping plus staged wolfSSL grep evidence
+  notes: Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG
+    evidence gate.
+- family: pkcs_container_parsing
+  wolfssl_api: wc_PKCS7_DecodeSignedData
+  openssl_candidate_api: d2i_PKCS7
+  mbedtls_candidate_api: ''
+  mapping_type: parser_equivalent
+  confidence: low
+  evidence:
+    wolfssl_card_confidence: not_found_in_source
+    basis: static top-family mapping plus staged wolfSSL grep evidence
+  notes: Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG
+    evidence gate.
+- family: pkcs_container_parsing
+  wolfssl_api: wc_PKCS7_VerifySignedData
+  openssl_candidate_api: PKCS7_verify
+  mbedtls_candidate_api: ''
+  mapping_type: parser_equivalent
+  confidence: medium
+  evidence:
+    wolfssl_card_confidence: high
+    basis: static top-family mapping plus staged wolfSSL grep evidence
+  notes: Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG
+    evidence gate.
+- family: secure_heap_state_lifecycle
+  wolfssl_api: wolfSSL_Free
+  openssl_candidate_api: OPENSSL_free
+  mbedtls_candidate_api: mbedtls_free
+  mapping_type: cleanup_equivalent
+  confidence: medium
+  evidence:
+    wolfssl_card_confidence: medium
+    basis: static top-family mapping plus staged wolfSSL grep evidence
+  notes: Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG
+    evidence gate.
+- family: secure_heap_state_lifecycle
+  wolfssl_api: wolfSSL_Malloc
+  openssl_candidate_api: OPENSSL_malloc
+  mbedtls_candidate_api: mbedtls_calloc
+  mapping_type: semantic_related
+  confidence: medium
+  evidence:
+    wolfssl_card_confidence: medium
+    basis: static top-family mapping plus staged wolfSSL grep evidence
+  notes: Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG
+    evidence gate.
+- family: secure_heap_state_lifecycle
+  wolfssl_api: wolfSSL_SetAllocators
+  openssl_candidate_api: CRYPTO_set_mem_functions
+  mbedtls_candidate_api: mbedtls_platform_set_calloc_free
+  mapping_type: semantic_related
+  confidence: medium
+  evidence:
+    wolfssl_card_confidence: medium
+    basis: static top-family mapping plus staged wolfSSL grep evidence
+  notes: Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG
+    evidence gate.
+- family: tls_protocol_state_lifecycle
+  wolfssl_api: wolfSSL_CTX_new
+  openssl_candidate_api: SSL_CTX_new
+  mbedtls_candidate_api: mbedtls_ssl_config_init
+  mapping_type: lifecycle_equivalent
+  confidence: medium
+  evidence:
+    wolfssl_card_confidence: high
+    basis: static top-family mapping plus staged wolfSSL grep evidence
+  notes: Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG
+    evidence gate.
+- family: tls_protocol_state_lifecycle
+  wolfssl_api: wolfSSL_accept
+  openssl_candidate_api: SSL_accept
+  mbedtls_candidate_api: mbedtls_ssl_handshake
+  mapping_type: semantic_related
+  confidence: medium
+  evidence:
+    wolfssl_card_confidence: high
+    basis: static top-family mapping plus staged wolfSSL grep evidence
+  notes: Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG
+    evidence gate.
+- family: tls_protocol_state_lifecycle
+  wolfssl_api: wolfSSL_connect
+  openssl_candidate_api: SSL_connect
+  mbedtls_candidate_api: mbedtls_ssl_handshake
+  mapping_type: semantic_related
+  confidence: medium
+  evidence:
+    wolfssl_card_confidence: high
+    basis: static top-family mapping plus staged wolfSSL grep evidence
+  notes: Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG
+    evidence gate.
+- family: tls_protocol_state_lifecycle
+  wolfssl_api: wolfSSL_free
+  openssl_candidate_api: SSL_free
+  mbedtls_candidate_api: mbedtls_ssl_free
+  mapping_type: cleanup_equivalent
+  confidence: medium
+  evidence:
+    wolfssl_card_confidence: high
+    basis: static top-family mapping plus staged wolfSSL grep evidence
+  notes: Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG
+    evidence gate.
+- family: tls_protocol_state_lifecycle
+  wolfssl_api: wolfSSL_new
+  openssl_candidate_api: SSL_new
+  mbedtls_candidate_api: mbedtls_ssl_init
+  mapping_type: lifecycle_equivalent
+  confidence: medium
+  evidence:
+    wolfssl_card_confidence: high
+    basis: static top-family mapping plus staged wolfSSL grep evidence
+  notes: Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG
+    evidence gate.
+- family: tls_protocol_state_lifecycle
+  wolfssl_api: wolfSSL_read
+  openssl_candidate_api: SSL_read
+  mbedtls_candidate_api: mbedtls_ssl_read
+  mapping_type: semantic_related
+  confidence: medium
+  evidence:
+    wolfssl_card_confidence: high
+    basis: static top-family mapping plus staged wolfSSL grep evidence
+  notes: Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG
+    evidence gate.
+- family: tls_protocol_state_lifecycle
+  wolfssl_api: wolfSSL_write
+  openssl_candidate_api: SSL_write
+  mbedtls_candidate_api: mbedtls_ssl_write
+  mapping_type: semantic_related
+  confidence: medium
+  evidence:
+    wolfssl_card_confidence: high
+    basis: static top-family mapping plus staged wolfSSL grep evidence
+  notes: Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG
+    evidence gate.
+- family: x509_parsing
+  wolfssl_api: wolfSSL_X509_free
+  openssl_candidate_api: X509_free
+  mbedtls_candidate_api: mbedtls_x509_crt_free
+  mapping_type: cleanup_equivalent
+  confidence: medium
+  evidence:
+    wolfssl_card_confidence: high
+    basis: static top-family mapping plus staged wolfSSL grep evidence
+  notes: Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG
+    evidence gate.
+- family: x509_parsing
+  wolfssl_api: wolfSSL_X509_load_certificate_file
+  openssl_candidate_api: PEM_read_X509
+  mbedtls_candidate_api: mbedtls_x509_crt_parse_file
+  mapping_type: parser_equivalent
+  confidence: medium
+  evidence:
+    wolfssl_card_confidence: high
+    basis: static top-family mapping plus staged wolfSSL grep evidence
+  notes: Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG
+    evidence gate.
+- family: x509_parsing
+  wolfssl_api: wolfSSL_X509_verify
+  openssl_candidate_api: X509_verify
+  mbedtls_candidate_api: mbedtls_x509_crt_verify
+  mapping_type: semantic_related
+  confidence: medium
+  evidence:
+    wolfssl_card_confidence: high
+    basis: static top-family mapping plus staged wolfSSL grep evidence
+  notes: Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG
+    evidence gate.

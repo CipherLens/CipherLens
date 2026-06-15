@@ -16,6 +16,7 @@ work/
     mbedtls-3.6.4/
     openssl-3.5.5/
     botan-3.10.0/
+    wolfSSL 5.9.1/
 ```
 
 With this layout, no environment variable is required. The project defaults to:

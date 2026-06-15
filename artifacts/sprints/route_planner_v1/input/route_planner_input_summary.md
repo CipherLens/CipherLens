@@ -1,0 +1,50 @@
+# route_planner_v1 Input Summary
+
+loaded_sources:
+  auto_scheduler: artifacts/sprints/auto_scheduler_v1
+  schema_dir: artifacts/sprints/framework_automation_schema_unification_v1
+  pattern_bank: artifacts/pattern_bank/unified_pattern_bank.yaml
+  scheduler_seed: artifacts/pattern_bank/scheduler_seed.yaml
+  feedback_files:
+  - artifacts/feedback/asn1_nested_boundary_d_path_audit_feedback.jsonl
+  - artifacts/feedback/asn1_nested_boundary_minimal_reproducer_feedback.jsonl
+  - artifacts/feedback/asn1_nested_boundary_seed_enrichment_feedback.jsonl
+  - artifacts/feedback/cipher_aead_lifecycle_botan_crosscheck_feedback.jsonl
+  - artifacts/feedback/cipher_aead_lifecycle_gcm_closure_feedback.jsonl
+  - artifacts/feedback/cipher_aead_lifecycle_mutation_feedback.jsonl
+  - artifacts/feedback/cipher_aead_lifecycle_semantic_crosscheck_feedback.jsonl
+  - artifacts/feedback/der_full_consumption_feedback.jsonl
+  - artifacts/feedback/mac_lifecycle_feedback.jsonl
+  - artifacts/feedback/mutation_feedback.jsonl
+  - artifacts/feedback/secure_heap_init_failed_then_query_candidate_feedback.jsonl
+  - artifacts/feedback/secure_heap_state_lifecycle_feedback.jsonl
+  - artifacts/feedback/secure_heap_state_lifecycle_pattern_expansion_feedback.jsonl
+  knowledge_files:
+  - knowledge_raw/poc_patterns/unified_patterns.md
+  - knowledge_raw/poc_patterns/openssl_issue_patterns.md
+missing_sources: []
+parse_errors: []
+auto_scheduler_recommendation:
+  top_1_family: x509_parsing
+  top_2_family: evp_pkey_context_lifecycle
+  top_3_family: der_full_consumption
+  recommended_next_task: x509_parsing_triage_v1
+  recommended_route: C_app_level_validation_gap
+  glm_allowed: false
+  auto_render_allowed: false
+  auto_run_allowed: false
+interpretation:
+  why_top_1_x509: x509_parsing has many historical seeds, medium evidence, and is
+    not blocked by seed-missing, closed negative feedback, or external validation.
+  why_route_c_is_tentative: Many x509 issues involve app-visible x509/verify/crl behavior,
+    but some seeds overlap with D-path crash audit and ASN.1 boundary families; C-path
+    is a triage hypothesis, not a final execution route.
+  why_no_render_run: auto_scheduler_v1 explicitly set auto_render_allowed=false and
+    auto_run_allowed=false; route_planner_v1 only emits contracts.
+  why_no_glm: A-path gate is false for x509_parsing and no recipe-slot contract exists
+    for this route yet.
+schema_loaded:
+  route_decision_schema: true
+  evidence_gate: true
+  a_path_glm_gate: true
+  scheduler_seed: true

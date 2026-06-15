@@ -1,0 +1,24 @@
+schema: family_track_policy_v1
+tracks:
+  parsing:
+    priority: low_after_known_pattern
+    known_patterns:
+    - der_single_object_trailing_garbage_full_consumption
+    families:
+    - x509_parsing
+    - pkey_parsing
+    - pkcs8_parsing
+    - x509_crl_parsing
+    - cms_container_parsing
+  lifecycle:
+    priority: high_after_parsing_known_pattern
+    families:
+    - secure_heap_state_lifecycle
+    - mac_lifecycle
+    - ossl_store_lifecycle
+  semantic:
+    priority: high_after_parsing_known_pattern
+    families:
+    - pkey_verify_semantic
+    - bn_arithmetic_semantic
+    - ec_arithmetic_semantic

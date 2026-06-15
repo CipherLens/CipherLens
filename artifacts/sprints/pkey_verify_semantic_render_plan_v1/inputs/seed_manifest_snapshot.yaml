@@ -1,0 +1,179 @@
+schema: semantic_seed_manifest_v1
+generated_at: '2026-06-13T12:36:04+00:00'
+family: pkey_verify_semantic
+track: semantic
+target_library: openssl
+seed_ready: true
+uses_der_parsing: false
+uses_trailing_garbage: false
+uses_full_consumption_oracle: false
+api_cards_used:
+- knowledge_base/api_cards/openssl/EVP_DigestVerify.yaml
+- knowledge_base/api_cards/openssl/EVP_DigestVerifyInit.yaml
+- knowledge_base/api_cards/openssl/EVP_PKEY_verify.yaml
+- knowledge_base/api_cards/openssl/EVP_PKEY_CTX_set_rsa_padding.yaml
+- knowledge_base/api_cards/openssl/EVP_PKEY_CTX_set_rsa_pss_saltlen.yaml
+- knowledge_base/api_cards/mbedtls/mbedtls_pk_verify.yaml
+preferred_algorithm: RSA + SHA256
+seeds:
+- seed_id: pkey_verify_semantic_valid_sign_verify_control
+  seed_type: valid_sign_verify_control
+  operation_family: public_key_signature_verification
+  algorithm: RSA
+  digest: SHA256
+  message: fixed deterministic semantic seed message
+  api_sequence:
+  - EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)
+  - EVP_PKEY_keygen_init
+  - EVP_PKEY_CTX_set_rsa_keygen_bits(2048)
+  - EVP_PKEY_keygen
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit(ctx, NULL, EVP_sha256(), NULL, signing_key)
+  - EVP_DigestSignUpdate(ctx, message, message_len)
+  - EVP_DigestSignFinal(ctx, NULL, &sig_len)
+  - EVP_DigestSignFinal(ctx, sig, &sig_len)
+  - EVP_MD_CTX_new
+  - EVP_DigestVerifyInit(ctx, NULL, EVP_sha256(), NULL, verify_key)
+  - EVP_DigestVerifyUpdate(ctx, verify_message, verify_message_len)
+  - EVP_DigestVerifyFinal(ctx, signature, signature_len)
+  scenario: sign with key A and verify the same message/signature with key A
+  expected_behavior: accept
+  oracle:
+  - unexpected_reject
+  - semantic_divergence
+  - crash_or_sanitizer
+  mutation_hints:
+  - control case for valid signature acceptance
+  render_requirements:
+    generate_key_at_runtime: true
+    serialize_key_or_signature_as_der: false
+    use_evp_high_level_api: true
+    must_not_use_d2i_prefix_parsing: true
+    observe_verify_return_code: true
+    cleanup:
+    - EVP_MD_CTX_free
+    - EVP_PKEY_free
+    - EVP_PKEY_CTX_free
+    - OPENSSL_free(signature)
+- seed_id: pkey_verify_semantic_modified_signature_reject_control
+  seed_type: modified_signature_reject_control
+  operation_family: public_key_signature_verification
+  algorithm: RSA
+  digest: SHA256
+  message: fixed deterministic semantic seed message
+  api_sequence:
+  - EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)
+  - EVP_PKEY_keygen_init
+  - EVP_PKEY_CTX_set_rsa_keygen_bits(2048)
+  - EVP_PKEY_keygen
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit(ctx, NULL, EVP_sha256(), NULL, signing_key)
+  - EVP_DigestSignUpdate(ctx, message, message_len)
+  - EVP_DigestSignFinal(ctx, NULL, &sig_len)
+  - EVP_DigestSignFinal(ctx, sig, &sig_len)
+  - EVP_MD_CTX_new
+  - EVP_DigestVerifyInit(ctx, NULL, EVP_sha256(), NULL, verify_key)
+  - EVP_DigestVerifyUpdate(ctx, verify_message, verify_message_len)
+  - EVP_DigestVerifyFinal(ctx, signature, signature_len)
+  scenario: flip one byte in a valid signature before verification
+  expected_behavior: reject
+  oracle:
+  - unexpected_accept
+  - semantic_divergence
+  - crash_or_sanitizer
+  mutation_hints:
+  - bitflip signature
+  - malformed signature length boundary
+  render_requirements:
+    generate_key_at_runtime: true
+    serialize_key_or_signature_as_der: false
+    use_evp_high_level_api: true
+    must_not_use_d2i_prefix_parsing: true
+    observe_verify_return_code: true
+    cleanup:
+    - EVP_MD_CTX_free
+    - EVP_PKEY_free
+    - EVP_PKEY_CTX_free
+    - OPENSSL_free(signature)
+- seed_id: pkey_verify_semantic_modified_message_reject_control
+  seed_type: modified_message_reject_control
+  operation_family: public_key_signature_verification
+  algorithm: RSA
+  digest: SHA256
+  message: fixed deterministic semantic seed message
+  api_sequence:
+  - EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)
+  - EVP_PKEY_keygen_init
+  - EVP_PKEY_CTX_set_rsa_keygen_bits(2048)
+  - EVP_PKEY_keygen
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit(ctx, NULL, EVP_sha256(), NULL, signing_key)
+  - EVP_DigestSignUpdate(ctx, message, message_len)
+  - EVP_DigestSignFinal(ctx, NULL, &sig_len)
+  - EVP_DigestSignFinal(ctx, sig, &sig_len)
+  - EVP_MD_CTX_new
+  - EVP_DigestVerifyInit(ctx, NULL, EVP_sha256(), NULL, verify_key)
+  - EVP_DigestVerifyUpdate(ctx, verify_message, verify_message_len)
+  - EVP_DigestVerifyFinal(ctx, signature, signature_len)
+  scenario: verify a valid signature against a modified message
+  expected_behavior: reject
+  oracle:
+  - unexpected_accept
+  - semantic_divergence
+  - crash_or_sanitizer
+  mutation_hints:
+  - wrong message
+  - message length delta
+  render_requirements:
+    generate_key_at_runtime: true
+    serialize_key_or_signature_as_der: false
+    use_evp_high_level_api: true
+    must_not_use_d2i_prefix_parsing: true
+    observe_verify_return_code: true
+    cleanup:
+    - EVP_MD_CTX_free
+    - EVP_PKEY_free
+    - EVP_PKEY_CTX_free
+    - OPENSSL_free(signature)
+- seed_id: pkey_verify_semantic_wrong_key_reject_control
+  seed_type: wrong_key_reject_control
+  operation_family: public_key_signature_verification
+  algorithm: RSA
+  digest: SHA256
+  message: fixed deterministic semantic seed message
+  api_sequence:
+  - EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)
+  - EVP_PKEY_keygen_init
+  - EVP_PKEY_CTX_set_rsa_keygen_bits(2048)
+  - EVP_PKEY_keygen
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit(ctx, NULL, EVP_sha256(), NULL, signing_key)
+  - EVP_DigestSignUpdate(ctx, message, message_len)
+  - EVP_DigestSignFinal(ctx, NULL, &sig_len)
+  - EVP_DigestSignFinal(ctx, sig, &sig_len)
+  - EVP_MD_CTX_new
+  - EVP_DigestVerifyInit(ctx, NULL, EVP_sha256(), NULL, verify_key)
+  - EVP_DigestVerifyUpdate(ctx, verify_message, verify_message_len)
+  - EVP_DigestVerifyFinal(ctx, signature, signature_len)
+  scenario: sign with key A and verify with independently generated key B
+  expected_behavior: reject
+  oracle:
+  - unexpected_accept
+  - semantic_divergence
+  - crash_or_sanitizer
+  mutation_hints:
+  - wrong public key
+  - key mismatch
+  - provider dispatch boundary
+  render_requirements:
+    generate_key_at_runtime: true
+    serialize_key_or_signature_as_der: false
+    use_evp_high_level_api: true
+    must_not_use_d2i_prefix_parsing: true
+    observe_verify_return_code: true
+    cleanup:
+    - EVP_MD_CTX_free
+    - EVP_PKEY_free
+    - EVP_PKEY_CTX_free
+    - OPENSSL_free(signature)
+next_stage: generic_mutation_engine

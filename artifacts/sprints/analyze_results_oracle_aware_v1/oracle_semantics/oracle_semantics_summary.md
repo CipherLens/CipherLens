@@ -1,0 +1,39 @@
+# Oracle Semantics Summary
+
+```yaml
+schema: oracle_semantics_summary_v1
+generated_at: '2026-06-12T03:39:14+00:00'
+raw_observations:
+  total_events: 49
+  cases_with_events: 14
+  parse_events: 14
+  verify_events: 7
+  full_consumption_events: 14
+  cleanup_events: 14
+  accepted_true: 0
+  accepted_false: 21
+  full_consumption_true: 0
+  full_consumption_false: 35
+  full_consumption_unknown: 14
+interpretation_rules:
+- rule: accepted_false_and_full_consumption_false
+  interpretation: reject path; not a full-consumption gap by itself
+- rule: accepted_true_and_full_consumption_false
+  interpretation: possible full-consumption gap candidate
+- rule: normal_exit_without_accept
+  interpretation: no crash; semantic outcome depends on oracle event
+- rule: sanitizer_output
+  interpretation: sanitizer_crash_candidate, requires triage
+semantic_outcome:
+  all_cases_rejected: true
+  any_success_accept: false
+  any_success_accept_with_trailing_unconsumed: false
+  full_consumption_gap_candidates: []
+  needs_more_valid_mutation_inputs: true
+  interpretation: No accepted=true parser path was observed; full_consumption=false occurs on reject/error
+    paths and is not a full-consumption validation gap by itself.
+claim_policy:
+  confirmed_vulnerability: false
+  cve: false
+  exploitable: false
+```

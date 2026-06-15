@@ -1,0 +1,28 @@
+template_id: WOLFSSL-FAMILY-asn1_nested_boundary
+template_name: wolfssl family canonical template for asn1_nested_boundary
+template_level: family
+pattern_id: wolfssl_family::asn1_nested_boundary
+source_library: wolfssl
+source_api:
+- wc_InitDecodedCert
+- wc_ParseCert
+- wc_FreeDecodedCert
+- ASN1_item_d2i
+- mbedtls_x509_crt_parse_der
+harness_family: x509_asn1_inner_boundary
+oracle_type:
+- parser_reject_accept
+- full_consumption
+- return_code_semantics
+seed_pocs:
+- WOLFSSL-POC-0004
+template_file: canonical_tmpl_wolfssl.c
+mutation_points:
+- ASN1_NESTED_LENGTH
+- DER_BYTES
+- TRAILING_GARBAGE
+- NESTED_DEPTH
+- EXPECT_RET
+notes:
+- PoCs are retained as seed evidence; this is the family-level template unit.
+- No target adapter or GLM output is embedded in this template package.

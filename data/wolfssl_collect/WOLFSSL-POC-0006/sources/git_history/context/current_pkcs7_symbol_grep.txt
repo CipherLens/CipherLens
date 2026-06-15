@@ -1,0 +1,145 @@
+wolfcrypt/src/pkcs7.c:1620:                        byte signedAttribSet[MAX_SET_SZ];
+wolfcrypt/src/pkcs7.c:1621:                            EncodedAttrib signedAttribs[7];
+wolfcrypt/src/pkcs7.c:1629:    word32 encContentDigestSz, signedAttribsSz, signedAttribsCount,
+wolfcrypt/src/pkcs7.c:1630:           signedAttribSetSz;
+wolfcrypt/src/pkcs7.c:1634:static int EncodeAttributes(EncodedAttrib* ea, int eaSz,
+wolfcrypt/src/pkcs7.c:2213:static int wc_PKCS7_BuildSignedAttributes(wc_PKCS7* pkcs7, ESD* esd,
+wolfcrypt/src/pkcs7.c:2237:    if (pkcs7->defaultSignedAttribs != WOLFSSL_NO_ATTRIBUTES) {
+wolfcrypt/src/pkcs7.c:2254:        if ((pkcs7->defaultSignedAttribs & WOLFSSL_CONTENT_TYPE_ATTRIBUTE) ||
+wolfcrypt/src/pkcs7.c:2255:            pkcs7->defaultSignedAttribs == 0) {
+wolfcrypt/src/pkcs7.c:2264:        if ((pkcs7->defaultSignedAttribs & WOLFSSL_SIGNING_TIME_ATTRIBUTE) ||
+wolfcrypt/src/pkcs7.c:2265:            pkcs7->defaultSignedAttribs == 0) {
+wolfcrypt/src/pkcs7.c:2274:        if ((pkcs7->defaultSignedAttribs & WOLFSSL_MESSAGE_DIGEST_ATTRIBUTE) ||
+wolfcrypt/src/pkcs7.c:2275:            pkcs7->defaultSignedAttribs == 0) {
+wolfcrypt/src/pkcs7.c:2283:        esd->signedAttribsCount += idx;
+wolfcrypt/src/pkcs7.c:2284:        esd->signedAttribsSz += (word32)EncodeAttributes(
+wolfcrypt/src/pkcs7.c:2285:            &esd->signedAttribs[atrIdx], (int)idx, cannedAttribs,
+wolfcrypt/src/pkcs7.c:2289:        esd->signedAttribsCount = 0;
+wolfcrypt/src/pkcs7.c:2290:        esd->signedAttribsSz = 0;
+wolfcrypt/src/pkcs7.c:2294:    if (pkcs7->signedAttribsSz > 0 && pkcs7->signedAttribs != NULL) {
+wolfcrypt/src/pkcs7.c:2297:        if (pkcs7->signedAttribsSz > availableSpace)
+wolfcrypt/src/pkcs7.c:2300:        esd->signedAttribsCount += pkcs7->signedAttribsSz;
+wolfcrypt/src/pkcs7.c:2301:        esd->signedAttribsSz += (word32)EncodeAttributes(
+wolfcrypt/src/pkcs7.c:2302:            &esd->signedAttribs[atrIdx], (int)esd->signedAttribsCount,
+wolfcrypt/src/pkcs7.c:2303:            pkcs7->signedAttribs, (int)pkcs7->signedAttribsSz);
+wolfcrypt/src/pkcs7.c:2474: * flatSignedAttribs - flattened, signed attributes
+wolfcrypt/src/pkcs7.c:2475: * flatSignedAttrbsSz - size of flatSignedAttribs, octets
+wolfcrypt/src/pkcs7.c:2481:static int wc_PKCS7_BuildDigestInfo(wc_PKCS7* pkcs7, byte* flatSignedAttribs,
+wolfcrypt/src/pkcs7.c:2482:                                    word32 flatSignedAttribsSz, ESD* esd,
+wolfcrypt/src/pkcs7.c:2503:    if (flatSignedAttribsSz != 0) {
+wolfcrypt/src/pkcs7.c:2505:        if (flatSignedAttribs == NULL)
+wolfcrypt/src/pkcs7.c:2508:        attribSetSz = SetSet(flatSignedAttribsSz, attribSet);
+wolfcrypt/src/pkcs7.c:2518:                                flatSignedAttribs, flatSignedAttribsSz);
+wolfcrypt/src/pkcs7.c:2562: * flatSignedAttribs - flattened, signed attributes
+wolfcrypt/src/pkcs7.c:2563: * flatSignedAttribsSz - size of flatSignedAttribs, octets
+wolfcrypt/src/pkcs7.c:2568:                                             byte* flatSignedAttribs,
+wolfcrypt/src/pkcs7.c:2569:                                             word32 flatSignedAttribsSz,
+wolfcrypt/src/pkcs7.c:2591:    ret = wc_PKCS7_BuildDigestInfo(pkcs7, flatSignedAttribs,
+wolfcrypt/src/pkcs7.c:2592:                                   flatSignedAttribsSz, esd, digestInfo,
+wolfcrypt/src/pkcs7.c:3005:    byte* flatSignedAttribs = NULL;
+wolfcrypt/src/pkcs7.c:3006:    word32 flatSignedAttribsSz = 0;
+wolfcrypt/src/pkcs7.c:3225:        ret = wc_PKCS7_BuildSignedAttributes(pkcs7, esd, pkcs7->contentType,
+wolfcrypt/src/pkcs7.c:3236:        if (esd->signedAttribsSz > 0) {
+wolfcrypt/src/pkcs7.c:3237:            flatSignedAttribs = (byte*)XMALLOC(esd->signedAttribsSz, pkcs7->heap,
+wolfcrypt/src/pkcs7.c:3239:            if (flatSignedAttribs == NULL) {
+wolfcrypt/src/pkcs7.c:3244:            flatSignedAttribsSz = esd->signedAttribsSz;
+wolfcrypt/src/pkcs7.c:3246:            FlattenAttributes(pkcs7, flatSignedAttribs, esd->signedAttribs,
+wolfcrypt/src/pkcs7.c:3247:                                                  (int)esd->signedAttribsCount);
+wolfcrypt/src/pkcs7.c:3248:            esd->signedAttribSetSz = SetImplicit(ASN_SET, 0, esd->signedAttribsSz,
+wolfcrypt/src/pkcs7.c:3249:                                                              esd->signedAttribSet, 0);
+wolfcrypt/src/pkcs7.c:3251:            esd->signedAttribSetSz = 0;
+wolfcrypt/src/pkcs7.c:3259:            ret = wc_PKCS7_SignedDataBuildSignature(pkcs7, flatSignedAttribs,
+wolfcrypt/src/pkcs7.c:3260:                                            flatSignedAttribsSz, esd);
+wolfcrypt/src/pkcs7.c:3267:        signerInfoSz += flatSignedAttribsSz + esd->signedAttribSetSz;
+wolfcrypt/src/pkcs7.c:3554:    if (flatSignedAttribsSz > 0) {
+wolfcrypt/src/pkcs7.c:3561:            esd->signedAttribsCount = 0;
+wolfcrypt/src/pkcs7.c:3562:            esd->signedAttribsSz = 0;
+wolfcrypt/src/pkcs7.c:3563:            ret = wc_PKCS7_BuildSignedAttributes(pkcs7, esd, pkcs7->contentType,
+wolfcrypt/src/pkcs7.c:3574:            if (esd->signedAttribsSz > 0) {
+wolfcrypt/src/pkcs7.c:3575:                if (flatSignedAttribs == NULL) {
+wolfcrypt/src/pkcs7.c:3580:                flatSignedAttribsSz = esd->signedAttribsSz;
+wolfcrypt/src/pkcs7.c:3581:                FlattenAttributes(pkcs7, flatSignedAttribs,
+wolfcrypt/src/pkcs7.c:3582:                                  esd->signedAttribs,
+wolfcrypt/src/pkcs7.c:3583:                                  (int)esd->signedAttribsCount);
+wolfcrypt/src/pkcs7.c:3585:                esd->signedAttribSetSz = 0;
+wolfcrypt/src/pkcs7.c:3590:                esd->signedAttribSet, esd->signedAttribSetSz);
+wolfcrypt/src/pkcs7.c:3591:        idx += (int)esd->signedAttribSetSz;
+wolfcrypt/src/pkcs7.c:3593:                flatSignedAttribs, flatSignedAttribsSz);
+wolfcrypt/src/pkcs7.c:3594:        idx += (int)flatSignedAttribsSz;
+wolfcrypt/src/pkcs7.c:3600:        ret = wc_PKCS7_SignedDataBuildSignature(pkcs7, flatSignedAttribs,
+wolfcrypt/src/pkcs7.c:3601:                                                flatSignedAttribsSz, esd);
+wolfcrypt/src/pkcs7.c:3649:    XFREE(flatSignedAttribs, pkcs7->heap, DYNAMIC_TYPE_PKCS7);
+wolfcrypt/src/pkcs7.c:3665:int wc_PKCS7_EncodeSignedData_ex(wc_PKCS7* pkcs7, const byte* hashBuf,
+wolfcrypt/src/pkcs7.c:3754: * Calling this API before wc_PKCS7_EncodeSignedData() will disable the
+wolfcrypt/src/pkcs7.c:3760:int wc_PKCS7_NoDefaultSignedAttribs(wc_PKCS7* pkcs7)
+wolfcrypt/src/pkcs7.c:3762:    return wc_PKCS7_SetDefaultSignedAttribs(pkcs7, WOLFSSL_NO_ATTRIBUTES);
+wolfcrypt/src/pkcs7.c:3771: * Calling this API before wc_PKCS7_EncodeSignedData() allows control over which
+wolfcrypt/src/pkcs7.c:3777:int  wc_PKCS7_SetDefaultSignedAttribs(wc_PKCS7* pkcs7, word16 flag)
+wolfcrypt/src/pkcs7.c:3789:        pkcs7->defaultSignedAttribs = 0;
+wolfcrypt/src/pkcs7.c:3800:    pkcs7->defaultSignedAttribs |= flag;
+wolfcrypt/src/pkcs7.c:3806:int wc_PKCS7_EncodeSignedData(wc_PKCS7* pkcs7, byte* output, word32 outputSz)
+wolfcrypt/src/pkcs7.c:3879: * signedAttribs        - optional signed attributes
+wolfcrypt/src/pkcs7.c:3880: * signedAttribsSz      - number of PKCS7Attrib members in signedAttribs
+wolfcrypt/src/pkcs7.c:3888:                             PKCS7Attrib* signedAttribs, word32 signedAttribsSz,
+wolfcrypt/src/pkcs7.c:3910:    pkcs7->signedAttribs = signedAttribs;
+wolfcrypt/src/pkcs7.c:3911:    pkcs7->signedAttribsSz = signedAttribsSz;
+wolfcrypt/src/pkcs7.c:3914:    ret = wc_PKCS7_EncodeSignedData(pkcs7, output, outputSz);
+wolfcrypt/src/pkcs7.c:3948: * signedAttribs        - optional signed attributes, for SignedData
+wolfcrypt/src/pkcs7.c:3949: * signedAttribsSz      - number of PKCS7Attrib members in signedAttribs
+wolfcrypt/src/pkcs7.c:3961:                                      PKCS7Attrib* signedAttribs,
+wolfcrypt/src/pkcs7.c:3962:                                      word32 signedAttribsSz,
+wolfcrypt/src/pkcs7.c:4022:    pkcs7->signedAttribs = signedAttribs;
+wolfcrypt/src/pkcs7.c:4023:    pkcs7->signedAttribsSz = signedAttribsSz;
+wolfcrypt/src/pkcs7.c:4025:    ret = wc_PKCS7_EncodeSignedData(pkcs7, output, outputSz);
+wolfcrypt/src/pkcs7.c:4056: * signedAttribs        - optional signed attributes, for SignedData
+wolfcrypt/src/pkcs7.c:4057: * signedAttribsSz      - number of PKCS7Attrib members in signedAttribs
+wolfcrypt/src/pkcs7.c:4066:                                       PKCS7Attrib* signedAttribs,
+wolfcrypt/src/pkcs7.c:4067:                                       word32 signedAttribsSz, byte* output,
+wolfcrypt/src/pkcs7.c:4120:    pkcs7->signedAttribs = signedAttribs;
+wolfcrypt/src/pkcs7.c:4121:    pkcs7->signedAttribsSz = signedAttribsSz;
+wolfcrypt/src/pkcs7.c:4123:    ret = wc_PKCS7_EncodeSignedData(pkcs7, output, outputSz);
+wolfcrypt/src/pkcs7.c:4160: * signedAttribs        - optional signed attributes, for SignedData
+wolfcrypt/src/pkcs7.c:4161: * signedAttribsSz      - number of PKCS7Attrib members in signedAttribs
+wolfcrypt/src/pkcs7.c:4173:                                       PKCS7Attrib* signedAttribs,
+wolfcrypt/src/pkcs7.c:4174:                                       word32 signedAttribsSz,
+wolfcrypt/src/pkcs7.c:4256:    pkcs7->signedAttribs = signedAttribs;
+wolfcrypt/src/pkcs7.c:4257:    pkcs7->signedAttribsSz = signedAttribsSz;
+wolfcrypt/src/pkcs7.c:4259:    ret = wc_PKCS7_EncodeSignedData(pkcs7, output, outputSz);
+wolfcrypt/src/pkcs7.c:4870: * signedAttribSz - size of signedAttrib, octets
+wolfcrypt/src/pkcs7.c:4878:                                      word32 signedAttribSz, byte* pkcs7Digest,
+wolfcrypt/src/pkcs7.c:4907:    if (signedAttribSz > 0) {
+wolfcrypt/src/pkcs7.c:4932:    if (hashBuf && hashBufSz > 0 && signedAttribSz == 0) {
+wolfcrypt/src/pkcs7.c:4943:        if (signedAttribSz > 0) {
+wolfcrypt/src/pkcs7.c:4944:            attribSetSz = SetSet(signedAttribSz, attribSet);
+wolfcrypt/src/pkcs7.c:4949:                ret = wc_HashUpdate(hash, hashType, signedAttrib, signedAttribSz);
+wolfcrypt/src/pkcs7.c:5132: * signedAttribSz - size of signedAttributes
+wolfcrypt/src/pkcs7.c:5137:                                             word32 signedAttribSz,
+wolfcrypt/src/pkcs7.c:5167:                                         signedAttribSz, pkcs7Digest,
+wolfcrypt/src/pkcs7.c:5478: *  at their location in the buffer "in". Also in this case signedAttribSz gets
+wolfcrypt/src/pkcs7.c:5484:        word32* idxIn, int degenerate, byte** signedAttrib, int* signedAttribSz)
+wolfcrypt/src/pkcs7.c:5623:            *signedAttribSz = length;
+wolfcrypt/src/pkcs7.c:5626:                        *signedAttribSz) < 0) {
+wolfcrypt/src/pkcs7.c:5982:    int contentSz = 0, sigSz = 0, certSz = 0, signedAttribSz = 0;
+wolfcrypt/src/pkcs7.c:7228:                    degenerate, &signedAttrib, &signedAttribSz);
+wolfcrypt/src/pkcs7.c:7283:                            (word32)sigSz, signedAttrib, (word32)signedAttribSz,
+wolfcrypt/src/pkcs7.c:7380: *              as output from wc_PKCS7_EncodeSignedData_ex (if also using
+wolfcrypt/src/pkcs7.c:7385: *              as output from wc_PKCS7_EncodeSignedData_ex. Can be NULL
+wolfcrypt/src/pkcs7.c:14338:        authAttribsSz += (word32)EncodeAttributes(authAttribs, 1,
+wolfcrypt/src/pkcs7.c:14345:        authAttribsSz += (word32)EncodeAttributes(
+wolfcrypt/src/pkcs7.c:14397:        unauthAttribsSz = (word32)EncodeAttributes(
+wolfcrypt/src/pkcs7.c:15580:        attribsSz = (word32)EncodeAttributes(attribs,
+wolfssl/wolfcrypt/pkcs7.h:246:    PKCS7Attrib* signedAttribs;
+wolfssl/wolfcrypt/pkcs7.h:287:    word32 signedAttribsSz;
+wolfssl/wolfcrypt/pkcs7.h:334:    word16 defaultSignedAttribs; /* set which default signed attribs */
+wolfssl/wolfcrypt/pkcs7.h:429:WOLFSSL_API int  wc_PKCS7_NoDefaultSignedAttribs(wc_PKCS7* pkcs7);
+wolfssl/wolfcrypt/pkcs7.h:430:WOLFSSL_API int  wc_PKCS7_SetDefaultSignedAttribs(wc_PKCS7* pkcs7, word16 flag);
+wolfssl/wolfcrypt/pkcs7.h:431:WOLFSSL_API int  wc_PKCS7_EncodeSignedData(wc_PKCS7* pkcs7,
+wolfssl/wolfcrypt/pkcs7.h:433:WOLFSSL_API int  wc_PKCS7_EncodeSignedData_ex(wc_PKCS7* pkcs7, const byte* hashBuf,
+wolfssl/wolfcrypt/pkcs7.h:453:                                          PKCS7Attrib* signedAttribs,
+wolfssl/wolfcrypt/pkcs7.h:454:                                          word32 signedAttribsSz, byte* output,
+wolfssl/wolfcrypt/pkcs7.h:466:                                          PKCS7Attrib* signedAttribs,
+wolfssl/wolfcrypt/pkcs7.h:467:                                          word32 signedAttribsSz,
+wolfssl/wolfcrypt/pkcs7.h:476:                                          PKCS7Attrib* signedAttribs,
+wolfssl/wolfcrypt/pkcs7.h:477:                                          word32 signedAttribsSz, byte* output,
+wolfssl/wolfcrypt/pkcs7.h:490:                                          PKCS7Attrib* signedAttribs,
+wolfssl/wolfcrypt/pkcs7.h:491:                                          word32 signedAttribsSz,

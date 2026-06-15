@@ -1,0 +1,251 @@
+families:
+  mac_lifecycle:
+    aliases:
+      - object_state_lifecycle
+      - mac_context_size_lifecycle_oracle
+    mutation_dimensions:
+      mac_algorithm:
+        values:
+          - HMAC
+          - CMAC
+      digest_or_cipher:
+        values:
+          - SHA256
+          - SHA512
+          - AES-128-CBC
+          - AES-256-CBC
+      lifecycle_sequence:
+        values:
+          - final_before_setup
+          - update_before_setup
+          - query_size_before_setup
+          - setup_update_final
+          - setup_update_final_final
+          - setup_final_final
+          - abort_then_final
+          - wrong_digest_combo
+          - update_after_final
+          - third_final
+          - final_after_abort
+          - update_after_second_final
+          - query_after_final
+          - query_after_abort
+    legal_combinations:
+      mac_algorithm_digest_or_cipher:
+        - mac_algorithm: HMAC
+          digest_or_cipher: SHA256
+        - mac_algorithm: HMAC
+          digest_or_cipher: SHA512
+        - mac_algorithm: CMAC
+          digest_or_cipher: AES-128-CBC
+        - mac_algorithm: CMAC
+          digest_or_cipher: AES-256-CBC
+    projection_limitations:
+      invalid_algorithm_parameter_combos:
+        - mac_algorithm: HMAC
+          digest_or_cipher_prefix: AES-
+          reason: HMAC requires a digest such as SHA256 or SHA512, not an AES cipher.
+        - mac_algorithm: CMAC
+          digest_or_cipher_prefix: SHA
+          reason: CMAC requires an AES block cipher, not a SHA digest.
+      unsupported_sequences:
+        - lifecycle_sequence: query_size_before_setup
+          reason: mbedTLS PSA MAC has no public pre-setup size query equivalent.
+    feedback_sources:
+      - mac_cmac_double_final_minimal
+      - mac_lifecycle_v2_minimal
+      - behavior_summary.v2
+      - api_cards
+    high_value_sequences:
+      - update_after_final
+      - final_after_abort
+      - update_after_second_final
+    lower_priority_sequences:
+      - third_final
+      - query_after_final
+      - query_after_abort
+    profiles:
+      mac_lifecycle_v2:
+        mutation_dimensions:
+          mac_algorithm:
+            values:
+              - HMAC
+              - CMAC
+          digest_or_cipher:
+            values:
+              - SHA256
+              - SHA512
+              - AES-128-CBC
+              - AES-256-CBC
+          lifecycle_sequence:
+            values:
+              - update_after_final
+              - third_final
+              - final_after_abort
+              - update_after_second_final
+              - query_after_final
+              - query_after_abort
+        feedback_sources:
+          - mac_cmac_double_final_minimal
+          - mac_lifecycle_v2_minimal
+          - behavior_summary.v2
+          - api_cards
+        high_value_sequences:
+          - update_after_final
+          - final_after_abort
+          - update_after_second_final
+        lower_priority_sequences:
+          - third_final
+          - query_after_final
+          - query_after_abort
+        expected_candidate_types:
+          - lifecycle_semantic_divergence_candidate
+          - allowed_legacy_semantics_needs_review
+          - failure_path_output_state_triage
+          - safe_negative
+          - projection_limitation
+          - crash_candidate
+    oracle_observables:
+      - return_code
+      - output_length
+      - operation_state
+      - sanitizer_signal
+      - returned_size
+      - error_stack
+    expected_candidate_types:
+      - unexpected_success_candidate
+      - failure_path_output_state_triage
+      - allowed_legacy_semantics
+      - allowed_legacy_semantics_needs_review
+      - lifecycle_semantic_divergence_candidate
+      - safe_negative
+      - projection_limitation
+      - crash_candidate
+    interpretation_rules:
+      - name: cmac_double_final_review
+        applies_to:
+          mac_algorithm: CMAC
+          lifecycle_sequence:
+            - setup_update_final_final
+            - setup_final_final
+            - third_final
+        verdict: allowed_legacy_semantics_needs_review
+        note: OpenSSL CMAC repeated EVP_MAC_final may be allowed legacy/provider semantics; do not report as confirmed vulnerability without documentation and caller impact.
+      - name: cmac_update_after_final_review
+        applies_to:
+          mac_algorithm: CMAC
+          lifecycle_sequence:
+            - update_after_final
+            - update_after_second_final
+        verdict: lifecycle_semantic_divergence_candidate
+        fallback_verdict: allowed_legacy_semantics_needs_review
+        note: OpenSSL CMAC update-after-final and update-after-second-final are high-value lifecycle divergence candidates when paired with mbedTLS PSA BAD_STATE-like rejection, but they still require documentation review and caller impact before any vulnerability claim.
+      - name: hmac_failure_path_outl
+        applies_to:
+          mac_algorithm: HMAC
+        verdict: failure_path_output_state_triage
+        note: HMAC failure-path outl/state observations require triage and are not bug candidates by themselves.
+      - name: invalid_hmac_cmac_projection
+        verdict: projection_limitation
+        note: HMAC+AES and CMAC+SHA combinations are invalid projections and should be skipped or marked projection_limitation.
+  pkey_verify_semantic:
+    aliases:
+      - pkey_verify
+      - signature_verify_semantic
+    mutation_dimensions:
+      signature_mutation:
+        values:
+          - valid_signature
+          - truncated_signature
+          - all_zero_signature
+          - random_signature
+          - bitflip_signature
+          - oversized_signature
+      digest_mutation:
+        values:
+          - matching_digest
+          - wrong_digest_algorithm
+          - wrong_hash_length
+          - zero_length_hash
+          - one_byte_hash
+      key_mutation:
+        values:
+          - matching_key
+          - wrong_key
+          - public_only
+          - mismatched_key_type
+      padding_mutation:
+        values:
+          - rsa_pkcs1_v15
+          - rsa_pss
+          - pss_saltlen_mismatch
+    oracle_observables:
+      - return_code
+      - error_stack
+      - sanitizer_signal
+      - signature_acceptance
+    expected_candidate_types:
+      - unexpected_success_candidate
+      - safe_negative
+      - behavior_divergence_candidate
+      - projection_limitation
+      - crash_candidate
+      - harness_error
+    feedback_sources:
+      - api_cards
+      - pk_verify_ext_null_deref_seed
+    high_value_sequences:
+      - invalid_signature
+      - wrong_digest
+      - wrong_hash_length
+      - wrong_key
+      - pss_saltlen_mismatch
+      - padding_mismatch
+    profiles:
+      pkey_verify_v0:
+        mutation_dimensions:
+          key_type:
+            values:
+              - rsa
+          digest_mutation:
+            values:
+              - matching_digest
+              - wrong_digest_algorithm
+              - wrong_hash_length
+          key_mutation:
+            values:
+              - matching_key
+              - wrong_key
+          padding_mutation:
+            values:
+              - rsa_pkcs1_v15
+              - rsa_pss
+              - pss_saltlen_mismatch
+          signature_mutation:
+            values:
+              - valid_signature
+              - invalid_signature
+              - truncated_signature
+              - all_zero_signature
+              - bitflip_signature
+          verify_api:
+            values:
+              - EVP_DigestVerify
+              - EVP_PKEY_verify
+        feedback_sources:
+          - api_cards
+          - pk_verify_ext_null_deref_seed
+        high_value_sequences:
+          - invalid_signature
+          - wrong_digest
+          - wrong_hash_length
+          - wrong_key
+          - pss_saltlen_mismatch
+          - padding_mismatch
+        expected_candidate_types:
+          - unexpected_success_candidate
+          - behavior_divergence_candidate
+          - safe_negative
+          - projection_limitation
+          - crash_candidate
+          - harness_error

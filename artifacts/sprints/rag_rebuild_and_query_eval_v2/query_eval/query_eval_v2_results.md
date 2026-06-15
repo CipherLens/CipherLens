@@ -1,0 +1,370 @@
+# Query Eval v2 Results
+
+```yaml
+query_results:
+- query_id: q1_tls_three_library_lifecycle
+  query: wolfSSL_CTX_new SSL_CTX_new mbedtls_ssl_config_init TLS context lifecycle
+    cleanup
+  success: true
+  expected_terms_found:
+  - wolfSSL_CTX_new
+  - SSL_CTX_new
+  - mbedtls_ssl_config_init
+  - lifecycle
+  missing_expected_terms: []
+  top_hits_summary:
+  - rank: 1
+    source_file: knowledge_raw/api_knowledge_cards/mbedtls_counterpart_api_cards.yaml
+    layer: api_cards
+    api: mbedtls_ssl_config_init
+    library: mbedtls
+    score: 1.2147928601119493
+  - rank: 2
+    source_file: knowledge_raw/api_knowledge_cards/openssl_counterpart_api_cards.yaml
+    layer: api_cards
+    api: SSL_CTX_new
+    library: openssl
+    score: 1.099146484880484
+  - rank: 3
+    source_file: knowledge_raw/api_knowledge_cards/wolfssl_top_family_api_cards.yaml
+    layer: api_cards
+    api: wolfSSL_CTX_new
+    library: wolfssl
+    score: 1.0096460835503729
+  - rank: 4
+    source_file: knowledge_raw/api_knowledge_cards/mbedtls_counterpart_api_cards.yaml
+    layer: api_cards
+    api: mbedtls_ssl_setup
+    library: mbedtls
+    score: 0.9419481954546118
+  - rank: 5
+    source_file: knowledge_raw/api_knowledge_cards/mbedtls_counterpart_api_cards.yaml
+    layer: api_cards
+    api: mbedtls_ssl_init
+    library: mbedtls
+    score: 0.9414846744892171
+  retrieved_sources:
+  - knowledge_raw/api_knowledge_cards/mbedtls_counterpart_api_cards.yaml
+  - knowledge_raw/api_knowledge_cards/openssl_counterpart_api_cards.yaml
+  - knowledge_raw/api_knowledge_cards/wolfssl_top_family_api_cards.yaml
+  notes: query completed
+- query_id: q2_tls_session_mapping
+  query: wolfSSL_new SSL_new mbedtls_ssl_setup handshake read write free
+  success: true
+  expected_terms_found:
+  - wolfSSL_new
+  - SSL_new
+  - mbedtls_ssl_setup
+  - mbedtls_ssl_free
+  missing_expected_terms: []
+  top_hits_summary:
+  - rank: 1
+    source_file: knowledge_raw/api_knowledge_cards/mbedtls_counterpart_api_cards.yaml
+    layer: api_cards
+    api: mbedtls_ssl_setup
+    library: mbedtls
+    score: 1.1169535939936646
+  - rank: 2
+    source_file: knowledge_raw/api_knowledge_cards/wolfssl_top_family_api_cards.yaml
+    layer: api_cards
+    api: wolfSSL_new
+    library: wolfssl
+    score: 0.9400677767450634
+  - rank: 3
+    source_file: knowledge_raw/api_constraints/cross_library_counterpart_api_constraints.md
+    layer: api_constraints
+    api: ''
+    library: ''
+    score: 0.8880190477228923
+  - rank: 4
+    source_file: knowledge_raw/api_knowledge_cards/mbedtls_counterpart_api_cards.yaml
+    layer: api_cards
+    api: mbedtls_ssl_free
+    library: mbedtls
+    score: 0.8516646282702205
+  - rank: 5
+    source_file: knowledge_raw/api_knowledge_cards/mbedtls_counterpart_api_cards.yaml
+    layer: api_cards
+    api: mbedtls_ssl_config_free
+    library: mbedtls
+    score: 0.850469037696064
+  retrieved_sources:
+  - knowledge_raw/api_constraints/cross_library_counterpart_api_constraints.md
+  - knowledge_raw/api_knowledge_cards/mbedtls_counterpart_api_cards.yaml
+  - knowledge_raw/api_knowledge_cards/wolfssl_top_family_api_cards.yaml
+  notes: query completed
+- query_id: q3_x509_asn1_parse_mapping
+  query: wc_ParseCert ASN1_item_d2i mbedtls_x509_crt_parse_der X509 parsing
+  success: false
+  expected_terms_found:
+  - ASN1_item_d2i
+  - mbedtls_x509_crt_parse_der
+  missing_expected_terms:
+  - wc_ParseCert
+  top_hits_summary:
+  - rank: 1
+    source_file: knowledge_raw/poc_patterns/core10_patterns.md
+    layer: poc_patterns
+    api: ''
+    library: ''
+    score: 1.301827248595533
+  - rank: 2
+    source_file: knowledge_raw/poc_patterns/unified_patterns.md
+    layer: poc_patterns
+    api: ''
+    library: ''
+    score: 1.301827248595533
+  - rank: 3
+    source_file: knowledge_raw/api_knowledge_cards/mbedtls_counterpart_api_cards.yaml
+    layer: api_cards
+    api: mbedtls_x509_crt_parse_der
+    library: mbedtls
+    score: 1.1690108266189154
+  - rank: 4
+    source_file: knowledge_raw/api_knowledge_cards/mbedtls_counterpart_api_cards.yaml
+    layer: api_cards
+    api: mbedtls_x509_crt_parse
+    library: mbedtls
+    score: 1.1400591360196768
+  - rank: 5
+    source_file: knowledge_raw/api_constraints/mbedtls/4.1.0/x509_asn1_nested_helpers.md
+    layer: api_constraints
+    api: ''
+    library: mbedtls
+    score: 1.0736334784006873
+  retrieved_sources:
+  - knowledge_raw/api_constraints/mbedtls/4.1.0/x509_asn1_nested_helpers.md
+  - knowledge_raw/api_knowledge_cards/mbedtls_counterpart_api_cards.yaml
+  - knowledge_raw/poc_patterns/core10_patterns.md
+  - knowledge_raw/poc_patterns/unified_patterns.md
+  notes: query completed
+- query_id: q4_pkcs7_wolfssl_openssl
+  query: wc_PKCS7_VerifySignedData PKCS7_verify PKCS7_free cross library mapping
+  success: true
+  expected_terms_found:
+  - wc_PKCS7_VerifySignedData
+  - PKCS7_verify
+  - PKCS7_free
+  - candidate_mapping
+  missing_expected_terms: []
+  top_hits_summary:
+  - rank: 1
+    source_file: knowledge_raw/api_knowledge_cards/openssl_counterpart_api_cards.yaml
+    layer: api_cards
+    api: PKCS7_verify
+    library: openssl
+    score: 1.0516483645235426
+  - rank: 2
+    source_file: knowledge_raw/api_knowledge_cards/wolfssl_top_family_api_cards.yaml
+    layer: api_cards
+    api: wc_PKCS7_VerifySignedData
+    library: wolfssl
+    score: 0.9904689925570787
+  - rank: 3
+    source_file: knowledge_raw/api_knowledge_cards/wolfssl_top_family_api_cards.yaml
+    layer: api_cards
+    api: wc_PKCS7_Free
+    library: wolfssl
+    score: 0.9483237624660732
+  - rank: 4
+    source_file: knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+    layer: api_constraints
+    api: ''
+    library: ''
+    score: 0.8783168828851722
+  - rank: 5
+    source_file: knowledge_raw/cross_lib_equivalence/cross_library_counterpart_mapping_candidates.yaml
+    layer: cross_lib_equivalence
+    api: ''
+    library: ''
+    score: 0.8251606229817192
+  retrieved_sources:
+  - knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+  - knowledge_raw/api_knowledge_cards/openssl_counterpart_api_cards.yaml
+  - knowledge_raw/api_knowledge_cards/wolfssl_top_family_api_cards.yaml
+  - knowledge_raw/cross_lib_equivalence/cross_library_counterpart_mapping_candidates.yaml
+  notes: query completed
+- query_id: q5_pkcs12_wolfssl_openssl
+  query: wc_PKCS12_parse PKCS12_parse d2i_PKCS12 PKCS12_free
+  success: true
+  expected_terms_found:
+  - wc_PKCS12_parse
+  - PKCS12_parse
+  missing_expected_terms: []
+  top_hits_summary:
+  - rank: 1
+    source_file: knowledge_raw/api_constraints/cross_library_counterpart_api_constraints.md
+    layer: api_constraints
+    api: ''
+    library: ''
+    score: 0.7525700965830935
+  - rank: 2
+    source_file: knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+    layer: api_constraints
+    api: ''
+    library: ''
+    score: 0.7457374059021022
+  - rank: 3
+    source_file: knowledge_base/api_cards/openssl/d2i_PKCS8_PRIV_KEY_INFO.yaml
+    layer: api_cards
+    api: d2i_PKCS8_PRIV_KEY_INFO
+    library: openssl
+    score: 0.7293374201470291
+  - rank: 4
+    source_file: knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_rsa.function.md
+    layer: unit_tests
+    api: ''
+    library: mbedtls
+    score: 0.613767696399293
+  - rank: 5
+    source_file: knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+    layer: api_constraints
+    api: ''
+    library: ''
+    score: 0.6104408529106451
+  retrieved_sources:
+  - knowledge_base/api_cards/openssl/d2i_PKCS8_PRIV_KEY_INFO.yaml
+  - knowledge_raw/api_constraints/cross_library_counterpart_api_constraints.md
+  - knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+  - knowledge_raw/unit_tests/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__tests__suites__test_suite_rsa.function.md
+  notes: query completed
+- query_id: q6_secure_heap_allocator
+  query: wolfSSL secure heap OpenSSL CRYPTO_secure_malloc OPENSSL_secure_free mbedtls
+    calloc free allocator
+  success: true
+  expected_terms_found:
+  - CRYPTO_secure_malloc
+  - OPENSSL_secure_free
+  - mbedtls_free
+  missing_expected_terms: []
+  top_hits_summary:
+  - rank: 1
+    source_file: knowledge_raw/api_knowledge_cards/openssl_counterpart_api_cards.yaml
+    layer: api_cards
+    api: CRYPTO_secure_malloc
+    library: openssl
+    score: 1.2276417233577057
+  - rank: 2
+    source_file: knowledge_raw/api_knowledge_cards/openssl_counterpart_api_cards.yaml
+    layer: api_cards
+    api: OPENSSL_secure_free
+    library: openssl
+    score: 1.221099335742868
+  - rank: 3
+    source_file: knowledge_raw/api_knowledge_cards/mbedtls_counterpart_api_cards.yaml
+    layer: api_cards
+    api: mbedtls_free
+    library: mbedtls
+    score: 1.198961143708295
+  - rank: 4
+    source_file: knowledge_raw/api_knowledge_cards/openssl_counterpart_api_cards.yaml
+    layer: api_cards
+    api: CRYPTO_secure_malloc_init
+    library: openssl
+    score: 1.1193417909144137
+  - rank: 5
+    source_file: knowledge_raw/poc_patterns/unified_patterns.md
+    layer: poc_patterns
+    api: ''
+    library: ''
+    score: 1.0006417316906915
+  retrieved_sources:
+  - knowledge_raw/api_knowledge_cards/mbedtls_counterpart_api_cards.yaml
+  - knowledge_raw/api_knowledge_cards/openssl_counterpart_api_cards.yaml
+  - knowledge_raw/poc_patterns/unified_patterns.md
+  notes: query completed
+- query_id: q7_no_direct_counterpart_mbedtls_pkcs
+  query: mbedTLS no direct counterpart PKCS7 PKCS12 wolfSSL wc_PKCS7 wc_PKCS12
+  success: true
+  expected_terms_found:
+  - PKCS7
+  - PKCS12
+  - mbedTLS
+  missing_expected_terms:
+  - no_direct_counterpart
+  top_hits_summary:
+  - rank: 1
+    source_file: knowledge_base/api_cards/mbedtls/mbedtls_pk_verify.yaml
+    layer: api_cards
+    api: mbedtls_pk_verify
+    library: mbedtls
+    score: 0.861917099791027
+  - rank: 2
+    source_file: knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__rsa.c.md
+    layer: api_constraints
+    api: ''
+    library: mbedtls
+    score: 0.8087210136782041
+  - rank: 3
+    source_file: knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+    layer: api_constraints
+    api: ''
+    library: ''
+    score: 0.7982677450398963
+  - rank: 4
+    source_file: knowledge_raw/poc_patterns/core10_patterns.md
+    layer: poc_patterns
+    api: ''
+    library: ''
+    score: 0.7713978188004568
+  - rank: 5
+    source_file: knowledge_raw/poc_patterns/unified_patterns.md
+    layer: poc_patterns
+    api: ''
+    library: ''
+    score: 0.7713978188004568
+  retrieved_sources:
+  - knowledge_base/api_cards/mbedtls/mbedtls_pk_verify.yaml
+  - knowledge_raw/api_constraints/mbedtls/__home__wen__work__clean_sources__mbedtls-4.1.0__tf-psa-crypto__drivers__builtin__src__rsa.c.md
+  - knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md
+  - knowledge_raw/poc_patterns/core10_patterns.md
+  - knowledge_raw/poc_patterns/unified_patterns.md
+  notes: query completed
+- query_id: q8_candidate_labels
+  query: candidate_constraint synthetic_lifecycle_sequence candidate_mapping confirmed_equivalence
+    false positive
+  success: true
+  expected_terms_found:
+  - candidate_constraint
+  - synthetic_lifecycle_sequence
+  - candidate_mapping
+  missing_expected_terms: []
+  top_hits_summary:
+  - rank: 1
+    source_file: knowledge_raw/cross_lib_equivalence/cross_library_counterpart_mapping_candidates.yaml
+    layer: cross_lib_equivalence
+    api: ''
+    library: ''
+    score: 0.7985857403272043
+  - rank: 2
+    source_file: knowledge_raw/api_constraints/cross_library_counterpart_api_constraints.md
+    layer: api_constraints
+    api: ''
+    library: ''
+    score: 0.7504188967318792
+  - rank: 3
+    source_file: knowledge_raw/api_constraints/cross_library_counterpart_call_sequences.md
+    layer: api_constraints
+    api: ''
+    library: ''
+    score: 0.7450244563043591
+  - rank: 4
+    source_file: knowledge_raw/api_knowledge_cards/openssl_counterpart_api_cards.yaml
+    layer: api_cards
+    api: PKCS7_verify
+    library: openssl
+    score: 0.7143419589050515
+  - rank: 5
+    source_file: knowledge_raw/api_knowledge_cards/wolfssl_top_family_api_cards.yaml
+    layer: api_cards
+    api: DecodedCert
+    library: wolfssl
+    score: 0.7057606749180457
+  retrieved_sources:
+  - knowledge_raw/api_constraints/cross_library_counterpart_api_constraints.md
+  - knowledge_raw/api_constraints/cross_library_counterpart_call_sequences.md
+  - knowledge_raw/api_knowledge_cards/openssl_counterpart_api_cards.yaml
+  - knowledge_raw/api_knowledge_cards/wolfssl_top_family_api_cards.yaml
+  - knowledge_raw/cross_lib_equivalence/cross_library_counterpart_mapping_candidates.yaml
+  notes: query completed
+```

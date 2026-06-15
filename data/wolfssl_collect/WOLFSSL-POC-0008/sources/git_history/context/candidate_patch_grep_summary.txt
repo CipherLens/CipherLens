@@ -1,0 +1,91 @@
+===== 9467d82ae relevant grep =====
+5:    NULL the correct key in TLSX_KeyShare_ProcessPqcHybridClient when using WOLFSSL_TLSX_PQC_MLKEM_STORE_OBJ.
+15:@@ -10215,7 +10215,11 @@ static int TLSX_KeyShare_ProcessPqcHybridClient(WOLFSSL* ssl,
+16:             keyShareEntry->lastRet = WC_PENDING_E;
+17:             /* Prevent freeing of the ECC and ML-KEM private keys */
+18:             ecc_kse->key = NULL;
+19:+        #ifndef WOLFSSL_TLSX_PQC_MLKEM_STORE_OBJ
+20:             pqc_kse->privKey = NULL;
+22:+            pqc_kse->key = NULL;
+===== e37118bdf relevant grep =====
+5:    Hardening in TLSX_KeyShare_ProcessPqcHybridClient
+16:@@ -10222,15 +10222,24 @@ static int TLSX_KeyShare_ProcessPqcHybridClient(WOLFSSL* ssl,
+17:             ecc_kse->key = NULL;
+18:             pqc_kse->privKey = NULL;
+23:+            /* Re-sync keyShareEntry->key with ecc_kse->key. ecc_kse->key was
+24:+             * aliased to keyShareEntry->key above. The inner Process*_ex
+26:+             * to NULL (so the outer pointer must also become NULL to avoid
+27:+             * UAF/double-free in TLSX_KeyShare_FreeAll), or returned early
+30:+             * freeing). Mirroring whatever the inner left in ecc_kse->key
+32:+            keyShareEntry->key = ecc_kse->key;
+37:-        keyShareEntry->key = ecc_kse->key;
+38:-        ecc_kse->key = NULL;
+50:@@ -4579,6 +4579,104 @@ int test_tls13_pqc_hybrid_truncated_keyshare(void)
+55:+ * KeyShare does not leave a dangling pointer in keyShareEntry->key.
+57:+ * The earlier truncated-keyshare test is rejected by the keLen <= ctSz
+58:+ * check before TLSX_KeyShare_ProcessPqcHybridClient sets up the
+59:+ * ecc_kse->key = keyShareEntry->key alias, so it does not exercise the
+64:+ * AFTER its unconditional cleanup at the end of the function frees the
+65:+ * aliased key. Without the fix, the outer keyShareEntry->key still
+66:+ * holds the freed pointer; wolfSSL_free -> TLSX_KeyShare_FreeAll calls
+67:+ * wc_ecc_free + XFREE on it, producing a use-after-free and a double
+68:+ * free that ASAN flags. */
+74:+    !defined(WOLFSSL_NO_ML_KEM_768) && defined(HAVE_ECC) && \
+79:+    WOLFSSL_CTX *ctx = NULL;
+80:+    WOLFSSL *ssl = NULL;
+102:+    /* legacy_compression_method: null */
+126:+    ExpectNotNull(ctx = wolfSSL_CTX_new(wolfTLSv1_3_client_method()));
+130:+    ExpectNotNull(ssl = wolfSSL_new(ctx));
+133:+    ExpectIntEQ(wolfSSL_UseKeyShare(ssl, WOLFSSL_SECP256R1MLKEM768),
+144:+    /* Without the fix, this triggers UAF + double-free in
+145:+     * TLSX_KeyShare_FreeAll. */
+146:+    wolfSSL_free(ssl);
+147:+    wolfSSL_CTX_free(ctx);
+162: int test_tls13_pqc_hybrid_truncated_keyshare(void);
+170:     TEST_DECL_GROUP("tls13", test_tls13_pqc_hybrid_truncated_keyshare), \
+===== 46f632038 relevant grep =====
+5:    Fix PQC hybrid KeyShare pointer sanity.
+18:@@ -10175,6 +10175,7 @@ static int TLSX_KeyShare_ProcessPqcHybridClient(WOLFSSL* ssl,
+21:         keyShareEntry->key = ecc_kse->key;
+22:+        ecc_kse->key = NULL;
+26:@@ -10210,6 +10211,17 @@ static int TLSX_KeyShare_ProcessPqcHybridClient(WOLFSSL* ssl,
+31:+        /* Prevent FreeAll from freeing pointers owned by keyShareEntry. */
+32:+        if (ecc_kse != NULL)
+33:+            ecc_kse->key = NULL;
+34:+        if (pqc_kse != NULL) {
+35:+        #ifndef WOLFSSL_TLSX_PQC_MLKEM_STORE_OBJ
+36:+            pqc_kse->privKey = NULL;
+38:+            pqc_kse->key = NULL;
+43:     TLSX_KeyShare_FreeAll(ecc_kse, ssl->heap);
+52:+/* Test that a truncated PQC hybrid KeyShare in a ServerHello does not cause a
+53:+ * heap use-after-free during cleanup. A malicious server sends
+55:+ * This exercises the error path in TLSX_KeyShare_ProcessPqcHybridClient().
+56:+ * Under ASAN the UAF manifests as ForceZero writing to freed KyberKey memory
+57:+ * during wolfSSL_free -> TLSX_FreeAll -> TLSX_KeyShare_FreeAll. */
+60:+    !defined(WOLFSSL_NO_ML_KEM_768) && defined(HAVE_ECC) && \
+88:+int test_tls13_pqc_hybrid_truncated_keyshare(void)
+93:+    !defined(WOLFSSL_NO_ML_KEM_768) && defined(HAVE_ECC) && \
+96:+    WOLFSSL_CTX *ctx = NULL;
+97:+    WOLFSSL *ssl = NULL;
+117:+        /* legacy_compression_method: null */
+123:+        /* extension: key_share (truncated hybrid data) */
+127:+        0x00, 0x0a,        /* key_exchange length: 10 (truncated!) */
+133:+    ExpectNotNull(ctx = wolfSSL_CTX_new(wolfTLSv1_3_client_method()));
+137:+    ExpectNotNull(ssl = wolfSSL_new(ctx));
+139:+    /* Generate the client-side PQC hybrid key share so the truncated
+141:+    ExpectIntEQ(wolfSSL_UseKeyShare(ssl, WOLFSSL_SECP256R1MLKEM768),
+148:+    /* Connect should fail gracefully on the truncated key share. */
+152:+    /* The UAF, if present, triggers here: wolfSSL_free -> TLSX_FreeAll ->
+153:+     * TLSX_KeyShare_FreeAll -> ForceZero on already-freed KyberKey. */
+154:+    wolfSSL_free(ssl);
+155:+    wolfSSL_CTX_free(ctx);
+170:+    WOLFSSL_CTX *ctx_c = NULL, *ctx_s = NULL;
+171:+    WOLFSSL *ssl_c = NULL, *ssl_s = NULL;
+180:+    ExpectIntEQ(test_memio_do_handshake(ssl_c, ssl_s, 10, NULL), 0);
+216:+    wolfSSL_free(ssl_c);
+217:+    wolfSSL_free(ssl_s);
+218:+    wolfSSL_CTX_free(ctx_c);
+219:+    wolfSSL_CTX_free(ctx_s);
+232:+int test_tls13_pqc_hybrid_truncated_keyshare(void);
+243:+    TEST_DECL_GROUP("tls13", test_tls13_pqc_hybrid_truncated_keyshare), \
+===== 11d2f4894 relevant grep =====

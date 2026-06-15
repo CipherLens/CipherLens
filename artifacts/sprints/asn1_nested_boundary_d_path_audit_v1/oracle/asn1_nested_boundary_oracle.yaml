@@ -1,0 +1,22 @@
+sprint: asn1_nested_boundary_d_path_audit_v1
+oracles:
+  safe_reject:
+    description: malformed nested child object should be rejected without crash
+  full_consumption:
+    description: parser should not silently ignore malformed nested content if it
+      belongs to the object
+  no_crash:
+    description: malformed ASN.1 should not cause SIGSEGV / abort
+  cross_library_semantic_divergence:
+    description: one library accepts nested malformed object while another rejects
+      under comparable API
+  app_level_validation_gap:
+    description: only used if behavior reaches CLI/app level
+must_not_confuse_with: DER full-consumption top-level trailing garbage oracle
+primary_observables:
+- return_code
+- parse_success_or_failure
+- object_pointer_nullness
+- consumed_pointer_if_available
+- sanitizer_or_segv_evidence
+- stderr_error_stack_if_available

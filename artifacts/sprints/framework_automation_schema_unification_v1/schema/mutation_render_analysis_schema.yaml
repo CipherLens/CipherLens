@@ -1,0 +1,80 @@
+schema_version: 1
+mutation_plan_schema:
+  family: string
+  api_group: string
+  algorithms_or_modes:
+  - string
+  controls:
+  - normal and malformed controls
+  mutation_dimensions:
+  - state order
+  - parameter value
+  - input structure
+  - output state
+  state_sequences:
+  - string
+  oracle_modes:
+  - return_code
+  - output_state
+  - sanitizer
+  - app_visible
+  - pointer_consumption
+  max_cases: integer
+  stop_conditions:
+  - normal_control_failed
+  - seed_missing
+  - placeholder_only
+  - rag_evidence_insufficient
+  - api_mapping_gap
+  - compile_errors_above_threshold
+  - too_many_needs_triage
+  - negative_feedback_repeated
+render_matrix_schema:
+  case_id: stable id
+  case_name: short name
+  family: family id
+  library: library id
+  algorithm_or_mode: optional string
+  state_sequence: sequence id
+  expected_oracle: oracle id
+  control_dependency: control case id or null
+  render_template: template path or renderer id
+  enabled: bool
+analysis_schema:
+  case_id: stable id
+  compile_status: ok|compile_error
+  run_status: run_ok|run_nonzero|timeout|not_run
+  exit_code: int|null
+  signal: int|null
+  observed_behavior: short machine-readable description
+  classification:
+    allowed:
+    - normal_control_ok
+    - normal_control_failed
+    - expected_reject
+    - legal_semantics
+    - permissive_behavior
+    - permissive_but_harmless
+    - semantic_divergence_candidate
+    - app_level_validation_gap_candidate
+    - crash_candidate
+    - sanitizer_needed
+    - version_matrix_needed
+    - seed_missing
+    - placeholder_only
+    - blocked_seed_missing
+    - harness_error
+    - compile_error
+    - needs_triage
+  claim_level:
+    allowed:
+    - no_claim
+    - needs_triage
+    - candidate_only
+    - robustness_candidate
+    - validated_new_state_candidate
+forbidden_labels:
+- confirmed_vulnerability
+- CVE
+- exploitable
+- remote_code_execution

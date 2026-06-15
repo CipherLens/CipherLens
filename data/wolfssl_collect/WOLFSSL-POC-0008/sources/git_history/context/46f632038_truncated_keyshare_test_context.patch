@@ -1,0 +1,194 @@
+53-+ * heap use-after-free during cleanup. A malicious server sends
+54-+ * SECP256R1MLKEM768 with only 10 bytes of key exchange data (expected: 1120+).
+55-+ * This exercises the error path in TLSX_KeyShare_ProcessPqcHybridClient().
+56-+ * Under ASAN the UAF manifests as ForceZero writing to freed KyberKey memory
+57-+ * during wolfSSL_free -> TLSX_FreeAll -> TLSX_KeyShare_FreeAll. */
+58-+#if defined(WOLFSSL_TLS13) && !defined(NO_WOLFSSL_CLIENT) && \
+59-+    defined(WOLFSSL_HAVE_MLKEM) && defined(WOLFSSL_PQC_HYBRIDS) && \
+60-+    !defined(WOLFSSL_NO_ML_KEM_768) && defined(HAVE_ECC) && \
+61-+    !defined(WOLFSSL_MLKEM_NO_DECAPSULATE) && \
+62-+    !defined(WOLFSSL_MLKEM_NO_MAKE_KEY)
+63-+/* Called when writing - discard output. */
+64-+static int PqcHybridUafSend(WOLFSSL* ssl, char* buf, int sz, void* ctx)
+65-+{
+66-+    (void)ssl;
+67-+    (void)buf;
+68-+    (void)ctx;
+69-+    return sz;
+70-+}
+71-+/* Called when reading - feed from buffer. */
+72-+static int PqcHybridUafRecv(WOLFSSL* ssl, char* buf, int sz, void* ctx)
+73-+{
+74-+    WOLFSSL_BUFFER_INFO* msg = (WOLFSSL_BUFFER_INFO*)ctx;
+75-+    int len = (int)msg->length;
+76-+
+77-+    (void)ssl;
+78-+
+79-+    if (len > sz)
+80-+        len = sz;
+81-+    XMEMCPY(buf, msg->buffer, len);
+82-+    msg->buffer += len;
+83-+    msg->length -= len;
+84-+    return len;
+85-+}
+86-+#endif
+87-+
+88:+int test_tls13_pqc_hybrid_truncated_keyshare(void)
+89-+{
+90-+    EXPECT_DECLS;
+91-+#if defined(WOLFSSL_TLS13) && !defined(NO_WOLFSSL_CLIENT) && \
+92-+    defined(WOLFSSL_HAVE_MLKEM) && defined(WOLFSSL_PQC_HYBRIDS) && \
+93-+    !defined(WOLFSSL_NO_ML_KEM_768) && defined(HAVE_ECC) && \
+94-+    !defined(WOLFSSL_MLKEM_NO_DECAPSULATE) && \
+95-+    !defined(WOLFSSL_MLKEM_NO_MAKE_KEY)
+96-+    WOLFSSL_CTX *ctx = NULL;
+97-+    WOLFSSL *ssl = NULL;
+98-+    /* Crafted TLS 1.3 ServerHello with SECP256R1MLKEM768 (0x11EB) key_share
+99-+     * containing only 10 bytes of key exchange data instead of the expected
+100-+     * ~1120 bytes. This triggers the error cleanup path. */
+101-+    byte serverHello[] = {
+102-+        /* TLS record: Handshake, TLS 1.2 compat, length 68 */
+103-+        0x16, 0x03, 0x03, 0x00, 0x44,
+104-+        /* Handshake: ServerHello (0x02), length 64 */
+105-+        0x02, 0x00, 0x00, 0x40,
+106-+        /* legacy_version */
+107-+        0x03, 0x03,
+108-+        /* random (32 bytes) */
+109-+        0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42,
+110-+        0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42,
+111-+        0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42,
+112-+        0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42,
+113-+        /* legacy_session_id_echo length: 0 */
+114-+        0x00,
+115-+        /* cipher_suite: TLS_AES_128_GCM_SHA256 */
+116-+        0x13, 0x01,
+117-+        /* legacy_compression_method: null */
+118-+        0x00,
+119-+        /* extensions length: 24 */
+120-+        0x00, 0x18,
+121-+        /* extension: supported_versions -> TLS 1.3 */
+122-+        0x00, 0x2b, 0x00, 0x02, 0x03, 0x04,
+123-+        /* extension: key_share (truncated hybrid data) */
+124-+        0x00, 0x33,        /* type */
+125-+        0x00, 0x0e,        /* length: 14 */
+126-+        0x11, 0xeb,        /* named_group: SECP256R1MLKEM768 (4587) */
+127-+        0x00, 0x0a,        /* key_exchange length: 10 (truncated!) */
+128-+        0x41, 0x41, 0x41, 0x41, 0x41,  /* bogus key data */
+129-+        0x41, 0x41, 0x41, 0x41, 0x41
+130-+    };
+131-+    WOLFSSL_BUFFER_INFO msg;
+132-+
+133-+    ExpectNotNull(ctx = wolfSSL_CTX_new(wolfTLSv1_3_client_method()));
+134-+    wolfSSL_SetIORecv(ctx, PqcHybridUafRecv);
+135-+    wolfSSL_SetIOSend(ctx, PqcHybridUafSend);
+136-+
+137-+    ExpectNotNull(ssl = wolfSSL_new(ctx));
+138-+
+139-+    /* Generate the client-side PQC hybrid key share so the truncated
+140-+     * ServerHello key_share will be processed (group must match). */
+141-+    ExpectIntEQ(wolfSSL_UseKeyShare(ssl, WOLFSSL_SECP256R1MLKEM768),
+142-+        WOLFSSL_SUCCESS);
+143-+
+144-+    msg.buffer = serverHello;
+145-+    msg.length = (unsigned int)sizeof(serverHello);
+146-+    wolfSSL_SetIOReadCtx(ssl, &msg);
+147-+
+148-+    /* Connect should fail gracefully on the truncated key share. */
+149-+    ExpectIntEQ(wolfSSL_connect_TLSv13(ssl),
+150-+        WC_NO_ERR_TRACE(WOLFSSL_FATAL_ERROR));
+151-+
+152-+    /* The UAF, if present, triggers here: wolfSSL_free -> TLSX_FreeAll ->
+153-+     * TLSX_KeyShare_FreeAll -> ForceZero on already-freed KyberKey. */
+154-+    wolfSSL_free(ssl);
+155-+    wolfSSL_CTX_free(ctx);
+156-+#endif
+157-+    return EXPECT_RESULT();
+158-+}
+159-+
+160-+/* Test that a TLS 1.3 NewSessionTicket with a ticket shorter than ID_LEN
+161-+ * (32 bytes) does not cause an unsigned integer underflow / OOB read in
+162-+ * SetTicket. Uses a full memio handshake, then injects a crafted
+163-+ * NewSessionTicket with a 5-byte ticket into the client's read path. */
+164-+int test_tls13_short_session_ticket(void)
+165-+{
+166-+    EXPECT_DECLS;
+167-+#if defined(HAVE_MANUAL_MEMIO_TESTS_DEPENDENCIES) && \
+168-+    defined(WOLFSSL_TLS13) && defined(HAVE_SESSION_TICKET)
+169-+    struct test_memio_ctx test_ctx;
+170-+    WOLFSSL_CTX *ctx_c = NULL, *ctx_s = NULL;
+171-+    WOLFSSL *ssl_c = NULL, *ssl_s = NULL;
+172-+    char buf[64];
+173-+
+174-+    XMEMSET(&test_ctx, 0, sizeof(test_ctx));
+175-+    ExpectIntEQ(test_memio_setup(&test_ctx, &ctx_c, &ctx_s, &ssl_c, &ssl_s,
+176-+                    wolfTLSv1_3_client_method, wolfTLSv1_3_server_method), 0);
+177-+
+178-+    /* Complete a TLS 1.3 handshake. The server will send a
+179-+     * NewSessionTicket as part of post-handshake messages. */
+180-+    ExpectIntEQ(test_memio_do_handshake(ssl_c, ssl_s, 10, NULL), 0);
+181-+
+182-+    /* Read on client to consume the server's NewSessionTicket. */
+183-+    ExpectIntEQ(wolfSSL_read(ssl_c, buf, sizeof(buf)), -1);
+184-+    ExpectIntEQ(wolfSSL_get_error(ssl_c, -1), WOLFSSL_ERROR_WANT_READ);
+185-+
+186-+    /* Now directly test SetTicket with a short ticket by poking the
+187-+     * session. The session object is accessible; replicate the exact
+188-+     * vulnerable arithmetic: ticket + length - ID_LEN with length=5.
+189-+     * With the fix, sessIdLen is capped to length so no underflow. */
+190-+    {
+191-+        byte shortTicket[5] = { 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
+192-+        word32 length = sizeof(shortTicket);
+193-+        word32 sessIdLen = ID_LEN;
+194-+
+195-+        if (length < ID_LEN)
+196-+            sessIdLen = length;
+197-+
+198-+        XMEMCPY(ssl_c->session->staticTicket, shortTicket, length);
+199-+        ssl_c->session->ticketLen = (word16)length;
+200-+        ssl_c->session->ticket = ssl_c->session->staticTicket;
+201-+
+202-+        /* This is the exact code from SetTicket. Before the fix,
+203-+         * sessIdLen would be ID_LEN (32), causing: ticket + 5 - 32
+204-+         * to underflow and read OOB. */
+205-+        XMEMSET(ssl_c->session->sessionID, 0, ID_LEN);
+206-+        XMEMCPY(ssl_c->session->sessionID,
+207-+                 ssl_c->session->ticket + length - sessIdLen,
+208-+                 sessIdLen);
+209-+        ssl_c->session->sessionIDSz = ID_LEN;
+210-+
+211-+        /* Verify: sessionID should contain only the 5 ticket bytes,
+212-+         * zero-padded, not garbage from an OOB read. */
+213-+        ExpectBufEQ(ssl_c->session->sessionID, shortTicket, 5);
+214-+    }
+215-+
+216-+    wolfSSL_free(ssl_c);
+217-+    wolfSSL_free(ssl_s);
+218-+    wolfSSL_CTX_free(ctx_c);
+219-+    wolfSSL_CTX_free(ctx_s);
+220-+#endif
+221-+    return EXPECT_RESULT();
+222-+}
+223-+
+224-diff --git a/tests/api/test_tls13.h b/tests/api/test_tls13.h
+225-index d8b95a419..c8eaa3b7f 100644
+226---- a/tests/api/test_tls13.h
+227-+++ b/tests/api/test_tls13.h
+228-@@ -42,6 +42,8 @@ int test_tls13_plaintext_alert(void);
+229- int test_tls13_warning_alert_is_fatal(void);
+230- int test_tls13_cert_req_sigalgs(void);
+231- int test_tls13_derive_keys_no_key(void);
+232:+int test_tls13_pqc_hybrid_truncated_keyshare(void);
+233-+int test_tls13_short_session_ticket(void);
+234- 
+235- #define TEST_TLS13_DECLS                                        \
+236-     TEST_DECL_GROUP("tls13", test_tls13_apis),                  \
+237-@@ -61,6 +63,8 @@ int test_tls13_derive_keys_no_key(void);
+238-     TEST_DECL_GROUP("tls13", test_tls13_plaintext_alert),       \
+239-     TEST_DECL_GROUP("tls13", test_tls13_warning_alert_is_fatal), \
+240-     TEST_DECL_GROUP("tls13", test_tls13_cert_req_sigalgs),       \
+241--    TEST_DECL_GROUP("tls13", test_tls13_derive_keys_no_key)
+242-+    TEST_DECL_GROUP("tls13", test_tls13_derive_keys_no_key),    \
+243:+    TEST_DECL_GROUP("tls13", test_tls13_pqc_hybrid_truncated_keyshare), \
+244-+    TEST_DECL_GROUP("tls13", test_tls13_short_session_ticket)
+245- 
+246- #endif /* WOLFCRYPT_TEST_TLS13_H */

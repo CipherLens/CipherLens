@@ -1,0 +1,35 @@
+schema: family_card_v1
+family: bignum_serialization_boundary
+track: boundary
+archetype: bignum_serialization_length_boundary
+target_library: openssl
+main_apis:
+- BN_bin2bn
+- BN_bn2bin
+- BN_bn2binpad
+- BN_hex2bn
+- BN_bn2hex
+- BN_dec2bn
+- BN_bn2dec
+- BN_num_bytes
+- BN_is_negative
+- BN_set_negative
+- BN_cmp
+valid_sequence: local minimal control sequence generated from manual audit feedback
+invalid_or_observation_sequences:
+- operation before required init
+- invalid algorithm/property or contract boundary
+- documented observation path
+oracle_labels:
+- unexpected_failure_on_valid_sequence
+- unexpected_success_after_invalid_state
+- state_transition_observation
+- semantic_divergence_candidate
+- crash_or_sanitizer
+avoid_patterns:
+- der_single_object_trailing_garbage_full_consumption
+- secure_heap_state_lifecycle_issue_28669
+claim_policy:
+  confirmed_vulnerability: false
+  cve: false
+  exploitable: false

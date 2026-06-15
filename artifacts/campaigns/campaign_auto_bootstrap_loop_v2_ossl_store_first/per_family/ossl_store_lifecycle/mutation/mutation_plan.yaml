@@ -1,0 +1,46 @@
+schema: campaign_auto_mutation_plan_v1
+generated_at: '2026-06-14T04:57:24+00:00'
+family: ossl_store_lifecycle
+track: lifecycle
+archetype: ossl_store_context_lifecycle
+mutation_case_count: 7
+enabled_case_count: 4
+uses_der_trailing_garbage: false
+uses_full_consumption_oracle: false
+unsafe_use_after_free_executed: false
+cases:
+- case_id: ossl_store_open_nonexistent_path
+  mutation_strategy: open_nonexistent_path
+  expected_behavior: error_or_documented
+  enabled: true
+  deferred_reason: ''
+- case_id: ossl_store_open_empty_file
+  mutation_strategy: open_empty_file
+  expected_behavior: error_or_documented
+  enabled: true
+  deferred_reason: ''
+- case_id: ossl_store_open_random_text_file
+  mutation_strategy: open_random_text_file
+  expected_behavior: error_or_documented
+  enabled: true
+  deferred_reason: ''
+- case_id: ossl_store_load_after_eof_observation
+  mutation_strategy: load_after_eof
+  expected_behavior: observation
+  enabled: true
+  deferred_reason: ''
+- case_id: ossl_store_valid_open_load_close_control_deferred
+  mutation_strategy: valid_open_load_close_control
+  expected_behavior: success_or_documented
+  enabled: false
+  deferred_reason: unsafe or unavailable local valid object control is not executed by default
+- case_id: ossl_store_repeated_close_disabled
+  mutation_strategy: repeated_close
+  expected_behavior: disabled_unsafe_control
+  enabled: false
+  deferred_reason: unsafe or unavailable local valid object control is not executed by default
+- case_id: ossl_store_load_after_close_disabled
+  mutation_strategy: load_after_close
+  expected_behavior: disabled_unsafe_control
+  enabled: false
+  deferred_reason: unsafe or unavailable local valid object control is not executed by default

@@ -1,0 +1,568 @@
+From 3034dd9e2d3cbfdb0c47735aa70a9fb421a0c00d Mon Sep 17 00:00:00 2001
+From: Marco Oliverio <marco@wolfssl.com>
+Date: Wed, 25 Mar 2026 08:16:56 +0100
+Subject: [PATCH 1/8] dtls13: release mutex on error
+
+---
+ src/dtls13.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/src/dtls13.c b/src/dtls13.c
+index 7598bf0e9b6..0b2b697b5fa 100644
+--- a/src/dtls13.c
++++ b/src/dtls13.c
+@@ -737,6 +737,9 @@ int Dtls13RtxAddAck(WOLFSSL* ssl, w64wrapper epoch, w64wrapper seq)
+         for (; cur != NULL; prevNext = &cur->next, cur = cur->next) {
+             if (w64Equal(cur->epoch, epoch) && w64Equal(cur->seq, seq)) {
+                 /* already in list. no duplicates. */
++    #ifdef WOLFSSL_RW_THREADED
++                wc_UnLockMutex(&ssl->dtls13Rtx.mutex);
++    #endif
+                 return 0;
+             }
+             else if (w64LT(epoch, cur->epoch)
+@@ -747,8 +750,12 @@ int Dtls13RtxAddAck(WOLFSSL* ssl, w64wrapper epoch, w64wrapper seq)
+         }
+ 
+         rn = Dtls13NewRecordNumber(epoch, seq, ssl->heap);
+-        if (rn == NULL)
++        if (rn == NULL) {
++    #ifdef WOLFSSL_RW_THREADED
++            wc_UnLockMutex(&ssl->dtls13Rtx.mutex);
++    #endif
+             return MEMORY_E;
++        }
+ 
+         *prevNext = rn;
+         rn->next = cur;
+
+From 025a7dcd16319b4519fc0bad489afac1be5be34a Mon Sep 17 00:00:00 2001
+From: Marco Oliverio <marco@wolfssl.com>
+Date: Wed, 25 Mar 2026 13:16:08 +0100
+Subject: [PATCH 2/8] dtls13: lock list manipulation
+
+---
+ src/dtls13.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/src/dtls13.c b/src/dtls13.c
+index 0b2b697b5fa..90dd14ca44a 100644
+--- a/src/dtls13.c
++++ b/src/dtls13.c
+@@ -837,6 +837,11 @@ static void Dtls13RtxRemoveCurAck(WOLFSSL* ssl)
+ {
+     Dtls13RecordNumber *rn, **prevNext;
+ 
++#ifdef WOLFSSL_RW_THREADED
++    if (wc_LockMutex(&ssl->dtls13Rtx.mutex) != 0)
++        return;
++#endif
++
+     prevNext = &ssl->dtls13Rtx.seenRecords;
+     rn = ssl->dtls13Rtx.seenRecords;
+ 
+@@ -845,12 +850,19 @@ static void Dtls13RtxRemoveCurAck(WOLFSSL* ssl)
+             w64Equal(rn->seq, ssl->keys.curSeq)) {
+             *prevNext = rn->next;
+             XFREE(rn, ssl->heap, DYNAMIC_TYPE_DTLS_MSG);
++#ifdef WOLFSSL_RW_THREADED
++            wc_UnLockMutex(&ssl->dtls13Rtx.mutex);
++#endif
+             return;
+         }
+ 
+         prevNext = &rn->next;
+         rn = rn->next;
+     }
++
++#ifdef WOLFSSL_RW_THREADED
++    wc_UnLockMutex(&ssl->dtls13Rtx.mutex);
++#endif
+ }
+ 
+ static void Dtls13MaybeSaveClientHello(WOLFSSL* ssl)
+
+From 1c83e24a7aee2adb185c299e2de7bcf8eb635255 Mon Sep 17 00:00:00 2001
+From: Marco Oliverio <marco@wolfssl.com>
+Date: Wed, 25 Mar 2026 08:35:41 +0100
+Subject: [PATCH 3/8] dtls13: keep a counter for seenRecords list
+
+---
+ src/dtls13.c          | 56 ++++++++++++++++++++++---------------------
+ tests/api/test_dtls.c |  2 +-
+ wolfssl/internal.h    |  8 ++++++-
+ 3 files changed, 37 insertions(+), 29 deletions(-)
+
+diff --git a/src/dtls13.c b/src/dtls13.c
+index 90dd14ca44a..ca2389944c2 100644
+--- a/src/dtls13.c
++++ b/src/dtls13.c
+@@ -734,6 +734,13 @@ int Dtls13RtxAddAck(WOLFSSL* ssl, w64wrapper epoch, w64wrapper seq)
+         Dtls13RecordNumber** prevNext = &ssl->dtls13Rtx.seenRecords;
+         Dtls13RecordNumber* cur = ssl->dtls13Rtx.seenRecords;
+ 
++        if (ssl->dtls13Rtx.seenRecordsCount >= DTLS13_ACK_MAX_RECORDS) {
++    #ifdef WOLFSSL_RW_THREADED
++            wc_UnLockMutex(&ssl->dtls13Rtx.mutex);
++    #endif
++            return 0; /* list full, silently drop */
++        }
++
+         for (; cur != NULL; prevNext = &cur->next, cur = cur->next) {
+             if (w64Equal(cur->epoch, epoch) && w64Equal(cur->seq, seq)) {
+                 /* already in list. no duplicates. */
+@@ -759,6 +766,7 @@ int Dtls13RtxAddAck(WOLFSSL* ssl, w64wrapper epoch, w64wrapper seq)
+ 
+         *prevNext = rn;
+         rn->next = cur;
++        ssl->dtls13Rtx.seenRecordsCount++;
+     #ifdef WOLFSSL_RW_THREADED
+         wc_UnLockMutex(&ssl->dtls13Rtx.mutex);
+     #endif
+@@ -788,6 +796,7 @@ static void Dtls13RtxFlushAcks(WOLFSSL* ssl)
+         }
+ 
+         ssl->dtls13Rtx.seenRecords = NULL;
++        ssl->dtls13Rtx.seenRecordsCount = 0;
+     #ifdef WOLFSSL_RW_THREADED
+         wc_UnLockMutex(&ssl->dtls13Rtx.mutex);
+     #endif
+@@ -850,6 +859,8 @@ static void Dtls13RtxRemoveCurAck(WOLFSSL* ssl)
+             w64Equal(rn->seq, ssl->keys.curSeq)) {
+             *prevNext = rn->next;
+             XFREE(rn, ssl->heap, DYNAMIC_TYPE_DTLS_MSG);
++            if (ssl->dtls13Rtx.seenRecordsCount > 0)
++                ssl->dtls13Rtx.seenRecordsCount--;
+ #ifdef WOLFSSL_RW_THREADED
+             wc_UnLockMutex(&ssl->dtls13Rtx.mutex);
+ #endif
+@@ -2563,39 +2574,26 @@ int Dtls13SetRecordNumberKeys(WOLFSSL* ssl, enum encrypt_side side)
+     return NOT_COMPILED_IN;
+ }
+ 
+-/* 64 bits epoch + 64 bits sequence */
+-#define DTLS13_RN_SIZE 16
+-
+-static int Dtls13GetAckListLength(Dtls13RecordNumber* list, word16* length)
+-{
+-    int numberElements;
+-
+-    numberElements = 0;
+-
+-    /* TODO: check that we don't exceed the maximum length */
+-
+-    while (list != NULL) {
+-        list = list->next;
+-        numberElements++;
+-    }
+-
+-    *length = (word16)(DTLS13_RN_SIZE * numberElements);
+-    return 0;
+-}
+ 
+ int Dtls13WriteAckMessage(WOLFSSL* ssl,
+-    Dtls13RecordNumber* recordNumberList, word32* length)
++    Dtls13RecordNumber* recordNumberList, word16 recordsCount, word32* length)
+ {
+     word16 msgSz, headerLength;
+     byte *output, *ackMessage;
+     word32 sendSz;
++    word32 written;
+     int ret;
+ 
+     sendSz = 0;
++    written = 0;
+ 
+     if (ssl->dtls13EncryptEpoch == NULL)
+         return BAD_STATE_E;
+ 
++    if (recordsCount > DTLS13_ACK_MAX_RECORDS)
++        return BUFFER_E;
++    msgSz = (word16)(DTLS13_RN_SIZE * recordsCount);
++
+     if (w64IsZero(ssl->dtls13EncryptEpoch->epochNumber)) {
+         /* unprotected ACK */
+         headerLength = DTLS_RECORD_HEADER_SZ;
+@@ -2605,10 +2603,6 @@ int Dtls13WriteAckMessage(WOLFSSL* ssl,
+         sendSz += MAX_MSG_EXTRA;
+     }
+ 
+-    ret = Dtls13GetAckListLength(recordNumberList, &msgSz);
+-    if (ret != 0)
+-        return ret;
+-
+     sendSz += headerLength;
+ 
+     /* ACK list 2 bytes length field */
+@@ -2631,6 +2625,8 @@ int Dtls13WriteAckMessage(WOLFSSL* ssl,
+     WOLFSSL_MSG("write ack records");
+ 
+     while (recordNumberList != NULL) {
++        if (written + DTLS13_RN_SIZE > msgSz)
++            return BUFFER_E;
+         WOLFSSL_MSG_EX("epoch %d seq %d", recordNumberList->epoch,
+                 recordNumberList->seq);
+         c64toa(&recordNumberList->epoch, ackMessage);
+@@ -2638,8 +2634,12 @@ int Dtls13WriteAckMessage(WOLFSSL* ssl,
+         c64toa(&recordNumberList->seq, ackMessage);
+         ackMessage += OPAQUE64_LEN;
+         recordNumberList = recordNumberList->next;
++        written += DTLS13_RN_SIZE;
+     }
+ 
++    if (written != msgSz)
++        return BUFFER_E;
++
+     *length = msgSz + OPAQUE16_LEN;
+ 
+     return 0;
+@@ -2750,6 +2750,7 @@ int Dtls13DoScheduledWork(WOLFSSL* ssl)
+                 tail = &(*tail)->next;
+             *tail = ssl->dtls13Rtx.seenRecords;
+             ssl->dtls13Rtx.seenRecords = NULL;
++            ssl->dtls13Rtx.seenRecordsCount = 0;
+             ssl->dupWrite->sendAcks = 1;
+             wc_UnLockMutex(&ssl->dupWrite->dupMutex);
+         }
+@@ -2963,12 +2964,13 @@ int SendDtls13Ack(WOLFSSL* ssl)
+     if (ret < 0)
+         return ret;
+ #endif
+-    ret = Dtls13WriteAckMessage(ssl, ssl->dtls13Rtx.seenRecords, &length);
++    ret = Dtls13WriteAckMessage(ssl, ssl->dtls13Rtx.seenRecords,
++        ssl->dtls13Rtx.seenRecordsCount, &length);
+ #ifdef WOLFSSL_RW_THREADED
+     wc_UnLockMutex(&ssl->dtls13Rtx.mutex);
+ #endif
+-        if (ret != 0)
+-            return ret;
++    if (ret != 0)
++        return ret;
+ 
+     output = GetOutputBuffer(ssl);
+ 
+diff --git a/tests/api/test_dtls.c b/tests/api/test_dtls.c
+index bc277066dcf..16e1c936422 100644
+--- a/tests/api/test_dtls.c
++++ b/tests/api/test_dtls.c
+@@ -918,7 +918,7 @@ int test_dtls13_ack_order(void)
+     ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 2), w64From32(0, 2)), 0);
+     ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 2), w64From32(0, 2)), 0);
+     ExpectIntEQ(Dtls13WriteAckMessage(ssl_c, ssl_c->dtls13Rtx.seenRecords,
+-            &length), 0);
++            ssl_c->dtls13Rtx.seenRecordsCount, &length), 0);
+ 
+     /* must zero the span reserved for the header to avoid read of uninited
+      * data.
+diff --git a/wolfssl/internal.h b/wolfssl/internal.h
+index e12bdc12396..0dc586a6e3b 100644
+--- a/wolfssl/internal.h
++++ b/wolfssl/internal.h
+@@ -5857,6 +5857,11 @@ enum  {
+     DTLS13_EPOCH_TRAFFIC0 = 3
+ };
+ 
++/* 64-bit epoch + 64-bit sequence number */
++#define DTLS13_RN_SIZE (OPAQUE64_LEN + OPAQUE64_LEN)
++/* Maximum number of ACK records encodable in the word16 length field */
++#define DTLS13_ACK_MAX_RECORDS ((int)(WOLFSSL_MAX_16BIT / DTLS13_RN_SIZE))
++
+ typedef struct Dtls13Epoch {
+     w64wrapper epochNumber;
+ 
+@@ -5925,6 +5930,7 @@ typedef struct Dtls13Rtx {
+     Dtls13RtxRecord *rtxRecords;
+     Dtls13RtxRecord **rtxRecordTailPtr;
+     Dtls13RecordNumber *seenRecords;
++    word16 seenRecordsCount;
+ #ifdef WOLFSSL_32BIT_MILLI_TIME
+     word32 lastRtx;
+ #else
+@@ -7279,7 +7285,7 @@ WOLFSSL_LOCAL int Dtls13ReconstructEpochNumber(WOLFSSL* ssl, byte epochBits,
+ WOLFSSL_LOCAL int Dtls13ReconstructSeqNumber(WOLFSSL* ssl,
+     Dtls13UnifiedHdrInfo* hdrInfo, w64wrapper* out);
+ WOLFSSL_TEST_VIS int Dtls13WriteAckMessage(WOLFSSL* ssl,
+-    Dtls13RecordNumber* recordNumberList, word32* length);
++    Dtls13RecordNumber* recordNumberList, word16 recordsCount, word32* length);
+ WOLFSSL_LOCAL int SendDtls13Ack(WOLFSSL* ssl);
+ WOLFSSL_TEST_VIS int Dtls13RtxAddAck(WOLFSSL* ssl, w64wrapper epoch, w64wrapper seq);
+ WOLFSSL_LOCAL int Dtls13RtxProcessingCertificate(WOLFSSL* ssl, byte* input,
+
+From ccfc95809b13c8c627254b532dcee97fd834b952 Mon Sep 17 00:00:00 2001
+From: Marco Oliverio <marco@wolfssl.com>
+Date: Wed, 25 Mar 2026 08:36:33 +0100
+Subject: [PATCH 4/8] test: dtls13: add ack test
+
+---
+ tests/api/test_dtls.c | 118 ++++++++++++++++++++++++++++++++++++++++++
+ tests/api/test_dtls.h |   4 ++
+ wolfssl/internal.h    |   2 +-
+ 3 files changed, 123 insertions(+), 1 deletion(-)
+
+diff --git a/tests/api/test_dtls.c b/tests/api/test_dtls.c
+index 16e1c936422..a72a940d954 100644
+--- a/tests/api/test_dtls.c
++++ b/tests/api/test_dtls.c
+@@ -939,6 +939,124 @@ int test_dtls13_ack_order(void)
+     return EXPECT_RESULT();
+ }
+ 
++int test_dtls13_ack_overflow(void)
++{
++    EXPECT_DECLS;
++#if defined(HAVE_MANUAL_MEMIO_TESTS_DEPENDENCIES) && defined(WOLFSSL_DTLS13)
++    WOLFSSL_CTX *ctx_c = NULL, *ctx_s = NULL;
++    WOLFSSL *ssl_c = NULL, *ssl_s = NULL;
++    struct test_memio_ctx test_ctx;
++    unsigned char readBuf[50];
++    word32 length = 0;
++    int i;
++
++    XMEMSET(&test_ctx, 0, sizeof(test_ctx));
++
++    ExpectIntEQ(test_memio_setup(&test_ctx, &ctx_c, &ctx_s, &ssl_c, &ssl_s,
++        wolfDTLSv1_3_client_method, wolfDTLSv1_3_server_method), 0);
++    ExpectIntEQ(test_memio_do_handshake(ssl_c, ssl_s, 10, NULL), 0);
++    ExpectIntEQ(wolfSSL_read(ssl_c, readBuf, sizeof(readBuf)), -1);
++    ExpectIntEQ(wolfSSL_get_error(ssl_c, -1), WOLFSSL_ERROR_WANT_READ);
++    ExpectIntEQ(wolfSSL_read(ssl_s, readBuf, sizeof(readBuf)), -1);
++    ExpectIntEQ(wolfSSL_get_error(ssl_s, -1), WOLFSSL_ERROR_WANT_READ);
++
++    /* Edge case 1: one below limit - all inserts must succeed */
++    for (i = 0; i < DTLS13_ACK_MAX_RECORDS - 1; i++) {
++        ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 0),
++                                    w64From32(0, (word32)i)), 0);
++    }
++    ExpectIntEQ(ssl_c->dtls13Rtx.seenRecordsCount, DTLS13_ACK_MAX_RECORDS - 1);
++
++    /* Edge case 2: insert the last allowed record - must succeed */
++    ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 0),
++                    w64From32(0, (word32)(DTLS13_ACK_MAX_RECORDS - 1))), 0);
++    ExpectIntEQ(ssl_c->dtls13Rtx.seenRecordsCount, DTLS13_ACK_MAX_RECORDS);
++
++    /* Writing a full-but-valid list must succeed */
++    ExpectIntEQ(Dtls13WriteAckMessage(ssl_c, ssl_c->dtls13Rtx.seenRecords,
++                    ssl_c->dtls13Rtx.seenRecordsCount, &length), 0);
++
++    /* Edge case 3: one over limit - must be silently dropped */
++    ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 0),
++                    w64From32(0, (word32)DTLS13_ACK_MAX_RECORDS)), 0);
++    ExpectIntEQ(ssl_c->dtls13Rtx.seenRecordsCount, DTLS13_ACK_MAX_RECORDS);
++
++    /* Bypass the insert guard to force the list one element over the limit,
++     * then verify Dtls13WriteAckMessage errors out instead of overflowing */
++    ssl_c->dtls13Rtx.seenRecordsCount = 0;
++    ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 1),
++                    w64From32(0, (word32)DTLS13_ACK_MAX_RECORDS)), 0);
++    ssl_c->dtls13Rtx.seenRecordsCount = (word16)(DTLS13_ACK_MAX_RECORDS + 1);
++    ExpectIntEQ(Dtls13WriteAckMessage(ssl_c, ssl_c->dtls13Rtx.seenRecords,
++                    ssl_c->dtls13Rtx.seenRecordsCount, &length), BUFFER_E);
++
++    wolfSSL_free(ssl_c);
++    wolfSSL_CTX_free(ctx_c);
++    wolfSSL_free(ssl_s);
++    wolfSSL_CTX_free(ctx_s);
++#endif
++    return EXPECT_RESULT();
++}
++
++int test_dtls13_ack_dup_write_counter(void)
++{
++    EXPECT_DECLS;
++#if defined(HAVE_MANUAL_MEMIO_TESTS_DEPENDENCIES) && defined(WOLFSSL_DTLS13) \
++    && defined(HAVE_WRITE_DUP)
++    WOLFSSL_CTX *ctx_c = NULL, *ctx_s = NULL;
++    WOLFSSL *ssl_c = NULL, *ssl_s = NULL;
++    WOLFSSL *ssl_c2 = NULL;
++    struct test_memio_ctx test_ctx;
++    unsigned char readBuf[50];
++    int i;
++
++    XMEMSET(&test_ctx, 0, sizeof(test_ctx));
++
++    ExpectIntEQ(test_memio_setup(&test_ctx, &ctx_c, &ctx_s, &ssl_c, &ssl_s,
++        wolfDTLSv1_3_client_method, wolfDTLSv1_3_server_method), 0);
++    ExpectIntEQ(test_memio_do_handshake(ssl_c, ssl_s, 10, NULL), 0);
++    /* Drain any post-handshake messages */
++    ExpectIntEQ(wolfSSL_read(ssl_c, readBuf, sizeof(readBuf)), -1);
++    ExpectIntEQ(wolfSSL_get_error(ssl_c, -1), WOLFSSL_ERROR_WANT_READ);
++    ExpectIntEQ(wolfSSL_read(ssl_s, readBuf, sizeof(readBuf)), -1);
++    ExpectIntEQ(wolfSSL_get_error(ssl_s, -1), WOLFSSL_ERROR_WANT_READ);
++
++    /* Split ssl_c: ssl_c becomes READ_DUP_SIDE, ssl_c2 becomes WRITE_DUP_SIDE */
++    ExpectNotNull(ssl_c2 = wolfSSL_write_dup(ssl_c));
++
++    /* Cycle 1: add records, trigger handoff, verify counter is reset to 0 */
++    for (i = 0; i < 5; i++)
++        ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 3),
++                                    w64From32(0, (word32)i)), 0);
++    ExpectIntEQ(ssl_c->dtls13Rtx.seenRecordsCount, 5);
++    ssl_c->dtls13Rtx.sendAcks = 1;
++    ExpectIntEQ(Dtls13DoScheduledWork(ssl_c), 0);
++    /* seenRecords ownership was transferred to dupWrite->sendAckList;
++     * seenRecordsCount must be reset to 0 — not left at 5. */
++    ExpectNull(ssl_c->dtls13Rtx.seenRecords);
++    ExpectIntEQ(ssl_c->dtls13Rtx.seenRecordsCount, 0);
++
++    /* Cycle 2 (different epoch to avoid the dup-filter): verify the counter
++     * did not accumulate across the previous transfer.  Without the fix,
++     * seenRecordsCount would now be 10 after this second batch. */
++    for (i = 0; i < 5; i++)
++        ExpectIntEQ(Dtls13RtxAddAck(ssl_c, w64From32(0, 4),
++                                    w64From32(0, (word32)i)), 0);
++    ExpectIntEQ(ssl_c->dtls13Rtx.seenRecordsCount, 5);
++    ssl_c->dtls13Rtx.sendAcks = 1;
++    ExpectIntEQ(Dtls13DoScheduledWork(ssl_c), 0);
++    ExpectNull(ssl_c->dtls13Rtx.seenRecords);
++    ExpectIntEQ(ssl_c->dtls13Rtx.seenRecordsCount, 0);
++
++    wolfSSL_free(ssl_c);
++    wolfSSL_free(ssl_c2);
++    wolfSSL_CTX_free(ctx_c);
++    wolfSSL_free(ssl_s);
++    wolfSSL_CTX_free(ctx_s);
++#endif
++    return EXPECT_RESULT();
++}
++
+ int test_dtls_version_checking(void)
+ {
+     EXPECT_DECLS;
+diff --git a/tests/api/test_dtls.h b/tests/api/test_dtls.h
+index 72a82d58b76..3593340ab64 100644
+--- a/tests/api/test_dtls.h
++++ b/tests/api/test_dtls.h
+@@ -30,6 +30,8 @@ int test_wolfSSL_dtls_cid_parse(void);
+ int test_wolfSSL_dtls_set_pending_peer(void);
+ int test_dtls13_epochs(void);
+ int test_dtls13_ack_order(void);
++int test_dtls13_ack_overflow(void);
++int test_dtls13_ack_dup_write_counter(void);
+ int test_dtls_version_checking(void);
+ int test_dtls_short_ciphertext(void);
+ int test_dtls12_record_length_mismatch(void);
+@@ -60,6 +62,8 @@ int test_dtls13_min_rtx_interval(void);
+         TEST_DECL_GROUP("dtls", test_wolfSSL_dtls_set_pending_peer),           \
+         TEST_DECL_GROUP("dtls", test_dtls13_epochs),                           \
+         TEST_DECL_GROUP("dtls", test_dtls13_ack_order),                        \
++        TEST_DECL_GROUP("dtls", test_dtls13_ack_overflow),                     \
++        TEST_DECL_GROUP("dtls", test_dtls13_ack_dup_write_counter),            \
+         TEST_DECL_GROUP("dtls", test_dtls_version_checking),                   \
+         TEST_DECL_GROUP("dtls", test_dtls_short_ciphertext),                   \
+         TEST_DECL_GROUP("dtls", test_dtls12_record_length_mismatch),           \
+diff --git a/wolfssl/internal.h b/wolfssl/internal.h
+index 0dc586a6e3b..8b25a287a33 100644
+--- a/wolfssl/internal.h
++++ b/wolfssl/internal.h
+@@ -7244,7 +7244,7 @@ WOLFSSL_LOCAL int Dtls13GetSeq(WOLFSSL* ssl, int order, word32* seq,
+     byte increment);
+ WOLFSSL_LOCAL void Dtls13RtxRemoveRecord(WOLFSSL* ssl, w64wrapper epoch,
+     w64wrapper seq);
+-WOLFSSL_LOCAL int Dtls13DoScheduledWork(WOLFSSL* ssl);
++WOLFSSL_TEST_VIS int Dtls13DoScheduledWork(WOLFSSL* ssl);
+ WOLFSSL_LOCAL int Dtls13DeriveSnKeys(WOLFSSL* ssl, int provision);
+ WOLFSSL_LOCAL int Dtls13SetRecordNumberKeys(WOLFSSL* ssl,
+     enum encrypt_side side);
+
+From 350a9bfd8995e88c5424695e0f4f64e6d9204d7e Mon Sep 17 00:00:00 2001
+From: Marco Oliverio <marco@wolfssl.com>
+Date: Thu, 26 Mar 2026 18:01:53 +0100
+Subject: [PATCH 5/8] dtls13: add DtlsDoScheduledWork in the
+ WOLFSSL_API_PREFIX_MAP
+
+---
+ wolfssl/internal.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/wolfssl/internal.h b/wolfssl/internal.h
+index 8b25a287a33..ffaec84c809 100644
+--- a/wolfssl/internal.h
++++ b/wolfssl/internal.h
+@@ -7230,6 +7230,7 @@ WOLFSSL_LOCAL void DtlsSetSeqNumForReply(WOLFSSL* ssl);
+         #define Dtls13CheckEpoch wolfSSL_Dtls13CheckEpoch
+         #define Dtls13WriteAckMessage wolfSSL_Dtls13WriteAckMessage
+         #define Dtls13RtxAddAck wolfSSL_Dtls13RtxAddAck
++        #define Dtls13DoScheduledWork wolfSSL_Dtls13DoScheduledWork
+     #endif
+ 
+ WOLFSSL_TEST_VIS struct Dtls13Epoch* Dtls13GetEpoch(WOLFSSL* ssl,
+
+From 1aa1cec3f20d1b712948481326c3c31dc37d849d Mon Sep 17 00:00:00 2001
+From: Marco Oliverio <marco@wolfssl.com>
+Date: Thu, 26 Mar 2026 18:02:17 +0100
+Subject: [PATCH 6/8] dtls13: limit max number of ack records to 128
+
+---
+ wolfssl/internal.h | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/wolfssl/internal.h b/wolfssl/internal.h
+index ffaec84c809..06ecee27ff9 100644
+--- a/wolfssl/internal.h
++++ b/wolfssl/internal.h
+@@ -5859,8 +5859,17 @@ enum  {
+ 
+ /* 64-bit epoch + 64-bit sequence number */
+ #define DTLS13_RN_SIZE (OPAQUE64_LEN + OPAQUE64_LEN)
+-/* Maximum number of ACK records encodable in the word16 length field */
+-#define DTLS13_ACK_MAX_RECORDS ((int)(WOLFSSL_MAX_16BIT / DTLS13_RN_SIZE))
++/* Maximum number of ACK records allowed in a ACK record */
++#ifndef DTLS13_ACK_MAX_RECORDS
++#define DTLS13_ACK_MAX_RECORDS 128
++#endif
++/* WOLFSSL_MAX_16BIT / DTLS13_RN_SIZE (0xffff / (OPAQUE64_LEN + OPAQUE64_LEN))
++ * Literals are used because OPAQUE64_LEN is an enum value, invisible to the
++ * preprocessor. */
++#if DTLS13_ACK_MAX_RECORDS > 0xffff / 16
++#error "DTLS13_ACK_MAX_RECORDS exceeds the maximum encodable in the word16 length field"
++#endif
++
+ 
+ typedef struct Dtls13Epoch {
+     w64wrapper epochNumber;
+
+From d1d6e587c0df57bcdbeb452552e18e51c6fb3f75 Mon Sep 17 00:00:00 2001
+From: Marco Oliverio <marco@wolfssl.com>
+Date: Mon, 30 Mar 2026 16:53:07 +0200
+Subject: [PATCH 7/8] test_dtls: remove bad char
+
+---
+ tests/api/test_dtls.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tests/api/test_dtls.c b/tests/api/test_dtls.c
+index a72a940d954..fd38206e72a 100644
+--- a/tests/api/test_dtls.c
++++ b/tests/api/test_dtls.c
+@@ -1032,7 +1032,7 @@ int test_dtls13_ack_dup_write_counter(void)
+     ssl_c->dtls13Rtx.sendAcks = 1;
+     ExpectIntEQ(Dtls13DoScheduledWork(ssl_c), 0);
+     /* seenRecords ownership was transferred to dupWrite->sendAckList;
+-     * seenRecordsCount must be reset to 0 — not left at 5. */
++     * seenRecordsCount must be reset to 0,  not left at 5. */
+     ExpectNull(ssl_c->dtls13Rtx.seenRecords);
+     ExpectIntEQ(ssl_c->dtls13Rtx.seenRecordsCount, 0);
+ 
+
+From 1496614579a0f868e10f14b0af76d604a5b69752 Mon Sep 17 00:00:00 2001
+From: Marco Oliverio <marco@wolfssl.com>
+Date: Mon, 30 Mar 2026 17:34:36 +0200
+Subject: [PATCH 8/8] internal.h: clarify DTLS13_ACK_MAX_RECORDS comment
+
+---
+ wolfssl/internal.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/wolfssl/internal.h b/wolfssl/internal.h
+index 06ecee27ff9..216b75bde1c 100644
+--- a/wolfssl/internal.h
++++ b/wolfssl/internal.h
+@@ -5859,7 +5859,7 @@ enum  {
+ 
+ /* 64-bit epoch + 64-bit sequence number */
+ #define DTLS13_RN_SIZE (OPAQUE64_LEN + OPAQUE64_LEN)
+-/* Maximum number of ACK records allowed in a ACK record */
++/* Maximum number of ACK records allowed in an ACK message */
+ #ifndef DTLS13_ACK_MAX_RECORDS
+ #define DTLS13_ACK_MAX_RECORDS 128
+ #endif

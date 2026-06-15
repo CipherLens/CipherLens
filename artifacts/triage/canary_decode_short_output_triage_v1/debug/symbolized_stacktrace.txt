@@ -1,0 +1,11 @@
+==22==ERROR: AddressSanitizer: global-buffer-overflow on address 0x5a613b65b08f at pc 0x7826970443f7 bp 0x7ffdb6149790 sp 0x7ffdb6149780
+    #0 0x7826970443f6 in evp_decodeblock_int ../openssl-3.5.5-asan-src/crypto/evp/encode.c:659
+    #1 0x782697046144 in EVP_DecodeBlock ../openssl-3.5.5-asan-src/crypto/evp/encode.c:715
+    #2 0x5a613b658b79 in run_variant /home/wen/work/crypto-pattern-fuzz/artifacts/triage/canary_decode_short_output_triage_v1/cases/canary_decode_short_output_triage.c:58
+    #3 0x5a613b659548 in main /home/wen/work/crypto-pattern-fuzz/artifacts/triage/canary_decode_short_output_triage_v1/cases/canary_decode_short_output_triage.c:97
+    #4 0x78269582a1c9 in __libc_start_call_main ../sysdeps/nptl/libc_start_call_main.h:58
+    #5 0x78269582a28a in __libc_start_main_impl ../csu/libc-start.c:360
+    #6 0x5a613b658464 in _start (/home/wen/work/crypto-pattern-fuzz/artifacts/triage/canary_decode_short_output_triage_v1/work/canary_decode_short_output_triage.bin+0x5464) (BuildId: 1137073df29206aef6da91eba6cf6de645976347)
+0x5a613b65b08f is located 49 bytes before global variable '*.LC2' defined in '/home/wen/work/crypto-pattern-fuzz/artifacts/triage/canary_decode_short_output_triage_v1/cases/canary_decode_short_output_triage.c' (0x5a613b65b0c0) of size 20
+0x5a613b65b08f is located 2 bytes after global variable '*.LC1' defined in '/home/wen/work/crypto-pattern-fuzz/artifacts/triage/canary_decode_short_output_triage_v1/cases/canary_decode_short_output_triage.c' (0x5a613b65b080) of size 13
+SUMMARY: AddressSanitizer: global-buffer-overflow ../openssl-3.5.5-asan-src/crypto/evp/encode.c:659 in evp_decodeblock_int

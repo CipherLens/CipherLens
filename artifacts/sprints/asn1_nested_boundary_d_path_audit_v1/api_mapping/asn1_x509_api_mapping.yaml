@@ -1,0 +1,33 @@
+sprint: asn1_nested_boundary_d_path_audit_v1
+family: asn1_nested_boundary
+openssl:
+- api: d2i_X509
+  role: DER X.509 parser; useful for safe reject and pointer advancement checks
+- api: d2i_X509_bio
+  role: BIO-backed X.509 parser; similar semantic surface with stream input
+- api: X509_new
+  role: object allocation/initialization if needed
+- api: X509_free
+  role: cleanup
+- api: ASN1_item_d2i
+  role: generic ASN.1 item parser; lower-level candidate for nested object parsing
+- api: OSSL_DECODER
+  role: provider/decoder path, probably D-path first due configuration complexity
+- api: X509_verify_cert
+  role: certificate validation; relevant only if parse result reaches verification
+    semantics
+- api: d2i_PKCS12_fp
+  role: PKCS12 parser path for OPENSSL-ISSUE-30581
+- api: PKCS12_parse
+  role: post-parse PKCS12 unpack path for OPENSSL-ISSUE-30581
+mbedtls:
+- api: mbedtls_x509_crt_parse
+  role: PEM/DER certificate parser
+- api: mbedtls_x509_crt_parse_der
+  role: DER X.509 parser used by MBEDTLS-POC-0017
+- api: mbedtls_x509_crt_free
+  role: cleanup
+botan:
+- api: Botan::X509_Certificate
+  role: potential future cross-library parser target; not used in this D-path audit
+a_path_mapping_status: possible_later_not_now

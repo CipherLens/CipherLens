@@ -1,0 +1,4 @@
+# Next Action After Template Inventory
+
+- next_task_name: template_generalizer_v1
+- why: Schema is observable and top candidates have adapter-ready or existing-template support.

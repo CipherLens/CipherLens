@@ -1,0 +1,331 @@
+tools/render_cases_v1.py:11:import argparse
+tools/render_cases_v1.py:24:FORBIDDEN_HARNESS_TERMS = ["d2i_PKCS7", "mbedtls_", "#include <mbedtls/", "wolfSSL_", "wc_"]
+tools/render_cases_v1.py:28:    return _dt.datetime.now(_dt.timezone.utc).replace(microsecond=0).isoformat()
+tools/render_cases_v1.py:33:        return yaml.safe_load(f) or {}
+tools/render_cases_v1.py:48:    return path.as_posix()
+tools/render_cases_v1.py:56:    return ",\n".join(chunks)
+tools/render_cases_v1.py:68:            "pem_der_format_toggle": list(b"-----BEGIN PKCS7-----\nAA==\n-----END PKCS7-----\n"),
+tools/render_cases_v1.py:69:            "expected_return_flip": base,
+tools/render_cases_v1.py:88:        return variants.get(mutation_strategy, base), replacements
+tools/render_cases_v1.py:98:        "expected_return_flip": base,
+tools/render_cases_v1.py:117:    return variants.get(mutation_strategy, base), replacements
+tools/render_cases_v1.py:121:    return f"""/*
+tools/render_cases_v1.py:147:    int parse_ret = 0;
+tools/render_cases_v1.py:148:    PKCS12 *p12 = NULL;
+tools/render_cases_v1.py:154:    p12 = d2i_PKCS12(NULL, &p, input_len);
+tools/render_cases_v1.py:157:    /* trigger_call: OpenSSL PKCS parser candidate selected by slot_bindings. */
+tools/render_cases_v1.py:159:        parse_ret = PKCS12_parse(p12, "", &pkey, &cert, &ca);
+tools/render_cases_v1.py:163:     * oracle / return check: parser accept/reject plus consumption signal.
+tools/render_cases_v1.py:164:     * A nonzero return here is an oracle classification signal only.
+tools/render_cases_v1.py:166:    if (p12 != NULL && parse_ret == 1 && consumed_len < input_len) {{
+tools/render_cases_v1.py:168:    }} else if (p12 != NULL && parse_ret == 1) {{
+tools/render_cases_v1.py:182:        PKCS12_free(p12);
+tools/render_cases_v1.py:184:    return ret;
+tools/render_cases_v1.py:190:    return f"""/*
+tools/render_cases_v1.py:217:    /* trigger_call: OpenSSL ASN.1 parser candidate selected by slot_bindings. */
+tools/render_cases_v1.py:218:    x509 = (X509 *)ASN1_item_d2i(NULL, &p, der_len, ASN1_ITEM_rptr(X509));
+tools/render_cases_v1.py:222:     * oracle / return check: parser accept/reject plus consumption signal.
+tools/render_cases_v1.py:223:     * A nonzero return here is an oracle classification signal only.
+tools/render_cases_v1.py:237:    return ret;
+tools/render_cases_v1.py:244:        return pkcs_harness(job, bytes_)
+tools/render_cases_v1.py:246:        return asn1_harness(job, bytes_)
+tools/render_cases_v1.py:253:            return item
+tools/render_cases_v1.py:254:    return {}
+tools/render_cases_v1.py:258:    return out_dir / "rendered_cases" / render_job_id
+tools/render_cases_v1.py:273:    return not reasons, reasons
+tools/render_cases_v1.py:287:        return (
+tools/render_cases_v1.py:315:        return (
+tools/render_cases_v1.py:339:        return (
+tools/render_cases_v1.py:420:            "Nonzero harness return codes are oracle signals, not crash evidence.",
+tools/render_cases_v1.py:469:                "replacement_summary": "parser accept/reject and consumption signal rendered",
+tools/render_cases_v1.py:476:            "no_d2i_PKCS7": "d2i_PKCS7" not in harness,
+tools/render_cases_v1.py:515:    return index_entry, None
+tools/render_cases_v1.py:523:    return {
+tools/render_cases_v1.py:542:    return "".join(f"- {item}\n" for item in items) if items else "- none\n"
+tools/render_cases_v1.py:685:        "no_d2i_PKCS7_used": all("d2i_PKCS7" not in text for text in harness_texts),
+tools/render_cases_v1.py:706:        checks["no_d2i_PKCS7_used"],
+tools/render_cases_v1.py:717:    return checks
+tools/render_cases_v1.py:720:def parse_args() -> argparse.Namespace:
+tools/render_cases_v1.py:721:    parser = argparse.ArgumentParser(description="Render cases from render_plan_v1.")
+tools/render_cases_v1.py:722:    parser.add_argument("--render-plan", required=True)
+tools/render_cases_v1.py:723:    parser.add_argument("--case-manifest", required=True)
+tools/render_cases_v1.py:724:    parser.add_argument("--mutation-case-matrix", required=True)
+tools/render_cases_v1.py:725:    parser.add_argument("--oracle-expectation-plan", required=True)
+tools/render_cases_v1.py:726:    parser.add_argument("--adapter-root", required=True)
+tools/render_cases_v1.py:727:    parser.add_argument("--family-template-root", required=True)
+tools/render_cases_v1.py:728:    parser.add_argument("--out-dir", required=True)
+tools/render_cases_v1.py:729:    return parser.parse_args()
+tools/render_cases_v1.py:733:    args = parse_args()
+tools/render_cases_v1.py:930:    return 0 if quality["quality_status"] == "pass" else 1
+analyzer/family_result_adapter.py:22:        return ""
+analyzer/family_result_adapter.py:25:        return ""
+analyzer/family_result_adapter.py:26:    return path.read_text(encoding="utf-8", errors="replace")
+analyzer/family_result_adapter.py:31:        return "compile_error"
+analyzer/family_result_adapter.py:33:        return "run_timeout"
+analyzer/family_result_adapter.py:35:        return "run_ok"
+analyzer/family_result_adapter.py:37:        return "run_nonzero"
+analyzer/family_result_adapter.py:38:    return "unknown"
+analyzer/family_result_adapter.py:44:    return {
+analyzer/family_result_adapter.py:54:            "returncode": compile_result.get("return_code"),
+analyzer/family_result_adapter.py:60:            "returncode": run.get("exit_code"),
+analyzer/family_result_adapter.py:71:    return {
+analyzer/family_result_adapter.py:79:        "compile_returncode": verdict.get("compile_returncode"),
+analyzer/family_result_adapter.py:86:        return "compile_failure"
+analyzer/family_result_adapter.py:88:        return "timeout_candidate"
+analyzer/family_result_adapter.py:90:        return "sanitizer_crash_candidate"
+analyzer/family_result_adapter.py:92:        return "bug_candidate"
+analyzer/family_result_adapter.py:94:        return "nonzero_exit_candidate"
+analyzer/family_result_adapter.py:104:        return "no_crash_observed"
+analyzer/family_result_adapter.py:105:    return "oracle_semantics_needs_review"
+analyzer/family_result_adapter.py:115:        return (
+analyzer/family_result_adapter.py:122:        return (
+analyzer/family_result_adapter.py:129:        return ("needs_triage", "medium", reason or "case timed out", "timeout triage")
+analyzer/family_result_adapter.py:131:        return (
+analyzer/family_result_adapter.py:138:        return ("needs_triage", "high", reason or "case did not compile", "compile fixup")
+analyzer/family_result_adapter.py:140:        return (
+analyzer/family_result_adapter.py:146:    return (
+analyzer/analyze_poc.py:1:import argparse
+analyzer/analyze_poc.py:11:        return True
+analyzer/analyze_poc.py:30:    "return",
+analyzer/analyze_poc.py:32:    "printf",
+analyzer/analyze_poc.py:33:    "fprintf",
+analyzer/analyze_poc.py:46:    "verify_ext",
+analyzer/analyze_poc.py:50:    "verify",
+analyzer/analyze_poc.py:55:    return path.read_text(encoding="utf-8", errors="ignore")
+analyzer/analyze_poc.py:64:    return includes
+analyzer/analyze_poc.py:74:    return macros
+analyzer/analyze_poc.py:80:    return text
+analyzer/analyze_poc.py:108:    return stmts
+analyzer/analyze_poc.py:159:    return args
+analyzer/analyze_poc.py:196:    return calls
+analyzer/analyze_poc.py:202:        return "mbedtls"
+analyzer/analyze_poc.py:204:        return "openssl"
+analyzer/analyze_poc.py:206:        return "botan"
+analyzer/analyze_poc.py:207:    return "unknown"
+analyzer/analyze_poc.py:214:                return c
+analyzer/analyze_poc.py:219:            return c
+analyzer/analyze_poc.py:222:        return api_calls[-1]
+analyzer/analyze_poc.py:224:    return {}
+analyzer/analyze_poc.py:233:    if "MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE" in text:
+analyzer/analyze_poc.py:234:        candidates.append("fixed_ret_check:MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE")
+analyzer/analyze_poc.py:236:    if "MBEDTLS_ERR_MPI_NEGATIVE_VALUE" in text:
+analyzer/analyze_poc.py:237:        candidates.append("fixed_ret_check:MBEDTLS_ERR_MPI_NEGATIVE_VALUE")
+analyzer/analyze_poc.py:239:    return candidates
+analyzer/analyze_poc.py:254:    return {
+analyzer/analyze_poc.py:268:    parser = argparse.ArgumentParser(description="Analyze C PoC and extract API call metadata.")
+analyzer/analyze_poc.py:269:    parser.add_argument("poc", help="Path to PoC .c file")
+analyzer/analyze_poc.py:270:    parser.add_argument(
+analyzer/analyze_poc.py:275:    parser.add_argument(
+analyzer/analyze_poc.py:281:    args = parser.parse_args()
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__invalid_container_structure__case_001/oracle_metadata.yaml:6:primary_oracle: parser_reject_accept
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__invalid_container_structure__case_001/oracle_metadata.yaml:8:- return_code_semantics
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__invalid_container_structure__case_001/oracle_metadata.yaml:23:- Nonzero harness return codes are oracle signals, not crash evidence.
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__seed_preserving_baseline__case_001/harness.c:28:    /* trigger_call: OpenSSL ASN.1 parser candidate selected by slot_bindings. */
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__seed_preserving_baseline__case_001/harness.c:29:    x509 = (X509 *)ASN1_item_d2i(NULL, &p, der_len, ASN1_ITEM_rptr(X509));
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__seed_preserving_baseline__case_001/harness.c:33:     * oracle / return check: parser accept/reject plus consumption signal.
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__seed_preserving_baseline__case_001/harness.c:34:     * A nonzero return here is an oracle classification signal only.
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__seed_preserving_baseline__case_001/harness.c:48:    return ret;
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__seed_preserving_baseline__case_001/oracle_metadata.yaml:6:primary_oracle: parser_reject_accept
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__seed_preserving_baseline__case_001/oracle_metadata.yaml:9:- return_code_semantics
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__seed_preserving_baseline__case_001/oracle_metadata.yaml:22:- Nonzero harness return codes are oracle signals, not crash evidence.
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__seed_preserving_baseline__case_001/render_trace.yaml:24:  replacement_summary: parser accept/reject and consumption signal rendered
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__seed_preserving_baseline__case_001/render_trace.yaml:29:  no_d2i_PKCS7: true
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__invalid_container_structure__case_001/render_trace.yaml:24:  replacement_summary: parser accept/reject and consumption signal rendered
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__invalid_container_structure__case_001/render_trace.yaml:29:  no_d2i_PKCS7: true
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__long_length__case_001/harness.c:28:    /* trigger_call: OpenSSL ASN.1 parser candidate selected by slot_bindings. */
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__long_length__case_001/harness.c:29:    x509 = (X509 *)ASN1_item_d2i(NULL, &p, der_len, ASN1_ITEM_rptr(X509));
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__long_length__case_001/harness.c:33:     * oracle / return check: parser accept/reject plus consumption signal.
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__long_length__case_001/harness.c:34:     * A nonzero return here is an oracle classification signal only.
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__long_length__case_001/harness.c:48:    return ret;
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/README.md:1:# render__pkcs_container_parsing__openssl__expected_return_flip__case_001
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/README.md:3:- case_id: `pkcs_container_parsing_openssl__mut_007__expected_return_flip`
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/README.md:6:- mutation_strategy: `expected_return_flip`
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__long_length__case_001/render_trace.yaml:24:  replacement_summary: parser accept/reject and consumption signal rendered
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__long_length__case_001/render_trace.yaml:29:  no_d2i_PKCS7: true
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__long_length__case_001/oracle_metadata.yaml:6:primary_oracle: parser_reject_accept
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__long_length__case_001/oracle_metadata.yaml:9:- return_code_semantics
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__long_length__case_001/oracle_metadata.yaml:22:- Nonzero harness return codes are oracle signals, not crash evidence.
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/input_corpus/input.bin:1:-----BEGIN PKCS7-----
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/input_corpus/input.bin:3:-----END PKCS7-----
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__invalid_container_structure__case_001/harness.c:27:    int parse_ret = 0;
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__invalid_container_structure__case_001/harness.c:28:    PKCS12 *p12 = NULL;
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__invalid_container_structure__case_001/harness.c:34:    p12 = d2i_PKCS12(NULL, &p, input_len);
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__invalid_container_structure__case_001/harness.c:37:    /* trigger_call: OpenSSL PKCS parser candidate selected by slot_bindings. */
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__invalid_container_structure__case_001/harness.c:39:        parse_ret = PKCS12_parse(p12, "", &pkey, &cert, &ca);
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__invalid_container_structure__case_001/harness.c:43:     * oracle / return check: parser accept/reject plus consumption signal.
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__invalid_container_structure__case_001/harness.c:44:     * A nonzero return here is an oracle classification signal only.
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__invalid_container_structure__case_001/harness.c:46:    if (p12 != NULL && parse_ret == 1 && consumed_len < input_len) {
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__invalid_container_structure__case_001/harness.c:48:    } else if (p12 != NULL && parse_ret == 1) {
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__invalid_container_structure__case_001/harness.c:62:        PKCS12_free(p12);
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__invalid_container_structure__case_001/harness.c:64:    return ret;
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/render_trace.yaml:24:  replacement_summary: parser accept/reject and consumption signal rendered
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/render_trace.yaml:29:  no_d2i_PKCS7: true
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/oracle_metadata.yaml:6:primary_oracle: parser_reject_accept
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/oracle_metadata.yaml:8:- return_code_semantics
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/oracle_metadata.yaml:23:- Nonzero harness return codes are oracle signals, not crash evidence.
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/harness.c:30:    int parse_ret = 0;
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/harness.c:31:    PKCS12 *p12 = NULL;
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/harness.c:37:    p12 = d2i_PKCS12(NULL, &p, input_len);
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/harness.c:40:    /* trigger_call: OpenSSL PKCS parser candidate selected by slot_bindings. */
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/harness.c:42:        parse_ret = PKCS12_parse(p12, "", &pkey, &cert, &ca);
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/harness.c:46:     * oracle / return check: parser accept/reject plus consumption signal.
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/harness.c:47:     * A nonzero return here is an oracle classification signal only.
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/harness.c:49:    if (p12 != NULL && parse_ret == 1 && consumed_len < input_len) {
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/harness.c:51:    } else if (p12 != NULL && parse_ret == 1) {
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/harness.c:65:        PKCS12_free(p12);
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__pem_der_format_toggle__case_001/harness.c:67:    return ret;
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/oracle_metadata.yaml:2:render_job_id: render__pkcs_container_parsing__openssl__expected_return_flip__case_001
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/oracle_metadata.yaml:3:case_id: pkcs_container_parsing_openssl__mut_007__expected_return_flip
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/oracle_metadata.yaml:6:primary_oracle: parser_reject_accept
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/oracle_metadata.yaml:8:- return_code_semantics
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/oracle_metadata.yaml:23:- Nonzero harness return codes are oracle signals, not crash evidence.
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/README.md:1:# render__asn1_nested_boundary__openssl__expected_return_flip__case_001
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/README.md:3:- case_id: `asn1_nested_boundary_openssl__mut_007__expected_return_flip`
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/README.md:6:- mutation_strategy: `expected_return_flip`
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__nested_depth_variation__case_001/harness.c:28:    /* trigger_call: OpenSSL ASN.1 parser candidate selected by slot_bindings. */
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__nested_depth_variation__case_001/harness.c:29:    x509 = (X509 *)ASN1_item_d2i(NULL, &p, der_len, ASN1_ITEM_rptr(X509));
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__nested_depth_variation__case_001/harness.c:33:     * oracle / return check: parser accept/reject plus consumption signal.
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__nested_depth_variation__case_001/harness.c:34:     * A nonzero return here is an oracle classification signal only.
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__nested_depth_variation__case_001/harness.c:48:    return ret;
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/case_metadata.yaml:2:render_job_id: render__pkcs_container_parsing__openssl__expected_return_flip__case_001
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/case_metadata.yaml:3:case_id: pkcs_container_parsing_openssl__mut_007__expected_return_flip
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/case_metadata.yaml:7:mutation_strategy: expected_return_flip
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/harness.c:27:    int parse_ret = 0;
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/harness.c:28:    PKCS12 *p12 = NULL;
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/harness.c:34:    p12 = d2i_PKCS12(NULL, &p, input_len);
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/harness.c:37:    /* trigger_call: OpenSSL PKCS parser candidate selected by slot_bindings. */
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/harness.c:39:        parse_ret = PKCS12_parse(p12, "", &pkey, &cert, &ca);
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/harness.c:43:     * oracle / return check: parser accept/reject plus consumption signal.
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/harness.c:44:     * A nonzero return here is an oracle classification signal only.
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/harness.c:46:    if (p12 != NULL && parse_ret == 1 && consumed_len < input_len) {
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/harness.c:48:    } else if (p12 != NULL && parse_ret == 1) {
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/harness.c:62:        PKCS12_free(p12);
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/harness.c:64:    return ret;
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__nested_depth_variation__case_001/render_trace.yaml:24:  replacement_summary: parser accept/reject and consumption signal rendered
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__nested_depth_variation__case_001/render_trace.yaml:29:  no_d2i_PKCS7: true
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/build_metadata.yaml:2:render_job_id: render__pkcs_container_parsing__openssl__expected_return_flip__case_001
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/build_metadata.yaml:3:case_id: pkcs_container_parsing_openssl__mut_007__expected_return_flip
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/case_metadata.yaml:2:render_job_id: render__asn1_nested_boundary__openssl__expected_return_flip__case_001
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/case_metadata.yaml:3:case_id: asn1_nested_boundary_openssl__mut_007__expected_return_flip
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/case_metadata.yaml:7:mutation_strategy: expected_return_flip
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/oracle_metadata.yaml:2:render_job_id: render__asn1_nested_boundary__openssl__expected_return_flip__case_001
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/oracle_metadata.yaml:3:case_id: asn1_nested_boundary_openssl__mut_007__expected_return_flip
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/oracle_metadata.yaml:6:primary_oracle: parser_reject_accept
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/oracle_metadata.yaml:9:- return_code_semantics
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/oracle_metadata.yaml:22:- Nonzero harness return codes are oracle signals, not crash evidence.
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/render_trace.yaml:2:render_job_id: render__pkcs_container_parsing__openssl__expected_return_flip__case_001
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/render_trace.yaml:3:case_id: pkcs_container_parsing_openssl__mut_007__expected_return_flip
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/render_trace.yaml:8:mutation_case_used: artifacts/sprints/family_adapter_mutation_planner_v1/mutation_case_matrix/mutation_case_matrix.yaml#cases[pkcs_container_parsing_openssl__mut_007__expected_return_flip]
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/render_trace.yaml:24:  replacement_summary: parser accept/reject and consumption signal rendered
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__expected_return_flip__case_001/render_trace.yaml:29:  no_d2i_PKCS7: true
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/build_metadata.yaml:2:render_job_id: render__asn1_nested_boundary__openssl__expected_return_flip__case_001
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/build_metadata.yaml:3:case_id: asn1_nested_boundary_openssl__mut_007__expected_return_flip
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/render_trace.yaml:2:render_job_id: render__asn1_nested_boundary__openssl__expected_return_flip__case_001
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/render_trace.yaml:3:case_id: asn1_nested_boundary_openssl__mut_007__expected_return_flip
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/render_trace.yaml:8:mutation_case_used: artifacts/sprints/family_adapter_mutation_planner_v1/mutation_case_matrix/mutation_case_matrix.yaml#cases[asn1_nested_boundary_openssl__mut_007__expected_return_flip]
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/render_trace.yaml:24:  replacement_summary: parser accept/reject and consumption signal rendered
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/render_trace.yaml:29:  no_d2i_PKCS7: true
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__nested_length_mismatch__case_001/oracle_metadata.yaml:6:primary_oracle: parser_reject_accept
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__nested_length_mismatch__case_001/oracle_metadata.yaml:9:- return_code_semantics
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__nested_length_mismatch__case_001/oracle_metadata.yaml:22:- Nonzero harness return codes are oracle signals, not crash evidence.
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/harness.c:28:    /* trigger_call: OpenSSL ASN.1 parser candidate selected by slot_bindings. */
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/harness.c:29:    x509 = (X509 *)ASN1_item_d2i(NULL, &p, der_len, ASN1_ITEM_rptr(X509));
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/harness.c:33:     * oracle / return check: parser accept/reject plus consumption signal.
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/harness.c:34:     * A nonzero return here is an oracle classification signal only.
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__expected_return_flip__case_001/harness.c:48:    return ret;
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__nested_depth_variation__case_001/oracle_metadata.yaml:6:primary_oracle: parser_reject_accept
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__nested_depth_variation__case_001/oracle_metadata.yaml:9:- return_code_semantics
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__nested_depth_variation__case_001/oracle_metadata.yaml:22:- Nonzero harness return codes are oracle signals, not crash evidence.
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__nested_length_mismatch__case_001/render_trace.yaml:24:  replacement_summary: parser accept/reject and consumption signal rendered
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__nested_length_mismatch__case_001/render_trace.yaml:29:  no_d2i_PKCS7: true
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__nested_length_mismatch__case_001/harness.c:28:    /* trigger_call: OpenSSL ASN.1 parser candidate selected by slot_bindings. */
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__nested_length_mismatch__case_001/harness.c:29:    x509 = (X509 *)ASN1_item_d2i(NULL, &p, der_len, ASN1_ITEM_rptr(X509));
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__nested_length_mismatch__case_001/harness.c:33:     * oracle / return check: parser accept/reject plus consumption signal.
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__nested_length_mismatch__case_001/harness.c:34:     * A nonzero return here is an oracle classification signal only.
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__nested_length_mismatch__case_001/harness.c:48:    return ret;
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__malformed_length__case_001/oracle_metadata.yaml:6:primary_oracle: parser_reject_accept
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__malformed_length__case_001/oracle_metadata.yaml:8:- return_code_semantics
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__malformed_length__case_001/oracle_metadata.yaml:23:- Nonzero harness return codes are oracle signals, not crash evidence.
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__malformed_length__case_001/harness.c:27:    int parse_ret = 0;
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__malformed_length__case_001/harness.c:28:    PKCS12 *p12 = NULL;
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__malformed_length__case_001/harness.c:34:    p12 = d2i_PKCS12(NULL, &p, input_len);
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__malformed_length__case_001/harness.c:37:    /* trigger_call: OpenSSL PKCS parser candidate selected by slot_bindings. */
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__malformed_length__case_001/harness.c:39:        parse_ret = PKCS12_parse(p12, "", &pkey, &cert, &ca);
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__malformed_length__case_001/harness.c:43:     * oracle / return check: parser accept/reject plus consumption signal.
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__malformed_length__case_001/harness.c:44:     * A nonzero return here is an oracle classification signal only.
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__malformed_length__case_001/harness.c:46:    if (p12 != NULL && parse_ret == 1 && consumed_len < input_len) {
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__malformed_length__case_001/harness.c:48:    } else if (p12 != NULL && parse_ret == 1) {
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__malformed_length__case_001/harness.c:62:        PKCS12_free(p12);
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__malformed_length__case_001/harness.c:64:    return ret;
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__malformed_length__case_001/render_trace.yaml:24:  replacement_summary: parser accept/reject and consumption signal rendered
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__malformed_length__case_001/render_trace.yaml:29:  no_d2i_PKCS7: true
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__trailing_garbage__case_001/render_trace.yaml:28:  replacement_summary: parser accept/reject and consumption signal rendered
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__trailing_garbage__case_001/render_trace.yaml:33:  no_d2i_PKCS7: true
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__trailing_garbage__case_001/oracle_metadata.yaml:6:primary_oracle: parser_reject_accept
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__trailing_garbage__case_001/oracle_metadata.yaml:9:- return_code_semantics
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__trailing_garbage__case_001/oracle_metadata.yaml:22:- Nonzero harness return codes are oracle signals, not crash evidence.
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__trailing_garbage__case_001/render_trace.yaml:28:  replacement_summary: parser accept/reject and consumption signal rendered
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__trailing_garbage__case_001/render_trace.yaml:33:  no_d2i_PKCS7: true
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__trailing_garbage__case_001/oracle_metadata.yaml:6:primary_oracle: parser_reject_accept
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__trailing_garbage__case_001/oracle_metadata.yaml:8:- return_code_semantics
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__trailing_garbage__case_001/oracle_metadata.yaml:23:- Nonzero harness return codes are oracle signals, not crash evidence.
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__malformed_length__case_001/case_metadata.yaml:13:  safety_notes: nested length mutation can become generic parse failure
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__trailing_garbage__case_001/harness.c:28:    /* trigger_call: OpenSSL ASN.1 parser candidate selected by slot_bindings. */
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__trailing_garbage__case_001/harness.c:29:    x509 = (X509 *)ASN1_item_d2i(NULL, &p, der_len, ASN1_ITEM_rptr(X509));
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__trailing_garbage__case_001/harness.c:33:     * oracle / return check: parser accept/reject plus consumption signal.
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__trailing_garbage__case_001/harness.c:34:     * A nonzero return here is an oracle classification signal only.
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__trailing_garbage__case_001/harness.c:48:    return ret;
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__trailing_garbage__case_001/harness.c:27:    int parse_ret = 0;
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__trailing_garbage__case_001/harness.c:28:    PKCS12 *p12 = NULL;
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__trailing_garbage__case_001/harness.c:34:    p12 = d2i_PKCS12(NULL, &p, input_len);
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__trailing_garbage__case_001/harness.c:37:    /* trigger_call: OpenSSL PKCS parser candidate selected by slot_bindings. */
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__trailing_garbage__case_001/harness.c:39:        parse_ret = PKCS12_parse(p12, "", &pkey, &cert, &ca);
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__trailing_garbage__case_001/harness.c:43:     * oracle / return check: parser accept/reject plus consumption signal.
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__trailing_garbage__case_001/harness.c:44:     * A nonzero return here is an oracle classification signal only.
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__trailing_garbage__case_001/harness.c:46:    if (p12 != NULL && parse_ret == 1 && consumed_len < input_len) {
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__trailing_garbage__case_001/harness.c:48:    } else if (p12 != NULL && parse_ret == 1) {
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__trailing_garbage__case_001/harness.c:62:        PKCS12_free(p12);
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__trailing_garbage__case_001/harness.c:64:    return ret;
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__short_length__case_001/oracle_metadata.yaml:6:primary_oracle: parser_reject_accept
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__short_length__case_001/oracle_metadata.yaml:9:- return_code_semantics
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__short_length__case_001/oracle_metadata.yaml:22:- Nonzero harness return codes are oracle signals, not crash evidence.
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__short_length__case_001/harness.c:28:    /* trigger_call: OpenSSL ASN.1 parser candidate selected by slot_bindings. */
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__short_length__case_001/harness.c:29:    x509 = (X509 *)ASN1_item_d2i(NULL, &p, der_len, ASN1_ITEM_rptr(X509));
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__short_length__case_001/harness.c:33:     * oracle / return check: parser accept/reject plus consumption signal.
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__short_length__case_001/harness.c:34:     * A nonzero return here is an oracle classification signal only.
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__short_length__case_001/harness.c:48:    return ret;
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__short_length__case_001/render_trace.yaml:24:  replacement_summary: parser accept/reject and consumption signal rendered
+artifacts/sprints/render_cases_v1/rendered_cases/render__asn1_nested_boundary__openssl__short_length__case_001/render_trace.yaml:29:  no_d2i_PKCS7: true
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001/harness.c:27:    int parse_ret = 0;
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001/harness.c:28:    PKCS12 *p12 = NULL;
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001/harness.c:34:    p12 = d2i_PKCS12(NULL, &p, input_len);
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001/harness.c:37:    /* trigger_call: OpenSSL PKCS parser candidate selected by slot_bindings. */
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001/harness.c:39:        parse_ret = PKCS12_parse(p12, "", &pkey, &cert, &ca);
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001/harness.c:43:     * oracle / return check: parser accept/reject plus consumption signal.
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001/harness.c:44:     * A nonzero return here is an oracle classification signal only.
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001/harness.c:46:    if (p12 != NULL && parse_ret == 1 && consumed_len < input_len) {
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001/harness.c:48:    } else if (p12 != NULL && parse_ret == 1) {
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001/harness.c:62:        PKCS12_free(p12);
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001/harness.c:64:    return ret;
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001/oracle_metadata.yaml:6:primary_oracle: parser_reject_accept
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001/oracle_metadata.yaml:8:- return_code_semantics
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001/oracle_metadata.yaml:23:- Nonzero harness return codes are oracle signals, not crash evidence.
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001/oracle_metadata.yaml:6:primary_oracle: parser_reject_accept
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001/oracle_metadata.yaml:8:- return_code_semantics
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001/oracle_metadata.yaml:23:- Nonzero harness return codes are oracle signals, not crash evidence.
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001/case_metadata.yaml:13:  safety_notes: nested length mutation can become generic parse failure
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001/render_trace.yaml:24:  replacement_summary: parser accept/reject and consumption signal rendered
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__seed_preserving_baseline__case_001/render_trace.yaml:29:  no_d2i_PKCS7: true
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001/render_trace.yaml:24:  replacement_summary: parser accept/reject and consumption signal rendered
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001/render_trace.yaml:29:  no_d2i_PKCS7: true
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001/harness.c:27:    int parse_ret = 0;
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001/harness.c:28:    PKCS12 *p12 = NULL;
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001/harness.c:34:    p12 = d2i_PKCS12(NULL, &p, input_len);
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001/harness.c:37:    /* trigger_call: OpenSSL PKCS parser candidate selected by slot_bindings. */
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001/harness.c:39:        parse_ret = PKCS12_parse(p12, "", &pkey, &cert, &ca);
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001/harness.c:43:     * oracle / return check: parser accept/reject plus consumption signal.
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001/harness.c:44:     * A nonzero return here is an oracle classification signal only.
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001/harness.c:46:    if (p12 != NULL && parse_ret == 1 && consumed_len < input_len) {
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001/harness.c:48:    } else if (p12 != NULL && parse_ret == 1) {
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001/harness.c:62:        PKCS12_free(p12);
+artifacts/sprints/render_cases_v1/rendered_cases/render__pkcs_container_parsing__openssl__nested_length_mismatch__case_001/harness.c:64:    return ret;

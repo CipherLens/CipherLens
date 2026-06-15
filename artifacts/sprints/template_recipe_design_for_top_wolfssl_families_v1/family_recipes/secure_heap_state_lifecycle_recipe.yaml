@@ -1,0 +1,272 @@
+recipe_id: secure_heap_state_lifecycle_wolfssl_template_recipe_v1
+family: secure_heap_state_lifecycle
+source_library: wolfssl
+candidate_pocs: []
+harness_family: object_state_lifecycle
+recommended_generalization_mode: needs_new_family_recipe
+template_files_to_generate:
+- poc_original.c
+- tmpl_wolfssl.c
+- template_meta.yaml
+- mask_report.yaml
+- ast_mask_report.yaml
+- selected_mask_units.yaml
+must_preserve_semantics:
+- target_api_call
+- return_code_check
+- cleanup_call
+- oracle_observable
+ast_mask_preserve_units:
+- unit_type: trigger_call
+  node_kind_hint: call_expression
+  reason: preserve source API path and oracle trigger
+- unit_type: cleanup_call
+  node_kind_hint: call_expression
+  reason: preserve ownership/lifecycle semantics
+- unit_type: oracle_check
+  node_kind_hint: if_statement or return_statement
+  reason: preserve observable safe/bug/triage classification
+ast_maskable_units:
+- unit_type: api_argument
+  slot_name: ALLOCATOR_INITIALIZED
+  node_kind_hint: argument or literal
+  reason: uninitialized allocator behavior may be expected safe rejection
+- unit_type: api_argument
+  slot_name: MALLOC_SIZE
+  node_kind_hint: argument or literal
+  reason: avoid unbounded allocation
+- unit_type: api_argument
+  slot_name: FREE_ORDER
+  node_kind_hint: argument or literal
+  reason: API misuse must be down-ranked
+- unit_type: api_argument
+  slot_name: DOUBLE_FREE_CANDIDATE
+  node_kind_hint: argument or literal
+  reason: requires explicit sanitizer evidence
+- unit_type: api_argument
+  slot_name: ALLOCATOR_REPLACEMENT
+  node_kind_hint: argument or literal
+  reason: custom allocator must be deterministic
+mutation_slots:
+- slot_name: ALLOCATOR_INITIALIZED
+  slot_type: boolean
+  examples:
+  - 'true'
+  - 'false'
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: uninitialized allocator behavior may be expected safe rejection
+- slot_name: MALLOC_SIZE
+  slot_type: size_t
+  examples:
+  - '0'
+  - '1'
+  - '16'
+  - large
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: avoid unbounded allocation
+- slot_name: FREE_ORDER
+  slot_type: sequence
+  examples:
+  - free_once
+  - free_before_use
+  - free_after_replace
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: API misuse must be down-ranked
+- slot_name: DOUBLE_FREE_CANDIDATE
+  slot_type: boolean
+  examples:
+  - 'false'
+  - 'true'
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: requires explicit sanitizer evidence
+- slot_name: ALLOCATOR_REPLACEMENT
+  slot_type: enum
+  examples:
+  - default
+  - custom
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: custom allocator must be deterministic
+api_slots:
+- slot_name: wolfSSL_Malloc
+  source_api: wolfSSL_Malloc
+  allowed_target_apis:
+  - mbedtls:mbedtls_calloc
+  - openssl:OPENSSL_malloc
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: wolfSSL_Free
+  source_api: wolfSSL_Free
+  allowed_target_apis:
+  - mbedtls:mbedtls_free
+  - openssl:OPENSSL_free
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  - usable_for_adapter
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: wolfSSL_SetAllocators
+  source_api: wolfSSL_SetAllocators
+  allowed_target_apis:
+  - mbedtls:mbedtls_platform_set_calloc_free
+  - openssl:CRYPTO_set_mem_functions
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: XMALLOC
+  source_api: XMALLOC
+  allowed_target_apis: []
+  blocked_target_apis: []
+  mapping_gate_status:
+  - not_in_mapping_gate
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: XFREE
+  source_api: XFREE
+  allowed_target_apis: []
+  blocked_target_apis: []
+  mapping_gate_status:
+  - not_in_mapping_gate
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: OPENSSL_malloc
+  source_api: ''
+  allowed_target_apis:
+  - openssl:OPENSSL_malloc
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: OPENSSL_free
+  source_api: ''
+  allowed_target_apis:
+  - openssl:OPENSSL_free
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: CRYPTO_set_mem_functions
+  source_api: ''
+  allowed_target_apis:
+  - openssl:CRYPTO_set_mem_functions
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: CRYPTO_secure_malloc
+  source_api: ''
+  allowed_target_apis: []
+  blocked_target_apis: []
+  mapping_gate_status:
+  - not_in_mapping_gate
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: CRYPTO_secure_free
+  source_api: ''
+  allowed_target_apis: []
+  blocked_target_apis: []
+  mapping_gate_status:
+  - not_in_mapping_gate
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: mbedtls_calloc
+  source_api: ''
+  allowed_target_apis:
+  - mbedtls:mbedtls_calloc
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: mbedtls_free
+  source_api: ''
+  allowed_target_apis:
+  - mbedtls:mbedtls_free
+  blocked_target_apis: []
+  mapping_gate_status:
+  - usable_for_adapter
+  notes: candidate mapping only; not confirmed equivalence
+- slot_name: mbedtls_platform_set_calloc_free
+  source_api: ''
+  allowed_target_apis:
+  - mbedtls:mbedtls_platform_set_calloc_free
+  blocked_target_apis: []
+  mapping_gate_status:
+  - candidate_only
+  notes: candidate mapping only; not confirmed equivalence
+cleanup_slots:
+- slot_name: cleanup_call
+  source_cleanup: family-specific wolfSSL cleanup/free API
+  target_cleanup_candidates:
+  - OPENSSL_free
+  - mbedtls_free
+  - mbedtls_platform_set_calloc_free
+  required: true
+oracle_types:
+- cleanup_required
+- lifecycle_state
+- crash_or_sanitizer
+adapter_scope:
+  allowed_targets:
+    openssl:
+      allowed_apis: []
+      candidate_only_apis:
+      - CRYPTO_set_mem_functions
+      - OPENSSL_free
+      - OPENSSL_malloc
+    mbedtls:
+      allowed_apis:
+      - mbedtls_free
+      candidate_only_apis:
+      - mbedtls_calloc
+      - mbedtls_platform_set_calloc_free
+  blocked_targets: []
+  candidate_only_targets:
+    openssl:
+    - CRYPTO_set_mem_functions
+    - OPENSSL_free
+    - OPENSSL_malloc
+    mbedtls:
+    - mbedtls_calloc
+    - mbedtls_platform_set_calloc_free
+rag_evidence_required:
+- source_api_card
+- target_api_card
+- mapping_gate
+- constraints
+- call_sequence
+tree_sitter_ast_mask_pipeline:
+  expected_script:
+  - template_maker/ast_mask_tree_sitter.py
+  - template_maker/ast_mask_lite.py
+  - template_maker/ast_mask_select.py
+  expected_outputs:
+  - ast_mask_report.yaml
+  - selected_mask_units.yaml
+  canonical_schema:
+    ast_units_field: ast_mask_units
+    selected_units_field: selected_units
+  fallback_allowed: true
+glm_allowed:
+  default: false
+  allowed_later_for:
+  - adapter_slot_filling
+  - slot_bindings
+  forbidden_for:
+  - full_c_generation
+  - freeform_harness_generation
+  - ast_selection
+risk_notes:
+- Do not report candidate mapping as confirmed equivalence or vulnerability.

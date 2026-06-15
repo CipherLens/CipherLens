@@ -1,0 +1,34 @@
+# Refactor Summary
+
+```yaml
+schema: analysis_feedback_refactor_summary_v1
+task: project_structure_refactor_phase5_analysis_feedback_v1
+new_modules:
+- analysis/runtime_feedback.py
+- analysis/candidate_queue.py
+- analysis/mutation_feedback.py
+- analysis/scheduler_proposal.py
+- analysis/family_loop_closure.py
+- analysis/analysis_records.py
+tools_wrappers_preserved:
+- tools/runtime_feedback_integration_v1.py
+- tools/family_loop_closure_report_v1.py
+deleted_files: []
+logic_moved:
+  runtime_feedback: analysis/runtime_feedback.py
+  candidate_pending_queue: analysis/candidate_queue.py
+  mutation_policy_feedback: analysis/mutation_feedback.py
+  scheduler_proposal: analysis/scheduler_proposal.py
+  family_loop_closure: analysis/family_loop_closure.py
+  schema_record_helpers: analysis/analysis_records.py
+compatibility:
+  thin_wrappers: true
+  cli_backward_compatible: true
+smoke_test:
+  staged_feedback: true
+  candidate_count: 3
+  external_validation_pending: 3
+  family_loop_closed: true
+  pkcs_pending_valid_seed: true
+  smoke_test_pass: true
+```

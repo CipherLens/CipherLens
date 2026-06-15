@@ -1,0 +1,47 @@
+target: openssl-3.5.5-asan
+smoke_compile_attempted: true
+smoke_run_attempted: true
+smoke_status: failed
+include_dirs:
+- /home/wen/work/install-openssl-3.5.5-asan/include
+lib_dirs:
+- /home/wen/work/install-openssl-3.5.5-asan/lib64
+link_flags:
+- -L/home/wen/work/install-openssl-3.5.5-asan/lib64
+- -Wl,-rpath,/home/wen/work/install-openssl-3.5.5-asan/lib64
+- -lssl
+- -lcrypto
+- -ldl
+compile:
+  cmd:
+  - clang
+  - -g
+  - -O1
+  - -fsanitize=address,undefined
+  - -fno-omit-frame-pointer
+  - -I/home/wen/work/install-openssl-3.5.5-asan/include
+  - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/bootstrap/cross_library_sanitizer_bootstrap_v1/smoke/openssl-3.5.5-asan/smoke.c
+  - -L/home/wen/work/install-openssl-3.5.5-asan/lib64
+  - -Wl,-rpath,/home/wen/work/install-openssl-3.5.5-asan/lib64
+  - -lssl
+  - -lcrypto
+  - -ldl
+  - -pthread
+  - -o
+  - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/bootstrap/cross_library_sanitizer_bootstrap_v1/smoke/openssl-3.5.5-asan/smoke.bin
+  cwd: ''
+  return_code: 0
+  ok: true
+  timeout: false
+  stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/bootstrap/cross_library_sanitizer_bootstrap_v1/smoke/openssl-3.5.5-asan/compile.stdout.log
+  stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/bootstrap/cross_library_sanitizer_bootstrap_v1/smoke/openssl-3.5.5-asan/compile.stderr.log
+run:
+  cmd:
+  - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/bootstrap/cross_library_sanitizer_bootstrap_v1/smoke/openssl-3.5.5-asan/smoke.bin
+  cwd: ''
+  return_code: -6
+  ok: false
+  timeout: false
+  stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/bootstrap/cross_library_sanitizer_bootstrap_v1/smoke/openssl-3.5.5-asan/run.stdout.log
+  stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/bootstrap/cross_library_sanitizer_bootstrap_v1/smoke/openssl-3.5.5-asan/run.stderr.log
+blocked_reason: smoke run failed

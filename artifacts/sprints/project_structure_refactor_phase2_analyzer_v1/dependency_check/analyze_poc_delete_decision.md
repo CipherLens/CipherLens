@@ -1,0 +1,20 @@
+# analyze_poc Delete Decision
+
+```yaml
+file: analyzer/analyze_poc.py
+delete_allowed: true
+deleted: true
+reason: superseded_by_family_level_analyzer
+generated_at: '2026-06-12T07:43:15+00:00'
+dependency_check:
+  imports: 0
+  cli_refs: 0
+  active_doc_refs: 0
+  active_pipeline_refs: 0
+migrated_or_recorded_logic:
+- PoC C source extraction logic recorded in this review; not needed by current runtime/oracle-aware
+  analyzer path
+- family-level semantic labels migrated to analyzer/semantic_labels.py
+- candidate labels migrated to analyzer/candidate_labels.py
+- oracle-aware case/family analysis migrated to analyzer/oracle_aware_analyzer.py
+```

@@ -1,0 +1,247 @@
+schema: semantic_mutation_plan_v1
+generated_at: '2026-06-13T12:44:31+00:00'
+family: pkey_verify_semantic
+track: semantic
+target_library: openssl
+source_seed_manifest: artifacts/sprints/pkey_verify_semantic_seed_discovery_v1/seed_discovery/seed_manifest.yaml
+uses_der_parsing: false
+uses_trailing_garbage: false
+uses_full_consumption_oracle: false
+cases:
+- case_id: pkey_verify_semantic_mut_valid_accept_control
+  source_seed_id: pkey_verify_semantic_valid_sign_verify_control
+  mutation_strategy: valid_accept_control
+  expected_behavior: accept
+  oracle:
+  - unexpected_reject
+  - semantic_divergence
+  - crash_or_sanitizer
+  api_sequence:
+  - EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)
+  - EVP_PKEY_keygen_init
+  - EVP_PKEY_CTX_set_rsa_keygen_bits(2048)
+  - EVP_PKEY_keygen
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit(ctx, NULL, EVP_sha256(), NULL, signing_key)
+  - EVP_DigestSignUpdate(ctx, message, message_len)
+  - EVP_DigestSignFinal(ctx, NULL, &sig_len)
+  - EVP_DigestSignFinal(ctx, sig, &sig_len)
+  - EVP_MD_CTX_new
+  - EVP_DigestVerifyInit(ctx, NULL, EVP_sha256(), NULL, verify_key)
+  - EVP_DigestVerifyUpdate(ctx, verify_message, verify_message_len)
+  - EVP_DigestVerifyFinal(ctx, signature, signature_len)
+  mutation_parameters:
+    signature: unchanged
+    message: unchanged
+    verify_key: same_key
+  render_requirements:
+    generate_key_at_runtime: true
+    serialize_key_or_signature_as_der: false
+    use_evp_high_level_api: true
+    observe_verify_return_code: true
+    cleanup:
+    - EVP_MD_CTX_free
+    - EVP_PKEY_free
+    - EVP_PKEY_CTX_free
+    - OPENSSL_free(signature)
+    must_not_use_prefix_parsing: true
+- case_id: pkey_verify_semantic_mut_signature_flip_one_byte
+  source_seed_id: pkey_verify_semantic_modified_signature_reject_control
+  mutation_strategy: signature_corruption_flip_one_byte
+  expected_behavior: reject
+  oracle: &id001
+  - unexpected_accept
+  - semantic_divergence
+  - crash_or_sanitizer
+  api_sequence: &id002
+  - EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)
+  - EVP_PKEY_keygen_init
+  - EVP_PKEY_CTX_set_rsa_keygen_bits(2048)
+  - EVP_PKEY_keygen
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit(ctx, NULL, EVP_sha256(), NULL, signing_key)
+  - EVP_DigestSignUpdate(ctx, message, message_len)
+  - EVP_DigestSignFinal(ctx, NULL, &sig_len)
+  - EVP_DigestSignFinal(ctx, sig, &sig_len)
+  - EVP_MD_CTX_new
+  - EVP_DigestVerifyInit(ctx, NULL, EVP_sha256(), NULL, verify_key)
+  - EVP_DigestVerifyUpdate(ctx, verify_message, verify_message_len)
+  - EVP_DigestVerifyFinal(ctx, signature, signature_len)
+  mutation_parameters:
+    signature_mutation: flip_byte
+    byte_index: 0
+  render_requirements:
+    generate_key_at_runtime: true
+    serialize_key_or_signature_as_der: false
+    use_evp_high_level_api: true
+    observe_verify_return_code: true
+    cleanup: &id003
+    - EVP_MD_CTX_free
+    - EVP_PKEY_free
+    - EVP_PKEY_CTX_free
+    - OPENSSL_free(signature)
+    must_not_use_prefix_parsing: true
+- case_id: pkey_verify_semantic_mut_signature_truncate
+  source_seed_id: pkey_verify_semantic_modified_signature_reject_control
+  mutation_strategy: signature_corruption_truncate
+  expected_behavior: reject
+  oracle: *id001
+  api_sequence: *id002
+  mutation_parameters:
+    signature_mutation: truncate
+    remove_bytes: 1
+  render_requirements:
+    generate_key_at_runtime: true
+    serialize_key_or_signature_as_der: false
+    use_evp_high_level_api: true
+    observe_verify_return_code: true
+    cleanup: *id003
+    must_not_use_prefix_parsing: true
+- case_id: pkey_verify_semantic_mut_signature_extend
+  source_seed_id: pkey_verify_semantic_modified_signature_reject_control
+  mutation_strategy: signature_corruption_extend
+  expected_behavior: reject
+  oracle: *id001
+  api_sequence: *id002
+  mutation_parameters:
+    signature_mutation: append_bytes
+    append_hex: '00'
+  render_requirements:
+    generate_key_at_runtime: true
+    serialize_key_or_signature_as_der: false
+    use_evp_high_level_api: true
+    observe_verify_return_code: true
+    cleanup: *id003
+    must_not_use_prefix_parsing: true
+- case_id: pkey_verify_semantic_mut_signature_all_zero
+  source_seed_id: pkey_verify_semantic_modified_signature_reject_control
+  mutation_strategy: signature_corruption_all_zero
+  expected_behavior: reject
+  oracle: *id001
+  api_sequence: *id002
+  mutation_parameters:
+    signature_mutation: replace_with_zero_buffer
+  render_requirements:
+    generate_key_at_runtime: true
+    serialize_key_or_signature_as_der: false
+    use_evp_high_level_api: true
+    observe_verify_return_code: true
+    cleanup: *id003
+    must_not_use_prefix_parsing: true
+- case_id: pkey_verify_semantic_mut_message_flip_one_byte
+  source_seed_id: pkey_verify_semantic_modified_message_reject_control
+  mutation_strategy: message_mismatch_flip_one_byte
+  expected_behavior: reject
+  oracle: *id001
+  api_sequence: &id004
+  - EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)
+  - EVP_PKEY_keygen_init
+  - EVP_PKEY_CTX_set_rsa_keygen_bits(2048)
+  - EVP_PKEY_keygen
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit(ctx, NULL, EVP_sha256(), NULL, signing_key)
+  - EVP_DigestSignUpdate(ctx, message, message_len)
+  - EVP_DigestSignFinal(ctx, NULL, &sig_len)
+  - EVP_DigestSignFinal(ctx, sig, &sig_len)
+  - EVP_MD_CTX_new
+  - EVP_DigestVerifyInit(ctx, NULL, EVP_sha256(), NULL, verify_key)
+  - EVP_DigestVerifyUpdate(ctx, verify_message, verify_message_len)
+  - EVP_DigestVerifyFinal(ctx, signature, signature_len)
+  mutation_parameters:
+    message_mutation: flip_byte
+    byte_index: 0
+  render_requirements:
+    generate_key_at_runtime: true
+    serialize_key_or_signature_as_der: false
+    use_evp_high_level_api: true
+    observe_verify_return_code: true
+    cleanup: &id005
+    - EVP_MD_CTX_free
+    - EVP_PKEY_free
+    - EVP_PKEY_CTX_free
+    - OPENSSL_free(signature)
+    must_not_use_prefix_parsing: true
+- case_id: pkey_verify_semantic_mut_message_empty
+  source_seed_id: pkey_verify_semantic_modified_message_reject_control
+  mutation_strategy: message_mismatch_empty_message
+  expected_behavior: reject
+  oracle: *id001
+  api_sequence: *id004
+  mutation_parameters:
+    message_mutation: empty_message
+  render_requirements:
+    generate_key_at_runtime: true
+    serialize_key_or_signature_as_der: false
+    use_evp_high_level_api: true
+    observe_verify_return_code: true
+    cleanup: *id005
+    must_not_use_prefix_parsing: true
+- case_id: pkey_verify_semantic_mut_message_longer
+  source_seed_id: pkey_verify_semantic_modified_message_reject_control
+  mutation_strategy: message_mismatch_longer_message
+  expected_behavior: reject
+  oracle: *id001
+  api_sequence: *id004
+  mutation_parameters:
+    message_mutation: append_text
+    append_text: -extra
+  render_requirements:
+    generate_key_at_runtime: true
+    serialize_key_or_signature_as_der: false
+    use_evp_high_level_api: true
+    observe_verify_return_code: true
+    cleanup: *id005
+    must_not_use_prefix_parsing: true
+- case_id: pkey_verify_semantic_mut_message_different
+  source_seed_id: pkey_verify_semantic_modified_message_reject_control
+  mutation_strategy: message_mismatch_different_message
+  expected_behavior: reject
+  oracle: *id001
+  api_sequence: *id004
+  mutation_parameters:
+    message_mutation: replace_message
+    replacement: different semantic message
+  render_requirements:
+    generate_key_at_runtime: true
+    serialize_key_or_signature_as_der: false
+    use_evp_high_level_api: true
+    observe_verify_return_code: true
+    cleanup: *id005
+    must_not_use_prefix_parsing: true
+- case_id: pkey_verify_semantic_mut_wrong_key_reject
+  source_seed_id: pkey_verify_semantic_wrong_key_reject_control
+  mutation_strategy: wrong_key_verify
+  expected_behavior: reject
+  oracle: *id001
+  api_sequence:
+  - EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)
+  - EVP_PKEY_keygen_init
+  - EVP_PKEY_CTX_set_rsa_keygen_bits(2048)
+  - EVP_PKEY_keygen
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit(ctx, NULL, EVP_sha256(), NULL, signing_key)
+  - EVP_DigestSignUpdate(ctx, message, message_len)
+  - EVP_DigestSignFinal(ctx, NULL, &sig_len)
+  - EVP_DigestSignFinal(ctx, sig, &sig_len)
+  - EVP_MD_CTX_new
+  - EVP_DigestVerifyInit(ctx, NULL, EVP_sha256(), NULL, verify_key)
+  - EVP_DigestVerifyUpdate(ctx, verify_message, verify_message_len)
+  - EVP_DigestVerifyFinal(ctx, signature, signature_len)
+  mutation_parameters:
+    signing_key: key_A
+    verify_key: independent_key_B
+  render_requirements:
+    generate_key_at_runtime: true
+    serialize_key_or_signature_as_der: false
+    use_evp_high_level_api: true
+    observe_verify_return_code: true
+    cleanup:
+    - EVP_MD_CTX_free
+    - EVP_PKEY_free
+    - EVP_PKEY_CTX_free
+    - OPENSSL_free(signature)
+    must_not_use_prefix_parsing: true
+claim_policy:
+  confirmed_vulnerability: false
+  cve: false
+  exploitable: false

@@ -1,0 +1,36 @@
+schema: campaign_external_pending_summary_v1
+generated_at: '2026-06-13T12:17:12+00:00'
+loaded: true
+skipped_families:
+- asn1_nested_boundary
+- pkcs_container_parsing
+- x509_asn1_inner_boundary
+- x509_parsing
+items:
+- task_name: external_validation_import_gate_v1
+  family: asn1_nested_boundary
+  status: external_validation_pending
+  reason: ASN.1 full-consumption candidates are assigned to teammate validation.
+  blocked_by:
+  - teammate_external_validation
+  owner: teammate
+  source: artifacts/sprints/scheduler_runtime_loop_v1/queue/scheduler_task_queue.yaml
+- task_name: wait_pkcs_app_level_consumption_check
+  family: pkcs_container_parsing
+  status: external_validation_pending
+  reason: PKCS local triage classified candidates as caller_must_check_consumption; app-level caller behavior
+    is teammate-owned.
+  blocked_by:
+  - pkcs_app_level_consumption_check_v1
+  owner: teammate
+  source: artifacts/sprints/scheduler_runtime_loop_v1/queue/scheduler_task_queue.yaml
+- task_name: x509_external_validation_pending_v1
+  family: x509_parsing
+  status: external_validation_pending
+  reason: OpenSSL x509 app accepted the trailing-garbage candidate while malformed-only control was rejected.
+  blocked_by:
+  - teammate_x509_app_level_validation
+  owner: teammate
+  source: /home/wen/work/crypto-pattern-fuzz/artifacts/sprints/x509_candidate_triage_v1/triage/x509_candidate_triage.yaml
+  case_id: x509_parsing__generic_mut_001__der_valid_plus_trailing_garbage
+  classification: app_level_validation_gap_candidate

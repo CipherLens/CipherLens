@@ -1,0 +1,259 @@
+families:
+- family: pkcs_container_parsing
+  mutation_slots:
+  - slot_name: CONTAINER_BYTES
+    mutation_type: byte_array
+    examples:
+    - valid_pkcs12_der
+    - malformed_pkcs7_der
+    expected_oracle: parser_reject_accept
+    risk: container data must remain bounded
+  - slot_name: CONTAINER_FORMAT
+    mutation_type: enum
+    examples:
+    - DER
+    - PEM
+    expected_oracle: return_code_semantics
+    risk: avoid format/API mismatch false positives
+  - slot_name: TRAILING_BYTES
+    mutation_type: byte_array
+    examples:
+    - empty
+    - '00'
+    - ff00
+    expected_oracle: full_consumption
+    risk: only meaningful for APIs exposing consumption
+  - slot_name: NESTED_LENGTH_DELTA
+    mutation_type: integer
+    examples:
+    - '-1'
+    - '0'
+    - '+1'
+    - large
+    expected_oracle: parser_reject_accept
+    risk: nested length mutation can become generic parse failure
+  - slot_name: EXPECT_RET
+    mutation_type: enum
+    examples:
+    - success
+    - reject
+    expected_oracle: return_code_semantics
+    risk: do not hard-code library numeric values
+  mutation_budget_hint:
+    small: 8
+    medium: 32
+    large: 96
+  scheduler_features:
+  - family
+  - oracle_type
+  - target_library
+  - mapping_gate_status
+  - seed_type
+  notes: Slots support controlled variants around API semantics and oracle observables,
+    not only replay of historical PoC bytes.
+- family: asn1_nested_boundary
+  mutation_slots:
+  - slot_name: ASN1_NESTED_LENGTH
+    mutation_type: integer
+    examples:
+    - short
+    - exact
+    - long
+    expected_oracle: parser_reject_accept
+    risk: RAG v2 wc_ParseCert recall is weaker; use as risk, not block
+  - slot_name: DER_BYTES
+    mutation_type: byte_array
+    examples:
+    - well_formed
+    - truncated
+    - malformed_tag
+    expected_oracle: return_code_semantics
+    risk: keep DER buffer and len paired
+  - slot_name: TRAILING_GARBAGE
+    mutation_type: byte_array
+    examples:
+    - none
+    - '00'
+    - random_tail
+    expected_oracle: full_consumption
+    risk: needs pointer/consumption observable
+  - slot_name: NESTED_DEPTH
+    mutation_type: integer
+    examples:
+    - '1'
+    - '2'
+    - '8'
+    expected_oracle: parser_reject_accept
+    risk: deep nesting may trigger resource limits
+  - slot_name: EXPECT_RET
+    mutation_type: enum
+    examples:
+    - accept
+    - reject
+    expected_oracle: return_code_semantics
+    risk: semantic labels preferred over numeric codes
+  mutation_budget_hint:
+    small: 8
+    medium: 32
+    large: 96
+  scheduler_features:
+  - family
+  - oracle_type
+  - target_library
+  - mapping_gate_status
+  - seed_type
+  notes: Slots support controlled variants around API semantics and oracle observables,
+    not only replay of historical PoC bytes.
+- family: x509_parsing
+  mutation_slots:
+  - slot_name: CERT_INPUT
+    mutation_type: byte_array_or_path
+    examples:
+    - DER
+    - PEM
+    - malformed
+    expected_oracle: parser_reject_accept
+    risk: file/path APIs need fixture handling in later template generation
+  - slot_name: SUBJECT_FIELD
+    mutation_type: asn1_field
+    examples:
+    - valid_cn
+    - malformed_cn
+    expected_oracle: return_code_semantics
+    risk: field mutation may be app-level not parser-level
+  - slot_name: ISSUER_FIELD
+    mutation_type: asn1_field
+    examples:
+    - valid_issuer
+    - truncated_issuer
+    expected_oracle: return_code_semantics
+    risk: avoid interpreting policy rejection as parser bug
+  - slot_name: TRAILING_DATA
+    mutation_type: byte_array
+    examples:
+    - none
+    - tail
+    expected_oracle: full_consumption
+    risk: only if API preserves input consumption signal
+  - slot_name: INVALID_LENGTH
+    mutation_type: integer
+    examples:
+    - short
+    - long
+    expected_oracle: parser_reject_accept
+    risk: length mismatch should be bounded
+  mutation_budget_hint:
+    small: 8
+    medium: 32
+    large: 96
+  scheduler_features:
+  - family
+  - oracle_type
+  - target_library
+  - mapping_gate_status
+  - seed_type
+  notes: Slots support controlled variants around API semantics and oracle observables,
+    not only replay of historical PoC bytes.
+- family: tls_protocol_state_lifecycle
+  mutation_slots:
+  - slot_name: INIT_ORDER
+    mutation_type: sequence
+    examples:
+    - ctx_before_ssl
+    - ssl_without_ctx
+    expected_oracle: lifecycle_state
+    risk: API misuse must be labeled false-positive risk
+  - slot_name: SETUP_ORDER
+    mutation_type: sequence
+    examples:
+    - missing_config
+    - partial_config
+    expected_oracle: return_code_semantics
+    risk: distinguish expected safe error from vulnerability
+  - slot_name: HANDSHAKE_STATE
+    mutation_type: enum
+    examples:
+    - before
+    - during
+    - after
+    expected_oracle: lifecycle_state
+    risk: requires deterministic mocked I/O later
+  - slot_name: IO_BEFORE_HANDSHAKE
+    mutation_type: enum
+    examples:
+    - read
+    - write
+    expected_oracle: return_code_semantics
+    risk: normal API misuse can dominate signal
+  - slot_name: CLEANUP_REPEAT
+    mutation_type: integer
+    examples:
+    - '0'
+    - '1'
+    - '2'
+    expected_oracle: crash_or_sanitizer
+    risk: double cleanup must not be overreported without crash evidence
+  mutation_budget_hint:
+    small: 8
+    medium: 32
+    large: 96
+  scheduler_features:
+  - family
+  - oracle_type
+  - target_library
+  - mapping_gate_status
+  - seed_type
+  notes: Slots support controlled variants around API semantics and oracle observables,
+    not only replay of historical PoC bytes.
+- family: secure_heap_state_lifecycle
+  mutation_slots:
+  - slot_name: ALLOCATOR_INITIALIZED
+    mutation_type: boolean
+    examples:
+    - 'true'
+    - 'false'
+    expected_oracle: lifecycle_state
+    risk: uninitialized allocator behavior may be expected safe rejection
+  - slot_name: MALLOC_SIZE
+    mutation_type: size_t
+    examples:
+    - '0'
+    - '1'
+    - '16'
+    - large
+    expected_oracle: return_code_semantics
+    risk: avoid unbounded allocation
+  - slot_name: FREE_ORDER
+    mutation_type: sequence
+    examples:
+    - free_once
+    - free_before_use
+    - free_after_replace
+    expected_oracle: cleanup_required
+    risk: API misuse must be down-ranked
+  - slot_name: DOUBLE_FREE_CANDIDATE
+    mutation_type: boolean
+    examples:
+    - 'false'
+    - 'true'
+    expected_oracle: crash_or_sanitizer
+    risk: requires explicit sanitizer evidence
+  - slot_name: ALLOCATOR_REPLACEMENT
+    mutation_type: enum
+    examples:
+    - default
+    - custom
+    expected_oracle: lifecycle_state
+    risk: custom allocator must be deterministic
+  mutation_budget_hint:
+    small: 8
+    medium: 32
+    large: 96
+  scheduler_features:
+  - family
+  - oracle_type
+  - target_library
+  - mapping_gate_status
+  - seed_type
+  notes: Slots support controlled variants around API semantics and oracle observables,
+    not only replay of historical PoC bytes.

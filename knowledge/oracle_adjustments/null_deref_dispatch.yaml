@@ -1,0 +1,16 @@
+schema: oracle_adjustment_v1
+family: null_deref_dispatch
+source_task: memory_candidate_closure_and_valid_contract_campaign_v1
+rules:
+- api: EVP_MAC_init
+  condition: ctx == NULL
+  label: contract_boundary_observation
+  promote: false
+- api: '*'
+  condition: NULL ctx passed to API requiring allocated ctx
+  label: invalid_contract_observation
+  promote: false
+  unless: documentation explicitly promises safe reject
+main_feedback_written: false
+pattern_bank_modified: false
+confirmed_vulnerability_claim: false

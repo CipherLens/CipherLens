@@ -1,0 +1,1488 @@
+title: Ingested PoC Pattern Candidates
+formal_write_performed: false
+libraries:
+  mbedtls:
+  - poc_id: MBEDTLS-POC-0001
+    source_library: mbedtls
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: A_recipe_slot_cross_library_migration
+    critical_api: null
+    root_cause_hypothesis: Missing boundary check in output buffer length calculation
+      for negative MPI string conversion.
+    trigger_behavior: null
+    mutation_points:
+    - memset
+    - mbedtls_mpi_init
+    - mbedtls_mpi_lset
+    - mbedtls_mpi_free
+    - mbedtls_mpi_write_string
+    - malloc
+    - free
+    oracle_candidate: buffer_canary_boundary
+    seed_status:
+      original_seed: false
+      placeholder: false
+      synthetic: false
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: medium_confidence_staging
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: MBEDTLS-POC-0002
+    source_library: mbedtls
+    family_guess: bignum_arithmetic_precondition
+    harness_family_guess: return_code_outlen_semantic
+    route_guess: A_recipe_slot_cross_library_migration
+    critical_api: null
+    root_cause_hypothesis: Incorrect handling of negative MPI subtraction when |B|
+      has more limbs than |A|.
+    trigger_behavior: null
+    mutation_points:
+    - memset
+    - mbedtls_mpi_init
+    - mbedtls_mpi_read_string
+    - mbedtls_mpi_sub_abs
+    - mbedtls_mpi_free
+    - free
+    oracle_candidate: buffer_canary_boundary
+    seed_status:
+      original_seed: false
+      placeholder: false
+      synthetic: false
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: blocked
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: MBEDTLS-POC-0003
+    source_library: mbedtls
+    family_guess: cipher_padding_output_length
+    harness_family_guess: return_code_outlen_semantic
+    route_guess: D_crash_sanitizer_evidence_audit
+    critical_api: null
+    root_cause_hypothesis: Missing NULL pointer validation before RSA key access in
+      extended PK verification.
+    trigger_behavior: null
+    mutation_points:
+    - memset
+    - mbedtls_pk_init
+    - mbedtls_entropy_init
+    - mbedtls_ctr_drbg_init
+    - mbedtls_ctr_drbg_seed
+    - mbedtls_pk_setup
+    - mbedtls_pk_info_from_type
+    - mbedtls_rsa_gen_key
+    - mbedtls_pk_rsa
+    - mbedtls_pk_get_psa_attributes
+    - mbedtls_pk_import_into_psa
+    - mbedtls_pk_free
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: false
+      placeholder: false
+      synthetic: false
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: medium_confidence_staging
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: MBEDTLS-POC-0004
+    source_library: mbedtls
+    family_guess: cipher_padding_output_length
+    harness_family_guess: return_code_outlen_semantic
+    route_guess: A_recipe_slot_cross_library_migration
+    critical_api: null
+    root_cause_hypothesis: Incorrect output length assignment on invalid PKCS padding
+      error path.
+    trigger_behavior: null
+    mutation_points:
+    - memcpy
+    - memset
+    - mbedtls_cipher_init
+    - mbedtls_cipher_info_from_type
+    - mbedtls_cipher_setup
+    - mbedtls_cipher_setkey
+    - mbedtls_cipher_set_padding_mode
+    - mbedtls_cipher_set_iv
+    - mbedtls_cipher_reset
+    - mbedtls_cipher_update
+    - mbedtls_cipher_finish
+    - mbedtls_cipher_free
+    oracle_candidate: return_code_outlen_semantic
+    seed_status:
+      original_seed: false
+      placeholder: false
+      synthetic: false
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: medium_confidence_staging
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: MBEDTLS-POC-0005
+    source_library: mbedtls
+    family_guess: tls_protocol_state_lifecycle
+    harness_family_guess: object_state_lifecycle
+    route_guess: D_crash_sanitizer_evidence_audit
+    critical_api: null
+    root_cause_hypothesis: Missing validation for conflicting ASN.1 named-data value
+      pointer and nonzero length, allowing NULL pointer dereference.
+    trigger_behavior: null
+    mutation_points:
+    - mbedtls_asn1_store_named_data
+    - memcpy
+    - mbedtls_asn1_free_named_data_list
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: false
+      placeholder: false
+      synthetic: false
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: medium_confidence_staging
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: MBEDTLS-POC-0011
+    source_library: mbedtls
+    family_guess: tls_protocol_state_lifecycle
+    harness_family_guess: object_state_lifecycle
+    route_guess: A_recipe_slot_cross_library_migration
+    critical_api: null
+    root_cause_hypothesis: Missing PEM parse bounds check causing one-byte heap-based
+      buffer underflow on untrusted PEM input.
+    trigger_behavior: null
+    mutation_points:
+    - mbedtls_pem_init
+    - mbedtls_pem_read_buffer
+    - mbedtls_pem_free
+    oracle_candidate: pointer_consumption_semantic_oracle
+    seed_status:
+      original_seed: false
+      placeholder: false
+      synthetic: false
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: medium_confidence_staging
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: MBEDTLS-POC-0017
+    source_library: mbedtls
+    family_guess: tls_protocol_state_lifecycle
+    harness_family_guess: object_state_lifecycle
+    route_guess: A_recipe_slot_cross_library_migration
+    critical_api: null
+    root_cause_hypothesis: Incorrect ASN.1 length/bounds validation in parser or writer.
+    trigger_behavior: null
+    mutation_points:
+    - mbedtls_x509_crt_init
+    - mbedtls_x509_crt_parse_der
+    - mbedtls_x509_crt_free
+    oracle_candidate: pointer_consumption_semantic_oracle
+    seed_status:
+      original_seed: false
+      placeholder: false
+      synthetic: false
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: medium_confidence_staging
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: MBEDTLS-POC-0020
+    source_library: mbedtls
+    family_guess: tls_protocol_state_lifecycle
+    harness_family_guess: object_state_lifecycle
+    route_guess: A_recipe_slot_cross_library_migration
+    critical_api: null
+    root_cause_hypothesis: Incorrect edge-case handling in mbedtls_pk_parse_key.
+    trigger_behavior: null
+    mutation_points:
+    - mbedtls_rsa_parse_key
+    - mbedtls_rsa_parse_pubkey
+    - mbedtls_rsa_init
+    - mbedtls_rsa_free
+    oracle_candidate: pointer_consumption_semantic_oracle
+    seed_status:
+      original_seed: false
+      placeholder: false
+      synthetic: false
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: medium_confidence_staging
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: MBEDTLS-POC-0028
+    source_library: mbedtls
+    family_guess: cipher_aead_lifecycle
+    harness_family_guess: object_state_lifecycle
+    route_guess: needs_more_evidence
+    critical_api: null
+    root_cause_hypothesis: Missing validation of AEAD tag lengths from PSA drivers.
+    trigger_behavior: null
+    mutation_points: []
+    oracle_candidate: buffer_canary_boundary
+    seed_status:
+      original_seed: false
+      placeholder: false
+      synthetic: false
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: false
+    evidence_strength: medium
+    import_status: needs_manual_review
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  openssl:
+  - poc_id: OPENSSL-ISSUE-11567
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: C_app_level_validation_gap
+    critical_api:
+    - X509v3 Subject Key Identifier
+    - X509v3 Authority Key Identifier
+    - X509v3 Basic Constraints
+    - md5WithRSAEncryption
+    root_cause_hypothesis: Newer OpenSSL versions do not support zero serial numbers,
+      which is non-conforming with RFC 5280.
+    trigger_behavior: WRONG_RESULT
+    mutation_points:
+    - BIO_new_file
+    - X509_print_fp
+    - X509_free
+    - BIO_free
+    oracle_candidate: pointer_consumption_semantic_oracle
+    seed_status:
+      original_seed: false
+      placeholder: true
+      synthetic: true
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: blocked
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-11772
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: C_app_level_validation_gap
+    critical_api:
+    - X509_cmp_time
+    - X509_get0_notAfter
+    root_cause_hypothesis: The function calling X509_cmp_time() doesn't check that
+      it returned an error.
+    trigger_behavior: WRONG_RESULT
+    mutation_points:
+    - BIO_new_file
+    - X509_get0_notAfter
+    - X509_cmp_time
+    - X509_free
+    - BIO_free
+    oracle_candidate: pointer_consumption_semantic_oracle
+    seed_status:
+      original_seed: false
+      placeholder: true
+      synthetic: true
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: blocked
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-13860
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: C_app_level_validation_gap
+    critical_api:
+    - X509_parse
+    - X509_get_pubkey
+    root_cause_hypothesis: Change in behavior of public key output in OpenSSL x509
+      command between versions 1.0.2 and 1.1.1
+    trigger_behavior: UNKNOWN
+    mutation_points:
+    - BIO_new_file
+    - d2i_X509_bio
+    - X509_get_pubkey
+    - EVP_PKEY_free
+    - X509_free
+    - BIO_free
+    oracle_candidate: pointer_consumption_semantic_oracle
+    seed_status:
+      original_seed: false
+      placeholder: true
+      synthetic: true
+      source_vector: true
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: high_confidence_import_candidate
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-14457
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: C_app_level_validation_gap
+    critical_api:
+    - X509v3 extensions
+    - basicConstraints
+    - subjectKeyIdentifier
+    - authorityKeyIdentifier
+    - subjectAltName
+    - keyUsage
+    root_cause_hypothesis: CONFIGURATION_FILE_EXTENSION_OVERRIDE
+    trigger_behavior: WRONG_OUTPUT
+    mutation_points:
+    - BIO_new_file
+    - X509_STORE_new
+    - X509_STORE_add_cert
+    - X509_STORE_CTX_new
+    - X509_STORE_CTX_init
+    - X509_verify_cert
+    - X509_STORE_CTX_get_error
+    - X509_verify_cert_error_string
+    - X509_STORE_CTX_free
+    - X509_STORE_free
+    - X509_free
+    - BIO_free
+    oracle_candidate: pointer_consumption_semantic_oracle
+    seed_status:
+      original_seed: false
+      placeholder: true
+      synthetic: true
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: high_confidence_import_candidate
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-14675
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: C_app_level_validation_gap
+    critical_api:
+    - X509_verify_cert
+    root_cause_hypothesis: openssl verify does not process multiple certificates in
+      the input file
+    trigger_behavior: WRONG_ALERT_OR_PROTOCOL_BEHAVIOR
+    mutation_points:
+    - BIO_new_file
+    - X509_STORE_new
+    - X509_STORE_add_cert
+    - X509_STORE_CTX_new
+    - X509_STORE_CTX_init
+    - X509_verify_cert
+    - X509_STORE_CTX_get_error
+    - X509_verify_cert_error_string
+    - X509_STORE_CTX_free
+    - X509_STORE_free
+    - X509_free
+    - BIO_free
+    oracle_candidate: pointer_consumption_semantic_oracle
+    seed_status:
+      original_seed: false
+      placeholder: true
+      synthetic: true
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: blocked
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-15899
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: C_app_level_validation_gap
+    critical_api:
+    - bn_expand_internal
+    - EVP_PKEY_get_bn_param
+    root_cause_hypothesis: Uninitialized BIGNUM variable 'n' passed to EVP_PKEY_get_bn_param
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    mutation_points:
+    - BIO_new_file
+    - X509_get_pubkey
+    - EVP_PKEY_get1_RSA
+    - RSA_get0_key
+    - BN_print_fp
+    - RSA_free
+    - EVP_PKEY_free
+    - X509_free
+    - BIO_free
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: false
+      placeholder: true
+      synthetic: true
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: high_confidence_import_candidate
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-16196
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: D_crash_sanitizer_evidence_audit
+    critical_api:
+    - BN_print
+    root_cause_hypothesis: needs_review
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    mutation_points:
+    - BIO_new_file
+    - X509_REQ_get_pubkey
+    - EVP_PKEY_get1_RSA
+    - RSA_get0_key
+    - BN_print_fp
+    - RSA_free
+    - EVP_PKEY_free
+    - X509_REQ_free
+    - BIO_free
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: false
+      placeholder: true
+      synthetic: true
+      source_vector: true
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: high_confidence_import_candidate
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-17715
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: C_app_level_validation_gap
+    critical_api:
+    - RAND_DRBG_generate
+    - EVP_EncryptUpdate
+    - EVP_CipherUpdate
+    - drbg_ctr_generate
+    - aesni_ecb_encrypt
+    root_cause_hypothesis: ctx->cipher_data is not being initialized prior to EVP_EncryptUpdate
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    mutation_points:
+    - BIO_new_file
+    - X509_free
+    - BIO_free
+    - X509_REQ_free
+    - fopen
+    - d2i_PKCS12_fp
+    - PKCS12_parse
+    - EVP_PKEY_free
+    - PKCS12_free
+    - BIO_new_fp
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: false
+      placeholder: true
+      synthetic: true
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: blocked
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-18168
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: A_recipe_slot_cross_library_migration
+    critical_api:
+    - WPACKET_put_bytes__
+    - int_der_w_integer
+    - ossl_DER_w_ulong
+    - ossl_DER_w_RSASSA_PSS_params
+    - prepare_rsa_params
+    - key_to_pki_pem_priv_bio
+    - key2any_encode
+    - rsapss_to_PrivateKeyInfo_pem_encode
+    root_cause_hypothesis: needs_review
+    trigger_behavior: ASSERTION_FAILURE
+    mutation_points:
+    - BIO_new_file
+    - RSA_free
+    - BIO_free
+    oracle_candidate: pointer_consumption_semantic_oracle
+    seed_status:
+      original_seed: false
+      placeholder: true
+      synthetic: true
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: high_confidence_import_candidate
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-18659
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: D_crash_sanitizer_evidence_audit
+    critical_api:
+    - OPENSSL_cleanup
+    - CONF_modules_unload
+    root_cause_hypothesis: needs_review
+    trigger_behavior: SEGV
+    mutation_points: []
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: false
+      placeholder: false
+      synthetic: false
+      source_vector: false
+      no_external_input_required: true
+    template_candidate: false
+    evidence_strength: medium
+    import_status: medium_confidence_staging
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-19524
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: D_crash_sanitizer_evidence_audit
+    critical_api:
+    - EVP_PKEY_new_raw_public_key
+    - EVP_MD_CTX_new
+    - EVP_DigestSignInit
+    - EVP_DigestSign
+    - OPENSSL_hexstr2buf
+    - OPENSSL_zalloc
+    root_cause_hypothesis: EVP_DigestUpdate() allows NULL to get passed to it, and
+      digests don't check for NULL.
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    mutation_points:
+    - EVP_PKEY_new_raw_public_key
+    - EVP_MD_CTX_new
+    - EVP_DigestSignInit
+    - EVP_DigestSign
+    - EVP_MD_CTX_free
+    - EVP_PKEY_free
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: false
+      placeholder: false
+      synthetic: true
+      source_vector: false
+      no_external_input_required: true
+    template_candidate: true
+    evidence_strength: medium
+    import_status: high_confidence_import_candidate
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-21935
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: D_crash_sanitizer_evidence_audit
+    critical_api:
+    - EVP_PKEY_new
+    - RSA_new
+    - RSA_set0_factors
+    - RSA_set0_key
+    - EVP_PKEY_assign
+    - EVP_DigestSignInit
+    - EVP_DigestSign
+    - EVP_MD_CTX_free
+    - EVP_PKEY_free
+    root_cause_hypothesis: NULL pointer dereference in BN_is_negative function when
+      handling invalid BIGNUM pointers.
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    mutation_points:
+    - BN_new
+    - BN_dec2bn
+    - BN_free
+    - EVP_PKEY_new
+    - RSA_new
+    - EVP_MD_CTX_new
+    - RSA_set0_key
+    - EVP_PKEY_assign_RSA
+    - EVP_DigestSignInit
+    - EVP_sha256
+    - EVP_MD_CTX_free
+    - EVP_PKEY_free
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: false
+      placeholder: false
+      synthetic: true
+      source_vector: false
+      no_external_input_required: true
+    template_candidate: true
+    evidence_strength: medium
+    import_status: high_confidence_import_candidate
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-22388
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: A_recipe_slot_cross_library_migration
+    critical_api:
+    - evp_pkey_asym_cipher_init
+    - ossl_cms_pkey_get_ri_type
+    root_cause_hypothesis: operation not supported for this keytype
+    trigger_behavior: WRONG_RESULT
+    mutation_points:
+    - BIO_new_file
+    - BIO_free
+    - CMS_encrypt
+    - EVP_aes_128_cbc
+    - BIO_new_fp
+    - CMS_decrypt
+    - CMS_ContentInfo_free
+    - EVP_PKEY_free
+    - X509_free
+    oracle_candidate: pointer_consumption_semantic_oracle
+    seed_status:
+      original_seed: false
+      placeholder: true
+      synthetic: true
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: high_confidence_import_candidate
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-22842
+    source_library: openssl
+    family_guess: mac_lifecycle
+    harness_family_guess: object_state_lifecycle
+    route_guess: D_crash_sanitizer_evidence_audit
+    critical_api:
+    - EVP_MAC_CTX_new()
+    - EVP_MAC_CTX_get_mac_size()
+    - EVP_MAC_init()
+    root_cause_hypothesis: NULL pointer dereference in EVP_MAC_CTX_get_mac_size()
+      due to uninitialized algctx cipher struct
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    mutation_points:
+    - EVP_MAC_fetch
+    - EVP_MAC_CTX_new
+    - EVP_MAC_init
+    - EVP_MAC_CTX_get_mac_size
+    - EVP_MAC_CTX_free
+    - EVP_MAC_free
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: false
+      placeholder: false
+      synthetic: true
+      source_vector: false
+      no_external_input_required: true
+    template_candidate: true
+    evidence_strength: medium
+    import_status: high_confidence_import_candidate
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-23325
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: C_app_level_validation_gap
+    critical_api:
+    - X509_V_ERR_DIFFERENT_CRL_SCOPE
+    - crl_crldp_check
+    - get_crl_score
+    root_cause_hypothesis: Incomplete implementation of CRL scope checks in case an
+      IDP is present in a CRL but no CDPs are present in the target cert.
+    trigger_behavior: WRONG_RESULT
+    mutation_points:
+    - BIO_new_file
+    - BIO_free
+    - X509_STORE_new
+    - X509_STORE_add_cert
+    - X509_STORE_add_crl
+    - X509_STORE_set_flags
+    - X509_STORE_CTX_new
+    - X509_STORE_CTX_init
+    - X509_verify_cert
+    - X509_STORE_CTX_get_error
+    - X509_verify_cert_error_string
+    - X509_STORE_CTX_free
+    oracle_candidate: pointer_consumption_semantic_oracle
+    seed_status:
+      original_seed: false
+      placeholder: true
+      synthetic: true
+      source_vector: true
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: high_confidence_import_candidate
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-26106
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: D_crash_sanitizer_evidence_audit
+    critical_api:
+    - X509_ALGOR_get0
+    root_cause_hypothesis: NULL pointer dereference in X509_ALGOR_get0 during PKCS#12
+      processing
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    mutation_points:
+    - fopen
+    - d2i_PKCS12_fp
+    - PKCS12_parse
+    - X509_free
+    - EVP_PKEY_free
+    - PKCS12_free
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: false
+      placeholder: true
+      synthetic: true
+      source_vector: true
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: high_confidence_import_candidate
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-2630
+    source_library: openssl
+    family_guess: secure_heap_state_lifecycle
+    harness_family_guess: object_state_lifecycle
+    route_guess: D_crash_sanitizer_evidence_audit
+    critical_api:
+    - CRYPTO_secure_malloc_init
+    - BIO_new
+    - BIO_write
+    root_cause_hypothesis: needs_review
+    trigger_behavior: SEGV
+    mutation_points:
+    - BIO_new
+    - BIO_s_secmem
+    - CRYPTO_secure_malloc_init
+    - BIO_write
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: false
+      placeholder: false
+      synthetic: false
+      source_vector: false
+      no_external_input_required: true
+    template_candidate: true
+    evidence_strength: medium
+    import_status: high_confidence_import_candidate
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-27572
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: A_recipe_slot_cross_library_migration
+    critical_api:
+    - parse_name
+    root_cause_hypothesis: Hardcoded use of MBSTRING_ASC when calling parse_name
+    trigger_behavior: WRONG_OUTPUT
+    mutation_points:
+    - BIO_new_file
+    - BIO_new_fp
+    - BIO_read
+    - memcpy
+    - ASN1_parse_dump
+    - free
+    - BIO_free
+    oracle_candidate: pointer_consumption_semantic_oracle
+    seed_status:
+      original_seed: false
+      placeholder: true
+      synthetic: true
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: high_confidence_import_candidate
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-28669
+    source_library: openssl
+    family_guess: secure_heap_state_lifecycle
+    harness_family_guess: object_state_lifecycle
+    route_guess: D_crash_sanitizer_evidence_audit
+    critical_api:
+    - CRYPTO_secure_used
+    root_cause_hypothesis: needs_review
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    mutation_points:
+    - CRYPTO_secure_used
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: false
+      placeholder: false
+      synthetic: false
+      source_vector: false
+      no_external_input_required: true
+    template_candidate: true
+    evidence_strength: medium
+    import_status: high_confidence_import_candidate
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-29418
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: C_app_level_validation_gap
+    critical_api:
+    - X509_get_ext_count
+    - X509_get_ext
+    - OBJ_nid2sn
+    - X509_EXTENSION_free
+    - X509_delete_ext
+    root_cause_hypothesis: Inconsistent handling of extensions when using the -ext
+      option with openssl x509 command.
+    trigger_behavior: WRONG_RESULT
+    mutation_points:
+    - BIO_new_file
+    - X509_check_purpose
+    - X509_free
+    - BIO_free
+    oracle_candidate: pointer_consumption_semantic_oracle
+    seed_status:
+      original_seed: false
+      placeholder: true
+      synthetic: true
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: blocked
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-29574
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: C_app_level_validation_gap
+    critical_api:
+    - SSL_CTX_use_PrivateKey_ASN1
+    - SSL_CTX_use_certificate_ASN1
+    - X509_Object::choose_sig_format
+    - X509_CA::make_cert
+    - PKCS8::PEM_encode
+    - PEM_encode
+    root_cause_hypothesis: needs_review
+    trigger_behavior: CORRUPTED_STATE
+    mutation_points:
+    - BIO_new_file
+    - BIO_free
+    - d2i_X509_bio
+    - X509_print_fp
+    - X509_free
+    oracle_candidate: pointer_consumption_semantic_oracle
+    seed_status:
+      original_seed: false
+      placeholder: true
+      synthetic: true
+      source_vector: true
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: high_confidence_import_candidate
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-29645
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: D_crash_sanitizer_evidence_audit
+    critical_api:
+    - BIO_set_data
+    - BIO_free
+    root_cause_hypothesis: NULL pointer dereference in BIO_free when called with a
+      BIO that was not properly initialized
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    mutation_points:
+    - BIO_new
+    - BIO_s_mem
+    - BIO_write
+    - BIO_get_data
+    - BIO_set_data
+    - BIO_free
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: false
+      placeholder: false
+      synthetic: true
+      source_vector: false
+      no_external_input_required: true
+    template_candidate: true
+    evidence_strength: medium
+    import_status: high_confidence_import_candidate
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-30291
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: A_recipe_slot_cross_library_migration
+    critical_api:
+    - CMS_sign
+    - CMS_verify
+    root_cause_hypothesis: REGRESSION
+    trigger_behavior: REGRESSION_TEST
+    mutation_points:
+    - BIO_new_file
+    - BIO_free
+    - CMS_sign
+    - X509_STORE_new
+    - X509_STORE_add_cert
+    - BIO_new_fp
+    - CMS_verify
+    - X509_STORE_free
+    - CMS_ContentInfo_free
+    - EVP_PKEY_free
+    - X509_free
+    oracle_candidate: pointer_consumption_semantic_oracle
+    seed_status:
+      original_seed: false
+      placeholder: true
+      synthetic: true
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: high_confidence_import_candidate
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-30432
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: C_app_level_validation_gap
+    critical_api:
+    - openssl dsaparam
+    - openssl gendsa
+    - openssl req
+    - openssl x509
+    - openssl verify
+    root_cause_hypothesis: OID of dsa_with_SHA384-512 is incorrect
+    trigger_behavior: VERIFY_ERROR
+    mutation_points:
+    - BIO_new_file
+    - BIO_free
+    - X509_STORE_new
+    - X509_STORE_add_cert
+    - X509_STORE_CTX_new
+    - X509_STORE_CTX_init
+    - X509_verify_cert
+    - X509_STORE_CTX_get_error
+    - X509_verify_cert_error_string
+    - X509_STORE_CTX_free
+    - X509_STORE_free
+    - X509_free
+    oracle_candidate: pointer_consumption_semantic_oracle
+    seed_status:
+      original_seed: false
+      placeholder: true
+      synthetic: true
+      source_vector: true
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: high_confidence_import_candidate
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-30581
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: D_crash_sanitizer_evidence_audit
+    critical_api:
+    - ASN1_STRING_length
+    - pkcs12_main
+    - do_cmd
+    - main
+    - BIO_puts
+    - BIO_printf
+    - ASN1_INTEGER_get
+    root_cause_hypothesis: Dereferencing a NULL pointer when decoding PBKDF2 salt
+      as ASN.1 NULL in the CLI info path.
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    mutation_points:
+    - fopen
+    - d2i_PKCS12_fp
+    - PKCS12_mac_present
+    - PKCS12_verify_mac
+    - PKCS12_parse
+    - X509_free
+    - EVP_PKEY_free
+    - PKCS12_free
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: false
+      placeholder: true
+      synthetic: true
+      source_vector: true
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: high_confidence_import_candidate
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-30889
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: D_crash_sanitizer_evidence_audit
+    critical_api:
+    - pkey_main
+    - encode_private_key
+    root_cause_hypothesis: NULL_DEREFERENCE_CRASH
+    trigger_behavior: SEGV
+    mutation_points:
+    - memcpy
+    - BIO_new_file
+    - BIO_new_fp
+    - EVP_aes_256_cbc
+    - EVP_PKEY_free
+    - BIO_free
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: false
+      placeholder: true
+      synthetic: true
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: blocked
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-6788
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: C_app_level_validation_gap
+    critical_api:
+    - X509_STORE_CTX_get_obj_by_subject
+    - X509_verify_cert
+    root_cause_hypothesis: The crl application's use of X509_STORE_CTX_get_obj_by_subject,
+      which matches the first certificate with an identical subject, relies on the
+      unstable qsort function to sort certificates before the lookup, resulting in
+      inconsistent verification behavior.
+    trigger_behavior: WRONG_RESULT
+    mutation_points:
+    - BIO_new_file
+    - X509_CRL_get_issuer
+    - X509_NAME_print_ex_fp
+    - X509_CRL_free
+    - BIO_free
+    oracle_candidate: pointer_consumption_semantic_oracle
+    seed_status:
+      original_seed: false
+      placeholder: true
+      synthetic: true
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: high_confidence_import_candidate
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-8435
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: A_recipe_slot_cross_library_migration
+    critical_api:
+    - pkey
+    - pkeyutl
+    - sm2_id
+    root_cause_hypothesis: OpenSSL treats SM2 keys like normal ECC keys, leading to
+      invalid private keys.
+    trigger_behavior: WRONG_RESULT
+    mutation_points:
+    - fopen
+    - malloc
+    - fread
+    - free
+    - BIO_new_file
+    - BIO_free
+    - EVP_MD_CTX_new
+    - EVP_DigestSignInit
+    - EVP_sm3
+    - EVP_PKEY_CTX_set1_id
+    - EVP_DigestSign
+    - EVP_MD_CTX_free
+    oracle_candidate: pointer_consumption_semantic_oracle
+    seed_status:
+      original_seed: false
+      placeholder: true
+      synthetic: true
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: high_confidence_import_candidate
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-8980
+    source_library: openssl
+    family_guess: cipher_aead_lifecycle
+    harness_family_guess: object_state_lifecycle
+    route_guess: D_crash_sanitizer_evidence_audit
+    critical_api:
+    - EVP_CIPHER_CTX_new
+    - EVP_aes_128_gcm
+    - EVP_EncryptInit_ex
+    - EVP_CIPHER_CTX_copy
+    root_cause_hypothesis: Uninitialized memory access in EVP_CIPHER_CTX_copy
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    mutation_points:
+    - EVP_CIPHER_CTX_new
+    - EVP_aes_128_gcm
+    - EVP_EncryptInit_ex
+    - EVP_CIPHER_CTX_copy
+    - EVP_CIPHER_CTX_free
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: false
+      placeholder: false
+      synthetic: false
+      source_vector: false
+      no_external_input_required: true
+    template_candidate: true
+    evidence_strength: medium
+    import_status: high_confidence_import_candidate
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: OPENSSL-ISSUE-9043
+    source_library: openssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: D_crash_sanitizer_evidence_audit
+    critical_api:
+    - X509_ATTRIBUTE_get0_type
+    root_cause_hypothesis: NULL pointer dereference in CSR text output code
+    trigger_behavior: NULL_DEREFERENCE_CRASH
+    mutation_points:
+    - BIO_new_file
+    - X509_REQ_print_fp
+    - X509_REQ_free
+    - BIO_free
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: false
+      placeholder: true
+      synthetic: true
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: blocked
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  wolfssl:
+  - poc_id: WOLFSSL-POC-0001
+    source_library: wolfssl
+    family_guess: tls_protocol_state_lifecycle
+    harness_family_guess: object_state_lifecycle
+    route_guess: needs_more_evidence
+    critical_api:
+    - wolfSSL_CTX_use_certificate_chain_file
+    - ProcessFile
+    - ProcessBuffer
+    - FreeDecodedCert
+    root_cause_hypothesis: needs_review
+    trigger_behavior: X.509 certificate parsing heap-buffer-overflow
+    mutation_points: []
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: true
+      placeholder: false
+      synthetic: false
+      source_vector: true
+      no_external_input_required: false
+    template_candidate: false
+    evidence_strength: low
+    import_status: blocked
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: WOLFSSL-POC-0002
+    source_library: wolfssl
+    family_guess: bignum_serialization_boundary
+    harness_family_guess: buffer_canary_boundary
+    route_guess: D_crash_sanitizer_evidence_audit
+    critical_api:
+    - wolfSSL_X509_d2i
+    - wolfSSL_X509_get_subject_name
+    - wolfSSL_X509_NAME_get_text_by_NID
+    root_cause_hypothesis: needs_review
+    trigger_behavior: X.509 certificate text parsing off-by-one out-of-bounds byte
+      overwrite
+    mutation_points:
+    - wolfSSL_X509_NAME_get_text_by_NID
+    - fopen
+    - malloc
+    - fread
+    - free
+    - wolfSSL_Init
+    - wolfSSL_Cleanup
+    - wolfSSL_X509_d2i
+    - wolfSSL_X509_get_subject_name
+    - wolfSSL_X509_free
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: false
+      placeholder: false
+      synthetic: true
+      source_vector: true
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: high
+    import_status: medium_confidence_staging
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: WOLFSSL-POC-0003
+    source_library: wolfssl
+    family_guess: tls_protocol_state_lifecycle
+    harness_family_guess: object_state_lifecycle
+    route_guess: D_crash_sanitizer_evidence_audit
+    critical_api:
+    - wolfSSL_X509_set_notAfter
+    - wolfSSL_X509_notAfter
+    - wolfSSL_X509_set_notBefore
+    - wolfSSL_X509_notBefore
+    root_cause_hypothesis: needs_review
+    trigger_behavior: X.509 date parsing buffer overflow
+    mutation_points:
+    - memset
+    - memcpy
+    - wolfSSL_X509_set_notAfter
+    - wolfSSL_X509_notAfter
+    - wolfSSL_X509_set_notBefore
+    - wolfSSL_X509_notBefore
+    - wolfSSL_Init
+    - X509_new
+    - wolfSSL_Cleanup
+    - X509_free
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: true
+      placeholder: false
+      synthetic: false
+      source_vector: true
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: high
+    import_status: medium_confidence_staging
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: WOLFSSL-POC-0004
+    source_library: wolfssl
+    family_guess: tls_protocol_state_lifecycle
+    harness_family_guess: object_state_lifecycle
+    route_guess: D_crash_sanitizer_evidence_audit
+    critical_api:
+    - wolfSSL_X509_d2i
+    - wolfSSL_i2d_X509_bio
+    - CertFromX509
+    root_cause_hypothesis: needs_review
+    trigger_behavior: X.509 AuthorityKeyIdentifier heap buffer overflow
+    mutation_points:
+    - fopen
+    - memcpy
+    - malloc
+    - free
+    - wolfSSL_Init
+    - wolfSSL_X509_d2i
+    - wolfSSL_Cleanup
+    - wolfSSL_BIO_new
+    - wolfSSL_BIO_s_mem
+    - wolfSSL_X509_free
+    - wolfSSL_i2d_X509_bio
+    - wolfSSL_BIO_free
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: true
+      placeholder: false
+      synthetic: false
+      source_vector: true
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: high
+    import_status: medium_confidence_staging
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: WOLFSSL-POC-0005
+    source_library: wolfssl
+    family_guess: tls_protocol_state_lifecycle
+    harness_family_guess: object_state_lifecycle
+    route_guess: D_crash_sanitizer_evidence_audit
+    critical_api: null
+    root_cause_hypothesis: needs_review
+    trigger_behavior: DTLS 1.3 ACK record processing heap buffer overflow
+    mutation_points:
+    - wolfSSL_Init
+    - wolfSSL_read
+    - wolfSSL_get_error
+    - wolfSSL_free
+    - wolfSSL_CTX_free
+    - wolfSSL_Cleanup
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: true
+      placeholder: false
+      synthetic: false
+      source_vector: true
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: high
+    import_status: medium_confidence_staging
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: WOLFSSL-POC-0005
+    source_library: wolfssl
+    family_guess: x509_parsing
+    harness_family_guess: x509_asn1_inner_boundary
+    route_guess: D_crash_sanitizer_evidence_audit
+    critical_api: null
+    root_cause_hypothesis: needs_review
+    trigger_behavior: PEM / DER / Base64 decoding memory safety candidate
+    mutation_points:
+    - fopen
+    - malloc
+    - fread
+    - free
+    - wc_PemToDer
+    - wc_FreeDer
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: true
+      placeholder: false
+      synthetic: false
+      source_vector: false
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: medium
+    import_status: medium_confidence_staging
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: WOLFSSL-POC-0006
+    source_library: wolfssl
+    family_guess: pkcs_container_parsing
+    harness_family_guess: x509_asn1_inner_boundary
+    route_guess: A_recipe_slot_cross_library_migration
+    critical_api: null
+    root_cause_hypothesis: needs_review
+    trigger_behavior: PKCS7 SignedData encoding out-of-bounds write
+    mutation_points:
+    - fopen
+    - malloc
+    - fread
+    - free
+    - memset
+    - wc_PKCS7_Init
+    - wc_PKCS7_InitWithCert
+    - wc_PKCS7_EncodeSignedData
+    - wc_PKCS7_Free
+    oracle_candidate: pointer_consumption_semantic_oracle
+    seed_status:
+      original_seed: true
+      placeholder: false
+      synthetic: false
+      source_vector: true
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: high
+    import_status: medium_confidence_staging
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: WOLFSSL-POC-0007
+    source_library: wolfssl
+    family_guess: pkcs_container_parsing
+    harness_family_guess: x509_asn1_inner_boundary
+    route_guess: A_recipe_slot_cross_library_migration
+    critical_api: null
+    root_cause_hypothesis: needs_review
+    trigger_behavior: PKCS7 ORI OID processing stack buffer overflow
+    mutation_points:
+    - memset
+    - wc_PKCS7_New
+    - wc_PKCS7_SetOriDecryptCb
+    - wc_PKCS7_DecodeEnvelopedData
+    - wc_PKCS7_Free
+    oracle_candidate: buffer_canary_boundary
+    seed_status:
+      original_seed: true
+      placeholder: false
+      synthetic: false
+      source_vector: true
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: high
+    import_status: medium_confidence_staging
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: WOLFSSL-POC-0008
+    source_library: wolfssl
+    family_guess: tls_protocol_state_lifecycle
+    harness_family_guess: object_state_lifecycle
+    route_guess: D_crash_sanitizer_evidence_audit
+    critical_api: null
+    root_cause_hypothesis: needs_review
+    trigger_behavior: TLS 1.3 PQC hybrid KeyShare error cleanup double-free
+    mutation_points:
+    - wolfSSL_Init
+    - wolfSSL_CTX_new
+    - wolfTLSv1_3_client_method
+    - wolfSSL_SetIORecv
+    - wolfSSL_SetIOSend
+    - wolfSSL_new
+    - wolfSSL_CTX_free
+    - wolfSSL_UseKeyShare
+    - wolfSSL_free
+    - wolfSSL_SetIOReadCtx
+    - wolfSSL_connect_TLSv13
+    - wolfSSL_Cleanup
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: true
+      placeholder: false
+      synthetic: false
+      source_vector: true
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: high
+    import_status: medium_confidence_staging
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: WOLFSSL-POC-0009
+    source_library: wolfssl
+    family_guess: tls_protocol_state_lifecycle
+    harness_family_guess: object_state_lifecycle
+    route_guess: D_crash_sanitizer_evidence_audit
+    critical_api: null
+    root_cause_hypothesis: needs_review
+    trigger_behavior: SSL_SESSION deserialization heap-buffer-overflow
+    mutation_points:
+    - wolfSSL_SESSION_new
+    - wolfSSL_i2d_SSL_SESSION
+    - wolfSSL_SESSION_free
+    - malloc
+    - free
+    - memcpy
+    - memset
+    - wolfSSL_Init
+    - wolfSSL_Cleanup
+    - wolfSSL_d2i_SSL_SESSION
+    oracle_candidate: crash_sanitizer_oracle
+    seed_status:
+      original_seed: true
+      placeholder: false
+      synthetic: false
+      source_vector: true
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: high
+    import_status: medium_confidence_staging
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported
+  - poc_id: WOLFSSL-POC-0010
+    source_library: wolfssl
+    family_guess: tls_protocol_state_lifecycle
+    harness_family_guess: object_state_lifecycle
+    route_guess: A_recipe_slot_cross_library_migration
+    critical_api: null
+    root_cause_hypothesis: needs_review
+    trigger_behavior: TLS ALPN extension parsing out-of-bounds read
+    mutation_points:
+    - malloc
+    - free
+    - wolfSSL_select_next_proto
+    oracle_candidate: return_code_outlen_semantic
+    seed_status:
+      original_seed: true
+      placeholder: false
+      synthetic: false
+      source_vector: true
+      no_external_input_required: false
+    template_candidate: true
+    evidence_strength: high
+    import_status: medium_confidence_staging
+    notes: staged structured summary only; no raw HTML/log/poc.c body imported

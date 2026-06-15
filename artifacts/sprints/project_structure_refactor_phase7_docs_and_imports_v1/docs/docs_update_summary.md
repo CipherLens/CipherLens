@@ -1,0 +1,21 @@
+# Docs Update Summary
+
+```yaml
+schema: docs_update_summary_v1
+task: project_structure_refactor_phase7_docs_and_imports_v1
+docs_created_or_updated:
+- docs/PROJECT_STRUCTURE.md
+- docs/PIPELINE_ENTRYPOINTS.md
+- docs/TOOLS_POLICY.md
+- docs/RUNTIME_LOOP_STATUS.md
+project_location_documented: true
+tools_policy_documented: true
+module_boundaries_documented: true
+artifacts_output_only_documented: true
+legacy_delete_rule_documented: true
+sprint_driven_not_scheduler_driven_documented: true
+next_mainline: valid_seed_discovery_pkcs_v1
+notes:
+- No tools/*.py files were added.
+- No render, compile, run, feedback, GLM, or core knowledge write was performed.
+```

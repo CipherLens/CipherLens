@@ -1,0 +1,55 @@
+sprint: auto_scheduler_v1
+input_sources:
+  pattern_bank: artifacts/pattern_bank/unified_pattern_bank.yaml
+  scheduler_seed: artifacts/pattern_bank/scheduler_seed.yaml
+  feedback_files:
+  - artifacts/feedback/asn1_nested_boundary_d_path_audit_feedback.jsonl
+  - artifacts/feedback/asn1_nested_boundary_minimal_reproducer_feedback.jsonl
+  - artifacts/feedback/asn1_nested_boundary_seed_enrichment_feedback.jsonl
+  - artifacts/feedback/cipher_aead_lifecycle_botan_crosscheck_feedback.jsonl
+  - artifacts/feedback/cipher_aead_lifecycle_gcm_closure_feedback.jsonl
+  - artifacts/feedback/cipher_aead_lifecycle_mutation_feedback.jsonl
+  - artifacts/feedback/cipher_aead_lifecycle_semantic_crosscheck_feedback.jsonl
+  - artifacts/feedback/der_full_consumption_feedback.jsonl
+  - artifacts/feedback/mac_lifecycle_feedback.jsonl
+  - artifacts/feedback/mutation_feedback.jsonl
+  - artifacts/feedback/secure_heap_init_failed_then_query_candidate_feedback.jsonl
+  - artifacts/feedback/secure_heap_state_lifecycle_feedback.jsonl
+  - artifacts/feedback/secure_heap_state_lifecycle_pattern_expansion_feedback.jsonl
+  schema_files:
+  - artifacts/sprints/framework_automation_schema_unification_v1/schema/family_profile_schema.yaml
+  - artifacts/sprints/framework_automation_schema_unification_v1/schema/route_decision_schema.yaml
+  - artifacts/sprints/framework_automation_schema_unification_v1/gates/evidence_gate.yaml
+  - artifacts/sprints/framework_automation_schema_unification_v1/gates/a_path_glm_gate.yaml
+  - artifacts/sprints/framework_automation_schema_unification_v1/schema/feedback_schema.yaml
+  - artifacts/sprints/framework_automation_schema_unification_v1/scheduler/scheduler_scoring_schema.yaml
+  - artifacts/sprints/framework_automation_schema_unification_v1/automation_plan/auto_scheduler_v1_design.yaml
+  knowledge_raw_files:
+  - knowledge_raw/poc_patterns/core10_patterns.md
+  - knowledge_raw/poc_patterns/der_full_consumption_ossl_store_evidence.md
+  - knowledge_raw/poc_patterns/openssl_issue_patterns.md
+  - knowledge_raw/poc_patterns/unified_patterns.md
+family_count: 12
+top_1_family: x509_parsing
+top_2_family: evp_pkey_context_lifecycle
+top_3_family: der_full_consumption
+why_not_previous_families:
+  secure_heap: Moved to external validation after current-version init_failed_then_query
+    candidate; not main exploratory top-1.
+  cipher_aead_lifecycle: GCM cases closed or demoted as legal semantics/mapping gaps;
+    non-GCM spaces can wait.
+  asn1_nested_boundary: Blocked by real seed missing / placeholder-only evidence.
+  der_full_consumption: Strong app-level candidate, but next step is minimal reproducer/upstream
+    inquiry rather than another scheduler-selected experiment.
+  mac_lifecycle: Successful A-path template; useful as reference, not urgent next
+    discovery loop target.
+evidence_gate_effect: blocked seed-missing and weak-evidence families; legal semantics
+  negative feedback demotes AEAD-GCM.
+a_path_glm_gate_effect: GLM is allowed only for MAC lifecycle A-path template, but
+  auto render/run remains disabled in this scheduler-only sprint.
+auto_render_allowed: false
+auto_run_allowed: false
+recommended_next_task: x509_parsing_triage_v1
+pattern_bank_write_back: false
+vulnerability_found: false
+next_stage: route_planner_v1 or gated_auto_triage_v1 after reviewing scheduler output

@@ -1,0 +1,230 @@
+cards:
+  - api: d2i_X509
+    library: openssl
+    signature: "X509 *d2i_X509(X509 **a, const unsigned char **pp, long length)"
+    parameter_semantics:
+      - "pp points to an input DER pointer and is advanced to the first byte after the parsed object on success."
+      - "length is the number of bytes available from *pp."
+      - "a may be NULL to allocate a new X509 object."
+    return_value_semantics:
+      - "Returns a non-NULL X509 object on successful parse."
+      - "Returns NULL on parse failure."
+    state_preconditions:
+      - "Input should be DER-encoded X.509 Certificate."
+    valid_invalid_ranges:
+      - "Valid: exact DER object length."
+      - "Invalid: malformed ASN.1 lengths, truncated DER, oversized inner length."
+      - "High-risk semantic: valid DER prefix followed by trailing bytes."
+    related_apis:
+      - d2i_X509_REQ
+      - d2i_X509_CRL
+      - i2d_X509
+    mutation_hints:
+      - trailing_garbage
+      - valid_prefix_plus_second_der_object
+      - valid_prefix_plus_partial_der_object
+      - outer_sequence_len_minus_1
+      - outer_sequence_len_plus_1
+      - inner_len_zero
+      - inner_len_oversized
+    oracle_observables:
+      - return_pointer
+      - consumed_pointer
+      - consumed_len
+      - sanitizer_signal
+
+  - api: d2i_PKCS8_PRIV_KEY_INFO
+    library: openssl
+    signature: "PKCS8_PRIV_KEY_INFO *d2i_PKCS8_PRIV_KEY_INFO(PKCS8_PRIV_KEY_INFO **a, const unsigned char **pp, long length)"
+    parameter_semantics:
+      - "pp points to an input DER pointer and advances on success."
+      - "length is the caller-supplied input length."
+    return_value_semantics:
+      - "Returns non-NULL on successful PKCS#8 PrivateKeyInfo parse."
+      - "Returns NULL on parse failure."
+    state_preconditions:
+      - "Input should be DER-encoded PKCS#8 PrivateKeyInfo."
+    valid_invalid_ranges:
+      - "Valid: exact DER PrivateKeyInfo."
+      - "Invalid: malformed outer or inner ASN.1 lengths."
+      - "High-risk semantic: accepted prefix with unconsumed trailing bytes."
+    related_apis:
+      - EVP_PKEY2PKCS8
+      - i2d_PKCS8_PRIV_KEY_INFO
+      - d2i_PrivateKey
+    mutation_hints:
+      - trailing_garbage
+      - valid_prefix_plus_second_der_object
+      - valid_prefix_plus_partial_der_object
+      - inner_len_zero
+      - inner_len_oversized
+    oracle_observables:
+      - return_pointer
+      - consumed_pointer
+      - consumed_len
+      - sanitizer_signal
+
+  - api: EVP_DigestVerify
+    library: openssl
+    signature: "int EVP_DigestVerify(EVP_MD_CTX *ctx, const unsigned char *sigret, size_t siglen, const unsigned char *tbs, size_t tbslen)"
+    parameter_semantics:
+      - "ctx must be initialized for verify through EVP_DigestVerifyInit."
+      - "sigret/siglen provide the signature bytes."
+      - "tbs/tbslen provide the message bytes."
+    return_value_semantics:
+      - "Returns 1 for successful verification."
+      - "Returns 0 for verification failure."
+      - "Returns a negative value for other errors."
+    state_preconditions:
+      - "Digest, key type, padding mode, and key usage must match the signature scheme."
+    valid_invalid_ranges:
+      - "Valid: matching public key, digest algorithm, padding mode, message, and signature."
+      - "Invalid: wrong digest length, wrong digest algorithm, truncated signature, all-zero signature, RSA-PSS/v1.5 confusion."
+    related_apis:
+      - EVP_DigestVerifyInit
+      - EVP_DigestVerifyUpdate
+      - EVP_PKEY_verify
+    mutation_hints:
+      - wrong_hash_length
+      - wrong_digest_algorithm
+      - public_private_component_mismatch
+      - rsa_pss_salt_length_mismatch
+      - pkcs1_v15_pss_confusion
+      - truncated_signature
+      - oversized_signature
+      - all_zero_signature
+    oracle_observables:
+      - return_code
+      - error_stack
+      - sanitizer_signal
+      - unexpected_success
+
+  - api: EVP_PKEY_verify
+    library: openssl
+    signature: "int EVP_PKEY_verify(EVP_PKEY_CTX *ctx, const unsigned char *sig, size_t siglen, const unsigned char *tbs, size_t tbslen)"
+    parameter_semantics:
+      - "ctx must be initialized with EVP_PKEY_verify_init and configured for padding/digest where applicable."
+      - "sig/siglen provide signature bytes."
+      - "tbs/tbslen generally provide a digest for RSA-style verify operations."
+    return_value_semantics:
+      - "Returns 1 for successful verification."
+      - "Returns 0 for verification failure."
+      - "Returns a negative value for other errors."
+    state_preconditions:
+      - "Key type, padding mode, digest setting, and input size must match the configured scheme."
+    valid_invalid_ranges:
+      - "Invalid: mismatched digest size, wrong padding mode, unsupported key usage, malformed signature length."
+    related_apis:
+      - EVP_PKEY_verify_init
+      - EVP_PKEY_CTX_set_rsa_padding
+      - EVP_PKEY_CTX_set_signature_md
+      - EVP_DigestVerify
+    mutation_hints:
+      - wrong_hash_length
+      - wrong_digest_algorithm
+      - wrong_key_usage
+      - rsa_pss_salt_length_mismatch
+      - pkcs1_v15_pss_confusion
+      - truncated_signature
+      - oversized_signature
+      - all_zero_signature
+    oracle_observables:
+      - return_code
+      - error_stack
+      - sanitizer_signal
+      - unexpected_success
+
+  - api: psa_verify_hash
+    library: mbedtls
+    signature: "psa_status_t psa_verify_hash(psa_key_id_t key, psa_algorithm_t alg, const uint8_t *hash, size_t hash_length, const uint8_t *signature, size_t signature_length)"
+    parameter_semantics:
+      - "key identifies a PSA key with verify permission."
+      - "alg selects the signature algorithm."
+      - "hash/hash_length provide the already-computed hash input."
+      - "signature/signature_length provide the signature to verify."
+    return_value_semantics:
+      - "Returns PSA_SUCCESS only if the signature is valid."
+      - "Returns PSA_ERROR_INVALID_SIGNATURE for invalid signatures."
+      - "Returns other PSA errors for unsupported algorithms, bad state, or invalid arguments."
+    state_preconditions:
+      - "Key must exist, permit verify, and be compatible with alg."
+    valid_invalid_ranges:
+      - "Invalid: wrong hash length, wrong algorithm, wrong key usage, truncated or oversized signature."
+    related_apis:
+      - psa_verify_message
+      - psa_sign_hash
+      - psa_import_key
+    mutation_hints:
+      - wrong_hash_length
+      - wrong_digest_algorithm
+      - wrong_key_usage
+      - public_private_component_mismatch
+      - truncated_signature
+      - oversized_signature
+      - all_zero_signature
+    oracle_observables:
+      - status_code
+      - unexpected_success
+      - sanitizer_signal
+
+  - api: EVP_MAC_CTX_get_mac_size
+    library: openssl
+    signature: "size_t EVP_MAC_CTX_get_mac_size(EVP_MAC_CTX *ctx)"
+    parameter_semantics:
+      - "ctx is an EVP_MAC context allocated for a specific MAC implementation."
+      - "The returned size may depend on whether parameters and key material have been initialized."
+    return_value_semantics:
+      - "Returns MAC output size when known."
+      - "Returns 0 when unavailable or unsupported."
+    state_preconditions:
+      - "Context should be allocated; some MACs require init or parameter setup before size is meaningful."
+    valid_invalid_ranges:
+      - "Invalid lifecycle: query before setup, cleanup_then_query, partial_init_then_query."
+    related_apis:
+      - EVP_MAC_fetch
+      - EVP_MAC_CTX_new
+      - EVP_MAC_init
+      - EVP_MAC_update
+      - EVP_MAC_final
+    mutation_hints:
+      - query_before_setup
+      - partial_init_then_query
+      - cleanup_then_query
+      - wrong_digest_combo
+    oracle_observables:
+      - return_size
+      - sanitizer_signal
+      - unexpected_success
+
+  - api: psa_mac_sign_finish
+    library: mbedtls
+    signature: "psa_status_t psa_mac_sign_finish(psa_mac_operation_t *operation, uint8_t *mac, size_t mac_size, size_t *mac_length)"
+    parameter_semantics:
+      - "operation must have been initialized by psa_mac_sign_setup and updated with message bytes as needed."
+      - "mac/mac_size provide caller-owned output storage."
+      - "mac_length reports produced MAC length on success."
+    return_value_semantics:
+      - "Returns PSA_SUCCESS on successful MAC finalization."
+      - "Returns PSA_ERROR_BAD_STATE for invalid lifecycle sequences."
+      - "Returns size or argument errors for invalid output buffers."
+    state_preconditions:
+      - "Requires active MAC sign operation with compatible key and algorithm."
+    valid_invalid_ranges:
+      - "Invalid lifecycle: finish_before_setup, abort_then_finish, double_finish."
+      - "Invalid output: too-small mac_size or NULL mac_length where unsupported."
+    related_apis:
+      - psa_mac_sign_setup
+      - psa_mac_update
+      - psa_mac_abort
+      - psa_mac_compute
+    mutation_hints:
+      - finish_before_setup
+      - setup_then_finish
+      - abort_then_finish
+      - double_finish
+      - wrong_digest_combo
+    oracle_observables:
+      - status_code
+      - output_length
+      - output_state
+      - sanitizer_signal

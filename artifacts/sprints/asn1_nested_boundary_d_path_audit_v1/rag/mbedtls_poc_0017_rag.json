@@ -1,0 +1,503 @@
+{
+  "query": "MBEDTLS-POC-0017 x509_asn1_inner_boundary OpenSSL d2i_X509 safe safe migrated_safe",
+  "top_k": 20,
+  "results": [
+    {
+      "rank": 1,
+      "score": 1.4506883741837,
+      "distance": 0.38756227493286133,
+      "base_score": 0.7206883741837,
+      "rerank_score": 1.4506883741837,
+      "rerank_reasons": [
+        "api_match:d2i_X509",
+        "layer:poc_patterns",
+        "family_match:asn1_nested_boundary",
+        "library_match:mbedtls",
+        "keyword_overlap:d2i_x509,mbedtls,migrated_safe,poc",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+      "text": "## MBEDTLS-POC-0017\n\n- Source: data/pocs/core10/MBEDTLS-POC-0017\n- Family: asn1_nested_boundary\n- Oracle type: safe_reject_baseline\n- Root cause: Incorrect ASN.1 length/bounds validation in parser or writer.\n- Source API: X.509 CRT ASN.1 parsing functions\n- Target API: d2i_X509\n- Historical verdict: migrated_safe\n- Feedback summary: none\n- Scheduler priority: 0.35 (safe_safe_result, useful_negative_case)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: parser bounds violation / malformed certificate handling.",
+      "metadata": {
+        "pattern_id": "MBEDTLS-POC-0017",
+        "oracle_type": "safe_reject_baseline",
+        "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+        "library": "",
+        "doc_type": "poc_pattern",
+        "layer": "poc_patterns",
+        "family": "asn1_nested_boundary"
+      }
+    },
+    {
+      "rank": 2,
+      "score": 1.4506883741837,
+      "distance": 0.38756227493286133,
+      "base_score": 0.7206883741837,
+      "rerank_score": 1.4506883741837,
+      "rerank_reasons": [
+        "api_match:d2i_X509",
+        "layer:poc_patterns",
+        "family_match:asn1_nested_boundary",
+        "library_match:mbedtls",
+        "keyword_overlap:d2i_x509,mbedtls,migrated_safe,poc",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "## MBEDTLS-POC-0017\n\n- Source: data/pocs/core10/MBEDTLS-POC-0017\n- Family: asn1_nested_boundary\n- Oracle type: safe_reject_baseline\n- Root cause: Incorrect ASN.1 length/bounds validation in parser or writer.\n- Source API: X.509 CRT ASN.1 parsing functions\n- Target API: d2i_X509\n- Historical verdict: migrated_safe\n- Feedback summary: none\n- Scheduler priority: 0.35 (safe_safe_result, useful_negative_case)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: parser bounds violation / malformed certificate handling.",
+      "metadata": {
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+        "library": "",
+        "doc_type": "poc_pattern",
+        "oracle_type": "safe_reject_baseline",
+        "family": "asn1_nested_boundary",
+        "layer": "poc_patterns",
+        "pattern_id": "MBEDTLS-POC-0017"
+      }
+    },
+    {
+      "rank": 3,
+      "score": 1.269765399361917,
+      "distance": 0.5878928899765015,
+      "base_score": 0.629765399361917,
+      "rerank_score": 1.269765399361917,
+      "rerank_reasons": [
+        "api_match:d2i_X509",
+        "library_match:openssl",
+        "layer:api_cards",
+        "source_file_api_match",
+        "keyword_overlap:d2i_x509,openssl"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/openssl/d2i_X509.yaml",
+      "text": "Source: API Card\napi: d2i_X509\nlibrary: openssl\nfamily: der_parser\nsignature: X509 *d2i_X509(X509 **a, const unsigned char **ppin, long length)\nparameter_semantics: a: optional reuse/output object pointer\nppin: input DER pointer, advanced to consumed object end on success\nlength: available input length\nreturn_value_semantics: success: returns X509 object pointer\nfailure: returns NULL\nvalid_invalid_ranges: valid: complete DER X.509 certificate object\ninvalid: malformed ASN.1 certificate structure\nunsupported_conditions: - caller expecting whole-input validation without checking \"*ppin == end\"\nmutation_hints: - trailing garbage\n- malformed second object\n- oversized length\n- truncated inner ASN.1 field\noracle_observables: - parse_success\n- consumed_len\n- trailing_len\n- caller_accept\nnotes: - 'Known pitfall: d2i_* low-level APIs may advance the pointer only to the consumed\n  object.'\n- Whole-input callers should check p == end.\n",
+      "metadata": {
+        "doc_type": "api_card",
+        "source_file": "knowledge_base/api_cards/openssl/d2i_X509.yaml",
+        "api": "d2i_X509",
+        "layer": "api_cards",
+        "library": "openssl",
+        "family": "der_parser"
+      }
+    },
+    {
+      "rank": 4,
+      "score": 1.2030219961443496,
+      "distance": 0.508245587348938,
+      "base_score": 0.6630219961443496,
+      "rerank_score": 1.2030219961443496,
+      "rerank_reasons": [
+        "layer:poc_patterns",
+        "family_match:x509_parsing",
+        "library_match:mbedtls",
+        "keyword_overlap:mbedtls,poc",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+      "text": "## MBEDTLS-POC-0027\n\n- Source: data/pocs/core10/MBEDTLS-POC-0027\n- Family: x509_parsing\n- Oracle type: behavior_divergence\n- Root cause: Incorrect return value handling on error path.\n- Source API: mbedtls_ssl_get_verify_result\n- Target API: unknown\n- Historical verdict: pending_inference\n- Feedback summary: none\n- Scheduler priority: 0.45 (semantic_correctness, x509_tls_verdict)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: wrong behavior / semantic validation failure.",
+      "metadata": {
+        "oracle_type": "behavior_divergence",
+        "family": "x509_parsing",
+        "doc_type": "poc_pattern",
+        "pattern_id": "MBEDTLS-POC-0027",
+        "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+        "layer": "poc_patterns",
+        "library": ""
+      }
+    },
+    {
+      "rank": 5,
+      "score": 1.2030219961443496,
+      "distance": 0.508245587348938,
+      "base_score": 0.6630219961443496,
+      "rerank_score": 1.2030219961443496,
+      "rerank_reasons": [
+        "layer:poc_patterns",
+        "family_match:x509_parsing",
+        "library_match:mbedtls",
+        "keyword_overlap:mbedtls,poc",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "## MBEDTLS-POC-0027\n\n- Source: data/pocs/core10/MBEDTLS-POC-0027\n- Family: x509_parsing\n- Oracle type: behavior_divergence\n- Root cause: Incorrect return value handling on error path.\n- Source API: mbedtls_ssl_get_verify_result\n- Target API: unknown\n- Historical verdict: pending_inference\n- Feedback summary: none\n- Scheduler priority: 0.45 (semantic_correctness, x509_tls_verdict)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: wrong behavior / semantic validation failure.",
+      "metadata": {
+        "library": "",
+        "doc_type": "poc_pattern",
+        "pattern_id": "MBEDTLS-POC-0027",
+        "layer": "poc_patterns",
+        "oracle_type": "behavior_divergence",
+        "family": "x509_parsing",
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md"
+      }
+    },
+    {
+      "rank": 6,
+      "score": 1.1437953231085807,
+      "distance": 0.6030899286270142,
+      "base_score": 0.6237953231085808,
+      "rerank_score": 1.1437953231085807,
+      "rerank_reasons": [
+        "layer:poc_patterns",
+        "family_match:asn1_nested_boundary",
+        "library_match:openssl",
+        "keyword_overlap:openssl",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "## OPENSSL-ISSUE-18168\n\n- Source: datasets/openssl/poc_artifacts/issue_18168\n- Family: asn1_nested_boundary\n- Oracle type: crash_or_sanitizer\n- Root cause: unknown\n- Source API: WPACKET_put_bytes__, int_der_w_integer, ossl_DER_w_ulong, ossl_DER_w_RSASSA_PSS_params, prepare_rsa_params, key_to_pki_pem_priv_bio, key2any_encode, rsapss_to_PrivateKeyInfo_pem_encode\n- Target API: unknown\n- Historical verdict: unknown\n- Feedback summary: none\n- Scheduler priority: 0.3 (clear_oracle, reusable_family)\n- Notes: Title: Assertion failure in WPACKET_put_bytes__, packet.c:387, openssl-rsa. Component: WPACKET/DER_WRITER/RSA. Trigger behavior: ASSERTION_FAILURE.",
+      "metadata": {
+        "doc_type": "poc_pattern",
+        "pattern_id": "OPENSSL-ISSUE-18168",
+        "library": "",
+        "family": "asn1_nested_boundary",
+        "oracle_type": "crash_or_sanitizer",
+        "layer": "poc_patterns",
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md"
+      }
+    },
+    {
+      "rank": 7,
+      "score": 1.1437953231085807,
+      "distance": 0.6030899286270142,
+      "base_score": 0.6237953231085808,
+      "rerank_score": 1.1437953231085807,
+      "rerank_reasons": [
+        "layer:poc_patterns",
+        "family_match:asn1_nested_boundary",
+        "library_match:openssl",
+        "keyword_overlap:openssl",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/openssl_issue_patterns.md",
+      "text": "## OPENSSL-ISSUE-18168\n\n- Source: datasets/openssl/poc_artifacts/issue_18168\n- Family: asn1_nested_boundary\n- Oracle type: crash_or_sanitizer\n- Root cause: unknown\n- Source API: WPACKET_put_bytes__, int_der_w_integer, ossl_DER_w_ulong, ossl_DER_w_RSASSA_PSS_params, prepare_rsa_params, key_to_pki_pem_priv_bio, key2any_encode, rsapss_to_PrivateKeyInfo_pem_encode\n- Target API: unknown\n- Historical verdict: unknown\n- Feedback summary: none\n- Scheduler priority: 0.3 (clear_oracle, reusable_family)\n- Notes: Title: Assertion failure in WPACKET_put_bytes__, packet.c:387, openssl-rsa. Component: WPACKET/DER_WRITER/RSA. Trigger behavior: ASSERTION_FAILURE.",
+      "metadata": {
+        "family": "asn1_nested_boundary",
+        "library": "",
+        "source_file": "knowledge_raw/poc_patterns/openssl_issue_patterns.md",
+        "pattern_id": "OPENSSL-ISSUE-18168",
+        "doc_type": "poc_pattern",
+        "layer": "poc_patterns",
+        "oracle_type": "crash_or_sanitizer"
+      }
+    },
+    {
+      "rank": 8,
+      "score": 1.063928080222817,
+      "distance": 0.5774660110473633,
+      "base_score": 0.633928080222817,
+      "rerank_score": 1.063928080222817,
+      "rerank_reasons": [
+        "api_match:d2i_X509",
+        "library_match:openssl",
+        "source_file_api_match",
+        "keyword_overlap:d2i_x509,mbedtls,openssl,poc"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509.md",
+      "text": "nconsumed.\n\n## Harness Generation Notes\n\n- Use `const unsigned char *p = der; X509 *x = d2i_X509(NULL, &p, len);`.\n- For `MBEDTLS-POC-0017`, feed malformed nested ASN.1 certificate bytes and observe NULL/error queue and pointer movement.\n\n## Vulnerability-Pattern Migration Notes\n\n- Strong candidate for X.509 nested-boundary parser migration.\n- Evaluate whether inner malformed substructures are rejected at child bounds rather than accepted or parsed using an outer bound.\n\n## Related Tests or Examples Found Locally\n\n- `test/x509_test.c`: `d2i_X509(NULL, &p, sizeof(certdata))`.\n- `test/ossl_store_test.c`, `test/pkcs12_format_test.c`, `crypto/store/store_result.c`: direct DER X.509 parsing.",
+      "metadata": {
+        "library": "openssl",
+        "pattern_id": "",
+        "oracle_type": "",
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509.md",
+        "family": "",
+        "doc_type": "api_constraint",
+        "layer": "api_constraints"
+      }
+    },
+    {
+      "rank": 9,
+      "score": 1.0071065304089057,
+      "distance": 0.6204657554626465,
+      "base_score": 0.6171065304089057,
+      "rerank_score": 1.0071065304089057,
+      "rerank_reasons": [
+        "api_match:d2i_X509",
+        "library_match:openssl",
+        "source_file_api_match",
+        "keyword_overlap:d2i_x509,openssl"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509.md",
+      "text": "# API Constraints: d2i_X509 (OpenSSL 3.5.5)\n\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function name: `d2i_X509`\n- Header/manpage: `include/openssl/x509.h`, `doc/man3/d2i_X509.pod`\n- Implementation file: generated by `IMPLEMENT_ASN1_FUNCTIONS(X509)` in `crypto/x509/x_x509.c`\n- Signature:\n\n```c\nX509 *d2i_X509(X509 **a, const unsigned char **pp, long length);\n```\n\n## Semantics\n\n- DER-decodes an X.509 certificate from memory.\n- On success, advances `*pp` past the consumed DER object.\n\n## Return Value Semantics\n\n- Returns `X509 *` on success.\n- Returns `NULL` on ASN.1/X.509 parse failure; error details are in OpenSSL error queue.\n\n## Ownership and Buffer Constraints\n\n- Returned certificate is caller-owned and freed with `X509_free()`.\n- Input bytes remain caller-owned.\n- Pointer advancement lets harnesses detect whether trailing bytes were consumed or left unconsumed.\n\n## Harness Generation Notes\n\n- Use `const unsigned char *p = der; X509 *x = d2i_X509(NUL",
+      "metadata": {
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/d2i_X509.md",
+        "library": "openssl",
+        "family": "",
+        "layer": "api_constraints",
+        "pattern_id": "",
+        "doc_type": "api_constraint",
+        "oracle_type": ""
+      }
+    },
+    {
+      "rank": 10,
+      "score": 0.9981105264555157,
+      "distance": 0.5671266317367554,
+      "base_score": 0.6381105264555157,
+      "rerank_score": 0.9981105264555157,
+      "rerank_reasons": [
+        "api_match:migrated_safe",
+        "library_match:mbedtls",
+        "keyword_overlap:mbedtls,migrated_safe,poc",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+      "text": "## MBEDTLS-POC-0005\n\n- Source: data/pocs/core10/MBEDTLS-POC-0005\n- Family: api_state_machine\n- Oracle type: safe_reject_baseline\n- Root cause: Missing validation for conflicting ASN.1 named-data value pointer and nonzero length, allowing NULL pointer dereference.\n- Source API: mbedtls_asn1_store_named_data\n- Target API: ASN1_STRING_set\n- Historical verdict: migrated_safe\n- Feedback summary: none\n- Scheduler priority: 0.42 (object_state_lifecycle, safe_negative_baseline)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: NULL pointer dereference. Local metadata and artifacts describe mbedtls_asn1_store_named_data stale state, not a MAC lifecycle issue.",
+      "metadata": {
+        "library": "",
+        "family": "api_state_machine",
+        "doc_type": "poc_pattern",
+        "oracle_type": "safe_reject_baseline",
+        "layer": "poc_patterns",
+        "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+        "pattern_id": "MBEDTLS-POC-0005"
+      }
+    },
+    {
+      "rank": 11,
+      "score": 0.9981105264555157,
+      "distance": 0.5671266317367554,
+      "base_score": 0.6381105264555157,
+      "rerank_score": 0.9981105264555157,
+      "rerank_reasons": [
+        "api_match:migrated_safe",
+        "library_match:mbedtls",
+        "keyword_overlap:mbedtls,migrated_safe,poc",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "## MBEDTLS-POC-0005\n\n- Source: data/pocs/core10/MBEDTLS-POC-0005\n- Family: api_state_machine\n- Oracle type: safe_reject_baseline\n- Root cause: Missing validation for conflicting ASN.1 named-data value pointer and nonzero length, allowing NULL pointer dereference.\n- Source API: mbedtls_asn1_store_named_data\n- Target API: ASN1_STRING_set\n- Historical verdict: migrated_safe\n- Feedback summary: none\n- Scheduler priority: 0.42 (object_state_lifecycle, safe_negative_baseline)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: NULL pointer dereference. Local metadata and artifacts describe mbedtls_asn1_store_named_data stale state, not a MAC lifecycle issue.",
+      "metadata": {
+        "doc_type": "poc_pattern",
+        "family": "api_state_machine",
+        "library": "",
+        "oracle_type": "safe_reject_baseline",
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+        "layer": "poc_patterns",
+        "pattern_id": "MBEDTLS-POC-0005"
+      }
+    },
+    {
+      "rank": 12,
+      "score": 0.9878873410372777,
+      "distance": 0.5200170874595642,
+      "base_score": 0.6578873410372778,
+      "rerank_score": 0.9878873410372777,
+      "rerank_reasons": [
+        "api_match:d2i_X509",
+        "library_match:openssl",
+        "keyword_overlap:d2i_x509,mbedtls,openssl,poc"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/mbedtls/4.1.0/x509_asn1_nested_helpers.md",
+      "text": "ion Notes\n\n- Prefer public entry points such as `mbedtls_x509_crt_parse_der()` and malformed DER bytes.\n- White-box harnesses can target `x509_get_attr_type_value()` only when compiling against source internals.\n- Oracles should compare return-code class, especially `OUT_OF_DATA` vs `UNEXPECTED_TAG` or `LENGTH_MISMATCH`.\n\n## Vulnerability-Pattern Migration Notes\n\n- Relevant to `MBEDTLS-POC-0017`.\n- The migration feature is parent-end vs inner-end parsing, not certificate validation in general.\n- Target APIs such as OpenSSL `d2i_X509()`/`ASN1_item_d2i()` should be evaluated on whether malformed nested substructures are rejected at the child object boundary.\n\n## Related Tests or Examples Found Locally\n\n- `tests/suites/test_suite_x509parse.data`: many synthetic malformed DER certificates/CRLs with expected ASN.1 boundary errors.\n- Specific local evidence includes \"X509 CRT ASN1 (TBS, inv Issuer, 2nd AttributeTypeValue empty)\".",
+      "metadata": {
+        "layer": "api_constraints",
+        "oracle_type": "",
+        "doc_type": "api_constraint",
+        "pattern_id": "",
+        "family": "",
+        "source_file": "knowledge_raw/api_constraints/mbedtls/4.1.0/x509_asn1_nested_helpers.md",
+        "library": "mbedtls"
+      }
+    },
+    {
+      "rank": 13,
+      "score": 0.9859145039724599,
+      "distance": 0.524588942527771,
+      "base_score": 0.6559145039724599,
+      "rerank_score": 0.9859145039724599,
+      "rerank_reasons": [
+        "api_match:d2i_X509",
+        "library_match:openssl",
+        "keyword_overlap:d2i_x509,mbedtls,openssl,poc"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md",
+      "text": "may be reused/replaced according to OpenSSL d2i conventions.\n\n## Harness Generation Notes\n\n- Use `BIO_new_mem_buf(cert_pem, len)`, call `PEM_read_bio_X509()`, assert NULL/non-NULL, then free.\n- For `MBEDTLS-POC-0017`, DER-level `d2i_X509()` gives tighter control over malformed nested ASN.1 bytes.\n\n## Vulnerability-Pattern Migration Notes\n\n- Candidate for X.509 parser boundary migration when input is PEM wrapped.\n- Preserve malformed nested ASN.1 structure and parse failure oracle; avoid treating it only as text armor failure.\n\n## Related Tests or Examples Found Locally\n\n- `test/x509_test.c`, `test/crltest.c`, `test/algorithmid_test.c`, `test/v3ext.c`, `test/x509_check_cert_pkey_test.c`: direct `PEM_read_bio_X509()` usage.",
+      "metadata": {
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/PEM_read_bio_X509.md",
+        "library": "openssl",
+        "pattern_id": "",
+        "family": "",
+        "doc_type": "api_constraint",
+        "oracle_type": "",
+        "layer": "api_constraints"
+      }
+    },
+    {
+      "rank": 14,
+      "score": 0.9054618284467565,
+      "distance": 0.5736586451530457,
+      "base_score": 0.6354618284467565,
+      "rerank_score": 0.9054618284467565,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "layer:api_cards",
+        "keyword_overlap:mbedtls"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/mbedtls/mbedtls_pk_verify.yaml",
+      "text": "Source: API Card\napi: mbedtls_pk_verify\nlibrary: mbedtls\nfamily: pkey_verify\nsignature: int mbedtls_pk_verify(mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg, const unsigned char *hash, size_t hash_len, const unsigned char *sig, size_t sig_len)\nparameter_semantics: ctx: public key context used for signature verification\nmd_alg: message digest algorithm identifier\nhash: digest bytes to verify\nhash_len: digest length\nsig: signature bytes\nsig_len: signature length\nreturn_value_semantics: success: 0\ninvalid_signature_or_error: negative mbedTLS error code\nvalid_invalid_ranges: valid: signature generated by matching private key over matching digest\ninvalid: wrong digest, wrong hash length, wrong key, malformed signature\nunsupported_conditions: - incompatible key type\n- unsupported md_alg for key algorithm\n- malformed public key context\nmutation_hints: - wrong digest algorithm\n- wrong hash length\n- all-zero signature\n- truncated signature\n- wrong public key\n- RSA-PSS versus PKCS1 v1.5 padding mismatch through mbedtls_pk_verify_ext\noracle_observables: - return_code\n- sanitizer_signal\n- signature_acceptance\nknown_pitfalls: - mbedTLS negative returns must be separated into safe rejection, unsupported feature,\n  and crash/sanitizer evidence\n- md_alg and hash_len mismatch can reject before reaching signature mathematics\nnotes: - Use this card for mbedTLS-side controlled signature verification semantics, distinct\n  from the opaque-key null-deref pattern.\n",
+      "metadata": {
+        "api": "mbedtls_pk_verify",
+        "family": "pkey_verify",
+        "layer": "api_cards",
+        "source_file": "knowledge_base/api_cards/mbedtls/mbedtls_pk_verify.yaml",
+        "doc_type": "api_card",
+        "library": "mbedtls"
+      }
+    },
+    {
+      "rank": 15,
+      "score": 0.9016102301239077,
+      "distance": 0.6350282430648804,
+      "base_score": 0.6116102301239077,
+      "rerank_score": 0.9016102301239077,
+      "rerank_reasons": [
+        "api_match:d2i_X509",
+        "library_match:openssl",
+        "keyword_overlap:d2i_x509,openssl"
+      ],
+      "layer": "unit_tests",
+      "source_file": "knowledge_raw/unit_tests/openssl/3.5.5/der_asn1_target_api_evidence.md",
+      "text": "# Unit Test / Example Evidence: OpenSSL DER / ASN.1 Target APIs\n\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## APIs Covered\n\n- `d2i_X509`\n- `d2i_X509_bio`\n- `ASN1_item_d2i`\n- `d2i_PrivateKey`\n- `d2i_AutoPrivateKey`\n- `d2i_RSAPrivateKey`\n- `d2i_RSA_PUBKEY`\n- `d2i_PUBKEY`\n\n## Found Evidence\n\nstatus: partially_found_in_local_tests\n\n- `test/x509_test.c`\n  - Direct `d2i_X509()`, `d2i_PUBKEY()`, and `d2i_PrivateKey()` calls.\n- `test/pkcs7_test.c`\n  - Direct `d2i_X509_bio()` calls.\n- `test/evp_extra_test.c`\n  - `test_d2i_AutoPrivateKey` checks returned key type and `p == input + input_len`.\n- `test/evp_extra_test2.c`\n  - `test_d2i_AutoPrivateKey_ex` and legacy `d2i_RSAPrivateKey()` usage.\n- `crypto/x509/v3_lib.c`\n  - Internal extension decode through `ASN1_item_d2i()`.\n\n## Missing Local Evidence\n\nstatus: not_found_in_local_tests\n\napi: `d2i_RSA_PUBKEY`\n\nsearched_paths:\n- `/home/wen/work/clean_sources/openssl-3.5.5/test`\n- `/home/wen/work/clean_sources/openssl-3.5.5/apps`\n- `",
+      "metadata": {
+        "pattern_id": "",
+        "family": "",
+        "library": "openssl",
+        "doc_type": "unit_test_call_pattern",
+        "source_file": "knowledge_raw/unit_tests/openssl/3.5.5/der_asn1_target_api_evidence.md",
+        "oracle_type": "",
+        "layer": "unit_tests"
+      }
+    },
+    {
+      "rank": 16,
+      "score": 0.834727734487344,
+      "distance": 0.5510423183441162,
+      "base_score": 0.6447277344873441,
+      "rerank_score": 0.834727734487344,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:mbedtls,poc",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+      "text": "## MBEDTLS-POC-0020\n\n- Source: data/pocs/core10/MBEDTLS-POC-0020\n- Family: der_full_consumption\n- Oracle type: full_consumption_semantic\n- Root cause: Incorrect edge-case handling in mbedtls_pk_parse_key.\n- Source API: mbedtls_pk_parse_key, mbedtls_rsa_parse_key, mbedtls_rsa_parse_pubkey\n- Target API: d2i_RSAPrivateKey, d2i_PrivateKey, d2i_RSA_PUBKEY\n- Historical verdict: app_level_validation_gap_candidate\n- Feedback summary: app_level_validation_gap_candidate; total_cases=75; verdict_counts={'app_level_validation_gap_candidate': 30, 'expected_prefix_accept_behavior': 39, 'malformed_baseline_reject': 3, 'valid_baseline_success': 3}\n- Scheduler priority: 0.9 (app_level_validation_gap_candidate, clear_oracle, controlled_app_level_wrapper, der_v2_feedback, reusable_der_family, semantic_candidate_observed)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: accepts malformed key / trailing garbage. DER v2 controlled app-level sprint observed valid DER prefix plus malformed t",
+      "metadata": {
+        "library": "",
+        "oracle_type": "full_consumption_semantic",
+        "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+        "doc_type": "poc_pattern",
+        "family": "der_full_consumption",
+        "layer": "poc_patterns",
+        "pattern_id": "MBEDTLS-POC-0020"
+      }
+    },
+    {
+      "rank": 17,
+      "score": 0.834727734487344,
+      "distance": 0.5510423183441162,
+      "base_score": 0.6447277344873441,
+      "rerank_score": 0.834727734487344,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:mbedtls,poc",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "## MBEDTLS-POC-0020\n\n- Source: data/pocs/core10/MBEDTLS-POC-0020\n- Family: der_full_consumption\n- Oracle type: full_consumption_semantic\n- Root cause: Incorrect edge-case handling in mbedtls_pk_parse_key.\n- Source API: mbedtls_pk_parse_key, mbedtls_rsa_parse_key, mbedtls_rsa_parse_pubkey\n- Target API: d2i_RSAPrivateKey, d2i_PrivateKey, d2i_RSA_PUBKEY\n- Historical verdict: app_level_validation_gap_candidate\n- Feedback summary: app_level_validation_gap_candidate; total_cases=75; verdict_counts={'app_level_validation_gap_candidate': 30, 'expected_prefix_accept_behavior': 39, 'malformed_baseline_reject': 3, 'valid_baseline_success': 3}\n- Scheduler priority: 0.9 (app_level_validation_gap_candidate, clear_oracle, controlled_app_level_wrapper, der_v2_feedback, reusable_der_family, semantic_candidate_observed)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: accepts malformed key / trailing garbage. DER v2 controlled app-level sprint observed valid DER prefix plus malformed t",
+      "metadata": {
+        "layer": "poc_patterns",
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+        "pattern_id": "MBEDTLS-POC-0020",
+        "doc_type": "poc_pattern",
+        "family": "der_full_consumption",
+        "library": "",
+        "oracle_type": "full_consumption_semantic"
+      }
+    },
+    {
+      "rank": 18,
+      "score": 0.8282151478226785,
+      "distance": 0.5668697357177734,
+      "base_score": 0.6382151478226785,
+      "rerank_score": 0.8282151478226785,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:mbedtls,poc",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+      "text": "## MBEDTLS-POC-0003\n\n- Source: data/pocs/core10/MBEDTLS-POC-0003\n- Family: pkey_verify_semantic\n- Oracle type: crash_or_sanitizer\n- Root cause: Missing NULL pointer validation before RSA key access in extended PK verification.\n- Source API: mbedtls_pk_verify_ext\n- Target API: EVP_DigestVerify\n- Historical verdict: unknown\n- Feedback summary: none\n- Scheduler priority: 0.5 (pkey_verify_dispatch, crash_oracle)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: NULL dereference crash.",
+      "metadata": {
+        "family": "pkey_verify_semantic",
+        "pattern_id": "MBEDTLS-POC-0003",
+        "doc_type": "poc_pattern",
+        "oracle_type": "crash_or_sanitizer",
+        "source_file": "knowledge_raw/poc_patterns/core10_patterns.md",
+        "library": "",
+        "layer": "poc_patterns"
+      }
+    },
+    {
+      "rank": 19,
+      "score": 0.8282151478226785,
+      "distance": 0.5668697357177734,
+      "base_score": 0.6382151478226785,
+      "rerank_score": 0.8282151478226785,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:mbedtls,poc",
+        "recent_feedback_source"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+      "text": "## MBEDTLS-POC-0003\n\n- Source: data/pocs/core10/MBEDTLS-POC-0003\n- Family: pkey_verify_semantic\n- Oracle type: crash_or_sanitizer\n- Root cause: Missing NULL pointer validation before RSA key access in extended PK verification.\n- Source API: mbedtls_pk_verify_ext\n- Target API: EVP_DigestVerify\n- Historical verdict: unknown\n- Feedback summary: none\n- Scheduler priority: 0.5 (pkey_verify_dispatch, crash_oracle)\n- Notes: Dataset status: accepted_reconstructable. Failure signal: NULL dereference crash.",
+      "metadata": {
+        "pattern_id": "MBEDTLS-POC-0003",
+        "source_file": "knowledge_raw/poc_patterns/unified_patterns.md",
+        "oracle_type": "crash_or_sanitizer",
+        "layer": "poc_patterns",
+        "family": "pkey_verify_semantic",
+        "doc_type": "poc_pattern",
+        "library": ""
+      }
+    },
+    {
+      "rank": 20,
+      "score": 0.8231598838630934,
+      "distance": 0.46378618478775024,
+      "base_score": 0.6831598838630933,
+      "rerank_score": 0.8231598838630934,
+      "rerank_reasons": [
+        "library_match:mbedtls",
+        "keyword_overlap:mbedtls,poc"
+      ],
+      "layer": "poc_patterns",
+      "source_file": "knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.md",
+      "text": "## References\n\n- PR: `https://github.com/Mbed-TLS/mbedtls/pull/2442`\n- Evidence: `data/pocs/core10/MBEDTLS-POC-0017/reproduction_result.md`\n- PoC: `data/pocs/core10/MBEDTLS-POC-0017/poc/poc_x509_asn1_bounds.c`\n- Logs: `data/pocs/core10/MBEDTLS-POC-0017/poc/run_buggy.log`, `data/pocs/core10/MBEDTLS-POC-0017/poc/run_fixed.log`",
+      "metadata": {
+        "family": "",
+        "source_file": "knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0017.md",
+        "doc_type": "poc_pattern",
+        "oracle_type": "",
+        "pattern_id": "References",
+        "layer": "poc_patterns",
+        "library": "mbedtls"
+      }
+    }
+  ]
+}

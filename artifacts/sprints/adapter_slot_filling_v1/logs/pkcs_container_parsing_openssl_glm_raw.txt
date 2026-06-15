@@ -1,0 +1,168 @@
+```yaml
+schema: adapter_slot_filling_plan_v1
+adapter_id: pkcs_container_parsing.openssl.family_adapter_recipe_v1
+family: pkcs_container_parsing
+source_library: wolfssl
+target_library: openssl
+template_level: family
+source_template:
+  family_template_dir: artifacts/sprints/family_template_generalization_v1/family_packages/pkcs_container_parsing
+  canonical_template: artifacts/sprints/family_template_generalization_v1/family_packages/pkcs_container_parsing/canonical_tmpl_wolfssl.c
+  selected_mask_units: artifacts/sprints/family_template_generalization_v1/family_packages/pkcs_container_parsing/selected_mask_units.yaml
+adapter_recipe:
+  path: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/adapter_recipe.yaml
+  required_bindings:
+  - api_mapping
+  - type_mapping
+  - cleanup_mapping
+  - oracle_mapping
+  - input_mapping
+  - mutation_slot_mapping
+slot_groups:
+  api_mapping:
+    required: true
+    source_slots:
+    - wc_PKCS12_parse
+    - wc_PKCS7_VerifySignedData
+    - wc_PKCS7_DecodeSignedData
+    - PKCS12_parse
+    - PKCS7_verify
+    allowed_target_apis:
+    - PKCS12_parse
+    - PKCS7_verify
+    forbidden_target_apis:
+    - d2i_PKCS7
+  type_mapping:
+    required: true
+    source_types:
+    - family_source_types_from_template
+    target_type_candidates:
+    - to_be_filled_as_slot_bindings
+  cleanup_mapping:
+    required: true
+    source_cleanup_slots:
+    - slot_name: cleanup_call
+      source_cleanup: family-specific wolfSSL cleanup/free API
+      target_cleanup_candidates: []
+      required: true
+    target_cleanup_candidates:
+    - to_be_filled_as_slot_bindings
+  oracle_mapping:
+    required: true
+    source_oracles:
+    - parser_reject_accept
+    target_oracle_candidates:
+    - return_code
+    - output_state
+    - parser_result
+    - sanitizer_signal
+  input_mapping:
+    required: true
+    input_slots:
+    - '0'
+    - '256'
+    - '4096'
+    - ATTRIBUTE_COUNT
+    - ATTRIBUTE_OID_BYTES
+    - ATTRIBUTE_VALUE_BYTES
+    - CONTAINER_BYTES
+    - CONTAINER_FORMAT
+    - CONTAINER_OPERATION
+    - EXPECT_RET
+    - FAMILY_ATTRIBUTE_COUNT
+    - NESTED_LENGTH_DELTA
+    - TRAILING_BYTES
+    preservation_requirements:
+    - preserve family-level vulnerability path
+    - preserve input length/buffer pairing
+    - do not introduce blocked target API
+  mutation_slot_mapping:
+    required: true
+    mutation_slots:
+    - CONTAINER_BYTES
+    - CONTAINER_FORMAT
+    - TRAILING_BYTES
+    - NESTED_LENGTH_DELTA
+    - EXPECT_RET
+    allowed_mutation_policy: bind existing family mutation slots only
+glm_policy:
+  allowed_now: false
+  allowed_later_for:
+  - adapter_slot_filling
+  forbidden:
+  - full_c_generation
+  - freeform_harness_generation
+  - bypass_mapping_gate
+validation_before_render:
+- all_required_bindings_present
+- no_forbidden_target_api
+- cleanup_mapping_present
+- oracle_mapping_present
+- no_confirmed_equivalence_claim
+- blocked_targets_respected
+selected_mask_units_summary:
+- unit_id: ASTLITE-0003
+  role: mutation_point
+  suggested_use: mutate_value
+  placeholder: '[ATTRIBUTE_COUNT]'
+  function: ''
+- unit_id: ASTLITE-0004
+  role: mutation_point
+  suggested_use: mutate_value
+  placeholder: '[ATTRIBUTE_COUNT]'
+  function: ''
+- unit_id: ASTLITE-0001
+  role: mutation_point
+  suggested_use: mutate_value
+  placeholder: '[CONTAINER_OPERATION]'
+  function: ''
+- unit_id: ASTLITE-0002
+  role: mutation_point
+  suggested_use: mutate_value
+  placeholder: '[CONTAINER_OPERATION]'
+  function: ''
+- unit_id: ASTLITE-0015
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+  placeholder: '[EXPECT_RET]'
+  function: ''
+- unit_id: ASTLITE-0033
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+  placeholder: '[EXPECT_RET]'
+  function: ''
+- unit_id: ASTLITE-0026
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+  placeholder: '[0]'
+  function: ''
+- unit_id: ASTLITE-0027
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+  placeholder: '[0]'
+  function: ''
+- unit_id: ASTLITE-0028
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+  placeholder: '[0]'
+  function: ''
+- unit_id: ASTLITE-0029
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+  placeholder: '[0]'
+  function: ''
+- unit_id: ASTLITE-0030
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+  placeholder: '[0]'
+  function: ''
+- unit_id: ASTLITE-0007
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+  placeholder: '[256]'
+  function: ''
+notes:
+- Plan only. No GLM call in this sprint.
+- GLM output must be YAML slot_bindings only.
+- Candidate mapping must remain candidate-only.
+```

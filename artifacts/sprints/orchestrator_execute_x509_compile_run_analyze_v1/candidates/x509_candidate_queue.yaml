@@ -1,0 +1,82 @@
+schema: family_candidate_queue_v1
+generated_at: '2026-06-13T04:23:14+00:00'
+source_task: orchestrator_execute_x509_compile_run_analyze_v1
+family: x509_parsing
+allowed_candidate_labels:
+- crash_candidate
+- external_validation_pending
+- full_consumption_gap_candidate
+- needs_triage
+- normal_accept
+- normal_reject
+- oracle_incomplete
+- sanitizer_candidate
+- semantic_divergence_candidate
+forbidden_labels:
+- confirmed vulnerability
+- CVE
+- exploitable
+candidates:
+- case_id: x509_parsing__generic_mut_001__der_valid_plus_trailing_garbage
+  family: x509_parsing
+  target_library: openssl
+  candidate_label: full_consumption_gap_candidate
+  mutation_strategy: der_valid_plus_trailing_garbage
+  reason: accepted path with full_consumption=false observed
+  triage_required: true
+  external_validation_status: pending
+  claim_policy:
+    confirmed_vulnerability: false
+    cve: false
+    exploitable: false
+- case_id: x509_parsing__generic_mut_002__near_valid_der_length_delta
+  family: x509_parsing
+  target_library: openssl
+  candidate_label: normal_reject
+  mutation_strategy: near_valid_der_length_delta
+  reason: reject path observed
+  triage_required: false
+  external_validation_status: not_required
+  claim_policy:
+    confirmed_vulnerability: false
+    cve: false
+    exploitable: false
+- case_id: x509_parsing__generic_mut_003__pem_valid_plus_trailing_garbage
+  family: x509_parsing
+  target_library: openssl
+  candidate_label: normal_accept
+  mutation_strategy: pem_valid_plus_trailing_garbage
+  reason: accepted path observed without full-consumption gap
+  triage_required: false
+  external_validation_status: not_required
+  claim_policy:
+    confirmed_vulnerability: false
+    cve: false
+    exploitable: false
+- case_id: x509_parsing__generic_mut_004__malformed_only_control
+  family: x509_parsing
+  target_library: openssl
+  candidate_label: normal_reject
+  mutation_strategy: malformed_only_control
+  reason: reject path observed
+  triage_required: false
+  external_validation_status: not_required
+  claim_policy:
+    confirmed_vulnerability: false
+    cve: false
+    exploitable: false
+summary:
+  total_candidates: 4
+  crash_candidate: 0
+  external_validation_pending: 0
+  full_consumption_gap_candidate: 1
+  needs_triage: 0
+  normal_accept: 1
+  normal_reject: 2
+  oracle_incomplete: 0
+  sanitizer_candidate: 0
+  semantic_divergence_candidate: 0
+claim_policy:
+  confirmed_vulnerability: false
+  cve: false
+  exploitable: false

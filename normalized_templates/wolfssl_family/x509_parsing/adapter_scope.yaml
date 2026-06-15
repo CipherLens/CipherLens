@@ -1,0 +1,35 @@
+schema: family_adapter_scope_v1
+family: x509_parsing
+template_level: family
+adapter_generation_in_this_sprint: false
+glm_usage_in_this_sprint: false
+scope:
+  allowed_targets:
+    openssl:
+      allowed_apis: []
+      candidate_only_apis:
+      - PEM_read_X509
+      - X509_free
+      - X509_verify
+    mbedtls:
+      allowed_apis:
+      - mbedtls_x509_crt_parse_der
+      candidate_only_apis:
+      - mbedtls_x509_crt_free
+      - mbedtls_x509_crt_parse_file
+      - mbedtls_x509_crt_verify
+  blocked_targets:
+  - target_library: mbedtls
+    target_api: mbedtls_x509_crt_parse_der
+    reason: needs_manual_review
+    source_api: wc_ParseCert
+  candidate_only_targets:
+    openssl:
+    - PEM_read_X509
+    - X509_free
+    - X509_verify
+    mbedtls:
+    - mbedtls_x509_crt_free
+    - mbedtls_x509_crt_parse_file
+    - mbedtls_x509_crt_verify
+policy: future adapters must bind slots through recipe-slot mode only

@@ -1,0 +1,519 @@
+schema: family_profiles_v1
+families:
+  x509_parsing:
+    seed_formats:
+    - der
+    - pem
+    oracle_goals:
+    - parser_accept
+    - full_consumption_gap
+    operators:
+    - valid_object_plus_trailing_garbage
+    - near_valid_length_delta
+    - pem_valid_plus_trailing_garbage
+    - malformed_only_control
+    render_allowed: true
+    case_id_prefix: x509_parsing
+    family_label: x509_parsing
+  pkey_parsing:
+    family: pkey_parsing
+    status: profile_ready
+    description: OpenSSL pkey / public/private key parsing
+    input_formats:
+    - der
+    - pem
+    seed_discovery:
+      enabled: true
+      seed_keywords:
+      - key
+      - pkey
+      - private
+      - public
+      - rsa
+      - ec
+      candidate_extensions:
+      - .key
+      - .pem
+      - .der
+      - .pub
+      validation_commands:
+      - openssl pkey -in <file> -noout
+      - openssl pkey -pubin -in <file> -noout
+    oracle_goals:
+    - parser_accept
+    - full_consumption_gap
+    mutation_operators:
+    - valid_object_plus_trailing_garbage
+    - malformed_only_control
+    - near_valid_length_delta
+    - format_toggle_der_pem
+    notes: Bootstrap profile for scheduler seed-discovery selection only; does not add family-specific
+      mutators or execute harnesses.
+    api_card_refs:
+    - /home/wen/work/crypto-pattern-fuzz/knowledge/api_cards/pkey_parsing.yaml
+    rag_refs:
+    - /home/wen/work/crypto-pattern-fuzz/knowledge/family_cards/pkey_parsing.yaml
+    - /home/wen/work/crypto-pattern-fuzz/knowledge/api_cards/pkey_parsing.yaml
+    known_pattern_refs:
+    - der_single_object_trailing_garbage_full_consumption
+  pkcs8_parsing:
+    family: pkcs8_parsing
+    status: profile_ready
+    description: PKCS#8 private key parsing
+    input_formats:
+    - der
+    - pem
+    seed_discovery:
+      enabled: true
+      seed_keywords:
+      - pkcs8
+      - private key
+      candidate_extensions:
+      - .pk8
+      - .key
+      - .pem
+      - .der
+      validation_commands:
+      - openssl pkcs8 -in <file> -inform PEM -nocrypt -out /dev/null
+      - openssl pkcs8 -in <file> -inform DER -nocrypt -out /dev/null
+    oracle_goals:
+    - parser_accept
+    - full_consumption_gap
+    mutation_operators:
+    - valid_object_plus_trailing_garbage
+    - malformed_only_control
+    - near_valid_length_delta
+    - format_toggle_der_pem
+    notes: Bootstrap profile for scheduler seed-discovery selection only; does not add family-specific
+      mutators or execute harnesses.
+    api_card_refs:
+    - /home/wen/work/crypto-pattern-fuzz/knowledge/api_cards/pkcs8_parsing.yaml
+    rag_refs:
+    - /home/wen/work/crypto-pattern-fuzz/knowledge/family_cards/pkcs8_parsing.yaml
+    - /home/wen/work/crypto-pattern-fuzz/knowledge/api_cards/pkcs8_parsing.yaml
+    known_pattern_refs:
+    - der_single_object_trailing_garbage_full_consumption
+  cms_container_parsing:
+    family: cms_container_parsing
+    status: profile_ready
+    description: CMS / SignedData / EnvelopedData container parsing
+    input_formats:
+    - der
+    - pem
+    seed_discovery:
+      enabled: true
+      seed_keywords:
+      - cms
+      - signeddata
+      - envelopeddata
+      - pkcs7
+      candidate_extensions:
+      - .cms
+      - .p7m
+      - .p7s
+      - .der
+      - .pem
+      validation_commands:
+      - openssl cms -inform DER -in <file> -cmsout -noout
+      - openssl cms -inform PEM -in <file> -cmsout -noout
+    oracle_goals:
+    - parser_accept
+    - full_consumption_gap
+    mutation_operators:
+    - valid_object_plus_trailing_garbage
+    - malformed_only_control
+    - near_valid_length_delta
+    - format_toggle_der_pem
+    notes: Bootstrap profile for scheduler seed-discovery selection only; does not add family-specific
+      mutators or execute harnesses.
+    api_card_refs:
+    - /home/wen/work/crypto-pattern-fuzz/knowledge/api_cards/cms_container_parsing.yaml
+    rag_refs:
+    - /home/wen/work/crypto-pattern-fuzz/knowledge/family_cards/cms_container_parsing.yaml
+    - /home/wen/work/crypto-pattern-fuzz/knowledge/api_cards/cms_container_parsing.yaml
+    known_pattern_refs:
+    - der_single_object_trailing_garbage_full_consumption
+  x509_crl_parsing:
+    family: x509_crl_parsing
+    status: profile_ready
+    description: X.509 CRL parsing
+    input_formats:
+    - der
+    - pem
+    seed_discovery:
+      enabled: true
+      seed_keywords:
+      - crl
+      - certificate revocation list
+      - x509
+      candidate_extensions:
+      - .crl
+      - .der
+      - .pem
+      validation_commands:
+      - openssl crl -inform DER -in <file> -noout
+      - openssl crl -inform PEM -in <file> -noout
+    oracle_goals:
+    - parser_accept
+    - full_consumption_gap
+    mutation_operators:
+    - valid_object_plus_trailing_garbage
+    - malformed_only_control
+    - near_valid_length_delta
+    - format_toggle_der_pem
+    notes: Bootstrap profile for scheduler seed-discovery selection only; does not add family-specific
+      mutators or execute harnesses.
+    api_card_refs:
+    - /home/wen/work/crypto-pattern-fuzz/knowledge/api_cards/x509_crl_parsing.yaml
+    rag_refs:
+    - /home/wen/work/crypto-pattern-fuzz/knowledge/family_cards/x509_crl_parsing.yaml
+    - /home/wen/work/crypto-pattern-fuzz/knowledge/api_cards/x509_crl_parsing.yaml
+    known_pattern_refs:
+    - der_single_object_trailing_garbage_full_consumption
+  secure_heap_state_lifecycle:
+    family: secure_heap_state_lifecycle
+    track: lifecycle
+    target_library: openssl
+    status: profile_ready
+    description: OpenSSL secure heap state/lifecycle API behavior, including use before initialization
+      and state transition checks.
+    seed_discovery:
+      enabled: true
+      mode: issue_pattern_or_api_sequence
+      seed_keywords:
+      - secure heap
+      - CRYPTO_secure_malloc
+      - CRYPTO_secure_used
+      - CRYPTO_secure_malloc_init
+      candidate_sources:
+      - datasets/openssl/poc_artifacts/issue_28669
+    mutation:
+      engine: generic_mutation_engine
+    render:
+      mode: lifecycle_harness
+    oracle:
+    - state_transition_mismatch
+    - unexpected_success_after_invalid_state
+    - crash_or_sanitizer
+    notes: Minimal non-parsing profile for scheduler track diversification; does not add family-specific
+      scripts or claim vulnerability status.
+  pkey_verify_semantic:
+    family: pkey_verify_semantic
+    track: semantic
+    target_library: openssl
+    status: profile_ready
+    seed_discovery:
+      enabled: true
+      mode: api_sequence_or_regression_pattern
+    mutation:
+      engine: generic_mutation_engine
+    render:
+      mode: semantic_harness
+    oracle:
+    - unexpected_accept
+    - unexpected_reject
+    - semantic_divergence
+    - crash_or_sanitizer
+    avoid_patterns:
+    - der_single_object_trailing_garbage_full_consumption
+    notes: Minimal semantic profile for novelty-gated scheduler selection; no family-specific scripts
+      are introduced here.
+  evp_digest_ctx_lifecycle:
+    family: evp_digest_ctx_lifecycle
+    track: lifecycle
+    archetype: evp_context_lifecycle
+    target_library: openssl
+    status: profile_ready
+    seed_discovery:
+      enabled: true
+      mode: api_sequence_or_regression_pattern
+    mutation:
+      engine: generic_lifecycle_mutation_engine
+    render:
+      mode: lifecycle_harness
+    oracle:
+    - unexpected_success_after_invalid_state
+    - unexpected_failure_on_valid_sequence
+    - state_transition_mismatch
+    - crash_or_sanitizer
+    avoid_patterns:
+    - der_single_object_trailing_garbage_full_consumption
+    - secure_heap_state_lifecycle_issue_28669
+    notes: Minimal non-parsing lifecycle profile for EVP_MD_CTX init/update/final/reset/free state-boundary
+      seed discovery.
+  evp_cipher_ctx_lifecycle:
+    family: evp_cipher_ctx_lifecycle
+    track: lifecycle
+    archetype: evp_context_lifecycle
+    target_library: openssl
+    status: profile_ready
+    seed_discovery:
+      enabled: true
+      mode: api_sequence_or_regression_pattern
+    mutation:
+      engine: generic_lifecycle_mutation_engine
+    render:
+      mode: lifecycle_harness
+    oracle:
+    - unexpected_failure_on_valid_sequence
+    - unexpected_success_after_invalid_state
+    - state_transition_observation
+    - crash_or_sanitizer
+    avoid_patterns:
+    - der_single_object_trailing_garbage_full_consumption
+    - secure_heap_state_lifecycle_issue_28669
+    notes: Minimal non-parsing lifecycle profile for EVP_CIPHER_CTX init/update/final/reset/free state-boundary
+      seed discovery with AES-128-CBC.
+  mac_lifecycle:
+    family: mac_lifecycle
+    track: lifecycle
+    archetype: mac_context_lifecycle
+    target_library: openssl
+    status: profile_ready
+    seed_discovery:
+      enabled: true
+      mode: api_sequence_or_regression_pattern
+    mutation:
+      engine: generic_lifecycle_mutation_engine
+    render:
+      mode: lifecycle_harness
+    oracle:
+    - unexpected_failure_on_valid_sequence
+    - unexpected_success_after_invalid_state
+    - state_transition_observation
+    - crash_or_sanitizer
+    avoid_patterns:
+    - der_single_object_trailing_garbage_full_consumption
+    - secure_heap_state_lifecycle_issue_28669
+    notes: Minimal non-parsing lifecycle profile for OpenSSL EVP_MAC HMAC init/update/final/re-init state-boundary
+      seed discovery.
+  provider_fetch_lifecycle:
+    family: provider_fetch_lifecycle
+    track: lifecycle
+    archetype: provider_fetch_context_lifecycle
+    target_library: openssl
+    status: profile_ready
+    seed_discovery:
+      enabled: true
+      mode: manual_audit_bootstrap
+    mutation:
+      engine: manual_audit_minimal_mutation_rules
+    render:
+      mode: lifecycle_harness
+    oracle:
+    - unexpected_failure_on_valid_sequence
+    - unexpected_success_after_invalid_state
+    - state_transition_observation
+    - semantic_divergence_candidate
+    - crash_or_sanitizer
+    avoid_patterns:
+    - der_single_object_trailing_garbage_full_consumption
+    - secure_heap_state_lifecycle_issue_28669
+    notes: Auto-registered by campaign_auto_bootstrap_loop_v1 from manual audit feedback.
+  evp_pkey_context_lifecycle:
+    family: evp_pkey_context_lifecycle
+    track: lifecycle
+    archetype: pkey_context_operation_lifecycle
+    target_library: openssl
+    status: profile_ready
+    seed_discovery:
+      enabled: true
+      mode: manual_audit_bootstrap
+    mutation:
+      engine: manual_audit_minimal_mutation_rules
+    render:
+      mode: lifecycle_harness
+    oracle:
+    - unexpected_failure_on_valid_sequence
+    - unexpected_success_after_invalid_state
+    - state_transition_observation
+    - semantic_divergence_candidate
+    - crash_or_sanitizer
+    avoid_patterns:
+    - der_single_object_trailing_garbage_full_consumption
+    - secure_heap_state_lifecycle_issue_28669
+    notes: Auto-registered by campaign_auto_bootstrap_loop_v1 from manual audit feedback.
+  bn_usub_semantic:
+    family: bn_usub_semantic
+    track: semantic
+    archetype: bignum_arithmetic_semantic
+    target_library: openssl
+    status: profile_ready
+    seed_discovery:
+      enabled: true
+      mode: manual_audit_bootstrap
+    mutation:
+      engine: manual_audit_minimal_mutation_rules
+    render:
+      mode: semantic_harness
+    oracle:
+    - unexpected_failure_on_valid_sequence
+    - unexpected_success_after_invalid_state
+    - state_transition_observation
+    - semantic_divergence_candidate
+    - crash_or_sanitizer
+    avoid_patterns:
+    - der_single_object_trailing_garbage_full_consumption
+    - secure_heap_state_lifecycle_issue_28669
+    notes: Auto-registered by campaign_auto_bootstrap_loop_v1 from manual audit feedback.
+  ossl_store_lifecycle:
+    family: ossl_store_lifecycle
+    track: lifecycle
+    archetype: ossl_store_context_lifecycle
+    target_library: openssl
+    status: profile_ready
+    seed_discovery:
+      enabled: true
+      mode: manual_audit_bootstrap
+    mutation:
+      engine: manual_audit_minimal_mutation_rules
+    render:
+      mode: lifecycle_harness
+    oracle:
+    - unexpected_failure_on_valid_sequence
+    - unexpected_success_after_invalid_state
+    - state_transition_observation
+    - semantic_divergence_candidate
+    - crash_or_sanitizer
+    avoid_patterns:
+    - der_single_object_trailing_garbage_full_consumption
+    - secure_heap_state_lifecycle_issue_28669
+    notes: Auto-registered by campaign_auto_bootstrap_loop_v1 from manual audit feedback.
+  ossl_store_decoder_boundary:
+    family: ossl_store_decoder_boundary
+    track: unknown
+    archetype: ossl_store_decoder_boundary
+    target_library: openssl
+    status: profile_ready
+    seed_discovery:
+      enabled: true
+      mode: manual_audit_bootstrap
+    mutation:
+      engine: manual_audit_minimal_mutation_rules
+    render:
+      mode: semantic_harness
+    oracle:
+    - unexpected_failure_on_valid_sequence
+    - unexpected_success_after_invalid_state
+    - state_transition_observation
+    - semantic_divergence_candidate
+    - crash_or_sanitizer
+    avoid_patterns:
+    - der_single_object_trailing_garbage_full_consumption
+    - secure_heap_state_lifecycle_issue_28669
+    notes: Auto-registered by campaign_auto_bootstrap_loop_v1 from manual audit feedback.
+  cipher_aead_lifecycle:
+    family: cipher_aead_lifecycle
+    track: lifecycle
+    archetype: cipher_aead_lifecycle
+    target_library: openssl
+    status: profile_ready
+    seed_discovery:
+      enabled: true
+      mode: manual_audit_bootstrap
+    mutation:
+      engine: manual_audit_minimal_mutation_rules
+    render:
+      mode: lifecycle_harness
+    oracle:
+    - unexpected_failure_on_valid_sequence
+    - unexpected_success_after_invalid_state
+    - state_transition_observation
+    - semantic_divergence_candidate
+    - crash_or_sanitizer
+    avoid_patterns:
+    - der_single_object_trailing_garbage_full_consumption
+    - secure_heap_state_lifecycle_issue_28669
+    notes: Auto-registered by campaign_auto_bootstrap_loop_v1 from manual audit feedback.
+  cipher_aead_lifecycle_ccm:
+    family: cipher_aead_lifecycle_ccm
+    track: lifecycle
+    archetype: cipher_aead_ccm_state_order_lifecycle
+    target_library: openssl
+    status: profile_ready
+    seed_discovery:
+      enabled: true
+      mode: manual_audit_bootstrap
+    mutation:
+      engine: manual_audit_minimal_mutation_rules
+    render:
+      mode: lifecycle_harness
+    oracle:
+    - unexpected_failure_on_valid_sequence
+    - unexpected_success_after_invalid_state
+    - state_transition_observation
+    - semantic_divergence_candidate
+    - crash_or_sanitizer
+    avoid_patterns:
+    - der_single_object_trailing_garbage_full_consumption
+    - secure_heap_state_lifecycle_issue_28669
+    notes: Auto-registered by campaign_auto_bootstrap_loop_v1 from manual audit feedback.
+  cipher_aead_lifecycle_ctx_copy:
+    family: cipher_aead_lifecycle_ctx_copy
+    track: lifecycle
+    archetype: cipher_ctx_copy_lifecycle
+    target_library: openssl
+    status: profile_ready
+    seed_discovery:
+      enabled: true
+      mode: manual_audit_bootstrap
+    mutation:
+      engine: manual_audit_minimal_mutation_rules
+    render:
+      mode: lifecycle_harness
+    oracle:
+    - unexpected_failure_on_valid_sequence
+    - unexpected_success_after_invalid_state
+    - state_transition_observation
+    - semantic_divergence_candidate
+    - crash_or_sanitizer
+    avoid_patterns:
+    - der_single_object_trailing_garbage_full_consumption
+    - secure_heap_state_lifecycle_issue_28669
+    notes: Auto-registered by campaign_auto_bootstrap_loop_v1 from manual audit feedback.
+  ec_arithmetic_semantic:
+    family: ec_arithmetic_semantic
+    track: semantic
+    archetype: ec_group_point_arithmetic_semantic
+    target_library: openssl
+    status: profile_ready
+    seed_discovery:
+      enabled: true
+      mode: manual_audit_bootstrap
+    mutation:
+      engine: manual_audit_minimal_mutation_rules
+    render:
+      mode: semantic_harness
+    oracle:
+    - unexpected_failure_on_valid_sequence
+    - unexpected_success_after_invalid_state
+    - state_transition_observation
+    - semantic_divergence_candidate
+    - crash_or_sanitizer
+    avoid_patterns:
+    - der_single_object_trailing_garbage_full_consumption
+    - secure_heap_state_lifecycle_issue_28669
+    notes: Auto-registered by campaign_auto_bootstrap_loop_v1 from manual audit feedback.
+  bignum_serialization_boundary:
+    family: bignum_serialization_boundary
+    track: boundary
+    archetype: bignum_serialization_length_boundary
+    target_library: openssl
+    status: profile_ready
+    seed_discovery:
+      enabled: true
+      mode: manual_audit_bootstrap
+    mutation:
+      engine: manual_audit_minimal_mutation_rules
+    render:
+      mode: semantic_harness
+    oracle:
+    - unexpected_failure_on_valid_sequence
+    - unexpected_success_after_invalid_state
+    - state_transition_observation
+    - semantic_divergence_candidate
+    - crash_or_sanitizer
+    avoid_patterns:
+    - der_single_object_trailing_garbage_full_consumption
+    - secure_heap_state_lifecycle_issue_28669
+    notes: Auto-registered by campaign_auto_bootstrap_loop_v1 from manual audit feedback.

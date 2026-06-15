@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+set -euo pipefail
+clang++ -std=c++17 -g -O1 -fsanitize=address,undefined -fno-omit-frame-pointer -I/home/wen/work/install-botan-3.10.0-asan/include -I/home/wen/work/install-botan-3.10.0-asan/include/botan-3 /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/bootstrap/cross_library_sanitizer_bootstrap_v1/smoke/botan-3.10.0-asan/smoke.cpp -L/home/wen/work/install-botan-3.10.0-asan/lib -Wl,-rpath,/home/wen/work/install-botan-3.10.0-asan/lib -lbotan-3 -pthread -ldl -lrt -o /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/bootstrap/cross_library_sanitizer_bootstrap_v1/smoke/botan-3.10.0-asan/smoke.bin

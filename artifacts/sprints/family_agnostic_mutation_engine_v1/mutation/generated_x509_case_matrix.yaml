@@ -1,0 +1,83 @@
+schema: generic_mutation_case_matrix_v1
+generated_at: '2026-06-13T02:36:00+00:00'
+family: x509_parsing
+source_seed_manifest: artifacts/sprints/x509_family_template_seed_discovery_v1/manifests/verified_x509_seed_manifest.yaml
+profile: x509_parsing
+cases:
+- case_id: x509_parsing__generic_mut_001__der_valid_plus_trailing_garbage
+  family: x509_parsing
+  seed_id: existing_x509_der_ebbd400e
+  seed_format: der
+  operator: valid_object_plus_trailing_garbage
+  mutation_strategy: der_valid_plus_trailing_garbage
+  input_path: /home/wen/work/crypto-pattern-fuzz/artifacts/sprints/family_agnostic_mutation_engine_v1/inputs/mutated/x509_parsing__der_valid_plus_trailing_garbage.der
+  input_size_bytes: 1550
+  input_sha256: e57593d83dd9c91bcac2ef05c08ce76e31d0de67adbf18966f2fb66d8f22cbab
+  expected_oracle:
+    parser_accept_expected: true
+    full_consumption_check_required: true
+    malformed_only_control: false
+  render_allowed: true
+  notes:
+  - valid DER object plus trailing garbage for full-consumption oracle probing
+- case_id: x509_parsing__generic_mut_002__near_valid_der_length_delta
+  family: x509_parsing
+  seed_id: existing_x509_der_ebbd400e
+  seed_format: der
+  operator: near_valid_length_delta
+  mutation_strategy: near_valid_der_length_delta
+  input_path: /home/wen/work/crypto-pattern-fuzz/artifacts/sprints/family_agnostic_mutation_engine_v1/inputs/mutated/x509_parsing__near_valid_der_length_delta.der
+  input_size_bytes: 1549
+  input_sha256: 53d7ad97c8972308febc9ee2ba53d7573d32b5eae0aa8161b52de1977835f345
+  expected_oracle:
+    parser_accept_expected: false
+    full_consumption_check_required: true
+    malformed_only_control: false
+  render_allowed: true
+  notes:
+  - near-valid DER with a small length mutation
+- case_id: x509_parsing__generic_mut_003__pem_valid_plus_trailing_garbage
+  family: x509_parsing
+  seed_id: existing_x509_pem_5d83ab3b
+  seed_format: pem
+  operator: pem_valid_plus_trailing_garbage
+  mutation_strategy: pem_valid_plus_trailing_garbage
+  input_path: /home/wen/work/crypto-pattern-fuzz/artifacts/sprints/family_agnostic_mutation_engine_v1/inputs/mutated/x509_parsing__pem_valid_plus_trailing_garbage.pem
+  input_size_bytes: 1151
+  input_sha256: 2fe72f22862ac93843421dec76e295fd20b1d5568e91276038ddc751a8448bfc
+  expected_oracle:
+    parser_accept_expected: true
+    full_consumption_check_required: true
+    malformed_only_control: false
+  render_allowed: true
+  notes:
+  - valid PEM object plus trailing text for parser tolerance probing
+- case_id: x509_parsing__generic_mut_004__malformed_only_control
+  family: x509_parsing
+  seed_id: existing_x509_der_ebbd400e
+  seed_format: der
+  operator: malformed_only_control
+  mutation_strategy: malformed_only_control
+  input_path: /home/wen/work/crypto-pattern-fuzz/artifacts/sprints/family_agnostic_mutation_engine_v1/inputs/mutated/x509_parsing__malformed_only_control.der
+  input_size_bytes: 7
+  input_sha256: e98ea14e2b79b3393b9743ec9c439635c3f4570135d8c12f8b41a495fe1afc73
+  expected_oracle:
+    parser_accept_expected: false
+    full_consumption_check_required: false
+    malformed_only_control: true
+  render_allowed: true
+  notes:
+  - malformed-only control to calibrate reject-path oracle
+summary:
+  mutation_case_count: 4
+  strategies:
+  - der_valid_plus_trailing_garbage
+  - malformed_only_control
+  - near_valid_der_length_delta
+  - pem_valid_plus_trailing_garbage
+  render_allowed: 4
+  controls: 1
+claim_policy:
+  confirmed_vulnerability: false
+  cve: false
+  exploitable: false

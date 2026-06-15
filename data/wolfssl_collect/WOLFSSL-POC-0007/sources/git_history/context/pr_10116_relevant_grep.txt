@@ -1,0 +1,33 @@
+16:@@ -34686,6 +34686,78 @@ static int test_sniffer_chain_input_overflow(void)
+22:+static int test_DhAgree_rejects_p_minus_1(void)
+78:+    XMEMCPY(pMinus1, ffdhe2048_p, sizeof(ffdhe2048_p));
+195:@@ -34758,6 +34758,42 @@ static int test_DhAgree_rejects_p_minus_1(void)
+200:+static int test_ed448_rejects_identity_key(void)
+317:@@ -34794,6 +34794,89 @@ static int test_ed448_rejects_identity_key(void)
+324:+ * but we pass a 128-byte output buffer. Must return BUFFER_E. */
+325:+static int test_pkcs7_decode_encrypted_outputsz(void)
+394:+        /* 496-byte content into 128-byte buffer must return BUFFER_E */
+424:+                ret = BUFFER_E;
+427:             XMEMCPY(output, encryptedContent, (word32)encryptedContentSz);
+436:+                    ret = BUFFER_E;
+439:                 XMEMCPY(output, encryptedContent,
+446:Subject: [PATCH 5/5] Fix stack buffer overflow in wc_PKCS7_DecryptOri
+458:@@ -34877,6 +34877,65 @@ static int test_pkcs7_decode_encrypted_outputsz(void)
+462:+/* Dummy ORI callback for PKCS#7 ORI overflow test */
+464:+static int test_dummy_ori_cb(wc_PKCS7* pkcs7, byte* oriType, word32 oriTypeSz,
+465:+                              byte* oriValue, word32 oriValueSz,
+467:+                              void* ctx)
+469:+    (void)pkcs7; (void)oriType; (void)oriTypeSz;
+470:+    (void)oriValue; (void)oriValueSz;
+471:+    (void)decryptedKey; (void)decryptedKeySz; (void)ctx;
+476:+/* Test: PKCS#7 ORI must reject OID larger than MAX_OID_SZ (32) */
+477:+static int test_pkcs7_ori_oversized_oid(void)
+484:+    /* EnvelopedData with [4] IMPLICIT ORI containing an 80-byte OID */
+509:+        wc_PKCS7_SetOriDecryptCb(p7, test_dummy_ori_cb);
+528:+    TEST_DECL(test_pkcs7_ori_oversized_oid),
+536:@@ -11507,6 +11507,11 @@ static int wc_PKCS7_DecryptOri(wc_PKCS7* pkcs7, byte* in, word32 inSz,
+537:             if (GetASNObjectId(pkiMsg, idx, &oriOIDSz, pkiMsgSz) != 0)
+540:+            if (oriOIDSz <= 0 || (word32)oriOIDSz > MAX_OID_SZ) {
+541:+                WOLFSSL_MSG("ORI oriType OID too large");
+545:             XMEMCPY(oriOID, pkiMsg + *idx, (word32)oriOIDSz);
+546:             *idx += (word32)oriOIDSz;

@@ -1,0 +1,215 @@
+schema: lifecycle_seed_manifest_v1
+generated_at: '2026-06-14T03:03:14+00:00'
+family: mac_lifecycle
+track: lifecycle
+archetype: mac_context_lifecycle
+target_library: openssl
+seed_ready: true
+uses_der_parsing: false
+uses_trailing_garbage: false
+uses_full_consumption_oracle: false
+api_cards_used:
+- knowledge/family_cards/mac_lifecycle.yaml
+previous_completed_family:
+  family: pkey_verify_semantic
+  status: completed_no_candidate
+seeds:
+- seed_id: mac_lifecycle_valid_hmac_init_update_final_control
+  seed_type: valid_hmac_lifecycle_control
+  api_sequence:
+  - EVP_MAC_fetch(NULL, "HMAC", NULL)
+  - EVP_MAC_CTX_new(mac)
+  - OSSL_PARAM_construct_utf8_string("digest", "SHA256", 0)
+  - EVP_MAC_init(ctx, key, key_len, params)
+  - EVP_MAC_update(ctx, message, message_len)
+  - EVP_MAC_final(ctx, mac_out, &mac_out_len, sizeof(mac_out))
+  - EVP_MAC_CTX_free
+  - EVP_MAC_free
+  expected_behavior: success
+  oracle:
+  - unexpected_failure_on_valid_sequence
+  - crash_or_sanitizer
+  enabled: true
+  mutation_hints:
+  - valid HMAC init/update/final control
+  - MAC output length observation
+  render_requirements:
+    render_mode: lifecycle_harness
+    target_header: openssl/evp.h
+    observe_return_codes: true
+    observe_digest_output_length: true
+    must_not_use_der_parsing: true
+    must_not_use_trailing_garbage: true
+    must_not_use_full_consumption_oracle: true
+    cleanup: &id001
+    - EVP_MAC_CTX_free
+    - EVP_MAC_free
+- seed_id: mac_lifecycle_update_before_init_control
+  seed_type: invalid_state_update_before_init_control
+  api_sequence:
+  - EVP_MAC_fetch(NULL, "HMAC", NULL)
+  - EVP_MAC_CTX_new(mac)
+  - EVP_MAC_update(ctx, message, message_len)
+  - EVP_MAC_CTX_free
+  - EVP_MAC_free
+  expected_behavior: error_or_documented
+  oracle:
+  - unexpected_success_after_invalid_state
+  - crash_or_sanitizer
+  enabled: true
+  mutation_hints:
+  - call update before MAC init
+  - invalid state return-code observation
+  render_requirements:
+    render_mode: lifecycle_harness
+    target_header: openssl/evp.h
+    observe_return_codes: true
+    observe_digest_output_length: true
+    must_not_use_der_parsing: true
+    must_not_use_trailing_garbage: true
+    must_not_use_full_consumption_oracle: true
+    cleanup: *id001
+- seed_id: mac_lifecycle_final_without_update_after_init_control
+  seed_type: final_without_update_after_init_observation
+  api_sequence:
+  - EVP_MAC_fetch(NULL, "HMAC", NULL)
+  - EVP_MAC_CTX_new(mac)
+  - OSSL_PARAM_construct_utf8_string("digest", "SHA256", 0)
+  - EVP_MAC_init(ctx, key, key_len, params)
+  - EVP_MAC_final(ctx, mac_out, &mac_out_len, sizeof(mac_out))
+  - EVP_MAC_CTX_free
+  - EVP_MAC_free
+  expected_behavior: observation
+  oracle:
+  - state_transition_observation
+  - crash_or_sanitizer
+  enabled: true
+  mutation_hints:
+  - empty-message HMAC final observation
+  render_requirements:
+    render_mode: lifecycle_harness
+    target_header: openssl/evp.h
+    observe_return_codes: true
+    observe_digest_output_length: true
+    must_not_use_der_parsing: true
+    must_not_use_trailing_garbage: true
+    must_not_use_full_consumption_oracle: true
+    cleanup: *id001
+  notes: HMAC final after init with no update may be documented success; observe only.
+- seed_id: mac_lifecycle_repeated_final_observation_control
+  seed_type: repeated_final_observation
+  api_sequence:
+  - EVP_MAC_fetch(NULL, "HMAC", NULL)
+  - EVP_MAC_CTX_new(mac)
+  - OSSL_PARAM_construct_utf8_string("digest", "SHA256", 0)
+  - EVP_MAC_init(ctx, key, key_len, params)
+  - EVP_MAC_update(ctx, message, message_len)
+  - EVP_MAC_final(ctx, mac_out, &mac_out_len, sizeof(mac_out))
+  - EVP_MAC_final(ctx, mac_out, &mac_out_len, sizeof(mac_out))
+  - EVP_MAC_CTX_free
+  - EVP_MAC_free
+  expected_behavior: observation
+  oracle:
+  - state_transition_observation
+  - crash_or_sanitizer
+  enabled: true
+  mutation_hints:
+  - repeated final boundary
+  - state transition observation
+  render_requirements:
+    render_mode: lifecycle_harness
+    target_header: openssl/evp.h
+    observe_return_codes: true
+    observe_digest_output_length: true
+    must_not_use_der_parsing: true
+    must_not_use_trailing_garbage: true
+    must_not_use_full_consumption_oracle: true
+    cleanup: *id001
+  notes: Repeated final is observed only; success alone is not a vulnerability.
+- seed_id: mac_lifecycle_update_after_final_observation_control
+  seed_type: update_after_final_observation
+  api_sequence:
+  - EVP_MAC_fetch(NULL, "HMAC", NULL)
+  - EVP_MAC_CTX_new(mac)
+  - OSSL_PARAM_construct_utf8_string("digest", "SHA256", 0)
+  - EVP_MAC_init(ctx, key, key_len, params)
+  - EVP_MAC_update(ctx, message, message_len)
+  - EVP_MAC_final(ctx, mac_out, &mac_out_len, sizeof(mac_out))
+  - EVP_MAC_update(ctx, message, message_len)
+  - EVP_MAC_CTX_free
+  - EVP_MAC_free
+  expected_behavior: observation
+  oracle:
+  - state_transition_observation
+  - crash_or_sanitizer
+  enabled: true
+  mutation_hints:
+  - post-final update boundary
+  - state transition observation
+  render_requirements:
+    render_mode: lifecycle_harness
+    target_header: openssl/evp.h
+    observe_return_codes: true
+    observe_digest_output_length: true
+    must_not_use_der_parsing: true
+    must_not_use_trailing_garbage: true
+    must_not_use_full_consumption_oracle: true
+    cleanup: *id001
+  notes: Post-final update is observed only; success alone is not a vulnerability.
+- seed_id: mac_lifecycle_reinit_reuse_control
+  seed_type: reinit_reuse_control
+  api_sequence:
+  - EVP_MAC_fetch(NULL, "HMAC", NULL)
+  - EVP_MAC_CTX_new(mac)
+  - OSSL_PARAM_construct_utf8_string("digest", "SHA256", 0)
+  - EVP_MAC_init(ctx, key, key_len, params)
+  - EVP_MAC_update(ctx, message, message_len)
+  - EVP_MAC_final(ctx, mac_out, &mac_out_len, sizeof(mac_out))
+  - EVP_MAC_init(ctx, key, key_len, params)
+  - EVP_MAC_update(ctx, message, message_len)
+  - EVP_MAC_final(ctx, mac_out, &mac_out_len, sizeof(mac_out))
+  - EVP_MAC_CTX_free
+  - EVP_MAC_free
+  expected_behavior: success
+  oracle:
+  - unexpected_failure_on_valid_sequence
+  - crash_or_sanitizer
+  enabled: true
+  mutation_hints:
+  - re-init and reuse
+  - second MAC output length observation
+  render_requirements:
+    render_mode: lifecycle_harness
+    target_header: openssl/evp.h
+    observe_return_codes: true
+    observe_digest_output_length: true
+    must_not_use_der_parsing: true
+    must_not_use_trailing_garbage: true
+    must_not_use_full_consumption_oracle: true
+    cleanup: *id001
+- seed_id: mac_lifecycle_use_after_free_negative_control
+  seed_type: unsafe_negative_control
+  api_sequence:
+  - EVP_MAC_fetch(NULL, "HMAC", NULL)
+  - EVP_MAC_CTX_new(mac)
+  - EVP_MAC_CTX_free(ctx)
+  - EVP_MAC_update(ctx, message, message_len)
+  - EVP_MAC_free(mac)
+  expected_behavior: skip_or_disabled_by_default
+  oracle:
+  - disabled_unsafe_control
+  enabled: false
+  mutation_hints:
+  - unsafe use-after-free negative control retained only as disabled metadata
+  render_requirements:
+    render_mode: lifecycle_harness
+    target_header: openssl/evp.h
+    observe_return_codes: true
+    observe_digest_output_length: true
+    must_not_use_der_parsing: true
+    must_not_use_trailing_garbage: true
+    must_not_use_full_consumption_oracle: true
+    cleanup: *id001
+  disabled_reason: Use-after-free is intentionally invalid memory use and must not be run by default as
+    a normal campaign case.
+next_stage: generic_lifecycle_mutation_engine

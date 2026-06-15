@@ -1,0 +1,339 @@
+schema: family_template_generalization_report_v1
+task: family_template_generalization_v1
+answers:
+  five_family_template_packages_built: true
+  canonical_template_families:
+  - pkcs_container_parsing
+  - asn1_nested_boundary
+  spec_only_families:
+  - x509_parsing
+  - tls_protocol_state_lifecycle
+  - secure_heap_state_lifecycle
+  seed_poc_assignment:
+    pkcs_container_parsing:
+    - WOLFSSL-POC-0007
+    - WOLFSSL-POC-0006
+    asn1_nested_boundary:
+    - WOLFSSL-POC-0004
+  avoided_one_poc_one_template: true
+  tree_sitter_ast_mask_pipeline_success: true
+  lite_fallback_used: false
+  normalized_templates_write_attempted: true
+  normalized_templates_collisions:
+  - family: pkcs_container_parsing
+    target: normalized_templates/wolfssl_family/pkcs_container_parsing
+    status: collision_existing_target_not_overwritten
+    draft_written: artifacts/sprints/family_template_generalization_v1/normalized_templates_draft/pkcs_container_parsing
+  - family: asn1_nested_boundary
+    target: normalized_templates/wolfssl_family/asn1_nested_boundary
+    status: collision_existing_target_not_overwritten
+    draft_written: artifacts/sprints/family_template_generalization_v1/normalized_templates_draft/asn1_nested_boundary
+  - family: x509_parsing
+    target: normalized_templates/wolfssl_family/x509_parsing
+    status: collision_existing_target_not_overwritten
+    draft_written: artifacts/sprints/family_template_generalization_v1/normalized_templates_draft/x509_parsing
+  - family: tls_protocol_state_lifecycle
+    target: normalized_templates/wolfssl_family/tls_protocol_state_lifecycle
+    status: collision_existing_target_not_overwritten
+    draft_written: artifacts/sprints/family_template_generalization_v1/normalized_templates_draft/tls_protocol_state_lifecycle
+  - family: secure_heap_state_lifecycle
+    target: normalized_templates/wolfssl_family/secure_heap_state_lifecycle
+    status: collision_existing_target_not_overwritten
+    draft_written: artifacts/sprints/family_template_generalization_v1/normalized_templates_draft/secure_heap_state_lifecycle
+  glm_called: false
+  poc_or_render_or_compile_run: false
+  next_task_name: adapter_recipe_generation_v1
+families:
+- pkcs_container_parsing
+- asn1_nested_boundary
+- x509_parsing
+- tls_protocol_state_lifecycle
+- secure_heap_state_lifecycle
+packages:
+- family: pkcs_container_parsing
+  package_dir: artifacts/sprints/family_template_generalization_v1/family_packages/pkcs_container_parsing
+  mode: seeded_family_canonical_template
+  seed_examples:
+  - poc_id: WOLFSSL-POC-0007
+    source_dir: data/wolfssl_collect/WOLFSSL-POC-0007
+    source_file: data/wolfssl_collect/WOLFSSL-POC-0007/poc/poc_pkcs7_ori_oversized_oid_min.c
+    copied_as: poc_original.c
+    seed_role: evidence_example_only
+    issue_or_cve: CVE-2026-5295
+    title: wolfSSL PKCS7 ORI OID processing stack buffer overflow
+    oracle_type: crash_sanitizer_oracle
+    harness_family: pkcs7_ori_oid_parsing_memory_safety
+    source_api: []
+    strict_reproduction_metadata: true
+    no_execution_in_this_sprint: true
+  - poc_id: WOLFSSL-POC-0006
+    source_dir: data/wolfssl_collect/WOLFSSL-POC-0006
+    source_file: data/wolfssl_collect/WOLFSSL-POC-0006/poc/poc_pkcs7_signedattrs_overflow_min.c
+    copied_as: poc_original.c
+    seed_role: evidence_example_only
+    issue_or_cve: CVE-2026-0819
+    title: wolfSSL PKCS7 SignedData signed attributes out-of-bounds write
+    oracle_type: crash_sanitizer_oracle
+    harness_family: pkcs7_signeddata_encoding_memory_safety
+    source_api: []
+    strict_reproduction_metadata: true
+    no_execution_in_this_sprint: true
+  ast_status:
+    attempted: true
+    backend: tree-sitter
+    fallback_used: false
+    status: ok
+    tree_sitter_returncode: 0
+    select_returncode: 0
+    outputs:
+    - ast_mask_report.yaml
+    - selected_mask_units.yaml
+- family: asn1_nested_boundary
+  package_dir: artifacts/sprints/family_template_generalization_v1/family_packages/asn1_nested_boundary
+  mode: seeded_family_canonical_template
+  seed_examples:
+  - poc_id: WOLFSSL-POC-0004
+    source_dir: data/wolfssl_collect/WOLFSSL-POC-0004
+    source_file: data/wolfssl_collect/WOLFSSL-POC-0004/poc/poc_akid_certfromx509_min.c
+    copied_as: poc_original.c
+    seed_role: evidence_example_only
+    issue_or_cve: CVE-2026-5447
+    title: wolfSSL CertFromX509 AuthorityKeyIdentifier size confusion heap-buffer-overflow
+    oracle_type: crash_sanitizer_oracle
+    harness_family: x509_authority_key_identifier_memory_safety
+    source_api:
+    - wolfSSL_X509_d2i
+    - wolfSSL_i2d_X509_bio
+    - CertFromX509
+    strict_reproduction_metadata: true
+    no_execution_in_this_sprint: true
+  ast_status:
+    attempted: true
+    backend: tree-sitter
+    fallback_used: false
+    status: ok
+    tree_sitter_returncode: 0
+    select_returncode: 0
+    outputs:
+    - ast_mask_report.yaml
+    - selected_mask_units.yaml
+- family: x509_parsing
+  package_dir: artifacts/sprints/family_template_generalization_v1/family_packages/x509_parsing
+  mode: spec_only_no_source_seed
+  seed_examples: []
+  ast_status:
+    attempted: false
+    status: not_applicable_spec_only
+- family: tls_protocol_state_lifecycle
+  package_dir: artifacts/sprints/family_template_generalization_v1/family_packages/tls_protocol_state_lifecycle
+  mode: spec_only_no_source_seed
+  seed_examples: []
+  ast_status:
+    attempted: false
+    status: not_applicable_spec_only
+- family: secure_heap_state_lifecycle
+  package_dir: artifacts/sprints/family_template_generalization_v1/family_packages/secure_heap_state_lifecycle
+  mode: spec_only_no_source_seed
+  seed_examples: []
+  ast_status:
+    attempted: false
+    status: not_applicable_spec_only
+quality_checks:
+- family: pkcs_container_parsing
+  package_exists: true
+  template_level_is_family: true
+  has_canonical_template: true
+  has_spec: false
+  seed_examples_recorded: true
+  family_template_meta_or_spec_exists: true
+  mutation_slots_exists: true
+  oracle_plan_exists: true
+  adapter_scope_exists: true
+  mask_report_exists: true
+  ast_mask_report_exists: true
+  selected_mask_units_exists: true
+  trigger_call_preserved: true
+  cleanup_call_preserved: true
+  oracle_check_preserved: true
+  mutation_slots_present: true
+  api_slots_present: true
+  blocked_targets_recorded: true
+  glm_policy_recorded: true
+  ast_pipeline_status: ok
+  quality_status: pass
+  notes: family-level package; no adapter/render/compile/run performed
+- family: asn1_nested_boundary
+  package_exists: true
+  template_level_is_family: true
+  has_canonical_template: true
+  has_spec: false
+  seed_examples_recorded: true
+  family_template_meta_or_spec_exists: true
+  mutation_slots_exists: true
+  oracle_plan_exists: true
+  adapter_scope_exists: true
+  mask_report_exists: true
+  ast_mask_report_exists: true
+  selected_mask_units_exists: true
+  trigger_call_preserved: true
+  cleanup_call_preserved: true
+  oracle_check_preserved: true
+  mutation_slots_present: true
+  api_slots_present: true
+  blocked_targets_recorded: true
+  glm_policy_recorded: true
+  ast_pipeline_status: ok
+  quality_status: pass
+  notes: family-level package; no adapter/render/compile/run performed
+- family: x509_parsing
+  package_exists: true
+  template_level_is_family: true
+  has_canonical_template: false
+  has_spec: true
+  seed_examples_recorded: true
+  family_template_meta_or_spec_exists: true
+  mutation_slots_exists: true
+  oracle_plan_exists: true
+  adapter_scope_exists: true
+  mask_report_exists: false
+  ast_mask_report_exists: false
+  selected_mask_units_exists: false
+  trigger_call_preserved: false
+  cleanup_call_preserved: false
+  oracle_check_preserved: true
+  mutation_slots_present: true
+  api_slots_present: true
+  blocked_targets_recorded: true
+  glm_policy_recorded: true
+  ast_pipeline_status: not_applicable_spec_only
+  quality_status: spec_only_pass
+  notes: family-level package; no adapter/render/compile/run performed
+- family: tls_protocol_state_lifecycle
+  package_exists: true
+  template_level_is_family: true
+  has_canonical_template: false
+  has_spec: true
+  seed_examples_recorded: true
+  family_template_meta_or_spec_exists: true
+  mutation_slots_exists: true
+  oracle_plan_exists: true
+  adapter_scope_exists: true
+  mask_report_exists: false
+  ast_mask_report_exists: false
+  selected_mask_units_exists: false
+  trigger_call_preserved: false
+  cleanup_call_preserved: false
+  oracle_check_preserved: true
+  mutation_slots_present: true
+  api_slots_present: true
+  blocked_targets_recorded: true
+  glm_policy_recorded: true
+  ast_pipeline_status: not_applicable_spec_only
+  quality_status: spec_only_pass
+  notes: family-level package; no adapter/render/compile/run performed
+- family: secure_heap_state_lifecycle
+  package_exists: true
+  template_level_is_family: true
+  has_canonical_template: false
+  has_spec: true
+  seed_examples_recorded: true
+  family_template_meta_or_spec_exists: true
+  mutation_slots_exists: true
+  oracle_plan_exists: true
+  adapter_scope_exists: true
+  mask_report_exists: false
+  ast_mask_report_exists: false
+  selected_mask_units_exists: false
+  trigger_call_preserved: false
+  cleanup_call_preserved: false
+  oracle_check_preserved: true
+  mutation_slots_present: true
+  api_slots_present: true
+  blocked_targets_recorded: true
+  glm_policy_recorded: true
+  ast_pipeline_status: not_applicable_spec_only
+  quality_status: spec_only_pass
+  notes: family-level package; no adapter/render/compile/run performed
+ast_mask_pipeline_summary:
+  schema: ast_mask_pipeline_summary_v1
+  task: family_template_generalization_v1
+  families:
+  - family: pkcs_container_parsing
+    ast_mask_pipeline:
+      tree_sitter_attempted: true
+      tree_sitter_success: true
+      lite_fallback_used: false
+      ast_mask_report_exists: true
+      selected_mask_units_exists: true
+      errors: []
+      warnings: []
+  - family: asn1_nested_boundary
+    ast_mask_pipeline:
+      tree_sitter_attempted: true
+      tree_sitter_success: true
+      lite_fallback_used: false
+      ast_mask_report_exists: true
+      selected_mask_units_exists: true
+      errors: []
+      warnings: []
+  - family: x509_parsing
+    ast_mask_pipeline:
+      tree_sitter_attempted: false
+      tree_sitter_success: false
+      lite_fallback_used: false
+      ast_mask_report_exists: false
+      selected_mask_units_exists: false
+      errors: []
+      warnings:
+      - spec-only family; AST mask not attempted
+  - family: tls_protocol_state_lifecycle
+    ast_mask_pipeline:
+      tree_sitter_attempted: false
+      tree_sitter_success: false
+      lite_fallback_used: false
+      ast_mask_report_exists: false
+      selected_mask_units_exists: false
+      errors: []
+      warnings:
+      - spec-only family; AST mask not attempted
+  - family: secure_heap_state_lifecycle
+    ast_mask_pipeline:
+      tree_sitter_attempted: false
+      tree_sitter_success: false
+      lite_fallback_used: false
+      ast_mask_report_exists: false
+      selected_mask_units_exists: false
+      errors: []
+      warnings:
+      - spec-only family; AST mask not attempted
+normalized_writes:
+- family: pkcs_container_parsing
+  target: normalized_templates/wolfssl_family/pkcs_container_parsing
+  status: collision_existing_target_not_overwritten
+  draft_written: artifacts/sprints/family_template_generalization_v1/normalized_templates_draft/pkcs_container_parsing
+- family: asn1_nested_boundary
+  target: normalized_templates/wolfssl_family/asn1_nested_boundary
+  status: collision_existing_target_not_overwritten
+  draft_written: artifacts/sprints/family_template_generalization_v1/normalized_templates_draft/asn1_nested_boundary
+- family: x509_parsing
+  target: normalized_templates/wolfssl_family/x509_parsing
+  status: collision_existing_target_not_overwritten
+  draft_written: artifacts/sprints/family_template_generalization_v1/normalized_templates_draft/x509_parsing
+- family: tls_protocol_state_lifecycle
+  target: normalized_templates/wolfssl_family/tls_protocol_state_lifecycle
+  status: collision_existing_target_not_overwritten
+  draft_written: artifacts/sprints/family_template_generalization_v1/normalized_templates_draft/tls_protocol_state_lifecycle
+- family: secure_heap_state_lifecycle
+  target: normalized_templates/wolfssl_family/secure_heap_state_lifecycle
+  status: collision_existing_target_not_overwritten
+  draft_written: artifacts/sprints/family_template_generalization_v1/normalized_templates_draft/secure_heap_state_lifecycle
+forbidden_actions_observed:
+  poc_execution: false
+  compile_run: false
+  render_cases: false
+  glm_call: false
+  adapter_generation: false
+  knowledge_raw_modified: false
+  rag_rebuild: false
+  commit_or_push: false
+next_action: adapter_recipe_generation_v1

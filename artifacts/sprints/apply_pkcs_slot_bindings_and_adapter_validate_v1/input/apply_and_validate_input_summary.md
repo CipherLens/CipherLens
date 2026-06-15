@@ -1,0 +1,19 @@
+# Apply And Validate Input Summary
+
+```yaml
+schema: apply_and_validate_input_summary_v1
+generated_at: '2026-06-11T15:17:08+00:00'
+scope: apply only pkcs fixed slot_bindings and validate three concrete adapters
+pkcs_fixed_bindings: artifacts/sprints/adapter_slot_filling_fixup_v1/slot_bindings/pkcs_container_parsing/openssl/slot_bindings.fixed.yaml
+pkcs_target_bindings: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_bindings.yaml
+adapter_root: adapter_recipes/wolfssl_family
+validation_rules: artifacts/sprints/adapter_slot_filling_plan_v1/validation_rules/adapter_slot_binding_validation_rules.yaml
+mapping_gate: artifacts/sprints/cross_library_mapping_refinement_and_gate_v1/gate_results/cross_library_mapping_gate_results.yaml
+blocked_mappings: artifacts/sprints/cross_library_mapping_refinement_and_gate_v1/blocked_mappings/blocked_or_no_direct_counterpart_mappings.yaml
+no_glm: true
+no_render_compile_run: true
+no_c_generation: true
+adapter_recipe_yaml_modified: false
+slot_filling_plan_yaml_modified: false
+blocked_placeholder_policy: blocked adapters must remain render_ready=false
+```

@@ -1,0 +1,507 @@
+{
+  "query": "OpenSSL EVP cipher AEAD GCM CCM lifecycle update final tag aad ctx reuse after final",
+  "top_k": 20,
+  "results": [
+    {
+      "rank": 1,
+      "score": 1.2365353129159469,
+      "distance": 0.5960792303085327,
+      "base_score": 0.6265353129159468,
+      "rerank_score": 1.2365353129159469,
+      "rerank_reasons": [
+        "api_match:EVP",
+        "library_match:openssl",
+        "layer:api_cards",
+        "source_file_api_match",
+        "keyword_overlap:ctx,lifecycle,openssl",
+        "recent_feedback_source"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/openssl/EVP_MAC_final.yaml",
+      "text": "Source: API Card\napi: EVP_MAC_final\nlibrary: openssl\nfamily: mac_lifecycle\nsignature: int EVP_MAC_final(EVP_MAC_CTX *ctx, unsigned char *out, size_t *outl, size_t outsize)\nparameter_semantics: ctx: MAC context\nout: output buffer\noutl: caller-visible output length\noutsize: output buffer capacity\nreturn_value_semantics: success: 1 and outl receives MAC length\nfailure: 0 and output state should remain safe for caller\nvalid_invalid_ranges: valid: initialized MAC context and sufficiently sized output buffer\ninvalid: final before setup, update after final for strict lifecycle APIs, undersized\n  output\nunsupported_conditions: - using ctx after invalid lifecycle transition\nmutation_hints: - final before setup\n- double final\n- update after final\n- third final\n- update after second final\n- abort then final\n- output buffer too small\noracle_observables: - return_code\n- outl\n- output_buffer_state\n- sanitizer_signal\nknown_pitfalls: - HMAC failure-path outl observations should be classified as failure_path_output_state_triage,\n  not bug_candidate, without stronger output-state evidence.\n- HMAC+AES and CMAC+SHA are invalid parameter projections; skip them or mark projection_limitation.\nnotes: - 'Known pitfall: failure paths must not expose unsafe outl or stale output state.'\n- 'Feedback: OpenSSL CMAC repeated final may be allowed legacy/provider semantics\n  rather than a vulnerability by itself.'\n- 'Observed CMAC behavior: a second EVP_MAC_final() can succeed and return outl=16.'\n- 'MAC lifecycle v2 minimal confirmation: CMAC AES-128-CBC and AES-256-CBC accepted\n  EVP_MAC_update() after EVP_MAC_final(); a follow-up EVP_MAC_final() also succeeded\n  and produced a different 16-byte output.'\n- 'MAC lifecycle v2 minimal confirmation: CMAC third-final sequences returned success\n  for final1/final2/final3, each with outl=16 and distinct output bytes.'\n- 'MAC lifecycle v2 minimal confirmation: CMAC update-after-second-final sequences\n  returned success for final1, final2, update-after-second-final, and final3.'\n- High-value follow-up mutations are update-after-final and update-after-second-final\n  because they show continuation after a terminal-looking finalization state.\n- Third-final is useful evidence but should be treated as allowed_legacy_semantics_needs_review\n  until OpenSSL documentation confirms whether repeated finalization is intentional\n  provider semantics.\n- 'Classification guidance: do not report these CMAC lifecycle observations as confirmed\n  vulnerabilities without documentation review and caller-impact evidence.'\n",
+      "metadata": {
+        "api": "EVP_MAC_final",
+        "source_file": "knowledge_base/api_cards/openssl/EVP_MAC_final.yaml",
+        "family": "mac_lifecycle",
+        "doc_type": "api_card",
+        "library": "openssl",
+        "layer": "api_cards"
+      }
+    },
+    {
+      "rank": 2,
+      "score": 1.1968643962880823,
+      "distance": 0.338931143283844,
+      "base_score": 0.7468643962880823,
+      "rerank_score": 1.1968643962880823,
+      "rerank_reasons": [
+        "api_match:EVP",
+        "library_match:openssl",
+        "source_file_api_match",
+        "keyword_overlap:aad,aead,ccm,cipher,evp,gcm"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_aes_128_gcm.md",
+      "text": "optionally set IV length, process AAD, process ciphertext, set expected tag, then call `EVP_DecryptFinal_ex()`.\n- GCM is useful as a comparison target for AEAD shortened tag validation but is not the same mode as the CCM source PoC.\n\n## Vulnerability-Pattern Migration Notes\n\n- Secondary OpenSSL AEAD candidate for `MBEDTLS-POC-0028`.\n- Tag length rules differ from CCM, so migration scoring should reduce operation-family specificity if source is strictly CCM.\n\n## Related Tests or Examples Found Locally\n\n- `demos/cipher/aesgcm.c`: full AES-GCM decrypt example.\n- `test/evp_extra_test.c`, `test/tls13encryptiontest.c`: GCM EVP test usage.",
+      "metadata": {
+        "pattern_id": "",
+        "oracle_type": "",
+        "library": "openssl",
+        "layer": "api_constraints",
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_aes_128_gcm.md",
+        "family": "",
+        "doc_type": "api_constraint"
+      }
+    },
+    {
+      "rank": 3,
+      "score": 1.152924171073384,
+      "distance": 0.6315231919288635,
+      "base_score": 0.6129241710733838,
+      "rerank_score": 1.152924171073384,
+      "rerank_reasons": [
+        "api_match:EVP",
+        "library_match:openssl",
+        "layer:api_cards",
+        "source_file_api_match",
+        "keyword_overlap:ctx,openssl"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/openssl/EVP_DigestVerifyInit.yaml",
+      "text": "Source: API Card\napi: EVP_DigestVerifyInit\nlibrary: openssl\nfamily: pkey_verify\nsignature: int EVP_DigestVerifyInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx, const EVP_MD *type, ENGINE *e, EVP_PKEY *pkey)\nparameter_semantics: ctx: digest verification context allocated by EVP_MD_CTX_new or equivalent\npctx: optional output pointer for the initialized EVP_PKEY_CTX\ntype: digest algorithm such as EVP_sha256\ne: legacy ENGINE parameter, normally NULL\npkey: public key or key object used for verification\nreturn_value_semantics: success: 1\nerror: 0 or provider-specific failure\nvalid_invalid_ranges: valid: compatible digest and key type with a verification-capable key\ninvalid: NULL context, unsupported digest/key pairing, wrong key type, provider dispatch\n  failure\nunsupported_conditions: - requested digest is not valid for the key algorithm\n- key does not support signature verification\n- provider does not expose the requested verify operation\nmutation_hints: - wrong digest algorithm\n- mismatched key type\n- public key without expected verification capability\n- RSA-PSS setup on non-RSA key\n- digest/key compatibility boundary\noracle_observables: - return_code\n- error_stack\n- sanitizer_signal\nknown_pitfalls: - setup failure must not be collapsed with invalid signature rejection\n- a failed initialization may leave pctx unset or unusable\n- provider behavior can differ between unsupported operation and invalid signature\nnotes: - Use this card for setup-stage evidence in signature verification migration, not\n  as proof of signature acceptance by itself.\n",
+      "metadata": {
+        "library": "openssl",
+        "source_file": "knowledge_base/api_cards/openssl/EVP_DigestVerifyInit.yaml",
+        "api": "EVP_DigestVerifyInit",
+        "doc_type": "api_card",
+        "layer": "api_cards",
+        "family": "pkey_verify"
+      }
+    },
+    {
+      "rank": 4,
+      "score": 1.1525514512753947,
+      "distance": 0.42338329553604126,
+      "base_score": 0.7025514512753949,
+      "rerank_score": 1.1525514512753947,
+      "rerank_reasons": [
+        "api_match:EVP",
+        "library_match:openssl",
+        "source_file_api_match",
+        "keyword_overlap:aead,ccm,cipher,openssl,tag"
+      ],
+      "layer": "unit_tests",
+      "source_file": "knowledge_raw/unit_tests/openssl/3.5.5/evp_aead_target_api_evidence.md",
+      "text": "and ciphertext\n    - set expected tag\n    - `EVP_DecryptFinal_ex()` for authentication result.\n- Existing local RAG file `knowledge_raw/api_constraints/openssl/3.5.5/EVP_DecryptFinal_ex.md` also records direct tests and demos.\n\n## Harness Relevance\n\n- OpenSSL AEAD mapping for `MBEDTLS-POC-0028` needs multiple APIs: cipher selection, decrypt setup, tag ctrl/params, update, and final/update authentication.\n- CCM invalid tag length may become observable during ctrl/setup/update rather than being encoded in a single algorithm macro as in PSA.",
+      "metadata": {
+        "oracle_type": "",
+        "layer": "unit_tests",
+        "pattern_id": "",
+        "source_file": "knowledge_raw/unit_tests/openssl/3.5.5/evp_aead_target_api_evidence.md",
+        "library": "openssl",
+        "doc_type": "unit_test_call_pattern",
+        "family": ""
+      }
+    },
+    {
+      "rank": 5,
+      "score": 1.1465027435469812,
+      "distance": 0.4357445240020752,
+      "base_score": 0.6965027435469813,
+      "rerank_score": 1.1465027435469812,
+      "rerank_reasons": [
+        "api_match:EVP",
+        "library_match:openssl",
+        "source_file_api_match",
+        "keyword_overlap:aead,ccm,cipher,ctx,gcm,openssl"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_DecryptInit_ex.md",
+      "text": "ctx` is caller-owned and freed with `EVP_CIPHER_CTX_free()`.\n- Key and IV buffers are caller-owned and read by the library.\n\n## Harness Generation Notes\n\n- For GCM/CCM, initialize context, select `EVP_aes_128_gcm()` or `EVP_aes_128_ccm()`, set AEAD controls, then set key/IV.\n- Observe return code at setup-time for invalid AEAD tag/IV parameters.\n\n## Vulnerability-Pattern Migration Notes\n\n- Candidate for `MBEDTLS-POC-0028` because it represents AEAD decrypt setup.\n- OpenSSL often sets tag length through `EVP_CIPHER_CTX_ctrl()` or params rather than encoding it in the algorithm identifier.\n\n## Related Tests or Examples Found Locally\n\n- `test/evp_extra_test.c`: stepwise cipher initialization and AEAD tests.\n- `demos/cipher/aesccm.c`, `demos/cipher/aesgcm.c`: decrypt setup examples.",
+      "metadata": {
+        "family": "",
+        "doc_type": "api_constraint",
+        "layer": "api_constraints",
+        "pattern_id": "",
+        "oracle_type": "",
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_DecryptInit_ex.md",
+        "library": "openssl"
+      }
+    },
+    {
+      "rank": 6,
+      "score": 1.145508413338019,
+      "distance": 0.4377971291542053,
+      "base_score": 0.6955084133380189,
+      "rerank_score": 1.145508413338019,
+      "rerank_reasons": [
+        "api_match:EVP",
+        "library_match:openssl",
+        "source_file_api_match",
+        "keyword_overlap:aad,aead,ccm,cipher,gcm,openssl"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_DecryptUpdate.md",
+      "text": "or provider failure.\n\n## Ownership and Buffer Constraints\n\n- `out` is caller-owned writable output when non-NULL.\n- `outl` must be non-NULL.\n- `in` is caller-owned readable input when non-NULL.\n\n## Harness Generation Notes\n\n- For GCM/CCM decrypt, use separate calls for AAD and ciphertext.\n- For CCM, final authentication result may be returned by the ciphertext update call rather than `EVP_DecryptFinal_ex()`.\n\n## Vulnerability-Pattern Migration Notes\n\n- Companion API for `MBEDTLS-POC-0028` OpenSSL AEAD migration.\n- May be where invalid tag length or authentication failure becomes observable for CCM.\n\n## Related Tests or Examples Found Locally\n\n- `test/evp_extra_test.c`: AEAD update tests.\n- `demos/cipher/aesccm.c`, `demos/cipher/aesgcm.c`: decrypt update flows.",
+      "metadata": {
+        "oracle_type": "",
+        "library": "openssl",
+        "doc_type": "api_constraint",
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_DecryptUpdate.md",
+        "pattern_id": "",
+        "layer": "api_constraints",
+        "family": ""
+      }
+    },
+    {
+      "rank": 7,
+      "score": 1.1438038329966158,
+      "distance": 0.44132959842681885,
+      "base_score": 0.6938038329966159,
+      "rerank_score": 1.1438038329966158,
+      "rerank_reasons": [
+        "api_match:EVP",
+        "library_match:openssl",
+        "source_file_api_match",
+        "keyword_overlap:aad,aead,ccm,cipher,evp,gcm"
+      ],
+      "layer": "unit_tests",
+      "source_file": "knowledge_raw/unit_tests/openssl/3.5.5/evp_aead_target_api_evidence.md",
+      "text": "# Unit Test / Example Evidence: OpenSSL EVP AEAD Target APIs\n\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\nstatus: found_in_local_tests\n\n## APIs Covered\n\n- `EVP_DecryptInit_ex`\n- `EVP_CIPHER_CTX_ctrl`\n- `EVP_DecryptUpdate`\n- `EVP_DecryptFinal_ex`\n- `EVP_aes_128_ccm`\n- `EVP_aes_128_gcm`\n\n## Evidence\n\n- `test/evp_extra_test.c`\n  - Stepwise EVP cipher initialization tests use `EVP_CipherInit_ex`, `EVP_CIPHER_CTX_ctrl`, AEAD set/get tag controls, and select `EVP_aes_128_ccm()` / `EVP_aes_128_gcm()`.\n  - GCM decrypt tests use `EVP_DecryptUpdate()` and `EVP_DecryptFinal_ex()`.\n- `demos/cipher/aesccm.c`\n  - Full AES-CCM decrypt setup flow:\n    - `EVP_DecryptInit_ex2()`\n    - `EVP_DecryptInit_ex()`\n    - `EVP_DecryptUpdate()` for length, AAD, and ciphertext/tag verification.\n- `demos/cipher/aesgcm.c`\n  - Full AES-GCM decrypt flow:\n    - init with cipher/key/IV\n    - process AAD and ciphertext\n    - set expected tag\n    - `EVP_DecryptFinal_ex()` for authentication result.\n- Exi",
+      "metadata": {
+        "family": "",
+        "library": "openssl",
+        "layer": "unit_tests",
+        "source_file": "knowledge_raw/unit_tests/openssl/3.5.5/evp_aead_target_api_evidence.md",
+        "doc_type": "unit_test_call_pattern",
+        "oracle_type": "",
+        "pattern_id": ""
+      }
+    },
+    {
+      "rank": 8,
+      "score": 1.137649678539083,
+      "distance": 0.45422884821891785,
+      "base_score": 0.6876496785390831,
+      "rerank_score": 1.137649678539083,
+      "rerank_reasons": [
+        "api_match:EVP",
+        "library_match:openssl",
+        "source_file_api_match",
+        "keyword_overlap:aad,aead,ccm,cipher,evp,openssl"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_aes_128_ccm.md",
+      "text": "# API Constraints: EVP_aes_128_ccm (OpenSSL 3.5.5)\n\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function name: `EVP_aes_128_ccm`\n- Header declaration: `include/openssl/evp.h`\n- Implementation family: EVP AES cipher methods / provider cipher implementation\n- Signature:\n\n```c\nconst EVP_CIPHER *EVP_aes_128_ccm(void);\n```\n\n## Semantics\n\n- Returns the AES-128-CCM cipher descriptor for EVP operations.\n- Used with `EVP_DecryptInit_ex()` / `EVP_DecryptInit_ex2()` and AEAD tag controls/params.\n\n## Return Value Semantics\n\n- Returns a non-NULL cipher descriptor when available.\n- May be unavailable depending on provider/build configuration.\n\n## Ownership and Buffer Constraints\n\n- Returned descriptor is library-owned; caller must not free it.\n- Cipher context and key/IV/tag buffers remain caller-owned.\n\n## Harness Generation Notes\n\n- For CCM decrypt, set tag before key/IV, specify total ciphertext length, process AAD, then process ciphertext.\n- OpenSSL CCM tag length",
+      "metadata": {
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_aes_128_ccm.md",
+        "family": "",
+        "pattern_id": "",
+        "library": "openssl",
+        "doc_type": "api_constraint",
+        "oracle_type": "",
+        "layer": "api_constraints"
+      }
+    },
+    {
+      "rank": 9,
+      "score": 1.1376375874826405,
+      "distance": 0.4542544186115265,
+      "base_score": 0.6876375874826405,
+      "rerank_score": 1.1376375874826405,
+      "rerank_reasons": [
+        "api_match:EVP",
+        "library_match:openssl",
+        "source_file_api_match",
+        "keyword_overlap:aad,aead,cipher,evp,gcm,openssl"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_aes_128_gcm.md",
+      "text": "# API Constraints: EVP_aes_128_gcm (OpenSSL 3.5.5)\n\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function name: `EVP_aes_128_gcm`\n- Header declaration: `include/openssl/evp.h`\n- Implementation family: EVP AES cipher methods / provider cipher implementation\n- Signature:\n\n```c\nconst EVP_CIPHER *EVP_aes_128_gcm(void);\n```\n\n## Semantics\n\n- Returns the AES-128-GCM cipher descriptor for EVP operations.\n- Used with `EVP_DecryptInit_ex()` / `EVP_DecryptInit_ex2()` and AEAD tag controls/params.\n\n## Return Value Semantics\n\n- Returns a non-NULL cipher descriptor when available.\n- May be unavailable depending on provider/build configuration.\n\n## Ownership and Buffer Constraints\n\n- Returned descriptor is library-owned.\n- Caller owns `EVP_CIPHER_CTX`, key, IV, AAD, ciphertext, plaintext, and tag buffers.\n\n## Harness Generation Notes\n\n- For GCM decrypt, initialize cipher, optionally set IV length, process AAD, process ciphertext, set expected tag, then call `EVP_Decrypt",
+      "metadata": {
+        "pattern_id": "",
+        "oracle_type": "",
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_aes_128_gcm.md",
+        "layer": "api_constraints",
+        "family": "",
+        "doc_type": "api_constraint",
+        "library": "openssl"
+      }
+    },
+    {
+      "rank": 10,
+      "score": 1.1364962379962653,
+      "distance": 0.45667222142219543,
+      "base_score": 0.6864962379962654,
+      "rerank_score": 1.1364962379962653,
+      "rerank_reasons": [
+        "api_match:EVP",
+        "library_match:openssl",
+        "source_file_api_match",
+        "keyword_overlap:aad,aead,ccm,ctx,evp,openssl"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_DecryptUpdate.md",
+      "text": "# API Constraints: EVP_DecryptUpdate (OpenSSL 3.5.5)\n\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function name: `EVP_DecryptUpdate`\n- Header declaration: `include/openssl/evp.h`\n- Implementation file: `crypto/evp/evp_enc.c`\n- Signature:\n\n```c\nint EVP_DecryptUpdate(EVP_CIPHER_CTX *ctx,\n                      unsigned char *out,\n                      int *outl,\n                      const unsigned char *in,\n                      int inl);\n```\n\n## Semantics\n\n- Processes ciphertext or AEAD AAD/length phases depending on mode and arguments.\n- Sets `*outl = 0` at function entry when `outl` is non-NULL.\n- For CCM, a call with `out == NULL`, `in == NULL` can set total ciphertext length before AAD/data processing.\n\n## Return Value Semantics\n\n- Returns `1` on successful update.\n- Returns `0` on invalid context, wrong operation direction, unsupported update, overlap, or provider failure.\n\n## Ownership and Buffer Constraints\n\n- `out` is caller-owned writable output",
+      "metadata": {
+        "layer": "api_constraints",
+        "doc_type": "api_constraint",
+        "pattern_id": "",
+        "library": "openssl",
+        "oracle_type": "",
+        "family": "",
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_DecryptUpdate.md"
+      }
+    },
+    {
+      "rank": 11,
+      "score": 1.1248918716622156,
+      "distance": 0.48171883821487427,
+      "base_score": 0.6748918716622155,
+      "rerank_score": 1.1248918716622156,
+      "rerank_reasons": [
+        "api_match:EVP",
+        "library_match:openssl",
+        "source_file_api_match",
+        "keyword_overlap:aead,cipher,ctx,evp,gcm,openssl"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_CIPHER_CTX_ctrl.md",
+      "text": "# API Constraints: EVP_CIPHER_CTX_ctrl (OpenSSL 3.5.5)\n\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function name: `EVP_CIPHER_CTX_ctrl`\n- Header declaration: `include/openssl/evp.h`\n- Implementation file: `crypto/evp/evp_enc.c`\n- Signature:\n\n```c\nint EVP_CIPHER_CTX_ctrl(EVP_CIPHER_CTX *ctx,\n                        int type,\n                        int arg,\n                        void *ptr);\n```\n\n## Semantics\n\n- Generic control interface for cipher context options.\n- AEAD controls include `EVP_CTRL_AEAD_SET_TAG`, `EVP_CTRL_AEAD_GET_TAG`, and GCM IV length controls.\n- Provider-backed ciphers translate controls to `OSSL_PARAM` where possible.\n\n## Return Value Semantics\n\n- Returns positive/success value for supported controls.\n- Returns `0` or unsupported code on invalid context, unsupported control, or invalid parameter.\n\n## Ownership and Buffer Constraints\n\n- `ctx` is caller-owned.\n- `ptr` semantics depend on control type; for AEAD set tag it points to c",
+      "metadata": {
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_CIPHER_CTX_ctrl.md",
+        "layer": "api_constraints",
+        "doc_type": "api_constraint",
+        "family": "",
+        "oracle_type": "",
+        "pattern_id": "",
+        "library": "openssl"
+      }
+    },
+    {
+      "rank": 12,
+      "score": 1.1225684115677632,
+      "distance": 0.48683759570121765,
+      "base_score": 0.6725684115677631,
+      "rerank_score": 1.1225684115677632,
+      "rerank_reasons": [
+        "api_match:EVP",
+        "library_match:openssl",
+        "source_file_api_match",
+        "keyword_overlap:aead,ccm,cipher,ctx,gcm,openssl"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_CIPHER_CTX_ctrl.md",
+      "text": "- `ctx` is caller-owned.\n- `ptr` semantics depend on control type; for AEAD set tag it points to caller-provided tag bytes.\n- No ownership of `ptr` is transferred.\n\n## Harness Generation Notes\n\n- For `MBEDTLS-POC-0028`, use this API to set AEAD tag length/value in OpenSSL-style GCM/CCM decrypt setup.\n- Invalid tag length behavior may be observed here or during later decrypt/final calls depending on cipher/mode.\n\n## Vulnerability-Pattern Migration Notes\n\n- Important OpenSSL companion API for AEAD tag-length migration.\n- Unlike PSA, tag length is not encoded in the algorithm macro; adapter must map shortened-tag semantics to ctrl/params.\n\n## Related Tests or Examples Found Locally\n\n- `test/evp_extra_test.c`: `EVP_CTRL_AEAD_SET_TAG`, `EVP_CTRL_AEAD_GET_TAG`, and `EVP_CTRL_GCM_SET_IVLEN`.\n- `demos/cipher/aesccm.c`, `demos/cipher/aesgcm.c`: AEAD tag configuration.",
+      "metadata": {
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_CIPHER_CTX_ctrl.md",
+        "oracle_type": "",
+        "library": "openssl",
+        "doc_type": "api_constraint",
+        "family": "",
+        "layer": "api_constraints",
+        "pattern_id": ""
+      }
+    },
+    {
+      "rank": 13,
+      "score": 1.1173092274210246,
+      "distance": 0.49855563044548035,
+      "base_score": 0.6673092274210246,
+      "rerank_score": 1.1173092274210246,
+      "rerank_reasons": [
+        "api_match:EVP",
+        "library_match:openssl",
+        "source_file_api_match",
+        "keyword_overlap:aad,aead,ccm,cipher,evp,openssl"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_aes_128_ccm.md",
+      "text": "/IV, specify total ciphertext length, process AAD, then process ciphertext.\n- OpenSSL CCM tag length is configured through ctrl/params, not the algorithm identifier.\n\n## Vulnerability-Pattern Migration Notes\n\n- Primary OpenSSL AEAD candidate for `MBEDTLS-POC-0028` because the source bug is invalid CCM shortened tag length.\n- Adapter should test invalid tag lengths such as 3 and observe whether setup/control/update rejects them.\n\n## Related Tests or Examples Found Locally\n\n- `demos/cipher/aesccm.c`: full AES-CCM decrypt example.\n- `test/evp_extra_test.c`: selects `EVP_aes_128_ccm()` in EVP tests.\n- `tf-psa-crypto` mbedTLS source states valid CCM tag lengths are 4, 6, 8, 10, 12, 14, 16; OpenSSL behavior must be measured locally by harness.",
+      "metadata": {
+        "library": "openssl",
+        "layer": "api_constraints",
+        "pattern_id": "",
+        "oracle_type": "",
+        "doc_type": "api_constraint",
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_aes_128_ccm.md",
+        "family": ""
+      }
+    },
+    {
+      "rank": 14,
+      "score": 1.1031476775791327,
+      "distance": 0.4855581223964691,
+      "base_score": 0.6731476775791326,
+      "rerank_score": 1.1031476775791327,
+      "rerank_reasons": [
+        "api_match:EVP",
+        "library_match:openssl",
+        "source_file_api_match",
+        "keyword_overlap:cipher,ctx,evp,openssl"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_CipherFinal_ex.md",
+      "text": "# API Constraints: EVP_CipherFinal_ex (OpenSSL 3.5.5)\n\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function name: `EVP_CipherFinal_ex`\n- Header declaration: `include/openssl/evp.h`\n- Implementation file: `crypto/evp/evp_enc.c`\n- Manpage: `doc/man3/EVP_EncryptInit.pod`\n- Signature:\n\n```c\nint EVP_CipherFinal_ex(EVP_CIPHER_CTX *ctx, unsigned char *outm, int *outl);\n```\n\n## Semantics\n\n- Generic cipher finalization wrapper.\n- Dispatches to `EVP_EncryptFinal_ex` or `EVP_DecryptFinal_ex` depending on the context operation.\n- Writes final output bytes to caller-provided `outm` and length to `outl`.\n\n## Return Value Semantics\n\n- Returns `1` on success.\n- Returns `0` on encryption/decryption failure.\n\n## Object and Buffer Constraints\n\n- `EVP_CIPHER_CTX` is opaque. Harnesses must not access internal fields.\n- `outm` is caller-owned output buffer.\n- `outl` is caller-visible output length pointer.\n\n## Adapter Generation Notes\n\n- Uses caller-provided output buffer: ye",
+      "metadata": {
+        "doc_type": "api_constraint",
+        "layer": "api_constraints",
+        "family": "",
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_CipherFinal_ex.md",
+        "pattern_id": "",
+        "library": "openssl",
+        "oracle_type": ""
+      }
+    },
+    {
+      "rank": 15,
+      "score": 1.101156075331776,
+      "distance": 0.5357301235198975,
+      "base_score": 0.651156075331776,
+      "rerank_score": 1.101156075331776,
+      "rerank_reasons": [
+        "api_match:EVP",
+        "library_match:openssl",
+        "source_file_api_match",
+        "keyword_overlap:aead,cipher,ctx,evp,openssl"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_DecryptInit_ex.md",
+      "text": "# API Constraints: EVP_DecryptInit_ex (OpenSSL 3.5.5)\n\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function name: `EVP_DecryptInit_ex`\n- Header declaration: `include/openssl/evp.h`\n- Implementation file: `crypto/evp/evp_enc.c`\n- Signature:\n\n```c\nint EVP_DecryptInit_ex(EVP_CIPHER_CTX *ctx,\n                       const EVP_CIPHER *cipher,\n                       ENGINE *impl,\n                       const unsigned char *key,\n                       const unsigned char *iv);\n```\n\n## Semantics\n\n- Initializes or updates an EVP cipher context for decryption.\n- Calls `EVP_CipherInit_ex(..., enc = 0)`.\n- For AEAD modes, may be called in stages: select cipher, set controls/params, then set key/IV.\n\n## Return Value Semantics\n\n- Returns `1` on success.\n- Returns `0` on initialization, provider, cipher, key, or parameter failure.\n\n## Ownership and Buffer Constraints\n\n- `ctx` is caller-owned and freed with `EVP_CIPHER_CTX_free()`.\n- Key and IV buffers are caller-owned a",
+      "metadata": {
+        "library": "openssl",
+        "oracle_type": "",
+        "doc_type": "api_constraint",
+        "family": "",
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_DecryptInit_ex.md",
+        "layer": "api_constraints",
+        "pattern_id": ""
+      }
+    },
+    {
+      "rank": 16,
+      "score": 1.0681777617712365,
+      "distance": 0.5669615268707275,
+      "base_score": 0.6381777617712364,
+      "rerank_score": 1.0681777617712365,
+      "rerank_reasons": [
+        "api_match:EVP",
+        "library_match:openssl",
+        "source_file_api_match",
+        "keyword_overlap:ctx,evp,openssl,reuse"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerifyInit.md",
+      "text": "# API Constraints: EVP_DigestVerifyInit / EVP_DigestVerifyInit_ex (OpenSSL 3.5.5)\n\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function names: `EVP_DigestVerifyInit`, `EVP_DigestVerifyInit_ex`\n- Header declaration: `include/openssl/evp.h`\n- Implementation file: `crypto/evp/m_sigver.c`\n- Manpage: `doc/man3/EVP_DigestVerifyInit.pod`\n- Signatures:\n\n```c\nint EVP_DigestVerifyInit_ex(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,\n    const char *mdname, OSSL_LIB_CTX *libctx,\n    const char *props, EVP_PKEY *pkey,\n    const OSSL_PARAM params[]);\n\nint EVP_DigestVerifyInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,\n    const EVP_MD *type, ENGINE *e,\n    EVP_PKEY *pkey);\n```\n\n## Semantics\n\n- Initializes an `EVP_MD_CTX` for signature verification.\n- May create or reuse an `EVP_PKEY_CTX`; if created by the init call, it is freed with the `EVP_MD_CTX`.\n- `_ex` variant supports provider/libctx/properties and parameter array.\n\n## Return Value Semantics\n\n- Returns `1` on success.\n- R",
+      "metadata": {
+        "layer": "api_constraints",
+        "family": "",
+        "pattern_id": "",
+        "doc_type": "api_constraint",
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_DigestVerifyInit.md",
+        "library": "openssl",
+        "oracle_type": ""
+      }
+    },
+    {
+      "rank": 17,
+      "score": 1.0628719204129917,
+      "distance": 0.5316939949989319,
+      "base_score": 0.6528719204129917,
+      "rerank_score": 1.0628719204129917,
+      "rerank_reasons": [
+        "api_match:EVP",
+        "library_match:openssl",
+        "source_file_api_match",
+        "keyword_overlap:ctx,evp,openssl"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_DecryptFinal_ex.md",
+      "text": "# API Constraints: EVP_DecryptFinal_ex (OpenSSL 3.5.5)\n\nSource version: `/home/wen/work/clean_sources/openssl-3.5.5`\n\n## API\n\n- API/function name: `EVP_DecryptFinal_ex`\n- Header declaration: `include/openssl/evp.h`\n- Implementation file: `crypto/evp/evp_enc.c`\n- Manpage: `doc/man3/EVP_EncryptInit.pod`\n- Signature:\n\n```c\nint EVP_DecryptFinal_ex(EVP_CIPHER_CTX *ctx, unsigned char *outm,\n    int *outl);\n```\n\n## Semantics\n\n- Finalizes decryption and checks final block padding where applicable.\n- Writes final plaintext bytes to `outm` and count to `outl`.\n- Current implementation sets `*outl = 0` at function entry when `outl` is not NULL.\n\n## Return Value Semantics\n\n- Returns `1` on success.\n- Returns `0` if decrypt failed, including padding failure.\n\n## Object and Buffer Constraints\n\n- `EVP_CIPHER_CTX` is opaque. Harnesses must not access internal fields.\n- `outm` is caller-owned output buffer.\n- `outl` is caller-visible output length pointer and must not be NULL.\n\n## Adapter Generation No",
+      "metadata": {
+        "pattern_id": "",
+        "oracle_type": "",
+        "doc_type": "api_constraint",
+        "library": "openssl",
+        "layer": "api_constraints",
+        "source_file": "knowledge_raw/api_constraints/openssl/3.5.5/EVP_DecryptFinal_ex.md",
+        "family": ""
+      }
+    },
+    {
+      "rank": 18,
+      "score": 1.0516893841876873,
+      "distance": 0.5583863854408264,
+      "base_score": 0.6416893841876874,
+      "rerank_score": 1.0516893841876873,
+      "rerank_reasons": [
+        "api_match:EVP",
+        "library_match:openssl",
+        "source_file_api_match",
+        "keyword_overlap:cipher,ctx,openssl"
+      ],
+      "layer": "unit_tests",
+      "source_file": "knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md",
+      "text": "0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b\n    };\n    unsigned char msg[] = \"It was the best of times, it was the worst of times\";\n    unsigned char ciphertext[80];\n    unsigned char plaintext[80];\n    /* We initialise tmp to a non zero value on purpose */\n    int ctlen, ptlen, tmp = 99;\n    int ret = 0;\n    const int enc_offset = 10, dec_offset = 20;\n```\n\n## Call pattern 41\n\n```c\ngoto err;\n\n    ret = 1;\n\nerr:\n    RSA_free(rsa);\n    EVP_MD_CTX_free(ctx);\n    EVP_PKEY_free(pkey);\n    BN_free(p);\n    BN_free(q);\n    BN_free(n);\n    BN_free(e);\n    BN_free(d);\n\n    return ret;\n}\n#endif\n\n#if !defined(OPENSSL_NO_CHACHA) && !defined(OPENSSL_NO_POLY1305)\nstatic int test_decrypt_null_chunks(void)\n{\n    EVP_CIPHER_CTX *ctx = NULL;\n    EVP_CIPHER *cipher = NULL;\n    const unsigned char key[32] = {\n        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,\n        0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,\n        0",
+      "metadata": {
+        "oracle_type": "",
+        "doc_type": "unit_test_call_pattern",
+        "pattern_id": "",
+        "source_file": "knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md",
+        "family": "",
+        "layer": "unit_tests",
+        "library": "openssl"
+      }
+    },
+    {
+      "rank": 19,
+      "score": 1.049051359382667,
+      "distance": 0.5648194551467896,
+      "base_score": 0.6390513593826669,
+      "rerank_score": 1.049051359382667,
+      "rerank_reasons": [
+        "api_match:EVP",
+        "library_match:openssl",
+        "source_file_api_match",
+        "keyword_overlap:cipher,ctx,openssl"
+      ],
+      "layer": "unit_tests",
+      "source_file": "knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md",
+      "text": "NULL, pkey)))\n        goto err;\n\n    ret = 1;\n\nerr:\n    RSA_free(rsa);\n    EVP_MD_CTX_free(ctx);\n    EVP_PKEY_free(pkey);\n    BN_free(p);\n    BN_free(q);\n    BN_free(n);\n    BN_free(e);\n    BN_free(d);\n\n    return ret;\n}\n#endif\n\n#if !defined(OPENSSL_NO_CHACHA) && !defined(OPENSSL_NO_POLY1305)\nstatic int test_decrypt_null_chunks(void)\n{\n    EVP_CIPHER_CTX *ctx = NULL;\n    EVP_CIPHER *cipher = NULL;\n    const unsigned char key[32] = {\n        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,\n        0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,\n        0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1\n    };\n    unsigned char iv[12] = {\n        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b\n    };\n    unsigned char msg[] = \"It was the best of times, it was the worst of times\";\n    unsigned char ciphertext[80];\n    unsigned char plaintext[80];\n    /* We initialise tmp to a non zero value on purpose */\n    int ctlen, ptle",
+      "metadata": {
+        "oracle_type": "",
+        "doc_type": "unit_test_call_pattern",
+        "family": "",
+        "source_file": "knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md",
+        "pattern_id": "",
+        "layer": "unit_tests",
+        "library": "openssl"
+      }
+    },
+    {
+      "rank": 20,
+      "score": 1.0476499695260677,
+      "distance": 0.56825852394104,
+      "base_score": 0.6376499695260677,
+      "rerank_score": 1.0476499695260677,
+      "rerank_reasons": [
+        "api_match:EVP",
+        "library_match:openssl",
+        "source_file_api_match",
+        "keyword_overlap:cipher,ctx,openssl"
+      ],
+      "layer": "unit_tests",
+      "source_file": "knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md",
+      "text": "return ret;\n}\n#endif\n\n#if !defined(OPENSSL_NO_CHACHA) && !defined(OPENSSL_NO_POLY1305)\nstatic int test_decrypt_null_chunks(void)\n{\n    EVP_CIPHER_CTX *ctx = NULL;\n    EVP_CIPHER *cipher = NULL;\n    const unsigned char key[32] = {\n        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,\n        0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,\n        0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1\n    };\n    unsigned char iv[12] = {\n        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b\n    };\n    unsigned char msg[] = \"It was the best of times, it was the worst of times\";\n    unsigned char ciphertext[80];\n    unsigned char plaintext[80];\n    /* We initialise tmp to a non zero value on purpose */\n    int ctlen, ptlen, tmp = 99;\n```\n\n## Call pattern 39\n\n```c\nrsa = NULL;\n\n    if (!TEST_true(EVP_DigestSignInit(ctx, NULL, md, NULL, pkey)))\n        goto err;\n\n    ret = 1;\n\nerr:\n    RSA_free(rsa);\n    EVP_MD_CTX_free(ctx);",
+      "metadata": {
+        "oracle_type": "",
+        "library": "openssl",
+        "layer": "unit_tests",
+        "source_file": "knowledge_raw/unit_tests/openssl/__home__wen__work__clean_sources__openssl-3.5.5__test__evp_extra_test.c.md",
+        "pattern_id": "",
+        "family": "",
+        "doc_type": "unit_test_call_pattern"
+      }
+    }
+  ]
+}

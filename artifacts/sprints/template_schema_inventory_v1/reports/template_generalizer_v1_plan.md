@@ -1,0 +1,85 @@
+# Template Generalizer V1 Plan
+
+- next_step: template_generalizer_v1
+- source_templates_to_generate_next:
+  -
+    - poc_id: WOLFSSL-POC-0007
+    - source_library: wolfssl
+    - family: pkcs_container_parsing
+    - mode: source_template_from_poc
+    - required_files:
+      - poc_original.c
+      - tmpl_wolfssl.c
+      - template_meta.yaml
+      - mask_report.yaml
+      - ast_mask_report.yaml
+      - selected_mask_units.yaml
+  -
+    - poc_id: WOLFSSL-POC-0006
+    - source_library: wolfssl
+    - family: pkcs_container_parsing
+    - mode: source_template_from_poc
+    - required_files:
+      - poc_original.c
+      - tmpl_wolfssl.c
+      - template_meta.yaml
+      - mask_report.yaml
+      - ast_mask_report.yaml
+      - selected_mask_units.yaml
+  -
+    - poc_id: WOLFSSL-POC-0004
+    - source_library: wolfssl
+    - family: asn1_nested_boundary
+    - mode: source_template_from_poc
+    - required_files:
+      - poc_original.c
+      - tmpl_wolfssl.c
+      - template_meta.yaml
+      - mask_report.yaml
+      - ast_mask_report.yaml
+      - selected_mask_units.yaml
+  -
+    - poc_id: OPENSSL-ISSUE-13860
+    - source_library: openssl
+    - family: asn1_nested_boundary
+    - mode: source_template_from_poc
+    - required_files:
+      - poc_original.c
+      - tmpl_openssl.c
+      - template_meta.yaml
+      - mask_report.yaml
+      - ast_mask_report.yaml
+      - selected_mask_units.yaml
+  -
+    - poc_id: OPENSSL-ISSUE-14457
+    - source_library: openssl
+    - family: asn1_nested_boundary
+    - mode: source_template_from_poc
+    - required_files:
+      - poc_original.c
+      - tmpl_openssl.c
+      - template_meta.yaml
+      - mask_report.yaml
+      - ast_mask_report.yaml
+      - selected_mask_units.yaml
+  -
+    - poc_id: OPENSSL-ISSUE-27572
+    - source_library: openssl
+    - family: asn1_nested_boundary
+    - mode: source_template_from_poc
+    - required_files:
+      - poc_original.c
+      - tmpl_openssl.c
+      - template_meta.yaml
+      - mask_report.yaml
+      - ast_mask_report.yaml
+      - selected_mask_units.yaml
+- tooling_needed:
+  - template_maker: True
+  - mask_tools: True
+  - ast_sister_or_ast_lite: True
+  - rag_evidence: True
+  - glm_allowed: False
+  - glm_allowed_only_for_future_adapter_slot_filling: True
+- mutation_point_policy: Mutation points must come from mask_report/AST selected units, not from GLM free-form generation.
+- notes: This plan is descriptive only; this inventory sprint did not create source templates.

@@ -1,0 +1,180 @@
+schema_version: 1
+family_profile_schema:
+  family_id: string_stable_identifier
+  family_name: human_readable_name
+  category:
+    one_of:
+    - lifecycle
+    - parser_boundary
+    - app_validation
+    - arithmetic_semantics
+    - provider_or_context
+    - memory_or_state
+  source_seeds:
+  - seed identifiers, PoC ids, issue ids, or patch/regression references
+  target_libraries:
+  - library ids
+  api_groups:
+  - source/target API clusters with roles
+  root_cause_hypotheses:
+  - explicit hypotheses, not claims
+  mutation_points:
+  - state, parameter, buffer, parser boundary, or app-level input mutations
+  oracle_types:
+  - return code, output state, pointer consumption, sanitizer, app visible behavior
+  previous_feedback:
+  - feedback jsonl rows or sprint summaries
+  current_status:
+    one_of:
+    - ready_for_triage
+    - ready_for_mutation
+    - ready_for_A_path
+    - external_validation_track
+    - closed_negative_feedback
+    - blocked_seed_missing
+    - needs_more_evidence
+  last_sprint: latest sprint id
+  recommended_next_action: scheduler-readable task id
+example_profiles:
+- family_id: mac_lifecycle
+  family_name: MAC context lifecycle
+  category: lifecycle
+  source_seeds:
+  - OPENSSL-ISSUE-22842
+  target_libraries:
+  - openssl
+  - mbedtls
+  api_groups:
+  - EVP_MAC_*
+  - PSA MAC APIs
+  root_cause_hypotheses:
+  - lifecycle/query behavior after final/abort/update sequences
+  mutation_points:
+  - final/update/abort ordering
+  - context reuse
+  oracle_types:
+  - return code
+  - safe rejection
+  - cross-library semantic comparison
+  previous_feedback:
+  - artifacts/feedback/mac_lifecycle_feedback.jsonl
+  current_status: ready_for_A_path
+  last_sprint: mac_lifecycle_family_v1
+  recommended_next_action: mac_lifecycle_documentation_and_caller_impact_triage
+- family_id: der_full_consumption
+  family_name: DER full-consumption app-level validation
+  category: app_validation
+  source_seeds:
+  - MBEDTLS-POC-0020
+  target_libraries:
+  - openssl
+  api_groups:
+  - openssl app DER commands
+  - OSSL_STORE loaders
+  - d2i_* lower-level references
+  root_cause_hypotheses:
+  - app accepts valid prefix DER while ignoring malformed trailing ASN.1 tail
+  mutation_points:
+  - append malformed tail
+  - malformed-only control
+  - valid-prefix control
+  oracle_types:
+  - app exit code
+  - stdout/stderr visible success
+  - malformed-only reject
+  previous_feedback:
+  - artifacts/feedback/der_full_consumption_feedback.jsonl
+  current_status: external_validation_track
+  last_sprint: ossl_store_full_consumption
+  recommended_next_action: minimal_reproducer_or_upstream_inquiry
+- family_id: secure_heap_state_lifecycle
+  family_name: secure heap state lifecycle
+  category: memory_or_state
+  source_seeds:
+  - OPENSSL-ISSUE-28669
+  target_libraries:
+  - openssl
+  api_groups:
+  - CRYPTO_secure_*
+  - OPENSSL_secure_*
+  root_cause_hypotheses:
+  - secure heap query/use paths after uninitialized, done, or failed init states may
+    dereference unavailable lock/state
+  mutation_points:
+  - pre_init
+  - initialized
+  - done_then_query
+  - init_failed_then_query
+  oracle_types:
+  - crash/signal
+  - gdb backtrace
+  - normal controls
+  - version matrix
+  previous_feedback:
+  - artifacts/feedback/secure_heap_state_lifecycle_feedback.jsonl
+  - artifacts/feedback/secure_heap_init_failed_then_query_candidate_feedback.jsonl
+  current_status: external_validation_track
+  last_sprint: secure_heap_init_failed_then_query_candidate_validation
+  recommended_next_action: secure_heap_external_validation_track
+- family_id: cipher_aead_lifecycle
+  family_name: AEAD cipher lifecycle
+  category: lifecycle
+  source_seeds:
+  - MBEDTLS-POC-0004
+  - MBEDTLS-POC-0028
+  - OPENSSL-ISSUE-17715
+  - OPENSSL-ISSUE-8980
+  target_libraries:
+  - openssl
+  - mbedtls
+  - botan
+  api_groups:
+  - OpenSSL EVP_Cipher/AEAD
+  - mbedTLS PSA AEAD
+  - Botan AEAD_Mode
+  root_cause_hypotheses:
+  - state/order/tag/output-state misuse may expose semantic divergence
+  mutation_points:
+  - final_without_update
+  - set_tag_after_final
+  - truncated_tag_length
+  - ctx_copy_or_reset
+  - init_failure_then_operation
+  oracle_types:
+  - return code
+  - output state
+  - cross-library legal semantics check
+  previous_feedback:
+  - artifacts/feedback/cipher_aead_lifecycle_*jsonl
+  current_status: closed_negative_feedback
+  last_sprint: cipher_aead_lifecycle_gcm_closure_v1
+  recommended_next_action: scheduler_rerank_or_non_gcm_aead_triage_later
+- family_id: asn1_nested_boundary
+  family_name: ASN.1 nested boundary
+  category: parser_boundary
+  source_seeds:
+  - MBEDTLS-POC-0017
+  - OPENSSL-ISSUE-30581
+  target_libraries:
+  - openssl
+  - mbedtls
+  api_groups:
+  - X509/PKCS12 ASN.1 parsers
+  - d2i_* APIs
+  - openssl pkcs12 app
+  root_cause_hypotheses:
+  - malformed nested ASN.1 substructure may reach null or boundary-sensitive paths
+  mutation_points:
+  - missing nested field
+  - bad salt type
+  - truncated nested object
+  - placeholder-vs-real seed
+  oracle_types:
+  - safe reject
+  - sanitizer crash
+  - strict reproduction gate
+  previous_feedback:
+  - artifacts/feedback/asn1_nested_boundary_*jsonl
+  current_status: blocked_seed_missing
+  last_sprint: asn1_nested_boundary_seed_enrichment_v1
+  recommended_next_action: framework_automation_schema_unification_v1

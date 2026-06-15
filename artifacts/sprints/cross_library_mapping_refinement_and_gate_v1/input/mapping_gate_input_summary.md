@@ -1,0 +1,22 @@
+# Report
+
+```yaml
+task: cross_library_mapping_refinement_and_gate_v1
+based_on_rag_v2_pass: true
+scope: mapping refinement / gate only
+writes_knowledge_raw: false
+rebuilds_rag: false
+known_weaknesses:
+- q3 wc_ParseCert recall weak
+- q7 no_direct_counterpart label recall weak
+inputs:
+  wolfssl_mapping: knowledge_raw/cross_lib_equivalence/wolfssl_cross_library_mapping_candidates.yaml
+  counterpart_mapping: knowledge_raw/cross_lib_equivalence/cross_library_counterpart_mapping_candidates.yaml
+  wolfssl_cards: knowledge_raw/api_knowledge_cards/wolfssl_top_family_api_cards.yaml
+  openssl_cards: knowledge_raw/api_knowledge_cards/openssl_counterpart_api_cards.yaml
+  mbedtls_cards: knowledge_raw/api_knowledge_cards/mbedtls_counterpart_api_cards.yaml
+  wolfssl_constraints: knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.yaml
+  counterpart_constraints: knowledge_raw/api_constraints/cross_library_counterpart_api_constraints.yaml
+  query_eval: artifacts/sprints/rag_rebuild_and_query_eval_v2/query_eval/query_eval_v2_results.yaml
+  out_dir: artifacts/sprints/cross_library_mapping_refinement_and_gate_v1
+```

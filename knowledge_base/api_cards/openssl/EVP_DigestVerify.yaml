@@ -26,6 +26,13 @@ related_apis:
   - EVP_MD_CTX_new
   - EVP_MD_CTX_free
 mutation_hints:
+  - invalid signature acceptance
+  - bitflip signature
+  - wrong digest algorithm
+  - wrong hash length
+  - wrong public key
+  - RSA-PSS salt length mismatch
+  - padding mismatch
   - wrong object type
   - public-only key path
   - malformed signature length
@@ -34,8 +41,11 @@ oracle_observables:
   - return_code
   - error_stack
   - sanitizer_signal
+  - signature_acceptance
+known_pitfalls:
+  - success on intentionally invalid signature material is a high-value semantic candidate
+  - initialization or padding setup failure must not be treated as invalid signature acceptance
 source_references:
   - openssl/evp.h
 notes:
   - "Known pitfall: distinguish invalid signature from provider or dispatch errors."
-

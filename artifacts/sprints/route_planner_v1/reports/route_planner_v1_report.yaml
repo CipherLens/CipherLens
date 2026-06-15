@@ -1,0 +1,46 @@
+sprint: route_planner_v1
+input_sources:
+  auto_scheduler: artifacts/sprints/auto_scheduler_v1
+  schema_dir: artifacts/sprints/framework_automation_schema_unification_v1
+  pattern_bank: artifacts/pattern_bank/unified_pattern_bank.yaml
+  scheduler_seed: artifacts/pattern_bank/scheduler_seed.yaml
+  feedback_files:
+  - artifacts/feedback/asn1_nested_boundary_d_path_audit_feedback.jsonl
+  - artifacts/feedback/asn1_nested_boundary_minimal_reproducer_feedback.jsonl
+  - artifacts/feedback/asn1_nested_boundary_seed_enrichment_feedback.jsonl
+  - artifacts/feedback/cipher_aead_lifecycle_botan_crosscheck_feedback.jsonl
+  - artifacts/feedback/cipher_aead_lifecycle_gcm_closure_feedback.jsonl
+  - artifacts/feedback/cipher_aead_lifecycle_mutation_feedback.jsonl
+  - artifacts/feedback/cipher_aead_lifecycle_semantic_crosscheck_feedback.jsonl
+  - artifacts/feedback/der_full_consumption_feedback.jsonl
+  - artifacts/feedback/mac_lifecycle_feedback.jsonl
+  - artifacts/feedback/mutation_feedback.jsonl
+  - artifacts/feedback/secure_heap_init_failed_then_query_candidate_feedback.jsonl
+  - artifacts/feedback/secure_heap_state_lifecycle_feedback.jsonl
+  - artifacts/feedback/secure_heap_state_lifecycle_pattern_expansion_feedback.jsonl
+  knowledge_files:
+  - knowledge_raw/poc_patterns/unified_patterns.md
+  - knowledge_raw/poc_patterns/openssl_issue_patterns.md
+auto_scheduler_recommendation_accepted: true
+top_1_family: x509_parsing
+top_1_route: C_app_level_validation_gap
+route_confidence: medium
+route_ambiguity:
+- C_app_level_validation_gap is plausible because several x509 seeds are app-visible
+  wrong-result/wrong-output cases.
+- D_crash_sanitizer_evidence_audit remains plausible for seeds such as CSR/ASN.1 NULL
+  dereference reports.
+- A-path is premature until seed inventory, API grouping, and oracle comparability
+  are explicit.
+- B-path is possible later for verifier/state-machine style mutations, but controls
+  are not defined yet.
+auto_triage_allowed: true
+auto_render_allowed: false
+auto_run_allowed: false
+glm_allowed: false
+top2_fallback: evp_pkey_context_lifecycle_evidence_strengthening_v1
+top3_fallback: der_full_consumption_minimal_reproducer_or_upstream_inquiry
+next_task_name: x509_parsing_triage_v1
+vulnerability_found: false
+pattern_bank_modified: false
+next_stage: gated_auto_triage_v1 after x509 seed inventory and route disambiguation

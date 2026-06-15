@@ -1,0 +1,54 @@
+# RAG candidate snippets
+
+| poc_id | library | family | import_status | notes |
+| --- | --- | --- | --- | --- |
+| MBEDTLS-POC-0001 | mbedtls | bignum_serialization_boundary | medium_confidence_staging | staged structured summary only; no raw HTML/log/poc.c body imported |
+| MBEDTLS-POC-0002 | mbedtls | bignum_arithmetic_precondition | blocked | staged structured summary only; no raw HTML/log/poc.c body imported |
+| MBEDTLS-POC-0003 | mbedtls | cipher_padding_output_length | medium_confidence_staging | staged structured summary only; no raw HTML/log/poc.c body imported |
+| MBEDTLS-POC-0004 | mbedtls | cipher_padding_output_length | medium_confidence_staging | staged structured summary only; no raw HTML/log/poc.c body imported |
+| MBEDTLS-POC-0005 | mbedtls | tls_protocol_state_lifecycle | medium_confidence_staging | staged structured summary only; no raw HTML/log/poc.c body imported |
+| MBEDTLS-POC-0011 | mbedtls | tls_protocol_state_lifecycle | medium_confidence_staging | staged structured summary only; no raw HTML/log/poc.c body imported |
+| MBEDTLS-POC-0017 | mbedtls | tls_protocol_state_lifecycle | medium_confidence_staging | staged structured summary only; no raw HTML/log/poc.c body imported |
+| MBEDTLS-POC-0020 | mbedtls | tls_protocol_state_lifecycle | medium_confidence_staging | staged structured summary only; no raw HTML/log/poc.c body imported |
+| MBEDTLS-POC-0028 | mbedtls | cipher_aead_lifecycle | needs_manual_review | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-11567 | openssl | bignum_serialization_boundary | blocked | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-11772 | openssl | bignum_serialization_boundary | blocked | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-13860 | openssl | bignum_serialization_boundary | high_confidence_import_candidate | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-14457 | openssl | bignum_serialization_boundary | high_confidence_import_candidate | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-14675 | openssl | bignum_serialization_boundary | blocked | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-15899 | openssl | bignum_serialization_boundary | high_confidence_import_candidate | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-16196 | openssl | bignum_serialization_boundary | high_confidence_import_candidate | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-17715 | openssl | bignum_serialization_boundary | blocked | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-18168 | openssl | bignum_serialization_boundary | high_confidence_import_candidate | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-18659 | openssl | bignum_serialization_boundary | medium_confidence_staging | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-19524 | openssl | bignum_serialization_boundary | high_confidence_import_candidate | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-21935 | openssl | bignum_serialization_boundary | high_confidence_import_candidate | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-22388 | openssl | bignum_serialization_boundary | high_confidence_import_candidate | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-22842 | openssl | mac_lifecycle | high_confidence_import_candidate | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-23325 | openssl | bignum_serialization_boundary | high_confidence_import_candidate | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-26106 | openssl | bignum_serialization_boundary | high_confidence_import_candidate | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-2630 | openssl | secure_heap_state_lifecycle | high_confidence_import_candidate | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-27572 | openssl | bignum_serialization_boundary | high_confidence_import_candidate | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-28669 | openssl | secure_heap_state_lifecycle | high_confidence_import_candidate | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-29418 | openssl | bignum_serialization_boundary | blocked | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-29574 | openssl | bignum_serialization_boundary | high_confidence_import_candidate | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-29645 | openssl | bignum_serialization_boundary | high_confidence_import_candidate | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-30291 | openssl | bignum_serialization_boundary | high_confidence_import_candidate | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-30432 | openssl | bignum_serialization_boundary | high_confidence_import_candidate | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-30581 | openssl | bignum_serialization_boundary | high_confidence_import_candidate | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-30889 | openssl | bignum_serialization_boundary | blocked | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-6788 | openssl | bignum_serialization_boundary | high_confidence_import_candidate | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-8435 | openssl | bignum_serialization_boundary | high_confidence_import_candidate | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-8980 | openssl | cipher_aead_lifecycle | high_confidence_import_candidate | staged structured summary only; no raw HTML/log/poc.c body imported |
+| OPENSSL-ISSUE-9043 | openssl | bignum_serialization_boundary | blocked | staged structured summary only; no raw HTML/log/poc.c body imported |
+| WOLFSSL-POC-0001 | wolfssl | tls_protocol_state_lifecycle | blocked | staged structured summary only; no raw HTML/log/poc.c body imported |
+| WOLFSSL-POC-0002 | wolfssl | bignum_serialization_boundary | medium_confidence_staging | staged structured summary only; no raw HTML/log/poc.c body imported |
+| WOLFSSL-POC-0003 | wolfssl | tls_protocol_state_lifecycle | medium_confidence_staging | staged structured summary only; no raw HTML/log/poc.c body imported |
+| WOLFSSL-POC-0004 | wolfssl | tls_protocol_state_lifecycle | medium_confidence_staging | staged structured summary only; no raw HTML/log/poc.c body imported |
+| WOLFSSL-POC-0005 | wolfssl | tls_protocol_state_lifecycle | medium_confidence_staging | staged structured summary only; no raw HTML/log/poc.c body imported |
+| WOLFSSL-POC-0005 | wolfssl | x509_parsing | medium_confidence_staging | staged structured summary only; no raw HTML/log/poc.c body imported |
+| WOLFSSL-POC-0006 | wolfssl | pkcs_container_parsing | medium_confidence_staging | staged structured summary only; no raw HTML/log/poc.c body imported |
+| WOLFSSL-POC-0007 | wolfssl | pkcs_container_parsing | medium_confidence_staging | staged structured summary only; no raw HTML/log/poc.c body imported |
+| WOLFSSL-POC-0008 | wolfssl | tls_protocol_state_lifecycle | medium_confidence_staging | staged structured summary only; no raw HTML/log/poc.c body imported |
+| WOLFSSL-POC-0009 | wolfssl | tls_protocol_state_lifecycle | medium_confidence_staging | staged structured summary only; no raw HTML/log/poc.c body imported |
+| WOLFSSL-POC-0010 | wolfssl | tls_protocol_state_lifecycle | medium_confidence_staging | staged structured summary only; no raw HTML/log/poc.c body imported |

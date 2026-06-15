@@ -1,0 +1,46 @@
+high_value_candidates:
+- family: cipher_aead_lifecycle
+  case_id: aead_006_final_without_update_gcm_encrypt
+  case_name: final_without_update
+  algorithm: aes-128-gcm
+  mode: encrypt
+  state_sequence: final_without_update
+  case_type: mutation_case
+  expected_oracle: return_code_and_output_integrity
+  source: artifacts/sprints/cipher_aead_lifecycle_mutation_v1/rendered_cases/mutations/aead_006_final_without_update_gcm_encrypt/aead_006_final_without_update_gcm_encrypt_openssl.c
+  status: run_ok
+  exit_code: 0
+  classification: semantic_divergence_candidate
+  observed_behavior: mutation_allowed_but_may_match_documented_low_level_semantics
+  case_result: permissive_behavior
+  next_action: compare_against API documentation and other AEAD implementations
+- family: cipher_aead_lifecycle
+  case_id: aead_009_set_tag_after_final_gcm_decrypt
+  case_name: set_tag_after_final
+  algorithm: aes-128-gcm
+  mode: decrypt
+  state_sequence: set_tag_after_final
+  case_type: mutation_case
+  expected_oracle: strict_bad_state_reject_or_unexpected_success
+  source: artifacts/sprints/cipher_aead_lifecycle_mutation_v1/rendered_cases/mutations/aead_009_set_tag_after_final_gcm_decrypt/aead_009_set_tag_after_final_gcm_decrypt_openssl.c
+  status: run_ok
+  exit_code: 0
+  classification: permissive_behavior
+  observed_behavior: mutation_allowed_by_api
+  case_result: permissive_behavior
+  next_action: prioritize for cross-library comparison, not as confirmed bug
+- family: cipher_aead_lifecycle
+  case_id: aead_012_wrong_tag_length_gcm_decrypt
+  case_name: wrong_tag_length
+  algorithm: aes-128-gcm
+  mode: decrypt
+  state_sequence: wrong_tag_length
+  case_type: mutation_case
+  expected_oracle: unexpected_success_or_strict_reject
+  source: artifacts/sprints/cipher_aead_lifecycle_mutation_v1/rendered_cases/mutations/aead_012_wrong_tag_length_gcm_decrypt/aead_012_wrong_tag_length_gcm_decrypt_openssl.c
+  status: run_ok
+  exit_code: 0
+  classification: semantic_divergence_candidate
+  observed_behavior: mutation_allowed_but_may_match_documented_low_level_semantics
+  case_result: permissive_behavior
+  next_action: compare_against API documentation and other AEAD implementations

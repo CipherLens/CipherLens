@@ -1,0 +1,32 @@
+schema: family_adapter_scope_v1
+family: asn1_nested_boundary
+source_library: wolfssl
+allowed_targets:
+  openssl:
+    allowed_apis:
+    - ASN1_item_d2i
+    candidate_only_apis: []
+  mbedtls:
+    allowed_apis:
+    - mbedtls_x509_crt_parse_der
+    candidate_only_apis: []
+blocked_targets:
+- target_library: mbedtls
+  target_api: mbedtls_x509_crt_parse_der
+  reason: needs_manual_review
+  source_api: wc_ParseCert
+- target_library: openssl
+  target_api: d2i_X509
+  reason: needs_manual_review
+  source_api: wc_ParseCert
+candidate_only_targets:
+  openssl: []
+  mbedtls: []
+adapter_ready_mapping_count: 2
+candidate_only_mapping_count: 0
+manual_review_mapping_count: 2
+adapter_generation_in_this_sprint: false
+glm_usage_in_this_sprint: false
+notes:
+- Future adapters must bind slots through recipe-slot mode only.
+- Mappings are candidate evidence, not confirmed API equivalence.

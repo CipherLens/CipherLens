@@ -1,0 +1,76 @@
+openssl_skip_manual_review:
+- api: d2i_ASN1_SEQUENCE_ANY
+  reason: needs_manual_review
+- api: PKCS12_free
+  reason: needs_manual_review
+- api: PKCS7_free
+  reason: needs_manual_review
+- api: d2i_PKCS12
+  reason: needs_manual_review
+- api: d2i_PKCS7
+  reason: needs_manual_review
+- api: PEM_read_bio_X509
+  reason: needs_manual_review
+- api: X509_free
+  reason: needs_manual_review
+- api: d2i_X509
+  reason: needs_manual_review
+mbedtls_skip_manual_review:
+- api: mbedtls_calloc
+  reason: needs_manual_review
+- api: mbedtls_platform_set_calloc_free
+  reason: reject_not_found
+mbedtls_no_direct_counterpart:
+- source_api: wc_PKCS12_parse
+  reason: no_direct_counterpart
+- source_api: wc_PKCS7_Free
+  reason: no_direct_counterpart
+- source_api: wc_PKCS7_Init
+  reason: no_direct_counterpart
+- source_api: wc_PKCS7_VerifySignedData
+  reason: no_direct_counterpart
+mapping_needs_manual_review:
+- wolfssl_api: wolfSSL_Malloc
+  target_library: mbedtls
+  target_api: mbedtls_calloc
+- wolfssl_api: wolfSSL_SetAllocators
+  target_library: mbedtls
+  target_api: mbedtls_platform_set_calloc_free
+- wolfssl_api: wc_PKCS7_DecodeSignedData
+  target_library: openssl
+  target_api: d2i_PKCS7
+- wolfssl_api: wc_ParseCert
+  target_library: openssl
+  target_api: d2i_X509
+- wolfssl_api: wolfSSL_X509_free
+  target_library: openssl
+  target_api: X509_free
+mapping_no_direct_counterpart:
+- wolfssl_api: wc_PKCS12_parse
+  target_library: mbedtls
+- wolfssl_api: wc_PKCS7_DecodeSignedData
+  target_library: mbedtls
+- wolfssl_api: wc_PKCS7_VerifySignedData
+  target_library: mbedtls
+mapping_weak_evidence:
+- wolfssl_api: wolfSSL_X509_load_certificate_file
+  target_library: mbedtls
+  target_api: mbedtls_x509_crt_parse_file
+- wolfssl_api: wolfSSL_X509_verify
+  target_library: mbedtls
+  target_api: mbedtls_x509_crt_verify
+- wolfssl_api: wolfSSL_Free
+  target_library: openssl
+  target_api: OPENSSL_free
+- wolfssl_api: wolfSSL_Malloc
+  target_library: openssl
+  target_api: OPENSSL_malloc
+- wolfssl_api: wolfSSL_SetAllocators
+  target_library: openssl
+  target_api: CRYPTO_set_mem_functions
+- wolfssl_api: wolfSSL_X509_load_certificate_file
+  target_library: openssl
+  target_api: PEM_read_X509
+- wolfssl_api: wolfSSL_X509_verify
+  target_library: openssl
+  target_api: X509_verify

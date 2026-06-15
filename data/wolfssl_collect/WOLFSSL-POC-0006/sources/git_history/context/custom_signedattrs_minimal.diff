@@ -1,0 +1,75 @@
+--- /home/yvxi/workplace/CryptoPoc/Collect_Poc/wolfSSL_collect/WOLFSSL-POC-0006/sources/git_history/context/v5_8_4_custom_signedattrs_context.txt	2026-06-08 19:45:30.921545541 +0800
++++ /home/yvxi/workplace/CryptoPoc/Collect_Poc/wolfSSL_collect/WOLFSSL-POC-0006/sources/git_history/context/v5_9_0_custom_signedattrs_context.txt	2026-06-08 19:45:30.925545540 +0800
+@@ -1,31 +1,41 @@
+-2065-        esd->signedAttribsCount += cannedAttribsCount;
+-2066-        esd->signedAttribsSz += (word32)EncodeAttributes(
+-2067-            &esd->signedAttribs[atrIdx], (int)idx, cannedAttribs,
+-2068-            (int)cannedAttribsCount);
+-2069-        atrIdx += idx;
+-2070-    } else {
+-2071-        esd->signedAttribsCount = 0;
+-2072-        esd->signedAttribsSz = 0;
+-2073-    }
+-2074-
+-2075:    /* add custom signed attributes if set */
+-2076-    if (pkcs7->signedAttribsSz > 0 && pkcs7->signedAttribs != NULL) {
+-2077-        esd->signedAttribsCount += pkcs7->signedAttribsSz;
+-2078-        esd->signedAttribsSz += (word32)EncodeAttributes(
+-2079-            &esd->signedAttribs[atrIdx], (int)esd->signedAttribsCount,
+-2080-            pkcs7->signedAttribs, (int)pkcs7->signedAttribsSz);
+-2081-    }
+-2082-
+-2083-#ifdef NO_ASN_TIME
+-2084-    (void)signingTimeOidSz;
+-2085-    (void)signingTime;
+-2086-    (void)signingTimeSz;
+-2087-#endif
+-2088-
+-2089-    return 0;
+-2090-}
+-2091-
+-2092-
+-2093-/* gets correct encryption algo ID for SignedData, either CTC_<hash>wRSA or
+-2094- * CTC_<hash>wECDSA, from pkcs7->publicKeyOID and pkcs7->hashOID.
+-2095- *
++2246-        esd->signedAttribsCount += cannedAttribsCount;
++2247-        esd->signedAttribsSz += (word32)EncodeAttributes(
++2248-            &esd->signedAttribs[atrIdx], (int)idx, cannedAttribs,
++2249-            (int)cannedAttribsCount);
++2250-        atrIdx += idx;
++2251-    } else {
++2252-        esd->signedAttribsCount = 0;
++2253-        esd->signedAttribsSz = 0;
++2254-    }
++2255-
++2256:    /* add custom signed attributes if set */
++2257-    if (pkcs7->signedAttribsSz > 0 && pkcs7->signedAttribs != NULL) {
++2258-        word32 availableSpace = MAX_SIGNED_ATTRIBS_SZ - atrIdx;
++2259-
++2260-        if (pkcs7->signedAttribsSz > availableSpace)
++2261-            return BUFFER_E;
++2262-
++2263-        esd->signedAttribsCount += pkcs7->signedAttribsSz;
++2264-        esd->signedAttribsSz += (word32)EncodeAttributes(
++2265-            &esd->signedAttribs[atrIdx], (int)esd->signedAttribsCount,
++2266-            pkcs7->signedAttribs, (int)pkcs7->signedAttribsSz);
++2267-    }
++2268-
++2269-#ifdef NO_ASN_TIME
++2270-    (void)signingTimeOidSz;
++2271-    (void)signingTime;
++2272-    (void)signingTimeSz;
++2273-#endif
++2274-
++2275-    return 0;
++2276-}
++2277-
++2278-
++2279-/* gets correct encryption algo ID for SignedData, either CTC_<hash>wRSA or
++2280- * CTC_<hash>wECDSA, from pkcs7->publicKeyOID and pkcs7->hashOID.
++2281- *
++2282- * pkcs7          - pointer to PKCS7 structure
++2283- * digEncAlgoId   - [OUT] output int to store correct algo ID in
++2284- * digEncAlgoType - [OUT] output for algo ID type
++2285- *
++2286- * return 0 on success, negative on error */

@@ -1,0 +1,24 @@
+schema: current_oracle_output_inventory_v1
+generated_at: '2026-06-12T02:59:23+00:00'
+original_harness_count: 14
+current_parser_accept_reject_output: false
+current_return_code_output: false
+current_consumed_length_output: false
+current_full_consumption_output: false
+current_openssl_error_output: false
+evidence:
+  printf_count_in_original_harnesses: 0
+  oracle_event_count_in_original_harnesses: 0
+  return_ret_present: true
+  consumed_len_internal_present: true
+  err_queue_internal_present: false
+  raw_rg_output: artifacts/sprints/oracle_instrumentation_enrichment_v1/inventory/current_oracle_output_rg.txt
+  raw_rg_match_lines: 331
+why_analyze_results_only_no_crash_observed:
+- Original harnesses did not print structured parser accept/reject fields to stdout/stderr.
+- Existing compile_run output therefore carried only process status, exit_code, signal, timeout, and sanitizer
+  status.
+- Because all 14 cases exited normally with no sanitizer/crash, analyze_results_v1 could only label no_crash_observed.
+notes:
+- Some original harnesses compute consumed_len internally, but do not emit it as a parseable oracle event.
+- Original harnesses use return codes as oracle signals; nonzero return is not crash evidence.

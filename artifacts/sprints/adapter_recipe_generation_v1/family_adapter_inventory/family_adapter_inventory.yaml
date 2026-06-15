@@ -1,0 +1,180 @@
+schema: family_adapter_inventory_v1
+families:
+- family: pkcs_container_parsing
+  template_level: family
+  has_canonical_template: true
+  has_spec_only: false
+  canonical_template_file: artifacts/sprints/family_template_generalization_v1/family_packages/pkcs_container_parsing/canonical_tmpl_wolfssl.c
+  selected_mask_units_file: artifacts/sprints/family_template_generalization_v1/family_packages/pkcs_container_parsing/selected_mask_units.yaml
+  mutation_slots_file: artifacts/sprints/family_template_generalization_v1/family_packages/pkcs_container_parsing/mutation_slots.yaml
+  oracle_plan_file: artifacts/sprints/family_template_generalization_v1/family_packages/pkcs_container_parsing/oracle_plan.yaml
+  adapter_scope_file: artifacts/sprints/family_template_generalization_v1/family_packages/pkcs_container_parsing/adapter_scope.yaml
+  allowed_targets:
+    openssl:
+      allowed_apis:
+      - PKCS12_parse
+      - PKCS7_verify
+      candidate_only_apis: []
+    mbedtls:
+      allowed_apis: []
+      candidate_only_apis: []
+  blocked_targets:
+  - target_library: mbedtls
+    target_api: ''
+    reason: no_direct_counterpart
+    source_api: wc_PKCS12_parse
+  - target_library: mbedtls
+    target_api: ''
+    reason: no_direct_counterpart
+    source_api: wc_PKCS7_DecodeSignedData
+  - target_library: mbedtls
+    target_api: ''
+    reason: no_direct_counterpart
+    source_api: wc_PKCS7_VerifySignedData
+  - target_library: openssl
+    target_api: d2i_PKCS7
+    reason: weak_evidence
+    source_api: wc_PKCS7_DecodeSignedData
+  adapter_ready_mapping_count: 2
+  candidate_only_mapping_count: 2
+  can_generate_concrete_adapter_recipe: true
+  reason: canonical template + selected units + adapter-ready mapping
+  notes:
+  - Family is adapter unit; PoCs are not adapter units.
+  - Mappings remain candidate-only.
+- family: asn1_nested_boundary
+  template_level: family
+  has_canonical_template: true
+  has_spec_only: false
+  canonical_template_file: artifacts/sprints/family_template_generalization_v1/family_packages/asn1_nested_boundary/canonical_tmpl_wolfssl.c
+  selected_mask_units_file: artifacts/sprints/family_template_generalization_v1/family_packages/asn1_nested_boundary/selected_mask_units.yaml
+  mutation_slots_file: artifacts/sprints/family_template_generalization_v1/family_packages/asn1_nested_boundary/mutation_slots.yaml
+  oracle_plan_file: artifacts/sprints/family_template_generalization_v1/family_packages/asn1_nested_boundary/oracle_plan.yaml
+  adapter_scope_file: artifacts/sprints/family_template_generalization_v1/family_packages/asn1_nested_boundary/adapter_scope.yaml
+  allowed_targets:
+    openssl:
+      allowed_apis:
+      - ASN1_item_d2i
+      candidate_only_apis: []
+    mbedtls:
+      allowed_apis:
+      - mbedtls_x509_crt_parse_der
+      candidate_only_apis: []
+  blocked_targets:
+  - target_library: mbedtls
+    target_api: mbedtls_x509_crt_parse_der
+    reason: needs_manual_review
+    source_api: wc_ParseCert
+  - target_library: openssl
+    target_api: d2i_X509
+    reason: needs_manual_review
+    source_api: wc_ParseCert
+  adapter_ready_mapping_count: 2
+  candidate_only_mapping_count: 2
+  can_generate_concrete_adapter_recipe: true
+  reason: canonical template + selected units + adapter-ready mapping
+  notes:
+  - Family is adapter unit; PoCs are not adapter units.
+  - Mappings remain candidate-only.
+- family: x509_parsing
+  template_level: family
+  has_canonical_template: false
+  has_spec_only: true
+  canonical_template_file: ''
+  selected_mask_units_file: ''
+  mutation_slots_file: artifacts/sprints/family_template_generalization_v1/family_packages/x509_parsing/mutation_slots.yaml
+  oracle_plan_file: artifacts/sprints/family_template_generalization_v1/family_packages/x509_parsing/oracle_plan.yaml
+  adapter_scope_file: artifacts/sprints/family_template_generalization_v1/family_packages/x509_parsing/adapter_scope.yaml
+  allowed_targets:
+    openssl:
+      allowed_apis: []
+      candidate_only_apis:
+      - PEM_read_X509
+      - X509_free
+      - X509_verify
+    mbedtls:
+      allowed_apis:
+      - mbedtls_x509_crt_parse_der
+      candidate_only_apis:
+      - mbedtls_x509_crt_free
+      - mbedtls_x509_crt_parse_file
+      - mbedtls_x509_crt_verify
+  blocked_targets:
+  - target_library: mbedtls
+    target_api: mbedtls_x509_crt_parse_der
+    reason: needs_manual_review
+    source_api: wc_ParseCert
+  adapter_ready_mapping_count: 7
+  candidate_only_mapping_count: 7
+  can_generate_concrete_adapter_recipe: false
+  reason: spec-only or not selected for concrete adapter recipe in this sprint
+  notes:
+  - Family is adapter unit; PoCs are not adapter units.
+  - Mappings remain candidate-only.
+- family: tls_protocol_state_lifecycle
+  template_level: family
+  has_canonical_template: false
+  has_spec_only: true
+  canonical_template_file: ''
+  selected_mask_units_file: ''
+  mutation_slots_file: artifacts/sprints/family_template_generalization_v1/family_packages/tls_protocol_state_lifecycle/mutation_slots.yaml
+  oracle_plan_file: artifacts/sprints/family_template_generalization_v1/family_packages/tls_protocol_state_lifecycle/oracle_plan.yaml
+  adapter_scope_file: artifacts/sprints/family_template_generalization_v1/family_packages/tls_protocol_state_lifecycle/adapter_scope.yaml
+  allowed_targets:
+    openssl:
+      allowed_apis:
+      - SSL_CTX_new
+      - SSL_free
+      - SSL_new
+      candidate_only_apis:
+      - SSL_accept
+      - SSL_connect
+      - SSL_read
+      - SSL_write
+    mbedtls:
+      allowed_apis:
+      - mbedtls_ssl_config_init
+      - mbedtls_ssl_free
+      - mbedtls_ssl_init
+      candidate_only_apis:
+      - mbedtls_ssl_handshake
+      - mbedtls_ssl_read
+      - mbedtls_ssl_write
+  blocked_targets: []
+  adapter_ready_mapping_count: 14
+  candidate_only_mapping_count: 14
+  can_generate_concrete_adapter_recipe: false
+  reason: spec-only or not selected for concrete adapter recipe in this sprint
+  notes:
+  - Family is adapter unit; PoCs are not adapter units.
+  - Mappings remain candidate-only.
+- family: secure_heap_state_lifecycle
+  template_level: family
+  has_canonical_template: false
+  has_spec_only: true
+  canonical_template_file: ''
+  selected_mask_units_file: ''
+  mutation_slots_file: artifacts/sprints/family_template_generalization_v1/family_packages/secure_heap_state_lifecycle/mutation_slots.yaml
+  oracle_plan_file: artifacts/sprints/family_template_generalization_v1/family_packages/secure_heap_state_lifecycle/oracle_plan.yaml
+  adapter_scope_file: artifacts/sprints/family_template_generalization_v1/family_packages/secure_heap_state_lifecycle/adapter_scope.yaml
+  allowed_targets:
+    openssl:
+      allowed_apis: []
+      candidate_only_apis:
+      - CRYPTO_set_mem_functions
+      - OPENSSL_free
+      - OPENSSL_malloc
+    mbedtls:
+      allowed_apis:
+      - mbedtls_free
+      candidate_only_apis:
+      - mbedtls_calloc
+      - mbedtls_platform_set_calloc_free
+  blocked_targets: []
+  adapter_ready_mapping_count: 6
+  candidate_only_mapping_count: 6
+  can_generate_concrete_adapter_recipe: false
+  reason: spec-only or not selected for concrete adapter recipe in this sprint
+  notes:
+  - Family is adapter unit; PoCs are not adapter units.
+  - Mappings remain candidate-only.

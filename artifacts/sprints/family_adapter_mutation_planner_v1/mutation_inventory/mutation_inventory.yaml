@@ -1,0 +1,66 @@
+schema: mutation_inventory_v1
+adapters:
+- adapter_id: pkcs_container_parsing_openssl
+  family: pkcs_container_parsing
+  target_library: openssl
+  adapter_recipe: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/adapter_recipe.yaml
+  slot_bindings: adapter_recipes/wolfssl_family/pkcs_container_parsing/openssl/slot_bindings.yaml
+  family_mutation_slots:
+  - CONTAINER_BYTES
+  - CONTAINER_FORMAT
+  - EXPECT_RET
+  - NESTED_LENGTH_DELTA
+  - TRAILING_BYTES
+  selected_mask_units:
+  - '0'
+  - '256'
+  - '4096'
+  - ATTRIBUTE_COUNT
+  - ATTRIBUTE_OID_BYTES
+  - ATTRIBUTE_VALUE_BYTES
+  - CONTAINER_BYTES
+  - CONTAINER_OPERATION
+  - EXPECT_RET
+  - FAMILY_ATTRIBUTE_COUNT
+  - TRAILING_BYTES
+  oracle_types:
+  - parser_reject_accept
+  - return_code_semantics
+  - full_consumption
+  - cleanup_required
+  can_mutate: true
+  reason: adapter validation pass and render_ready=true
+  blocked: false
+  notes:
+  - case specs only; no render in this sprint
+- adapter_id: asn1_nested_boundary_openssl
+  family: asn1_nested_boundary
+  target_library: openssl
+  adapter_recipe: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/adapter_recipe.yaml
+  slot_bindings: adapter_recipes/wolfssl_family/asn1_nested_boundary/openssl/slot_bindings.yaml
+  family_mutation_slots:
+  - ASN1_NESTED_LENGTH
+  - DER_BYTES
+  - EXPECT_RET
+  - NESTED_DEPTH
+  - TRAILING_GARBAGE
+  selected_mask_units:
+  - DER_BYTES
+  - DER_LENGTH
+  - EXPECT_RET
+  oracle_types:
+  - parser_reject_accept
+  - full_consumption
+  - return_code_semantics
+  can_mutate: true
+  reason: adapter validation pass and render_ready=true
+  blocked: false
+  notes:
+  - case specs only; no render in this sprint
+- adapter_id: asn1_nested_boundary_mbedtls
+  family: asn1_nested_boundary
+  target_library: mbedtls
+  can_mutate: false
+  blocked_reason: blocked_expected / needs_manual_review / mapping gate not render-ready
+  notes:
+  - blocked adapter excluded from mutation case matrix

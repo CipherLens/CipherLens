@@ -1,0 +1,342 @@
+adapter_ready_mapping_candidates:
+- family: asn1_nested_boundary
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wc_InitDecodedCert
+  target_api: mbedtls_x509_crt_parse_der
+  mapping_type: semantic_related
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: DER input, length, parser result slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: asn1_nested_boundary
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wc_InitDecodedCert
+  target_api: ASN1_item_d2i
+  mapping_type: semantic_related
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: DER input, length, parser result slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: pkcs_container_parsing
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wc_PKCS12_parse
+  target_api: PKCS12_parse
+  mapping_type: parser_equivalent
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: container input, parser/verify, cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: pkcs_container_parsing
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wc_PKCS7_VerifySignedData
+  target_api: PKCS7_verify
+  mapping_type: parser_equivalent
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: container input, parser/verify, cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: secure_heap_state_lifecycle
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_Free
+  target_api: mbedtls_free
+  mapping_type: cleanup_equivalent
+  required_oracle_style: cleanup_required
+  adapter_slot_hint: allocator setup/use/free slots
+  cleanup_mapping_hint: cleanup required
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: secure_heap_state_lifecycle
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_Free
+  target_api: OPENSSL_free
+  mapping_type: cleanup_equivalent
+  required_oracle_style: cleanup_required
+  adapter_slot_hint: allocator setup/use/free slots
+  cleanup_mapping_hint: cleanup required
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: secure_heap_state_lifecycle
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_Malloc
+  target_api: mbedtls_calloc
+  mapping_type: semantic_related
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: allocator setup/use/free slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: secure_heap_state_lifecycle
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_Malloc
+  target_api: OPENSSL_malloc
+  mapping_type: semantic_related
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: allocator setup/use/free slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: secure_heap_state_lifecycle
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_SetAllocators
+  target_api: mbedtls_platform_set_calloc_free
+  mapping_type: semantic_related
+  required_oracle_style: cleanup_required
+  adapter_slot_hint: allocator setup/use/free slots
+  cleanup_mapping_hint: cleanup required
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: secure_heap_state_lifecycle
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_SetAllocators
+  target_api: CRYPTO_set_mem_functions
+  mapping_type: semantic_related
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: allocator setup/use/free slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: tls_protocol_state_lifecycle
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_CTX_new
+  target_api: mbedtls_ssl_config_init
+  mapping_type: lifecycle_equivalent
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: init/use/cleanup lifecycle slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: tls_protocol_state_lifecycle
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_CTX_new
+  target_api: SSL_CTX_new
+  mapping_type: lifecycle_equivalent
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: init/use/cleanup lifecycle slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: tls_protocol_state_lifecycle
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_accept
+  target_api: mbedtls_ssl_handshake
+  mapping_type: semantic_related
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: init/use/cleanup lifecycle slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: tls_protocol_state_lifecycle
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_accept
+  target_api: SSL_accept
+  mapping_type: semantic_related
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: init/use/cleanup lifecycle slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: tls_protocol_state_lifecycle
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_connect
+  target_api: mbedtls_ssl_handshake
+  mapping_type: semantic_related
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: init/use/cleanup lifecycle slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: tls_protocol_state_lifecycle
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_connect
+  target_api: SSL_connect
+  mapping_type: semantic_related
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: init/use/cleanup lifecycle slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: tls_protocol_state_lifecycle
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_free
+  target_api: mbedtls_ssl_free
+  mapping_type: cleanup_equivalent
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: init/use/cleanup lifecycle slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: tls_protocol_state_lifecycle
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_free
+  target_api: SSL_free
+  mapping_type: cleanup_equivalent
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: init/use/cleanup lifecycle slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: tls_protocol_state_lifecycle
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_new
+  target_api: mbedtls_ssl_init
+  mapping_type: lifecycle_equivalent
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: init/use/cleanup lifecycle slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: tls_protocol_state_lifecycle
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_new
+  target_api: SSL_new
+  mapping_type: lifecycle_equivalent
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: init/use/cleanup lifecycle slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: tls_protocol_state_lifecycle
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_read
+  target_api: mbedtls_ssl_read
+  mapping_type: semantic_related
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: init/use/cleanup lifecycle slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: tls_protocol_state_lifecycle
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_read
+  target_api: SSL_read
+  mapping_type: semantic_related
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: init/use/cleanup lifecycle slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: tls_protocol_state_lifecycle
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_write
+  target_api: mbedtls_ssl_write
+  mapping_type: semantic_related
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: init/use/cleanup lifecycle slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: tls_protocol_state_lifecycle
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_write
+  target_api: SSL_write
+  mapping_type: semantic_related
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: init/use/cleanup lifecycle slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: x509_parsing
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wc_InitDecodedCert
+  target_api: mbedtls_x509_crt_parse_der
+  mapping_type: candidate_counterpart
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: parser input and object cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: x509_parsing
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_X509_free
+  target_api: mbedtls_x509_crt_free
+  mapping_type: cleanup_equivalent
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: parser input and object cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: x509_parsing
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_X509_free
+  target_api: X509_free
+  mapping_type: cleanup_equivalent
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: parser input and object cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: x509_parsing
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_X509_load_certificate_file
+  target_api: mbedtls_x509_crt_parse_file
+  mapping_type: parser_equivalent
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: parser input and object cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: x509_parsing
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_X509_load_certificate_file
+  target_api: PEM_read_X509
+  mapping_type: parser_equivalent
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: parser input and object cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: x509_parsing
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_X509_verify
+  target_api: mbedtls_x509_crt_verify
+  mapping_type: semantic_related
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: parser input and object cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: x509_parsing
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_X509_verify
+  target_api: X509_verify
+  mapping_type: semantic_related
+  required_oracle_style: parser_reject_accept
+  adapter_slot_hint: parser input and object cleanup slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required

@@ -1,0 +1,9 @@
+# Next Action
+
+```yaml
+schema: next_action_after_runtime_feedback_v1
+generated_at: '2026-06-12T04:30:42+00:00'
+next_task_name: family_loop_closure_report_v1
+secondary_next_task: valid_seed_discovery_pkcs_v1
+reason: staged feedback and external-validation queue generated successfully
+```

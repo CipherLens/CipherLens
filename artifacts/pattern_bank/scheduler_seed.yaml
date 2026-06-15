@@ -51,7 +51,7 @@ families:
     - non_gcm_spaces_remain
     recommended_next_action: scheduler_rerank_after_aead_gcm
   asn1_nested_boundary:
-    priority_score: 0.6
+    priority_score: 0.28
     patterns:
     - MBEDTLS-POC-0017
     - OPENSSL-ISSUE-16196
@@ -59,13 +59,47 @@ families:
     - OPENSSL-ISSUE-26106
     - OPENSSL-ISSUE-27572
     - OPENSSL-ISSUE-30581
+    triage_status: blocked_seed_missing
+    recommended_path: switch_to_framework_automation
+    next_task_name: framework_automation_schema_unification_v1
+    family_readiness: blocked_on_original_seed
+    oracle_quality: medium
+    vulnerability_conclusion: none_confirmed
+    seed_enrichment:
+      latest_sprint: asn1_nested_boundary_seed_enrichment_v1
+      original_seed_status: real_seed_not_found
+      generated_seed_status: equivalent_seed_not_generated
+      validation_result: generated_seed_parse_error_no_crash_for_source_test_vector_candidates
+      asn1_status: blocked_seed_missing
+      scheduler_action: switch_to_framework_automation
+    minimal_reproducer:
+      latest_sprint: asn1_nested_boundary_minimal_reproducer_v1
+      openssl_issue_30581_seed_status: only_placeholder_input_found
+      strict_reproduction_success: false
+      cli_result: blocked_by_placeholder_guard
+      c_api_result: not_generated_no_real_seed
+      scheduler_action: seed_enrichment_before_A_path
+    d_path_audit:
+      latest_sprint: asn1_nested_boundary_d_path_audit_v1
+      mbedtls_poc_0017: migrated_safe_negative_feedback
+      openssl_issue_30581: promising_crash_sanitizer_seed_but_strict_reproduction_missing
+      openssl_issue_9043: needs_more_seed_evidence
+      scheduler_action: continue_D_path_before_A_path
     reasons:
     - clear_oracle
     - has_candidate_signal
     - reusable_family
     - safe_safe_result
     - useful_negative_case
-    recommended_next_action: asn1_nested_boundary_triage_v1
+    - d_path_audit_complete
+    - crash_sanitizer_seed_metadata_available
+    - strict_reproduction_needed
+    - seed_missing_placeholder_only
+    - seed_enrichment_needed
+    - bounded_seed_enrichment_complete
+    - blocked_seed_missing
+    - framework_automation_preferred
+    recommended_next_action: framework_automation_schema_unification_v1
   secure_heap_state_lifecycle:
     priority_score: 0.35
     patterns:
@@ -175,7 +209,61 @@ families:
     - reusable_family
     - semantic_correctness
     - x509_tls_verdict
-    recommended_next_action: x509_parsing_triage_v1
+    - x509_parsing_triage_v1_complete
+    - app_level_validation_gap_promoted
+    - asn1_overlap_isolated
+    - x509_app_level_gap_triage_v1_complete
+    - seed_recovery_required
+    - x509_app_level_seed_recovery_v1_complete
+    - source_test_vector_candidate
+    triage_status: source_vector_reproducer_planning_ready
+    recommended_path: C_app_level_validation_gap_source_vector
+    next_task_name: x509_app_level_source_vector_reproducer_planning_v1
+    family_readiness: source_vector_only_no_original_seed
+    oracle_quality: medium
+    vulnerability_conclusion: none_confirmed
+    triage_v1:
+      latest_sprint: x509_parsing_triage_v1
+      seed_count: 11
+      app_level_x509_count: 8
+      der_overlap_count: 0
+      asn1_overlap_count: 1
+      d_path_crash_seed_count: 1
+      needs_more_evidence_count: 1
+      glm_allowed: false
+      render_run_allowed: false
+      next_action: x509_parsing_app_level_gap_triage_v1
+    app_level_gap_triage_v1:
+      latest_sprint: x509_parsing_app_level_gap_triage_v1
+      c_path_seed_count: 7
+      top_candidates:
+      - OPENSSL-ISSUE-14457
+      - OPENSSL-ISSUE-29418
+      - OPENSSL-ISSUE-14675
+      ready_for_minimal_reproducer_planning: []
+      needs_seed_recovery_count: 7
+      real_input_found_count: 0
+      glm_allowed: false
+      render_run_allowed: false
+      next_action: x509_app_level_seed_recovery_v1
+    seed_recovery_v1:
+      latest_sprint: x509_app_level_seed_recovery_v1
+      original_seed_found_count: 0
+      source_test_vector_found:
+      - OPENSSL-ISSUE-29418
+      construction_script_found:
+      - OPENSSL-ISSUE-14457
+      - OPENSSL-ISSUE-14675
+      - OPENSSL-ISSUE-23325
+      - OPENSSL-ISSUE-6788
+      top_after_recovery:
+      - OPENSSL-ISSUE-29418
+      - OPENSSL-ISSUE-14457
+      - OPENSSL-ISSUE-14675
+      next_action: x509_app_level_source_vector_reproducer_planning_v1
+      strict_reproduction_ready: false
+      vulnerability_conclusion: none_confirmed
+    recommended_next_action: x509_app_level_source_vector_reproducer_planning_v1
   bn_mpi_arithmetic:
     priority_score: 0.25
     patterns:

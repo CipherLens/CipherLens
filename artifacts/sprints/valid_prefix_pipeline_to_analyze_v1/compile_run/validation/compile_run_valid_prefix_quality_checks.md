@@ -1,0 +1,16 @@
+# Compile Run Quality
+
+```yaml
+schema: compile_run_valid_prefix_quality_checks_v1
+generated_at: '2026-06-12T04:13:11+00:00'
+compile_jobs_seen: 6
+compile_success: 6
+compile_failed: 0
+run_attempted: 6
+oracle_events: 18
+openssl_only: true
+mbedtls_attempted: false
+analyze_performed: false
+feedback_written: false
+quality_status: pass
+```

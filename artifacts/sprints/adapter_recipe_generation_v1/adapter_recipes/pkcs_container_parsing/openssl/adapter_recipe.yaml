@@ -1,0 +1,216 @@
+schema: family_adapter_recipe_v1
+adapter_id: pkcs_container_parsing.openssl.family_adapter_recipe_v1
+family: pkcs_container_parsing
+source_library: wolfssl
+target_library: openssl
+template_level: family
+source_template:
+  family_template_dir: artifacts/sprints/family_template_generalization_v1/family_packages/pkcs_container_parsing
+  canonical_template: canonical_tmpl_wolfssl.c
+  family_template_meta: family_template_meta.yaml
+  selected_mask_units: selected_mask_units.yaml
+source_slots:
+  api_slots:
+  - slot_name: wc_PKCS12_parse
+    source_api: wc_PKCS12_parse
+    allowed_target_apis:
+    - openssl:PKCS12_parse
+    blocked_target_apis:
+    - 'mbedtls:'
+    mapping_gate_status:
+    - no_direct_counterpart
+    - usable_for_adapter
+    notes: candidate mapping only; not confirmed equivalence
+  - slot_name: wc_PKCS7_VerifySignedData
+    source_api: wc_PKCS7_VerifySignedData
+    allowed_target_apis:
+    - openssl:PKCS7_verify
+    blocked_target_apis:
+    - 'mbedtls:'
+    mapping_gate_status:
+    - no_direct_counterpart
+    - usable_for_adapter
+    notes: candidate mapping only; not confirmed equivalence
+  - slot_name: wc_PKCS7_DecodeSignedData
+    source_api: wc_PKCS7_DecodeSignedData
+    allowed_target_apis: []
+    blocked_target_apis:
+    - 'mbedtls:'
+    - openssl:d2i_PKCS7
+    mapping_gate_status:
+    - no_direct_counterpart
+    - weak_evidence
+    notes: candidate mapping only; not confirmed equivalence
+  - slot_name: PKCS12_parse
+    source_api: ''
+    allowed_target_apis:
+    - openssl:PKCS12_parse
+    blocked_target_apis: []
+    mapping_gate_status:
+    - usable_for_adapter
+    notes: candidate mapping only; not confirmed equivalence
+  - slot_name: PKCS7_verify
+    source_api: ''
+    allowed_target_apis:
+    - openssl:PKCS7_verify
+    blocked_target_apis: []
+    mapping_gate_status:
+    - usable_for_adapter
+    notes: candidate mapping only; not confirmed equivalence
+  mutation_slots:
+  - CONTAINER_BYTES
+  - CONTAINER_FORMAT
+  - TRAILING_BYTES
+  - NESTED_LENGTH_DELTA
+  - EXPECT_RET
+  cleanup_slots:
+  - slot_name: cleanup_call
+    source_cleanup: family-specific wolfSSL cleanup/free API
+    target_cleanup_candidates: []
+    required: true
+  oracle_slots:
+  - parser_reject_accept
+target_mapping:
+  mapping_gate_status:
+  - adapter_ready
+  - weak_evidence
+  target_apis:
+  - PKCS12_parse
+  - PKCS7_verify
+  candidate_only_apis:
+  - PKCS12_parse
+  - PKCS7_verify
+  blocked_apis:
+  - d2i_PKCS7
+  mappings:
+  - family: pkcs_container_parsing
+    source_library: wolfssl
+    target_library: openssl
+    wolfssl_api: wc_PKCS12_parse
+    target_api: PKCS12_parse
+    mapping_type: parser_equivalent
+    required_oracle_style: parser_reject_accept
+    adapter_slot_hint: container input, parser/verify, cleanup slots
+    cleanup_mapping_hint: family-specific cleanup if object allocated
+    lifecycle_hint: candidate lifecycle must be verified by generated harness
+    risk_notes: candidate mapping only; compile/run/analyze still required
+  - family: pkcs_container_parsing
+    source_library: wolfssl
+    target_library: openssl
+    wolfssl_api: wc_PKCS7_VerifySignedData
+    target_api: PKCS7_verify
+    mapping_type: parser_equivalent
+    required_oracle_style: parser_reject_accept
+    adapter_slot_hint: container input, parser/verify, cleanup slots
+    cleanup_mapping_hint: family-specific cleanup if object allocated
+    lifecycle_hint: candidate lifecycle must be verified by generated harness
+    risk_notes: candidate mapping only; compile/run/analyze still required
+  blocked_mappings:
+  - family: pkcs_container_parsing
+    wolfssl_api: wc_PKCS7_DecodeSignedData
+    target_library: openssl
+    target_api: d2i_PKCS7
+    reason: weak_evidence
+    recommendation: manual_review_before_adapter
+    notes: not adapter-ready under current evidence gate
+  confirmed_equivalence: false
+slot_binding_policy:
+  glm_allowed: false
+  glm_allowed_later_for:
+  - adapter_slot_filling
+  required_bindings:
+  - api_mapping
+  - type_mapping
+  - cleanup_mapping
+  - oracle_mapping
+  - input_mapping
+  - mutation_slot_mapping
+validation:
+  require_trigger_call: true
+  require_cleanup_call: true
+  require_oracle_check: true
+  require_blocked_targets_respected: true
+  require_no_confirmed_equivalence_claim: true
+oracle_strategy:
+  primary:
+  - parser_reject_accept
+  secondary: []
+false_positive_risks:
+- api_misuse
+- candidate_mapping_not_confirmed
+- no_direct_counterpart
+render_policy:
+  render_allowed_now: false
+  render_allowed_after:
+  - adapter_slot_filling
+  - adapter_validate
+compile_policy:
+  compile_allowed_now: false
+selected_mask_units_used:
+- unit_id: ASTLITE-0003
+  role: mutation_point
+  suggested_use: mutate_value
+- unit_id: ASTLITE-0004
+  role: mutation_point
+  suggested_use: mutate_value
+- unit_id: ASTLITE-0001
+  role: mutation_point
+  suggested_use: mutate_value
+- unit_id: ASTLITE-0002
+  role: mutation_point
+  suggested_use: mutate_value
+- unit_id: ASTLITE-0015
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+- unit_id: ASTLITE-0033
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+- unit_id: ASTLITE-0026
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+- unit_id: ASTLITE-0027
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+- unit_id: ASTLITE-0028
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+- unit_id: ASTLITE-0029
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+- unit_id: ASTLITE-0030
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+- unit_id: ASTLITE-0007
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+- unit_id: ASTLITE-0018
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+- unit_id: ASTLITE-0020
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+- unit_id: ASTLITE-0021
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+- unit_id: ASTLITE-0008
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+- unit_id: ASTLITE-0019
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+- unit_id: ASTLITE-0009
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+- unit_id: ASTLITE-0031
+  role: mutation_point
+  suggested_use: llm_reconstruction_context
+- unit_id: ASTLITE-0017
+  role: helper_function
+  suggested_use: preserve_input_preparation
+- unit_id: ASTLITE-0025
+  role: cleanup
+  suggested_use: preserve_cleanup
+notes:
+- Family-level adapter recipe skeleton only.
+- Candidate mapping is not confirmed API equivalence.
+- No GLM, render, compile, run, or C generation in this sprint.

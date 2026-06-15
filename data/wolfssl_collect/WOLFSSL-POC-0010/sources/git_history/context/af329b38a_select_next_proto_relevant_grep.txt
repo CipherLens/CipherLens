@@ -1,0 +1,123 @@
+5:    Fix heap buffer over-read in wolfSSL_select_next_proto
+7:    Add missing bounds validation in wolfSSL_select_next_proto. Three
+10:    1. Outer loop: no check that length byte + position stays within inLen,
+11:       allowing XMEMCMP to read past the server protocol list buffer.
+13:    2. Inner loop: same missing check for clientNames/clientLen boundary.
+15:    3. No-overlap fallback unconditionally dereferences clientNames[0] even
+16:       when clientLen is 0, and returns an outLen that may exceed the buffer.
+18:    Also reject zero-length protocol entries (invalid per RFC 7301) to
+21:    Add unit test test_wolfSSL_select_next_proto with 8 cases covering NULL
+22:    params, normal match, no overlap, malformed length overruns, zero-length
+23:    entries, and empty client lists.
+26: tests/api.c | 119 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+33:@@ -16662,8 +16662,12 @@ int wolfSSL_select_next_proto(unsigned char **out, unsigned char *outLen,
+35:     for (i = 0; i < inLen; i += lenIn) {
+36:         lenIn = in[i++];
+37:+        if (lenIn == 0 || i + lenIn > inLen)
+39:         for (j = 0; j < clientLen; j += lenClient) {
+40:             lenClient = clientNames[j++];
+41:+            if (lenClient == 0 || j + lenClient > clientLen)
+44:             if (lenIn != lenClient)
+46:@@ -16676,8 +16680,14 @@ int wolfSSL_select_next_proto(unsigned char **out, unsigned char *outLen,
+50:-    *out = (unsigned char *)clientNames + 1;
+51:-    *outLen = clientNames[0];
+52:+    if (clientLen > 0 && (unsigned int)clientNames[0] + 1 <= clientLen) {
+53:+        *out = (unsigned char *)clientNames + 1;
+54:+        *outLen = clientNames[0];
+57:+        *out = (unsigned char *)clientNames;
+58:+        *outLen = 0;
+63:diff --git a/tests/api.c b/tests/api.c
+65:--- a/tests/api.c
+66:+++ b/tests/api.c
+67:@@ -9865,6 +9865,124 @@ static int test_wolfSSL_set_alpn_protos(void)
+71:+static int test_wolfSSL_select_next_proto(void)
+73:+    EXPECT_DECLS;
+74:+    unsigned char *out = NULL;
+75:+    unsigned char outLen = 0;
+78:+    /* Wire format: length-prefixed protocol names */
+79:+    unsigned char serverList[] = {
+83:+    unsigned int serverLen = sizeof(serverList);
+85:+    unsigned char clientList[] = {
+88:+    unsigned int clientLen = sizeof(clientList);
+90:+    unsigned char clientListHttp[] = {
+93:+    unsigned int clientListHttpLen = sizeof(clientListHttp);
+95:+    unsigned char clientListNoMatch[] = {
+98:+    unsigned int clientListNoMatchLen = sizeof(clientListNoMatch);
+100:+    /* Test 1: NULL parameters return UNSUPPORTED */
+101:+    ExpectIntEQ(wolfSSL_select_next_proto(NULL, &outLen, serverList,
+102:+        serverLen, clientList, clientLen), WOLFSSL_NPN_UNSUPPORTED);
+103:+    ExpectIntEQ(wolfSSL_select_next_proto(&out, NULL, serverList,
+104:+        serverLen, clientList, clientLen), WOLFSSL_NPN_UNSUPPORTED);
+105:+    ExpectIntEQ(wolfSSL_select_next_proto(&out, &outLen, NULL,
+106:+        serverLen, clientList, clientLen), WOLFSSL_NPN_UNSUPPORTED);
+107:+    ExpectIntEQ(wolfSSL_select_next_proto(&out, &outLen, serverList,
+108:+        serverLen, NULL, clientLen), WOLFSSL_NPN_UNSUPPORTED);
+110:+    /* Test 2: Normal match - client wants "spdy/2", server offers it */
+111:+    out = NULL;
+112:+    outLen = 0;
+113:+    ret = wolfSSL_select_next_proto(&out, &outLen, serverList, serverLen,
+114:+        clientList, clientLen);
+115:+    ExpectIntEQ(ret, WOLFSSL_NPN_NEGOTIATED);
+116:+    ExpectIntEQ(outLen, 6);
+117:+    ExpectNotNull(out);
+118:+    ExpectIntEQ(XMEMCMP(out, "spdy/2", 6), 0);
+120:+    /* Test 3: No overlap - server offers "http/1.1,spdy/2", client wants
+121:+     * "spdy/3". Falls back to first client protocol. */
+122:+    out = NULL;
+123:+    outLen = 0;
+124:+    ret = wolfSSL_select_next_proto(&out, &outLen, serverList, serverLen,
+125:+        clientListNoMatch, clientListNoMatchLen);
+126:+    ExpectIntEQ(ret, WOLFSSL_NPN_NO_OVERLAP);
+127:+    ExpectIntEQ(outLen, 6);
+128:+    ExpectNotNull(out);
+129:+    ExpectIntEQ(XMEMCMP(out, "spdy/3", 6), 0);
+131:+    /* Test 4: Malformed server list - length byte overruns buffer.
+132:+     * Must NOT crash (heap over-read). */
+134:+        unsigned char malformedServer[] = { 200, 'h','t','t','p' };
+135:+        out = NULL;
+136:+        outLen = 0;
+137:+        ret = wolfSSL_select_next_proto(&out, &outLen, malformedServer,
+138:+            sizeof(malformedServer), clientList, clientLen);
+139:+        ExpectIntEQ(ret, WOLFSSL_NPN_NO_OVERLAP);
+142:+    /* Test 5: Malformed client list - length byte overruns buffer.
+145:+        unsigned char malformedClient[] = { 200, 's','p','d','y' };
+146:+        out = NULL;
+147:+        outLen = 0;
+148:+        ret = wolfSSL_select_next_proto(&out, &outLen, serverList, serverLen,
+149:+            malformedClient, sizeof(malformedClient));
+150:+        ExpectIntEQ(ret, WOLFSSL_NPN_NO_OVERLAP);
+153:+    /* Test 6: Zero-length entry in server list - must NOT infinite loop */
+155:+        unsigned char zeroLenServer[] = { 0, 6, 's','p','d','y','/','2' };
+156:+        out = NULL;
+157:+        outLen = 0;
+158:+        ret = wolfSSL_select_next_proto(&out, &outLen, zeroLenServer,
+159:+            sizeof(zeroLenServer), clientList, clientLen);
+160:+        /* Zero-length entry causes break, so no match found */
+161:+        ExpectIntEQ(ret, WOLFSSL_NPN_NO_OVERLAP);
+164:+    /* Test 7: Empty client list (clientLen == 0) - must NOT dereference
+165:+     * clientNames[0]. */
+167:+        unsigned char emptyClient[] = { 0 };
+168:+        out = NULL;
+169:+        outLen = 0;
+170:+        ret = wolfSSL_select_next_proto(&out, &outLen, serverList, serverLen,
+171:+            emptyClient, 0);
+172:+        ExpectIntEQ(ret, WOLFSSL_NPN_NO_OVERLAP);
+173:+        ExpectIntEQ(outLen, 0);
+176:+    /* Test 8: First protocol match - both start with "http/1.1" */
+177:+    out = NULL;
+178:+    outLen = 0;
+179:+    ret = wolfSSL_select_next_proto(&out, &outLen, serverList, serverLen,
+180:+        clientListHttp, clientListHttpLen);
+181:+    ExpectIntEQ(ret, WOLFSSL_NPN_NEGOTIATED);
+182:+    ExpectIntEQ(outLen, 8);
+183:+    ExpectNotNull(out);
+184:+    ExpectIntEQ(XMEMCMP(out, "http/1.1", 8), 0);
+186:+    return EXPECT_RESULT();
+189: #endif /* HAVE_ALPN_PROTOS_SUPPORT */
+191: static int test_wolfSSL_wolfSSL_UseSecureRenegotiation(void)
+192:@@ -32842,6 +32960,7 @@ TEST_CASE testCases[] = {
+193: #ifdef HAVE_ALPN_PROTOS_SUPPORT
+195:     TEST_DECL(test_wolfSSL_set_alpn_protos),
+196:+    TEST_DECL(test_wolfSSL_select_next_proto),
+198:     TEST_DECL(test_tls_ems_downgrade),
+199:     TEST_DECL(test_wolfSSL_DisableExtendedMasterSecret),

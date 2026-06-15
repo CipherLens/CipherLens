@@ -1,0 +1,93 @@
+family: cipher_aead_lifecycle
+source_draft: artifacts/sprints/cipher_aead_lifecycle_family_triage_v1/mutation/aead_lifecycle_render_matrix_draft.yaml
+selection_policy:
+  total_selected: 12
+  algorithm_priority: aes-128-gcm
+  run_controls_first: true
+  stop_if_controls_fail: true
+  note: "This selection intentionally does not run the full 24-case draft matrix."
+selected_cases:
+  - case_id: aead_000_normal_encrypt_gcm
+    case_name: normal_encrypt_control
+    algorithm: aes-128-gcm
+    mode: encrypt
+    state_sequence: normal_encrypt_control
+    case_type: safety_control
+    expected_oracle: normal_defined_behavior
+  - case_id: aead_001_normal_decrypt_gcm
+    case_name: normal_decrypt_control
+    algorithm: aes-128-gcm
+    mode: decrypt
+    state_sequence: normal_decrypt_control
+    case_type: safety_control
+    expected_oracle: normal_defined_behavior
+  - case_id: aead_004_repeated_final_gcm_encrypt
+    case_name: repeated_final
+    algorithm: aes-128-gcm
+    mode: encrypt
+    state_sequence: repeated_final
+    case_type: mutation_case
+    expected_oracle: semantic_divergence
+  - case_id: aead_005_update_after_final_gcm_encrypt
+    case_name: update_after_final
+    algorithm: aes-128-gcm
+    mode: encrypt
+    state_sequence: update_after_final
+    case_type: mutation_case
+    expected_oracle: strict_bad_state_reject_or_semantic_divergence
+  - case_id: aead_006_final_without_update_gcm_encrypt
+    case_name: final_without_update
+    algorithm: aes-128-gcm
+    mode: encrypt
+    state_sequence: final_without_update
+    case_type: mutation_case
+    expected_oracle: return_code_and_output_integrity
+  - case_id: aead_007_get_tag_before_final_gcm_encrypt
+    case_name: get_tag_before_final
+    algorithm: aes-128-gcm
+    mode: encrypt
+    state_sequence: get_tag_before_final
+    case_type: mutation_case
+    expected_oracle: unexpected_success_or_strict_reject
+  - case_id: aead_009_set_tag_after_final_gcm_decrypt
+    case_name: set_tag_after_final
+    algorithm: aes-128-gcm
+    mode: decrypt
+    state_sequence: set_tag_after_final
+    case_type: mutation_case
+    expected_oracle: strict_bad_state_reject_or_unexpected_success
+  - case_id: aead_010_aad_after_data_update_gcm_encrypt
+    case_name: aad_after_data_update
+    algorithm: aes-128-gcm
+    mode: encrypt
+    state_sequence: aad_after_data_update
+    case_type: mutation_case
+    expected_oracle: strict_bad_state_reject_or_semantic_divergence
+  - case_id: aead_011_decrypt_without_set_tag_gcm
+    case_name: decrypt_without_set_tag
+    algorithm: aes-128-gcm
+    mode: decrypt
+    state_sequence: decrypt_without_set_tag
+    case_type: mutation_case
+    expected_oracle: strict_bad_state_reject
+  - case_id: aead_012_wrong_tag_length_gcm_decrypt
+    case_name: wrong_tag_length
+    algorithm: aes-128-gcm
+    mode: decrypt
+    state_sequence: wrong_tag_length
+    case_type: mutation_case
+    expected_oracle: unexpected_success_or_strict_reject
+  - case_id: aead_013_ctx_reuse_after_final_gcm_encrypt
+    case_name: ctx_reuse_after_final
+    algorithm: aes-128-gcm
+    mode: encrypt
+    state_sequence: ctx_reuse_after_final
+    case_type: mutation_case
+    expected_oracle: semantic_divergence
+  - case_id: aead_014_cleanup_then_update_gcm
+    case_name: cleanup_then_update
+    algorithm: aes-128-gcm
+    mode: encrypt
+    state_sequence: cleanup_then_update
+    case_type: mutation_case
+    expected_oracle: crash_or_sanitizer

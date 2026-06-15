@@ -1,0 +1,716 @@
+# AST Sister Output Schema Summary
+
+- mask_report_schema:
+  - observed_files: 268
+  - observed_fields:
+    - bug_behavior
+    - cross_generation_hints
+    - difference_from_copy_variant
+    - expected_oracle
+    - family
+    - harness_family
+    - immutable_structure
+    - includes
+    - key_vulnerability_fragments
+    - language
+    - mask_backend
+    - mask_strategy
+    - mask_units
+    - masking_design
+    - masking_levels
+    - must_preserve_features
+    - mutation_points
+    - mutation_relevance
+    - notes
+    - occlusion_candidates
+    - operation
+    - oracle
+    - oracle_type
+    - pattern_id
+    - poc_pattern
+    - rag_query_context
+    - roles
+    - safe_behavior
+    - schema_version
+    - semantic_projection
+    - source_api
+    - source_file
+    - source_library
+    - source_pattern_id
+    - source_template
+    - status
+    - target_api
+    - template_id
+    - template_name
+    - triage_behavior
+    - trigger_apis
+    - variant_of
+  - unit_fields:
+    - cleanup
+    - code
+    - default
+    - default_value
+    - examples
+    - granularity
+    - id
+    - init
+    - input_construction
+    - location
+    - mask_level
+    - mutation_reason
+    - name
+    - oracle
+    - other_context
+    - placeholder
+    - placeholder_family
+    - priority
+    - reason
+    - role
+    - slot
+    - source
+    - source_expr
+    - trigger_call
+    - type
+    - unit_id
+    - values
+    - variants
+  - slot_fields:
+    - name
+    - placeholder
+    - slot
+    - type
+    - unit_id
+  - oracle_fields:
+    - bug_behavior
+    - expected_oracle
+    - oracle
+    - oracle_type
+    - safe_behavior
+    - triage_behavior
+  - variants:
+    - variant_count: 14
+    - top_variants:
+      -
+        - count: 242
+        - fields:
+          - harness_family
+          - immutable_structure
+          - key_vulnerability_fragments
+          - mask_units
+          - must_preserve_features
+          - oracle_type
+          - pattern_id
+          - source_library
+          - template_id
+      -
+        - count: 8
+        - fields:
+          - cross_generation_hints
+          - includes
+          - language
+          - masking_design
+          - masking_levels
+          - poc_pattern
+          - rag_query_context
+          - roles
+          - source_api
+          - source_file
+          - source_library
+          - template_id
+          - template_name
+      -
+        - count: 3
+        - fields:
+          - expected_oracle
+          - includes
+          - language
+          - mask_units
+          - masking_design
+          - mutation_points
+          - occlusion_candidates
+          - poc_pattern
+          - roles
+          - source_api
+          - source_file
+          - source_library
+          - template_id
+          - template_name
+      -
+        - count: 3
+        - fields:
+          - cross_generation_hints
+          - harness_family
+          - includes
+          - language
+          - masking_design
+          - masking_levels
+          - oracle_type
+          - poc_pattern
+          - rag_query_context
+          - roles
+          - source_api
+          - source_file
+          - source_library
+          - template_id
+          - template_name
+      -
+        - count: 2
+        - fields:
+          - includes
+          - language
+          - mask_units
+          - masking_design
+          - notes
+          - operation
+          - oracle
+          - poc_pattern
+          - rag_query_context
+          - roles
+          - source_api
+          - source_file
+          - source_library
+          - template_id
+          - template_name
+      -
+        - count: 2
+        - fields:
+          - includes
+          - language
+          - mask_units
+          - masking_design
+          - mutation_points
+          - notes
+          - operation
+          - oracle
+          - poc_pattern
+          - rag_query_context
+          - roles
+          - source_api
+          - source_file
+          - source_library
+          - template_id
+          - template_name
+      -
+        - count: 1
+        - fields:
+          - harness_family
+          - mutation_points
+          - oracle_type
+          - semantic_projection
+          - source_pattern_id
+          - template_id
+      -
+        - count: 1
+        - fields:
+          - family
+          - mask_backend
+          - mask_units
+          - mutation_relevance
+          - status
+          - template_id
+- ast_mask_report_schema:
+  - observed_files: 15
+  - observed_fields:
+    - ast_analysis
+    - ast_mask_units
+    - ast_units
+    - generated_by
+    - harness_family
+    - mask_level_summary
+    - pattern_id
+    - role_summary
+    - selected_high_value_nodes
+    - source_api
+    - source_library
+    - summary
+    - template_id
+    - template_name
+    - trigger_apis
+  - ast_unit_fields:
+    - api_or_function
+    - argument_index
+    - call_site
+    - code
+    - default
+    - enclosing_function
+    - function
+    - kind
+    - line
+    - line_end
+    - line_start
+    - macro
+    - mask_level
+    - mutable
+    - mutation_name
+    - mutation_type
+    - name
+    - node_type
+    - order
+    - placeholder
+    - placeholders
+    - priority
+    - reason
+    - role
+    - slot
+    - source
+    - source_text
+    - spelling
+    - unit_id
+    - values
+  - node_kind_fields:
+    - api_argument
+    - api_argument_level
+    - array_initializer
+    - array_size_constant
+    - block
+    - call_expr
+    - call_expression
+    - call_expression_or_argument
+    - cleanup
+    - function_call
+    - function_call_argument
+    - function_call_level
+    - function_definition
+    - helper_function
+    - identifier
+    - if_statement
+    - input_construction
+    - input_preparation
+    - integer_literal
+    - macro_level
+    - mutation_point
+    - oracle
+    - preproc_def
+    - statement
+    - statement_level
+    - string_literal
+    - string_literal_argument
+    - trigger_call
+    - trigger_call_step1
+    - trigger_call_step2_zero_len
+    - trigger_call_step3_reuse
+    - type
+    - value
+    - value_level
+  - source_range_fields:
+    - line
+    - line_end
+    - line_start
+  - confidence_fields:
+    - priority
+  - variants:
+    - variant_count: 5
+    - top_variants:
+      -
+        - count: 4
+        - fields:
+          - ast_mask_units
+          - harness_family
+          - mask_level_summary
+          - role_summary
+          - source_api
+          - source_library
+          - summary
+          - template_id
+          - template_name
+          - trigger_apis
+      -
+        - count: 3
+        - fields:
+          - ast_units
+          - pattern_id
+          - source_library
+          - template_id
+      -
+        - count: 3
+        - fields:
+          - ast_analysis
+          - selected_high_value_nodes
+          - source_api
+          - template_id
+          - template_name
+      -
+        - count: 3
+        - fields:
+          - ast_units
+          - generated_by
+          - pattern_id
+          - source_library
+          - template_id
+      -
+        - count: 2
+        - fields:
+          - ast_mask_units
+          - mask_level_summary
+          - role_summary
+          - source_api
+          - source_library
+          - summary
+          - template_id
+          - template_name
+- selected_mask_units_schema:
+  - observed_files: 20
+  - observed_fields:
+    - family
+    - harness_family
+    - pattern_id
+    - rejected_summary
+    - schema_version
+    - selected_units
+    - selection_policy
+    - selection_summary
+    - source_api
+    - source_library
+    - template_id
+    - template_name
+    - trigger_apis
+  - selected_unit_fields:
+    - code
+    - default
+    - enclosing_function
+    - function
+    - granularity
+    - id
+    - kind
+    - line
+    - line_end
+    - line_start
+    - mask_level
+    - mutation_name
+    - mutation_type
+    - name
+    - node_type
+    - order
+    - placeholder
+    - priority
+    - reason
+    - role
+    - selected
+    - selection_reason
+    - selection_score
+    - slot
+    - source
+    - suggested_use
+    - unit_id
+    - values
+  - scoring_fields:
+    - priority
+    - selected
+    - selection_reason
+    - selection_score
+    - suggested_use
+  - suggested_use_fields:
+    - classify_seed_vs_expansion
+    - llm_reconstruction_context
+    - migrate_api_call
+    - mutate_alloc_api
+    - mutate_api_argument
+    - mutate_free_api
+    - mutate_lifecycle_done
+    - mutate_lifecycle_init
+    - mutate_query_api
+    - mutate_state_sequence
+    - mutate_value
+    - preserve_cleanup
+    - preserve_control_case
+    - preserve_crash_observability
+    - preserve_input_preparation
+    - preserve_oracle
+    - preserve_precondition_check
+  - variants:
+    - variant_count: 8
+    - top_variants:
+      -
+        - count: 4
+        - fields:
+          - harness_family
+          - pattern_id
+          - selected_units
+          - source_library
+          - template_id
+          - trigger_apis
+      -
+        - count: 4
+        - fields:
+          - harness_family
+          - rejected_summary
+          - selected_units
+          - selection_policy
+          - selection_summary
+          - source_api
+          - template_id
+          - template_name
+          - trigger_apis
+      -
+        - count: 3
+        - fields:
+          - selected_units
+          - selection_policy
+          - source_api
+          - template_id
+          - template_name
+      -
+        - count: 3
+        - fields:
+          - pattern_id
+          - selected_units
+          - source_library
+          - template_id
+      -
+        - count: 2
+        - fields:
+          - harness_family
+          - pattern_id
+          - selected_units
+          - template_id
+      -
+        - count: 2
+        - fields:
+          - rejected_summary
+          - selected_units
+          - selection_policy
+          - selection_summary
+          - source_api
+          - template_id
+          - template_name
+      -
+        - count: 1
+        - fields:
+          - family
+          - selected_units
+          - template_id
+      -
+        - count: 1
+        - fields:
+          - harness_family
+          - pattern_id
+          - schema_version
+          - selected_units
+          - template_id
+- template_meta_schema:
+  - observed_files: 690
+  - observed_fields:
+    - ast_mask_selection_trace
+    - backend
+    - bug_behavior
+    - bug_class
+    - claim_boundary
+    - cross_generation_notes
+    - cross_library
+    - default_cases
+    - description
+    - execution_mode
+    - expected_buggy_behavior
+    - expected_fixed_behavior
+    - generation_policy
+    - harness_family
+    - internal_apis
+    - internal_path
+    - is_final_harness
+    - language
+    - llm_enrichment
+    - llm_freeform_c_allowed
+    - mask_slots
+    - mutation_points
+    - normalization
+    - notes
+    - operation
+    - oracle
+    - oracle_type
+    - pattern_id
+    - placeholders
+    - poc_source
+    - rag_requirements
+    - render_matrix_case
+    - required_observables
+    - safe_behavior
+    - schema_version
+    - seed_status
+    - semantic_projection
+    - slot_placeholders
+    - source_api
+    - source_api_detail
+    - source_api_name
+    - source_component
+    - source_internal_functions
+    - source_library
+    - source_pattern_id
+    - source_poc
+    - source_template
+    - source_template_id
+    - source_version
+    - status
+    - target_api
+    - target_library
+    - template_id
+    - template_name
+    - triage_behavior
+    - variant_of
+    - variant_type
+    - verdict
+    - vulnerability_class
+  - mutation_slot_fields:
+    - constraint
+    - critical
+    - default
+    - description
+    - name
+    - normalized
+    - placeholder
+    - priority
+    - strategy
+    - type
+    - values
+    - variants
+  - oracle_fields:
+    - bug_behavior
+    - oracle
+    - oracle_type
+    - safe_behavior
+    - triage_behavior
+    - verdict
+  - variants:
+    - variant_count: 38
+    - top_variants:
+      -
+        - count: 320
+        - fields:
+          - backend
+          - cross_library
+          - generation_policy
+          - harness_family
+          - language
+          - mutation_points
+          - operation
+          - oracle
+          - oracle_type
+          - poc_source
+          - render_matrix_case
+          - source_api
+          - status
+          - target_api
+          - target_library
+          - template_id
+          - template_name
+      -
+        - count: 232
+        - fields:
+          - bug_behavior
+          - cross_library
+          - description
+          - generation_policy
+          - harness_family
+          - mask_slots
+          - mutation_points
+          - oracle_type
+          - pattern_id
+          - render_matrix_case
+          - required_observables
+          - safe_behavior
+          - semantic_projection
+          - source_api
+          - source_component
+          - source_library
+          - source_template_id
+          - status
+          - template_id
+          - triage_behavior
+          - vulnerability_class
+      -
+        - count: 48
+        - fields:
+          - cross_library
+          - harness_family
+          - oracle_type
+          - source_api
+          - source_library
+          - template_id
+      -
+        - count: 24
+        - fields:
+          - harness_family
+          - oracle_type
+          - pattern_id
+          - render_matrix_case
+          - target_api
+          - target_library
+          - template_id
+      -
+        - count: 12
+        - fields:
+          - harness_family
+          - oracle_type
+          - render_matrix_case
+          - target_api
+          - target_library
+          - template_id
+      -
+        - count: 7
+        - fields:
+          - cross_library
+          - harness_family
+          - oracle_type
+          - pattern_id
+          - target_api
+          - target_library
+          - template_id
+      -
+        - count: 4
+        - fields:
+          - backend
+          - cross_library
+          - generation_policy
+          - language
+          - mutation_points
+          - operation
+          - oracle
+          - poc_source
+          - rag_requirements
+          - source_api
+          - status
+          - template_id
+          - template_name
+          - verdict
+      -
+        - count: 3
+        - fields:
+          - backend
+          - bug_class
+          - cross_library
+          - default_cases
+          - expected_buggy_behavior
+          - expected_fixed_behavior
+          - generation_policy
+          - harness_family
+          - internal_apis
+          - language
+          - mutation_points
+          - notes
+          - operation
+          - oracle
+          - oracle_type
+          - placeholders
+          - poc_source
+          - rag_requirements
+          - source_api
+          - source_api_detail
+          - source_api_name
+          - source_poc
+          - source_template_id
+          - status
+          - template_id
+          - template_name
+          - verdict
+- canonical_alignment_recommendation:
+  - ast_mask_report:
+    - Use top-level ast_mask_units as canonical list.
+    - Each unit should include unit_id, mask_level, role, code, source.
+    - When backend provides exact ranges, include node_type, line_start, line_end, column_start, column_end.
+  - selected_mask_units:
+    - Use top-level selected_units as canonical list.
+    - Carry unit_id linkage back to ast_mask_units.
+    - Include suggested_use with migrate_api_call and preserve_oracle/oracle coverage.
+    - Keep selection_summary for downstream validators.
+  - mask_report:
+    - Keep existing role and mask_units variants readable.
+    - Expose mutation slot names/placeholders in a normalized list for family recipes.

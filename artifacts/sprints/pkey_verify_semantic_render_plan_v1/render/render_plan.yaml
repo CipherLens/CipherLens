@@ -1,0 +1,763 @@
+schema: semantic_render_plan_v1
+generated_at: '2026-06-13T12:57:59+00:00'
+family: pkey_verify_semantic
+track: semantic
+target_library: openssl
+source_mutation_plan: artifacts/sprints/pkey_verify_semantic_generic_mutation_plan_v1/mutation/mutation_plan.yaml
+source_slot_bindings: artifacts/sprints/glm_slot_filling_token_budget_fix_v1/slot_filling/generated_slot_bindings.yaml
+adapter_validate_passed: true
+uses_rag_glm_baseline: true
+mapping_gate_bypassed: false
+uses_der_parsing: false
+uses_trailing_garbage: false
+uses_full_consumption_oracle: false
+render_mode: semantic_harness
+algorithm: RSA
+digest: SHA256
+slot_binding_policy:
+  slot_bindings_loaded: true
+  used_as_gate_evidence_only: true
+  semantic_render_uses_evp_digest_sign_verify: true
+cases:
+- case_id: pkey_verify_semantic_mut_valid_accept_control
+  source_seed_id: pkey_verify_semantic_valid_sign_verify_control
+  mutation_strategy: valid_accept_control
+  case_group: valid_accept_control
+  expected_behavior: accept
+  api_sequence:
+  - EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)
+  - EVP_PKEY_keygen_init
+  - EVP_PKEY_CTX_set_rsa_keygen_bits(2048)
+  - EVP_PKEY_keygen
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit(ctx, NULL, EVP_sha256(), NULL, signing_key)
+  - EVP_DigestSignUpdate(ctx, message, message_len)
+  - EVP_DigestSignFinal(ctx, NULL, &sig_len)
+  - EVP_DigestSignFinal(ctx, sig, &sig_len)
+  - EVP_MD_CTX_new
+  - EVP_DigestVerifyInit(ctx, NULL, EVP_sha256(), NULL, verify_key)
+  - EVP_DigestVerifyUpdate(ctx, verify_message, verify_message_len)
+  - EVP_DigestVerifyFinal(ctx, signature, signature_len)
+  key_generation:
+    algorithm: RSA
+    bits: 2048
+    digest: EVP_sha256
+    apis:
+    - EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)
+    - EVP_PKEY_keygen_init
+    - EVP_PKEY_CTX_set_rsa_keygen_bits
+    - EVP_PKEY_keygen
+  signing_flow:
+    message_source: fixed deterministic semantic seed message
+    apis:
+    - EVP_MD_CTX_new
+    - EVP_DigestSignInit
+    - EVP_DigestSignUpdate
+    - EVP_DigestSignFinal(size query)
+    - EVP_DigestSignFinal(signature output)
+  verification_flow:
+    verify_key: same_key_or_mutation_selected_key
+    verify_message: original_or_mutated_message
+    signature: valid_or_mutated_signature
+    apis:
+    - EVP_MD_CTX_new
+    - EVP_DigestVerifyInit
+    - EVP_DigestVerifyUpdate
+    - EVP_DigestVerifyFinal
+    actual_behavior_mapping:
+      EVP_DigestVerifyFinal_returns_1: accept
+      EVP_DigestVerifyFinal_returns_0: reject
+      EVP_DigestVerifyFinal_returns_other: error
+  mutation_application:
+    mode: none
+    details: keep valid signature, message, and verification key unchanged
+  oracle_events:
+  - ORACLE_EVENT family=pkey_verify_semantic
+  - ORACLE_EVENT case_id=pkey_verify_semantic_mut_valid_accept_control
+  - ORACLE_EVENT expected_behavior=accept
+  - ORACLE_EVENT actual_behavior=accept/reject/error
+  - ORACLE_EVENT semantic_mismatch=0/1
+  - ORACLE_EVENT crash_or_sanitizer=0/1
+  oracle_rules:
+  - expected=accept and actual=reject/error -> unexpected_reject
+  - expected=reject and actual=accept -> unexpected_accept
+  - crash/sanitizer signal -> crash_or_sanitizer
+  required_includes:
+  - openssl/evp.h
+  - openssl/rsa.h
+  - openssl/err.h
+  - stdio.h
+  - string.h
+  required_libs:
+  - crypto
+  cleanup_requirements:
+  - EVP_MD_CTX_free
+  - EVP_PKEY_free
+  - EVP_PKEY_CTX_free
+  - OPENSSL_free(signature)
+  render_execution:
+    render_cases_executed: false
+    compile_executed: false
+    run_executed: false
+- case_id: pkey_verify_semantic_mut_signature_flip_one_byte
+  source_seed_id: pkey_verify_semantic_modified_signature_reject_control
+  mutation_strategy: signature_corruption_flip_one_byte
+  case_group: signature_corruption
+  expected_behavior: reject
+  api_sequence: &id001
+  - EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)
+  - EVP_PKEY_keygen_init
+  - EVP_PKEY_CTX_set_rsa_keygen_bits(2048)
+  - EVP_PKEY_keygen
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit(ctx, NULL, EVP_sha256(), NULL, signing_key)
+  - EVP_DigestSignUpdate(ctx, message, message_len)
+  - EVP_DigestSignFinal(ctx, NULL, &sig_len)
+  - EVP_DigestSignFinal(ctx, sig, &sig_len)
+  - EVP_MD_CTX_new
+  - EVP_DigestVerifyInit(ctx, NULL, EVP_sha256(), NULL, verify_key)
+  - EVP_DigestVerifyUpdate(ctx, verify_message, verify_message_len)
+  - EVP_DigestVerifyFinal(ctx, signature, signature_len)
+  key_generation:
+    algorithm: RSA
+    bits: 2048
+    digest: EVP_sha256
+    apis:
+    - EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)
+    - EVP_PKEY_keygen_init
+    - EVP_PKEY_CTX_set_rsa_keygen_bits
+    - EVP_PKEY_keygen
+  signing_flow:
+    message_source: fixed deterministic semantic seed message
+    apis:
+    - EVP_MD_CTX_new
+    - EVP_DigestSignInit
+    - EVP_DigestSignUpdate
+    - EVP_DigestSignFinal(size query)
+    - EVP_DigestSignFinal(signature output)
+  verification_flow:
+    verify_key: same_key_or_mutation_selected_key
+    verify_message: original_or_mutated_message
+    signature: valid_or_mutated_signature
+    apis:
+    - EVP_MD_CTX_new
+    - EVP_DigestVerifyInit
+    - EVP_DigestVerifyUpdate
+    - EVP_DigestVerifyFinal
+    actual_behavior_mapping:
+      EVP_DigestVerifyFinal_returns_1: accept
+      EVP_DigestVerifyFinal_returns_0: reject
+      EVP_DigestVerifyFinal_returns_other: error
+  mutation_application:
+    mode: mutate_signature_buffer
+    details:
+      signature_mutation: flip_byte
+      byte_index: 0
+  oracle_events:
+  - ORACLE_EVENT family=pkey_verify_semantic
+  - ORACLE_EVENT case_id=pkey_verify_semantic_mut_signature_flip_one_byte
+  - ORACLE_EVENT expected_behavior=reject
+  - ORACLE_EVENT actual_behavior=accept/reject/error
+  - ORACLE_EVENT semantic_mismatch=0/1
+  - ORACLE_EVENT crash_or_sanitizer=0/1
+  oracle_rules:
+  - expected=accept and actual=reject/error -> unexpected_reject
+  - expected=reject and actual=accept -> unexpected_accept
+  - crash/sanitizer signal -> crash_or_sanitizer
+  required_includes:
+  - openssl/evp.h
+  - openssl/rsa.h
+  - openssl/err.h
+  - stdio.h
+  - string.h
+  required_libs:
+  - crypto
+  cleanup_requirements:
+  - EVP_MD_CTX_free
+  - EVP_PKEY_free
+  - EVP_PKEY_CTX_free
+  - OPENSSL_free(signature)
+  render_execution:
+    render_cases_executed: false
+    compile_executed: false
+    run_executed: false
+- case_id: pkey_verify_semantic_mut_signature_truncate
+  source_seed_id: pkey_verify_semantic_modified_signature_reject_control
+  mutation_strategy: signature_corruption_truncate
+  case_group: signature_corruption
+  expected_behavior: reject
+  api_sequence: *id001
+  key_generation:
+    algorithm: RSA
+    bits: 2048
+    digest: EVP_sha256
+    apis:
+    - EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)
+    - EVP_PKEY_keygen_init
+    - EVP_PKEY_CTX_set_rsa_keygen_bits
+    - EVP_PKEY_keygen
+  signing_flow:
+    message_source: fixed deterministic semantic seed message
+    apis:
+    - EVP_MD_CTX_new
+    - EVP_DigestSignInit
+    - EVP_DigestSignUpdate
+    - EVP_DigestSignFinal(size query)
+    - EVP_DigestSignFinal(signature output)
+  verification_flow:
+    verify_key: same_key_or_mutation_selected_key
+    verify_message: original_or_mutated_message
+    signature: valid_or_mutated_signature
+    apis:
+    - EVP_MD_CTX_new
+    - EVP_DigestVerifyInit
+    - EVP_DigestVerifyUpdate
+    - EVP_DigestVerifyFinal
+    actual_behavior_mapping:
+      EVP_DigestVerifyFinal_returns_1: accept
+      EVP_DigestVerifyFinal_returns_0: reject
+      EVP_DigestVerifyFinal_returns_other: error
+  mutation_application:
+    mode: mutate_signature_buffer
+    details:
+      signature_mutation: truncate
+      remove_bytes: 1
+  oracle_events:
+  - ORACLE_EVENT family=pkey_verify_semantic
+  - ORACLE_EVENT case_id=pkey_verify_semantic_mut_signature_truncate
+  - ORACLE_EVENT expected_behavior=reject
+  - ORACLE_EVENT actual_behavior=accept/reject/error
+  - ORACLE_EVENT semantic_mismatch=0/1
+  - ORACLE_EVENT crash_or_sanitizer=0/1
+  oracle_rules:
+  - expected=accept and actual=reject/error -> unexpected_reject
+  - expected=reject and actual=accept -> unexpected_accept
+  - crash/sanitizer signal -> crash_or_sanitizer
+  required_includes:
+  - openssl/evp.h
+  - openssl/rsa.h
+  - openssl/err.h
+  - stdio.h
+  - string.h
+  required_libs:
+  - crypto
+  cleanup_requirements:
+  - EVP_MD_CTX_free
+  - EVP_PKEY_free
+  - EVP_PKEY_CTX_free
+  - OPENSSL_free(signature)
+  render_execution:
+    render_cases_executed: false
+    compile_executed: false
+    run_executed: false
+- case_id: pkey_verify_semantic_mut_signature_extend
+  source_seed_id: pkey_verify_semantic_modified_signature_reject_control
+  mutation_strategy: signature_corruption_extend
+  case_group: signature_corruption
+  expected_behavior: reject
+  api_sequence: *id001
+  key_generation:
+    algorithm: RSA
+    bits: 2048
+    digest: EVP_sha256
+    apis:
+    - EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)
+    - EVP_PKEY_keygen_init
+    - EVP_PKEY_CTX_set_rsa_keygen_bits
+    - EVP_PKEY_keygen
+  signing_flow:
+    message_source: fixed deterministic semantic seed message
+    apis:
+    - EVP_MD_CTX_new
+    - EVP_DigestSignInit
+    - EVP_DigestSignUpdate
+    - EVP_DigestSignFinal(size query)
+    - EVP_DigestSignFinal(signature output)
+  verification_flow:
+    verify_key: same_key_or_mutation_selected_key
+    verify_message: original_or_mutated_message
+    signature: valid_or_mutated_signature
+    apis:
+    - EVP_MD_CTX_new
+    - EVP_DigestVerifyInit
+    - EVP_DigestVerifyUpdate
+    - EVP_DigestVerifyFinal
+    actual_behavior_mapping:
+      EVP_DigestVerifyFinal_returns_1: accept
+      EVP_DigestVerifyFinal_returns_0: reject
+      EVP_DigestVerifyFinal_returns_other: error
+  mutation_application:
+    mode: mutate_signature_buffer
+    details:
+      signature_mutation: append_bytes
+      append_hex: '00'
+  oracle_events:
+  - ORACLE_EVENT family=pkey_verify_semantic
+  - ORACLE_EVENT case_id=pkey_verify_semantic_mut_signature_extend
+  - ORACLE_EVENT expected_behavior=reject
+  - ORACLE_EVENT actual_behavior=accept/reject/error
+  - ORACLE_EVENT semantic_mismatch=0/1
+  - ORACLE_EVENT crash_or_sanitizer=0/1
+  oracle_rules:
+  - expected=accept and actual=reject/error -> unexpected_reject
+  - expected=reject and actual=accept -> unexpected_accept
+  - crash/sanitizer signal -> crash_or_sanitizer
+  required_includes:
+  - openssl/evp.h
+  - openssl/rsa.h
+  - openssl/err.h
+  - stdio.h
+  - string.h
+  required_libs:
+  - crypto
+  cleanup_requirements:
+  - EVP_MD_CTX_free
+  - EVP_PKEY_free
+  - EVP_PKEY_CTX_free
+  - OPENSSL_free(signature)
+  render_execution:
+    render_cases_executed: false
+    compile_executed: false
+    run_executed: false
+- case_id: pkey_verify_semantic_mut_signature_all_zero
+  source_seed_id: pkey_verify_semantic_modified_signature_reject_control
+  mutation_strategy: signature_corruption_all_zero
+  case_group: signature_corruption
+  expected_behavior: reject
+  api_sequence: *id001
+  key_generation:
+    algorithm: RSA
+    bits: 2048
+    digest: EVP_sha256
+    apis:
+    - EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)
+    - EVP_PKEY_keygen_init
+    - EVP_PKEY_CTX_set_rsa_keygen_bits
+    - EVP_PKEY_keygen
+  signing_flow:
+    message_source: fixed deterministic semantic seed message
+    apis:
+    - EVP_MD_CTX_new
+    - EVP_DigestSignInit
+    - EVP_DigestSignUpdate
+    - EVP_DigestSignFinal(size query)
+    - EVP_DigestSignFinal(signature output)
+  verification_flow:
+    verify_key: same_key_or_mutation_selected_key
+    verify_message: original_or_mutated_message
+    signature: valid_or_mutated_signature
+    apis:
+    - EVP_MD_CTX_new
+    - EVP_DigestVerifyInit
+    - EVP_DigestVerifyUpdate
+    - EVP_DigestVerifyFinal
+    actual_behavior_mapping:
+      EVP_DigestVerifyFinal_returns_1: accept
+      EVP_DigestVerifyFinal_returns_0: reject
+      EVP_DigestVerifyFinal_returns_other: error
+  mutation_application:
+    mode: mutate_signature_buffer
+    details:
+      signature_mutation: replace_with_zero_buffer
+  oracle_events:
+  - ORACLE_EVENT family=pkey_verify_semantic
+  - ORACLE_EVENT case_id=pkey_verify_semantic_mut_signature_all_zero
+  - ORACLE_EVENT expected_behavior=reject
+  - ORACLE_EVENT actual_behavior=accept/reject/error
+  - ORACLE_EVENT semantic_mismatch=0/1
+  - ORACLE_EVENT crash_or_sanitizer=0/1
+  oracle_rules:
+  - expected=accept and actual=reject/error -> unexpected_reject
+  - expected=reject and actual=accept -> unexpected_accept
+  - crash/sanitizer signal -> crash_or_sanitizer
+  required_includes:
+  - openssl/evp.h
+  - openssl/rsa.h
+  - openssl/err.h
+  - stdio.h
+  - string.h
+  required_libs:
+  - crypto
+  cleanup_requirements:
+  - EVP_MD_CTX_free
+  - EVP_PKEY_free
+  - EVP_PKEY_CTX_free
+  - OPENSSL_free(signature)
+  render_execution:
+    render_cases_executed: false
+    compile_executed: false
+    run_executed: false
+- case_id: pkey_verify_semantic_mut_message_flip_one_byte
+  source_seed_id: pkey_verify_semantic_modified_message_reject_control
+  mutation_strategy: message_mismatch_flip_one_byte
+  case_group: message_mismatch
+  expected_behavior: reject
+  api_sequence: &id002
+  - EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)
+  - EVP_PKEY_keygen_init
+  - EVP_PKEY_CTX_set_rsa_keygen_bits(2048)
+  - EVP_PKEY_keygen
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit(ctx, NULL, EVP_sha256(), NULL, signing_key)
+  - EVP_DigestSignUpdate(ctx, message, message_len)
+  - EVP_DigestSignFinal(ctx, NULL, &sig_len)
+  - EVP_DigestSignFinal(ctx, sig, &sig_len)
+  - EVP_MD_CTX_new
+  - EVP_DigestVerifyInit(ctx, NULL, EVP_sha256(), NULL, verify_key)
+  - EVP_DigestVerifyUpdate(ctx, verify_message, verify_message_len)
+  - EVP_DigestVerifyFinal(ctx, signature, signature_len)
+  key_generation:
+    algorithm: RSA
+    bits: 2048
+    digest: EVP_sha256
+    apis:
+    - EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)
+    - EVP_PKEY_keygen_init
+    - EVP_PKEY_CTX_set_rsa_keygen_bits
+    - EVP_PKEY_keygen
+  signing_flow:
+    message_source: fixed deterministic semantic seed message
+    apis:
+    - EVP_MD_CTX_new
+    - EVP_DigestSignInit
+    - EVP_DigestSignUpdate
+    - EVP_DigestSignFinal(size query)
+    - EVP_DigestSignFinal(signature output)
+  verification_flow:
+    verify_key: same_key_or_mutation_selected_key
+    verify_message: original_or_mutated_message
+    signature: valid_or_mutated_signature
+    apis:
+    - EVP_MD_CTX_new
+    - EVP_DigestVerifyInit
+    - EVP_DigestVerifyUpdate
+    - EVP_DigestVerifyFinal
+    actual_behavior_mapping:
+      EVP_DigestVerifyFinal_returns_1: accept
+      EVP_DigestVerifyFinal_returns_0: reject
+      EVP_DigestVerifyFinal_returns_other: error
+  mutation_application:
+    mode: mutate_verify_message
+    details:
+      message_mutation: flip_byte
+      byte_index: 0
+  oracle_events:
+  - ORACLE_EVENT family=pkey_verify_semantic
+  - ORACLE_EVENT case_id=pkey_verify_semantic_mut_message_flip_one_byte
+  - ORACLE_EVENT expected_behavior=reject
+  - ORACLE_EVENT actual_behavior=accept/reject/error
+  - ORACLE_EVENT semantic_mismatch=0/1
+  - ORACLE_EVENT crash_or_sanitizer=0/1
+  oracle_rules:
+  - expected=accept and actual=reject/error -> unexpected_reject
+  - expected=reject and actual=accept -> unexpected_accept
+  - crash/sanitizer signal -> crash_or_sanitizer
+  required_includes:
+  - openssl/evp.h
+  - openssl/rsa.h
+  - openssl/err.h
+  - stdio.h
+  - string.h
+  required_libs:
+  - crypto
+  cleanup_requirements:
+  - EVP_MD_CTX_free
+  - EVP_PKEY_free
+  - EVP_PKEY_CTX_free
+  - OPENSSL_free(signature)
+  render_execution:
+    render_cases_executed: false
+    compile_executed: false
+    run_executed: false
+- case_id: pkey_verify_semantic_mut_message_empty
+  source_seed_id: pkey_verify_semantic_modified_message_reject_control
+  mutation_strategy: message_mismatch_empty_message
+  case_group: message_mismatch
+  expected_behavior: reject
+  api_sequence: *id002
+  key_generation:
+    algorithm: RSA
+    bits: 2048
+    digest: EVP_sha256
+    apis:
+    - EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)
+    - EVP_PKEY_keygen_init
+    - EVP_PKEY_CTX_set_rsa_keygen_bits
+    - EVP_PKEY_keygen
+  signing_flow:
+    message_source: fixed deterministic semantic seed message
+    apis:
+    - EVP_MD_CTX_new
+    - EVP_DigestSignInit
+    - EVP_DigestSignUpdate
+    - EVP_DigestSignFinal(size query)
+    - EVP_DigestSignFinal(signature output)
+  verification_flow:
+    verify_key: same_key_or_mutation_selected_key
+    verify_message: original_or_mutated_message
+    signature: valid_or_mutated_signature
+    apis:
+    - EVP_MD_CTX_new
+    - EVP_DigestVerifyInit
+    - EVP_DigestVerifyUpdate
+    - EVP_DigestVerifyFinal
+    actual_behavior_mapping:
+      EVP_DigestVerifyFinal_returns_1: accept
+      EVP_DigestVerifyFinal_returns_0: reject
+      EVP_DigestVerifyFinal_returns_other: error
+  mutation_application:
+    mode: mutate_verify_message
+    details:
+      message_mutation: empty_message
+  oracle_events:
+  - ORACLE_EVENT family=pkey_verify_semantic
+  - ORACLE_EVENT case_id=pkey_verify_semantic_mut_message_empty
+  - ORACLE_EVENT expected_behavior=reject
+  - ORACLE_EVENT actual_behavior=accept/reject/error
+  - ORACLE_EVENT semantic_mismatch=0/1
+  - ORACLE_EVENT crash_or_sanitizer=0/1
+  oracle_rules:
+  - expected=accept and actual=reject/error -> unexpected_reject
+  - expected=reject and actual=accept -> unexpected_accept
+  - crash/sanitizer signal -> crash_or_sanitizer
+  required_includes:
+  - openssl/evp.h
+  - openssl/rsa.h
+  - openssl/err.h
+  - stdio.h
+  - string.h
+  required_libs:
+  - crypto
+  cleanup_requirements:
+  - EVP_MD_CTX_free
+  - EVP_PKEY_free
+  - EVP_PKEY_CTX_free
+  - OPENSSL_free(signature)
+  render_execution:
+    render_cases_executed: false
+    compile_executed: false
+    run_executed: false
+- case_id: pkey_verify_semantic_mut_message_longer
+  source_seed_id: pkey_verify_semantic_modified_message_reject_control
+  mutation_strategy: message_mismatch_longer_message
+  case_group: message_mismatch
+  expected_behavior: reject
+  api_sequence: *id002
+  key_generation:
+    algorithm: RSA
+    bits: 2048
+    digest: EVP_sha256
+    apis:
+    - EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)
+    - EVP_PKEY_keygen_init
+    - EVP_PKEY_CTX_set_rsa_keygen_bits
+    - EVP_PKEY_keygen
+  signing_flow:
+    message_source: fixed deterministic semantic seed message
+    apis:
+    - EVP_MD_CTX_new
+    - EVP_DigestSignInit
+    - EVP_DigestSignUpdate
+    - EVP_DigestSignFinal(size query)
+    - EVP_DigestSignFinal(signature output)
+  verification_flow:
+    verify_key: same_key_or_mutation_selected_key
+    verify_message: original_or_mutated_message
+    signature: valid_or_mutated_signature
+    apis:
+    - EVP_MD_CTX_new
+    - EVP_DigestVerifyInit
+    - EVP_DigestVerifyUpdate
+    - EVP_DigestVerifyFinal
+    actual_behavior_mapping:
+      EVP_DigestVerifyFinal_returns_1: accept
+      EVP_DigestVerifyFinal_returns_0: reject
+      EVP_DigestVerifyFinal_returns_other: error
+  mutation_application:
+    mode: mutate_verify_message
+    details:
+      message_mutation: append_text
+      append_text: -extra
+  oracle_events:
+  - ORACLE_EVENT family=pkey_verify_semantic
+  - ORACLE_EVENT case_id=pkey_verify_semantic_mut_message_longer
+  - ORACLE_EVENT expected_behavior=reject
+  - ORACLE_EVENT actual_behavior=accept/reject/error
+  - ORACLE_EVENT semantic_mismatch=0/1
+  - ORACLE_EVENT crash_or_sanitizer=0/1
+  oracle_rules:
+  - expected=accept and actual=reject/error -> unexpected_reject
+  - expected=reject and actual=accept -> unexpected_accept
+  - crash/sanitizer signal -> crash_or_sanitizer
+  required_includes:
+  - openssl/evp.h
+  - openssl/rsa.h
+  - openssl/err.h
+  - stdio.h
+  - string.h
+  required_libs:
+  - crypto
+  cleanup_requirements:
+  - EVP_MD_CTX_free
+  - EVP_PKEY_free
+  - EVP_PKEY_CTX_free
+  - OPENSSL_free(signature)
+  render_execution:
+    render_cases_executed: false
+    compile_executed: false
+    run_executed: false
+- case_id: pkey_verify_semantic_mut_message_different
+  source_seed_id: pkey_verify_semantic_modified_message_reject_control
+  mutation_strategy: message_mismatch_different_message
+  case_group: message_mismatch
+  expected_behavior: reject
+  api_sequence: *id002
+  key_generation:
+    algorithm: RSA
+    bits: 2048
+    digest: EVP_sha256
+    apis:
+    - EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)
+    - EVP_PKEY_keygen_init
+    - EVP_PKEY_CTX_set_rsa_keygen_bits
+    - EVP_PKEY_keygen
+  signing_flow:
+    message_source: fixed deterministic semantic seed message
+    apis:
+    - EVP_MD_CTX_new
+    - EVP_DigestSignInit
+    - EVP_DigestSignUpdate
+    - EVP_DigestSignFinal(size query)
+    - EVP_DigestSignFinal(signature output)
+  verification_flow:
+    verify_key: same_key_or_mutation_selected_key
+    verify_message: original_or_mutated_message
+    signature: valid_or_mutated_signature
+    apis:
+    - EVP_MD_CTX_new
+    - EVP_DigestVerifyInit
+    - EVP_DigestVerifyUpdate
+    - EVP_DigestVerifyFinal
+    actual_behavior_mapping:
+      EVP_DigestVerifyFinal_returns_1: accept
+      EVP_DigestVerifyFinal_returns_0: reject
+      EVP_DigestVerifyFinal_returns_other: error
+  mutation_application:
+    mode: mutate_verify_message
+    details:
+      message_mutation: replace_message
+      replacement: different semantic message
+  oracle_events:
+  - ORACLE_EVENT family=pkey_verify_semantic
+  - ORACLE_EVENT case_id=pkey_verify_semantic_mut_message_different
+  - ORACLE_EVENT expected_behavior=reject
+  - ORACLE_EVENT actual_behavior=accept/reject/error
+  - ORACLE_EVENT semantic_mismatch=0/1
+  - ORACLE_EVENT crash_or_sanitizer=0/1
+  oracle_rules:
+  - expected=accept and actual=reject/error -> unexpected_reject
+  - expected=reject and actual=accept -> unexpected_accept
+  - crash/sanitizer signal -> crash_or_sanitizer
+  required_includes:
+  - openssl/evp.h
+  - openssl/rsa.h
+  - openssl/err.h
+  - stdio.h
+  - string.h
+  required_libs:
+  - crypto
+  cleanup_requirements:
+  - EVP_MD_CTX_free
+  - EVP_PKEY_free
+  - EVP_PKEY_CTX_free
+  - OPENSSL_free(signature)
+  render_execution:
+    render_cases_executed: false
+    compile_executed: false
+    run_executed: false
+- case_id: pkey_verify_semantic_mut_wrong_key_reject
+  source_seed_id: pkey_verify_semantic_wrong_key_reject_control
+  mutation_strategy: wrong_key_verify
+  case_group: wrong_key
+  expected_behavior: reject
+  api_sequence:
+  - EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)
+  - EVP_PKEY_keygen_init
+  - EVP_PKEY_CTX_set_rsa_keygen_bits(2048)
+  - EVP_PKEY_keygen
+  - EVP_MD_CTX_new
+  - EVP_DigestSignInit(ctx, NULL, EVP_sha256(), NULL, signing_key)
+  - EVP_DigestSignUpdate(ctx, message, message_len)
+  - EVP_DigestSignFinal(ctx, NULL, &sig_len)
+  - EVP_DigestSignFinal(ctx, sig, &sig_len)
+  - EVP_MD_CTX_new
+  - EVP_DigestVerifyInit(ctx, NULL, EVP_sha256(), NULL, verify_key)
+  - EVP_DigestVerifyUpdate(ctx, verify_message, verify_message_len)
+  - EVP_DigestVerifyFinal(ctx, signature, signature_len)
+  key_generation:
+    algorithm: RSA
+    bits: 2048
+    digest: EVP_sha256
+    apis:
+    - EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)
+    - EVP_PKEY_keygen_init
+    - EVP_PKEY_CTX_set_rsa_keygen_bits
+    - EVP_PKEY_keygen
+  signing_flow:
+    message_source: fixed deterministic semantic seed message
+    apis:
+    - EVP_MD_CTX_new
+    - EVP_DigestSignInit
+    - EVP_DigestSignUpdate
+    - EVP_DigestSignFinal(size query)
+    - EVP_DigestSignFinal(signature output)
+  verification_flow:
+    verify_key: same_key_or_mutation_selected_key
+    verify_message: original_or_mutated_message
+    signature: valid_or_mutated_signature
+    apis:
+    - EVP_MD_CTX_new
+    - EVP_DigestVerifyInit
+    - EVP_DigestVerifyUpdate
+    - EVP_DigestVerifyFinal
+    actual_behavior_mapping:
+      EVP_DigestVerifyFinal_returns_1: accept
+      EVP_DigestVerifyFinal_returns_0: reject
+      EVP_DigestVerifyFinal_returns_other: error
+  mutation_application:
+    mode: use_independent_verification_key
+    details:
+      signing_key: key_A
+      verify_key: independent_key_B
+  oracle_events:
+  - ORACLE_EVENT family=pkey_verify_semantic
+  - ORACLE_EVENT case_id=pkey_verify_semantic_mut_wrong_key_reject
+  - ORACLE_EVENT expected_behavior=reject
+  - ORACLE_EVENT actual_behavior=accept/reject/error
+  - ORACLE_EVENT semantic_mismatch=0/1
+  - ORACLE_EVENT crash_or_sanitizer=0/1
+  oracle_rules:
+  - expected=accept and actual=reject/error -> unexpected_reject
+  - expected=reject and actual=accept -> unexpected_accept
+  - crash/sanitizer signal -> crash_or_sanitizer
+  required_includes:
+  - openssl/evp.h
+  - openssl/rsa.h
+  - openssl/err.h
+  - stdio.h
+  - string.h
+  required_libs:
+  - crypto
+  cleanup_requirements:
+  - EVP_MD_CTX_free
+  - EVP_PKEY_free
+  - EVP_PKEY_CTX_free
+  - OPENSSL_free(signature)
+  render_execution:
+    render_cases_executed: false
+    compile_executed: false
+    run_executed: false
+claim_policy:
+  confirmed_vulnerability: false
+  cve: false
+  exploitable: false

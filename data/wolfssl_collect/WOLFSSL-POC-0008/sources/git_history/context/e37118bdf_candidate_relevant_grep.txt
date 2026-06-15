@@ -1,0 +1,35 @@
+5:    Hardening in TLSX_KeyShare_ProcessPqcHybridClient
+16:@@ -10222,15 +10222,24 @@ static int TLSX_KeyShare_ProcessPqcHybridClient(WOLFSSL* ssl,
+17:             ecc_kse->key = NULL;
+18:             pqc_kse->privKey = NULL;
+23:+            /* Re-sync keyShareEntry->key with ecc_kse->key. ecc_kse->key was
+24:+             * aliased to keyShareEntry->key above. The inner Process*_ex
+26:+             * to NULL (so the outer pointer must also become NULL to avoid
+27:+             * UAF/double-free in TLSX_KeyShare_FreeAll), or returned early
+30:+             * freeing). Mirroring whatever the inner left in ecc_kse->key
+32:+            keyShareEntry->key = ecc_kse->key;
+37:-        keyShareEntry->key = ecc_kse->key;
+38:-        ecc_kse->key = NULL;
+50:@@ -4579,6 +4579,104 @@ int test_tls13_pqc_hybrid_truncated_keyshare(void)
+55:+ * KeyShare does not leave a dangling pointer in keyShareEntry->key.
+57:+ * The earlier truncated-keyshare test is rejected by the keLen <= ctSz
+58:+ * check before TLSX_KeyShare_ProcessPqcHybridClient sets up the
+59:+ * ecc_kse->key = keyShareEntry->key alias, so it does not exercise the
+64:+ * AFTER its unconditional cleanup at the end of the function frees the
+65:+ * aliased key. Without the fix, the outer keyShareEntry->key still
+66:+ * holds the freed pointer; wolfSSL_free -> TLSX_KeyShare_FreeAll calls
+67:+ * wc_ecc_free + XFREE on it, producing a use-after-free and a double
+68:+ * free that ASAN flags. */
+74:+    !defined(WOLFSSL_NO_ML_KEM_768) && defined(HAVE_ECC) && \
+79:+    WOLFSSL_CTX *ctx = NULL;
+80:+    WOLFSSL *ssl = NULL;
+102:+    /* legacy_compression_method: null */
+126:+    ExpectNotNull(ctx = wolfSSL_CTX_new(wolfTLSv1_3_client_method()));
+130:+    ExpectNotNull(ssl = wolfSSL_new(ctx));
+133:+    ExpectIntEQ(wolfSSL_UseKeyShare(ssl, WOLFSSL_SECP256R1MLKEM768),
+144:+    /* Without the fix, this triggers UAF + double-free in
+145:+     * TLSX_KeyShare_FreeAll. */
+146:+    wolfSSL_free(ssl);
+147:+    wolfSSL_CTX_free(ctx);
+162: int test_tls13_pqc_hybrid_truncated_keyshare(void);
+170:     TEST_DECL_GROUP("tls13", test_tls13_pqc_hybrid_truncated_keyshare), \

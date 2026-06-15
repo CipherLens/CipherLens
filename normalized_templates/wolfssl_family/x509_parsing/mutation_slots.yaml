@@ -1,0 +1,78 @@
+schema: family_mutation_slots_v1
+family: x509_parsing
+template_level: family
+seed_pocs: []
+mutation_slots:
+- slot_name: CERT_INPUT
+  slot_type: byte_array_or_path
+  examples:
+  - DER
+  - PEM
+  - malformed
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: file/path APIs need fixture handling in later template generation
+- slot_name: SUBJECT_FIELD
+  slot_type: asn1_field
+  examples:
+  - valid_cn
+  - malformed_cn
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: field mutation may be app-level not parser-level
+- slot_name: ISSUER_FIELD
+  slot_type: asn1_field
+  examples:
+  - valid_issuer
+  - truncated_issuer
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: avoid interpreting policy rejection as parser bug
+- slot_name: TRAILING_DATA
+  slot_type: byte_array
+  examples:
+  - none
+  - tail
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: only if API preserves input consumption signal
+- slot_name: INVALID_LENGTH
+  slot_type: integer
+  examples:
+  - short
+  - long
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  safety_notes: length mismatch should be bounded
+ast_maskable_units:
+- unit_type: api_argument
+  slot_name: CERT_INPUT
+  node_kind_hint: argument or literal
+  reason: file/path APIs need fixture handling in later template generation
+- unit_type: api_argument
+  slot_name: SUBJECT_FIELD
+  node_kind_hint: argument or literal
+  reason: field mutation may be app-level not parser-level
+- unit_type: api_argument
+  slot_name: ISSUER_FIELD
+  node_kind_hint: argument or literal
+  reason: avoid interpreting policy rejection as parser bug
+- unit_type: api_argument
+  slot_name: TRAILING_DATA
+  node_kind_hint: argument or literal
+  reason: only if API preserves input consumption signal
+- unit_type: api_argument
+  slot_name: INVALID_LENGTH
+  node_kind_hint: argument or literal
+  reason: length mismatch should be bounded
+semantic_policy: mutate slots, preserve trigger/cleanup/oracle shape

@@ -1,0 +1,3807 @@
+wolfssl_api_cards_api_card_v0:
+- schema: api_card_v0
+  api: DecodedCert
+  library: wolfssl
+  family: asn1_nested_boundary
+  families:
+  - asn1_nested_boundary
+  signature: int wc_ParseCert(DecodedCert* cert, int type, int verify, void* cm);
+  signature_candidates:
+  - int wc_ParseCert(DecodedCert* cert, int type, int verify, void* cm);
+  - void wc_FreeDecodedCert(struct DecodedCert* cert);
+  - int wc_CheckCertOcspResponse(WOLFSSL_OCSP *ocsp, DecodedCert *cert, byte *response,
+    int responseSz, void* heap);
+  - int CheckCertCRL(WOLFSSL_CRL* crl, DecodedCert* cert)
+  - cert = (DecodedCert*)XMALLOC(sizeof(DecodedCert), NULL, DYNAMIC_TYPE_DCERT);
+  parameter_semantics:
+    cert: certificate object or certificate input
+    type: API parameter; semantics require manual review
+    verify: API parameter; semantics require manual review
+    cm: API parameter; semantics require manual review
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - input buffers and parser context must remain valid for the parse/verify call
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - certificate or DER/PEM input must be well-formed enough for the selected parser
+      path
+    manual_review_required: true
+  mutation_hints:
+  - input buffers and parser context must remain valid for the parse/verify call
+  - certificate or DER/PEM input must be well-formed enough for the selected parser
+    path
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - parser_state
+  - consumed_input_or_error
+  - sanitizer_signal
+  lifecycle:
+    init:
+    - wc_InitDecodedCert
+    use:
+    - DecodedCert
+    cleanup:
+    - wc_FreeDecodedCert
+  related_apis:
+  - wc_InitDecodedCert
+  - wc_ParseCert
+  - wc_GetSubjectCN
+  - wc_FreeDecodedCert
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/asn_public.h
+      line: 1058
+      summary: int wc_GetPubKeyDerFromCert(struct DecodedCert* cert,
+    - file: doc/dox_comments/header_files-ja/asn_public.h
+      line: 1753
+      summary: "DecodedCert decodedCert; // \u30C7\u30B3\u30FC\u30C9\u3055\u308C\u305F\
+        \u8A3C\u660E\u66F8\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3002"
+    - file: doc/dox_comments/header_files-ja/asn_public.h
+      line: 1763
+      summary: void wc_InitDecodedCert(struct DecodedCert* cert,
+    - file: doc/dox_comments/header_files-ja/asn_public.h
+      line: 1782
+      summary: "DecodedCert decodedCert; // \u30C7\u30B3\u30FC\u30C9\u3055\u308C\u305F\
+        \u8A3C\u660E\u66F8\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3002"
+    - file: doc/dox_comments/header_files-ja/asn_public.h
+      line: 1796
+      summary: int wc_ParseCert(DecodedCert* cert, int type, int verify, void* cm);
+    source_refs:
+    - file: src/crl.c
+      line: 661
+      summary: int CheckCertCRL(WOLFSSL_CRL* crl, DecodedCert* cert)
+    - file: src/crl.c
+      line: 2528
+      summary: DecodedCert* cert = NULL;
+    - file: src/crl.c
+      line: 2538
+      summary: cert = (DecodedCert*)XMALLOC(sizeof(DecodedCert), NULL, DYNAMIC_TYPE_DCERT);
+    - file: src/internal.c
+      line: 49
+      summary: '* WOLFSSL_SMALL_CERT_VERIFY:  Verify cert sig without DecodedCert     default:
+        off'
+    - file: src/internal.c
+      line: 13405
+      summary: int CheckForAltNames(DecodedCert* dCert, const char* domain, word32
+        domainLen,
+    test_refs:
+    - file: examples/ocsp_responder/ocsp_responder.c
+      line: 414
+      summary: DecodedCert* caCert)
+    - file: examples/ocsp_responder/ocsp_responder.c
+      line: 737
+      summary: DecodedCert caCert;
+    - file: tests/api.c
+      line: 786
+      summary: DecodedCert preTBS;
+    - file: tests/api.c
+      line: 910
+      summary: DecodedCert preTBS;
+    - file: tests/api.c
+      line: 1091
+      summary: DecodedCert preTBS;
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wc_FreeDecodedCert
+  library: wolfssl
+  family: asn1_nested_boundary
+  families:
+  - asn1_nested_boundary
+  signature: wc_FreeDecodedCert(&decodedCert);
+  signature_candidates:
+  - wc_FreeDecodedCert(&decodedCert);
+  - void wc_FreeDecodedCert(struct DecodedCert* cert);
+  - wc_FreeDecodedCert(&cert);
+  - WOLFSSL_API void wc_FreeDecodedCert(struct DecodedCert* cert);
+  - wc_FreeDecodedCert(decoded);
+  parameter_semantics: {}
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - cleanup API; object or pointer must have compatible allocation provenance
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - certificate or DER/PEM input must be well-formed enough for the selected parser
+      path
+    manual_review_required: true
+  mutation_hints:
+  - cleanup API; object or pointer must have compatible allocation provenance
+  - certificate or DER/PEM input must be well-formed enough for the selected parser
+    path
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - parser_state
+  - consumed_input_or_error
+  - sanitizer_signal
+  lifecycle:
+    init:
+    - wc_InitDecodedCert
+    use:
+    - wc_FreeDecodedCert
+    cleanup: []
+  related_apis:
+  - wc_InitDecodedCert
+  - wc_ParseCert
+  - wc_GetSubjectCN
+  - DecodedCert
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/asn_public.h
+      line: 1761
+      summary: \sa wc_FreeDecodedCert
+    - file: doc/dox_comments/header_files-ja/asn_public.h
+      line: 1794
+      summary: \sa wc_FreeDecodedCert
+    - file: doc/dox_comments/header_files-ja/asn_public.h
+      line: 1817
+      summary: wc_FreeDecodedCert(&decodedCert);
+    - file: doc/dox_comments/header_files-ja/asn_public.h
+      line: 1823
+      summary: void wc_FreeDecodedCert(struct DecodedCert* cert);
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 4695
+      summary: wc_FreeDecodedCert(&cert);
+    source_refs:
+    - file: src/ocsp.c
+      line: 2362
+      summary: wc_FreeDecodedCert(decoded);
+    - file: src/ocsp.c
+      line: 2466
+      summary: wc_FreeDecodedCert(decoded);
+    - file: src/ssl_certman.c
+      line: 632
+      summary: wc_FreeDecodedCert(dCert);
+    - file: wolfcrypt/src/asn.c
+      line: 12093
+      summary: void wc_FreeDecodedCert(DecodedCert* cert)
+    - file: wolfcrypt/src/asn.c
+      line: 21987
+      summary: wc_FreeDecodedCert(cert);
+    test_refs:
+    - file: examples/ocsp_responder/ocsp_responder.c
+      line: 1113
+      summary: wc_FreeDecodedCert(&caCert);
+    - file: tests/api.c
+      line: 898
+      summary: wc_FreeDecodedCert(&preTBS);
+    - file: tests/api.c
+      line: 1037
+      summary: wc_FreeDecodedCert(&preTBS);
+    - file: tests/api.c
+      line: 1215
+      summary: wc_FreeDecodedCert(&preTBS);
+    - file: tests/api.c
+      line: 1374
+      summary: wc_FreeDecodedCert(&preTBS);
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wc_InitDecodedCert
+  library: wolfssl
+  family: asn1_nested_boundary
+  families:
+  - asn1_nested_boundary
+  signature: "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001\u5165\u529B\u3055\u308C\
+    \u305FDecodedCert\u69CB\u9020\u4F53\u304B\u3089DER\u5F62\u5F0F\u306E\u516C\u958B\
+    \u9375\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002\u3053\u306EAPI\u3092\u547C\u3073\
+    \u51FA\u3059\u524D\u306B\u3001\u30E6\u30FC\u30B6\u30FC\u306Fwc_InitDecodedCert()\u3068\
+    wc_ParseCert()\u3092\u547C\u3073\u51FA\u3059\u5FC5\u8981\u304C\u3042\u308A\u307E\
+    \u3059\u3002wc_InitDecodedCert()\u306FDER/ASN.1\u30A8\u30F3\u30B3\u30FC\u30C9\u3055\
+    \u308C\u305F\u8A3C\u660E\u66F8\u3092\u53D7\u3051\u5165\u308C\u307E\u3059\u3002\
+    PEM\u8A3C\u660E\u66F8\u3092DER\u306B\u5909\u63DB\u3059\u308B\u306B\u306F\u3001\
+    wc_InitDecodedCert()\u3092\u547C\u3073\u51FA\u3059\u524D\u306B\u307E\u305Awc_CertP"
+  signature_candidates:
+  - "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001\u5165\u529B\u3055\u308C\u305FDecodedCert\u69CB\
+    \u9020\u4F53\u304B\u3089DER\u5F62\u5F0F\u306E\u516C\u958B\u9375\u3092\u53D6\u5F97\
+    \u3057\u307E\u3059\u3002\u3053\u306EAPI\u3092\u547C\u3073\u51FA\u3059\u524D\u306B\
+    \u3001\u30E6\u30FC\u30B6\u30FC\u306Fwc_InitDecodedCert()\u3068wc_ParseCert()\u3092\
+    \u547C\u3073\u51FA\u3059\u5FC5\u8981\u304C\u3042\u308A\u307E\u3059\u3002wc_InitDecodedCert()\u306F\
+    DER/ASN.1\u30A8\u30F3\u30B3\u30FC\u30C9\u3055\u308C\u305F\u8A3C\u660E\u66F8\u3092\
+    \u53D7\u3051\u5165\u308C\u307E\u3059\u3002PEM\u8A3C\u660E\u66F8\u3092DER\u306B\
+    \u5909\u63DB\u3059\u308B\u306B\u306F\u3001wc_InitDecodedCert()\u3092\u547C\u3073\
+    \u51FA\u3059\u524D\u306B\u307E\u305Awc_CertP"
+  - wc_InitDecodedCert(&decodedCert, certBuf, certBufSz, NULL);
+  - wc_InitDecodedCert(&cert, wolfSSL_get_chain_cert(peerCerts, idx), wolfSSL_get_chain_length(peerCerts,
+    idx), NULL);
+  - wc_InitDecodedCert(&cert, derCert, derCertSz, NULL);
+  - DecodedCert struct. Users must call wc_InitDecodedCert() and wc_ParseCert()
+  parameter_semantics: {}
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - must precede dependent operations on the created or initialized object
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - certificate or DER/PEM input must be well-formed enough for the selected parser
+      path
+    manual_review_required: true
+  mutation_hints:
+  - must precede dependent operations on the created or initialized object
+  - certificate or DER/PEM input must be well-formed enough for the selected parser
+    path
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - parser_state
+  - consumed_input_or_error
+  - sanitizer_signal
+  lifecycle:
+    init: []
+    use:
+    - wc_InitDecodedCert
+    cleanup:
+    - wc_FreeDecodedCert
+  related_apis:
+  - wc_ParseCert
+  - wc_GetSubjectCN
+  - wc_FreeDecodedCert
+  - DecodedCert
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/asn_public.h
+      line: 1048
+      summary: "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001\u5165\u529B\u3055\u308C\
+        \u305FDecodedCert\u69CB\u9020\u4F53\u304B\u3089DER\u5F62\u5F0F\u306E\u516C\
+        \u958B\u9375\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002\u3053\u306EAPI\u3092\
+        \u547C\u3073\u51FA\u3059\u524D\u306B\u3001\u30E6\u30FC\u30B6\u30FC\u306Fwc_InitDecodedCert()\u3068\
+        wc_ParseCert()\u3092\u547C\u3073\u51FA\u3059\u5FC5\u8981\u304C\u3042\u308A\
+        \u307E\u3059\u3002wc_InitDecodedCert()\u306FDER/ASN.1\u30A8\u30F3\u30B3\u30FC\
+        \u30C9\u3055\u308C\u305F\u8A3C\u660E\u66F8\u3092\u53D7\u3051\u5165\u308C\u307E\
+        \u3059\u3002PEM\u8A3C\u660E\u66F8\u3092DER\u306B\u5909\u63DB\u3059\u308B"
+    - file: doc/dox_comments/header_files-ja/asn_public.h
+      line: 1757
+      summary: wc_InitDecodedCert(&decodedCert, certBuf, certBufSz, NULL);
+    - file: doc/dox_comments/header_files-ja/asn_public.h
+      line: 1763
+      summary: void wc_InitDecodedCert(struct DecodedCert* cert,
+    - file: doc/dox_comments/header_files-ja/asn_public.h
+      line: 1786
+      summary: wc_InitDecodedCert(&decodedCert, certBuf, certBufSz, NULL);
+    - file: doc/dox_comments/header_files-ja/asn_public.h
+      line: 1793
+      summary: \sa wc_InitDecodedCert
+    source_refs:
+    - file: src/ocsp.c
+      line: 2326
+      summary: wc_InitDecodedCert(decoded, signerDer, signerDerSz, responder->heap);
+    - file: src/ocsp.c
+      line: 2363
+      summary: wc_InitDecodedCert(decoded, issuerCertDer, issuerCertDerSz,
+    - file: src/ssl_certman.c
+      line: 621
+      summary: wc_InitDecodedCert(dCert, buff,
+    - file: wolfcrypt/src/asn.c
+      line: 11908
+      summary: void wc_InitDecodedCert(DecodedCert* cert, const byte* source, word32
+        inSz,
+    - file: wolfcrypt/src/asn.c
+      line: 21955
+      summary: wc_InitDecodedCert(cert, certDer, certDerSz, NULL);
+    test_refs:
+    - file: examples/ocsp_responder/ocsp_responder.c
+      line: 870
+      summary: wc_InitDecodedCert(&caCert, caCertDer, caCertDerSz, NULL);
+    - file: tests/api.c
+      line: 876
+      summary: wc_InitDecodedCert(&preTBS, scratchBuf, scratchSz, 0);
+    - file: tests/api.c
+      line: 1015
+      summary: wc_InitDecodedCert(&preTBS, scratchBuf, scratchSz, 0);
+    - file: tests/api.c
+      line: 1192
+      summary: wc_InitDecodedCert(&preTBS, scratchBuf, scratchSz, 0);
+    - file: tests/api.c
+      line: 1352
+      summary: wc_InitDecodedCert(&preTBS, scratchBuf, scratchSz, 0);
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wc_ParseCert
+  library: wolfssl
+  family: asn1_nested_boundary
+  families:
+  - asn1_nested_boundary
+  signature: ret = wc_ParseCert(&decodedCert, CERT_TYPE, NO_VERIFY, NULL);
+  signature_candidates:
+  - ret = wc_ParseCert(&decodedCert, CERT_TYPE, NO_VERIFY, NULL);
+  - fprintf(stderr, "wc_ParseCert failed.\n");
+  - int wc_ParseCert(DecodedCert* cert, int type, int verify, void* cm);
+  - if (wc_ParseCert(&cert, CERT_TYPE, VERIFY, cm) != 0)
+  - wc_ParseCert(&cert, CERT_TYPE, NO_VERIFY, NULL);
+  parameter_semantics:
+    CERT_TYPE: certificate object or certificate input
+    NO_VERIFY: API parameter; semantics require manual review
+    'NULL': API parameter; semantics require manual review
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - input buffers and parser context must remain valid for the parse/verify call
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - certificate or DER/PEM input must be well-formed enough for the selected parser
+      path
+    manual_review_required: true
+  mutation_hints:
+  - input buffers and parser context must remain valid for the parse/verify call
+  - certificate or DER/PEM input must be well-formed enough for the selected parser
+    path
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - parser_state
+  - consumed_input_or_error
+  - sanitizer_signal
+  lifecycle:
+    init:
+    - wc_InitDecodedCert
+    use:
+    - wc_ParseCert
+    cleanup:
+    - wc_FreeDecodedCert
+  related_apis:
+  - wc_InitDecodedCert
+  - wc_GetSubjectCN
+  - wc_FreeDecodedCert
+  - DecodedCert
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/asn_public.h
+      line: 1760
+      summary: \sa wc_ParseCert
+    - file: doc/dox_comments/header_files-ja/asn_public.h
+      line: 1787
+      summary: ret = wc_ParseCert(&decodedCert, CERT_TYPE, NO_VERIFY, NULL);
+    - file: doc/dox_comments/header_files-ja/asn_public.h
+      line: 1789
+      summary: fprintf(stderr, "wc_ParseCert failed.\n");
+    - file: doc/dox_comments/header_files-ja/asn_public.h
+      line: 1796
+      summary: int wc_ParseCert(DecodedCert* cert, int type, int verify, void* cm);
+    - file: doc/dox_comments/header_files-ja/asn_public.h
+      line: 1813
+      summary: ret = wc_ParseCert(&decodedCert, CERT_TYPE, NO_VERIFY, NULL);
+    source_refs:
+    - file: src/ocsp.c
+      line: 2327
+      summary: ret = wc_ParseCert(decoded, CERT_TYPE, 0, NULL);
+    - file: src/ocsp.c
+      line: 2365
+      summary: ret = wc_ParseCert(decoded, CERT_TYPE, 0, NULL);
+    - file: src/ssl_certman.c
+      line: 623
+      summary: ret = wc_ParseCert(dCert, CERT_TYPE, NO_VERIFY, NULL);
+    - file: wolfcrypt/src/asn.c
+      line: 21359
+      summary: int wc_ParseCert(DecodedCert* cert, int type, int verify, void* cm)
+    - file: wolfcrypt/src/asn.c
+      line: 24640
+      summary: '* Users must call wc_InitDecodedCert() and wc_ParseCert() before calling'
+    test_refs:
+    - file: examples/ocsp_responder/ocsp_responder.c
+      line: 871
+      summary: ret = wc_ParseCert(&caCert, CERT_TYPE, 0, NULL);
+    - file: tests/api.c
+      line: 877
+      summary: ExpectIntEQ(wc_ParseCert(&preTBS, CERT_TYPE, NO_VERIFY, NULL), 0);
+    - file: tests/api.c
+      line: 1016
+      summary: ExpectIntEQ(wc_ParseCert(&preTBS, CERT_TYPE, NO_VERIFY, NULL), 0);
+    - file: tests/api.c
+      line: 1193
+      summary: ExpectIntEQ(wc_ParseCert(&preTBS, CERT_TYPE, NO_VERIFY, NULL), 0);
+    - file: tests/api.c
+      line: 1353
+      summary: ExpectIntEQ(wc_ParseCert(&preTBS, CERT_TYPE, NO_VERIFY, NULL), 0);
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wc_PKCS12_parse
+  library: wolfssl
+  family: pkcs_container_parsing
+  families:
+  - pkcs_container_parsing
+  signature: WOLFSSL_ENTER("wc_PKCS12_parse");
+  signature_candidates:
+  - WOLFSSL_ENTER("wc_PKCS12_parse");
+  - WOLFSSL_LEAVE("wc_PKCS12_parse verify ", ret);
+  parameter_semantics: {}
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - lifecycle relation inferred from API family; requires manual review before formal
+    import
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - PKCS7/PKCS12 container bytes and lengths must match the selected decode/verify
+      API
+    manual_review_required: true
+  mutation_hints:
+  - lifecycle relation inferred from API family; requires manual review before formal
+    import
+  - PKCS7/PKCS12 container bytes and lengths must match the selected decode/verify
+    API
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - parser_state
+  - container_object
+  - sanitizer_signal
+  lifecycle:
+    init:
+    - wc_PKCS7_Init
+    use:
+    - wc_PKCS12_parse
+    cleanup:
+    - wc_PKCS7_Free
+  related_apis:
+  - wc_PKCS7_Init
+  - wc_PKCS7_DecodeSignedData
+  - wc_PKCS7_VerifySignedData
+  - wc_PKCS7_Free
+  evidence:
+    header_refs:
+    - file: wolfssl/wolfcrypt/pkcs12.h
+      line: 55
+      summary: WOLFSSL_API int wc_PKCS12_parse(WC_PKCS12* pkcs12, const char* psw,
+    source_refs:
+    - file: src/ssl_p7p12.c
+      line: 1867
+      summary: ret = wc_PKCS12_parse(pkcs12, psw, &pk, &pkSz, &certData, &certDataSz,
+    - file: src/ssl_p7p12.c
+      line: 1871
+      summary: ret = wc_PKCS12_parse(pkcs12, psw, &pk, &pkSz, &certData, &certDataSz,
+    - file: wolfcrypt/src/pkcs12.c
+      line: 1307
+      summary: int wc_PKCS12_parse(WC_PKCS12* pkcs12, const char* psw,
+    - file: wolfcrypt/src/pkcs12.c
+      line: 1343
+      summary: WOLFSSL_ENTER("wc_PKCS12_parse");
+    - file: wolfcrypt/src/pkcs12.c
+      line: 1361
+      summary: WOLFSSL_LEAVE("wc_PKCS12_parse verify ", ret);
+    test_refs:
+    - file: tests/api/test_pkcs12.c
+      line: 135
+      summary: ExpectIntEQ(wc_PKCS12_parse(pkcs12Import, pkcs12Passwd, &outKey, &outKeySz,
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wc_PKCS7_Free
+  library: wolfssl
+  family: pkcs_container_parsing
+  families:
+  - pkcs_container_parsing
+  signature: wc_PKCS7_Free(pkcs7);
+  signature_candidates:
+  - wc_PKCS7_Free(pkcs7);
+  - void wc_PKCS7_Free(wc_PKCS7* pkcs7);
+  - wc_PKCS7_Free(&pkcs7);
+  - wc_PKCS7_Free(&p7->pkcs7);
+  - void wc_PKCS7_Free(wc_PKCS7* pkcs7)
+  parameter_semantics:
+    pkcs7: API parameter; semantics require manual review
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - cleanup API; object or pointer must have compatible allocation provenance
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - PKCS7/PKCS12 container bytes and lengths must match the selected decode/verify
+      API
+    manual_review_required: true
+  mutation_hints:
+  - cleanup API; object or pointer must have compatible allocation provenance
+  - PKCS7/PKCS12 container bytes and lengths must match the selected decode/verify
+    API
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - parser_state
+  - container_object
+  - sanitizer_signal
+  lifecycle:
+    init:
+    - wc_PKCS7_Init
+    use:
+    - wc_PKCS7_Free
+    cleanup: []
+  related_apis:
+  - wc_PKCS7_Init
+  - wc_PKCS7_DecodeSignedData
+  - wc_PKCS7_VerifySignedData
+  - wc_PKCS12_parse
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/pkcs7.h
+      line: 55
+      summary: \sa wc_PKCS7_Free
+    - file: doc/dox_comments/header_files-ja/pkcs7.h
+      line: 73
+      summary: wc_PKCS7_Free(pkcs7);
+    - file: doc/dox_comments/header_files-ja/pkcs7.h
+      line: 78
+      summary: void wc_PKCS7_Free(wc_PKCS7* pkcs7);
+    - file: doc/dox_comments/header_files-ja/pkcs7.h
+      line: 170
+      summary: wc_PKCS7_Free(&pkcs7);
+    - file: doc/dox_comments/header_files-ja/pkcs7.h
+      line: 251
+      summary: wc_PKCS7_Free(&pkcs7);
+    source_refs:
+    - file: src/ssl_p7p12.c
+      line: 94
+      summary: wc_PKCS7_Free(&p7->pkcs7);
+    - file: wolfcrypt/src/pkcs7.c
+      line: 1360
+      summary: void wc_PKCS7_Free(wc_PKCS7* pkcs7)
+    - file: wolfcrypt/src/pkcs7.c
+      line: 5178
+      summary: '* wc_PKCS7_Free()'
+    - file: wolfcrypt/src/pkcs7.c
+      line: 6737
+      summary: wc_PKCS7_Free(pkcs7);
+    - file: wolfcrypt/src/pkcs7.c
+      line: 6744
+      summary: '* freed by application with wc_PKCS7_Free() */'
+    test_refs:
+    - file: tests/api.c
+      line: 34928
+      summary: wc_PKCS7_Free(p7);
+    - file: tests/api.c
+      line: 34987
+      summary: wc_PKCS7_Free(p7);
+    - file: tests/api.c
+      line: 35068
+      summary: wc_PKCS7_Free(&pkcs7);
+    - file: tests/api.c
+      line: 35114
+      summary: wc_PKCS7_Free(&pkcs7);
+    - file: tests/api/test_ossl_p7p12.c
+      line: 262
+      summary: wc_PKCS7_Free(p7Ver);
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wc_PKCS7_Init
+  library: wolfssl
+  family: pkcs_container_parsing
+  families:
+  - pkcs_container_parsing
+  signature: int ret = wc_PKCS7_Init(&pkcs7, NULL, INVALID_DEVID);
+  signature_candidates:
+  - int ret = wc_PKCS7_Init(&pkcs7, NULL, INVALID_DEVID);
+  - int wc_PKCS7_Init(wc_PKCS7* pkcs7, void* heap, int devId);
+  - ret = wc_PKCS7_Init(&pkcs7->pkcs7, NULL, INVALID_DEVID);
+  - if (wc_PKCS7_Init(pkcs7, heap, devId) == 0) {
+  - int wc_PKCS7_Init(wc_PKCS7* pkcs7, void* heap, int devId)
+  parameter_semantics:
+    'NULL': API parameter; semantics require manual review
+    INVALID_DEVID: API parameter; semantics require manual review
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - must precede dependent operations on the created or initialized object
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - PKCS7/PKCS12 container bytes and lengths must match the selected decode/verify
+      API
+    manual_review_required: true
+  mutation_hints:
+  - must precede dependent operations on the created or initialized object
+  - PKCS7/PKCS12 container bytes and lengths must match the selected decode/verify
+    API
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - parser_state
+  - container_object
+  - sanitizer_signal
+  lifecycle:
+    init: []
+    use:
+    - wc_PKCS7_Init
+    cleanup:
+    - wc_PKCS7_Free
+  related_apis:
+  - wc_PKCS7_DecodeSignedData
+  - wc_PKCS7_VerifySignedData
+  - wc_PKCS7_Free
+  - wc_PKCS12_parse
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files/pkcs7.h
+      line: 1247
+      summary: \sa wc_PKCS7_Init
+    - file: doc/dox_comments/header_files/pkcs7.h
+      line: 1265
+      summary: \sa wc_PKCS7_Init
+    - file: doc/dox_comments/header_files/pkcs7.h
+      line: 1284
+      summary: int ret = wc_PKCS7_Init(&pkcs7, NULL, INVALID_DEVID);
+    - file: doc/dox_comments/header_files/pkcs7.h
+      line: 1289
+      summary: int wc_PKCS7_Init(wc_PKCS7* pkcs7, void* heap, int devId);
+    - file: doc/dox_comments/header_files/pkcs7.h
+      line: 1307
+      summary: \sa wc_PKCS7_Init
+    source_refs:
+    - file: src/ssl_p7p12.c
+      line: 54
+      summary: ret = wc_PKCS7_Init(&pkcs7->pkcs7, NULL, INVALID_DEVID);
+    - file: wolfcrypt/src/pkcs7.c
+      line: 822
+      summary: if (wc_PKCS7_Init(pkcs7, heap, devId) == 0) {
+    - file: wolfcrypt/src/pkcs7.c
+      line: 842
+      summary: int wc_PKCS7_Init(wc_PKCS7* pkcs7, void* heap, int devId)
+    - file: wolfcrypt/src/pkcs7.c
+      line: 846
+      summary: WOLFSSL_ENTER("wc_PKCS7_Init");
+    - file: wolfcrypt/src/pkcs7.c
+      line: 1136
+      summary: ret = wc_PKCS7_Init(pkcs7, heap, devId);
+    test_refs:
+    - file: tests/api.c
+      line: 35054
+      summary: ExpectIntEQ(wc_PKCS7_Init(&pkcs7, NULL, 0), 0);
+    - file: tests/api.c
+      line: 35105
+      summary: ExpectIntEQ(wc_PKCS7_Init(&pkcs7, NULL, 0), 0);
+    - file: tests/api/test_ossl_p7p12.c
+      line: 257
+      summary: ExpectIntEQ(wc_PKCS7_Init(p7Ver, HEAP_HINT, INVALID_DEVID), 0);
+    - file: tests/api/test_ossl_p7p12.c
+      line: 265
+      summary: ExpectIntEQ(wc_PKCS7_Init(p7Ver, HEAP_HINT, INVALID_DEVID), 0);
+    - file: tests/api/test_pkcs7.c
+      line: 86
+      summary: '* Testing wc_PKCS7_Init()'
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wc_PKCS7_VerifySignedData
+  library: wolfssl
+  family: pkcs_container_parsing
+  families:
+  - pkcs_container_parsing
+  signature: ret = wc_PKCS7_VerifySignedData(&pkcs7, pkcs7Buff, sizeof(pkcs7Buff));
+  signature_candidates:
+  - ret = wc_PKCS7_VerifySignedData(&pkcs7, pkcs7Buff, sizeof(pkcs7Buff));
+  - if (wc_PKCS7_VerifySignedData(&pkcs7->pkcs7, pkcs7->data, pkcs7->len)
+  - WOLFSSL_MSG("wc_PKCS7_VerifySignedData failed");
+  - ret = wc_PKCS7_VerifySignedData(&p7->pkcs7, p7->data, p7->len);
+  - int wc_PKCS7_VerifySignedData(wc_PKCS7* pkcs7, byte* pkiMsg, word32 pkiMsgSz)
+  parameter_semantics:
+    pkcs7Buff: input buffer
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - input buffers and parser context must remain valid for the parse/verify call
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - PKCS7/PKCS12 container bytes and lengths must match the selected decode/verify
+      API
+    manual_review_required: true
+  mutation_hints:
+  - input buffers and parser context must remain valid for the parse/verify call
+  - PKCS7/PKCS12 container bytes and lengths must match the selected decode/verify
+    API
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - parser_state
+  - container_object
+  - sanitizer_signal
+  lifecycle:
+    init:
+    - wc_PKCS7_Init
+    use:
+    - wc_PKCS7_VerifySignedData
+    cleanup:
+    - wc_PKCS7_Free
+  related_apis:
+  - wc_PKCS7_Init
+  - wc_PKCS7_DecodeSignedData
+  - wc_PKCS7_Free
+  - wc_PKCS12_parse
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/pkcs7.h
+      line: 174
+      summary: \sa wc_PKCS7_VerifySignedData
+    - file: doc/dox_comments/header_files-ja/pkcs7.h
+      line: 305
+      summary: ret = wc_PKCS7_VerifySignedData(&pkcs7, pkcs7Buff, sizeof(pkcs7Buff));
+    - file: doc/dox_comments/header_files-ja/pkcs7.h
+      line: 316
+      summary: int  wc_PKCS7_VerifySignedData(wc_PKCS7* pkcs7,
+    - file: doc/dox_comments/header_files/pkcs7.h
+      line: 218
+      summary: \sa wc_PKCS7_VerifySignedData
+    - file: doc/dox_comments/header_files/pkcs7.h
+      line: 386
+      summary: ret = wc_PKCS7_VerifySignedData(&pkcs7, pkcs7Buff, sizeof(pkcs7Buff));
+    source_refs:
+    - file: src/ssl_p7p12.c
+      line: 185
+      summary: if (wc_PKCS7_VerifySignedData(&pkcs7->pkcs7, pkcs7->data, pkcs7->len)
+    - file: src/ssl_p7p12.c
+      line: 187
+      summary: WOLFSSL_MSG("wc_PKCS7_VerifySignedData failed");
+    - file: src/ssl_p7p12.c
+      line: 338
+      summary: if (wc_PKCS7_VerifySignedData(&pkcs7->pkcs7, pkcs7->data, pkcs7->len)
+    - file: src/ssl_p7p12.c
+      line: 340
+      summary: WOLFSSL_MSG("wc_PKCS7_VerifySignedData failed");
+    - file: src/ssl_p7p12.c
+      line: 797
+      summary: ret = wc_PKCS7_VerifySignedData(&p7->pkcs7, p7->data, p7->len);
+    test_refs:
+    - file: tests/api/test_ossl_p7p12.c
+      line: 255
+      summary: /* verify with wc_PKCS7_VerifySignedData */
+    - file: tests/api/test_ossl_p7p12.c
+      line: 258
+      summary: ExpectIntEQ(wc_PKCS7_VerifySignedData(p7Ver, out, (word32)outLen),
+        0);
+    - file: tests/api/test_ossl_p7p12.c
+      line: 261
+      summary: /* verify with wc_PKCS7_VerifySignedData streaming */
+    - file: tests/api/test_ossl_p7p12.c
+      line: 269
+      summary: ret = wc_PKCS7_VerifySignedData(p7Ver, out + z, 1);
+    - file: tests/api/test_ossl_p7p12.c
+      line: 346
+      summary: ExpectIntEQ(wc_PKCS7_VerifySignedData(p7Ver, out, (word32)outLen),
+        0);
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: XFREE
+  library: wolfssl
+  family: secure_heap_state_lifecycle
+  families:
+  - secure_heap_state_lifecycle
+  signature: extern void XFREE(void *p, void* heap, int type);
+  signature_candidates:
+  - extern void XFREE(void *p, void* heap, int type);
+  - "#define XFREE(p, h, t)   \t{void* xp = (p); if((xp)) free((xp));}"
+  - "#define XFREE(p, h, t)   \t{void* xp = (p); if((xp)) wolfSSL_Free((xp));}"
+  - XFREE(tmp, heap, DYNAMIC_TYPE_TMP_BUFFER);
+  - XFREE(*out, heap, DYNAMIC_TYPE_TMP_BUFFER);
+  parameter_semantics:
+    p: API parameter; semantics require manual review
+    heap: API parameter; semantics require manual review
+    type: API parameter; semantics require manual review
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - cleanup API; object or pointer must have compatible allocation provenance
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - allocator hooks and allocation/free pairs must preserve ownership and lifetime
+    manual_review_required: true
+  mutation_hints:
+  - cleanup API; object or pointer must have compatible allocation provenance
+  - allocator hooks and allocation/free pairs must preserve ownership and lifetime
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - allocation_state
+  - ownership_lifetime
+  - sanitizer_signal
+  lifecycle:
+    init: []
+    use:
+    - XFREE
+    cleanup:
+    - wolfSSL_Free
+  related_apis:
+  - XMALLOC
+  - wolfSSL_Malloc
+  - wolfSSL_Free
+  - wolfSSL_SetAllocators
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/memory.h
+      line: 23
+      summary: \sa XFREE
+    - file: doc/dox_comments/header_files-ja/memory.h
+      line: 54
+      summary: \sa XFREE
+    - file: doc/dox_comments/header_files-ja/memory.h
+      line: 83
+      summary: \sa XFREE
+    - file: doc/dox_comments/header_files-ja/rsa.h
+      line: 4
+      summary: "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001\u63D0\u4F9B\u3055\u308C\
+        \u305FRsaKey\u69CB\u9020\u4F53\u3092\u521D\u671F\u5316\u3057\u307E\u3059\u3002\
+        \u307E\u305F\u3001\u30E6\u30FC\u30B6\u30FC\u5B9A\u7FA9\u306E\u30E1\u30E2\u30EA\
+        \u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\uFF08XMALLOC\u3001XFREE\u3001XREALLOC\u3092\
+        \u53C2\u7167\uFF09\u3067\u4F7F\u7528\u3059\u308B\u305F\u3081\u306B\u3001\u30D2\
+        \u30FC\u30D7\u8B58\u5225\u5B50\u3082\u53D7\u3051\u53D6\u308A\u307E\u3059\u3002"
+    - file: doc/dox_comments/header_files-ja/rsa.h
+      line: 32
+      summary: "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001\u63D0\u4F9B\u3055\u308C\
+        \u305FRsaKey\u69CB\u9020\u4F53\u3092\u521D\u671F\u5316\u3057\u307E\u3059\u3002\
+        id\u3068len\u306F\u3001\u30C7\u30D0\u30A4\u30B9\u4E0A\u306E\u30AD\u30FC\u3092\
+        \u8B58\u5225\u3059\u308B\u305F\u3081\u306B\u4F7F\u7528\u3055\u308C\u3001devId\u306F\
+        \u30C7\u30D0\u30A4\u30B9\u3092\u8B58\u5225\u3057\u307E\u3059\u3002\u307E\u305F\
+        \u3001\u30E6\u30FC\u30B6\u30FC\u5B9A\u7FA9\u306E\u30E1\u30E2\u30EA\u30AA\u30FC\
+        \u30D0\u30FC\u30E9\u30A4\u30C9\uFF08XMALLOC\u3001XFREE\u3001XREALLOC\u3092\
+        \u53C2\u7167\uFF09\u3067\u4F7F\u7528\u3059\u308B\u305F\u3081\u306B\u3001\u30D2\
+        \u30FC\u30D7\u8B58\u5225\u5B50\u3082\u53D7\u3051\u53D6\u308A\u307E\u3059\u3002"
+    source_refs:
+    - file: src/bio.c
+      line: 481
+      summary: XFREE(tmp, heap, DYNAMIC_TYPE_TMP_BUFFER);
+    - file: src/bio.c
+      line: 489
+      summary: XFREE(tmp, heap, DYNAMIC_TYPE_TMP_BUFFER);
+    - file: src/bio.c
+      line: 495
+      summary: XFREE(*out, heap, DYNAMIC_TYPE_TMP_BUFFER);
+    - file: src/bio.c
+      line: 845
+      summary: XFREE(frmt, front->heap, DYNAMIC_TYPE_TMP_BUFFER);
+    - file: src/bio.c
+      line: 976
+      summary: XFREE(addr, NULL, DYNAMIC_TYPE_BIO);
+    test_refs:
+    - file: examples/asn1/asn1.c
+      line: 94
+      summary: XFREE(data, NULL, DYNAMIC_TYPE_TMP_BUFFER);
+    - file: examples/asn1/asn1.c
+      line: 111
+      summary: XFREE(data, NULL, DYNAMIC_TYPE_TMP_BUFFER);
+    - file: examples/asn1/asn1.c
+      line: 153
+      summary: XFREE(data, NULL, DYNAMIC_TYPE_TMP_BUFFER);
+    - file: examples/asn1/asn1.c
+      line: 189
+      summary: XFREE(data, NULL, DYNAMIC_TYPE_TMP_BUFFER);
+    - file: examples/asn1/asn1.c
+      line: 301
+      summary: XFREE(data, NULL, DYNAMIC_TYPE_TMP_BUFFER);
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: XMALLOC
+  library: wolfssl
+  family: secure_heap_state_lifecycle
+  families:
+  - secure_heap_state_lifecycle
+  signature: byte* der = (byte*)XMALLOC((8*1024), NULL, DYNAMIC_TYPE_CERT);
+  signature_candidates:
+  - byte* der = (byte*)XMALLOC((8*1024), NULL, DYNAMIC_TYPE_CERT);
+  - WOLFSSL_X509 x509 = (WOLFSSL_X509*)XMALLOC(sizeof(WOLFSSL_X509), NULL,
+  - WOLFSSL_X509* x509 = (WOLFSSL_X509*)XMALLOC(sizeof(WOLFSSL_X509), NULL,
+  - WOLFSSL_X509* x509a = (WOLFSSL_X509*)XMALLOC(sizeof(WOLFSSL_X509), NULL,
+  - tmp = (byte*)XMALLOC(sz, heap, DYNAMIC_TYPE_TMP_BUFFER);
+  parameter_semantics:
+    'NULL': API parameter; semantics require manual review
+    DYNAMIC_TYPE_CERT: certificate object or certificate input
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - lifecycle relation inferred from API family; requires manual review before formal
+    import
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - allocator hooks and allocation/free pairs must preserve ownership and lifetime
+    manual_review_required: true
+  mutation_hints:
+  - lifecycle relation inferred from API family; requires manual review before formal
+    import
+  - allocator hooks and allocation/free pairs must preserve ownership and lifetime
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - allocation_state
+  - ownership_lifetime
+  - sanitizer_signal
+  lifecycle:
+    init: []
+    use:
+    - XMALLOC
+    cleanup:
+    - XFREE
+    - wolfSSL_Free
+  related_apis:
+  - XFREE
+  - wolfSSL_Malloc
+  - wolfSSL_Free
+  - wolfSSL_SetAllocators
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/asn_public.h
+      line: 898
+      summary: byte* der = (byte*)XMALLOC((8*1024), NULL, DYNAMIC_TYPE_CERT);
+    - file: doc/dox_comments/header_files-ja/memory.h
+      line: 22
+      summary: \sa XMALLOC
+    - file: doc/dox_comments/header_files-ja/memory.h
+      line: 53
+      summary: \sa XMALLOC
+    - file: doc/dox_comments/header_files-ja/memory.h
+      line: 82
+      summary: \sa XMALLOC
+    - file: doc/dox_comments/header_files-ja/rsa.h
+      line: 4
+      summary: "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001\u63D0\u4F9B\u3055\u308C\
+        \u305FRsaKey\u69CB\u9020\u4F53\u3092\u521D\u671F\u5316\u3057\u307E\u3059\u3002\
+        \u307E\u305F\u3001\u30E6\u30FC\u30B6\u30FC\u5B9A\u7FA9\u306E\u30E1\u30E2\u30EA\
+        \u30AA\u30FC\u30D0\u30FC\u30E9\u30A4\u30C9\uFF08XMALLOC\u3001XFREE\u3001XREALLOC\u3092\
+        \u53C2\u7167\uFF09\u3067\u4F7F\u7528\u3059\u308B\u305F\u3081\u306B\u3001\u30D2\
+        \u30FC\u30D7\u8B58\u5225\u5B50\u3082\u53D7\u3051\u53D6\u308A\u307E\u3059\u3002"
+    source_refs:
+    - file: src/bio.c
+      line: 472
+      summary: tmp = (byte*)XMALLOC(sz, heap, DYNAMIC_TYPE_TMP_BUFFER);
+    - file: src/bio.c
+      line: 969
+      summary: (WOLFSSL_BIO_ADDR *)XMALLOC(sizeof(*addr), NULL, DYNAMIC_TYPE_BIO);
+    - file: src/bio.c
+      line: 1443
+      summary: bio->ptr.mem_buf_data = (byte*)XMALLOC((size_t)size, bio->heap,
+    - file: src/bio.c
+      line: 2090
+      summary: meth = (WOLFSSL_BIO_METHOD*)XMALLOC(sizeof(WOLFSSL_BIO_METHOD), NULL,
+    - file: src/bio.c
+      line: 2441
+      summary: bio->ip = (char*)XMALLOC(
+    test_refs:
+    - file: examples/asn1/asn1.c
+      line: 87
+      summary: data = (unsigned char*)XMALLOC(DATA_INC_LEN, NULL, DYNAMIC_TYPE_TMP_BUFFER);
+    - file: examples/benchmark/tls_bench.c
+      line: 1042
+      summary: writeBuf = (unsigned char*)XMALLOC((size_t)info->packetSize, NULL,
+    - file: examples/benchmark/tls_bench.c
+      line: 1051
+      summary: readBuf = (unsigned char*)XMALLOC((size_t)readBufSz, NULL, DYNAMIC_TYPE_TMP_BUFFER);
+    - file: examples/benchmark/tls_bench.c
+      line: 1501
+      summary: readBuf = (unsigned char*)XMALLOC((size_t)readBufSz, NULL, DYNAMIC_TYPE_TMP_BUFFER);
+    - file: examples/benchmark/tls_bench.c
+      line: 2054
+      summary: ciphers = (char*)XMALLOC(WOLFSSL_CIPHER_LIST_MAX_SIZE, NULL, DYNAMIC_TYPE_TMP_BUFFER);
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wolfSSL_CTX_free
+  library: wolfssl
+  family: tls_protocol_state_lifecycle
+  families:
+  - tls_protocol_state_lifecycle
+  signature: wolfSSL_CTX_free(ctx);
+  signature_candidates:
+  - wolfSSL_CTX_free(ctx);
+  - void wolfSSL_CTX_free(WOLFSSL_CTX* ctx);
+  - wolfSSL_CTX_free(ssl->ctx);
+  - wolfSSL_CTX_free(ssl->initial_ctx);
+  - wolfSSL_CTX_free(srv->ctx);
+  parameter_semantics:
+    ctx: context/session object
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - cleanup API; object or pointer must have compatible allocation provenance
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - context, session, certificates, keys, and peer/socket state must match selected
+      protocol mode
+    manual_review_required: true
+  mutation_hints:
+  - cleanup API; object or pointer must have compatible allocation provenance
+  - context, session, certificates, keys, and peer/socket state must match selected
+    protocol mode
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - session_state
+  - error_code
+  - sanitizer_signal
+  lifecycle:
+    init:
+    - wolfSSL_CTX_new
+    - wolfSSL_new
+    use:
+    - wolfSSL_CTX_free
+    cleanup:
+    - wolfSSL_free
+  related_apis:
+  - wolfSSL_CTX_new
+  - wolfSSL_new
+  - wolfSSL_free
+  - wolfSSL_connect
+  - wolfSSL_accept
+  - wolfSSL_read
+  - wolfSSL_write
+  - wolfSSL_shutdown
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1887
+      summary: wolfSSL_CTX_free(ctx);
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1894
+      summary: void wolfSSL_CTX_free(WOLFSSL_CTX* ctx);
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1916
+      summary: \sa wolfSSL_CTX_free
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1945
+      summary: \sa wolfSSL_CTX_free
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 4408
+      summary: \sa wolfSSL_CTX_free
+    source_refs:
+    - file: src/internal.c
+      line: 7004
+      summary: wolfSSL_CTX_free(ssl->ctx);
+    - file: src/internal.c
+      line: 9096
+      summary: wolfSSL_CTX_free(ssl->initial_ctx);
+    - file: src/internal.c
+      line: 25021
+      summary: '* wolfSSL_CTX_free will take care of it.'
+    - file: src/sniffer.c
+      line: 806
+      summary: wolfSSL_CTX_free(srv->ctx);
+    - file: src/ssl.c
+      line: 584
+      summary: wolfSSL_CTX_free(ctx);
+    test_refs:
+    - file: examples/async/async_client.c
+      line: 570
+      summary: wolfSSL_CTX_free(ctx);
+    - file: examples/async/async_server.c
+      line: 634
+      summary: wolfSSL_CTX_free(ctx);
+    - file: examples/benchmark/tls_bench.c
+      line: 1239
+      summary: wolfSSL_CTX_free(cli_ctx);
+    - file: examples/benchmark/tls_bench.c
+      line: 1685
+      summary: wolfSSL_CTX_free(srv_ctx);
+    - file: examples/benchmark/tls_bench.c
+      line: 1869
+      summary: wolfSSL_CTX_free(ctx);
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wolfSSL_CTX_new
+  library: wolfssl
+  family: tls_protocol_state_lifecycle
+  families:
+  - tls_protocol_state_lifecycle
+  signature: ctx = wolfSSL_CTX_new(wolfTLSv1_2_client_method());
+  signature_candidates:
+  - ctx = wolfSSL_CTX_new(wolfTLSv1_2_client_method());
+  - "\\param ctx wolfSSL_CTX_new()\u3092\u4F7F\u7528\u3057\u3066\u4F5C\u6210\u3055\
+    \u308C\u305FWOLFSSL_CTX\u69CB\u9020\u4F53\u3078\u306E\u30DD\u30A4\u30F3\u30BF\u3002"
+  - "\\param ctx - wolfSSL_CTX_new()\u3092\u4F7F\u7528\u3057\u3066\u4F5C\u6210\u3055\
+    \u308C\u305FWOLFSSL_CTX\u69CB\u9020\u4F53\u3078\u306E\u30DD\u30A4\u30F3\u30BF\u3002"
+  - WOLFSSL_CTX* ctx = wolfSSL_CTX_new(wolfDTLSv1_2_client_method());
+  - ctx  = wolfSSL_CTX_new(wolfSSLv23_method());
+  parameter_semantics: {}
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - must precede dependent operations on the created or initialized object
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - context, session, certificates, keys, and peer/socket state must match selected
+      protocol mode
+    manual_review_required: true
+  mutation_hints:
+  - must precede dependent operations on the created or initialized object
+  - context, session, certificates, keys, and peer/socket state must match selected
+    protocol mode
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - session_state
+  - error_code
+  - sanitizer_signal
+  lifecycle:
+    init:
+    - wolfSSL_new
+    use:
+    - wolfSSL_CTX_new
+    cleanup:
+    - wolfSSL_CTX_free
+    - wolfSSL_free
+  related_apis:
+  - wolfSSL_CTX_free
+  - wolfSSL_new
+  - wolfSSL_free
+  - wolfSSL_connect
+  - wolfSSL_accept
+  - wolfSSL_read
+  - wolfSSL_write
+  - wolfSSL_shutdown
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/iotsafe.h
+      line: 12
+      summary: ctx = wolfSSL_CTX_new(wolfTLSv1_2_client_method());
+    - file: doc/dox_comments/header_files-ja/memory.h
+      line: 237
+      summary: \sa wolfSSL_CTX_new
+    - file: doc/dox_comments/header_files-ja/memory.h
+      line: 252
+      summary: "\\param ctx wolfSSL_CTX_new()\u3092\u4F7F\u7528\u3057\u3066\u4F5C\u6210\
+        \u3055\u308C\u305FWOLFSSL_CTX\u69CB\u9020\u4F53\u3078\u306E\u30DD\u30A4\u30F3\
+        \u30BF\u3002"
+    - file: doc/dox_comments/header_files-ja/memory.h
+      line: 276
+      summary: \sa wolfSSL_CTX_new
+    - file: doc/dox_comments/header_files-ja/psa.h
+      line: 12
+      summary: ctx = wolfSSL_CTX_new(wolfTLSv1_2_client_method());
+    source_refs:
+    - file: src/sniffer.c
+      line: 1756
+      summary: sniffer->ctx = wolfSSL_CTX_new(wolfSSLv23_client_method());
+    - file: src/sniffer.c
+      line: 1863
+      summary: sniffer->ctx = wolfSSL_CTX_new(wolfSSLv23_client_method());
+    - file: src/sniffer.c
+      line: 7690
+      summary: sniffer->ctx = wolfSSL_CTX_new(wolfSSLv23_client_method());
+    - file: src/ssl.c
+      line: 653
+      summary: WOLFSSL_CTX* wolfSSL_CTX_new(WOLFSSL_METHOD* method)
+    test_refs:
+    - file: examples/async/async_client.c
+      line: 325
+      summary: ctx = wolfSSL_CTX_new(wolfTLSv1_2_client_method());
+    - file: examples/async/async_client.c
+      line: 328
+      summary: ctx = wolfSSL_CTX_new(wolfSSLv23_client_method());
+    - file: examples/async/async_server.c
+      line: 331
+      summary: ctx = wolfSSL_CTX_new(wolfTLSv1_2_server_method());
+    - file: examples/async/async_server.c
+      line: 334
+      summary: ctx = wolfSSL_CTX_new(wolfSSLv23_server_method());
+    - file: examples/benchmark/tls_bench.c
+      line: 960
+      summary: cli_ctx = wolfSSL_CTX_new(wolfDTLSv1_3_client_method());
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wolfSSL_CTX_set_verify
+  library: wolfssl
+  family: tls_protocol_state_lifecycle
+  families:
+  - tls_protocol_state_lifecycle
+  signature: wolfSSL_CTX_set_verify(ctx, WOLFSSL_VERIFY_NONE, NULL);
+  signature_candidates:
+  - wolfSSL_CTX_set_verify(ctx, WOLFSSL_VERIFY_NONE, NULL);
+  - WOLFSSL_ENTER("wolfSSL_CTX_set_verify");
+  - wolfSSL_CTX_set_verify(tmp, WOLFSSL_VERIFY_DEFAULT, NULL);
+  - wolfSSL_CTX_set_verify( (WOLFSSL_CTX *)(conf->priv_ctx),
+  - wolfSSL_CTX_set_verify( (WOLFSSL_CTX *)conf->priv_ctx, authmode, NULL);
+  parameter_semantics:
+    ctx: context/session object
+    WOLFSSL_VERIFY_NONE: API parameter; semantics require manual review
+    'NULL': API parameter; semantics require manual review
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - TLS/DTLS context and session state must be initialized before protocol I/O
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - context, session, certificates, keys, and peer/socket state must match selected
+      protocol mode
+    manual_review_required: true
+  mutation_hints:
+  - TLS/DTLS context and session state must be initialized before protocol I/O
+  - context, session, certificates, keys, and peer/socket state must match selected
+    protocol mode
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - session_state
+  - error_code
+  - sanitizer_signal
+  lifecycle:
+    init:
+    - wolfSSL_CTX_new
+    - wolfSSL_new
+    use:
+    - wolfSSL_CTX_set_verify
+    cleanup:
+    - wolfSSL_CTX_free
+    - wolfSSL_free
+  related_apis:
+  - wolfSSL_CTX_new
+  - wolfSSL_CTX_free
+  - wolfSSL_new
+  - wolfSSL_free
+  - wolfSSL_connect
+  - wolfSSL_accept
+  - wolfSSL_read
+  - wolfSSL_write
+  - wolfSSL_shutdown
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 2282
+      summary: wolfSSL_CTX_set_verify(ctx, (WOLFSSL_VERIFY_PEER |
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 2288
+      summary: void wolfSSL_CTX_set_verify(WOLFSSL_CTX* ctx, int mode,
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 2309
+      summary: \sa wolfSSL_CTX_set_verify
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 2338
+      summary: \sa wolfSSL_CTX_set_verify
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 2366
+      summary: \sa wolfSSL_CTX_set_verify
+    source_refs:
+    - file: src/ssl.c
+      line: 607
+      summary: wolfSSL_CTX_set_verify(ctx, WOLFSSL_VERIFY_NONE, NULL);
+    - file: src/ssl_api_cert.c
+      line: 478
+      summary: WOLFSSL_ABI void wolfSSL_CTX_set_verify(WOLFSSL_CTX* ctx, int mode,
+    - file: src/ssl_api_cert.c
+      line: 481
+      summary: WOLFSSL_ENTER("wolfSSL_CTX_set_verify");
+    - file: src/ssl_certman.c
+      line: 582
+      summary: wolfSSL_CTX_set_verify(tmp, WOLFSSL_VERIFY_DEFAULT, NULL);
+    - file: src/ssl_certman.c
+      line: 1020
+      summary: wolfSSL_CTX_set_verify(tmp, WOLFSSL_VERIFY_DEFAULT, NULL);
+    test_refs:
+    - file: examples/async/async_client.c
+      line: 384
+      summary: wolfSSL_CTX_set_verify(ctx, WOLFSSL_VERIFY_PEER, NULL);
+    - file: examples/async/async_client.c
+      line: 387
+      summary: wolfSSL_CTX_set_verify(ctx, WOLFSSL_VERIFY_NONE, NULL);
+    - file: examples/async/async_server.c
+      line: 409
+      summary: wolfSSL_CTX_set_verify(ctx,
+    - file: examples/async/async_server.c
+      line: 413
+      summary: wolfSSL_CTX_set_verify(ctx, WOLFSSL_VERIFY_NONE, NULL);
+    - file: examples/client/client.c
+      line: 3393
+      summary: wolfSSL_CTX_set_verify(ctx, WOLFSSL_VERIFY_DEFAULT, NULL);
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wolfSSL_accept
+  library: wolfssl
+  family: tls_protocol_state_lifecycle
+  families:
+  - tls_protocol_state_lifecycle
+  signature: ret = wolfSSL_accept(ssl);
+  signature_candidates:
+  - ret = wolfSSL_accept(ssl);
+  - "\\brief \u3053\u306E\u95A2\u6570\u306F\u30B5\u30FC\u30D0\u5074\u3067\u547C\u3073\
+    \u51FA\u3055\u308C\u3001SSL\u30AF\u30E9\u30A4\u30A2\u30F3\u30C8\u304CSSL/TLS\u30CF\
+    \u30F3\u30C9\u30B7\u30A7\u30A4\u30AF\u3092\u958B\u59CB\u3059\u308B\u306E\u3092\
+    \u5F85\u6A5F\u3057\u307E\u3059\u3002\u3053\u306E\u95A2\u6570\u304C\u547C\u3073\
+    \u51FA\u3055\u308C\u308B\u3068\u304D\u3001\u4E0B\u5C64\u306E\u901A\u4FE1\u30C1\
+    \u30E3\u30CD\u30EB\u306F\u3059\u3067\u306B\u8A2D\u5B9A\u3055\u308C\u3066\u3044\
+    \u307E\u3059\u3002wolfSSL_accept()\u306F\u3001\u30D6\u30ED\u30C3\u30AD\u30F3\u30B0\
+    \u3068\u30CE\u30F3\u30D6\u30ED\u30C3\u30AD\u30F3\u30B0\u306E\u4E21\u65B9\u306E\
+    I/O\u3067\u52D5\u4F5C\u3057\u307E\u3059\u3002\u4E0B\u5C64\u306EI/O\u304C\u30CE\
+    \u30F3\u30D6\u30ED\u30C3\u30AD\u30F3\u30B0\u306E\u5834\u5408\u3001wolfSSL_accept()\u306F\
+    \u3001\u4E0B\u5C64\u306EI/O\u304CwolfSSL_accept\u304C\u30CF\u30F3\u30C9\u30B7\u30A7\
+    \u30A4\u30AF\u3092\u7D99\u7D9A\u3059\u308B\u305F\u3081\u306B\u5FC5\u8981\u306A"
+  - int  wolfSSL_accept(WOLFSSL* ssl);
+  - "\\return WOLFSSL_SUCCESS \u6709\u52B9\u306A\u30AF\u30C3\u30AD\u30FC\u3092\u542B\
+    \u3080ClientHello\u304C\u53D7\u4FE1\u3055\u308C\u307E\u3057\u305F\u3002wolfSSL_accept()\u3067\
+    \u63A5\u7D9A\u3092\u7D9A\u884C\u3067\u304D\u307E\u3059\u3002"
+  - "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001\u524D\u56DE\u306EAPI\u95A2\u6570\
+    \u547C\u3073\u51FA\u3057(wolfSSL_connect\u3001wolfSSL_accept\u3001wolfSSL_read\u3001\
+    wolfSSL_write\u7B49)\u304C\u30A8\u30E9\u30FC\u30EA\u30BF\u30FC\u30F3\u30B3\u30FC\
+    \u30C9(SSL_FAILURE)\u306B\u306A\u3063\u305F\u7406\u7531\u3092\u8AAC\u660E\u3059\
+    \u308B\u4E00\u610F\u306E\u30A8\u30E9\u30FC\u30B3\u30FC\u30C9\u3092\u8FD4\u3057\
+    \u307E\u3059\u3002\u524D\u56DE\u306E\u95A2\u6570\u306E\u623B\u308A\u5024\u306F\
+    \u3001ret\u3092\u901A\u3058\u3066wolfSSL_get_error\u306B\u6E21\u3055\u308C\u307E\
+    \u3059\u3002wolfSSL_get_error\u304C\u547C\u3073\u51FA\u3055\u308C\u3066\u4E00\u610F\
+    \u306E\u30A8\u30E9\u30FC\u30B3\u30FC\u30C9\u3092\u8FD4\u3057\u305F\u5F8C\u3001\
+    wolf"
+  parameter_semantics:
+    ssl: API parameter; semantics require manual review
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - TLS/DTLS context and session state must be initialized before protocol I/O
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - context, session, certificates, keys, and peer/socket state must match selected
+      protocol mode
+    manual_review_required: true
+  mutation_hints:
+  - TLS/DTLS context and session state must be initialized before protocol I/O
+  - context, session, certificates, keys, and peer/socket state must match selected
+    protocol mode
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - session_state
+  - error_code
+  - sanitizer_signal
+  lifecycle:
+    init:
+    - wolfSSL_CTX_new
+    - wolfSSL_new
+    use:
+    - wolfSSL_accept
+    cleanup:
+    - wolfSSL_CTX_free
+    - wolfSSL_free
+  related_apis:
+  - wolfSSL_CTX_new
+  - wolfSSL_CTX_free
+  - wolfSSL_new
+  - wolfSSL_free
+  - wolfSSL_connect
+  - wolfSSL_read
+  - wolfSSL_write
+  - wolfSSL_shutdown
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/quic.h
+      line: 276
+      summary: \sa wolfSSL_accept
+    - file: doc/dox_comments/header_files-ja/quic.h
+      line: 292
+      summary: \sa wolfSSL_accept
+    - file: doc/dox_comments/header_files-ja/quic.h
+      line: 309
+      summary: \sa wolfSSL_accept
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 631
+      summary: ret = wolfSSL_accept(ssl);
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 664
+      summary: ret = wolfSSL_accept(ssl);
+    source_refs:
+    - file: src/internal.c
+      line: 37879
+      summary: '* wolfSSL_accept when changing this one. */'
+    - file: src/ssl.c
+      line: 2111
+      summary: err = wolfSSL_accept(ssl);
+    - file: src/ssl.c
+      line: 6989
+      summary: int wolfSSL_accept(WOLFSSL* ssl)
+    - file: src/ssl.c
+      line: 7023
+      summary: WOLFSSL_ENTER("wolfSSL_accept");
+    - file: src/ssl.c
+      line: 7433
+      summary: WOLFSSL_LEAVE("wolfSSL_accept", WOLFSSL_SUCCESS);
+    test_refs:
+    - file: examples/async/async_server.c
+      line: 465
+      summary: ret = wolfSSL_accept(ssl);
+    - file: examples/async/async_server.c
+      line: 490
+      summary: 'fprintf(stderr, "ERROR: wolfSSL_accept failed: %d (%s)\n",'
+    - file: examples/benchmark/tls_bench.c
+      line: 1566
+      summary: ret = wolfSSL_accept(srv_ssl);
+    - file: examples/benchmark/tls_bench.c
+      line: 1569
+      summary: ret = wolfSSL_accept(srv_ssl);
+    - file: examples/echoserver/echoserver.c
+      line: 317
+      summary: WOLFSSL_ASYNC_WHILE_PENDING(ret = wolfSSL_accept(ssl),
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wolfSSL_connect
+  library: wolfssl
+  family: tls_protocol_state_lifecycle
+  families:
+  - tls_protocol_state_lifecycle
+  signature: "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001\u30D0\u30C3\u30D5\u30A1\
+    data\u304B\u3089sz\u30D0\u30A4\u30C8\u3092SSL\u63A5\u7D9Assl\u306B\u66F8\u304D\
+    \u8FBC\u307F\u307E\u3059\u3002\u5FC5\u8981\u306B\u5FDC\u3058\u3066\u3001wolfSSL_connect()\u307E\
+    \u305F\u306FwolfSSL_accept()\u306B\u3088\u3063\u3066\u30CF\u30F3\u30C9\u30B7\u30A7\
+    \u30A4\u30AF\u304C\u307E\u3060\u5B9F\u884C\u3055\u308C\u3066\u3044\u306A\u3044\
+    \u5834\u5408\u3001wolfSSL_write()\u306FSSL/TLS\u30BB\u30C3\u30B7\u30E7\u30F3\u3092\
+    \u30CD\u30B4\u30B7\u30A8\u30FC\u30C8\u3057\u307E\u3059\u3002(D)TLSv1.3\u3092\u4F7F\
+    \u7528\u3057\u3066\u3044\u3066early data\u6A5F\u80FD\u304C\u30B3\u30F3\u30D1\u30A4\
+    \u30EB\u3055\u308C\u3066\u3044\u308B\u5834\u5408\u3001\u3053\u306E\u95A2\u6570\
+    \u306F\u30C7\u30FC\u30BF\u9001\u4FE1\u304C\u53EF\u80FD\u306B\u306A\u308B\u307E\
+    \u3067\u30CF\u30F3\u30C9\u30B7\u30A7\u30A4\u30AF"
+  signature_candidates:
+  - "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001\u30D0\u30C3\u30D5\u30A1data\u304B\
+    \u3089sz\u30D0\u30A4\u30C8\u3092SSL\u63A5\u7D9Assl\u306B\u66F8\u304D\u8FBC\u307F\
+    \u307E\u3059\u3002\u5FC5\u8981\u306B\u5FDC\u3058\u3066\u3001wolfSSL_connect()\u307E\
+    \u305F\u306FwolfSSL_accept()\u306B\u3088\u3063\u3066\u30CF\u30F3\u30C9\u30B7\u30A7\
+    \u30A4\u30AF\u304C\u307E\u3060\u5B9F\u884C\u3055\u308C\u3066\u3044\u306A\u3044\
+    \u5834\u5408\u3001wolfSSL_write()\u306FSSL/TLS\u30BB\u30C3\u30B7\u30E7\u30F3\u3092\
+    \u30CD\u30B4\u30B7\u30A8\u30FC\u30C8\u3057\u307E\u3059\u3002(D)TLSv1.3\u3092\u4F7F\
+    \u7528\u3057\u3066\u3044\u3066early data\u6A5F\u80FD\u304C\u30B3\u30F3\u30D1\u30A4\
+    \u30EB\u3055\u308C\u3066\u3044\u308B\u5834\u5408\u3001\u3053\u306E\u95A2\u6570\
+    \u306F\u30C7\u30FC\u30BF\u9001\u4FE1\u304C\u53EF\u80FD\u306B\u306A\u308B\u307E\
+    \u3067\u30CF\u30F3\u30C9\u30B7\u30A7\u30A4\u30AF"
+  - "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001SSL\u30BB\u30C3\u30B7\u30E7\u30F3\
+    (ssl)\u306E\u5185\u90E8\u8AAD\u307F\u53D6\u308A\u30D0\u30C3\u30D5\u30A1\u304B\u3089\
+    sz\u30D0\u30A4\u30C8\u3092\u30D0\u30C3\u30D5\u30A1data\u306B\u8AAD\u307F\u8FBC\
+    \u307F\u307E\u3059\u3002\u8AAD\u307F\u53D6\u3089\u308C\u305F\u30D0\u30A4\u30C8\
+    \u306F\u5185\u90E8\u53D7\u4FE1\u30D0\u30C3\u30D5\u30A1\u304B\u3089\u524A\u9664\
+    \u3055\u308C\u307E\u3059\u3002\u5FC5\u8981\u306B\u5FDC\u3058\u3066\u3001wolfSSL_connect()\u307E\
+    \u305F\u306FwolfSSL_accept()\u306B\u3088\u3063\u3066\u30CF\u30F3\u30C9\u30B7\u30A7\
+    \u30A4\u30AF\u304C\u307E\u3060\u5B9F\u884C\u3055\u308C\u3066\u3044\u306A\u3044\
+    \u5834\u5408\u3001wolfSSL_read()\u306FSSL/TLS\u30BB\u30C3\u30B7\u30E7\u30F3\u3092\
+    \u30CD\u30B4\u30B7\u30A8\u30FC\u30C8\u3057\u307E\u3059\u3002SSL/TLS\u30D7\u30ED\
+    \u30C8\u30B3\u30EB\u306F\u3001\u6700\u5927\u30B5\u30A4\u30BA\u304C16kB\u306ES"
+  - "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001SSL\u30BB\u30C3\u30B7\u30E7\u30F3\
+    (ssl)\u306E\u5185\u90E8\u8AAD\u307F\u53D6\u308A\u30D0\u30C3\u30D5\u30A1\u304B\u3089\
+    sz\u30D0\u30A4\u30C8\u3092\u30D0\u30C3\u30D5\u30A1data\u306B\u30B3\u30D4\u30FC\
+    \u3057\u307E\u3059\u3002\u3053\u306E\u95A2\u6570\u306F\u3001\u5185\u90E8SSL\u30BB\
+    \u30C3\u30B7\u30E7\u30F3\u53D7\u4FE1\u30D0\u30C3\u30D5\u30A1\u5185\u306E\u30C7\
+    \u30FC\u30BF\u304C\u524A\u9664\u307E\u305F\u306F\u5909\u66F4\u3055\u308C\u306A\
+    \u3044\u70B9\u3092\u9664\u3044\u3066\u3001wolfSSL_read()\u3068\u540C\u3058\u3067\
+    \u3059\u3002wolfSSL_read()\u3068\u540C\u69D8\u306B\u3001\u5FC5\u8981\u306B\u5FDC\
+    \u3058\u3066\u3001wolfSSL_connect()\u307E\u305F\u306FwolfSSL_accept()\u306B\u3088\
+    \u3063\u3066\u30CF\u30F3\u30C9\u30B7\u30A7\u30A4\u30AF\u304C\u307E\u3060\u5B9F\
+    \u884C\u3055\u308C\u3066\u3044\u306A\u3044\u5834\u5408\u3001wolfSSL"
+  - "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001\u6307\u5B9A\u3055\u308C\u305F\u30D5\
+    \u30E9\u30B0\u3092\u4F7F\u7528\u3057\u3066\u3001\u30D0\u30C3\u30D5\u30A1data\u304B\
+    \u3089sz\u30D0\u30A4\u30C8\u3092SSL\u63A5\u7D9Assl\u306B\u66F8\u304D\u8FBC\u307F\
+    \u307E\u3059\u3002\u5FC5\u8981\u306B\u5FDC\u3058\u3066\u3001wolfSSL_connect()\u307E\
+    \u305F\u306FwolfSSL_accept()\u306B\u3088\u3063\u3066\u30CF\u30F3\u30C9\u30B7\u30A7\
+    \u30A4\u30AF\u304C\u307E\u3060\u5B9F\u884C\u3055\u308C\u3066\u3044\u306A\u3044\
+    \u5834\u5408\u3001wolfSSL_send()\u306FSSL/TLS\u30BB\u30C3\u30B7\u30E7\u30F3\u3092\
+    \u30CD\u30B4\u30B7\u30A8\u30FC\u30C8\u3057\u307E\u3059\u3002wolfSSL_send()\u306F\
+    \u3001\u30D6\u30ED\u30C3\u30AD\u30F3\u30B0I/O\u3068\u30CE\u30F3\u30D6\u30ED\u30C3\
+    \u30AD\u30F3\u30B0I/O\u306E\u4E21\u65B9\u3067\u52D5\u4F5C\u3057\u307E\u3059\u3002\
+    \u57FA\u76E4\u3068\u306A\u308BI/O"
+  - "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001\u6307\u5B9A\u3055\u308C\u305F\u30D5\
+    \u30E9\u30B0\u3092\u4F7F\u7528\u3057\u3066\u3001SSL\u30BB\u30C3\u30B7\u30E7\u30F3\
+    (ssl)\u306E\u5185\u90E8\u8AAD\u307F\u53D6\u308A\u30D0\u30C3\u30D5\u30A1\u304B\u3089\
+    sz\u30D0\u30A4\u30C8\u3092\u30D0\u30C3\u30D5\u30A1data\u306B\u8AAD\u307F\u8FBC\
+    \u307F\u307E\u3059\u3002\u8AAD\u307F\u53D6\u3089\u308C\u305F\u30D0\u30A4\u30C8\
+    \u306F\u3001\u5185\u90E8\u53D7\u4FE1\u30D0\u30C3\u30D5\u30A1\u304B\u3089\u524A\
+    \u9664\u3055\u308C\u307E\u3059\u3002\u3053\u306E\u95A2\u6570\u306F\u3001\u57FA\
+    \u76E4\u3068\u306A\u308B\u8AAD\u307F\u53D6\u308A\u64CD\u4F5C\u306Erecv\u30D5\u30E9\
+    \u30B0\u3092\u30A2\u30D7\u30EA\u30B1\u30FC\u30B7\u30E7\u30F3\u304C\u8A2D\u5B9A\
+    \u3067\u304D\u308B\u70B9\u3092\u9664\u3044\u3066\u3001wolfSSL_read()\u3068\u540C\
+    \u3058\u3067\u3059\u3002\u5FC5\u8981\u306B\u5FDC\u3058\u3066\u3001wolfSSL_connect()\u307E\
+    \u305F\u306FwolfSSL_accept()\u306B\u3088\u3063\u3066\u30CF\u30F3\u30C9\u30B7"
+  parameter_semantics: {}
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - TLS/DTLS context and session state must be initialized before protocol I/O
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - context, session, certificates, keys, and peer/socket state must match selected
+      protocol mode
+    manual_review_required: true
+  mutation_hints:
+  - TLS/DTLS context and session state must be initialized before protocol I/O
+  - context, session, certificates, keys, and peer/socket state must match selected
+    protocol mode
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - session_state
+  - error_code
+  - sanitizer_signal
+  lifecycle:
+    init:
+    - wolfSSL_CTX_new
+    - wolfSSL_new
+    use:
+    - wolfSSL_connect
+    cleanup:
+    - wolfSSL_CTX_free
+    - wolfSSL_free
+  related_apis:
+  - wolfSSL_CTX_new
+  - wolfSSL_CTX_free
+  - wolfSSL_new
+  - wolfSSL_free
+  - wolfSSL_accept
+  - wolfSSL_read
+  - wolfSSL_write
+  - wolfSSL_shutdown
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/quic.h
+      line: 277
+      summary: \sa wolfSSL_connect
+    - file: doc/dox_comments/header_files-ja/quic.h
+      line: 293
+      summary: \sa wolfSSL_connect
+    - file: doc/dox_comments/header_files-ja/quic.h
+      line: 310
+      summary: \sa wolfSSL_connect
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1715
+      summary: "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001\u30D0\u30C3\u30D5\u30A1\
+        data\u304B\u3089sz\u30D0\u30A4\u30C8\u3092SSL\u63A5\u7D9Assl\u306B\u66F8\u304D\
+        \u8FBC\u307F\u307E\u3059\u3002\u5FC5\u8981\u306B\u5FDC\u3058\u3066\u3001wolfSSL_connect()\u307E\
+        \u305F\u306FwolfSSL_accept()\u306B\u3088\u3063\u3066\u30CF\u30F3\u30C9\u30B7\
+        \u30A7\u30A4\u30AF\u304C\u307E\u3060\u5B9F\u884C\u3055\u308C\u3066\u3044\u306A\
+        \u3044\u5834\u5408\u3001wolfSSL_write()\u306FSSL/TLS\u30BB\u30C3\u30B7\u30E7\
+        \u30F3\u3092\u30CD\u30B4\u30B7\u30A8\u30FC\u30C8\u3057\u307E\u3059\u3002(D)TLSv1.3\u3092\
+        \u4F7F\u7528\u3057\u3066\u3044\u3066early data\u6A5F"
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1749
+      summary: "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001SSL\u30BB\u30C3\u30B7\u30E7\
+        \u30F3(ssl)\u306E\u5185\u90E8\u8AAD\u307F\u53D6\u308A\u30D0\u30C3\u30D5\u30A1\
+        \u304B\u3089sz\u30D0\u30A4\u30C8\u3092\u30D0\u30C3\u30D5\u30A1data\u306B\u8AAD\
+        \u307F\u8FBC\u307F\u307E\u3059\u3002\u8AAD\u307F\u53D6\u3089\u308C\u305F\u30D0\
+        \u30A4\u30C8\u306F\u5185\u90E8\u53D7\u4FE1\u30D0\u30C3\u30D5\u30A1\u304B\u3089\
+        \u524A\u9664\u3055\u308C\u307E\u3059\u3002\u5FC5\u8981\u306B\u5FDC\u3058\u3066\
+        \u3001wolfSSL_connect()\u307E\u305F\u306FwolfSSL_accept()\u306B\u3088\u3063\
+        \u3066\u30CF\u30F3\u30C9\u30B7\u30A7\u30A4\u30AF\u304C\u307E\u3060\u5B9F\u884C\
+        \u3055\u308C\u3066\u3044\u306A\u3044\u5834\u5408\u3001wolfSSL_read()\u306F\
+        SSL/TLS\u30BB\u30C3"
+    source_refs:
+    - file: src/internal.c
+      line: 7608
+      summary: '* For example wolfSSL_clear() is called then wolfSSL_connect or accept
+        */'
+    - file: src/ssl.c
+      line: 2122
+      summary: err = wolfSSL_connect(ssl);
+    - file: src/ssl.c
+      line: 4783
+      summary: ret = wolfSSL_connect(ssl);
+    - file: src/ssl.c
+      line: 6490
+      summary: int wolfSSL_connect(WOLFSSL* ssl)
+    - file: src/ssl.c
+      line: 6538
+      summary: WOLFSSL_ENTER("wolfSSL_connect");
+    test_refs:
+    - file: examples/async/async_client.c
+      line: 430
+      summary: ret = wolfSSL_connect(ssl);
+    - file: examples/async/async_client.c
+      line: 455
+      summary: 'fprintf(stderr, "ERROR: wolfSSL_connect failed: %d (%s)\n",'
+    - file: examples/benchmark/tls_bench.c
+      line: 1122
+      summary: ret = wolfSSL_connect(cli_ssl);
+    - file: examples/benchmark/tls_bench.c
+      line: 1126
+      summary: ret = wolfSSL_connect(cli_ssl);
+    - file: examples/client/client.c
+      line: 181
+      summary: ret = wolfSSL_connect(ssl);
+    doc_refs:
+    - file: wolfcrypt/src/port/Espressif/esp_crt_bundle/README.md
+      line: 154
+      summary: 'E (28484) esp-tls-wolfssl: wolfSSL_connect returned -1, error code:
+        -188'
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wolfSSL_dtls
+  library: wolfssl
+  family: tls_protocol_state_lifecycle
+  families:
+  - tls_protocol_state_lifecycle
+  signature: ret = wolfSSL_dtls(ssl);
+  signature_candidates:
+  - ret = wolfSSL_dtls(ssl);
+  - int  wolfSSL_dtls(WOLFSSL* ssl);
+  - int wolfSSL_dtls(WOLFSSL* ssl)
+  - if (!wolfSSL_dtls(ssl) || wolfSSL_dtls_get_using_nonblock(ssl)) {
+  parameter_semantics:
+    ssl: API parameter; semantics require manual review
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - TLS/DTLS context and session state must be initialized before protocol I/O
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - context, session, certificates, keys, and peer/socket state must match selected
+      protocol mode
+    manual_review_required: true
+  mutation_hints:
+  - TLS/DTLS context and session state must be initialized before protocol I/O
+  - context, session, certificates, keys, and peer/socket state must match selected
+    protocol mode
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - session_state
+  - error_code
+  - sanitizer_signal
+  lifecycle:
+    init:
+    - wolfSSL_CTX_new
+    - wolfSSL_new
+    use:
+    - wolfSSL_dtls
+    cleanup:
+    - wolfSSL_CTX_free
+    - wolfSSL_free
+  related_apis:
+  - wolfSSL_CTX_new
+  - wolfSSL_CTX_free
+  - wolfSSL_new
+  - wolfSSL_free
+  - wolfSSL_connect
+  - wolfSSL_accept
+  - wolfSSL_read
+  - wolfSSL_write
+  - wolfSSL_shutdown
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 2962
+      summary: \sa wolfSSL_dtls
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 2975
+      summary: \sa wolfSSL_dtls
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 2990
+      summary: \sa wolfSSL_dtls
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 3072
+      summary: \sa wolfSSL_dtls
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 3094
+      summary: \sa wolfSSL_dtls
+    source_refs:
+    - file: src/ssl.c
+      line: 1309
+      summary: int wolfSSL_dtls(WOLFSSL* ssl)
+    - file: src/wolfio.c
+      line: 2691
+      summary: if (!wolfSSL_dtls(ssl) || wolfSSL_dtls_get_using_nonblock(ssl)) {
+    test_refs:
+    - file: examples/client/client.c
+      line: 219
+      summary: if (wolfSSL_dtls(ssl))
+    - file: examples/client/client.c
+      line: 244
+      summary: else if (select_ret == TEST_TIMEOUT && !wolfSSL_dtls(ssl)) {
+    - file: examples/client/client.c
+      line: 254
+      summary: else if (select_ret == TEST_TIMEOUT && wolfSSL_dtls(ssl)) {
+    - file: examples/client/client.c
+      line: 581
+      summary: if (wolfSSL_dtls(ssl)) {
+    - file: examples/client/client.c
+      line: 1166
+      summary: if (wolfSSL_dtls(ssl)) {
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wolfSSL_dtls_set_peer
+  library: wolfssl
+  family: tls_protocol_state_lifecycle
+  families:
+  - tls_protocol_state_lifecycle
+  signature: ret = wolfSSL_dtls_set_peer(ssl, &addr, sizeof(addr));
+  signature_candidates:
+  - ret = wolfSSL_dtls_set_peer(ssl, &addr, sizeof(addr));
+  - int  wolfSSL_dtls_set_peer(WOLFSSL* ssl, void* peer, unsigned int peerSz);
+  - (void)wolfSSL_dtls_set_peer(ssl,
+  - int wolfSSL_dtls_set_peer(WOLFSSL* ssl, void* peer, unsigned int peerSz)
+  - if (wolfSSL_dtls_set_peer(ssl, peer, peerSz) != WOLFSSL_SUCCESS)
+  parameter_semantics:
+    ssl: API parameter; semantics require manual review
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - TLS/DTLS context and session state must be initialized before protocol I/O
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - context, session, certificates, keys, and peer/socket state must match selected
+      protocol mode
+    manual_review_required: true
+  mutation_hints:
+  - TLS/DTLS context and session state must be initialized before protocol I/O
+  - context, session, certificates, keys, and peer/socket state must match selected
+    protocol mode
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - session_state
+  - error_code
+  - sanitizer_signal
+  lifecycle:
+    init:
+    - wolfSSL_CTX_new
+    - wolfSSL_new
+    use:
+    - wolfSSL_dtls_set_peer
+    cleanup:
+    - wolfSSL_CTX_free
+    - wolfSSL_free
+  related_apis:
+  - wolfSSL_CTX_new
+  - wolfSSL_CTX_free
+  - wolfSSL_new
+  - wolfSSL_free
+  - wolfSSL_connect
+  - wolfSSL_accept
+  - wolfSSL_read
+  - wolfSSL_write
+  - wolfSSL_shutdown
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 2965
+      summary: \sa wolfSSL_dtls_set_peer
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 2978
+      summary: \sa wolfSSL_dtls_set_peer
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 2993
+      summary: \sa wolfSSL_dtls_set_peer
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 3071
+      summary: \sa wolfSSL_dtls_set_peer
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 3120
+      summary: \sa wolfSSL_dtls_set_peer
+    source_refs:
+    - file: src/internal.c
+      line: 22602
+      summary: (void)wolfSSL_dtls_set_peer(ssl,
+    - file: src/ssl.c
+      line: 1429
+      summary: int wolfSSL_dtls_set_peer(WOLFSSL* ssl, void* peer, unsigned int peerSz)
+    - file: src/wolfio.c
+      line: 873
+      summary: if (wolfSSL_dtls_set_peer(ssl, peer, peerSz) != WOLFSSL_SUCCESS)
+    - file: src/wolfio.c
+      line: 1086
+      summary: if ((ret = wolfSSL_dtls_set_peer(ssl, (SOCKADDR_IN*)&addr,
+    - file: src/wolfio.c
+      line: 1103
+      summary: if ((ret = wolfSSL_dtls_set_peer(ssl, (SOCKADDR_IN6*)&addr,
+    test_refs:
+    - file: examples/benchmark/tls_bench.c
+      line: 1091
+      summary: ret = wolfSSL_dtls_set_peer(cli_ssl, &info->serverAddr,
+    - file: examples/benchmark/tls_bench.c
+      line: 1548
+      summary: ret = wolfSSL_dtls_set_peer(srv_ssl, &info->clientAddr,
+    - file: examples/server/server.c
+      line: 3611
+      summary: wolfSSL_dtls_set_peer(ssl, &client_addr, client_len);
+    - file: tests/api.c
+      line: 5374
+      summary: err = wolfSSL_dtls_set_peer(ssl, &cliAddr, cliLen);
+    - file: tests/api.c
+      line: 6382
+      summary: wolfSSL_dtls_set_peer(ssl, &cliAddr, cliLen);
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wolfSSL_free
+  library: wolfssl
+  family: tls_protocol_state_lifecycle
+  families:
+  - tls_protocol_state_lifecycle
+  signature: wolfSSL_free(ssl);
+  signature_candidates:
+  - wolfSSL_free(ssl);
+  - void wolfSSL_free(WOLFSSL* ssl);
+  - wolfSSL_free(bio->ptr.ssl);
+  - wolfSSL_free(session->sslClient);
+  - wolfSSL_free(session->sslServer);
+  parameter_semantics:
+    ssl: API parameter; semantics require manual review
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - cleanup API; object or pointer must have compatible allocation provenance
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - context, session, certificates, keys, and peer/socket state must match selected
+      protocol mode
+    manual_review_required: true
+  mutation_hints:
+  - cleanup API; object or pointer must have compatible allocation provenance
+  - context, session, certificates, keys, and peer/socket state must match selected
+    protocol mode
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - session_state
+  - error_code
+  - sanitizer_signal
+  lifecycle:
+    init:
+    - wolfSSL_CTX_new
+    - wolfSSL_new
+    use:
+    - wolfSSL_free
+    cleanup:
+    - wolfSSL_CTX_free
+  related_apis:
+  - wolfSSL_CTX_new
+  - wolfSSL_CTX_free
+  - wolfSSL_new
+  - wolfSSL_connect
+  - wolfSSL_accept
+  - wolfSSL_read
+  - wolfSSL_write
+  - wolfSSL_shutdown
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 40
+      summary: \sa wolfSSL_free
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1859
+      summary: "// wolfSSL_free()\u3068wolfSSL_new()\u3067ssl\u30AA\u30D6\u30B8\u30A7\
+        \u30AF\u30C8\u3092\u518D\u5272\u308A\u5F53\u3066"
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1892
+      summary: \sa wolfSSL_free
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1911
+      summary: wolfSSL_free(ssl);
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1918
+      summary: void wolfSSL_free(WOLFSSL* ssl);
+    source_refs:
+    - file: src/bio.c
+      line: 2766
+      summary: wolfSSL_free(ssl);
+    - file: src/bio.c
+      line: 3080
+      summary: wolfSSL_free(bio->ptr.ssl);
+    - file: src/sniffer.c
+      line: 842
+      summary: wolfSSL_free(session->sslClient);
+    - file: src/sniffer.c
+      line: 843
+      summary: wolfSSL_free(session->sslServer);
+    - file: src/sniffer.c
+      line: 5305
+      summary: wolfSSL_free(session->sslServer);
+    test_refs:
+    - file: examples/async/async_client.c
+      line: 567
+      summary: wolfSSL_free(ssl);
+    - file: examples/async/async_server.c
+      line: 605
+      summary: wolfSSL_free(ssl);
+    - file: examples/async/async_server.c
+      line: 624
+      summary: wolfSSL_free(ssl);
+    - file: examples/benchmark/tls_bench.c
+      line: 1222
+      summary: wolfSSL_free(cli_ssl);
+    - file: examples/benchmark/tls_bench.c
+      line: 1236
+      summary: wolfSSL_free(cli_ssl);
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wolfSSL_new
+  library: wolfssl
+  family: tls_protocol_state_lifecycle
+  families:
+  - tls_protocol_state_lifecycle
+  signature: ssl = wolfSSL_new(ctx);
+  signature_candidates:
+  - ssl = wolfSSL_new(ctx);
+  - "\\param ssl wolfSSL_new()\u3092\u4F7F\u7528\u3057\u3066\u4F5C\u6210\u3055\u308C\
+    \u305FWOLFSSL\u69CB\u9020\u4F53\u3078\u306E\u30DD\u30A4\u30F3\u30BF\u3002"
+  - "\\param ssl - wolfSSL_new()\u3092\u4F7F\u7528\u3057\u3066\u4F5C\u6210\u3055\u308C\
+    \u305FWOLFSSL\u69CB\u9020\u4F53\u3078\u306E\u30DD\u30A4\u30F3\u30BF\u3002"
+  - session->sslServer = wolfSSL_new(session->context->ctx);
+  - session->sslClient = wolfSSL_new(session->context->ctx);
+  parameter_semantics:
+    ctx: context/session object
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - must precede dependent operations on the created or initialized object
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - context, session, certificates, keys, and peer/socket state must match selected
+      protocol mode
+    manual_review_required: true
+  mutation_hints:
+  - must precede dependent operations on the created or initialized object
+  - context, session, certificates, keys, and peer/socket state must match selected
+    protocol mode
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - session_state
+  - error_code
+  - sanitizer_signal
+  lifecycle:
+    init:
+    - wolfSSL_CTX_new
+    use:
+    - wolfSSL_new
+    cleanup:
+    - wolfSSL_CTX_free
+    - wolfSSL_free
+  related_apis:
+  - wolfSSL_CTX_new
+  - wolfSSL_CTX_free
+  - wolfSSL_free
+  - wolfSSL_connect
+  - wolfSSL_accept
+  - wolfSSL_read
+  - wolfSSL_write
+  - wolfSSL_shutdown
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/iotsafe.h
+      line: 49
+      summary: ssl = wolfSSL_new(ctx);
+    - file: doc/dox_comments/header_files-ja/iotsafe.h
+      line: 100
+      summary: ssl = wolfSSL_new(ctx);
+    - file: doc/dox_comments/header_files-ja/memory.h
+      line: 290
+      summary: "\\param ssl wolfSSL_new()\u3092\u4F7F\u7528\u3057\u3066\u4F5C\u6210\
+        \u3055\u308C\u305FWOLFSSL\u69CB\u9020\u4F53\u3078\u306E\u30DD\u30A4\u30F3\u30BF\
+        \u3002"
+    - file: doc/dox_comments/header_files-ja/memory.h
+      line: 310
+      summary: \sa wolfSSL_new
+    - file: doc/dox_comments/header_files-ja/psa.h
+      line: 43
+      summary: ssl = wolfSSL_new(ctx);
+    source_refs:
+    - file: src/bio.c
+      line: 2740
+      summary: ssl = wolfSSL_new(ctx);
+    - file: src/sniffer.c
+      line: 5297
+      summary: session->sslServer = wolfSSL_new(session->context->ctx);
+    - file: src/sniffer.c
+      line: 5303
+      summary: session->sslClient = wolfSSL_new(session->context->ctx);
+    - file: src/ssl.c
+      line: 752
+      summary: WOLFSSL* wolfSSL_new(WOLFSSL_CTX* ctx)
+    - file: src/ssl.c
+      line: 757
+      summary: WOLFSSL_ENTER("wolfSSL_new");
+    test_refs:
+    - file: examples/async/async_client.c
+      line: 396
+      summary: ssl = wolfSSL_new(ctx);
+    - file: examples/async/async_server.c
+      line: 433
+      summary: if ((ssl = wolfSSL_new(ctx)) == NULL) {
+    - file: examples/benchmark/tls_bench.c
+      line: 1073
+      summary: cli_ssl = wolfSSL_new(cli_ctx);
+    - file: examples/benchmark/tls_bench.c
+      line: 1530
+      summary: srv_ssl = wolfSSL_new(srv_ctx);
+    - file: examples/benchmark/tls_bench.c
+      line: 1836
+      summary: ssl = wolfSSL_new(ctx);
+    doc_refs:
+    - file: wolfcrypt/src/port/psa/README.md
+      line: 67
+      summary: ssl = wolfSSL_new(ctx);
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wolfSSL_read
+  library: wolfssl
+  family: tls_protocol_state_lifecycle
+  families:
+  - tls_protocol_state_lifecycle
+  signature: "ret = wolfSSL_write(ssl) \u304A\u3088\u3073 wolfSSL_read(ssl);"
+  signature_candidates:
+  - "ret = wolfSSL_write(ssl) \u304A\u3088\u3073 wolfSSL_read(ssl);"
+  - "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001\u30D0\u30C3\u30D5\u30A1data\u304B\
+    \u3089sz\u30D0\u30A4\u30C8\u3092SSL\u63A5\u7D9Assl\u306B\u66F8\u304D\u8FBC\u307F\
+    \u307E\u3059\u3002\u5FC5\u8981\u306B\u5FDC\u3058\u3066\u3001wolfSSL_connect()\u307E\
+    \u305F\u306FwolfSSL_accept()\u306B\u3088\u3063\u3066\u30CF\u30F3\u30C9\u30B7\u30A7\
+    \u30A4\u30AF\u304C\u307E\u3060\u5B9F\u884C\u3055\u308C\u3066\u3044\u306A\u3044\
+    \u5834\u5408\u3001wolfSSL_write()\u306FSSL/TLS\u30BB\u30C3\u30B7\u30E7\u30F3\u3092\
+    \u30CD\u30B4\u30B7\u30A8\u30FC\u30C8\u3057\u307E\u3059\u3002(D)TLSv1.3\u3092\u4F7F\
+    \u7528\u3057\u3066\u3044\u3066early data\u6A5F\u80FD\u304C\u30B3\u30F3\u30D1\u30A4\
+    \u30EB\u3055\u308C\u3066\u3044\u308B\u5834\u5408\u3001\u3053\u306E\u95A2\u6570\
+    \u306F\u30C7\u30FC\u30BF\u9001\u4FE1\u304C\u53EF\u80FD\u306B\u306A\u308B\u307E\
+    \u3067\u30CF\u30F3\u30C9\u30B7\u30A7\u30A4\u30AF"
+  - "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001SSL\u30BB\u30C3\u30B7\u30E7\u30F3\
+    (ssl)\u306E\u5185\u90E8\u8AAD\u307F\u53D6\u308A\u30D0\u30C3\u30D5\u30A1\u304B\u3089\
+    sz\u30D0\u30A4\u30C8\u3092\u30D0\u30C3\u30D5\u30A1data\u306B\u8AAD\u307F\u8FBC\
+    \u307F\u307E\u3059\u3002\u8AAD\u307F\u53D6\u3089\u308C\u305F\u30D0\u30A4\u30C8\
+    \u306F\u5185\u90E8\u53D7\u4FE1\u30D0\u30C3\u30D5\u30A1\u304B\u3089\u524A\u9664\
+    \u3055\u308C\u307E\u3059\u3002\u5FC5\u8981\u306B\u5FDC\u3058\u3066\u3001wolfSSL_connect()\u307E\
+    \u305F\u306FwolfSSL_accept()\u306B\u3088\u3063\u3066\u30CF\u30F3\u30C9\u30B7\u30A7\
+    \u30A4\u30AF\u304C\u307E\u3060\u5B9F\u884C\u3055\u308C\u3066\u3044\u306A\u3044\
+    \u5834\u5408\u3001wolfSSL_read()\u306FSSL/TLS\u30BB\u30C3\u30B7\u30E7\u30F3\u3092\
+    \u30CD\u30B4\u30B7\u30A8\u30FC\u30C8\u3057\u307E\u3059\u3002SSL/TLS\u30D7\u30ED\
+    \u30C8\u30B3\u30EB\u306F\u3001\u6700\u5927\u30B5\u30A4\u30BA\u304C16kB\u306ES"
+  - "\\param data wolfSSL_read()\u304C\u8AAD\u307F\u53D6\u3063\u305F\u30C7\u30FC\u30BF\
+    \u3092\u683C\u7D0D\u3059\u308B\u30D0\u30C3\u30D5\u30A1\u3002"
+  - input = wolfSSL_read(ssl, reply, sizeof(reply));
+  parameter_semantics: {}
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - TLS/DTLS context and session state must be initialized before protocol I/O
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - context, session, certificates, keys, and peer/socket state must match selected
+      protocol mode
+    manual_review_required: true
+  mutation_hints:
+  - TLS/DTLS context and session state must be initialized before protocol I/O
+  - context, session, certificates, keys, and peer/socket state must match selected
+    protocol mode
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - session_state
+  - error_code
+  - sanitizer_signal
+  lifecycle:
+    init:
+    - wolfSSL_CTX_new
+    - wolfSSL_new
+    use:
+    - wolfSSL_read
+    cleanup:
+    - wolfSSL_CTX_free
+    - wolfSSL_free
+  related_apis:
+  - wolfSSL_CTX_new
+  - wolfSSL_CTX_free
+  - wolfSSL_new
+  - wolfSSL_free
+  - wolfSSL_connect
+  - wolfSSL_accept
+  - wolfSSL_write
+  - wolfSSL_shutdown
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 583
+      summary: "ret = wolfSSL_write(ssl) \u304A\u3088\u3073 wolfSSL_read(ssl);"
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1715
+      summary: "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001\u30D0\u30C3\u30D5\u30A1\
+        data\u304B\u3089sz\u30D0\u30A4\u30C8\u3092SSL\u63A5\u7D9Assl\u306B\u66F8\u304D\
+        \u8FBC\u307F\u307E\u3059\u3002\u5FC5\u8981\u306B\u5FDC\u3058\u3066\u3001wolfSSL_connect()\u307E\
+        \u305F\u306FwolfSSL_accept()\u306B\u3088\u3063\u3066\u30CF\u30F3\u30C9\u30B7\
+        \u30A7\u30A4\u30AF\u304C\u307E\u3060\u5B9F\u884C\u3055\u308C\u3066\u3044\u306A\
+        \u3044\u5834\u5408\u3001wolfSSL_write()\u306FSSL/TLS\u30BB\u30C3\u30B7\u30E7\
+        \u30F3\u3092\u30CD\u30B4\u30B7\u30A8\u30FC\u30C8\u3057\u307E\u3059\u3002(D)TLSv1.3\u3092\
+        \u4F7F\u7528\u3057\u3066\u3044\u3066early data\u6A5F"
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1741
+      summary: \sa wolfSSL_read
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1749
+      summary: "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001SSL\u30BB\u30C3\u30B7\u30E7\
+        \u30F3(ssl)\u306E\u5185\u90E8\u8AAD\u307F\u53D6\u308A\u30D0\u30C3\u30D5\u30A1\
+        \u304B\u3089sz\u30D0\u30A4\u30C8\u3092\u30D0\u30C3\u30D5\u30A1data\u306B\u8AAD\
+        \u307F\u8FBC\u307F\u307E\u3059\u3002\u8AAD\u307F\u53D6\u3089\u308C\u305F\u30D0\
+        \u30A4\u30C8\u306F\u5185\u90E8\u53D7\u4FE1\u30D0\u30C3\u30D5\u30A1\u304B\u3089\
+        \u524A\u9664\u3055\u308C\u307E\u3059\u3002\u5FC5\u8981\u306B\u5FDC\u3058\u3066\
+        \u3001wolfSSL_connect()\u307E\u305F\u306FwolfSSL_accept()\u306B\u3088\u3063\
+        \u3066\u30CF\u30F3\u30C9\u30B7\u30A7\u30A4\u30AF\u304C\u307E\u3060\u5B9F\u884C\
+        \u3055\u308C\u3066\u3044\u306A\u3044\u5834\u5408\u3001wolfSSL_read()\u306F\
+        SSL/TLS\u30BB\u30C3"
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1756
+      summary: "\\param data wolfSSL_read()\u304C\u8AAD\u307F\u53D6\u3063\u305F\u30C7\
+        \u30FC\u30BF\u3092\u683C\u7D0D\u3059\u308B\u30D0\u30C3\u30D5\u30A1\u3002"
+    source_refs:
+    - file: src/bio.c
+      line: 217
+      summary: ret = wolfSSL_read(bio->ptr.ssl, buf, len);
+    - file: src/internal.c
+      line: 26204
+      summary: '* Invoked in wolfSSL_read/wolfSSL_write to check if wolfSSL_negotiate()
+        is'
+    - file: src/internal.c
+      line: 26692
+      summary: WOLFSSL_MSG("User calling wolfSSL_read in error state, not allowed");
+    - file: src/ssl.c
+      line: 2916
+      summary: int wolfSSL_read(WOLFSSL* ssl, void* data, int sz)
+    - file: src/ssl.c
+      line: 2918
+      summary: WOLFSSL_ENTER("wolfSSL_read");
+    test_refs:
+    - file: examples/async/async_client.c
+      line: 511
+      summary: ret = wolfSSL_read(ssl, rx, (int)sizeof(rx) - 1);
+    - file: examples/async/async_client.c
+      line: 538
+      summary: 'fprintf(stderr, "ERROR: wolfSSL_read failed: %d (%s)\n",'
+    - file: examples/async/async_server.c
+      line: 508
+      summary: ret = wolfSSL_read(ssl, buff, sizeof(buff) - 1);
+    - file: examples/async/async_server.c
+      line: 533
+      summary: 'fprintf(stderr, "ERROR: wolfSSL_read failed: %d (%s)\n",'
+    - file: examples/benchmark/tls_bench.c
+      line: 1195
+      summary: ret = wolfSSL_read(cli_ssl, readBuf, readBufSz);
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wolfSSL_shutdown
+  library: wolfssl
+  family: tls_protocol_state_lifecycle
+  families:
+  - tls_protocol_state_lifecycle
+  signature: "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001SSL\u30BB\u30C3\u30B7\u30E7\
+    \u30F3ssl\u3092\u4F7F\u7528\u3057\u3066\u30A2\u30AF\u30C6\u30A3\u30D6\u306ASSL/TLS\u63A5\
+    \u7D9A\u3092\u30B7\u30E3\u30C3\u30C8\u30C0\u30A6\u30F3\u3057\u307E\u3059\u3002\
+    \u3053\u306E\u95A2\u6570\u306F\u3001\u30D4\u30A2\u306B\u300Cclose notify\u300D\
+    \u30A2\u30E9\u30FC\u30C8\u3092\u9001\u4FE1\u3057\u3088\u3046\u3068\u8A66\u307F\
+    \u307E\u3059\u3002\u547C\u3073\u51FA\u3057\u5074\u306E\u30A2\u30D7\u30EA\u30B1\
+    \u30FC\u30B7\u30E7\u30F3\u306F\u3001\u30D4\u30A2\u304B\u3089\u306E\u5FDC\u7B54\
+    \u3068\u3057\u3066\u300Cclose notify\u300D\u30A2\u30E9\u30FC\u30C8\u304C\u9001\
+    \u4FE1\u3055\u308C\u308B\u306E\u3092\u5F85\u3064\u304B\u3001wolfSSL_shutdown()\u3092\
+    \u76F4\u63A5\u547C\u3073\u51FA\u3057\u305F\u5F8C\u306B\u57FA\u76E4\u3068\u306A\
+    \u308B\u63A5\u7D9A\u3092\u30B7\u30E3\u30C3\u30C8\u30C0\u30A6\u30F3\u3059\u308B\
+    \u304B(\u30EA\u30BD\u30FC\u30B9\u3092\u7BC0\u7D04\u3059\u308B\u305F\u3081)\u3092\
+    \u9078\u629E\u3067\u304D\u307E\u3059\u3002TL"
+  signature_candidates:
+  - "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001SSL\u30BB\u30C3\u30B7\u30E7\u30F3\
+    ssl\u3092\u4F7F\u7528\u3057\u3066\u30A2\u30AF\u30C6\u30A3\u30D6\u306ASSL/TLS\u63A5\
+    \u7D9A\u3092\u30B7\u30E3\u30C3\u30C8\u30C0\u30A6\u30F3\u3057\u307E\u3059\u3002\
+    \u3053\u306E\u95A2\u6570\u306F\u3001\u30D4\u30A2\u306B\u300Cclose notify\u300D\
+    \u30A2\u30E9\u30FC\u30C8\u3092\u9001\u4FE1\u3057\u3088\u3046\u3068\u8A66\u307F\
+    \u307E\u3059\u3002\u547C\u3073\u51FA\u3057\u5074\u306E\u30A2\u30D7\u30EA\u30B1\
+    \u30FC\u30B7\u30E7\u30F3\u306F\u3001\u30D4\u30A2\u304B\u3089\u306E\u5FDC\u7B54\
+    \u3068\u3057\u3066\u300Cclose notify\u300D\u30A2\u30E9\u30FC\u30C8\u304C\u9001\
+    \u4FE1\u3055\u308C\u308B\u306E\u3092\u5F85\u3064\u304B\u3001wolfSSL_shutdown()\u3092\
+    \u76F4\u63A5\u547C\u3073\u51FA\u3057\u305F\u5F8C\u306B\u57FA\u76E4\u3068\u306A\
+    \u308B\u63A5\u7D9A\u3092\u30B7\u30E3\u30C3\u30C8\u30C0\u30A6\u30F3\u3059\u308B\
+    \u304B(\u30EA\u30BD\u30FC\u30B9\u3092\u7BC0\u7D04\u3059\u308B\u305F\u3081)\u3092\
+    \u9078\u629E\u3067\u304D\u307E\u3059\u3002TL"
+  - ret = wolfSSL_shutdown(ssl);
+  - int  wolfSSL_shutdown(WOLFSSL* ssl);
+  - wolfSSL_shutdown (to save resources).  Either option is allowed by
+  - wolfSSL_shutdown() works with both blocking and non-blocking I/O.
+  parameter_semantics: {}
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - TLS/DTLS context and session state must be initialized before protocol I/O
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - context, session, certificates, keys, and peer/socket state must match selected
+      protocol mode
+    manual_review_required: true
+  mutation_hints:
+  - TLS/DTLS context and session state must be initialized before protocol I/O
+  - context, session, certificates, keys, and peer/socket state must match selected
+    protocol mode
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - session_state
+  - error_code
+  - sanitizer_signal
+  lifecycle:
+    init:
+    - wolfSSL_CTX_new
+    - wolfSSL_new
+    use:
+    - wolfSSL_shutdown
+    cleanup:
+    - wolfSSL_CTX_free
+    - wolfSSL_free
+  related_apis:
+  - wolfSSL_CTX_new
+  - wolfSSL_CTX_free
+  - wolfSSL_new
+  - wolfSSL_free
+  - wolfSSL_connect
+  - wolfSSL_accept
+  - wolfSSL_read
+  - wolfSSL_write
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1923
+      summary: "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001SSL\u30BB\u30C3\u30B7\u30E7\
+        \u30F3ssl\u3092\u4F7F\u7528\u3057\u3066\u30A2\u30AF\u30C6\u30A3\u30D6\u306A\
+        SSL/TLS\u63A5\u7D9A\u3092\u30B7\u30E3\u30C3\u30C8\u30C0\u30A6\u30F3\u3057\u307E\
+        \u3059\u3002\u3053\u306E\u95A2\u6570\u306F\u3001\u30D4\u30A2\u306B\u300Cclose\
+        \ notify\u300D\u30A2\u30E9\u30FC\u30C8\u3092\u9001\u4FE1\u3057\u3088\u3046\
+        \u3068\u8A66\u307F\u307E\u3059\u3002\u547C\u3073\u51FA\u3057\u5074\u306E\u30A2\
+        \u30D7\u30EA\u30B1\u30FC\u30B7\u30E7\u30F3\u306F\u3001\u30D4\u30A2\u304B\u3089\
+        \u306E\u5FDC\u7B54\u3068\u3057\u3066\u300Cclose notify\u300D\u30A2\u30E9\u30FC\
+        \u30C8\u304C\u9001\u4FE1\u3055\u308C\u308B\u306E\u3092\u5F85\u3064\u304B\u3001\
+        wolfSSL_shutdown()\u3092\u76F4\u63A5\u547C\u3073\u51FA\u3057\u305F\u5F8C\u306B\
+        \u57FA"
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1938
+      summary: ret = wolfSSL_shutdown(ssl);
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1947
+      summary: int  wolfSSL_shutdown(WOLFSSL* ssl);
+    - file: doc/dox_comments/header_files/ssl.h
+      line: 2424
+      summary: wolfSSL_shutdown (to save resources).  Either option is allowed by
+    - file: doc/dox_comments/header_files/ssl.h
+      line: 2428
+      summary: wolfSSL_shutdown() works with both blocking and non-blocking I/O.
+    source_refs:
+    - file: src/bio.c
+      line: 2670
+      summary: int rc = wolfSSL_shutdown(b->ptr.ssl);
+    - file: src/bio.c
+      line: 2674
+      summary: wolfSSL_shutdown(b->ptr.ssl);
+    - file: src/ssl.c
+      line: 4016
+      summary: ret = wolfSSL_shutdown(ssl);
+    - file: src/ssl.c
+      line: 4027
+      summary: int wolfSSL_shutdown(WOLFSSL* ssl)
+    - file: src/ssl.c
+      line: 4030
+      summary: WOLFSSL_ENTER("wolfSSL_shutdown");
+    test_refs:
+    - file: examples/async/async_client.c
+      line: 566
+      summary: wolfSSL_shutdown(ssl);
+    - file: examples/async/async_server.c
+      line: 603
+      summary: wolfSSL_shutdown(ssl);
+    - file: examples/client/client.c
+      line: 739
+      summary: wolfSSL_shutdown(ssl);
+    - file: examples/client/client.c
+      line: 916
+      summary: wolfSSL_shutdown(ssl);
+    - file: examples/client/client.c
+      line: 1043
+      summary: ret = wolfSSL_shutdown(ssl);
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wolfSSL_use_PrivateKey_file
+  library: wolfssl
+  family: tls_protocol_state_lifecycle
+  families:
+  - tls_protocol_state_lifecycle
+  signature: int wolfSSL_use_PrivateKey_file(WOLFSSL* ssl, const char* file, int format);
+  signature_candidates:
+  - int wolfSSL_use_PrivateKey_file(WOLFSSL* ssl, const char* file, int format);
+  - int wolfSSL_use_PrivateKey_file(WOLFSSL* ssl, const char* file, int format)
+  - WOLFSSL_ENTER("wolfSSL_use_PrivateKey_file");
+  - return wolfSSL_use_PrivateKey_file(ssl, file, format);
+  parameter_semantics:
+    ssl: API parameter; semantics require manual review
+    file: API parameter; semantics require manual review
+    format: API parameter; semantics require manual review
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - TLS/DTLS context and session state must be initialized before protocol I/O
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - context, session, certificates, keys, and peer/socket state must match selected
+      protocol mode
+    manual_review_required: true
+  mutation_hints:
+  - TLS/DTLS context and session state must be initialized before protocol I/O
+  - context, session, certificates, keys, and peer/socket state must match selected
+    protocol mode
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - session_state
+  - error_code
+  - sanitizer_signal
+  lifecycle:
+    init:
+    - wolfSSL_CTX_new
+    - wolfSSL_new
+    use:
+    - wolfSSL_use_PrivateKey_file
+    cleanup:
+    - wolfSSL_CTX_free
+    - wolfSSL_free
+  related_apis:
+  - wolfSSL_CTX_new
+  - wolfSSL_CTX_free
+  - wolfSSL_new
+  - wolfSSL_free
+  - wolfSSL_connect
+  - wolfSSL_accept
+  - wolfSSL_read
+  - wolfSSL_write
+  - wolfSSL_shutdown
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 894
+      summary: \sa wolfSSL_use_PrivateKey_file
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 940
+      summary: \sa wolfSSL_use_PrivateKey_file
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 984
+      summary: \sa wolfSSL_use_PrivateKey_file
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1091
+      summary: \sa wolfSSL_use_PrivateKey_file
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1156
+      summary: \sa wolfSSL_use_PrivateKey_file
+    source_refs:
+    - file: src/conf.c
+      line: 1357
+      summary: ret = wolfSSL_use_PrivateKey_file(cctx->ssl, value,
+    - file: src/ssl_load.c
+      line: 3795
+      summary: int wolfSSL_use_PrivateKey_file(WOLFSSL* ssl, const char* file, int
+        format)
+    - file: src/ssl_load.c
+      line: 3799
+      summary: WOLFSSL_ENTER("wolfSSL_use_PrivateKey_file");
+    - file: src/ssl_load.c
+      line: 3920
+      summary: return wolfSSL_use_PrivateKey_file(ssl, file, format);
+    test_refs:
+    - file: examples/client/client.c
+      line: 3991
+      summary: if (wolfSSL_use_PrivateKey_file(ssl, ourKey, fileFormat)
+    - file: examples/server/server.c
+      line: 3335
+      summary: if (wolfSSL_use_PrivateKey_file(ssl, ourKey, WOLFSSL_FILETYPE_PEM)
+    - file: tests/api.c
+      line: 4829
+      summary: ExpectIntEQ(wolfSSL_use_PrivateKey_file(ctx->c_ssl, clientKeyFile,
+    - file: tests/api.c
+      line: 4851
+      summary: ExpectIntEQ(wolfSSL_use_PrivateKey_file(ctx->s_ssl, serverKeyFile,
+    - file: tests/api.c
+      line: 5399
+      summary: if (sharedCtx && wolfSSL_use_PrivateKey_file(ssl, keyFile,
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wolfSSL_use_certificate_file
+  library: wolfssl
+  family: tls_protocol_state_lifecycle
+  families:
+  - tls_protocol_state_lifecycle
+  signature: int wolfSSL_use_certificate_file(WOLFSSL* ssl, const char* file, int
+    format);
+  signature_candidates:
+  - int wolfSSL_use_certificate_file(WOLFSSL* ssl, const char* file, int format);
+  - int wolfSSL_use_certificate_file(WOLFSSL* ssl, const char* file, int format)
+  - WOLFSSL_ENTER("wolfSSL_use_certificate_file");
+  parameter_semantics:
+    ssl: API parameter; semantics require manual review
+    file: API parameter; semantics require manual review
+    format: API parameter; semantics require manual review
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - TLS/DTLS context and session state must be initialized before protocol I/O
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - context, session, certificates, keys, and peer/socket state must match selected
+      protocol mode
+    manual_review_required: true
+  mutation_hints:
+  - TLS/DTLS context and session state must be initialized before protocol I/O
+  - context, session, certificates, keys, and peer/socket state must match selected
+    protocol mode
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - session_state
+  - error_code
+  - sanitizer_signal
+  lifecycle:
+    init:
+    - wolfSSL_CTX_new
+    - wolfSSL_new
+    use:
+    - wolfSSL_use_certificate_file
+    cleanup:
+    - wolfSSL_CTX_free
+    - wolfSSL_free
+  related_apis:
+  - wolfSSL_CTX_new
+  - wolfSSL_CTX_free
+  - wolfSSL_new
+  - wolfSSL_free
+  - wolfSSL_connect
+  - wolfSSL_accept
+  - wolfSSL_read
+  - wolfSSL_write
+  - wolfSSL_shutdown
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 862
+      summary: \sa wolfSSL_use_certificate_file
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 939
+      summary: \sa wolfSSL_use_certificate_file
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 983
+      summary: \sa wolfSSL_use_certificate_file
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1090
+      summary: \sa wolfSSL_use_certificate_file
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1121
+      summary: \sa wolfSSL_use_certificate_file
+    source_refs:
+    - file: src/conf.c
+      line: 1313
+      summary: ret = wolfSSL_use_certificate_file(cctx->ssl, value,
+    - file: src/ssl_load.c
+      line: 3763
+      summary: int wolfSSL_use_certificate_file(WOLFSSL* ssl, const char* file, int
+        format)
+    - file: src/ssl_load.c
+      line: 3767
+      summary: WOLFSSL_ENTER("wolfSSL_use_certificate_file");
+    test_refs:
+    - file: tests/api.c
+      line: 5388
+      summary: if (sharedCtx && wolfSSL_use_certificate_file(ssl, certFile,
+    - file: tests/api.c
+      line: 5391
+      summary: if (wolfSSL_use_certificate_file(ssl, certFile,
+    - file: tests/api.c
+      line: 5619
+      summary: if (sharedCtx && wolfSSL_use_certificate_file(ssl, svrCertFile,
+    - file: tests/api.c
+      line: 5829
+      summary: if (sharedCtx && wolfSSL_use_certificate_file(ssl, cliCertFile,
+    - file: tests/api.c
+      line: 5832
+      summary: if (wolfSSL_use_certificate_file(ssl, cliCertFile,
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wolfSSL_write
+  library: wolfssl
+  family: tls_protocol_state_lifecycle
+  families:
+  - tls_protocol_state_lifecycle
+  signature: "ret = wolfSSL_write(ssl) \u304A\u3088\u3073 wolfSSL_read(ssl);"
+  signature_candidates:
+  - "ret = wolfSSL_write(ssl) \u304A\u3088\u3073 wolfSSL_read(ssl);"
+  - "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001\u30D0\u30C3\u30D5\u30A1data\u304B\
+    \u3089sz\u30D0\u30A4\u30C8\u3092SSL\u63A5\u7D9Assl\u306B\u66F8\u304D\u8FBC\u307F\
+    \u307E\u3059\u3002\u5FC5\u8981\u306B\u5FDC\u3058\u3066\u3001wolfSSL_connect()\u307E\
+    \u305F\u306FwolfSSL_accept()\u306B\u3088\u3063\u3066\u30CF\u30F3\u30C9\u30B7\u30A7\
+    \u30A4\u30AF\u304C\u307E\u3060\u5B9F\u884C\u3055\u308C\u3066\u3044\u306A\u3044\
+    \u5834\u5408\u3001wolfSSL_write()\u306FSSL/TLS\u30BB\u30C3\u30B7\u30E7\u30F3\u3092\
+    \u30CD\u30B4\u30B7\u30A8\u30FC\u30C8\u3057\u307E\u3059\u3002(D)TLSv1.3\u3092\u4F7F\
+    \u7528\u3057\u3066\u3044\u3066early data\u6A5F\u80FD\u304C\u30B3\u30F3\u30D1\u30A4\
+    \u30EB\u3055\u308C\u3066\u3044\u308B\u5834\u5408\u3001\u3053\u306E\u95A2\u6570\
+    \u306F\u30C7\u30FC\u30BF\u9001\u4FE1\u304C\u53EF\u80FD\u306B\u306A\u308B\u307E\
+    \u3067\u30CF\u30F3\u30C9\u30B7\u30A7\u30A4\u30AF"
+  - ret = wolfSSL_write(ssl, msg, msgSz);
+  - int  wolfSSL_write(WOLFSSL* ssl, const void* data, int sz);
+  - ret = wolfSSL_write(ssl) and wolfSSL_read(ssl);
+  parameter_semantics: {}
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - TLS/DTLS context and session state must be initialized before protocol I/O
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - context, session, certificates, keys, and peer/socket state must match selected
+      protocol mode
+    manual_review_required: true
+  mutation_hints:
+  - TLS/DTLS context and session state must be initialized before protocol I/O
+  - context, session, certificates, keys, and peer/socket state must match selected
+    protocol mode
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - session_state
+  - error_code
+  - sanitizer_signal
+  lifecycle:
+    init:
+    - wolfSSL_CTX_new
+    - wolfSSL_new
+    use:
+    - wolfSSL_write
+    cleanup:
+    - wolfSSL_CTX_free
+    - wolfSSL_free
+  related_apis:
+  - wolfSSL_CTX_new
+  - wolfSSL_CTX_free
+  - wolfSSL_new
+  - wolfSSL_free
+  - wolfSSL_connect
+  - wolfSSL_accept
+  - wolfSSL_read
+  - wolfSSL_shutdown
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 583
+      summary: "ret = wolfSSL_write(ssl) \u304A\u3088\u3073 wolfSSL_read(ssl);"
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1715
+      summary: "\\brief \u3053\u306E\u95A2\u6570\u306F\u3001\u30D0\u30C3\u30D5\u30A1\
+        data\u304B\u3089sz\u30D0\u30A4\u30C8\u3092SSL\u63A5\u7D9Assl\u306B\u66F8\u304D\
+        \u8FBC\u307F\u307E\u3059\u3002\u5FC5\u8981\u306B\u5FDC\u3058\u3066\u3001wolfSSL_connect()\u307E\
+        \u305F\u306FwolfSSL_accept()\u306B\u3088\u3063\u3066\u30CF\u30F3\u30C9\u30B7\
+        \u30A7\u30A4\u30AF\u304C\u307E\u3060\u5B9F\u884C\u3055\u308C\u3066\u3044\u306A\
+        \u3044\u5834\u5408\u3001wolfSSL_write()\u306FSSL/TLS\u30BB\u30C3\u30B7\u30E7\
+        \u30F3\u3092\u30CD\u30B4\u30B7\u30A8\u30FC\u30C8\u3057\u307E\u3059\u3002(D)TLSv1.3\u3092\
+        \u4F7F\u7528\u3057\u3066\u3044\u3066early data\u6A5F"
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1734
+      summary: ret = wolfSSL_write(ssl, msg, msgSz);
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1736
+      summary: "// wolfSSL_write()\u304C\u5931\u6557\u3001wolfSSL_get_error()\u3092\
+        \u547C\u3073\u51FA\u3059"
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 1744
+      summary: int  wolfSSL_write(WOLFSSL* ssl, const void* data, int sz);
+    source_refs:
+    - file: src/bio.c
+      line: 523
+      summary: ret = wolfSSL_write(bio->ptr.ssl, data, len);
+    - file: src/internal.c
+      line: 26204
+      summary: '* Invoked in wolfSSL_read/wolfSSL_write to check if wolfSSL_negotiate()
+        is'
+    - file: src/ssl.c
+      line: 2567
+      summary: WOLFSSL_ENTER("wolfSSL_write");
+    - file: src/ssl.c
+      line: 2732
+      summary: WOLFSSL_LEAVE("wolfSSL_write", ret);
+    - file: src/ssl.c
+      line: 2741
+      summary: int wolfSSL_write(WOLFSSL* ssl, const void* data, int sz)
+    test_refs:
+    - file: examples/async/async_client.c
+      line: 479
+      summary: ret = wolfSSL_write(ssl, tx, tx_len);
+    - file: examples/async/async_client.c
+      line: 504
+      summary: 'fprintf(stderr, "ERROR: wolfSSL_write failed: %d (%s)\n",'
+    - file: examples/async/async_server.c
+      line: 554
+      summary: ret = wolfSSL_write(ssl, buff, (int)len);
+    - file: examples/benchmark/tls_bench.c
+      line: 1155
+      summary: ret = wolfSSL_write(cli_ssl, writeBuf, writeSz);
+    - file: examples/benchmark/tls_bench.c
+      line: 1174
+      summary: ret = wolfSSL_write(cli_ssl, writeBuf, writeSz);
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wolfSSL_X509_free
+  library: wolfssl
+  family: x509_parsing
+  families:
+  - x509_parsing
+  signature: wolfSSL_X509_free(x509);
+  signature_candidates:
+  - wolfSSL_X509_free(x509);
+  - void wolfSSL_X509_free(WOLFSSL_X509* x509);
+  - wolfSSL_X509_free(ctx->ourCert);
+  - wolfSSL_X509_free(store->current_cert);
+  - wolfSSL_X509_free(issuer);
+  parameter_semantics:
+    x509: certificate object or certificate input
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - cleanup API; object or pointer must have compatible allocation provenance
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - certificate or DER/PEM input must be well-formed enough for the selected parser
+      path
+    manual_review_required: true
+  mutation_hints:
+  - cleanup API; object or pointer must have compatible allocation provenance
+  - certificate or DER/PEM input must be well-formed enough for the selected parser
+    path
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - certificate_object
+  - error_code
+  - sanitizer_signal
+  lifecycle:
+    init: []
+    use:
+    - wolfSSL_X509_free
+    cleanup: []
+  related_apis:
+  - wolfSSL_X509_load_certificate_file
+  - wolfSSL_X509_get_der
+  - wolfSSL_X509_verify
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 4165
+      summary: \sa wolfSSL_X509_free
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 4179
+      summary: wolfSSL_X509_free(x509);
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 4191
+      summary: void wolfSSL_X509_free(WOLFSSL_X509* x509);
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 4245
+      summary: \sa wolfSSL_X509_free
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 4325
+      summary: \sa wolfSSL_X509_free
+    source_refs:
+    - file: src/internal.c
+      line: 2987
+      summary: wolfSSL_X509_free(ctx->ourCert);
+    - file: src/internal.c
+      line: 14732
+      summary: wolfSSL_X509_free(x509);
+    - file: src/internal.c
+      line: 14763
+      summary: wolfSSL_X509_free(store->current_cert);
+    - file: src/internal.c
+      line: 15162
+      summary: wolfSSL_X509_free(x509);
+    - file: src/internal.c
+      line: 32094
+      summary: wolfSSL_X509_free(x509);
+    test_refs:
+    - file: tests/api.c
+      line: 2270
+      summary: wolfSSL_X509_free(x509);
+    - file: tests/api.c
+      line: 3018
+      summary: wolfSSL_X509_free(issuer);
+    - file: tests/api.c
+      line: 3155
+      summary: wolfSSL_X509_free(issuer);
+    - file: tests/api.c
+      line: 3489
+      summary: wolfSSL_X509_free(x509);
+    - file: tests/api.c
+      line: 3560
+      summary: wolfSSL_X509_free(x509);
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wolfSSL_X509_get_der
+  library: wolfssl
+  family: x509_parsing
+  families:
+  - x509_parsing
+  signature: byte* x509Der = wolfSSL_X509_get_der(x509, outSz);
+  signature_candidates:
+  - byte* x509Der = wolfSSL_X509_get_der(x509, outSz);
+  - const unsigned char* wolfSSL_X509_get_der(WOLFSSL_X509* x509, int* outSz);
+  - der = wolfSSL_X509_get_der(x509, &derSz);
+  - certDer = (byte*)wolfSSL_X509_get_der(cert, &certDerSz);
+  - curDer = (byte*)wolfSSL_X509_get_der(sk->data.x509, &curDerSz);
+  parameter_semantics:
+    x509: certificate object or certificate input
+    outSz: input/output length
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - lifecycle relation inferred from API family; requires manual review before formal
+    import
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - certificate or DER/PEM input must be well-formed enough for the selected parser
+      path
+    manual_review_required: true
+  mutation_hints:
+  - lifecycle relation inferred from API family; requires manual review before formal
+    import
+  - certificate or DER/PEM input must be well-formed enough for the selected parser
+    path
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - certificate_object
+  - error_code
+  - sanitizer_signal
+  lifecycle:
+    init: []
+    use:
+    - wolfSSL_X509_get_der
+    cleanup:
+    - wolfSSL_X509_free
+  related_apis:
+  - wolfSSL_X509_load_certificate_file
+  - wolfSSL_X509_verify
+  - wolfSSL_X509_free
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 4161
+      summary: \sa wolfSSL_X509_get_der
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 4185
+      summary: \sa wolfSSL_X509_get_der
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 4322
+      summary: \sa wolfSSL_X509_get_der
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 4351
+      summary: \sa wolfSSL_X509_get_der
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 5888
+      summary: byte* x509Der = wolfSSL_X509_get_der(x509, outSz);
+    source_refs:
+    - file: src/ssl_load.c
+      line: 4939
+      summary: der = wolfSSL_X509_get_der(x509, &derSz);
+    - file: src/ssl_p7p12.c
+      line: 1782
+      summary: certDer = (byte*)wolfSSL_X509_get_der(cert, &certDerSz);
+    - file: src/ssl_p7p12.c
+      line: 1803
+      summary: curDer = (byte*)wolfSSL_X509_get_der(sk->data.x509, &curDerSz);
+    - file: src/x509.c
+      line: 135
+      summary: rawCert = wolfSSL_X509_get_der((WOLFSSL_X509*)passedCert, &outSz);
+    - file: src/x509.c
+      line: 783
+      summary: rawCert = wolfSSL_X509_get_der((WOLFSSL_X509*)x509, &outSz);
+    test_refs:
+    - file: tests/api.c
+      line: 21075
+      summary: ExpectNotNull(peerCertBuf = wolfSSL_X509_get_der(x509, &peerCertSz));
+    - file: tests/api.c
+      line: 21114
+      summary: ExpectNotNull(peerCertBuf = wolfSSL_X509_get_der(x509, &peerCertSz));
+    - file: tests/api.c
+      line: 21139
+      summary: ExpectNotNull(peerCertBuf = wolfSSL_X509_get_der(x509, &peerCertSz));
+    - file: tests/api.c
+      line: 22301
+      summary: wolfSSL_X509_get_der(certToRevoke, &certDerSz));
+    - file: tests/api.c
+      line: 24027
+      summary: ExpectNotNull(wolfSSL_X509_get_der(x509, &derSz));
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wolfSSL_X509_get_issuer_name
+  library: wolfssl
+  family: x509_parsing
+  families:
+  - x509_parsing
+  signature: name = wolfSSL_X509_NAME_oneline(wolfSSL_X509_get_issuer_name(x509),
+    0, 0);
+  signature_candidates:
+  - name = wolfSSL_X509_NAME_oneline(wolfSSL_X509_get_issuer_name(x509), 0, 0);
+  - issuer = wolfSSL_X509_NAME_oneline(wolfSSL_X509_get_issuer_name(x509), 0, 0);
+  - WOLFSSL_X509_NAME*  wolfSSL_X509_get_issuer_name(WOLFSSL_X509* cert);
+  - WOLFSSL_X509_NAME* wolfSSL_X509_get_issuer_name(WOLFSSL_X509* cert)
+  - WOLFSSL_ENTER("wolfSSL_X509_get_issuer_name");
+  parameter_semantics: {}
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - lifecycle relation inferred from API family; requires manual review before formal
+    import
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - certificate or DER/PEM input must be well-formed enough for the selected parser
+      path
+    manual_review_required: true
+  mutation_hints:
+  - lifecycle relation inferred from API family; requires manual review before formal
+    import
+  - certificate or DER/PEM input must be well-formed enough for the selected parser
+    path
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - certificate_object
+  - error_code
+  - sanitizer_signal
+  lifecycle:
+    init: []
+    use:
+    - wolfSSL_X509_get_issuer_name
+    cleanup:
+    - wolfSSL_X509_free
+  related_apis:
+  - wolfSSL_X509_load_certificate_file
+  - wolfSSL_X509_get_der
+  - wolfSSL_X509_verify
+  - wolfSSL_X509_free
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 4006
+      summary: name = wolfSSL_X509_NAME_oneline(wolfSSL_X509_get_issuer_name(x509),
+        0, 0);
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 4014
+      summary: \sa wolfSSL_X509_get_issuer_name
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 4036
+      summary: issuer = wolfSSL_X509_NAME_oneline(wolfSSL_X509_get_issuer_name(x509),
+        0, 0);
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 4050
+      summary: WOLFSSL_X509_NAME*  wolfSSL_X509_get_issuer_name(WOLFSSL_X509* cert);
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 4072
+      summary: \sa wolfSSL_X509_get_issuer_name
+    source_refs:
+    - file: src/x509.c
+      line: 6209
+      summary: WOLFSSL_X509_NAME* wolfSSL_X509_get_issuer_name(WOLFSSL_X509* cert)
+    - file: src/x509.c
+      line: 6211
+      summary: WOLFSSL_ENTER("wolfSSL_X509_get_issuer_name");
+    - file: src/x509.c
+      line: 7939
+      summary: if (X509PrintName(bio, wolfSSL_X509_get_issuer_name(x509), issuType,
+        8)
+    - file: src/x509.c
+      line: 15830
+      summary: WOLFSSL_X509_NAME *issuerName = wolfSSL_X509_get_issuer_name(subject);
+    - file: wolfcrypt/src/port/Espressif/esp_crt_bundle/esp_crt_bundle.c
+      line: 337
+      summary: '*issuer  = wolfSSL_X509_get_issuer_name(cert);'
+    test_refs:
+    - file: tests/api.c
+      line: 11068
+      summary: wolfSSL_X509_get_issuer_name(x509)), WOLFSSL_SUCCESS);
+    - file: tests/api/test_ossl_x509.c
+      line: 357
+      summary: ExpectNotNull(issuertName = wolfSSL_X509_get_issuer_name(x509));
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wolfSSL_X509_get_subject_name
+  library: wolfssl
+  family: x509_parsing
+  families:
+  - x509_parsing
+  signature: name = wolfSSL_X509_get_subject_name(cert);
+  signature_candidates:
+  - name = wolfSSL_X509_get_subject_name(cert);
+  - WOLFSSL_X509_NAME*  wolfSSL_X509_get_subject_name(WOLFSSL_X509* cert);
+  - nameCopy = wolfSSL_X509_NAME_dup(wolfSSL_X509_get_subject_name(x509));
+  - nameCopy = wolfSSL_X509_NAME_dup(wolfSSL_X509_get_subject_name(cert));
+  - WOLFSSL_X509_NAME* wolfSSL_X509_get_subject_name(WOLFSSL_X509* cert)
+  parameter_semantics:
+    cert: certificate object or certificate input
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - lifecycle relation inferred from API family; requires manual review before formal
+    import
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - certificate or DER/PEM input must be well-formed enough for the selected parser
+      path
+    manual_review_required: true
+  mutation_hints:
+  - lifecycle relation inferred from API family; requires manual review before formal
+    import
+  - certificate or DER/PEM input must be well-formed enough for the selected parser
+    path
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - certificate_object
+  - error_code
+  - sanitizer_signal
+  lifecycle:
+    init: []
+    use:
+    - wolfSSL_X509_get_subject_name
+    cleanup:
+    - wolfSSL_X509_free
+  related_apis:
+  - wolfSSL_X509_load_certificate_file
+  - wolfSSL_X509_get_der
+  - wolfSSL_X509_verify
+  - wolfSSL_X509_free
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 4013
+      summary: \sa wolfSSL_X509_get_subject_name
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 4045
+      summary: \sa wolfSSL_X509_get_subject_name
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 4066
+      summary: name = wolfSSL_X509_get_subject_name(cert);
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 4076
+      summary: WOLFSSL_X509_NAME*  wolfSSL_X509_get_subject_name(WOLFSSL_X509* cert);
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 5353
+      summary: \sa wolfSSL_X509_get_subject_name
+    source_refs:
+    - file: src/ssl_api_cert.c
+      line: 1031
+      summary: nameCopy = wolfSSL_X509_NAME_dup(wolfSSL_X509_get_subject_name(x509));
+    - file: src/ssl_api_cert.c
+      line: 1442
+      summary: nameCopy = wolfSSL_X509_NAME_dup(wolfSSL_X509_get_subject_name(cert));
+    - file: src/x509.c
+      line: 6200
+      summary: WOLFSSL_X509_NAME* wolfSSL_X509_get_subject_name(WOLFSSL_X509* cert)
+    - file: src/x509.c
+      line: 6202
+      summary: WOLFSSL_ENTER("wolfSSL_X509_get_subject_name");
+    - file: src/x509.c
+      line: 7854
+      summary: if (X509PrintName(bio, wolfSSL_X509_get_subject_name(x509), subjType,
+        8)
+    test_refs:
+    - file: tests/api.c
+      line: 11066
+      summary: wolfSSL_X509_get_subject_name(x509)), WOLFSSL_SUCCESS);
+    - file: tests/api/test_certman.c
+      line: 845
+      summary: ExpectNotNull(name = wolfSSL_X509_get_subject_name(ca));
+    - file: tests/api/test_certman.c
+      line: 875
+      summary: ExpectNotNull(name = wolfSSL_X509_get_subject_name(ca));
+    - file: tests/api/test_certman.c
+      line: 963
+      summary: ExpectNotNull(name = wolfSSL_X509_get_subject_name(ca));
+    - file: tests/api/test_certman.c
+      line: 1005
+      summary: ExpectNotNull(name = wolfSSL_X509_get_subject_name(ca));
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wolfSSL_X509_load_certificate_file
+  library: wolfssl
+  family: x509_parsing
+  families:
+  - x509_parsing
+  signature: x509 = wolfSSL_X509_load_certificate_file(cliCert, SSL_FILETYPE_PEM);
+  signature_candidates:
+  - x509 = wolfSSL_X509_load_certificate_file(cliCert, SSL_FILETYPE_PEM);
+  - wolfSSL_X509_load_certificate_file(const char* fname, int format);
+  - WOLFSSL_X509* wolfSSL_X509_load_certificate_file(const char* fname, int format)
+  - x509 = wolfSSL_X509_load_certificate_file(file, type);
+  - WOLFSSL_MSG("wolfSSL_X509_load_certificate_file error");
+  parameter_semantics:
+    cliCert: certificate object or certificate input
+    SSL_FILETYPE_PEM: input buffer
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - lifecycle relation inferred from API family; requires manual review before formal
+    import
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - certificate or DER/PEM input must be well-formed enough for the selected parser
+      path
+    manual_review_required: true
+  mutation_hints:
+  - lifecycle relation inferred from API family; requires manual review before formal
+    import
+  - certificate or DER/PEM input must be well-formed enough for the selected parser
+    path
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - certificate_object
+  - error_code
+  - sanitizer_signal
+  lifecycle:
+    init: []
+    use:
+    - wolfSSL_X509_load_certificate_file
+    cleanup:
+    - wolfSSL_X509_free
+  related_apis:
+  - wolfSSL_X509_get_der
+  - wolfSSL_X509_verify
+  - wolfSSL_X509_free
+  evidence:
+    header_refs:
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 6004
+      summary: x509 = wolfSSL_X509_load_certificate_file(cliCert, SSL_FILETYPE_PEM);
+    - file: doc/dox_comments/header_files-ja/ssl.h
+      line: 6014
+      summary: wolfSSL_X509_load_certificate_file(const char* fname, int format);
+    - file: doc/dox_comments/header_files/ssl.h
+      line: 7069
+      summary: x509 = wolfSSL_X509_load_certificate_file(cliCert, SSL_FILETYPE_PEM);
+    - file: doc/dox_comments/header_files/ssl.h
+      line: 7079
+      summary: wolfSSL_X509_load_certificate_file(const char* fname, int format);
+    - file: wolfssl/openssl/ssl.h
+      line: 533
+      summary: '#define X509_load_certificate_file      wolfSSL_X509_load_certificate_file'
+    source_refs:
+    - file: src/internal.c
+      line: 15158
+      summary: x509 = wolfSSL_X509_load_certificate_file(filename,
+    - file: src/x509.c
+      line: 5996
+      summary: WOLFSSL_X509* wolfSSL_X509_load_certificate_file(const char* fname,
+        int format)
+    - file: src/x509.c
+      line: 9026
+      summary: x509 = wolfSSL_X509_load_certificate_file(file, type);
+    - file: src/x509.c
+      line: 9039
+      summary: WOLFSSL_MSG("wolfSSL_X509_load_certificate_file error");
+    test_refs:
+    - file: tests/api.c
+      line: 3006
+      summary: ExpectNotNull(issuer = wolfSSL_X509_load_certificate_file(caFile,
+    - file: tests/api.c
+      line: 3145
+      summary: ExpectNotNull(issuer = wolfSSL_X509_load_certificate_file(caFile,
+    - file: tests/api.c
+      line: 3493
+      summary: ExpectNotNull(x509 = wolfSSL_X509_load_certificate_file(*cert,
+    - file: tests/api.c
+      line: 3512
+      summary: ExpectNotNull(x509 = wolfSSL_X509_load_certificate_file(*cert,
+    - file: tests/api.c
+      line: 3557
+      summary: ExpectNotNull(x509 = wolfSSL_X509_load_certificate_file(
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.
+- schema: api_card_v0
+  api: wolfSSL_X509_verify
+  library: wolfssl
+  family: x509_parsing
+  families:
+  - x509_parsing
+  signature: WOLFSSL_API int wolfSSL_X509_verify(WOLFSSL_X509* x509, WOLFSSL_EVP_PKEY*
+    pkey);
+  signature_candidates:
+  - WOLFSSL_API int wolfSSL_X509_verify(WOLFSSL_X509* x509, WOLFSSL_EVP_PKEY* pkey);
+  - int wolfSSL_X509_verify(WOLFSSL_X509* x509, WOLFSSL_EVP_PKEY* pkey)
+  parameter_semantics:
+    x509: certificate object or certificate input
+    pkey: API parameter; semantics require manual review
+  return_value_semantics:
+    summary:
+    - staged draft only; exact success/failure values require documentation or source
+      review
+    review_required: true
+  state_preconditions:
+  - lifecycle relation inferred from API family; requires manual review before formal
+    import
+  valid_invalid_ranges:
+    valid:
+    - return value and output state must be checked by harness oracle where observable
+    invalid:
+    - certificate or DER/PEM input must be well-formed enough for the selected parser
+      path
+    manual_review_required: true
+  mutation_hints:
+  - lifecycle relation inferred from API family; requires manual review before formal
+    import
+  - certificate or DER/PEM input must be well-formed enough for the selected parser
+    path
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  oracle_observables:
+  - return_code
+  - certificate_object
+  - error_code
+  - sanitizer_signal
+  lifecycle:
+    init: []
+    use:
+    - wolfSSL_X509_verify
+    cleanup:
+    - wolfSSL_X509_free
+  related_apis:
+  - wolfSSL_X509_load_certificate_file
+  - wolfSSL_X509_get_der
+  - wolfSSL_X509_free
+  evidence:
+    header_refs:
+    - file: wolfssl/openssl/ssl.h
+      line: 608
+      summary: '#define X509_verify                     wolfSSL_X509_verify'
+    - file: wolfssl/ssl.h
+      line: 2293
+      summary: WOLFSSL_API int wolfSSL_X509_verify(WOLFSSL_X509* x509, WOLFSSL_EVP_PKEY*
+        pkey);
+    source_refs:
+    - file: src/x509.c
+      line: 8892
+      summary: int wolfSSL_X509_verify(WOLFSSL_X509* x509, WOLFSSL_EVP_PKEY* pkey)
+    test_refs:
+    - file: tests/api/test_ossl_x509_crypto.c
+      line: 117
+      summary: ExpectIntEQ(wolfSSL_X509_verify(serv, pkey), WOLFSSL_SUCCESS);
+    - file: tests/api/test_ossl_x509_crypto.c
+      line: 127
+      summary: ExpectIntEQ(wolfSSL_X509_verify(serv, pkey),
+    - file: tests/api/test_ossl_x509_crypto.c
+      line: 130
+      summary: ExpectIntEQ(wolfSSL_X509_verify(NULL, pkey),
+    - file: tests/api/test_ossl_x509_crypto.c
+      line: 132
+      summary: ExpectIntEQ(wolfSSL_X509_verify(serv, NULL),
+    doc_refs: []
+  confidence: high
+  import_source:
+    sprint: api_card_import_to_knowledge_raw_v1
+    staged_file: artifacts/sprints/api_card_enrichment_for_top_families_v1/api_cards/staged_wolfssl_api_cards.yaml
+    wolfssl_version: v5.9.1-stable
+    wolfssl_commit: 1d363f3adceba9d1478230ede476a37b0dcdef24
+  notes:
+  - Generated as staged draft; not written to knowledge_raw or knowledge_base.
+  - Do not claim vulnerability from this API card without runner/analyzer evidence.
+  - 'api_misuse_risk: lifecycle misuse can be confused with migrated vulnerability
+    behavior'
+  - 'false_positive_risk: grep-level evidence is not semantic equivalence'
+  - Imported as structured raw knowledge, not as vulnerability confirmation.
+  - parser_must_reject_malformed and similar constraints are oracle candidates, not
+    confirmed bugs.

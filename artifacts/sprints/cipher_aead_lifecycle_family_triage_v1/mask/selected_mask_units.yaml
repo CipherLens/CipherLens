@@ -1,0 +1,30 @@
+template_id: CIPHER_AEAD_LIFECYCLE_TRIAGE_V1
+family: cipher_aead_lifecycle
+selected_units:
+  - id: AEAD_INIT_API
+    role: lifecycle_init
+    selection_reason: "Controls whether the operation reaches initialized, failed-init, or wrong-mode state."
+  - id: AEAD_AAD_UPDATE_API
+    role: aad_update
+    selection_reason: "AAD ordering is a common AEAD state-machine constraint."
+  - id: AEAD_DATA_UPDATE_API
+    role: data_update
+    selection_reason: "Data update after final or before required setup is mutation-relevant."
+  - id: AEAD_FINAL_API
+    role: terminal_state
+    selection_reason: "Repeated final and update-after-final test terminal-state semantics."
+  - id: AEAD_TAG_SET_API
+    role: tag_set
+    selection_reason: "Decrypt tag set timing and tag length are core AEAD oracle inputs."
+  - id: AEAD_TAG_GET_API
+    role: tag_get
+    selection_reason: "Get-tag before final is mutation-relevant for permissive behavior triage."
+  - id: AEAD_CLEANUP_API
+    role: cleanup
+    selection_reason: "Cleanup/free followed by reuse can expose crash or sanitizer candidates."
+  - id: AEAD_STATE_SEQUENCE
+    role: state_transition
+    selection_reason: "The family is defined by lifecycle order and state transitions."
+  - id: AEAD_ORACLE
+    role: semantic_or_crash_oracle
+    selection_reason: "Verdicts depend on return code, sanitizer signal, tag verification, and output integrity."

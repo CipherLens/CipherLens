@@ -1,0 +1,21 @@
+task_name: historical_poc_ingestion_v1
+input_inventory: artifacts/sprints/poc_corpus_inventory_v1/inventory/unified_poc_corpus_inventory.json
+input_roots:
+  mbedtls: data/pocs
+  wolfssl: data/wolfssl_collect
+  openssl: datasets/openssl/poc_artifacts
+artifact_selectors:
+  mbedtls:
+    id_pattern: MBEDTLS-POC-XXXX
+    path_glob: data/pocs/**/MBEDTLS-POC-*
+  wolfssl:
+    id_pattern: WOLFSSL-POC-XXXX
+    path_glob: data/wolfssl_collect/WOLFSSL-POC-*
+  openssl:
+    id_pattern: OPENSSL-ISSUE-<issue_number>
+    path_glob: datasets/openssl/poc_artifacts/issue_*
+ingestion_rules:
+- Use status=ready_for_ingestion artifacts first.
+- Preserve metadata_summary and artifact_files verbatim.
+- Do not execute run.sh or compile poc.c during ingestion.
+- Route metadata_only/missing_metadata/needs_manual_review to manual triage.

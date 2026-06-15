@@ -1,0 +1,30 @@
+template_id: WOLFSSL-FAMILY-pkcs_container_parsing
+template_name: wolfssl family canonical template for pkcs_container_parsing
+template_level: family
+pattern_id: wolfssl_family::pkcs_container_parsing
+source_library: wolfssl
+source_api:
+- wc_PKCS12_parse
+- wc_PKCS7_VerifySignedData
+- wc_PKCS7_DecodeSignedData
+- PKCS12_parse
+- PKCS7_verify
+harness_family: x509_asn1_inner_boundary
+oracle_type:
+- parser_reject_accept
+- return_code_semantics
+- full_consumption
+- cleanup_required
+seed_pocs:
+- WOLFSSL-POC-0007
+- WOLFSSL-POC-0006
+template_file: canonical_tmpl_wolfssl.c
+mutation_points:
+- CONTAINER_BYTES
+- CONTAINER_FORMAT
+- TRAILING_BYTES
+- NESTED_LENGTH_DELTA
+- EXPECT_RET
+notes:
+- PoCs are retained as seed evidence; this is the family-level template unit.
+- No target adapter or GLM output is embedded in this template package.

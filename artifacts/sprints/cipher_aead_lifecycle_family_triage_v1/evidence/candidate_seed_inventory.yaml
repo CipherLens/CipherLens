@@ -1,0 +1,60 @@
+family: cipher_aead_lifecycle
+seed_count: 4
+seeds:
+  - seed_id: MBEDTLS-POC-0004
+    source: data/pocs/core10/MBEDTLS-POC-0004
+    library: mbedtls
+    issue_or_poc: core10_poc
+    component: cipher_finish_pkcs_padding
+    candidate_family: cipher_aead_lifecycle
+    suspected_root_cause: "Incorrect caller-visible output length assignment on invalid PKCS padding error path."
+    trigger_pattern: "invalid padding during finalization"
+    oracle_hint: "return_code plus output_length/error_path_state"
+    evidence_quality: medium
+    recommended_path: A_recipe_slot_cross_library_migration
+  - seed_id: MBEDTLS-POC-0028
+    source: data/pocs/core10/MBEDTLS-POC-0028
+    library: mbedtls
+    issue_or_poc: core10_poc
+    component: psa_aead_setup
+    candidate_family: cipher_aead_lifecycle
+    suspected_root_cause: "Missing validation of AEAD tag lengths from PSA drivers."
+    trigger_pattern: "invalid or shortened AEAD tag length accepted at setup"
+    oracle_hint: "unexpected_success / strict_bad_state_reject / tag_length_validation"
+    evidence_quality: medium
+    recommended_path: B_controlled_family_mutation
+  - seed_id: OPENSSL-ISSUE-17715
+    source: datasets/openssl/poc_artifacts/issue_17715
+    library: openssl
+    issue_or_poc: openssl_issue_artifact
+    component: EVP/RAND_DRBG/AES
+    candidate_family: cipher_aead_lifecycle
+    suspected_root_cause: "ctx->cipher_data not initialized before EVP_EncryptUpdate / EVP_CipherUpdate path."
+    trigger_pattern: "operation after incomplete or failed initialization"
+    oracle_hint: "crash_or_sanitizer"
+    evidence_quality: weak
+    recommended_path: D_crash_sanitizer_evidence_audit
+  - seed_id: OPENSSL-ISSUE-8980
+    source: datasets/openssl/poc_artifacts/issue_8980
+    library: openssl
+    issue_or_poc: openssl_issue_artifact
+    component: EVP/AES_GCM
+    candidate_family: cipher_aead_lifecycle
+    suspected_root_cause: "Uninitialized memory access in EVP_CIPHER_CTX_copy."
+    trigger_pattern: "context copy or reuse before full state initialization"
+    oracle_hint: "crash_or_sanitizer / uninitialized_memory"
+    evidence_quality: medium
+    recommended_path: D_crash_sanitizer_evidence_audit
+lifecycle_patterns_to_triage:
+  - update_after_final
+  - final_before_required_update
+  - repeated_final
+  - ctx_reuse_after_final
+  - decrypt_tag_set_order_mismatch
+  - aad_update_order_mismatch
+  - tag_length_mismatch
+  - get_tag_before_final
+  - set_tag_after_final
+  - init_failure_followed_by_update_or_final
+  - cleanup_free_followed_by_reuse
+  - encryption_decryption_mode_confusion

@@ -1,0 +1,79 @@
+schema: spec_only_future_slot_filling_plan_v1
+family: secure_heap_state_lifecycle
+reason_not_ready: Family package is spec-only or lacks canonical_tmpl_wolfssl.c /
+  selected_mask_units.yaml.
+required_before_slot_filling:
+- canonical_tmpl_wolfssl.c
+- selected_mask_units.yaml
+- concrete_adapter_recipe.yaml
+possible_targets:
+- family: secure_heap_state_lifecycle
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_Free
+  target_api: mbedtls_free
+  mapping_type: cleanup_equivalent
+  required_oracle_style: cleanup_required
+  adapter_slot_hint: allocator setup/use/free slots
+  cleanup_mapping_hint: cleanup required
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: secure_heap_state_lifecycle
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_Free
+  target_api: OPENSSL_free
+  mapping_type: cleanup_equivalent
+  required_oracle_style: cleanup_required
+  adapter_slot_hint: allocator setup/use/free slots
+  cleanup_mapping_hint: cleanup required
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: secure_heap_state_lifecycle
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_Malloc
+  target_api: mbedtls_calloc
+  mapping_type: semantic_related
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: allocator setup/use/free slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: secure_heap_state_lifecycle
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_Malloc
+  target_api: OPENSSL_malloc
+  mapping_type: semantic_related
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: allocator setup/use/free slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: secure_heap_state_lifecycle
+  source_library: wolfssl
+  target_library: mbedtls
+  wolfssl_api: wolfSSL_SetAllocators
+  target_api: mbedtls_platform_set_calloc_free
+  mapping_type: semantic_related
+  required_oracle_style: cleanup_required
+  adapter_slot_hint: allocator setup/use/free slots
+  cleanup_mapping_hint: cleanup required
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+- family: secure_heap_state_lifecycle
+  source_library: wolfssl
+  target_library: openssl
+  wolfssl_api: wolfSSL_SetAllocators
+  target_api: CRYPTO_set_mem_functions
+  mapping_type: semantic_related
+  required_oracle_style: lifecycle_state
+  adapter_slot_hint: allocator setup/use/free slots
+  cleanup_mapping_hint: family-specific cleanup if object allocated
+  lifecycle_hint: candidate lifecycle must be verified by generated harness
+  risk_notes: candidate mapping only; compile/run/analyze still required
+blocked_targets: []
+notes:
+- Do not create concrete slot filling request until family canonical template and
+  concrete adapter recipe exist.

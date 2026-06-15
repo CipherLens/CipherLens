@@ -1,0 +1,37 @@
+task: cipher_aead_lifecycle_mutation_v1
+input_triage:
+  report: artifacts/sprints/cipher_aead_lifecycle_family_triage_v1/reports/cipher_aead_lifecycle_triage_report.yaml
+  draft_matrix: artifacts/sprints/cipher_aead_lifecycle_family_triage_v1/mutation/aead_lifecycle_render_matrix_draft.yaml
+selected_case_count: 12
+selection_reason:
+  - "normal controls first"
+  - "GCM before CCM"
+  - "aes-128-gcm as primary algorithm"
+  - "cover high-value lifecycle state transitions without running all 24 draft cases"
+normal_controls:
+  - aead_000_normal_encrypt_gcm
+  - aead_001_normal_decrypt_gcm
+mutation_cases:
+  - aead_004_repeated_final_gcm_encrypt
+  - aead_005_update_after_final_gcm_encrypt
+  - aead_006_final_without_update_gcm_encrypt
+  - aead_007_get_tag_before_final_gcm_encrypt
+  - aead_009_set_tag_after_final_gcm_decrypt
+  - aead_010_aad_after_data_update_gcm_encrypt
+  - aead_011_decrypt_without_set_tag_gcm
+  - aead_012_wrong_tag_length_gcm_decrypt
+  - aead_013_ctx_reuse_after_final_gcm_encrypt
+  - aead_014_cleanup_then_update_gcm
+expected_oracles:
+  normal_encrypt_control: normal_defined_behavior
+  normal_decrypt_control: normal_defined_behavior
+  repeated_final: semantic_divergence
+  update_after_final: strict_bad_state_reject_or_semantic_divergence
+  final_without_update: return_code_and_output_integrity
+  get_tag_before_final: unexpected_success_or_strict_reject
+  set_tag_after_final: strict_bad_state_reject_or_unexpected_success
+  aad_after_data_update: strict_bad_state_reject_or_semantic_divergence
+  decrypt_without_set_tag: strict_bad_state_reject
+  wrong_tag_length: unexpected_success_or_strict_reject
+  ctx_reuse_after_final: semantic_divergence
+  cleanup_then_update: crash_or_sanitizer

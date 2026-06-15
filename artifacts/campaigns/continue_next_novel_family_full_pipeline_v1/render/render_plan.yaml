@@ -1,0 +1,220 @@
+schema: lifecycle_render_plan_v1
+generated_at: '2026-06-13T16:18:20+00:00'
+family: evp_cipher_ctx_lifecycle
+track: lifecycle
+archetype: evp_context_lifecycle
+target_library: openssl
+render_mode: lifecycle_harness
+render_plan_generated: true
+render_case_count: 8
+uses_der_parsing: false
+uses_trailing_garbage: false
+uses_full_consumption_oracle: false
+cases:
+- case_id: evp_cipher_ctx_lifecycle_mut_valid_init_update_final_control
+  family: evp_cipher_ctx_lifecycle
+  track: lifecycle
+  archetype: evp_context_lifecycle
+  target_library: openssl
+  mutation_strategy: valid_init_update_final_control
+  case_group: valid_lifecycle_control
+  expected_behavior: success
+  oracle_rule: unexpected_failure_on_valid_sequence
+  ctx_allocation: EVP_MD_CTX_new
+  digest: EVP_sha256
+  sequence:
+  - ctx = EVP_CIPHER_CTX_new()
+  - cipher = EVP_aes_128_cbc()
+  - plaintext = fixed byte string
+  - EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, iv)
+  - EVP_EncryptUpdate(ctx, ciphertext, &ciphertext_len, plaintext, plaintext_len)
+  - EVP_EncryptFinal_ex(ctx, ciphertext + ciphertext_len, &final_len)
+  cleanup:
+  - EVP_MD_CTX_reset if ctx is allocated
+  - EVP_MD_CTX_free
+  render_mode: lifecycle_harness
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false
+- case_id: evp_cipher_ctx_lifecycle_mut_update_before_init
+  family: evp_cipher_ctx_lifecycle
+  track: lifecycle
+  archetype: evp_context_lifecycle
+  target_library: openssl
+  mutation_strategy: update_before_init
+  case_group: invalid_state_control
+  expected_behavior: error_or_documented
+  oracle_rule: unexpected_success_after_invalid_state
+  ctx_allocation: EVP_MD_CTX_new
+  digest: EVP_sha256
+  sequence:
+  - ctx = EVP_CIPHER_CTX_new()
+  - cipher = EVP_aes_128_cbc()
+  - plaintext = fixed byte string
+  - EVP_EncryptUpdate(ctx, ciphertext, &ciphertext_len, plaintext, plaintext_len)
+  cleanup:
+  - EVP_MD_CTX_reset if ctx is allocated
+  - EVP_MD_CTX_free
+  render_mode: lifecycle_harness
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false
+- case_id: evp_cipher_ctx_lifecycle_mut_final_without_update
+  family: evp_cipher_ctx_lifecycle
+  track: lifecycle
+  archetype: evp_context_lifecycle
+  target_library: openssl
+  mutation_strategy: final_without_update
+  case_group: observation
+  expected_behavior: observation
+  oracle_rule: state_transition_observation
+  ctx_allocation: EVP_MD_CTX_new
+  digest: EVP_sha256
+  sequence:
+  - ctx = EVP_CIPHER_CTX_new()
+  - cipher = EVP_aes_128_cbc()
+  - plaintext = fixed byte string
+  - EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, iv)
+  - EVP_EncryptFinal_ex(ctx, ciphertext, &final_len)
+  cleanup:
+  - EVP_MD_CTX_reset if ctx is allocated
+  - EVP_MD_CTX_free
+  render_mode: lifecycle_harness
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false
+- case_id: evp_cipher_ctx_lifecycle_mut_update_after_final
+  family: evp_cipher_ctx_lifecycle
+  track: lifecycle
+  archetype: evp_context_lifecycle
+  target_library: openssl
+  mutation_strategy: update_after_final
+  case_group: observation
+  expected_behavior: observation
+  oracle_rule: state_transition_observation
+  ctx_allocation: EVP_MD_CTX_new
+  digest: EVP_sha256
+  sequence:
+  - ctx = EVP_CIPHER_CTX_new()
+  - cipher = EVP_aes_128_cbc()
+  - plaintext = fixed byte string
+  - EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, iv)
+  - EVP_EncryptUpdate(ctx, ciphertext, &ciphertext_len, plaintext, plaintext_len)
+  - EVP_EncryptFinal_ex(ctx, ciphertext + ciphertext_len, &final_len)
+  - EVP_EncryptUpdate(ctx, ciphertext, &ciphertext_len, plaintext, plaintext_len)
+  cleanup:
+  - EVP_MD_CTX_reset if ctx is allocated
+  - EVP_MD_CTX_free
+  render_mode: lifecycle_harness
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false
+- case_id: evp_cipher_ctx_lifecycle_mut_reset_reuse
+  family: evp_cipher_ctx_lifecycle
+  track: lifecycle
+  archetype: evp_context_lifecycle
+  target_library: openssl
+  mutation_strategy: reset_reuse
+  case_group: valid_lifecycle_control
+  expected_behavior: success
+  oracle_rule: unexpected_failure_on_valid_sequence
+  ctx_allocation: EVP_MD_CTX_new
+  digest: EVP_sha256
+  sequence:
+  - ctx = EVP_CIPHER_CTX_new()
+  - cipher = EVP_aes_128_cbc()
+  - plaintext = fixed byte string
+  - EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, iv)
+  - EVP_EncryptUpdate(ctx, ciphertext, &ciphertext_len, plaintext, plaintext_len)
+  - EVP_EncryptFinal_ex(ctx, ciphertext + ciphertext_len, &final_len)
+  - EVP_CIPHER_CTX_reset(ctx)
+  - EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, iv)
+  - EVP_EncryptUpdate(ctx, ciphertext, &ciphertext_len, plaintext, plaintext_len)
+  - EVP_EncryptFinal_ex(ctx, ciphertext + ciphertext_len, &final_len)
+  cleanup:
+  - EVP_MD_CTX_reset if ctx is allocated
+  - EVP_MD_CTX_free
+  render_mode: lifecycle_harness
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false
+- case_id: evp_cipher_ctx_lifecycle_mut_reinit_without_reset
+  family: evp_cipher_ctx_lifecycle
+  track: lifecycle
+  archetype: evp_context_lifecycle
+  target_library: openssl
+  mutation_strategy: reinit_without_reset
+  case_group: valid_lifecycle_control
+  expected_behavior: success
+  oracle_rule: unexpected_failure_on_valid_sequence
+  ctx_allocation: EVP_MD_CTX_new
+  digest: EVP_sha256
+  sequence:
+  - ctx = EVP_CIPHER_CTX_new()
+  - cipher = EVP_aes_128_cbc()
+  - plaintext = fixed byte string
+  - EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, iv)
+  - EVP_EncryptUpdate(ctx, ciphertext, &ciphertext_len, plaintext, plaintext_len)
+  - EVP_EncryptFinal_ex(ctx, ciphertext + ciphertext_len, &final_len)
+  - EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, iv)
+  - EVP_EncryptUpdate(ctx, ciphertext, &ciphertext_len, plaintext, plaintext_len)
+  - EVP_EncryptFinal_ex(ctx, ciphertext + ciphertext_len, &final_len)
+  cleanup:
+  - EVP_MD_CTX_reset if ctx is allocated
+  - EVP_MD_CTX_free
+  render_mode: lifecycle_harness
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false
+- case_id: evp_cipher_ctx_lifecycle_mut_double_final_observation
+  family: evp_cipher_ctx_lifecycle
+  track: lifecycle
+  archetype: evp_context_lifecycle
+  target_library: openssl
+  mutation_strategy: double_final
+  case_group: observation
+  expected_behavior: observation
+  oracle_rule: state_transition_observation
+  ctx_allocation: EVP_MD_CTX_new
+  digest: EVP_sha256
+  sequence:
+  - ctx = EVP_CIPHER_CTX_new()
+  - cipher = EVP_aes_128_cbc()
+  - plaintext = fixed byte string
+  - EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, iv)
+  - EVP_EncryptUpdate(ctx, ciphertext, &ciphertext_len, plaintext, plaintext_len)
+  - EVP_EncryptFinal_ex(ctx, ciphertext + ciphertext_len, &final_len)
+  - EVP_EncryptFinal_ex(ctx, ciphertext + ciphertext_len + final_len, &second_final_len)
+  cleanup:
+  - EVP_MD_CTX_reset if ctx is allocated
+  - EVP_MD_CTX_free
+  render_mode: lifecycle_harness
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false
+- case_id: evp_cipher_ctx_lifecycle_mut_reset_before_init_observation
+  family: evp_cipher_ctx_lifecycle
+  track: lifecycle
+  archetype: evp_context_lifecycle
+  target_library: openssl
+  mutation_strategy: reset_before_init
+  case_group: observation
+  expected_behavior: observation
+  oracle_rule: state_transition_observation
+  ctx_allocation: EVP_MD_CTX_new
+  digest: EVP_sha256
+  sequence:
+  - ctx = EVP_CIPHER_CTX_new()
+  - cipher = EVP_aes_128_cbc()
+  - plaintext = fixed byte string
+  - EVP_CIPHER_CTX_reset(ctx)
+  - EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, iv)
+  - EVP_EncryptUpdate(ctx, ciphertext, &ciphertext_len, plaintext, plaintext_len)
+  - EVP_EncryptFinal_ex(ctx, ciphertext + ciphertext_len, &final_len)
+  cleanup:
+  - EVP_MD_CTX_reset if ctx is allocated
+  - EVP_MD_CTX_free
+  render_mode: lifecycle_harness
+  uses_der_parsing: false
+  uses_trailing_garbage: false
+  uses_full_consumption_oracle: false

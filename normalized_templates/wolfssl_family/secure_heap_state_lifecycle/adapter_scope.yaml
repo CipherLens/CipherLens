@@ -1,0 +1,29 @@
+schema: family_adapter_scope_v1
+family: secure_heap_state_lifecycle
+template_level: family
+adapter_generation_in_this_sprint: false
+glm_usage_in_this_sprint: false
+scope:
+  allowed_targets:
+    openssl:
+      allowed_apis: []
+      candidate_only_apis:
+      - CRYPTO_set_mem_functions
+      - OPENSSL_free
+      - OPENSSL_malloc
+    mbedtls:
+      allowed_apis:
+      - mbedtls_free
+      candidate_only_apis:
+      - mbedtls_calloc
+      - mbedtls_platform_set_calloc_free
+  blocked_targets: []
+  candidate_only_targets:
+    openssl:
+    - CRYPTO_set_mem_functions
+    - OPENSSL_free
+    - OPENSSL_malloc
+    mbedtls:
+    - mbedtls_calloc
+    - mbedtls_platform_set_calloc_free
+policy: future adapters must bind slots through recipe-slot mode only

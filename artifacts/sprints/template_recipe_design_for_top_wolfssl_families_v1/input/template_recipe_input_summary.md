@@ -1,0 +1,67 @@
+# Template Recipe Input Summary
+
+- input_paths:
+  - template_schema:
+    - path: artifacts/sprints/template_schema_inventory_v1/schema/template_schema_summary.yaml
+    - exists: True
+  - template_coverage:
+    - path: artifacts/sprints/template_schema_inventory_v1/coverage/template_family_coverage.yaml
+    - exists: True
+  - template_candidates:
+    - path: artifacts/sprints/template_schema_inventory_v1/candidates/template_generalizer_candidate_selection.yaml
+    - exists: True
+  - template_generalizer_plan:
+    - path: artifacts/sprints/template_schema_inventory_v1/reports/template_generalizer_v1_plan.yaml
+    - exists: True
+  - ast_mask_inventory:
+    - path: artifacts/sprints/ast_sister_inventory_and_alignment_v1/reports/ast_sister_inventory_and_alignment_report.yaml
+    - exists: True
+  - ast_mask_schema:
+    - path: artifacts/sprints/ast_sister_inventory_and_alignment_v1/schemas/ast_sister_output_schema_summary.yaml
+    - exists: True
+  - ast_mask_alignment:
+    - path: artifacts/sprints/ast_sister_inventory_and_alignment_v1/alignment_plan/ast_sister_recipe_alignment_plan.yaml
+    - exists: True
+  - adapter_ready:
+    - path: artifacts/sprints/cross_library_mapping_refinement_and_gate_v1/adapter_ready/adapter_ready_mapping_candidates.yaml
+    - exists: True
+  - mapping_gate:
+    - path: artifacts/sprints/cross_library_mapping_refinement_and_gate_v1/gate_results/cross_library_mapping_gate_results.yaml
+    - exists: True
+  - blocked_mappings:
+    - path: artifacts/sprints/cross_library_mapping_refinement_and_gate_v1/blocked_mappings/blocked_or_no_direct_counterpart_mappings.yaml
+    - exists: True
+  - corrected_candidates:
+    - path: artifacts/sprints/manual_review_family_corrections_v1/scheduler/corrected_reviewed_scheduler_seed_candidates.yaml
+    - exists: True
+  - wolfssl_cards:
+    - path: knowledge_raw/api_knowledge_cards/wolfssl_top_family_api_cards.yaml
+    - exists: True
+  - counterpart_cards:
+    - path:
+      - knowledge_raw/api_knowledge_cards/openssl_counterpart_api_cards.yaml
+      - knowledge_raw/api_knowledge_cards/mbedtls_counterpart_api_cards.yaml
+    - exists: True
+  - wolfssl_constraints:
+    - path: knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.yaml
+    - exists: True
+  - cross_constraints:
+    - path: knowledge_raw/api_constraints/cross_library_counterpart_api_constraints.yaml
+    - exists: True
+  - wolfssl_call_sequences:
+    - path: knowledge_raw/api_constraints/wolfssl_call_sequences.yaml
+    - exists: True
+  - cross_call_sequences:
+    - path: knowledge_raw/api_constraints/cross_library_counterpart_call_sequences.yaml
+    - exists: True
+- why_family_recipe_first:
+  - Top wolfSSL families have no existing family template and no wolfSSL source template.
+  - Family recipe defines must-preserve semantics, mutation slots, oracle style, and AST mask expectations before source template generation.
+  - Direct template generation would risk changing the vulnerability path or inventing C structure.
+  - This sprint emits recipe artifacts only; template_generalizer_v1 will later consume family recipe plus tree-sitter AST mask pipeline outputs.
+- strict_non_actions:
+  - generate_c_template: False
+  - run_poc: False
+  - compile_run: False
+  - render: False
+  - glm: False

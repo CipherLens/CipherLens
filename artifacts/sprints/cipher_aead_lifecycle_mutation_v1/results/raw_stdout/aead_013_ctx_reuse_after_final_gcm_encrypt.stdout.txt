@@ -1,0 +1,16 @@
+OPENSSL_VERSION=OpenSSL 3.5.5 27 Jan 2026
+CASE_ID=aead_013_ctx_reuse_after_final_gcm_encrypt
+CASE_NAME=ctx_reuse_after_final
+ALGORITHM=aes-128-gcm
+MODE=encrypt
+STATE_SEQUENCE=ctx_reuse_after_final
+STEP=EVP_CIPHER_CTX_new ret=1
+STEP=EncryptInit ret=1
+STEP=Data_Update ret=1 outlen=30
+STEP=Final ret=1 outlen=0
+STEP=GetTag ret=1
+MUTATION_STEP=Reinit_null_after_final ret=1
+MUTATION_STEP=Update_after_reinit_null ret=0 outlen=0
+MUTATION_STEP=Final_after_reuse ret=0 outlen=0
+CASE_RESULT=expected_reject
+HARNESS_RETURN=0

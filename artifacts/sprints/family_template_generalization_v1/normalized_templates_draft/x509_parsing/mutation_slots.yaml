@@ -1,0 +1,110 @@
+schema: family_mutation_slots_v1
+family: x509_parsing
+template_level: family
+seed_pocs: []
+mutation_slots:
+- slot_name: CERT_INPUT
+  mutation_type: byte_array_or_path
+  seed_examples:
+  - DER
+  - PEM
+  - malformed
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  expected_oracle:
+  - parser_reject_accept
+  - return_code_semantics
+  - cleanup_required
+  risk: file/path APIs need fixture handling in later template generation
+- slot_name: SUBJECT_FIELD
+  mutation_type: asn1_field
+  seed_examples:
+  - valid_cn
+  - malformed_cn
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  expected_oracle:
+  - parser_reject_accept
+  - return_code_semantics
+  - cleanup_required
+  risk: field mutation may be app-level not parser-level
+- slot_name: ISSUER_FIELD
+  mutation_type: asn1_field
+  seed_examples:
+  - valid_issuer
+  - truncated_issuer
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  expected_oracle:
+  - parser_reject_accept
+  - return_code_semantics
+  - cleanup_required
+  risk: avoid interpreting policy rejection as parser bug
+- slot_name: TRAILING_DATA
+  mutation_type: byte_array
+  seed_examples:
+  - none
+  - tail
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  expected_oracle:
+  - parser_reject_accept
+  - return_code_semantics
+  - cleanup_required
+  risk: only if API preserves input consumption signal
+- slot_name: INVALID_LENGTH
+  mutation_type: integer
+  seed_examples:
+  - short
+  - long
+  allowed_mutations:
+  - boundary
+  - malformed
+  - valid_control
+  expected_oracle:
+  - parser_reject_accept
+  - return_code_semantics
+  - cleanup_required
+  risk: length mismatch should be bounded
+mutation_budget_hint:
+  small: 8
+  medium: 32
+  large: 96
+scheduler_features:
+- family
+- oracle_type
+- target_library
+- mapping_gate_status
+- seed_type
+ast_maskable_units:
+- unit_type: api_argument
+  slot_name: CERT_INPUT
+  node_kind_hint: argument or literal
+  reason: file/path APIs need fixture handling in later template generation
+- unit_type: api_argument
+  slot_name: SUBJECT_FIELD
+  node_kind_hint: argument or literal
+  reason: field mutation may be app-level not parser-level
+- unit_type: api_argument
+  slot_name: ISSUER_FIELD
+  node_kind_hint: argument or literal
+  reason: avoid interpreting policy rejection as parser bug
+- unit_type: api_argument
+  slot_name: TRAILING_DATA
+  node_kind_hint: argument or literal
+  reason: only if API preserves input consumption signal
+- unit_type: api_argument
+  slot_name: INVALID_LENGTH
+  node_kind_hint: argument or literal
+  reason: length mismatch should be bounded
+semantic_policy: mutate slots, preserve trigger/cleanup/oracle shape
+notes:
+- Budget hints are deterministic defaults for family-level planning.

@@ -1,0 +1,30 @@
+schema: family_card_v1
+family: evp_digest_ctx_lifecycle
+track: lifecycle
+archetype: evp_context_lifecycle
+target_library: openssl
+component: EVP_MD_CTX
+summary: >
+  EVP digest context lifecycle seeds exercise init/update/final/reset/free state
+  transitions without parser replay, DER trailing garbage, or full-consumption
+  oracles.
+primary_apis:
+  - EVP_MD_CTX_new
+  - EVP_DigestInit_ex
+  - EVP_DigestUpdate
+  - EVP_DigestFinal_ex
+  - EVP_MD_CTX_reset
+  - EVP_MD_CTX_free
+oracle:
+  - unexpected_success_after_invalid_state
+  - unexpected_failure_on_valid_sequence
+  - state_transition_observation
+  - crash_or_sanitizer
+avoid_patterns:
+  - der_single_object_trailing_garbage_full_consumption
+  - secure_heap_state_lifecycle_issue_28669
+  - x509_pkey_pkcs8_parsing
+claim_policy:
+  confirmed_vulnerability: false
+  cve: false
+  exploitable: false

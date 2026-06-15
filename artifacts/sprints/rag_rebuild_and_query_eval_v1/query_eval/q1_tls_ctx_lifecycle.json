@@ -1,0 +1,180 @@
+{
+  "query": "wolfSSL_CTX_new wolfSSL_CTX_free TLS context lifecycle",
+  "top_k": 8,
+  "results": [
+    {
+      "rank": 1,
+      "score": 0.8821114848248661,
+      "distance": 0.44485393166542053,
+      "base_score": 0.6921114848248662,
+      "rerank_score": 0.8821114848248661,
+      "rerank_reasons": [
+        "api_match:wolfSSL_CTX_free",
+        "keyword_overlap:wolfssl_ctx_free,wolfssl_ctx_new"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/wolfssl_call_sequences.md",
+      "text": "# wolfSSL call sequences\n\n- `wolfssl_decodedcert_parse_free_004:wc_InitDecodedCert -> wc_ParseCert -> wc_FreeDecodedCert`\n- `wolfssl_pkcs7_init_decode_free_005:wc_PKCS7_Init -> wc_PKCS7_Free`\n- `wolfssl_pkcs7_init_verify_free_006:wc_PKCS7_Init -> wc_PKCS7_Free`\n- `wolfssl_tls_accept_lifecycle_002:wolfSSL_CTX_new -> wolfSSL_new -> wolfSSL_read -> wolfSSL_write -> wolfSSL_free -> wolfSSL_CTX_free`\n- `wolfssl_tls_lifecycle_001:wolfSSL_CTX_new -> wolfSSL_new -> wolfSSL_connect -> wolfSSL_read -> wolfSSL_write -> wolfSSL_free -> wolfSSL_CTX_free`\n- `wolfssl_x509_load_inspect_free_003:wolfSSL_X509_load_certificate_file -> wolfSSL_X509_get_subject_name -> wolfSSL_X509_free`",
+      "metadata": {
+        "oracle_type": "",
+        "family": "",
+        "pattern_id": "",
+        "source_file": "knowledge_raw/api_constraints/wolfssl_call_sequences.md",
+        "doc_type": "api_constraint",
+        "library": "",
+        "layer": "api_constraints"
+      }
+    },
+    {
+      "rank": 2,
+      "score": 0.806643561470882,
+      "distance": 0.7647778391838074,
+      "base_score": 0.566643561470882,
+      "rerank_score": 0.806643561470882,
+      "rerank_reasons": [
+        "layer:api_cards",
+        "keyword_overlap:context,lifecycle",
+        "recent_feedback_source"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/openssl/EVP_MAC_final.yaml",
+      "text": "Source: API Card\napi: EVP_MAC_final\nlibrary: openssl\nfamily: mac_lifecycle\nsignature: int EVP_MAC_final(EVP_MAC_CTX *ctx, unsigned char *out, size_t *outl, size_t outsize)\nparameter_semantics: ctx: MAC context\nout: output buffer\noutl: caller-visible output length\noutsize: output buffer capacity\nreturn_value_semantics: success: 1 and outl receives MAC length\nfailure: 0 and output state should remain safe for caller\nvalid_invalid_ranges: valid: initialized MAC context and sufficiently sized output buffer\ninvalid: final before setup, update after final for strict lifecycle APIs, undersized\n  output\nunsupported_conditions: - using ctx after invalid lifecycle transition\nmutation_hints: - final before setup\n- double final\n- update after final\n- third final\n- update after second final\n- abort then final\n- output buffer too small\noracle_observables: - return_code\n- outl\n- output_buffer_state\n- sanitizer_signal\nknown_pitfalls: - HMAC failure-path outl observations should be classified as failure_path_output_state_triage,\n  not bug_candidate, without stronger output-state evidence.\n- HMAC+AES and CMAC+SHA are invalid parameter projections; skip them or mark projection_limitation.\nnotes: - 'Known pitfall: failure paths must not expose unsafe outl or stale output state.'\n- 'Feedback: OpenSSL CMAC repeated final may be allowed legacy/provider semantics\n  rather than a vulnerability by itself.'\n- 'Observed CMAC behavior: a second EVP_MAC_final() can succeed and return outl=16.'\n- 'MAC lifecycle v2 minimal confirmation: CMAC AES-128-CBC and AES-256-CBC accepted\n  EVP_MAC_update() after EVP_MAC_final(); a follow-up EVP_MAC_final() also succeeded\n  and produced a different 16-byte output.'\n- 'MAC lifecycle v2 minimal confirmation: CMAC third-final sequences returned success\n  for final1/final2/final3, each with outl=16 and distinct output bytes.'\n- 'MAC lifecycle v2 minimal confirmation: CMAC update-after-second-final sequences\n  returned success for final1, final2, update-after-second-final, and final3.'\n- High-value follow-up mutations are update-after-final and update-after-second-final\n  because they show continuation after a terminal-looking finalization state.\n- Third-final is useful evidence but should be treated as allowed_legacy_semantics_needs_review\n  until OpenSSL documentation confirms whether repeated finalization is intentional\n  provider semantics.\n- 'Classification guidance: do not report these CMAC lifecycle observations as confirmed\n  vulnerabilities without documentation review and caller-impact evidence.'\n",
+      "metadata": {
+        "library": "openssl",
+        "api": "EVP_MAC_final",
+        "source_file": "knowledge_base/api_cards/openssl/EVP_MAC_final.yaml",
+        "layer": "api_cards",
+        "doc_type": "api_card",
+        "family": "mac_lifecycle"
+      }
+    },
+    {
+      "rank": 3,
+      "score": 0.7971306334190478,
+      "distance": 0.6470919847488403,
+      "base_score": 0.6071306334190477,
+      "rerank_score": 0.7971306334190478,
+      "rerank_reasons": [
+        "api_match:wolfSSL_CTX_free",
+        "keyword_overlap:wolfssl_ctx_free,wolfssl_ctx_new"
+      ],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md",
+      "text": "`wc_PKCS7_VerifySignedData:parser_must_reject_malformed`\n- `XFREE:cleanup_required`\n- `XFREE:ownership_transfer`\n- `XMALLOC:ownership_transfer`\n- `wolfSSL_Free:cleanup_required`\n- `wolfSSL_Free:ownership_transfer`\n- `wolfSSL_Malloc:ownership_transfer`\n- `wolfSSL_SetAllocators:must_init_before_use`\n- `wolfSSL_SetAllocators:ownership_transfer`\n- `wolfSSL_CTX_free:cleanup_required`\n- `wolfSSL_CTX_free:ctx_session_lifecycle`\n- `wolfSSL_CTX_free:return_code_check`\n- `wolfSSL_CTX_new:ctx_session_lifecycle`\n- `wolfSSL_CTX_new:must_init_before_use`\n- `wolfSSL_CTX_new:return_code_check`\n- `wolfSSL_CTX_set_verify:ctx_session_lifecycle`\n- `wolfSSL_CTX_set_verify:return_code_check`\n- `wolfSSL_accept:ctx_session_lifecycle`\n- `wolfSSL_accept:return_code_check`\n- `wolfSSL_connect:ctx_session_lifecycle`\n- `wolfSSL_connect:return_code_check`\n- `wolfSSL_dtls:ctx_session_lifecycle`\n- `wolfSSL_dtls:return_code_check`\n- `wolfSSL_dtls_set_peer:ctx_session_lifecycle`\n- `wolfSSL_dtls_set_peer:return_code_che",
+      "metadata": {
+        "pattern_id": "",
+        "source_file": "knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md",
+        "layer": "api_constraints",
+        "family": "",
+        "library": "",
+        "oracle_type": "",
+        "doc_type": "api_constraint"
+      }
+    },
+    {
+      "rank": 4,
+      "score": 0.7427429092357045,
+      "distance": 0.7459840774536133,
+      "base_score": 0.5727429092357045,
+      "rerank_score": 0.7427429092357045,
+      "rerank_reasons": [
+        "layer:api_cards",
+        "keyword_overlap:context"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/openssl/EVP_DigestVerifyInit.yaml",
+      "text": "Source: API Card\napi: EVP_DigestVerifyInit\nlibrary: openssl\nfamily: pkey_verify\nsignature: int EVP_DigestVerifyInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx, const EVP_MD *type, ENGINE *e, EVP_PKEY *pkey)\nparameter_semantics: ctx: digest verification context allocated by EVP_MD_CTX_new or equivalent\npctx: optional output pointer for the initialized EVP_PKEY_CTX\ntype: digest algorithm such as EVP_sha256\ne: legacy ENGINE parameter, normally NULL\npkey: public key or key object used for verification\nreturn_value_semantics: success: 1\nerror: 0 or provider-specific failure\nvalid_invalid_ranges: valid: compatible digest and key type with a verification-capable key\ninvalid: NULL context, unsupported digest/key pairing, wrong key type, provider dispatch\n  failure\nunsupported_conditions: - requested digest is not valid for the key algorithm\n- key does not support signature verification\n- provider does not expose the requested verify operation\nmutation_hints: - wrong digest algorithm\n- mismatched key type\n- public key without expected verification capability\n- RSA-PSS setup on non-RSA key\n- digest/key compatibility boundary\noracle_observables: - return_code\n- error_stack\n- sanitizer_signal\nknown_pitfalls: - setup failure must not be collapsed with invalid signature rejection\n- a failed initialization may leave pctx unset or unusable\n- provider behavior can differ between unsupported operation and invalid signature\nnotes: - Use this card for setup-stage evidence in signature verification migration, not\n  as proof of signature acceptance by itself.\n",
+      "metadata": {
+        "library": "openssl",
+        "layer": "api_cards",
+        "api": "EVP_DigestVerifyInit",
+        "doc_type": "api_card",
+        "source_file": "knowledge_base/api_cards/openssl/EVP_DigestVerifyInit.yaml",
+        "family": "pkey_verify"
+      }
+    },
+    {
+      "rank": 5,
+      "score": 0.7413845695593775,
+      "distance": 0.7501347661018372,
+      "base_score": 0.5713845695593774,
+      "rerank_score": 0.7413845695593775,
+      "rerank_reasons": [
+        "api_match:wolfSSL_CTX_new",
+        "keyword_overlap:wolfssl_ctx_new"
+      ],
+      "layer": "cross_lib_equivalence",
+      "source_file": "knowledge_raw/cross_lib_equivalence/wolfssl_cross_library_mapping_candidates.yaml",
+      "text": "wolfssl_cross_library_mapping_candidates:\n- schema: cross_library_mapping_candidate_v0\n  family: asn1_nested_boundary\n  wolfssl_api: wc_InitDecodedCert\n  openssl_candidate_api: ASN1_item_d2i\n  mbedtls_candidate_api: mbedtls_x509_crt_parse_der\n  mapping_type: semantic_related\n  confidence: medium\n  evidence:\n    wolfssl_card_confidence: high\n    basis: static top-family mapping plus staged wolfSSL grep evidence\n  status: candidate_only\n  notes:\n  - Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG\n    evidence gate.\n  - Not confirmed equivalent; must pass candidate_mapper and RAG evidence gate.\n- schema: cross_library_mapping_candidate_v0\n  family: asn1_nested_boundary\n  wolfssl_api: wc_ParseCert\n  openssl_candidate_api: d2i_X509\n  mbedtls_candidate_api: mbedtls_x509_crt_parse_der\n  mapping_type: parser_equivalent\n  confidence: medium\n  evidence:\n    wolfssl_card_confidence: high\n    basis: static top-family mapping plus staged wolfSSL grep evidence\n  status: candidate_only\n  notes:\n  - Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG\n    evidence gate.\n  - Not confirmed equivalent; must pass candidate_mapper and RAG evidence gate.\n- schema: cross_library_mapping_candidate_v0\n  family: pkcs_container_parsing\n  wolfssl_api: wc_PKCS12_parse\n  openssl_candidate_api: PKCS12_parse\n  mbedtls_candidate_api: ''\n  mapping_type: parser_equivalent\n  confidence: medium\n  evidence:\n    wolfssl_card_confidence: high\n    basis: static top-family mapping plus staged wolfSSL grep evidence\n  status: candidate_only\n  notes:\n  - Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG\n    evidence gate.\n  - Not confirmed equivalent; must pass candidate_mapper and RAG evidence gate.\n- schema: cross_library_mapping_candidate_v0\n  family: pkcs_container_parsing\n  wolfssl_api: wc_PKCS7_DecodeSignedData\n  openssl_candidate_api: d2i_PKCS7\n  mbedtls_candidate_api: ''\n  mapping_type: parser_equivalent\n  confidence: low\n  evidence:\n    wolfssl_card_confidence: not_found_in_source\n    basis: static top-family mapping plus staged wolfSSL grep evidence\n  status: candidate_only\n  notes:\n  - Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG\n    evidence gate.\n  - Not confirmed equivalent; must pass candidate_mapper and RAG evidence gate.\n- schema: cross_library_mapping_candidate_v0\n  family: pkcs_container_parsing\n  wolfssl_api: wc_PKCS7_VerifySignedData\n  openssl_candidate_api: PKCS7_verify\n  mbedtls_candidate_api: ''\n  mapping_type: parser_equivalent\n  confidence: medium\n  evidence:\n    wolfssl_card_confidence: high\n    basis: static top-family mapping plus staged wolfSSL grep evidence\n  status: candidate_only\n  notes:\n  - Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG\n    evidence gate.\n  - Not confirmed equivalent; must pass candidate_mapper and RAG evidence gate.\n- schema: cross_library_mapping_candidate_v0\n  family: secure_heap_state_lifecycle\n  wolfssl_api: wolfSSL_Free\n  openssl_candidate_api: OPENSSL_free\n  mbedtls_candidate_api: mbedtls_free\n  mapping_type: cleanup_equivalent\n  confidence: medium\n  evidence:\n    wolfssl_card_confidence: medium\n    basis: static top-family mapping plus staged wolfSSL grep evidence\n  status: candidate_only\n  notes:\n  - Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG\n    evidence gate.\n  - Not confirmed equivalent; must pass candidate_mapper and RAG evidence gate.\n- schema: cross_library_mapping_candidate_v0\n  family: secure_heap_state_lifecycle\n  wolfssl_api: wolfSSL_Malloc\n  openssl_candidate_api: OPENSSL_malloc\n  mbedtls_candidate_api: mbedtls_calloc\n  mapping_type: semantic_related\n  confidence: medium\n  evidence:\n    wolfssl_card_confidence: medium\n    basis: static top-family mapping plus staged wolfSSL grep evidence\n  status: candidate_only\n  notes:\n  - Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG\n    evidence gate.\n  - Not confirmed equivalent; must pass candidate_mapper and RAG evidence gate.\n- schema: cross_library_mapping_candidate_v0\n  family: secure_heap_state_lifecycle\n  wolfssl_api: wolfSSL_SetAllocators\n  openssl_candidate_api: CRYPTO_set_mem_functions\n  mbedtls_candidate_api: mbedtls_platform_set_calloc_free\n  mapping_type: semantic_related\n  confidence: medium\n  evidence:\n    wolfssl_card_confidence: medium\n    basis: static top-family mapping plus staged wolfSSL grep evidence\n  status: candidate_only\n  notes:\n  - Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG\n    evidence gate.\n  - Not confirmed equivalent; must pass candidate_mapper and RAG evidence gate.\n- schema: cross_library_mapping_candidate_v0\n  family: tls_protocol_state_lifecycle\n  wolfssl_api: wolfSSL_CTX_new\n  openssl_candidate_api: SSL_CTX_new\n  mbedtls_candidate_api: mbedtls_ssl_config_init\n  mapping_type: lifecycle_equivalent\n  confidence: medium\n  evidence:\n    wolfssl_card_confidence: high\n    basis: static top-family mapping plus staged wolfSSL grep evidence\n  status: candidate_only\n  notes:\n  - Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG\n    evidence gate.\n  - Not confirmed equivalent; must pass candidate_mapper and RAG evidence gate.\n- schema: cross_library_mapping_candidate_v0\n  family: tls_protocol_state_lifecycle\n  wolfssl_api: wolfSSL_accept\n  openssl_candidate_api: SSL_accept\n  mbedtls_candidate_api: mbedtls_ssl_handshake\n  mapping_type: semantic_related\n  confidence: medium\n  evidence:\n    wolfssl_card_confidence: high\n    basis: static top-family mapping plus staged wolfSSL grep evidence\n  status: candidate_only\n  notes:\n  - Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG\n    evidence gate.\n  - Not confirmed equivalent; must pass candidate_mapper and RAG evidence gate.\n- schema: cross_library_mapping_candidate_v0\n  family: tls_protocol_state_lifecycle\n  wolfssl_api: wolfSSL_connect\n  openssl_candidate_api: SSL_connect\n  mbedtls_candidate_api: mbedtls_ssl_handshake\n  mapping_type: semantic_related\n  confidence: medium\n  evidence:\n    wolfssl_card_confidence: high\n    basis: static top-family mapping plus staged wolfSSL grep evidence\n  status: candidate_only\n  notes:\n  - Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG\n    evidence gate.\n  - Not confirmed equivalent; must pass candidate_mapper and RAG evidence gate.\n- schema: cross_library_mapping_candidate_v0\n  family: tls_protocol_state_lifecycle\n  wolfssl_api: wolfSSL_free\n  openssl_candidate_api: SSL_free\n  mbedtls_candidate_api: mbedtls_ssl_free\n  mapping_type: cleanup_equivalent\n  confidence: medium\n  evidence:\n    wolfssl_card_confidence: high\n    basis: static top-family mapping plus staged wolfSSL grep evidence\n  status: candidate_only\n  notes:\n  - Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG\n    evidence gate.\n  - Not confirmed equivalent; must pass candidate_mapper and RAG evidence gate.\n- schema: cross_library_mapping_candidate_v0\n  family: tls_protocol_state_lifecycle\n  wolfssl_api: wolfSSL_new\n  openssl_candidate_api: SSL_new\n  mbedtls_candidate_api: mbedtls_ssl_init\n  mapping_type: lifecycle_equivalent\n  confidence: medium\n  evidence:\n    wolfssl_card_confidence: high\n    basis: static top-family mapping plus staged wolfSSL grep evidence\n  status: candidate_only\n  notes:\n  - Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG\n    evidence gate.\n  - Not confirmed equivalent; must pass candidate_mapper and RAG evidence gate.\n- schema: cross_library_mapping_candidate_v0\n  family: tls_protocol_state_lifecycle\n  wolfssl_api: wolfSSL_read\n  openssl_candidate_api: SSL_read\n  mbedtls_candidate_api: mbedtls_ssl_read\n  mapping_type: semantic_related\n  confidence: medium\n  evidence:\n    wolfssl_card_confidence: high\n    basis: static top-family mapping plus staged wolfSSL grep evidence\n  status: candidate_only\n  notes:\n  - Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG\n    evidence gate.\n  - Not confirmed equivalent; must pass candidate_mapper and RAG evidence gate.\n- schema: cross_library_mapping_candidate_v0\n  family: tls_protocol_state_lifecycle\n  wolfssl_api: wolfSSL_write\n  openssl_candidate_api: SSL_write\n  mbedtls_candidate_api: mbedtls_ssl_write\n  mapping_type: semantic_related\n  confidence: medium\n  evidence:\n    wolfssl_card_confidence: high\n    basis: static top-family mapping plus staged wolfSSL grep evidence\n  status: candidate_only\n  notes:\n  - Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG\n    evidence gate.\n  - Not confirmed equivalent; must pass candidate_mapper and RAG evidence gate.\n- schema: cross_library_mapping_candidate_v0\n  family: x509_parsing\n  wolfssl_api: wolfSSL_X509_free\n  openssl_candidate_api: X509_free\n  mbedtls_candidate_api: mbedtls_x509_crt_free\n  mapping_type: cleanup_equivalent\n  confidence: medium\n  evidence:\n    wolfssl_card_confidence: high\n    basis: static top-family mapping plus staged wolfSSL grep evidence\n  status: candidate_only\n  notes:\n  - Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG\n    evidence gate.\n  - Not confirmed equivalent; must pass candidate_mapper and RAG evidence gate.\n- schema: cross_library_mapping_candidate_v0\n  family: x509_parsing\n  wolfssl_api: wolfSSL_X509_load_certificate_file\n  openssl_candidate_api: PEM_read_X509\n  mbedtls_candidate_api: mbedtls_x509_crt_parse_file\n  mapping_type: parser_equivalent\n  confidence: medium\n  evidence:\n    wolfssl_card_confidence: high\n    basis: static top-family mapping plus staged wolfSSL grep evidence\n  status: candidate_only\n  notes:\n  - Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG\n    evidence gate.\n  - Not confirmed equivalent; must pass candidate_mapper and RAG evidence gate.\n- schema: cross_library_mapping_candidate_v0\n  family: x509_parsing\n  wolfssl_api: wolfSSL_X509_verify\n  openssl_candidate_api: X509_verify\n  mbedtls_candidate_api: mbedtls_x509_crt_verify\n  mapping_type: semantic_related\n  confidence: medium\n  evidence:\n    wolfssl_card_confidence: high\n    basis: static top-family mapping plus staged wolfSSL grep evidence\n  status: candidate_only\n  notes:\n  - Candidate mapping only; weak or medium evidence must pass candidate_mapper/RAG\n    evidence gate.\n  - Not confirmed equivalent; must pass candidate_mapper and RAG evidence gate.\n",
+      "metadata": {
+        "source_file": "knowledge_raw/cross_lib_equivalence/wolfssl_cross_library_mapping_candidates.yaml",
+        "operation": "",
+        "api_family": "",
+        "layer": "cross_lib_equivalence",
+        "doc_type": "cross_lib_equivalence"
+      }
+    },
+    {
+      "rank": 6,
+      "score": 0.7310195074909369,
+      "distance": 0.7824692130088806,
+      "base_score": 0.5610195074909369,
+      "rerank_score": 0.7310195074909369,
+      "rerank_reasons": [
+        "layer:api_cards",
+        "keyword_overlap:context"
+      ],
+      "layer": "api_cards",
+      "source_file": "knowledge_base/api_cards/openssl/EVP_PKEY_CTX_set_rsa_pss_saltlen.yaml",
+      "text": "Source: API Card\napi: EVP_PKEY_CTX_set_rsa_pss_saltlen\nlibrary: openssl\nfamily: pkey_verify\nsignature: int EVP_PKEY_CTX_set_rsa_pss_saltlen(EVP_PKEY_CTX *ctx, int len)\nparameter_semantics: ctx: initialized EVP_PKEY_CTX configured for RSA-PSS\nlen: expected RSA-PSS salt length or special OpenSSL salt length constant\nreturn_value_semantics: success: positive value\nerror: zero or negative value depending on provider/path\nvalid_invalid_ranges: valid: compatible salt length for the signature and digest\ninvalid: mismatched salt length, non-RSA context, unsupported special salt length\n  constant\nunsupported_conditions: - non-RSA key context\n- provider does not support RSA-PSS salt length control\nmutation_hints: - pss_saltlen_mismatch\n- RSA-PSS signature verified with wrong expected salt length\n- zero salt versus digest-length salt\n- setup error versus invalid signature distinction\noracle_observables: - return_code\n- error_stack\n- signature_acceptance\n- sanitizer_signal\nknown_pitfalls: - mismatched salt length should usually reject the signature rather than succeed\n- special salt length constants may have provider-specific semantics\nnotes: - This card is specifically useful for PKEY verify behavior-divergence exploration.\n",
+      "metadata": {
+        "source_file": "knowledge_base/api_cards/openssl/EVP_PKEY_CTX_set_rsa_pss_saltlen.yaml",
+        "layer": "api_cards",
+        "library": "openssl",
+        "doc_type": "api_card",
+        "api": "EVP_PKEY_CTX_set_rsa_pss_saltlen",
+        "family": "pkey_verify"
+      }
+    },
+    {
+      "rank": 7,
+      "score": 0.6817295659100109,
+      "distance": 0.46685731410980225,
+      "base_score": 0.6817295659100109,
+      "rerank_score": 0.6817295659100109,
+      "rerank_reasons": [],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md",
+      "text": "code_check`\n- `wolfSSL_dtls_set_peer:ctx_session_lifecycle`\n- `wolfSSL_dtls_set_peer:return_code_check`\n- `wolfSSL_free:cleanup_required`\n- `wolfSSL_free:ctx_session_lifecycle`\n- `wolfSSL_free:return_code_check`\n- `wolfSSL_new:ctx_session_lifecycle`\n- `wolfSSL_new:must_init_before_use`\n- `wolfSSL_new:return_code_check`\n- `wolfSSL_read:ctx_session_lifecycle`\n- `wolfSSL_read:return_code_check`\n- `wolfSSL_shutdown:ctx_session_lifecycle`\n- `wolfSSL_shutdown:return_code_check`\n- `wolfSSL_use_PrivateKey_file:ctx_session_lifecycle`\n- `wolfSSL_use_PrivateKey_file:return_code_check`\n- `wolfSSL_use_certificate_file:ctx_session_lifecycle`\n- `wolfSSL_use_certificate_file:return_code_check`\n- `wolfSSL_write:ctx_session_lifecycle`\n- `wolfSSL_write:return_code_check`\n- `wolfSSL_X509_free:cleanup_required`\n- `wolfSSL_X509_free:input_must_be_der_or_pem`\n- `wolfSSL_X509_free:parser_must_reject_malformed`\n- `wolfSSL_X509_get_der:input_must_be_der_or_pem`\n- `wolfSSL_X509_get_der:parser_must_reject_malform",
+      "metadata": {
+        "doc_type": "api_constraint",
+        "library": "",
+        "layer": "api_constraints",
+        "pattern_id": "",
+        "oracle_type": "",
+        "family": "",
+        "source_file": "knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md"
+      }
+    },
+    {
+      "rank": 8,
+      "score": 0.639043131980267,
+      "distance": 0.5648396015167236,
+      "base_score": 0.639043131980267,
+      "rerank_score": 0.639043131980267,
+      "rerank_reasons": [],
+      "layer": "api_constraints",
+      "source_file": "knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md",
+      "text": "# wolfSSL top-family API constraints\n\n- `DecodedCert:input_must_be_der_or_pem`\n- `DecodedCert:parser_must_reject_malformed`\n- `wc_FreeDecodedCert:cleanup_required`\n- `wc_FreeDecodedCert:input_must_be_der_or_pem`\n- `wc_FreeDecodedCert:parser_must_reject_malformed`\n- `wc_InitDecodedCert:input_must_be_der_or_pem`\n- `wc_InitDecodedCert:must_init_before_use`\n- `wc_InitDecodedCert:parser_must_reject_malformed`\n- `wc_ParseCert:input_must_be_der_or_pem`\n- `wc_ParseCert:parser_must_reject_malformed`\n- `wc_PKCS12_parse:input_must_be_der_or_pem`\n- `wc_PKCS12_parse:parser_must_reject_malformed`\n- `wc_PKCS7_Free:cleanup_required`\n- `wc_PKCS7_Free:input_must_be_der_or_pem`\n- `wc_PKCS7_Free:parser_must_reject_malformed`\n- `wc_PKCS7_Init:input_must_be_der_or_pem`\n- `wc_PKCS7_Init:must_init_before_use`\n- `wc_PKCS7_Init:parser_must_reject_malformed`\n- `wc_PKCS7_VerifySignedData:input_must_be_der_or_pem`\n- `wc_PKCS7_VerifySignedData:parser_must_reject_malformed`\n- `XFREE:cleanup_required`\n- `XFREE:owners",
+      "metadata": {
+        "library": "",
+        "oracle_type": "",
+        "pattern_id": "",
+        "family": "",
+        "layer": "api_constraints",
+        "source_file": "knowledge_raw/api_constraints/wolfssl_top_family_api_constraints.md",
+        "doc_type": "api_constraint"
+      }
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+| api | family | constraint_kind | evidence_confidence |
+| --- | --- | --- | --- |
+| mbedtls_ssl_config_init | tls_protocol_state_lifecycle | lifecycle_order_and_state | medium |
+| mbedtls_ssl_config_free | tls_protocol_state_lifecycle | lifecycle_order_and_state | medium |
+| mbedtls_ssl_init | tls_protocol_state_lifecycle | lifecycle_order_and_state | medium |
+| mbedtls_ssl_free | tls_protocol_state_lifecycle | lifecycle_order_and_state | medium |
+| mbedtls_ssl_setup | tls_protocol_state_lifecycle | lifecycle_order_and_state | medium |
+| mbedtls_ssl_handshake | tls_protocol_state_lifecycle | lifecycle_order_and_state | medium |
+| mbedtls_ssl_read | tls_protocol_state_lifecycle | lifecycle_order_and_state | medium |
+| mbedtls_ssl_write | tls_protocol_state_lifecycle | lifecycle_order_and_state | medium |
+| mbedtls_x509_crt_init | x509_parsing | parser_boundary_and_object_lifecycle | medium |
+| mbedtls_x509_crt_parse | x509_parsing | parser_boundary_and_object_lifecycle | medium |
+| mbedtls_x509_crt_parse_der | x509_parsing | parser_boundary_and_object_lifecycle | medium |
+| mbedtls_x509_crt_free | x509_parsing | parser_boundary_and_object_lifecycle | medium |
+| mbedtls_platform_set_calloc_free | secure_heap_state_lifecycle | allocator_state_lifecycle | medium |
+| mbedtls_calloc | secure_heap_state_lifecycle | allocator_state_lifecycle | medium |
+| mbedtls_free | secure_heap_state_lifecycle | allocator_state_lifecycle | medium |

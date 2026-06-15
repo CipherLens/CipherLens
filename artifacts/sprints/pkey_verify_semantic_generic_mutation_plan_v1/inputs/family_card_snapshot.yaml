@@ -1,0 +1,42 @@
+schema: family_card_v1
+family: pkey_verify_semantic
+harness_family: semantic_signature_verification
+operation_family: public key signature verification
+target_library: openssl
+apis:
+- EVP_PKEY
+- EVP_PKEY_keygen
+- EVP_DigestSignInit
+- EVP_DigestSignUpdate
+- EVP_DigestSignFinal
+- EVP_DigestVerifyInit
+- EVP_DigestVerifyUpdate
+- EVP_DigestVerifyFinal
+target_api_features:
+- high-level EVP sign/verify API
+- runtime key generation
+- return-code observability
+- signature acceptance/rejection observability
+common_mutation_points:
+- modified signature byte
+- modified message byte
+- wrong verification key
+- digest/key compatibility
+oracle_goals:
+- unexpected_accept
+- unexpected_reject
+- semantic_divergence
+- crash_or_sanitizer
+avoid_patterns:
+- der_single_object_trailing_garbage_full_consumption
+non_goals:
+- DER parser prefix consumption
+- PEM/DER parsing seed
+- trailing garbage oracle
+- full-consumption oracle
+safe_behavior: valid signature accepts; modified signature, modified message, and wrong key reject
+triage_behavior: distinguish invalid signature rejection from setup/provider dispatch errors
+claim_policy:
+  confirmed_vulnerability: false
+  cve: false
+  exploitable: false

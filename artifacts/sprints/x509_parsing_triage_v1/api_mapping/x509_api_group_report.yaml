@@ -1,0 +1,46 @@
+family: x509_parsing
+openssl_app_level:
+- api_or_command: openssl x509
+  role: certificate parse/print/purpose/time checks; strong C-path surface for app-visible wrong-result/wrong-output
+- api_or_command: openssl verify
+  role: chain/trust/CRL verification; strong C-path surface for verification semantic gaps
+- api_or_command: openssl crl
+  role: CRL parse/issuer display; C-path for CRL/X509 app behavior
+- api_or_command: openssl req
+  role: CSR text/print path; use only for D-path crash audit or ASN.1 overlap, not pure x509 migration
+- api_or_command: OSSL_STORE / OSSL_DECODER
+  role: potential modern loader/decoder controls; not enough current evidence for A-path
+openssl_c_api:
+- api: d2i_X509
+  suitability: parse-only; useful for malformed cert loader controls but insufficient for verification/purpose/time
+    oracles alone
+- api: PEM_read_bio_X509
+  suitability: PEM certificate loader for app-level command translations
+- api: X509_new / X509_free
+  suitability: lifecycle support
+- api: X509_verify_cert
+  suitability: strong verifier API for C-path or later A/B controls
+- api: X509_STORE_CTX_init
+  suitability: required setup for trust/chain/CRL verification oracles
+- api: X509_cmp_time / X509_check_purpose / X509_get_pubkey
+  suitability: specific observables for issue_11772, issue_29418, issue_13860
+mbedtls_api:
+- api: mbedtls_x509_crt_parse
+  suitability: source-side certificate loader; parse oracle only
+- api: mbedtls_x509_crt_parse_der
+  suitability: source-side DER cert loader; useful for malformed cert controls
+- api: mbedtls_x509_crt_verify
+  suitability: source-side verifier API for chain/usage/time semantic comparison
+- api: mbedtls_x509_crt_free
+  suitability: cleanup support
+- api: mbedtls_ssl_get_verify_result
+  suitability: MBEDTLS-POC-0027 observable but requires TLS handshake family, not x509 parser-only harness
+route_suitability:
+  C_app_level_validation_gap: best immediate route because multiple OpenSSL artifacts expose app-visible
+    wrong-result/wrong-output without needing new recipe-slot rendering.
+  D_crash_sanitizer_evidence_audit: appropriate for OPENSSL-ISSUE-9043 and possibly malformed short-cert/corrupted-state
+    overlap after strict input/reproduction audit.
+  A_recipe_slot_cross_library_migration: blocked until comparable source/target API contract and oracle
+    controls exist; MBEDTLS-POC-0027 would require a separate TLS verify-result family.
+  B_controlled_family_mutation: possible later for purpose/time/chain/CRL mutation matrices once stable
+    controls are defined.
