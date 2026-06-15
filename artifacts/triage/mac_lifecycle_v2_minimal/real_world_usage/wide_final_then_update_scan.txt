@@ -1,0 +1,4144 @@
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/15_zhaozg__lua-openssl__src__mac.c ==
+final line 313: if (ret == 1) ret = EVP_MAC_final(ctx, digest, &dlen, dlen);
+update line 350: ret = EVP_MAC_update(c, (unsigned char *)s, l);
+
+context:
+  305:     params[params_n++] = OSSL_PARAM_construct_utf8_string("digest", (char *)EVP_MD_name(type), 0);
+  306:     params[params_n] = OSSL_PARAM_construct_end();
+  307: 
+  308:     ctx = EVP_MAC_CTX_new(mac);
+  309:     if (ctx) {
+  310:       ret = EVP_MAC_init(ctx, (const unsigned char *)k, l, params);
+  311:       if (ret == 1) {
+  312:         ret = EVP_MAC_update(ctx, (const unsigned char *)dat, len);
+  313:         if (ret == 1) ret = EVP_MAC_final(ctx, digest, &dlen, dlen);
+  314:       }
+  315:       EVP_MAC_CTX_free(ctx);
+  316:     }
+  317:     EVP_MAC_free(mac);
+  318:   }
+  319: 
+  320:   if (ret == 0) return openssl_pushresult(L, ret);
+  321: 
+  322:   if (raw)
+  323:     lua_pushlstring(L, (char *)digest, dlen);
+  324:   else {
+  325:     char hex[2 * EVP_MAX_MD_SIZE + 1];
+  326:     to_hex((const char *)digest, dlen, hex);
+  327:     lua_pushstring(L, hex);
+  328:   }
+  329: 
+  330:   return 1;
+  331: }
+  332: 
+  333: /***
+  334: feed data to do digest
+  335: 
+  336: @function update
+  337: @tparam string msg data
+  338: @treturn boolean result true for success
+  339: */
+  340: static int
+  341: openssl_mac_ctx_update(lua_State *L)
+  342: {
+  343:   int         ret;
+  344:   size_t      l;
+  345:   const char *s;
+  346: 
+  347:   EVP_MAC_CTX *c = CHECK_OBJECT(1, EVP_MAC_CTX, "openssl.mac_ctx");
+  348:   s = luaL_checklstring(L, 2, &l);
+  349: 
+  350:   ret = EVP_MAC_update(c, (unsigned char *)s, l);
+  351:   return openssl_pushresult(L, ret);
+  352: }
+  353: 
+  354: /***
+  355: get result of mac
+  356: 
+  357: @function final
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/15_zhaozg__lua-openssl__src__mac.c ==
+final line 313: if (ret == 1) ret = EVP_MAC_final(ctx, digest, &dlen, dlen);
+update line 374: ret = EVP_MAC_update(c, (unsigned char *)s, l);
+
+context:
+  305:     params[params_n++] = OSSL_PARAM_construct_utf8_string("digest", (char *)EVP_MD_name(type), 0);
+  306:     params[params_n] = OSSL_PARAM_construct_end();
+  307: 
+  308:     ctx = EVP_MAC_CTX_new(mac);
+  309:     if (ctx) {
+  310:       ret = EVP_MAC_init(ctx, (const unsigned char *)k, l, params);
+  311:       if (ret == 1) {
+  312:         ret = EVP_MAC_update(ctx, (const unsigned char *)dat, len);
+  313:         if (ret == 1) ret = EVP_MAC_final(ctx, digest, &dlen, dlen);
+  314:       }
+  315:       EVP_MAC_CTX_free(ctx);
+  316:     }
+  317:     EVP_MAC_free(mac);
+  318:   }
+  319: 
+  320:   if (ret == 0) return openssl_pushresult(L, ret);
+  321: 
+  322:   if (raw)
+  323:     lua_pushlstring(L, (char *)digest, dlen);
+  324:   else {
+  325:     char hex[2 * EVP_MAX_MD_SIZE + 1];
+  326:     to_hex((const char *)digest, dlen, hex);
+  327:     lua_pushstring(L, hex);
+  328:   }
+  329: 
+  330:   return 1;
+  331: }
+  332: 
+  333: /***
+  334: feed data to do digest
+  335: 
+  336: @function update
+  337: @tparam string msg data
+  338: @treturn boolean result true for success
+  339: */
+  340: static int
+  341: openssl_mac_ctx_update(lua_State *L)
+  342: {
+  343:   int         ret;
+  344:   size_t      l;
+  345:   const char *s;
+  346: 
+  347:   EVP_MAC_CTX *c = CHECK_OBJECT(1, EVP_MAC_CTX, "openssl.mac_ctx");
+  348:   s = luaL_checklstring(L, 2, &l);
+  349: 
+  350:   ret = EVP_MAC_update(c, (unsigned char *)s, l);
+  351:   return openssl_pushresult(L, ret);
+  352: }
+  353: 
+  354: /***
+  355: get result of mac
+  356: 
+  357: @function final
+  358: @tparam[opt] string last last part of data
+  359: @tparam[opt] boolean raw binary or hex encoded result, default true for binary result
+  360: @treturn string val hash result
+  361: */
+  362: static int
+  363: openssl_mac_ctx_final(lua_State *L)
+  364: {
+  365:   EVP_MAC_CTX  *c = CHECK_OBJECT(1, EVP_MAC_CTX, "openssl.mac_ctx");
+  366:   unsigned char digest[EVP_MAX_MD_SIZE];
+  367:   size_t        len = sizeof(digest);
+  368:   int           raw = 0;
+  369:   int           ret = 1;
+  370: 
+  371:   if (lua_isstring(L, 2)) {
+  372:     size_t      l;
+  373:     const char *s = luaL_checklstring(L, 2, &l);
+  374:     ret = EVP_MAC_update(c, (unsigned char *)s, l);
+  375:     raw = (lua_isnone(L, 3)) ? 0 : lua_toboolean(L, 3);
+  376:   } else
+  377:     raw = (lua_isnone(L, 2)) ? 0 : lua_toboolean(L, 2);
+  378: 
+  379:   if (ret == 1) {
+  380:     ret = EVP_MAC_final(c, digest, &len, len);
+  381:   }
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/04_sejun000__spdk_REFLASH__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 444: if (EVP_MAC_update(ctx, caval, calen) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/04_sejun000__spdk_REFLASH__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 447: if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  454: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/04_sejun000__spdk_REFLASH__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 450: if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  457: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/04_sejun000__spdk_REFLASH__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 453: if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  460: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/04_sejun000__spdk_REFLASH__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 456: if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  460: 		goto out;
+  461: 	}
+  462: 	if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+  463: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/04_sejun000__spdk_REFLASH__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 459: if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  460: 		goto out;
+  461: 	}
+  462: 	if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+  463: 		goto out;
+  464: 	}
+  465: 	if (EVP_MAC_update(ctx, (void *)nqn2, strlen(nqn2)) != 1) {
+  466: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/04_sejun000__spdk_REFLASH__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 462: if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  460: 		goto out;
+  461: 	}
+  462: 	if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+  463: 		goto out;
+  464: 	}
+  465: 	if (EVP_MAC_update(ctx, (void *)nqn2, strlen(nqn2)) != 1) {
+  466: 		goto out;
+  467: 	}
+  468: 	if (EVP_MAC_final(ctx, rval, &hlen, hlen) != 1) {
+  469: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/04_sejun000__spdk_REFLASH__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 465: if (EVP_MAC_update(ctx, (void *)nqn2, strlen(nqn2)) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  460: 		goto out;
+  461: 	}
+  462: 	if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+  463: 		goto out;
+  464: 	}
+  465: 	if (EVP_MAC_update(ctx, (void *)nqn2, strlen(nqn2)) != 1) {
+  466: 		goto out;
+  467: 	}
+  468: 	if (EVP_MAC_final(ctx, rval, &hlen, hlen) != 1) {
+  469: 		goto out;
+  470: 	}
+  471: 	rc = 0;
+  472: out:
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/03_jiengup__spdk__lib__nvme__nvme_auth.c ==
+final line 390: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 447: if (EVP_MAC_update(ctx, caval, calen) != 1) {
+
+context:
+  382: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  383: 		rc = -EIO;
+  384: 		goto out;
+  385: 	}
+  386: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  387: 		rc = -EIO;
+  388: 		goto out;
+  389: 	}
+  390: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  391: 		rc = -EIO;
+  392: 		goto out;
+  393: 	}
+  394: out:
+  395: 	EVP_MD_free(md);
+  396: 	EVP_MAC_CTX_free(ctx);
+  397: 	EVP_MAC_free(hmac);
+  398: 
+  399: 	return rc;
+  400: }
+  401: 
+  402: int
+  403: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  404: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  405: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  406: 			   const void *cval, void *rval)
+  407: {
+  408: 	EVP_MAC *hmac;
+  409: 	EVP_MAC_CTX *ctx;
+  410: 	OSSL_PARAM params[2];
+  411: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  412: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  413: 	size_t hlen, calen = sizeof(caval);
+  414: 	int rc, keylen;
+  415: 
+  416: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  417: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  418: 	if (rc != 0) {
+  419: 		return rc;
+  420: 	}
+  421: 
+  422: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  423: 	if (hmac == NULL) {
+  424: 		return -EIO;
+  425: 	}
+  426: 
+  427: 	ctx = EVP_MAC_CTX_new(hmac);
+  428: 	if (ctx == NULL) {
+  429: 		rc = -EIO;
+  430: 		goto out;
+  431: 	}
+  432: 
+  433: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  434: 	if (keylen < 0) {
+  435: 		rc = keylen;
+  436: 		goto out;
+  437: 	}
+  438: 
+  439: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  440: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  441: 	params[1] = OSSL_PARAM_construct_end();
+  442: 
+  443: 	rc = -EIO;
+  444: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  454: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/03_jiengup__spdk__lib__nvme__nvme_auth.c ==
+final line 390: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 450: if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+
+context:
+  382: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  383: 		rc = -EIO;
+  384: 		goto out;
+  385: 	}
+  386: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  387: 		rc = -EIO;
+  388: 		goto out;
+  389: 	}
+  390: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  391: 		rc = -EIO;
+  392: 		goto out;
+  393: 	}
+  394: out:
+  395: 	EVP_MD_free(md);
+  396: 	EVP_MAC_CTX_free(ctx);
+  397: 	EVP_MAC_free(hmac);
+  398: 
+  399: 	return rc;
+  400: }
+  401: 
+  402: int
+  403: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  404: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  405: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  406: 			   const void *cval, void *rval)
+  407: {
+  408: 	EVP_MAC *hmac;
+  409: 	EVP_MAC_CTX *ctx;
+  410: 	OSSL_PARAM params[2];
+  411: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  412: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  413: 	size_t hlen, calen = sizeof(caval);
+  414: 	int rc, keylen;
+  415: 
+  416: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  417: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  418: 	if (rc != 0) {
+  419: 		return rc;
+  420: 	}
+  421: 
+  422: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  423: 	if (hmac == NULL) {
+  424: 		return -EIO;
+  425: 	}
+  426: 
+  427: 	ctx = EVP_MAC_CTX_new(hmac);
+  428: 	if (ctx == NULL) {
+  429: 		rc = -EIO;
+  430: 		goto out;
+  431: 	}
+  432: 
+  433: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  434: 	if (keylen < 0) {
+  435: 		rc = keylen;
+  436: 		goto out;
+  437: 	}
+  438: 
+  439: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  440: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  441: 	params[1] = OSSL_PARAM_construct_end();
+  442: 
+  443: 	rc = -EIO;
+  444: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  457: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/03_jiengup__spdk__lib__nvme__nvme_auth.c ==
+final line 390: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 453: if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+
+context:
+  382: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  383: 		rc = -EIO;
+  384: 		goto out;
+  385: 	}
+  386: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  387: 		rc = -EIO;
+  388: 		goto out;
+  389: 	}
+  390: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  391: 		rc = -EIO;
+  392: 		goto out;
+  393: 	}
+  394: out:
+  395: 	EVP_MD_free(md);
+  396: 	EVP_MAC_CTX_free(ctx);
+  397: 	EVP_MAC_free(hmac);
+  398: 
+  399: 	return rc;
+  400: }
+  401: 
+  402: int
+  403: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  404: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  405: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  406: 			   const void *cval, void *rval)
+  407: {
+  408: 	EVP_MAC *hmac;
+  409: 	EVP_MAC_CTX *ctx;
+  410: 	OSSL_PARAM params[2];
+  411: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  412: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  413: 	size_t hlen, calen = sizeof(caval);
+  414: 	int rc, keylen;
+  415: 
+  416: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  417: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  418: 	if (rc != 0) {
+  419: 		return rc;
+  420: 	}
+  421: 
+  422: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  423: 	if (hmac == NULL) {
+  424: 		return -EIO;
+  425: 	}
+  426: 
+  427: 	ctx = EVP_MAC_CTX_new(hmac);
+  428: 	if (ctx == NULL) {
+  429: 		rc = -EIO;
+  430: 		goto out;
+  431: 	}
+  432: 
+  433: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  434: 	if (keylen < 0) {
+  435: 		rc = keylen;
+  436: 		goto out;
+  437: 	}
+  438: 
+  439: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  440: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  441: 	params[1] = OSSL_PARAM_construct_end();
+  442: 
+  443: 	rc = -EIO;
+  444: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  460: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/03_jiengup__spdk__lib__nvme__nvme_auth.c ==
+final line 390: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 456: if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+
+context:
+  382: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  383: 		rc = -EIO;
+  384: 		goto out;
+  385: 	}
+  386: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  387: 		rc = -EIO;
+  388: 		goto out;
+  389: 	}
+  390: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  391: 		rc = -EIO;
+  392: 		goto out;
+  393: 	}
+  394: out:
+  395: 	EVP_MD_free(md);
+  396: 	EVP_MAC_CTX_free(ctx);
+  397: 	EVP_MAC_free(hmac);
+  398: 
+  399: 	return rc;
+  400: }
+  401: 
+  402: int
+  403: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  404: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  405: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  406: 			   const void *cval, void *rval)
+  407: {
+  408: 	EVP_MAC *hmac;
+  409: 	EVP_MAC_CTX *ctx;
+  410: 	OSSL_PARAM params[2];
+  411: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  412: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  413: 	size_t hlen, calen = sizeof(caval);
+  414: 	int rc, keylen;
+  415: 
+  416: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  417: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  418: 	if (rc != 0) {
+  419: 		return rc;
+  420: 	}
+  421: 
+  422: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  423: 	if (hmac == NULL) {
+  424: 		return -EIO;
+  425: 	}
+  426: 
+  427: 	ctx = EVP_MAC_CTX_new(hmac);
+  428: 	if (ctx == NULL) {
+  429: 		rc = -EIO;
+  430: 		goto out;
+  431: 	}
+  432: 
+  433: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  434: 	if (keylen < 0) {
+  435: 		rc = keylen;
+  436: 		goto out;
+  437: 	}
+  438: 
+  439: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  440: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  441: 	params[1] = OSSL_PARAM_construct_end();
+  442: 
+  443: 	rc = -EIO;
+  444: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  460: 		goto out;
+  461: 	}
+  462: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  463: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/03_jiengup__spdk__lib__nvme__nvme_auth.c ==
+final line 390: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 459: if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+
+context:
+  382: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  383: 		rc = -EIO;
+  384: 		goto out;
+  385: 	}
+  386: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  387: 		rc = -EIO;
+  388: 		goto out;
+  389: 	}
+  390: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  391: 		rc = -EIO;
+  392: 		goto out;
+  393: 	}
+  394: out:
+  395: 	EVP_MD_free(md);
+  396: 	EVP_MAC_CTX_free(ctx);
+  397: 	EVP_MAC_free(hmac);
+  398: 
+  399: 	return rc;
+  400: }
+  401: 
+  402: int
+  403: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  404: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  405: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  406: 			   const void *cval, void *rval)
+  407: {
+  408: 	EVP_MAC *hmac;
+  409: 	EVP_MAC_CTX *ctx;
+  410: 	OSSL_PARAM params[2];
+  411: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  412: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  413: 	size_t hlen, calen = sizeof(caval);
+  414: 	int rc, keylen;
+  415: 
+  416: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  417: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  418: 	if (rc != 0) {
+  419: 		return rc;
+  420: 	}
+  421: 
+  422: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  423: 	if (hmac == NULL) {
+  424: 		return -EIO;
+  425: 	}
+  426: 
+  427: 	ctx = EVP_MAC_CTX_new(hmac);
+  428: 	if (ctx == NULL) {
+  429: 		rc = -EIO;
+  430: 		goto out;
+  431: 	}
+  432: 
+  433: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  434: 	if (keylen < 0) {
+  435: 		rc = keylen;
+  436: 		goto out;
+  437: 	}
+  438: 
+  439: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  440: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  441: 	params[1] = OSSL_PARAM_construct_end();
+  442: 
+  443: 	rc = -EIO;
+  444: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  460: 		goto out;
+  461: 	}
+  462: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  463: 		goto out;
+  464: 	}
+  465: 	if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+  466: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/03_jiengup__spdk__lib__nvme__nvme_auth.c ==
+final line 390: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 462: if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+
+context:
+  382: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  383: 		rc = -EIO;
+  384: 		goto out;
+  385: 	}
+  386: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  387: 		rc = -EIO;
+  388: 		goto out;
+  389: 	}
+  390: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  391: 		rc = -EIO;
+  392: 		goto out;
+  393: 	}
+  394: out:
+  395: 	EVP_MD_free(md);
+  396: 	EVP_MAC_CTX_free(ctx);
+  397: 	EVP_MAC_free(hmac);
+  398: 
+  399: 	return rc;
+  400: }
+  401: 
+  402: int
+  403: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  404: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  405: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  406: 			   const void *cval, void *rval)
+  407: {
+  408: 	EVP_MAC *hmac;
+  409: 	EVP_MAC_CTX *ctx;
+  410: 	OSSL_PARAM params[2];
+  411: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  412: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  413: 	size_t hlen, calen = sizeof(caval);
+  414: 	int rc, keylen;
+  415: 
+  416: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  417: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  418: 	if (rc != 0) {
+  419: 		return rc;
+  420: 	}
+  421: 
+  422: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  423: 	if (hmac == NULL) {
+  424: 		return -EIO;
+  425: 	}
+  426: 
+  427: 	ctx = EVP_MAC_CTX_new(hmac);
+  428: 	if (ctx == NULL) {
+  429: 		rc = -EIO;
+  430: 		goto out;
+  431: 	}
+  432: 
+  433: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  434: 	if (keylen < 0) {
+  435: 		rc = keylen;
+  436: 		goto out;
+  437: 	}
+  438: 
+  439: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  440: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  441: 	params[1] = OSSL_PARAM_construct_end();
+  442: 
+  443: 	rc = -EIO;
+  444: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  460: 		goto out;
+  461: 	}
+  462: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  463: 		goto out;
+  464: 	}
+  465: 	if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+  466: 		goto out;
+  467: 	}
+  468: 	if (EVP_MAC_update(ctx, (void *)nqn2, strlen(nqn2)) != 1) {
+  469: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/03_jiengup__spdk__lib__nvme__nvme_auth.c ==
+final line 390: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 465: if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+
+context:
+  382: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  383: 		rc = -EIO;
+  384: 		goto out;
+  385: 	}
+  386: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  387: 		rc = -EIO;
+  388: 		goto out;
+  389: 	}
+  390: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  391: 		rc = -EIO;
+  392: 		goto out;
+  393: 	}
+  394: out:
+  395: 	EVP_MD_free(md);
+  396: 	EVP_MAC_CTX_free(ctx);
+  397: 	EVP_MAC_free(hmac);
+  398: 
+  399: 	return rc;
+  400: }
+  401: 
+  402: int
+  403: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  404: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  405: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  406: 			   const void *cval, void *rval)
+  407: {
+  408: 	EVP_MAC *hmac;
+  409: 	EVP_MAC_CTX *ctx;
+  410: 	OSSL_PARAM params[2];
+  411: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  412: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  413: 	size_t hlen, calen = sizeof(caval);
+  414: 	int rc, keylen;
+  415: 
+  416: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  417: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  418: 	if (rc != 0) {
+  419: 		return rc;
+  420: 	}
+  421: 
+  422: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  423: 	if (hmac == NULL) {
+  424: 		return -EIO;
+  425: 	}
+  426: 
+  427: 	ctx = EVP_MAC_CTX_new(hmac);
+  428: 	if (ctx == NULL) {
+  429: 		rc = -EIO;
+  430: 		goto out;
+  431: 	}
+  432: 
+  433: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  434: 	if (keylen < 0) {
+  435: 		rc = keylen;
+  436: 		goto out;
+  437: 	}
+  438: 
+  439: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  440: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  441: 	params[1] = OSSL_PARAM_construct_end();
+  442: 
+  443: 	rc = -EIO;
+  444: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  460: 		goto out;
+  461: 	}
+  462: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  463: 		goto out;
+  464: 	}
+  465: 	if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+  466: 		goto out;
+  467: 	}
+  468: 	if (EVP_MAC_update(ctx, (void *)nqn2, strlen(nqn2)) != 1) {
+  469: 		goto out;
+  470: 	}
+  471: 	if (EVP_MAC_final(ctx, rval, &hlen, hlen) != 1) {
+  472: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/03_jiengup__spdk__lib__nvme__nvme_auth.c ==
+final line 390: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 468: if (EVP_MAC_update(ctx, (void *)nqn2, strlen(nqn2)) != 1) {
+
+context:
+  382: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  383: 		rc = -EIO;
+  384: 		goto out;
+  385: 	}
+  386: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  387: 		rc = -EIO;
+  388: 		goto out;
+  389: 	}
+  390: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  391: 		rc = -EIO;
+  392: 		goto out;
+  393: 	}
+  394: out:
+  395: 	EVP_MD_free(md);
+  396: 	EVP_MAC_CTX_free(ctx);
+  397: 	EVP_MAC_free(hmac);
+  398: 
+  399: 	return rc;
+  400: }
+  401: 
+  402: int
+  403: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  404: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  405: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  406: 			   const void *cval, void *rval)
+  407: {
+  408: 	EVP_MAC *hmac;
+  409: 	EVP_MAC_CTX *ctx;
+  410: 	OSSL_PARAM params[2];
+  411: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  412: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  413: 	size_t hlen, calen = sizeof(caval);
+  414: 	int rc, keylen;
+  415: 
+  416: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  417: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  418: 	if (rc != 0) {
+  419: 		return rc;
+  420: 	}
+  421: 
+  422: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  423: 	if (hmac == NULL) {
+  424: 		return -EIO;
+  425: 	}
+  426: 
+  427: 	ctx = EVP_MAC_CTX_new(hmac);
+  428: 	if (ctx == NULL) {
+  429: 		rc = -EIO;
+  430: 		goto out;
+  431: 	}
+  432: 
+  433: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  434: 	if (keylen < 0) {
+  435: 		rc = keylen;
+  436: 		goto out;
+  437: 	}
+  438: 
+  439: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  440: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  441: 	params[1] = OSSL_PARAM_construct_end();
+  442: 
+  443: 	rc = -EIO;
+  444: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  460: 		goto out;
+  461: 	}
+  462: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  463: 		goto out;
+  464: 	}
+  465: 	if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+  466: 		goto out;
+  467: 	}
+  468: 	if (EVP_MAC_update(ctx, (void *)nqn2, strlen(nqn2)) != 1) {
+  469: 		goto out;
+  470: 	}
+  471: 	if (EVP_MAC_final(ctx, rval, &hlen, hlen) != 1) {
+  472: 		goto out;
+  473: 	}
+  474: 	rc = 0;
+  475: out:
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/14_luluandleilei__openssl__crypto__kdf__tls1_prf.c ==
+final line 203: if (!EVP_MAC_final(ctx, A1, &A1_len))
+update line 210: if (!EVP_MAC_update(ctx, A1, A1_len))
+
+context:
+  195:     if (EVP_MAC_ctrl(ctx_init, EVP_MAC_CTRL_SET_KEY, sec, sec_len) != 1)
+  196:         goto err;
+  197:     if (!EVP_MAC_init(ctx_init))
+  198:         goto err;
+  199:     if (!EVP_MAC_CTX_copy(ctx, ctx_init))
+  200:         goto err;
+  201:     if (seed != NULL && !EVP_MAC_update(ctx, seed, seed_len))
+  202:         goto err;
+  203:     if (!EVP_MAC_final(ctx, A1, &A1_len))
+  204:         goto err;
+  205: 
+  206:     for (;;) {
+  207:         /* Reinit mac contexts */
+  208:         if (!EVP_MAC_CTX_copy(ctx, ctx_init))
+  209:             goto err;
+  210:         if (!EVP_MAC_update(ctx, A1, A1_len))
+  211:             goto err;
+  212:         if (olen > (size_t)chunk && !EVP_MAC_CTX_copy(ctx_tmp, ctx))
+  213:             goto err;
+  214:         if (seed != NULL && !EVP_MAC_update(ctx, seed, seed_len))
+  215:             goto err;
+  216: 
+  217:         if (olen > (size_t)chunk) {
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/14_luluandleilei__openssl__crypto__kdf__tls1_prf.c ==
+final line 203: if (!EVP_MAC_final(ctx, A1, &A1_len))
+update line 214: if (seed != NULL && !EVP_MAC_update(ctx, seed, seed_len))
+
+context:
+  195:     if (EVP_MAC_ctrl(ctx_init, EVP_MAC_CTRL_SET_KEY, sec, sec_len) != 1)
+  196:         goto err;
+  197:     if (!EVP_MAC_init(ctx_init))
+  198:         goto err;
+  199:     if (!EVP_MAC_CTX_copy(ctx, ctx_init))
+  200:         goto err;
+  201:     if (seed != NULL && !EVP_MAC_update(ctx, seed, seed_len))
+  202:         goto err;
+  203:     if (!EVP_MAC_final(ctx, A1, &A1_len))
+  204:         goto err;
+  205: 
+  206:     for (;;) {
+  207:         /* Reinit mac contexts */
+  208:         if (!EVP_MAC_CTX_copy(ctx, ctx_init))
+  209:             goto err;
+  210:         if (!EVP_MAC_update(ctx, A1, A1_len))
+  211:             goto err;
+  212:         if (olen > (size_t)chunk && !EVP_MAC_CTX_copy(ctx_tmp, ctx))
+  213:             goto err;
+  214:         if (seed != NULL && !EVP_MAC_update(ctx, seed, seed_len))
+  215:             goto err;
+  216: 
+  217:         if (olen > (size_t)chunk) {
+  218:             size_t mac_len;
+  219:             if (!EVP_MAC_final(ctx, out, &mac_len))
+  220:                 goto err;
+  221:             out += mac_len;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/18_jyoti210478__wazuh-code__src__os_crypto__hmac__hmac.c ==
+final line 63: if (!EVP_MAC_final(ctx, result, &len, sizeof(result))) {
+update line 134: if (!EVP_MAC_update(ctx, buffer, i)) {
+
+context:
+   55:     if (!EVP_MAC_init(ctx, (unsigned char *)key, strlen(key), params)) {
+   56:         goto cleanup;
+   57:     }
+   58: 
+   59:     if (!EVP_MAC_update(ctx, (unsigned char *)text, strlen(text))) {
+   60:         goto cleanup;
+   61:     }
+   62: 
+   63:     if (!EVP_MAC_final(ctx, result, &len, sizeof(result))) {
+   64:         goto cleanup;
+   65:     }
+   66: 
+   67:     if ((len * 2) + 1 > sizeof(os_sha1)) {
+   68:         goto cleanup;
+   69:     }
+   70: 
+   71:     for (size_t i = 0; i < len; i++) {
+   72:         snprintf(output + i * 2, 3, "%02x", result[i]);
+   73:     }
+   74: 
+   75:     output[len * 2] = '\0';
+   76:     ret = 0;
+   77: 
+   78: cleanup:
+   79:     if (ctx) {
+   80:         EVP_MAC_CTX_free(ctx);
+   81:     }
+   82: 
+   83:     if (hmac) {
+   84:         EVP_MAC_free(hmac);
+   85:     }
+   86: 
+   87:     return ret;
+   88: }
+   89: 
+   90: int OS_HMAC_SHA1_File(const char *key, const char *file_path, os_sha1 output, int mode)
+   91: {
+   92:     unsigned char result[EVP_MAX_MD_SIZE];
+   93:     unsigned char buffer[2048 + 2];
+   94: 
+   95:     int ret = -1;
+   96:     FILE *fp;
+   97:     size_t i, result_len, key_length;
+   98:     os_sha1 sha_key;
+   99:     EVP_MAC *mac = NULL;
+  100:     EVP_MAC_CTX *ctx = NULL;
+  101:     OSSL_PARAM params[3];
+  102: 
+  103:     fp = wfopen(file_path, mode == OS_BINARY ? "rb" : "r");
+  104:     if (!fp) {
+  105:         return -1;
+  106:     }
+  107: 
+  108:     mac = EVP_MAC_fetch(NULL, "HMAC", NULL);
+  109:     if (!mac) {
+  110:         goto cleanup;
+  111:     }
+  112: 
+  113:     ctx = EVP_MAC_CTX_new(mac);
+  114:     if (!ctx) {
+  115:         goto cleanup;
+  116:     }
+  117: 
+  118:     key_length = strlen(key);
+  119:     if (key_length > HMAC_SHA1_BLOCKSIZE){
+  120:         OS_SHA1_Str(key, key_length, sha_key);
+  121:         key = sha_key;
+  122:         key_length = SHA_DIGEST_LENGTH;
+  123:     }
+  124: 
+  125:     params[0] = OSSL_PARAM_construct_utf8_string("digest", "SHA1", 0);
+  126:     params[1] = OSSL_PARAM_construct_octet_string(OSSL_MAC_PARAM_KEY, (void*)key, key_length);
+  127:     params[2] = OSSL_PARAM_construct_end();
+  128: 
+  129:     if (!EVP_MAC_init(ctx, (unsigned char *)key, strlen(key), params)) {
+  130:         goto cleanup;
+  131:     }
+  132: 
+  133:     while ((i = fread(buffer, 1, sizeof(buffer), fp)) > 0) {
+  134:         if (!EVP_MAC_update(ctx, buffer, i)) {
+  135:             goto cleanup;
+  136:         }
+  137:     }
+  138: 
+  139:     result_len = sizeof(result);
+  140:     if (!EVP_MAC_final(ctx, result, &result_len, sizeof(result))) {
+  141:         goto cleanup;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/20_RVBARL__securics-daily__src__os_crypto__hmac__hmac.c ==
+final line 63: if (!EVP_MAC_final(ctx, result, &len, sizeof(result))) {
+update line 134: if (!EVP_MAC_update(ctx, buffer, i)) {
+
+context:
+   55:     if (!EVP_MAC_init(ctx, (unsigned char *)key, strlen(key), params)) {
+   56:         goto cleanup;
+   57:     }
+   58: 
+   59:     if (!EVP_MAC_update(ctx, (unsigned char *)text, strlen(text))) {
+   60:         goto cleanup;
+   61:     }
+   62: 
+   63:     if (!EVP_MAC_final(ctx, result, &len, sizeof(result))) {
+   64:         goto cleanup;
+   65:     }
+   66: 
+   67:     if ((len * 2) + 1 > sizeof(os_sha1)) {
+   68:         goto cleanup;
+   69:     }
+   70: 
+   71:     for (size_t i = 0; i < len; i++) {
+   72:         snprintf(output + i * 2, 3, "%02x", result[i]);
+   73:     }
+   74: 
+   75:     output[len * 2] = '\0';
+   76:     ret = 0;
+   77: 
+   78: cleanup:
+   79:     if (ctx) {
+   80:         EVP_MAC_CTX_free(ctx);
+   81:     }
+   82: 
+   83:     if (hmac) {
+   84:         EVP_MAC_free(hmac);
+   85:     }
+   86: 
+   87:     return ret;
+   88: }
+   89: 
+   90: int OS_HMAC_SHA1_File(const char *key, const char *file_path, os_sha1 output, int mode)
+   91: {
+   92:     unsigned char result[EVP_MAX_MD_SIZE];
+   93:     unsigned char buffer[2048 + 2];
+   94: 
+   95:     int ret = -1;
+   96:     FILE *fp;
+   97:     size_t i, result_len, key_length;
+   98:     os_sha1 sha_key;
+   99:     EVP_MAC *mac = NULL;
+  100:     EVP_MAC_CTX *ctx = NULL;
+  101:     OSSL_PARAM params[3];
+  102: 
+  103:     fp = wfopen(file_path, mode == OS_BINARY ? "rb" : "r");
+  104:     if (!fp) {
+  105:         return -1;
+  106:     }
+  107: 
+  108:     mac = EVP_MAC_fetch(NULL, "HMAC", NULL);
+  109:     if (!mac) {
+  110:         goto cleanup;
+  111:     }
+  112: 
+  113:     ctx = EVP_MAC_CTX_new(mac);
+  114:     if (!ctx) {
+  115:         goto cleanup;
+  116:     }
+  117: 
+  118:     key_length = strlen(key);
+  119:     if (key_length > HMAC_SHA1_BLOCKSIZE){
+  120:         OS_SHA1_Str(key, key_length, sha_key);
+  121:         key = sha_key;
+  122:         key_length = SHA_DIGEST_LENGTH;
+  123:     }
+  124: 
+  125:     params[0] = OSSL_PARAM_construct_utf8_string("digest", "SHA1", 0);
+  126:     params[1] = OSSL_PARAM_construct_octet_string(OSSL_MAC_PARAM_KEY, (void*)key, key_length);
+  127:     params[2] = OSSL_PARAM_construct_end();
+  128: 
+  129:     if (!EVP_MAC_init(ctx, (unsigned char *)key, strlen(key), params)) {
+  130:         goto cleanup;
+  131:     }
+  132: 
+  133:     while ((i = fread(buffer, 1, sizeof(buffer), fp)) > 0) {
+  134:         if (!EVP_MAC_update(ctx, buffer, i)) {
+  135:             goto cleanup;
+  136:         }
+  137:     }
+  138: 
+  139:     result_len = sizeof(result);
+  140:     if (!EVP_MAC_final(ctx, result, &result_len, sizeof(result))) {
+  141:         goto cleanup;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/11_bulithakawushika__Hybrid-TLS-Approach-Demostartion-Tool__TLS_Approach__src__mac_ops.c ==
+final line 67: if (EVP_MAC_final(mac_ctx, mac, &mac_len, POLY1305_TAG_SIZE) != 1) {
+update line 126: if (EVP_MAC_update(mac_ctx, message, message_len) != 1) {
+
+context:
+   59:         fprintf(stderr, "Failed to update Poly1305 MAC\n");
+   60:         EVP_MAC_CTX_free(mac_ctx);
+   61:         EVP_MAC_free(mac_ctx_type);
+   62:         return MAC_ERROR;
+   63:     }
+   64:     
+   65:     // Finalize MAC
+   66:     size_t mac_len = POLY1305_TAG_SIZE;
+   67:     if (EVP_MAC_final(mac_ctx, mac, &mac_len, POLY1305_TAG_SIZE) != 1) {
+   68:         fprintf(stderr, "Failed to finalize Poly1305 MAC\n");
+   69:         EVP_MAC_CTX_free(mac_ctx);
+   70:         EVP_MAC_free(mac_ctx_type);
+   71:         return MAC_ERROR;
+   72:     }
+   73:     
+   74:     // Cleanup
+   75:     EVP_MAC_CTX_free(mac_ctx);
+   76:     EVP_MAC_free(mac_ctx_type);
+   77:     
+   78:     // Clear sensitive key material
+   79:     memset(poly_key, 0, sizeof(poly_key));
+   80:     
+   81:     return MAC_SUCCESS;
+   82: }
+   83: 
+   84: /**
+   85:  * HMAC-SHA256 fallback implementation
+   86:  */
+   87: int hmac_sha256_generate_mac(const unsigned char* key,
+   88:                            const unsigned char* nonce,
+   89:                            const unsigned char* message,
+   90:                            size_t message_len,
+   91:                            unsigned char* mac) {
+   92:     
+   93:     // Create combined key material
+   94:     unsigned char hmac_key[POLY1305_KEY_SIZE];
+   95:     memcpy(hmac_key, key, 20);
+   96:     memcpy(hmac_key + 20, nonce, POLY1305_NONCE_SIZE);
+   97:     
+   98:     EVP_MAC* mac_ctx_type = EVP_MAC_fetch(NULL, "HMAC", NULL);
+   99:     if (mac_ctx_type == NULL) {
+  100:         fprintf(stderr, "Failed to fetch HMAC\n");
+  101:         return MAC_ERROR;
+  102:     }
+  103:     
+  104:     EVP_MAC_CTX* mac_ctx = EVP_MAC_CTX_new(mac_ctx_type);
+  105:     if (mac_ctx == NULL) {
+  106:         fprintf(stderr, "Failed to create HMAC context\n");
+  107:         EVP_MAC_free(mac_ctx_type);
+  108:         return MAC_ERROR;
+  109:     }
+  110:     
+  111:     // Set HMAC parameters
+  112:     OSSL_PARAM params[] = {
+  113:         OSSL_PARAM_utf8_string("digest", "SHA256", 0),
+  114:         OSSL_PARAM_octet_string("key", hmac_key, POLY1305_KEY_SIZE),
+  115:         OSSL_PARAM_END
+  116:     };
+  117:     
+  118:     if (EVP_MAC_init(mac_ctx, NULL, 0, params) != 1) {
+  119:         fprintf(stderr, "Failed to initialize HMAC\n");
+  120:         EVP_MAC_CTX_free(mac_ctx);
+  121:         EVP_MAC_free(mac_ctx_type);
+  122:         return MAC_ERROR;
+  123:     }
+  124:     
+  125:     // Update with message
+  126:     if (EVP_MAC_update(mac_ctx, message, message_len) != 1) {
+  127:         fprintf(stderr, "Failed to update HMAC\n");
+  128:         EVP_MAC_CTX_free(mac_ctx);
+  129:         EVP_MAC_free(mac_ctx_type);
+  130:         return MAC_ERROR;
+  131:     }
+  132:     
+  133:     // Finalize HMAC
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/19_SOLE-MONITA__som__src__os_crypto__hmac__hmac.c ==
+final line 63: if (!EVP_MAC_final(ctx, result, &len, sizeof(result))) {
+update line 134: if (!EVP_MAC_update(ctx, buffer, i)) {
+
+context:
+   55:     if (!EVP_MAC_init(ctx, (unsigned char *)key, strlen(key), params)) {
+   56:         goto cleanup;
+   57:     }
+   58: 
+   59:     if (!EVP_MAC_update(ctx, (unsigned char *)text, strlen(text))) {
+   60:         goto cleanup;
+   61:     }
+   62: 
+   63:     if (!EVP_MAC_final(ctx, result, &len, sizeof(result))) {
+   64:         goto cleanup;
+   65:     }
+   66: 
+   67:     if ((len * 2) + 1 > sizeof(os_sha1)) {
+   68:         goto cleanup;
+   69:     }
+   70: 
+   71:     for (size_t i = 0; i < len; i++) {
+   72:         snprintf(output + i * 2, 3, "%02x", result[i]);
+   73:     }
+   74: 
+   75:     output[len * 2] = '\0';
+   76:     ret = 0;
+   77: 
+   78: cleanup:
+   79:     if (ctx) {
+   80:         EVP_MAC_CTX_free(ctx);
+   81:     }
+   82: 
+   83:     if (hmac) {
+   84:         EVP_MAC_free(hmac);
+   85:     }
+   86: 
+   87:     return ret;
+   88: }
+   89: 
+   90: int OS_HMAC_SHA1_File(const char *key, const char *file_path, os_sha1 output, int mode)
+   91: {
+   92:     unsigned char result[EVP_MAX_MD_SIZE];
+   93:     unsigned char buffer[2048 + 2];
+   94: 
+   95:     int ret = -1;
+   96:     FILE *fp;
+   97:     size_t i, result_len, key_length;
+   98:     os_sha1 sha_key;
+   99:     EVP_MAC *mac = NULL;
+  100:     EVP_MAC_CTX *ctx = NULL;
+  101:     OSSL_PARAM params[3];
+  102: 
+  103:     fp = wfopen(file_path, mode == OS_BINARY ? "rb" : "r");
+  104:     if (!fp) {
+  105:         return -1;
+  106:     }
+  107: 
+  108:     mac = EVP_MAC_fetch(NULL, "HMAC", NULL);
+  109:     if (!mac) {
+  110:         goto cleanup;
+  111:     }
+  112: 
+  113:     ctx = EVP_MAC_CTX_new(mac);
+  114:     if (!ctx) {
+  115:         goto cleanup;
+  116:     }
+  117: 
+  118:     key_length = strlen(key);
+  119:     if (key_length > HMAC_SHA1_BLOCKSIZE){
+  120:         OS_SHA1_Str(key, key_length, sha_key);
+  121:         key = sha_key;
+  122:         key_length = SHA_DIGEST_LENGTH;
+  123:     }
+  124: 
+  125:     params[0] = OSSL_PARAM_construct_utf8_string("digest", "SHA1", 0);
+  126:     params[1] = OSSL_PARAM_construct_octet_string(OSSL_MAC_PARAM_KEY, (void*)key, key_length);
+  127:     params[2] = OSSL_PARAM_construct_end();
+  128: 
+  129:     if (!EVP_MAC_init(ctx, (unsigned char *)key, strlen(key), params)) {
+  130:         goto cleanup;
+  131:     }
+  132: 
+  133:     while ((i = fread(buffer, 1, sizeof(buffer), fp)) > 0) {
+  134:         if (!EVP_MAC_update(ctx, buffer, i)) {
+  135:             goto cleanup;
+  136:         }
+  137:     }
+  138: 
+  139:     result_len = sizeof(result);
+  140:     if (!EVP_MAC_final(ctx, result, &result_len, sizeof(result))) {
+  141:         goto cleanup;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/06_nvme-kv-osu-2025__nvme-kv-engine__lib__spdk__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 444: if (EVP_MAC_update(ctx, caval, calen) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/06_nvme-kv-osu-2025__nvme-kv-engine__lib__spdk__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 447: if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  454: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/06_nvme-kv-osu-2025__nvme-kv-engine__lib__spdk__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 450: if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  457: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/06_nvme-kv-osu-2025__nvme-kv-engine__lib__spdk__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 453: if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  460: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/06_nvme-kv-osu-2025__nvme-kv-engine__lib__spdk__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 456: if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  460: 		goto out;
+  461: 	}
+  462: 	if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+  463: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/06_nvme-kv-osu-2025__nvme-kv-engine__lib__spdk__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 459: if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  460: 		goto out;
+  461: 	}
+  462: 	if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+  463: 		goto out;
+  464: 	}
+  465: 	if (EVP_MAC_update(ctx, (void *)nqn2, strlen(nqn2)) != 1) {
+  466: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/06_nvme-kv-osu-2025__nvme-kv-engine__lib__spdk__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 462: if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  460: 		goto out;
+  461: 	}
+  462: 	if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+  463: 		goto out;
+  464: 	}
+  465: 	if (EVP_MAC_update(ctx, (void *)nqn2, strlen(nqn2)) != 1) {
+  466: 		goto out;
+  467: 	}
+  468: 	if (EVP_MAC_final(ctx, rval, &hlen, hlen) != 1) {
+  469: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/06_nvme-kv-osu-2025__nvme-kv-engine__lib__spdk__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 465: if (EVP_MAC_update(ctx, (void *)nqn2, strlen(nqn2)) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  460: 		goto out;
+  461: 	}
+  462: 	if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+  463: 		goto out;
+  464: 	}
+  465: 	if (EVP_MAC_update(ctx, (void *)nqn2, strlen(nqn2)) != 1) {
+  466: 		goto out;
+  467: 	}
+  468: 	if (EVP_MAC_final(ctx, rval, &hlen, hlen) != 1) {
+  469: 		goto out;
+  470: 	}
+  471: 	rc = 0;
+  472: out:
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/05_weida2__Spdk_BlobFS-Bitcask__lib__nvme__nvme_auth.c ==
+final line 390: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 447: if (EVP_MAC_update(ctx, caval, calen) != 1) {
+
+context:
+  382: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  383: 		rc = -EIO;
+  384: 		goto out;
+  385: 	}
+  386: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  387: 		rc = -EIO;
+  388: 		goto out;
+  389: 	}
+  390: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  391: 		rc = -EIO;
+  392: 		goto out;
+  393: 	}
+  394: out:
+  395: 	EVP_MD_free(md);
+  396: 	EVP_MAC_CTX_free(ctx);
+  397: 	EVP_MAC_free(hmac);
+  398: 
+  399: 	return rc;
+  400: }
+  401: 
+  402: int
+  403: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  404: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  405: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  406: 			   const void *cval, void *rval)
+  407: {
+  408: 	EVP_MAC *hmac;
+  409: 	EVP_MAC_CTX *ctx;
+  410: 	OSSL_PARAM params[2];
+  411: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  412: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  413: 	size_t hlen, calen = sizeof(caval);
+  414: 	int rc, keylen;
+  415: 
+  416: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  417: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  418: 	if (rc != 0) {
+  419: 		return rc;
+  420: 	}
+  421: 
+  422: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  423: 	if (hmac == NULL) {
+  424: 		return -EIO;
+  425: 	}
+  426: 
+  427: 	ctx = EVP_MAC_CTX_new(hmac);
+  428: 	if (ctx == NULL) {
+  429: 		rc = -EIO;
+  430: 		goto out;
+  431: 	}
+  432: 
+  433: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  434: 	if (keylen < 0) {
+  435: 		rc = keylen;
+  436: 		goto out;
+  437: 	}
+  438: 
+  439: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  440: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  441: 	params[1] = OSSL_PARAM_construct_end();
+  442: 
+  443: 	rc = -EIO;
+  444: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  454: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/05_weida2__Spdk_BlobFS-Bitcask__lib__nvme__nvme_auth.c ==
+final line 390: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 450: if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+
+context:
+  382: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  383: 		rc = -EIO;
+  384: 		goto out;
+  385: 	}
+  386: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  387: 		rc = -EIO;
+  388: 		goto out;
+  389: 	}
+  390: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  391: 		rc = -EIO;
+  392: 		goto out;
+  393: 	}
+  394: out:
+  395: 	EVP_MD_free(md);
+  396: 	EVP_MAC_CTX_free(ctx);
+  397: 	EVP_MAC_free(hmac);
+  398: 
+  399: 	return rc;
+  400: }
+  401: 
+  402: int
+  403: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  404: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  405: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  406: 			   const void *cval, void *rval)
+  407: {
+  408: 	EVP_MAC *hmac;
+  409: 	EVP_MAC_CTX *ctx;
+  410: 	OSSL_PARAM params[2];
+  411: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  412: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  413: 	size_t hlen, calen = sizeof(caval);
+  414: 	int rc, keylen;
+  415: 
+  416: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  417: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  418: 	if (rc != 0) {
+  419: 		return rc;
+  420: 	}
+  421: 
+  422: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  423: 	if (hmac == NULL) {
+  424: 		return -EIO;
+  425: 	}
+  426: 
+  427: 	ctx = EVP_MAC_CTX_new(hmac);
+  428: 	if (ctx == NULL) {
+  429: 		rc = -EIO;
+  430: 		goto out;
+  431: 	}
+  432: 
+  433: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  434: 	if (keylen < 0) {
+  435: 		rc = keylen;
+  436: 		goto out;
+  437: 	}
+  438: 
+  439: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  440: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  441: 	params[1] = OSSL_PARAM_construct_end();
+  442: 
+  443: 	rc = -EIO;
+  444: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  457: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/05_weida2__Spdk_BlobFS-Bitcask__lib__nvme__nvme_auth.c ==
+final line 390: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 453: if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+
+context:
+  382: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  383: 		rc = -EIO;
+  384: 		goto out;
+  385: 	}
+  386: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  387: 		rc = -EIO;
+  388: 		goto out;
+  389: 	}
+  390: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  391: 		rc = -EIO;
+  392: 		goto out;
+  393: 	}
+  394: out:
+  395: 	EVP_MD_free(md);
+  396: 	EVP_MAC_CTX_free(ctx);
+  397: 	EVP_MAC_free(hmac);
+  398: 
+  399: 	return rc;
+  400: }
+  401: 
+  402: int
+  403: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  404: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  405: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  406: 			   const void *cval, void *rval)
+  407: {
+  408: 	EVP_MAC *hmac;
+  409: 	EVP_MAC_CTX *ctx;
+  410: 	OSSL_PARAM params[2];
+  411: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  412: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  413: 	size_t hlen, calen = sizeof(caval);
+  414: 	int rc, keylen;
+  415: 
+  416: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  417: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  418: 	if (rc != 0) {
+  419: 		return rc;
+  420: 	}
+  421: 
+  422: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  423: 	if (hmac == NULL) {
+  424: 		return -EIO;
+  425: 	}
+  426: 
+  427: 	ctx = EVP_MAC_CTX_new(hmac);
+  428: 	if (ctx == NULL) {
+  429: 		rc = -EIO;
+  430: 		goto out;
+  431: 	}
+  432: 
+  433: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  434: 	if (keylen < 0) {
+  435: 		rc = keylen;
+  436: 		goto out;
+  437: 	}
+  438: 
+  439: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  440: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  441: 	params[1] = OSSL_PARAM_construct_end();
+  442: 
+  443: 	rc = -EIO;
+  444: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  460: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/05_weida2__Spdk_BlobFS-Bitcask__lib__nvme__nvme_auth.c ==
+final line 390: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 456: if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+
+context:
+  382: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  383: 		rc = -EIO;
+  384: 		goto out;
+  385: 	}
+  386: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  387: 		rc = -EIO;
+  388: 		goto out;
+  389: 	}
+  390: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  391: 		rc = -EIO;
+  392: 		goto out;
+  393: 	}
+  394: out:
+  395: 	EVP_MD_free(md);
+  396: 	EVP_MAC_CTX_free(ctx);
+  397: 	EVP_MAC_free(hmac);
+  398: 
+  399: 	return rc;
+  400: }
+  401: 
+  402: int
+  403: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  404: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  405: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  406: 			   const void *cval, void *rval)
+  407: {
+  408: 	EVP_MAC *hmac;
+  409: 	EVP_MAC_CTX *ctx;
+  410: 	OSSL_PARAM params[2];
+  411: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  412: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  413: 	size_t hlen, calen = sizeof(caval);
+  414: 	int rc, keylen;
+  415: 
+  416: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  417: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  418: 	if (rc != 0) {
+  419: 		return rc;
+  420: 	}
+  421: 
+  422: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  423: 	if (hmac == NULL) {
+  424: 		return -EIO;
+  425: 	}
+  426: 
+  427: 	ctx = EVP_MAC_CTX_new(hmac);
+  428: 	if (ctx == NULL) {
+  429: 		rc = -EIO;
+  430: 		goto out;
+  431: 	}
+  432: 
+  433: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  434: 	if (keylen < 0) {
+  435: 		rc = keylen;
+  436: 		goto out;
+  437: 	}
+  438: 
+  439: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  440: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  441: 	params[1] = OSSL_PARAM_construct_end();
+  442: 
+  443: 	rc = -EIO;
+  444: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  460: 		goto out;
+  461: 	}
+  462: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  463: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/05_weida2__Spdk_BlobFS-Bitcask__lib__nvme__nvme_auth.c ==
+final line 390: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 459: if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+
+context:
+  382: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  383: 		rc = -EIO;
+  384: 		goto out;
+  385: 	}
+  386: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  387: 		rc = -EIO;
+  388: 		goto out;
+  389: 	}
+  390: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  391: 		rc = -EIO;
+  392: 		goto out;
+  393: 	}
+  394: out:
+  395: 	EVP_MD_free(md);
+  396: 	EVP_MAC_CTX_free(ctx);
+  397: 	EVP_MAC_free(hmac);
+  398: 
+  399: 	return rc;
+  400: }
+  401: 
+  402: int
+  403: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  404: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  405: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  406: 			   const void *cval, void *rval)
+  407: {
+  408: 	EVP_MAC *hmac;
+  409: 	EVP_MAC_CTX *ctx;
+  410: 	OSSL_PARAM params[2];
+  411: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  412: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  413: 	size_t hlen, calen = sizeof(caval);
+  414: 	int rc, keylen;
+  415: 
+  416: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  417: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  418: 	if (rc != 0) {
+  419: 		return rc;
+  420: 	}
+  421: 
+  422: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  423: 	if (hmac == NULL) {
+  424: 		return -EIO;
+  425: 	}
+  426: 
+  427: 	ctx = EVP_MAC_CTX_new(hmac);
+  428: 	if (ctx == NULL) {
+  429: 		rc = -EIO;
+  430: 		goto out;
+  431: 	}
+  432: 
+  433: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  434: 	if (keylen < 0) {
+  435: 		rc = keylen;
+  436: 		goto out;
+  437: 	}
+  438: 
+  439: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  440: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  441: 	params[1] = OSSL_PARAM_construct_end();
+  442: 
+  443: 	rc = -EIO;
+  444: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  460: 		goto out;
+  461: 	}
+  462: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  463: 		goto out;
+  464: 	}
+  465: 	if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+  466: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/05_weida2__Spdk_BlobFS-Bitcask__lib__nvme__nvme_auth.c ==
+final line 390: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 462: if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+
+context:
+  382: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  383: 		rc = -EIO;
+  384: 		goto out;
+  385: 	}
+  386: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  387: 		rc = -EIO;
+  388: 		goto out;
+  389: 	}
+  390: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  391: 		rc = -EIO;
+  392: 		goto out;
+  393: 	}
+  394: out:
+  395: 	EVP_MD_free(md);
+  396: 	EVP_MAC_CTX_free(ctx);
+  397: 	EVP_MAC_free(hmac);
+  398: 
+  399: 	return rc;
+  400: }
+  401: 
+  402: int
+  403: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  404: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  405: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  406: 			   const void *cval, void *rval)
+  407: {
+  408: 	EVP_MAC *hmac;
+  409: 	EVP_MAC_CTX *ctx;
+  410: 	OSSL_PARAM params[2];
+  411: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  412: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  413: 	size_t hlen, calen = sizeof(caval);
+  414: 	int rc, keylen;
+  415: 
+  416: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  417: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  418: 	if (rc != 0) {
+  419: 		return rc;
+  420: 	}
+  421: 
+  422: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  423: 	if (hmac == NULL) {
+  424: 		return -EIO;
+  425: 	}
+  426: 
+  427: 	ctx = EVP_MAC_CTX_new(hmac);
+  428: 	if (ctx == NULL) {
+  429: 		rc = -EIO;
+  430: 		goto out;
+  431: 	}
+  432: 
+  433: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  434: 	if (keylen < 0) {
+  435: 		rc = keylen;
+  436: 		goto out;
+  437: 	}
+  438: 
+  439: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  440: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  441: 	params[1] = OSSL_PARAM_construct_end();
+  442: 
+  443: 	rc = -EIO;
+  444: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  460: 		goto out;
+  461: 	}
+  462: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  463: 		goto out;
+  464: 	}
+  465: 	if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+  466: 		goto out;
+  467: 	}
+  468: 	if (EVP_MAC_update(ctx, (void *)nqn2, strlen(nqn2)) != 1) {
+  469: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/05_weida2__Spdk_BlobFS-Bitcask__lib__nvme__nvme_auth.c ==
+final line 390: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 465: if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+
+context:
+  382: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  383: 		rc = -EIO;
+  384: 		goto out;
+  385: 	}
+  386: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  387: 		rc = -EIO;
+  388: 		goto out;
+  389: 	}
+  390: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  391: 		rc = -EIO;
+  392: 		goto out;
+  393: 	}
+  394: out:
+  395: 	EVP_MD_free(md);
+  396: 	EVP_MAC_CTX_free(ctx);
+  397: 	EVP_MAC_free(hmac);
+  398: 
+  399: 	return rc;
+  400: }
+  401: 
+  402: int
+  403: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  404: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  405: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  406: 			   const void *cval, void *rval)
+  407: {
+  408: 	EVP_MAC *hmac;
+  409: 	EVP_MAC_CTX *ctx;
+  410: 	OSSL_PARAM params[2];
+  411: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  412: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  413: 	size_t hlen, calen = sizeof(caval);
+  414: 	int rc, keylen;
+  415: 
+  416: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  417: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  418: 	if (rc != 0) {
+  419: 		return rc;
+  420: 	}
+  421: 
+  422: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  423: 	if (hmac == NULL) {
+  424: 		return -EIO;
+  425: 	}
+  426: 
+  427: 	ctx = EVP_MAC_CTX_new(hmac);
+  428: 	if (ctx == NULL) {
+  429: 		rc = -EIO;
+  430: 		goto out;
+  431: 	}
+  432: 
+  433: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  434: 	if (keylen < 0) {
+  435: 		rc = keylen;
+  436: 		goto out;
+  437: 	}
+  438: 
+  439: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  440: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  441: 	params[1] = OSSL_PARAM_construct_end();
+  442: 
+  443: 	rc = -EIO;
+  444: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  460: 		goto out;
+  461: 	}
+  462: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  463: 		goto out;
+  464: 	}
+  465: 	if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+  466: 		goto out;
+  467: 	}
+  468: 	if (EVP_MAC_update(ctx, (void *)nqn2, strlen(nqn2)) != 1) {
+  469: 		goto out;
+  470: 	}
+  471: 	if (EVP_MAC_final(ctx, rval, &hlen, hlen) != 1) {
+  472: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/05_weida2__Spdk_BlobFS-Bitcask__lib__nvme__nvme_auth.c ==
+final line 390: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 468: if (EVP_MAC_update(ctx, (void *)nqn2, strlen(nqn2)) != 1) {
+
+context:
+  382: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  383: 		rc = -EIO;
+  384: 		goto out;
+  385: 	}
+  386: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  387: 		rc = -EIO;
+  388: 		goto out;
+  389: 	}
+  390: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  391: 		rc = -EIO;
+  392: 		goto out;
+  393: 	}
+  394: out:
+  395: 	EVP_MD_free(md);
+  396: 	EVP_MAC_CTX_free(ctx);
+  397: 	EVP_MAC_free(hmac);
+  398: 
+  399: 	return rc;
+  400: }
+  401: 
+  402: int
+  403: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  404: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  405: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  406: 			   const void *cval, void *rval)
+  407: {
+  408: 	EVP_MAC *hmac;
+  409: 	EVP_MAC_CTX *ctx;
+  410: 	OSSL_PARAM params[2];
+  411: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  412: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  413: 	size_t hlen, calen = sizeof(caval);
+  414: 	int rc, keylen;
+  415: 
+  416: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  417: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  418: 	if (rc != 0) {
+  419: 		return rc;
+  420: 	}
+  421: 
+  422: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  423: 	if (hmac == NULL) {
+  424: 		return -EIO;
+  425: 	}
+  426: 
+  427: 	ctx = EVP_MAC_CTX_new(hmac);
+  428: 	if (ctx == NULL) {
+  429: 		rc = -EIO;
+  430: 		goto out;
+  431: 	}
+  432: 
+  433: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  434: 	if (keylen < 0) {
+  435: 		rc = keylen;
+  436: 		goto out;
+  437: 	}
+  438: 
+  439: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  440: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  441: 	params[1] = OSSL_PARAM_construct_end();
+  442: 
+  443: 	rc = -EIO;
+  444: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  460: 		goto out;
+  461: 	}
+  462: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  463: 		goto out;
+  464: 	}
+  465: 	if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+  466: 		goto out;
+  467: 	}
+  468: 	if (EVP_MAC_update(ctx, (void *)nqn2, strlen(nqn2)) != 1) {
+  469: 		goto out;
+  470: 	}
+  471: 	if (EVP_MAC_final(ctx, rval, &hlen, hlen) != 1) {
+  472: 		goto out;
+  473: 	}
+  474: 	rc = 0;
+  475: out:
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/07_fangyunh__Gem5-simpleSSD-SPDK-simulation__spdk__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 444: if (EVP_MAC_update(ctx, caval, calen) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/07_fangyunh__Gem5-simpleSSD-SPDK-simulation__spdk__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 447: if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  454: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/07_fangyunh__Gem5-simpleSSD-SPDK-simulation__spdk__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 450: if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  457: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/07_fangyunh__Gem5-simpleSSD-SPDK-simulation__spdk__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 453: if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  460: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/07_fangyunh__Gem5-simpleSSD-SPDK-simulation__spdk__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 456: if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  460: 		goto out;
+  461: 	}
+  462: 	if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+  463: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/07_fangyunh__Gem5-simpleSSD-SPDK-simulation__spdk__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 459: if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  460: 		goto out;
+  461: 	}
+  462: 	if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+  463: 		goto out;
+  464: 	}
+  465: 	if (EVP_MAC_update(ctx, (void *)nqn2, strlen(nqn2)) != 1) {
+  466: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/07_fangyunh__Gem5-simpleSSD-SPDK-simulation__spdk__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 462: if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  460: 		goto out;
+  461: 	}
+  462: 	if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+  463: 		goto out;
+  464: 	}
+  465: 	if (EVP_MAC_update(ctx, (void *)nqn2, strlen(nqn2)) != 1) {
+  466: 		goto out;
+  467: 	}
+  468: 	if (EVP_MAC_final(ctx, rval, &hlen, hlen) != 1) {
+  469: 		goto out;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/wide_candidate_files/07_fangyunh__Gem5-simpleSSD-SPDK-simulation__spdk__lib__nvme__nvme_auth.c ==
+final line 387: if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+update line 465: if (EVP_MAC_update(ctx, (void *)nqn2, strlen(nqn2)) != 1) {
+
+context:
+  379: 	if (EVP_MAC_init(ctx, keydgst, dgstlen, params) != 1) {
+  380: 		rc = -EIO;
+  381: 		goto out;
+  382: 	}
+  383: 	if (EVP_MAC_update(ctx, cval, clen) != 1) {
+  384: 		rc = -EIO;
+  385: 		goto out;
+  386: 	}
+  387: 	if (EVP_MAC_final(ctx, caval, calen, *calen) != 1) {
+  388: 		rc = -EIO;
+  389: 		goto out;
+  390: 	}
+  391: out:
+  392: 	EVP_MD_free(md);
+  393: 	EVP_MAC_CTX_free(ctx);
+  394: 	EVP_MAC_free(hmac);
+  395: 
+  396: 	return rc;
+  397: }
+  398: 
+  399: int
+  400: spdk_nvme_dhchap_calculate(struct spdk_key *key, enum spdk_nvmf_dhchap_hash hash,
+  401: 			   const char *type, uint32_t seq, uint16_t tid, uint8_t scc,
+  402: 			   const char *nqn1, const char *nqn2, const void *dhkey, size_t dhlen,
+  403: 			   const void *cval, void *rval)
+  404: {
+  405: 	EVP_MAC *hmac;
+  406: 	EVP_MAC_CTX *ctx;
+  407: 	OSSL_PARAM params[2];
+  408: 	uint8_t keybuf[NVME_AUTH_CHAP_KEY_MAX_SIZE], term = 0;
+  409: 	uint8_t caval[NVME_AUTH_DATA_SIZE];
+  410: 	size_t hlen, calen = sizeof(caval);
+  411: 	int rc, keylen;
+  412: 
+  413: 	hlen = spdk_nvme_dhchap_get_digest_length(hash);
+  414: 	rc = nvme_auth_augment_challenge(cval, hlen, dhkey, dhlen, caval, &calen, hash);
+  415: 	if (rc != 0) {
+  416: 		return rc;
+  417: 	}
+  418: 
+  419: 	hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+  420: 	if (hmac == NULL) {
+  421: 		return -EIO;
+  422: 	}
+  423: 
+  424: 	ctx = EVP_MAC_CTX_new(hmac);
+  425: 	if (ctx == NULL) {
+  426: 		rc = -EIO;
+  427: 		goto out;
+  428: 	}
+  429: 
+  430: 	keylen = nvme_auth_get_key(key, nqn1, keybuf, sizeof(keybuf));
+  431: 	if (keylen < 0) {
+  432: 		rc = keylen;
+  433: 		goto out;
+  434: 	}
+  435: 
+  436: 	params[0] = OSSL_PARAM_construct_utf8_string("digest",
+  437: 			(char *)spdk_nvme_dhchap_get_digest_name(hash), 0);
+  438: 	params[1] = OSSL_PARAM_construct_end();
+  439: 
+  440: 	rc = -EIO;
+  441: 	if (EVP_MAC_init(ctx, keybuf, (size_t)keylen, params) != 1) {
+  442: 		goto out;
+  443: 	}
+  444: 	if (EVP_MAC_update(ctx, caval, calen) != 1) {
+  445: 		goto out;
+  446: 	}
+  447: 	if (EVP_MAC_update(ctx, (void *)&seq, sizeof(seq)) != 1) {
+  448: 		goto out;
+  449: 	}
+  450: 	if (EVP_MAC_update(ctx, (void *)&tid, sizeof(tid)) != 1) {
+  451: 		goto out;
+  452: 	}
+  453: 	if (EVP_MAC_update(ctx, (void *)&scc, sizeof(scc)) != 1) {
+  454: 		goto out;
+  455: 	}
+  456: 	if (EVP_MAC_update(ctx, (void *)type, strlen(type)) != 1) {
+  457: 		goto out;
+  458: 	}
+  459: 	if (EVP_MAC_update(ctx, (void *)nqn1, strlen(nqn1)) != 1) {
+  460: 		goto out;
+  461: 	}
+  462: 	if (EVP_MAC_update(ctx, (void *)&term, sizeof(term)) != 1) {
+  463: 		goto out;
+  464: 	}
+  465: 	if (EVP_MAC_update(ctx, (void *)nqn2, strlen(nqn2)) != 1) {
+  466: 		goto out;
+  467: 	}
+  468: 	if (EVP_MAC_final(ctx, rval, &hlen, hlen) != 1) {
+  469: 		goto out;
+  470: 	}
+  471: 	rc = 0;
+  472: out:

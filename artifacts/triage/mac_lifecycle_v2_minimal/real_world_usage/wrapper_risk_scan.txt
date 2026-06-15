@@ -1,0 +1,157 @@
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/candidate_files/fides_MacGenerator.cpp ==
+has_final=1
+has_update=1
+has_state_guard_word=0
+
+-- context around line 72 --
+   68:         }
+   69:     }
+   70: 
+   71:     void MacGenerator::update(const unsigned char *data, std::size_t dataSize) const {
+   72:         if (EVP_MAC_update(macCtxUniquePtr_.get(), data, dataSize) != 1) {
+   73:             throw exception::RuntimeException(__FILE__, __LINE__, __func__, "update error: [[ ", utility::getErrorString(), " ]]");
+   74:         }
+   75:     }
+   76: 
+
+-- context around line 80 --
+   76: 
+   77:     void MacGenerator::finalize() {
+   78:         std::size_t outputSize;
+   79:         // Make a call to the final with a NULL buffer to get the length of the MAC
+   80:         if (EVP_MAC_final(macCtxUniquePtr_.get(), nullptr, &outputSize, 0) == 1) {
+   81:             // https://en.cppreference.com/w/cpp/container/vector/resize
+   82:             // Resizes the container to contain count elements, does nothing if count == size()
+   83:             outputBuffer_.resize(outputSize, 0);
+   84:             if (EVP_MAC_final(macCtxUniquePtr_.get(), outputBuffer_.data(), &outputSize, outputBuffer_.size()) != 1) {
+
+-- context around line 84 --
+   80:         if (EVP_MAC_final(macCtxUniquePtr_.get(), nullptr, &outputSize, 0) == 1) {
+   81:             // https://en.cppreference.com/w/cpp/container/vector/resize
+   82:             // Resizes the container to contain count elements, does nothing if count == size()
+   83:             outputBuffer_.resize(outputSize, 0);
+   84:             if (EVP_MAC_final(macCtxUniquePtr_.get(), outputBuffer_.data(), &outputSize, outputBuffer_.size()) != 1) {
+   85:                 throw exception::RuntimeException(__FILE__, __LINE__, __func__, "final error: [[ ", utility::getErrorString(), " ]]");
+   86:             }
+   87:         } else {
+   88:             throw exception::RuntimeException(__FILE__, __LINE__, __func__, "final error (get size): [[ ", utility::getErrorString(), " ]]");
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/candidate_files/minizip_mz_crypt_openssl.c ==
+has_final=1
+has_update=1
+has_state_guard_word=0
+
+-- context around line 606 --
+  602: 
+  603: #if OPENSSL_VERSION_NUMBER < 0x30000000L
+  604:     result = HMAC_Update(hmac->ctx, buf, size);
+  605: #else
+  606:     result = EVP_MAC_update(hmac->ctx, buf, size);
+  607: #endif
+  608:     if (!result) {
+  609:         hmac->error = ERR_get_error();
+  610:         return MZ_HASH_ERROR;
+
+-- context around line 637 --
+  633:     }
+  634: #else
+  635:     {
+  636:         size_t digest_outsize = digest_size;
+  637:         result = EVP_MAC_final(hmac->ctx, digest, &digest_outsize, digest_size);
+  638:     }
+  639: #endif
+  640: 
+  641:     if (!result) {
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/candidate_files/php_crypto_hash.c ==
+has_final=1
+has_update=1
+has_state_guard_word=0
+
+-- context around line 408 --
+  404: 		case PHP_CRYPTO_HASH_TYPE_HMAC:
+  405: 			rc = HMAC_Update(PHP_CRYPTO_HMAC_CTX(PHPC_THIS), (unsigned char *) data, data_len);
+  406: 			break;
+  407: 		case PHP_CRYPTO_HASH_TYPE_CMAC:
+  408: 			rc = CMAC_Update(PHP_CRYPTO_CMAC_CTX(PHPC_THIS), data, data_len);
+  409: 			break;
+  410: 		default:
+  411: 			rc = 0;
+  412: 	}
+
+-- context around line 454 --
+  450: 		case PHP_CRYPTO_HASH_TYPE_HMAC:
+  451: 			rc = HMAC_Final(PHP_CRYPTO_HMAC_CTX(PHPC_THIS), hash_value, &hash_len);
+  452: 			break;
+  453: 		case PHP_CRYPTO_HASH_TYPE_CMAC:
+  454: 			rc = CMAC_Final(PHP_CRYPTO_CMAC_CTX(PHPC_THIS), hash_value, &hash_len_size);
+  455: 			/* this is safe because the hash_len_size is always really small */
+  456: 			hash_len = hash_len_size;
+  457: 			break;
+  458: 		default:
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/candidate_files/heimdal_bx509d.c ==
+has_final=1
+has_update=1
+has_state_guard_word=1
+
+-- context around line 2319 --
+ 2315:     if (ret == ENOMEM)
+ 2316:         ret = krb5_enomem(r->context);
+ 2317:     /* HMAC the token body and the client principal name */
+ 2318:     if (ret == 0)
+ 2319:         ret = (EVP_MAC_update(ctx, data.data, data.length) == 1) ? 0 : EINVAL;
+ 2320:     if (ret == 0 && r->cname)
+ 2321:         ret = (EVP_MAC_update(ctx,
+ 2322:                               (unsigned char *)r->cname,
+ 2323:                               strlen(r->cname)) == 1) ? 0 : EINVAL;
+
+-- context around line 2321 --
+ 2317:     /* HMAC the token body and the client principal name */
+ 2318:     if (ret == 0)
+ 2319:         ret = (EVP_MAC_update(ctx, data.data, data.length) == 1) ? 0 : EINVAL;
+ 2320:     if (ret == 0 && r->cname)
+ 2321:         ret = (EVP_MAC_update(ctx,
+ 2322:                               (unsigned char *)r->cname,
+ 2323:                               strlen(r->cname)) == 1) ? 0 : EINVAL;
+ 2324:     if (ret == 0)
+ 2325:         ret = (EVP_MAC_final(ctx, mac, &maclen, maclen) == 1) ? 0 : EINVAL;
+
+-- context around line 2325 --
+ 2321:         ret = (EVP_MAC_update(ctx,
+ 2322:                               (unsigned char *)r->cname,
+ 2323:                               strlen(r->cname)) == 1) ? 0 : EINVAL;
+ 2324:     if (ret == 0)
+ 2325:         ret = (EVP_MAC_final(ctx, mac, &maclen, maclen) == 1) ? 0 : EINVAL;
+ 2326:     EVP_MAC_CTX_free(ctx);
+ 2327:     krb5_data_free(&data);
+ 2328:     data.length = maclen;
+ 2329:     data.data = mac;
+
+== artifacts/triage/mac_lifecycle_v2_minimal/real_world_usage/candidate_files/tpm2_kdfa.c ==
+has_final=1
+has_update=1
+has_state_guard_word=0
+
+-- context around line 109 --
+  105:             TPM2B_DIGEST *digest = buffer_list[c];
+  106: #if OPENSSL_VERSION_NUMBER < 0x30000000L
+  107:             int rc = HMAC_Update(ctx, digest->buffer, digest->size);
+  108: #else
+  109:             int rc = EVP_MAC_update(ctx, digest->buffer, digest->size);
+  110: #endif
+  111:             if (!rc) {
+  112:                 LOG_ERR("HMAC Update failed: %s", ERR_error_string(rc, NULL));
+  113:                 rval = TPM2_RC_MEMORY;
+
+-- context around line 123 --
+  119:         unsigned size = sizeof(tmpResult.buffer);
+  120:         int rc = HMAC_Final(ctx, tmpResult.buffer, &size);
+  121: #else
+  122:         size_t size;
+  123:         int rc = EVP_MAC_final(ctx, tmpResult.buffer, &size, sizeof(tmpResult.buffer));
+  124: #endif
+  125:         if (!rc) {
+  126:             LOG_ERR("HMAC Final failed: %s", ERR_error_string(rc, NULL));
+  127:             rval = TPM2_RC_MEMORY;
