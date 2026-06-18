@@ -1,0 +1,920 @@
+schema: unified_oracle_safe_reject_baseline_v1
+count: 22
+items:
+- oracle_type: parser_oracle
+  source_campaign: parser_full_consumption_oracle_v2
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: x509_der_certificate__valid_object__asn1parse
+  classification: expected_accept
+  candidate_level: none
+  confidence: high
+  evidence: &id001
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/valid_object/asn1parse.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/valid_object/asn1parse.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/x509_der_certificate.valid.der
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: record_baseline
+  adapter: parser_adapter
+  source_count: 1
+  dispatcher_input:
+    source_campaign: parser_full_consumption_oracle_v2
+    oracle_type: parser_oracle
+    family: parser_full_consumption_oracle
+    target: openssl
+    input_id: x509_der_certificate__valid_object__asn1parse
+    raw_exit_code: 0
+    raw_stdout_summary: ''
+    raw_stderr_summary: ''
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: accept
+    observed_behavior:
+      command: openssl asn1parse -inform DER
+      level: low_level_asn1parse
+      returncode: 0
+      behavior: accepted
+      stderr_excerpt: ''
+    control_behavior: ''
+    differential_context:
+      app_vs_low_level: false
+      original_classification: expected_accept
+    evidence_files: *id001
+- oracle_type: parser_oracle
+  source_campaign: parser_full_consumption_oracle_v2
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: x509_der_certificate__valid_object__x509
+  classification: expected_accept
+  candidate_level: none
+  confidence: high
+  evidence: &id002
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/valid_object/x509.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/valid_object/x509.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/x509_der_certificate.valid.der
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: record_baseline
+  adapter: parser_adapter
+  source_count: 1
+  dispatcher_input:
+    source_campaign: parser_full_consumption_oracle_v2
+    oracle_type: parser_oracle
+    family: parser_full_consumption_oracle
+    target: openssl
+    input_id: x509_der_certificate__valid_object__x509
+    raw_exit_code: 0
+    raw_stdout_summary: ''
+    raw_stderr_summary: ''
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: accept
+    observed_behavior:
+      command: openssl x509 -inform DER -noout
+      level: app_level
+      returncode: 0
+      behavior: accepted
+      stderr_excerpt: ''
+    control_behavior: ''
+    differential_context:
+      app_vs_low_level: false
+      original_classification: expected_accept
+    evidence_files: *id002
+- oracle_type: parser_oracle
+  source_campaign: parser_full_consumption_oracle_v2
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: x509_der_certificate__valid_object_plus_malformed_tail__asn1parse
+  classification: negative_control_support
+  candidate_level: none
+  confidence: high
+  evidence: &id003
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/valid_object_plus_malformed_tail/asn1parse.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/valid_object_plus_malformed_tail/asn1parse.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/x509_der_certificate.valid_plus_malformed_tail.der
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: record_low_level_tail_detection
+  adapter: parser_adapter
+  source_count: 1
+  dispatcher_input:
+    source_campaign: parser_full_consumption_oracle_v2
+    oracle_type: parser_oracle
+    family: parser_full_consumption_oracle
+    target: openssl
+    input_id: x509_der_certificate__valid_object_plus_malformed_tail__asn1parse
+    raw_exit_code: 1
+    raw_stdout_summary: ''
+    raw_stderr_summary: '80DB5B95E1740000:error:0680009B:asn1 encoding routines:ASN1_get_object:too
+      long:../crypto/asn1/asn1_lib.c:95:
+
+      '
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: reject
+    observed_behavior:
+      command: openssl asn1parse -inform DER
+      level: low_level_asn1parse
+      returncode: 1
+      behavior: rejected
+      stderr_excerpt: '80DB5B95E1740000:error:0680009B:asn1 encoding routines:ASN1_get_object:too
+        long:../crypto/asn1/asn1_lib.c:95:
+
+        '
+    control_behavior: ''
+    differential_context:
+      app_vs_low_level: false
+      original_classification: negative_control_support
+    evidence_files: *id003
+- oracle_type: parser_oracle
+  source_campaign: parser_full_consumption_oracle_v2
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: x509_der_certificate__malformed_tail_only__asn1parse
+  classification: negative_control_support
+  candidate_level: none
+  confidence: high
+  evidence: &id004
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/malformed_tail_only/asn1parse.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/malformed_tail_only/asn1parse.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/x509_der_certificate.malformed_tail_only.der
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: record_low_level_tail_detection
+  adapter: parser_adapter
+  source_count: 1
+  dispatcher_input:
+    source_campaign: parser_full_consumption_oracle_v2
+    oracle_type: parser_oracle
+    family: parser_full_consumption_oracle
+    target: openssl
+    input_id: x509_der_certificate__malformed_tail_only__asn1parse
+    raw_exit_code: 1
+    raw_stdout_summary: ''
+    raw_stderr_summary: '804B988629780000:error:0680009B:asn1 encoding routines:ASN1_get_object:too
+      long:../crypto/asn1/asn1_lib.c:95:
+
+      '
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: reject
+    observed_behavior:
+      command: openssl asn1parse -inform DER
+      level: low_level_asn1parse
+      returncode: 1
+      behavior: rejected
+      stderr_excerpt: '804B988629780000:error:0680009B:asn1 encoding routines:ASN1_get_object:too
+        long:../crypto/asn1/asn1_lib.c:95:
+
+        '
+    control_behavior: ''
+    differential_context:
+      app_vs_low_level: false
+      original_classification: negative_control_support
+    evidence_files: *id004
+- oracle_type: parser_oracle
+  source_campaign: parser_full_consumption_oracle_v2
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: x509_der_certificate__malformed_tail_only__x509
+  classification: expected_reject
+  candidate_level: none
+  confidence: high
+  evidence: &id005
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/malformed_tail_only/x509.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/malformed_tail_only/x509.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/x509_der_certificate.malformed_tail_only.der
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: record_negative_control
+  adapter: parser_adapter
+  source_count: 1
+  dispatcher_input:
+    source_campaign: parser_full_consumption_oracle_v2
+    oracle_type: parser_oracle
+    family: parser_full_consumption_oracle
+    target: openssl
+    input_id: x509_der_certificate__malformed_tail_only__x509
+    raw_exit_code: 1
+    raw_stdout_summary: ''
+    raw_stderr_summary: 'Could not read certificate from /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/x509_der_certificate.malformed_tail_only.der
+
+      Unable to load certificate
+
+      '
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: reject
+    observed_behavior:
+      command: openssl x509 -inform DER -noout
+      level: app_level
+      returncode: 1
+      behavior: rejected
+      stderr_excerpt: 'Could not read certificate from /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/x509_der_certificate.malformed_tail_only.der
+
+        Unable to load certificate
+
+        '
+    control_behavior: ''
+    differential_context:
+      app_vs_low_level: false
+      original_classification: expected_reject
+    evidence_files: *id005
+- oracle_type: parser_oracle
+  source_campaign: parser_full_consumption_oracle_v2
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: pkcs8_private_key_der__valid_object__asn1parse
+  classification: expected_accept
+  candidate_level: none
+  confidence: high
+  evidence: &id006
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object/asn1parse.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object/asn1parse.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/pkcs8_private_key_der.valid.der
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: record_baseline
+  adapter: parser_adapter
+  source_count: 1
+  dispatcher_input:
+    source_campaign: parser_full_consumption_oracle_v2
+    oracle_type: parser_oracle
+    family: parser_full_consumption_oracle
+    target: openssl
+    input_id: pkcs8_private_key_der__valid_object__asn1parse
+    raw_exit_code: 0
+    raw_stdout_summary: ''
+    raw_stderr_summary: ''
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: accept
+    observed_behavior:
+      command: openssl asn1parse -inform DER
+      level: low_level_asn1parse
+      returncode: 0
+      behavior: accepted
+      stderr_excerpt: ''
+    control_behavior: ''
+    differential_context:
+      app_vs_low_level: false
+      original_classification: expected_accept
+    evidence_files: *id006
+- oracle_type: parser_oracle
+  source_campaign: parser_full_consumption_oracle_v2
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: pkcs8_private_key_der__valid_object__pkey_private_pubout
+  classification: expected_accept
+  candidate_level: none
+  confidence: high
+  evidence: &id007
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object/pkey_private_pubout.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object/pkey_private_pubout.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/pkcs8_private_key_der.valid.der
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: record_baseline
+  adapter: parser_adapter
+  source_count: 1
+  dispatcher_input:
+    source_campaign: parser_full_consumption_oracle_v2
+    oracle_type: parser_oracle
+    family: parser_full_consumption_oracle
+    target: openssl
+    input_id: pkcs8_private_key_der__valid_object__pkey_private_pubout
+    raw_exit_code: 0
+    raw_stdout_summary: ''
+    raw_stderr_summary: ''
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: accept
+    observed_behavior:
+      command: openssl pkey -inform DER -pubout
+      level: app_level
+      returncode: 0
+      behavior: accepted
+      stderr_excerpt: ''
+    control_behavior: ''
+    differential_context:
+      app_vs_low_level: false
+      original_classification: expected_accept
+    evidence_files: *id007
+- oracle_type: parser_oracle
+  source_campaign: parser_full_consumption_oracle_v2
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: pkcs8_private_key_der__valid_object__pkcs8
+  classification: expected_accept
+  candidate_level: none
+  confidence: high
+  evidence: &id008
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object/pkcs8.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object/pkcs8.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/pkcs8_private_key_der.valid.der
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: record_baseline
+  adapter: parser_adapter
+  source_count: 1
+  dispatcher_input:
+    source_campaign: parser_full_consumption_oracle_v2
+    oracle_type: parser_oracle
+    family: parser_full_consumption_oracle
+    target: openssl
+    input_id: pkcs8_private_key_der__valid_object__pkcs8
+    raw_exit_code: 0
+    raw_stdout_summary: ''
+    raw_stderr_summary: ''
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: accept
+    observed_behavior:
+      command: openssl pkcs8 -inform DER -nocrypt
+      level: app_level
+      returncode: 0
+      behavior: accepted
+      stderr_excerpt: ''
+    control_behavior: ''
+    differential_context:
+      app_vs_low_level: false
+      original_classification: expected_accept
+    evidence_files: *id008
+- oracle_type: parser_oracle
+  source_campaign: parser_full_consumption_oracle_v2
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: pkcs8_private_key_der__valid_object_plus_malformed_tail__asn1parse
+  classification: negative_control_support
+  candidate_level: none
+  confidence: high
+  evidence: &id009
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object_plus_malformed_tail/asn1parse.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object_plus_malformed_tail/asn1parse.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/pkcs8_private_key_der.valid_plus_malformed_tail.der
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: record_low_level_tail_detection
+  adapter: parser_adapter
+  source_count: 1
+  dispatcher_input:
+    source_campaign: parser_full_consumption_oracle_v2
+    oracle_type: parser_oracle
+    family: parser_full_consumption_oracle
+    target: openssl
+    input_id: pkcs8_private_key_der__valid_object_plus_malformed_tail__asn1parse
+    raw_exit_code: 1
+    raw_stdout_summary: ''
+    raw_stderr_summary: '809B5E6081750000:error:0680009B:asn1 encoding routines:ASN1_get_object:too
+      long:../crypto/asn1/asn1_lib.c:95:
+
+      '
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: reject
+    observed_behavior:
+      command: openssl asn1parse -inform DER
+      level: low_level_asn1parse
+      returncode: 1
+      behavior: rejected
+      stderr_excerpt: '809B5E6081750000:error:0680009B:asn1 encoding routines:ASN1_get_object:too
+        long:../crypto/asn1/asn1_lib.c:95:
+
+        '
+    control_behavior: ''
+    differential_context:
+      app_vs_low_level: false
+      original_classification: negative_control_support
+    evidence_files: *id009
+- oracle_type: parser_oracle
+  source_campaign: parser_full_consumption_oracle_v2
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: pkcs8_private_key_der__malformed_tail_only__asn1parse
+  classification: negative_control_support
+  candidate_level: none
+  confidence: high
+  evidence: &id010
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/malformed_tail_only/asn1parse.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/malformed_tail_only/asn1parse.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/pkcs8_private_key_der.malformed_tail_only.der
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: record_low_level_tail_detection
+  adapter: parser_adapter
+  source_count: 1
+  dispatcher_input:
+    source_campaign: parser_full_consumption_oracle_v2
+    oracle_type: parser_oracle
+    family: parser_full_consumption_oracle
+    target: openssl
+    input_id: pkcs8_private_key_der__malformed_tail_only__asn1parse
+    raw_exit_code: 1
+    raw_stdout_summary: ''
+    raw_stderr_summary: '80DB749BAE7D0000:error:0680009B:asn1 encoding routines:ASN1_get_object:too
+      long:../crypto/asn1/asn1_lib.c:95:
+
+      '
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: reject
+    observed_behavior:
+      command: openssl asn1parse -inform DER
+      level: low_level_asn1parse
+      returncode: 1
+      behavior: rejected
+      stderr_excerpt: '80DB749BAE7D0000:error:0680009B:asn1 encoding routines:ASN1_get_object:too
+        long:../crypto/asn1/asn1_lib.c:95:
+
+        '
+    control_behavior: ''
+    differential_context:
+      app_vs_low_level: false
+      original_classification: negative_control_support
+    evidence_files: *id010
+- oracle_type: parser_oracle
+  source_campaign: parser_full_consumption_oracle_v2
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: pkcs8_private_key_der__malformed_tail_only__pkey_private_pubout
+  classification: expected_reject
+  candidate_level: none
+  confidence: high
+  evidence: &id011
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/malformed_tail_only/pkey_private_pubout.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/malformed_tail_only/pkey_private_pubout.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/pkcs8_private_key_der.malformed_tail_only.der
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: record_negative_control
+  adapter: parser_adapter
+  source_count: 1
+  dispatcher_input:
+    source_campaign: parser_full_consumption_oracle_v2
+    oracle_type: parser_oracle
+    family: parser_full_consumption_oracle
+    target: openssl
+    input_id: pkcs8_private_key_der__malformed_tail_only__pkey_private_pubout
+    raw_exit_code: 1
+    raw_stdout_summary: ''
+    raw_stderr_summary: 'Could not read key from /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/pkcs8_private_key_der.malformed_tail_only.der
+
+      '
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: reject
+    observed_behavior:
+      command: openssl pkey -inform DER -pubout
+      level: app_level
+      returncode: 1
+      behavior: rejected
+      stderr_excerpt: 'Could not read key from /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/pkcs8_private_key_der.malformed_tail_only.der
+
+        '
+    control_behavior: ''
+    differential_context:
+      app_vs_low_level: false
+      original_classification: expected_reject
+    evidence_files: *id011
+- oracle_type: parser_oracle
+  source_campaign: parser_full_consumption_oracle_v2
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: pkcs8_private_key_der__malformed_tail_only__pkcs8
+  classification: expected_reject
+  candidate_level: none
+  confidence: high
+  evidence: &id012
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/malformed_tail_only/pkcs8.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/malformed_tail_only/pkcs8.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/pkcs8_private_key_der.malformed_tail_only.der
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: record_negative_control
+  adapter: parser_adapter
+  source_count: 1
+  dispatcher_input:
+    source_campaign: parser_full_consumption_oracle_v2
+    oracle_type: parser_oracle
+    family: parser_full_consumption_oracle
+    target: openssl
+    input_id: pkcs8_private_key_der__malformed_tail_only__pkcs8
+    raw_exit_code: 1
+    raw_stdout_summary: ''
+    raw_stderr_summary: 'Error decrypting key
+
+      802BAF83FB700000:error:0680008E:asn1 encoding routines:asn1_d2i_read_bio:not
+      enough data:../crypto/asn1/a_d2i_fp.c:216:
+
+      '
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: reject
+    observed_behavior:
+      command: openssl pkcs8 -inform DER -nocrypt
+      level: app_level
+      returncode: 1
+      behavior: rejected
+      stderr_excerpt: 'Error decrypting key
+
+        802BAF83FB700000:error:0680008E:asn1 encoding routines:asn1_d2i_read_bio:not
+        enough data:../crypto/asn1/a_d2i_fp.c:216:
+
+        '
+    control_behavior: ''
+    differential_context:
+      app_vs_low_level: false
+      original_classification: expected_reject
+    evidence_files: *id012
+- oracle_type: parser_oracle
+  source_campaign: parser_full_consumption_oracle_v2
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: public_key_der__valid_object__asn1parse
+  classification: expected_accept
+  candidate_level: none
+  confidence: high
+  evidence: &id013
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/valid_object/asn1parse.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/valid_object/asn1parse.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/public_key_der.valid.der
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: record_baseline
+  adapter: parser_adapter
+  source_count: 1
+  dispatcher_input:
+    source_campaign: parser_full_consumption_oracle_v2
+    oracle_type: parser_oracle
+    family: parser_full_consumption_oracle
+    target: openssl
+    input_id: public_key_der__valid_object__asn1parse
+    raw_exit_code: 0
+    raw_stdout_summary: ''
+    raw_stderr_summary: ''
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: accept
+    observed_behavior:
+      command: openssl asn1parse -inform DER
+      level: low_level_asn1parse
+      returncode: 0
+      behavior: accepted
+      stderr_excerpt: ''
+    control_behavior: ''
+    differential_context:
+      app_vs_low_level: false
+      original_classification: expected_accept
+    evidence_files: *id013
+- oracle_type: parser_oracle
+  source_campaign: parser_full_consumption_oracle_v2
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: public_key_der__valid_object__pkey_public_pubout
+  classification: expected_accept
+  candidate_level: none
+  confidence: high
+  evidence: &id014
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/valid_object/pkey_public_pubout.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/valid_object/pkey_public_pubout.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/public_key_der.valid.der
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: record_baseline
+  adapter: parser_adapter
+  source_count: 1
+  dispatcher_input:
+    source_campaign: parser_full_consumption_oracle_v2
+    oracle_type: parser_oracle
+    family: parser_full_consumption_oracle
+    target: openssl
+    input_id: public_key_der__valid_object__pkey_public_pubout
+    raw_exit_code: 0
+    raw_stdout_summary: ''
+    raw_stderr_summary: ''
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: accept
+    observed_behavior:
+      command: openssl pkey -pubin -inform DER -pubout
+      level: app_level
+      returncode: 0
+      behavior: accepted
+      stderr_excerpt: ''
+    control_behavior: ''
+    differential_context:
+      app_vs_low_level: false
+      original_classification: expected_accept
+    evidence_files: *id014
+- oracle_type: parser_oracle
+  source_campaign: parser_full_consumption_oracle_v2
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: public_key_der__valid_object_plus_malformed_tail__asn1parse
+  classification: negative_control_support
+  candidate_level: none
+  confidence: high
+  evidence: &id015
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/valid_object_plus_malformed_tail/asn1parse.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/valid_object_plus_malformed_tail/asn1parse.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/public_key_der.valid_plus_malformed_tail.der
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: record_low_level_tail_detection
+  adapter: parser_adapter
+  source_count: 1
+  dispatcher_input:
+    source_campaign: parser_full_consumption_oracle_v2
+    oracle_type: parser_oracle
+    family: parser_full_consumption_oracle
+    target: openssl
+    input_id: public_key_der__valid_object_plus_malformed_tail__asn1parse
+    raw_exit_code: 1
+    raw_stdout_summary: ''
+    raw_stderr_summary: '800B65EE3F7F0000:error:0680009B:asn1 encoding routines:ASN1_get_object:too
+      long:../crypto/asn1/asn1_lib.c:95:
+
+      '
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: reject
+    observed_behavior:
+      command: openssl asn1parse -inform DER
+      level: low_level_asn1parse
+      returncode: 1
+      behavior: rejected
+      stderr_excerpt: '800B65EE3F7F0000:error:0680009B:asn1 encoding routines:ASN1_get_object:too
+        long:../crypto/asn1/asn1_lib.c:95:
+
+        '
+    control_behavior: ''
+    differential_context:
+      app_vs_low_level: false
+      original_classification: negative_control_support
+    evidence_files: *id015
+- oracle_type: parser_oracle
+  source_campaign: parser_full_consumption_oracle_v2
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: public_key_der__malformed_tail_only__asn1parse
+  classification: negative_control_support
+  candidate_level: none
+  confidence: high
+  evidence: &id016
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/malformed_tail_only/asn1parse.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/malformed_tail_only/asn1parse.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/public_key_der.malformed_tail_only.der
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: record_low_level_tail_detection
+  adapter: parser_adapter
+  source_count: 1
+  dispatcher_input:
+    source_campaign: parser_full_consumption_oracle_v2
+    oracle_type: parser_oracle
+    family: parser_full_consumption_oracle
+    target: openssl
+    input_id: public_key_der__malformed_tail_only__asn1parse
+    raw_exit_code: 1
+    raw_stdout_summary: ''
+    raw_stderr_summary: '809B01ACBB750000:error:0680009B:asn1 encoding routines:ASN1_get_object:too
+      long:../crypto/asn1/asn1_lib.c:95:
+
+      '
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: reject
+    observed_behavior:
+      command: openssl asn1parse -inform DER
+      level: low_level_asn1parse
+      returncode: 1
+      behavior: rejected
+      stderr_excerpt: '809B01ACBB750000:error:0680009B:asn1 encoding routines:ASN1_get_object:too
+        long:../crypto/asn1/asn1_lib.c:95:
+
+        '
+    control_behavior: ''
+    differential_context:
+      app_vs_low_level: false
+      original_classification: negative_control_support
+    evidence_files: *id016
+- oracle_type: parser_oracle
+  source_campaign: parser_full_consumption_oracle_v2
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: public_key_der__malformed_tail_only__pkey_public_pubout
+  classification: expected_reject
+  candidate_level: none
+  confidence: high
+  evidence: &id017
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/malformed_tail_only/pkey_public_pubout.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/malformed_tail_only/pkey_public_pubout.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/public_key_der.malformed_tail_only.der
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: record_negative_control
+  adapter: parser_adapter
+  source_count: 1
+  dispatcher_input:
+    source_campaign: parser_full_consumption_oracle_v2
+    oracle_type: parser_oracle
+    family: parser_full_consumption_oracle
+    target: openssl
+    input_id: public_key_der__malformed_tail_only__pkey_public_pubout
+    raw_exit_code: 1
+    raw_stdout_summary: ''
+    raw_stderr_summary: 'Could not read key of Public Key from /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/public_key_der.malformed_tail_only.der
+
+      '
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: reject
+    observed_behavior:
+      command: openssl pkey -pubin -inform DER -pubout
+      level: app_level
+      returncode: 1
+      behavior: rejected
+      stderr_excerpt: 'Could not read key of Public Key from /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/public_key_der.malformed_tail_only.der
+
+        '
+    control_behavior: ''
+    differential_context:
+      app_vs_low_level: false
+      original_classification: expected_reject
+    evidence_files: *id017
+- oracle_type: roundtrip_oracle
+  source_campaign: crypto_roundtrip_metamorphic_oracle_v1
+  family: roundtrip_metamorphic
+  target: cross_library
+  input_id: roundtrip_success_aggregate
+  classification: roundtrip_success
+  candidate_level: none
+  confidence: medium
+  evidence: &id018
+  - artifacts/cross_library/mainline/crypto_roundtrip_metamorphic_oracle_v1/validation/crypto_roundtrip_metamorphic_quality_checks.yaml
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: record_baseline
+  adapter: serialization_roundtrip_adapter
+  source_count: 15
+  dispatcher_input:
+    source_campaign: crypto_roundtrip_metamorphic_oracle_v1
+    oracle_type: roundtrip_oracle
+    family: roundtrip_metamorphic
+    target: cross_library
+    input_id: roundtrip_success_aggregate
+    raw_exit_code: 0
+    raw_stdout_summary: ''
+    raw_stderr_summary: ''
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: roundtrip success
+    observed_behavior: roundtrip success
+    control_behavior: ''
+    differential_context: {}
+    evidence_files: *id018
+- oracle_type: roundtrip_oracle
+  source_campaign: crypto_roundtrip_metamorphic_oracle_v1
+  family: roundtrip_metamorphic
+  target: cross_library
+  input_id: roundtrip_normal_reject_aggregate
+  classification: safe_reject
+  candidate_level: none
+  confidence: medium
+  evidence: *id018
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: record_baseline
+  adapter: serialization_roundtrip_adapter
+  source_count: 30
+  dispatcher_input:
+    source_campaign: crypto_roundtrip_metamorphic_oracle_v1
+    oracle_type: roundtrip_oracle
+    family: roundtrip_metamorphic
+    target: cross_library
+    input_id: roundtrip_normal_reject_aggregate
+    raw_exit_code: 0
+    raw_stdout_summary: ''
+    raw_stderr_summary: ''
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: reject invalid or unsupported degraded parse input
+    observed_behavior: normal reject
+    control_behavior: ''
+    differential_context: {}
+    evidence_files: *id018
+- oracle_type: lifecycle_oracle
+  source_campaign: stateful_lifecycle_valid_contract_v1
+  family: mac_digest_lifecycle
+  target: cross_library
+  input_id: mac_digest_lifecycle_valid_contract_aggregate
+  classification: safe_reject_or_state_guard
+  candidate_level: none
+  confidence: medium
+  evidence: &id019
+  - artifacts/cross_library/mainline/stateful_lifecycle_valid_contract_v1/validation/stateful_lifecycle_valid_contract_quality_checks.yaml
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: record_lifecycle_baseline
+  adapter: mac_digest_adapter
+  source_count: 36
+  dispatcher_input:
+    source_campaign: stateful_lifecycle_valid_contract_v1
+    oracle_type: lifecycle_oracle
+    family: mac_digest_lifecycle
+    target: cross_library
+    input_id: mac_digest_lifecycle_valid_contract_aggregate
+    raw_exit_code: 0
+    raw_stdout_summary: ''
+    raw_stderr_summary: ''
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: valid lifecycle sequence succeeds or safely reaches state guard
+    observed_behavior: success
+    control_behavior: ''
+    differential_context: {}
+    evidence_files: *id019
+- oracle_type: crypto_semantic_oracle
+  source_campaign: cipher_aead_lifecycle_adapter_recipe_v1
+  family: aead_lifecycle
+  target: cross_library
+  input_id: aead_encrypt_decrypt_success_aggregate
+  classification: expected_accept
+  candidate_level: none
+  confidence: medium
+  evidence: &id020
+  - artifacts/cross_library/mainline/cipher_aead_lifecycle_adapter_recipe_v1/validation/cipher_aead_lifecycle_adapter_quality_checks.yaml
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: record_baseline
+  adapter: aead_adapter
+  source_count: 24
+  dispatcher_input:
+    source_campaign: cipher_aead_lifecycle_adapter_recipe_v1
+    oracle_type: crypto_semantic_oracle
+    family: aead_lifecycle
+    target: cross_library
+    input_id: aead_encrypt_decrypt_success_aggregate
+    raw_exit_code: 0
+    raw_stdout_summary: ''
+    raw_stderr_summary: ''
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: encrypt then decrypt succeeds under valid contract
+    observed_behavior: encrypt_decrypt_success
+    control_behavior: ''
+    differential_context: {}
+    evidence_files: *id020
+- oracle_type: negative_control_oracle
+  source_campaign: cipher_aead_lifecycle_adapter_recipe_v1
+  family: aead_lifecycle
+  target: cross_library
+  input_id: aead_modified_tag_safe_reject_aggregate
+  classification: expected_negative_control
+  candidate_level: none
+  confidence: medium
+  evidence: *id020
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: record_negative_control
+  adapter: aead_adapter
+  source_count: 3
+  dispatcher_input:
+    source_campaign: cipher_aead_lifecycle_adapter_recipe_v1
+    oracle_type: negative_control_oracle
+    family: aead_lifecycle
+    target: cross_library
+    input_id: aead_modified_tag_safe_reject_aggregate
+    raw_exit_code: 0
+    raw_stdout_summary: ''
+    raw_stderr_summary: ''
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: modified tag rejected
+    observed_behavior: modified_tag_reject
+    control_behavior: negative control rejected
+    differential_context: {}
+    evidence_files: *id020

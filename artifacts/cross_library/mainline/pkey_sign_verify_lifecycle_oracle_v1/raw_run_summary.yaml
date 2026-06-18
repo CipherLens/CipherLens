@@ -1,0 +1,986 @@
+schema: pkey_sign_verify_raw_run_summary_v1
+runs:
+- case_id: openssl-system-cli__01_valid_sign_verify
+  target: openssl-system-cli
+  input_variant: valid_sign_verify
+  exit_code: 0
+  stdout_summary: Verified OK
+  stderr_summary: ''
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: verify_success
+  status: ok
+  compile:
+    not_applicable: true
+  run:
+    cmd:
+    - /usr/bin/openssl
+    - dgst
+    - -sha256
+    - -verify
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/inputs/keys/rsa_public.pem
+    - -signature
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/openssl-system-cli/openssl-system-cli__01_valid_sign_verify/valid_sign_verify.sig
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/openssl-system-cli/openssl-system-cli__01_valid_sign_verify/message.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/openssl-system-cli/openssl-system-cli__01_valid_sign_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/openssl-system-cli/openssl-system-cli__01_valid_sign_verify.stderr.log
+    setup_results:
+    - cmd:
+      - /usr/bin/openssl
+      - dgst
+      - -sha256
+      - -sign
+      - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/inputs/keys/rsa_private.pem
+      - -out
+      - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/openssl-system-cli/openssl-system-cli__01_valid_sign_verify/valid_sign_verify.sig
+      - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/openssl-system-cli/openssl-system-cli__01_valid_sign_verify/message.bin
+      return_code: 0
+      ok: true
+      timeout: false
+      stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/openssl-system-cli/openssl-system-cli__01_valid_sign_verify_setup_0.stdout.log
+      stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/openssl-system-cli/openssl-system-cli__01_valid_sign_verify_setup_0.stderr.log
+- case_id: openssl-system-cli__02_modified_signature_verify
+  target: openssl-system-cli
+  input_variant: modified_signature_verify
+  exit_code: 1
+  stdout_summary: Verification failure
+  stderr_summary: '800BEBB0C0720000:error:0200008A:rsa routines:RSA_padding_check_PKCS1_type_1:invalid
+    padding:../crypto/rsa/rsa_pk1.c:79: 800BEBB0C0720000:error:02000072:rsa routines:rsa_ossl_public_decrypt:padding
+    check failed:../crypto/rsa/rsa_ossl.c:697: 800BEBB0C0720000:error:1C880004:Provider
+    routines:rsa_verify:RSA lib:../providers/implementations/signature/rsa_sig.c:774:'
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: rejected
+  status: ok
+  compile:
+    not_applicable: true
+  run:
+    cmd:
+    - /usr/bin/openssl
+    - dgst
+    - -sha256
+    - -verify
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/inputs/keys/rsa_public.pem
+    - -signature
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/openssl-system-cli/openssl-system-cli__02_modified_signature_verify/modified_signature_verify.sig
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/openssl-system-cli/openssl-system-cli__02_modified_signature_verify/message.bin
+    return_code: 1
+    ok: false
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/openssl-system-cli/openssl-system-cli__02_modified_signature_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/openssl-system-cli/openssl-system-cli__02_modified_signature_verify.stderr.log
+    setup_results:
+    - cmd:
+      - /usr/bin/openssl
+      - dgst
+      - -sha256
+      - -sign
+      - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/inputs/keys/rsa_private.pem
+      - -out
+      - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/openssl-system-cli/openssl-system-cli__02_modified_signature_verify/modified_signature_verify.sig
+      - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/openssl-system-cli/openssl-system-cli__02_modified_signature_verify/message.bin
+      return_code: 0
+      ok: true
+      timeout: false
+      stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/openssl-system-cli/openssl-system-cli__02_modified_signature_verify_sign.stdout.log
+      stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/openssl-system-cli/openssl-system-cli__02_modified_signature_verify_sign.stderr.log
+- case_id: openssl-system-cli__03_wrong_key_verify
+  target: openssl-system-cli
+  input_variant: wrong_key_verify
+  exit_code: 1
+  stdout_summary: Verification failure
+  stderr_summary: '809B8DAD867C0000:error:0200008A:rsa routines:RSA_padding_check_PKCS1_type_1:invalid
+    padding:../crypto/rsa/rsa_pk1.c:79: 809B8DAD867C0000:error:02000072:rsa routines:rsa_ossl_public_decrypt:padding
+    check failed:../crypto/rsa/rsa_ossl.c:697: 809B8DAD867C0000:error:1C880004:Provider
+    routines:rsa_verify:RSA lib:../providers/implementations/signature/rsa_sig.c:774:'
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: rejected
+  status: ok
+  compile:
+    not_applicable: true
+  run:
+    cmd:
+    - /usr/bin/openssl
+    - dgst
+    - -sha256
+    - -verify
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/inputs/keys/rsa_wrong_public.pem
+    - -signature
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/openssl-system-cli/openssl-system-cli__03_wrong_key_verify/wrong_key_verify.sig
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/openssl-system-cli/openssl-system-cli__03_wrong_key_verify/message.bin
+    return_code: 1
+    ok: false
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/openssl-system-cli/openssl-system-cli__03_wrong_key_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/openssl-system-cli/openssl-system-cli__03_wrong_key_verify.stderr.log
+    setup_results:
+    - cmd:
+      - /usr/bin/openssl
+      - dgst
+      - -sha256
+      - -sign
+      - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/inputs/keys/rsa_private.pem
+      - -out
+      - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/openssl-system-cli/openssl-system-cli__03_wrong_key_verify/wrong_key_verify.sig
+      - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/openssl-system-cli/openssl-system-cli__03_wrong_key_verify/message.bin
+      return_code: 0
+      ok: true
+      timeout: false
+      stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/openssl-system-cli/openssl-system-cli__03_wrong_key_verify_setup_0.stdout.log
+      stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/openssl-system-cli/openssl-system-cli__03_wrong_key_verify_setup_0.stderr.log
+- case_id: openssl-system-cli__04_wrong_message_verify
+  target: openssl-system-cli
+  input_variant: wrong_message_verify
+  exit_code: 1
+  stdout_summary: Verification failure
+  stderr_summary: '805B0143897E0000:error:02000068:rsa routines:ossl_rsa_verify:bad
+    signature:../crypto/rsa/rsa_sign.c:430: 805B0143897E0000:error:1C880004:Provider
+    routines:rsa_verify:RSA lib:../providers/implementations/signature/rsa_sig.c:774:'
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: rejected
+  status: ok
+  compile:
+    not_applicable: true
+  run:
+    cmd:
+    - /usr/bin/openssl
+    - dgst
+    - -sha256
+    - -verify
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/inputs/keys/rsa_public.pem
+    - -signature
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/openssl-system-cli/openssl-system-cli__04_wrong_message_verify/wrong_message_verify.sig
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/openssl-system-cli/openssl-system-cli__04_wrong_message_verify/wrong_message.bin
+    return_code: 1
+    ok: false
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/openssl-system-cli/openssl-system-cli__04_wrong_message_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/openssl-system-cli/openssl-system-cli__04_wrong_message_verify.stderr.log
+    setup_results:
+    - cmd:
+      - /usr/bin/openssl
+      - dgst
+      - -sha256
+      - -sign
+      - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/inputs/keys/rsa_private.pem
+      - -out
+      - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/openssl-system-cli/openssl-system-cli__04_wrong_message_verify/wrong_message_verify.sig
+      - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/openssl-system-cli/openssl-system-cli__04_wrong_message_verify/message.bin
+      return_code: 0
+      ok: true
+      timeout: false
+      stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/openssl-system-cli/openssl-system-cli__04_wrong_message_verify_setup_0.stdout.log
+      stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/openssl-system-cli/openssl-system-cli__04_wrong_message_verify_setup_0.stderr.log
+- case_id: openssl-system-cli__05_empty_message_sign_verify
+  target: openssl-system-cli
+  input_variant: empty_message_sign_verify
+  exit_code: 0
+  stdout_summary: Verified OK
+  stderr_summary: ''
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: verify_success
+  status: ok
+  compile:
+    not_applicable: true
+  run:
+    cmd:
+    - /usr/bin/openssl
+    - dgst
+    - -sha256
+    - -verify
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/inputs/keys/rsa_public.pem
+    - -signature
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/openssl-system-cli/openssl-system-cli__05_empty_message_sign_verify/empty_message_sign_verify.sig
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/openssl-system-cli/openssl-system-cli__05_empty_message_sign_verify/empty_message.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/openssl-system-cli/openssl-system-cli__05_empty_message_sign_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/openssl-system-cli/openssl-system-cli__05_empty_message_sign_verify.stderr.log
+    setup_results:
+    - cmd:
+      - /usr/bin/openssl
+      - dgst
+      - -sha256
+      - -sign
+      - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/inputs/keys/rsa_private.pem
+      - -out
+      - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/openssl-system-cli/openssl-system-cli__05_empty_message_sign_verify/empty_message_sign_verify.sig
+      - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/openssl-system-cli/openssl-system-cli__05_empty_message_sign_verify/empty_message.bin
+      return_code: 0
+      ok: true
+      timeout: false
+      stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/openssl-system-cli/openssl-system-cli__05_empty_message_sign_verify_setup_0.stdout.log
+      stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/openssl-system-cli/openssl-system-cli__05_empty_message_sign_verify_setup_0.stderr.log
+- case_id: openssl-system-cli__06_failed_init_or_invalid_key_path
+  target: openssl-system-cli
+  input_variant: failed_init_or_invalid_key_path
+  exit_code: 1
+  stdout_summary: ''
+  stderr_summary: Could not read private key from /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/inputs/keys/invalid_private.pem
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: safe_reject
+  status: ok
+  compile:
+    not_applicable: true
+  run:
+    cmd:
+    - /usr/bin/openssl
+    - dgst
+    - -sha256
+    - -sign
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/inputs/keys/invalid_private.pem
+    - -out
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/openssl-system-cli/openssl-system-cli__06_failed_init_or_invalid_key_path/failed_init_or_invalid_key_path.sig
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/openssl-system-cli/openssl-system-cli__06_failed_init_or_invalid_key_path/message.bin
+    return_code: 1
+    ok: false
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/openssl-system-cli/openssl-system-cli__06_failed_init_or_invalid_key_path.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/openssl-system-cli/openssl-system-cli__06_failed_init_or_invalid_key_path.stderr.log
+    setup_results: []
+- case_id: mbedtls-3.6.4-asan__01_valid_sign_verify
+  target: mbedtls-3.6.4-asan
+  input_variant: valid_sign_verify
+  exit_code: 0
+  stdout_summary: observed_behavior=verify_success detail=verify_ret_0
+  stderr_summary: ''
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: verify_success
+  status: ok
+  compile:
+    cmd:
+    - clang
+    - -std=c11
+    - -g
+    - -O1
+    - -fsanitize=address,undefined
+    - -fno-omit-frame-pointer
+    - -I/home/wen/work/install-mbedtls-3.6.4-asan/include
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__01_valid_sign_verify.c
+    - -L/home/wen/work/install-mbedtls-3.6.4-asan/lib
+    - -Wl,-rpath,/home/wen/work/install-mbedtls-3.6.4-asan/lib
+    - -lmbedtls
+    - -lmbedx509
+    - -lmbedcrypto
+    - -o
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__01_valid_sign_verify.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__01_valid_sign_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__01_valid_sign_verify.stderr.log
+  run:
+    cmd:
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__01_valid_sign_verify.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__01_valid_sign_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__01_valid_sign_verify.stderr.log
+- case_id: mbedtls-3.6.4-asan__02_modified_signature_verify
+  target: mbedtls-3.6.4-asan
+  input_variant: modified_signature_verify
+  exit_code: 0
+  stdout_summary: observed_behavior=rejected detail=verify_ret_-17280
+  stderr_summary: ''
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: rejected
+  status: ok
+  compile:
+    cmd:
+    - clang
+    - -std=c11
+    - -g
+    - -O1
+    - -fsanitize=address,undefined
+    - -fno-omit-frame-pointer
+    - -I/home/wen/work/install-mbedtls-3.6.4-asan/include
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__02_modified_signature_verify.c
+    - -L/home/wen/work/install-mbedtls-3.6.4-asan/lib
+    - -Wl,-rpath,/home/wen/work/install-mbedtls-3.6.4-asan/lib
+    - -lmbedtls
+    - -lmbedx509
+    - -lmbedcrypto
+    - -o
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__02_modified_signature_verify.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__02_modified_signature_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__02_modified_signature_verify.stderr.log
+  run:
+    cmd:
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__02_modified_signature_verify.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__02_modified_signature_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__02_modified_signature_verify.stderr.log
+- case_id: mbedtls-3.6.4-asan__03_wrong_key_verify
+  target: mbedtls-3.6.4-asan
+  input_variant: wrong_key_verify
+  exit_code: 0
+  stdout_summary: observed_behavior=rejected detail=verify_ret_-17028
+  stderr_summary: ''
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: rejected
+  status: ok
+  compile:
+    cmd:
+    - clang
+    - -std=c11
+    - -g
+    - -O1
+    - -fsanitize=address,undefined
+    - -fno-omit-frame-pointer
+    - -I/home/wen/work/install-mbedtls-3.6.4-asan/include
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__03_wrong_key_verify.c
+    - -L/home/wen/work/install-mbedtls-3.6.4-asan/lib
+    - -Wl,-rpath,/home/wen/work/install-mbedtls-3.6.4-asan/lib
+    - -lmbedtls
+    - -lmbedx509
+    - -lmbedcrypto
+    - -o
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__03_wrong_key_verify.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__03_wrong_key_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__03_wrong_key_verify.stderr.log
+  run:
+    cmd:
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__03_wrong_key_verify.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__03_wrong_key_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__03_wrong_key_verify.stderr.log
+- case_id: mbedtls-3.6.4-asan__04_wrong_message_verify
+  target: mbedtls-3.6.4-asan
+  input_variant: wrong_message_verify
+  exit_code: 0
+  stdout_summary: observed_behavior=rejected detail=verify_ret_-17280
+  stderr_summary: ''
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: rejected
+  status: ok
+  compile:
+    cmd:
+    - clang
+    - -std=c11
+    - -g
+    - -O1
+    - -fsanitize=address,undefined
+    - -fno-omit-frame-pointer
+    - -I/home/wen/work/install-mbedtls-3.6.4-asan/include
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__04_wrong_message_verify.c
+    - -L/home/wen/work/install-mbedtls-3.6.4-asan/lib
+    - -Wl,-rpath,/home/wen/work/install-mbedtls-3.6.4-asan/lib
+    - -lmbedtls
+    - -lmbedx509
+    - -lmbedcrypto
+    - -o
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__04_wrong_message_verify.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__04_wrong_message_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__04_wrong_message_verify.stderr.log
+  run:
+    cmd:
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__04_wrong_message_verify.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__04_wrong_message_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__04_wrong_message_verify.stderr.log
+- case_id: mbedtls-3.6.4-asan__05_empty_message_sign_verify
+  target: mbedtls-3.6.4-asan
+  input_variant: empty_message_sign_verify
+  exit_code: 0
+  stdout_summary: observed_behavior=verify_success detail=verify_ret_0
+  stderr_summary: ''
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: verify_success
+  status: ok
+  compile:
+    cmd:
+    - clang
+    - -std=c11
+    - -g
+    - -O1
+    - -fsanitize=address,undefined
+    - -fno-omit-frame-pointer
+    - -I/home/wen/work/install-mbedtls-3.6.4-asan/include
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__05_empty_message_sign_verify.c
+    - -L/home/wen/work/install-mbedtls-3.6.4-asan/lib
+    - -Wl,-rpath,/home/wen/work/install-mbedtls-3.6.4-asan/lib
+    - -lmbedtls
+    - -lmbedx509
+    - -lmbedcrypto
+    - -o
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__05_empty_message_sign_verify.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__05_empty_message_sign_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__05_empty_message_sign_verify.stderr.log
+  run:
+    cmd:
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__05_empty_message_sign_verify.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__05_empty_message_sign_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__05_empty_message_sign_verify.stderr.log
+- case_id: mbedtls-3.6.4-asan__06_failed_init_or_invalid_key_path
+  target: mbedtls-3.6.4-asan
+  input_variant: failed_init_or_invalid_key_path
+  exit_code: 0
+  stdout_summary: observed_behavior=safe_reject detail=invalid_key_parse_ret_-15616
+  stderr_summary: ''
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: safe_reject
+  status: ok
+  compile:
+    cmd:
+    - clang
+    - -std=c11
+    - -g
+    - -O1
+    - -fsanitize=address,undefined
+    - -fno-omit-frame-pointer
+    - -I/home/wen/work/install-mbedtls-3.6.4-asan/include
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__06_failed_init_or_invalid_key_path.c
+    - -L/home/wen/work/install-mbedtls-3.6.4-asan/lib
+    - -Wl,-rpath,/home/wen/work/install-mbedtls-3.6.4-asan/lib
+    - -lmbedtls
+    - -lmbedx509
+    - -lmbedcrypto
+    - -o
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__06_failed_init_or_invalid_key_path.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__06_failed_init_or_invalid_key_path.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__06_failed_init_or_invalid_key_path.stderr.log
+  run:
+    cmd:
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__06_failed_init_or_invalid_key_path.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__06_failed_init_or_invalid_key_path.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/mbedtls-3.6.4-asan/mbedtls-3.6.4-asan__06_failed_init_or_invalid_key_path.stderr.log
+- case_id: mbedtls-4.1.0-asan__01_valid_sign_verify
+  target: mbedtls-4.1.0-asan
+  input_variant: valid_sign_verify
+  exit_code: null
+  stdout_summary: ''
+  stderr_summary: '/home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__01_valid_sign_verify.c:5:10:
+    fatal error: ''mbedtls/ctr_drbg.h'' file not found 5 | #include <mbedtls/ctr_drbg.h>
+    | ^~~~~~~~~~~~~~~~~~~~ 1 error generated.'
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: unsupported
+  status: compile_failed
+  compile:
+    cmd:
+    - clang
+    - -std=c11
+    - -g
+    - -O1
+    - -fsanitize=address,undefined
+    - -fno-omit-frame-pointer
+    - -I/home/wen/work/install-mbedtls-4.1.0-asan/include
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__01_valid_sign_verify.c
+    - -L/home/wen/work/install-mbedtls-4.1.0-asan/lib
+    - -Wl,-rpath,/home/wen/work/install-mbedtls-4.1.0-asan/lib
+    - -lmbedtls
+    - -lmbedx509
+    - -lmbedcrypto
+    - -o
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__01_valid_sign_verify.bin
+    return_code: 1
+    ok: false
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__01_valid_sign_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__01_valid_sign_verify.stderr.log
+  run:
+    return_code: null
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__01_valid_sign_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__01_valid_sign_verify.stderr.log
+    ok: false
+    not_run_reason: compile_failed
+- case_id: mbedtls-4.1.0-asan__02_modified_signature_verify
+  target: mbedtls-4.1.0-asan
+  input_variant: modified_signature_verify
+  exit_code: null
+  stdout_summary: ''
+  stderr_summary: '/home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__02_modified_signature_verify.c:5:10:
+    fatal error: ''mbedtls/ctr_drbg.h'' file not found 5 | #include <mbedtls/ctr_drbg.h>
+    | ^~~~~~~~~~~~~~~~~~~~ 1 error generated.'
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: unsupported
+  status: compile_failed
+  compile:
+    cmd:
+    - clang
+    - -std=c11
+    - -g
+    - -O1
+    - -fsanitize=address,undefined
+    - -fno-omit-frame-pointer
+    - -I/home/wen/work/install-mbedtls-4.1.0-asan/include
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__02_modified_signature_verify.c
+    - -L/home/wen/work/install-mbedtls-4.1.0-asan/lib
+    - -Wl,-rpath,/home/wen/work/install-mbedtls-4.1.0-asan/lib
+    - -lmbedtls
+    - -lmbedx509
+    - -lmbedcrypto
+    - -o
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__02_modified_signature_verify.bin
+    return_code: 1
+    ok: false
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__02_modified_signature_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__02_modified_signature_verify.stderr.log
+  run:
+    return_code: null
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__02_modified_signature_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__02_modified_signature_verify.stderr.log
+    ok: false
+    not_run_reason: compile_failed
+- case_id: mbedtls-4.1.0-asan__03_wrong_key_verify
+  target: mbedtls-4.1.0-asan
+  input_variant: wrong_key_verify
+  exit_code: null
+  stdout_summary: ''
+  stderr_summary: '/home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__03_wrong_key_verify.c:5:10:
+    fatal error: ''mbedtls/ctr_drbg.h'' file not found 5 | #include <mbedtls/ctr_drbg.h>
+    | ^~~~~~~~~~~~~~~~~~~~ 1 error generated.'
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: unsupported
+  status: compile_failed
+  compile:
+    cmd:
+    - clang
+    - -std=c11
+    - -g
+    - -O1
+    - -fsanitize=address,undefined
+    - -fno-omit-frame-pointer
+    - -I/home/wen/work/install-mbedtls-4.1.0-asan/include
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__03_wrong_key_verify.c
+    - -L/home/wen/work/install-mbedtls-4.1.0-asan/lib
+    - -Wl,-rpath,/home/wen/work/install-mbedtls-4.1.0-asan/lib
+    - -lmbedtls
+    - -lmbedx509
+    - -lmbedcrypto
+    - -o
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__03_wrong_key_verify.bin
+    return_code: 1
+    ok: false
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__03_wrong_key_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__03_wrong_key_verify.stderr.log
+  run:
+    return_code: null
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__03_wrong_key_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__03_wrong_key_verify.stderr.log
+    ok: false
+    not_run_reason: compile_failed
+- case_id: mbedtls-4.1.0-asan__04_wrong_message_verify
+  target: mbedtls-4.1.0-asan
+  input_variant: wrong_message_verify
+  exit_code: null
+  stdout_summary: ''
+  stderr_summary: '/home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__04_wrong_message_verify.c:5:10:
+    fatal error: ''mbedtls/ctr_drbg.h'' file not found 5 | #include <mbedtls/ctr_drbg.h>
+    | ^~~~~~~~~~~~~~~~~~~~ 1 error generated.'
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: unsupported
+  status: compile_failed
+  compile:
+    cmd:
+    - clang
+    - -std=c11
+    - -g
+    - -O1
+    - -fsanitize=address,undefined
+    - -fno-omit-frame-pointer
+    - -I/home/wen/work/install-mbedtls-4.1.0-asan/include
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__04_wrong_message_verify.c
+    - -L/home/wen/work/install-mbedtls-4.1.0-asan/lib
+    - -Wl,-rpath,/home/wen/work/install-mbedtls-4.1.0-asan/lib
+    - -lmbedtls
+    - -lmbedx509
+    - -lmbedcrypto
+    - -o
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__04_wrong_message_verify.bin
+    return_code: 1
+    ok: false
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__04_wrong_message_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__04_wrong_message_verify.stderr.log
+  run:
+    return_code: null
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__04_wrong_message_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__04_wrong_message_verify.stderr.log
+    ok: false
+    not_run_reason: compile_failed
+- case_id: mbedtls-4.1.0-asan__05_empty_message_sign_verify
+  target: mbedtls-4.1.0-asan
+  input_variant: empty_message_sign_verify
+  exit_code: null
+  stdout_summary: ''
+  stderr_summary: '/home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__05_empty_message_sign_verify.c:5:10:
+    fatal error: ''mbedtls/ctr_drbg.h'' file not found 5 | #include <mbedtls/ctr_drbg.h>
+    | ^~~~~~~~~~~~~~~~~~~~ 1 error generated.'
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: unsupported
+  status: compile_failed
+  compile:
+    cmd:
+    - clang
+    - -std=c11
+    - -g
+    - -O1
+    - -fsanitize=address,undefined
+    - -fno-omit-frame-pointer
+    - -I/home/wen/work/install-mbedtls-4.1.0-asan/include
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__05_empty_message_sign_verify.c
+    - -L/home/wen/work/install-mbedtls-4.1.0-asan/lib
+    - -Wl,-rpath,/home/wen/work/install-mbedtls-4.1.0-asan/lib
+    - -lmbedtls
+    - -lmbedx509
+    - -lmbedcrypto
+    - -o
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__05_empty_message_sign_verify.bin
+    return_code: 1
+    ok: false
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__05_empty_message_sign_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__05_empty_message_sign_verify.stderr.log
+  run:
+    return_code: null
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__05_empty_message_sign_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__05_empty_message_sign_verify.stderr.log
+    ok: false
+    not_run_reason: compile_failed
+- case_id: mbedtls-4.1.0-asan__06_failed_init_or_invalid_key_path
+  target: mbedtls-4.1.0-asan
+  input_variant: failed_init_or_invalid_key_path
+  exit_code: null
+  stdout_summary: ''
+  stderr_summary: '/home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__06_failed_init_or_invalid_key_path.c:5:10:
+    fatal error: ''mbedtls/ctr_drbg.h'' file not found 5 | #include <mbedtls/ctr_drbg.h>
+    | ^~~~~~~~~~~~~~~~~~~~ 1 error generated.'
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: unsupported
+  status: compile_failed
+  compile:
+    cmd:
+    - clang
+    - -std=c11
+    - -g
+    - -O1
+    - -fsanitize=address,undefined
+    - -fno-omit-frame-pointer
+    - -I/home/wen/work/install-mbedtls-4.1.0-asan/include
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__06_failed_init_or_invalid_key_path.c
+    - -L/home/wen/work/install-mbedtls-4.1.0-asan/lib
+    - -Wl,-rpath,/home/wen/work/install-mbedtls-4.1.0-asan/lib
+    - -lmbedtls
+    - -lmbedx509
+    - -lmbedcrypto
+    - -o
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__06_failed_init_or_invalid_key_path.bin
+    return_code: 1
+    ok: false
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__06_failed_init_or_invalid_key_path.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__06_failed_init_or_invalid_key_path.stderr.log
+  run:
+    return_code: null
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__06_failed_init_or_invalid_key_path.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/mbedtls-4.1.0-asan/mbedtls-4.1.0-asan__06_failed_init_or_invalid_key_path.stderr.log
+    ok: false
+    not_run_reason: compile_failed
+- case_id: botan-3.10.0-asan__01_valid_sign_verify
+  target: botan-3.10.0-asan
+  input_variant: valid_sign_verify
+  exit_code: 0
+  stdout_summary: observed_behavior=verify_success
+  stderr_summary: ''
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: verify_success
+  status: ok
+  compile:
+    cmd:
+    - clang++
+    - -std=c++20
+    - -g
+    - -O1
+    - -fsanitize=address,undefined
+    - -fno-omit-frame-pointer
+    - -I/home/wen/work/install-botan-3.10.0-asan/include
+    - -I/home/wen/work/install-botan-3.10.0-asan/include/botan-3
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/botan-3.10.0-asan/botan-3.10.0-asan__01_valid_sign_verify.cpp
+    - -L/home/wen/work/install-botan-3.10.0-asan/lib
+    - -Wl,-rpath,/home/wen/work/install-botan-3.10.0-asan/lib
+    - -lbotan-3
+    - -ldl
+    - -lrt
+    - -pthread
+    - -o
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/botan-3.10.0-asan/botan-3.10.0-asan__01_valid_sign_verify.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/botan-3.10.0-asan/botan-3.10.0-asan__01_valid_sign_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/botan-3.10.0-asan/botan-3.10.0-asan__01_valid_sign_verify.stderr.log
+  run:
+    cmd:
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/botan-3.10.0-asan/botan-3.10.0-asan__01_valid_sign_verify.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/botan-3.10.0-asan/botan-3.10.0-asan__01_valid_sign_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/botan-3.10.0-asan/botan-3.10.0-asan__01_valid_sign_verify.stderr.log
+- case_id: botan-3.10.0-asan__02_modified_signature_verify
+  target: botan-3.10.0-asan
+  input_variant: modified_signature_verify
+  exit_code: 0
+  stdout_summary: observed_behavior=rejected
+  stderr_summary: ''
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: rejected
+  status: ok
+  compile:
+    cmd:
+    - clang++
+    - -std=c++20
+    - -g
+    - -O1
+    - -fsanitize=address,undefined
+    - -fno-omit-frame-pointer
+    - -I/home/wen/work/install-botan-3.10.0-asan/include
+    - -I/home/wen/work/install-botan-3.10.0-asan/include/botan-3
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/botan-3.10.0-asan/botan-3.10.0-asan__02_modified_signature_verify.cpp
+    - -L/home/wen/work/install-botan-3.10.0-asan/lib
+    - -Wl,-rpath,/home/wen/work/install-botan-3.10.0-asan/lib
+    - -lbotan-3
+    - -ldl
+    - -lrt
+    - -pthread
+    - -o
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/botan-3.10.0-asan/botan-3.10.0-asan__02_modified_signature_verify.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/botan-3.10.0-asan/botan-3.10.0-asan__02_modified_signature_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/botan-3.10.0-asan/botan-3.10.0-asan__02_modified_signature_verify.stderr.log
+  run:
+    cmd:
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/botan-3.10.0-asan/botan-3.10.0-asan__02_modified_signature_verify.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/botan-3.10.0-asan/botan-3.10.0-asan__02_modified_signature_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/botan-3.10.0-asan/botan-3.10.0-asan__02_modified_signature_verify.stderr.log
+- case_id: botan-3.10.0-asan__03_wrong_key_verify
+  target: botan-3.10.0-asan
+  input_variant: wrong_key_verify
+  exit_code: 0
+  stdout_summary: observed_behavior=rejected
+  stderr_summary: ''
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: rejected
+  status: ok
+  compile:
+    cmd:
+    - clang++
+    - -std=c++20
+    - -g
+    - -O1
+    - -fsanitize=address,undefined
+    - -fno-omit-frame-pointer
+    - -I/home/wen/work/install-botan-3.10.0-asan/include
+    - -I/home/wen/work/install-botan-3.10.0-asan/include/botan-3
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/botan-3.10.0-asan/botan-3.10.0-asan__03_wrong_key_verify.cpp
+    - -L/home/wen/work/install-botan-3.10.0-asan/lib
+    - -Wl,-rpath,/home/wen/work/install-botan-3.10.0-asan/lib
+    - -lbotan-3
+    - -ldl
+    - -lrt
+    - -pthread
+    - -o
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/botan-3.10.0-asan/botan-3.10.0-asan__03_wrong_key_verify.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/botan-3.10.0-asan/botan-3.10.0-asan__03_wrong_key_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/botan-3.10.0-asan/botan-3.10.0-asan__03_wrong_key_verify.stderr.log
+  run:
+    cmd:
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/botan-3.10.0-asan/botan-3.10.0-asan__03_wrong_key_verify.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/botan-3.10.0-asan/botan-3.10.0-asan__03_wrong_key_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/botan-3.10.0-asan/botan-3.10.0-asan__03_wrong_key_verify.stderr.log
+- case_id: botan-3.10.0-asan__04_wrong_message_verify
+  target: botan-3.10.0-asan
+  input_variant: wrong_message_verify
+  exit_code: 0
+  stdout_summary: observed_behavior=rejected
+  stderr_summary: ''
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: rejected
+  status: ok
+  compile:
+    cmd:
+    - clang++
+    - -std=c++20
+    - -g
+    - -O1
+    - -fsanitize=address,undefined
+    - -fno-omit-frame-pointer
+    - -I/home/wen/work/install-botan-3.10.0-asan/include
+    - -I/home/wen/work/install-botan-3.10.0-asan/include/botan-3
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/botan-3.10.0-asan/botan-3.10.0-asan__04_wrong_message_verify.cpp
+    - -L/home/wen/work/install-botan-3.10.0-asan/lib
+    - -Wl,-rpath,/home/wen/work/install-botan-3.10.0-asan/lib
+    - -lbotan-3
+    - -ldl
+    - -lrt
+    - -pthread
+    - -o
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/botan-3.10.0-asan/botan-3.10.0-asan__04_wrong_message_verify.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/botan-3.10.0-asan/botan-3.10.0-asan__04_wrong_message_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/botan-3.10.0-asan/botan-3.10.0-asan__04_wrong_message_verify.stderr.log
+  run:
+    cmd:
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/botan-3.10.0-asan/botan-3.10.0-asan__04_wrong_message_verify.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/botan-3.10.0-asan/botan-3.10.0-asan__04_wrong_message_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/botan-3.10.0-asan/botan-3.10.0-asan__04_wrong_message_verify.stderr.log
+- case_id: botan-3.10.0-asan__05_empty_message_sign_verify
+  target: botan-3.10.0-asan
+  input_variant: empty_message_sign_verify
+  exit_code: 0
+  stdout_summary: observed_behavior=verify_success
+  stderr_summary: ''
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: verify_success
+  status: ok
+  compile:
+    cmd:
+    - clang++
+    - -std=c++20
+    - -g
+    - -O1
+    - -fsanitize=address,undefined
+    - -fno-omit-frame-pointer
+    - -I/home/wen/work/install-botan-3.10.0-asan/include
+    - -I/home/wen/work/install-botan-3.10.0-asan/include/botan-3
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/botan-3.10.0-asan/botan-3.10.0-asan__05_empty_message_sign_verify.cpp
+    - -L/home/wen/work/install-botan-3.10.0-asan/lib
+    - -Wl,-rpath,/home/wen/work/install-botan-3.10.0-asan/lib
+    - -lbotan-3
+    - -ldl
+    - -lrt
+    - -pthread
+    - -o
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/botan-3.10.0-asan/botan-3.10.0-asan__05_empty_message_sign_verify.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/botan-3.10.0-asan/botan-3.10.0-asan__05_empty_message_sign_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/botan-3.10.0-asan/botan-3.10.0-asan__05_empty_message_sign_verify.stderr.log
+  run:
+    cmd:
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/botan-3.10.0-asan/botan-3.10.0-asan__05_empty_message_sign_verify.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/botan-3.10.0-asan/botan-3.10.0-asan__05_empty_message_sign_verify.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/botan-3.10.0-asan/botan-3.10.0-asan__05_empty_message_sign_verify.stderr.log
+- case_id: botan-3.10.0-asan__06_failed_init_or_invalid_key_path
+  target: botan-3.10.0-asan
+  input_variant: failed_init_or_invalid_key_path
+  exit_code: 0
+  stdout_summary: observed_behavior=safe_reject detail=invalid_key_input_rejected
+  stderr_summary: ''
+  sanitizer_signal: ''
+  timeout_signal: false
+  observed_behavior: safe_reject
+  status: ok
+  compile:
+    cmd:
+    - clang++
+    - -std=c++20
+    - -g
+    - -O1
+    - -fsanitize=address,undefined
+    - -fno-omit-frame-pointer
+    - -I/home/wen/work/install-botan-3.10.0-asan/include
+    - -I/home/wen/work/install-botan-3.10.0-asan/include/botan-3
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/botan-3.10.0-asan/botan-3.10.0-asan__06_failed_init_or_invalid_key_path.cpp
+    - -L/home/wen/work/install-botan-3.10.0-asan/lib
+    - -Wl,-rpath,/home/wen/work/install-botan-3.10.0-asan/lib
+    - -lbotan-3
+    - -ldl
+    - -lrt
+    - -pthread
+    - -o
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/botan-3.10.0-asan/botan-3.10.0-asan__06_failed_init_or_invalid_key_path.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/botan-3.10.0-asan/botan-3.10.0-asan__06_failed_init_or_invalid_key_path.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/compile/botan-3.10.0-asan/botan-3.10.0-asan__06_failed_init_or_invalid_key_path.stderr.log
+  run:
+    cmd:
+    - /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/work/botan-3.10.0-asan/botan-3.10.0-asan__06_failed_init_or_invalid_key_path.bin
+    return_code: 0
+    ok: true
+    timeout: false
+    stdout_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/botan-3.10.0-asan/botan-3.10.0-asan__06_failed_init_or_invalid_key_path.stdout.log
+    stderr_log: /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/run/botan-3.10.0-asan/botan-3.10.0-asan__06_failed_init_or_invalid_key_path.stderr.log

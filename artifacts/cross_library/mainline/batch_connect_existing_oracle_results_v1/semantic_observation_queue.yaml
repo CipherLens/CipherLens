@@ -1,0 +1,70 @@
+schema: unified_oracle_semantic_observation_queue_v1
+count: 2
+items:
+- oracle_type: differential_oracle
+  source_campaign: crypto_roundtrip_metamorphic_oracle_v1
+  family: roundtrip_metamorphic
+  target: cross_library
+  input_id: roundtrip_semantic_observation_aggregate
+  classification: semantic_observation
+  candidate_level: observation
+  confidence: medium
+  evidence: &id001
+  - artifacts/cross_library/mainline/crypto_roundtrip_metamorphic_oracle_v1/validation/crypto_roundtrip_metamorphic_quality_checks.yaml
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: review_contracts_before_escalation
+  adapter: serialization_roundtrip_adapter
+  source_count: 30
+  dispatcher_input:
+    source_campaign: crypto_roundtrip_metamorphic_oracle_v1
+    oracle_type: differential_oracle
+    family: roundtrip_metamorphic
+    target: cross_library
+    input_id: roundtrip_semantic_observation_aggregate
+    raw_exit_code: 0
+    raw_stdout_summary: ''
+    raw_stderr_summary: ''
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: semantic differences remain observation until contract review
+    observed_behavior: cross-library or capability semantic observation
+    control_behavior: ''
+    differential_context:
+      semantic_observation_count: 30
+    evidence_files: *id001
+- oracle_type: differential_oracle
+  source_campaign: cipher_aead_lifecycle_adapter_recipe_v1
+  family: aead_lifecycle
+  target: cross_library
+  input_id: aead_semantic_observation_aggregate
+  classification: semantic_observation
+  candidate_level: observation
+  confidence: medium
+  evidence: &id002
+  - artifacts/cross_library/mainline/cipher_aead_lifecycle_adapter_recipe_v1/validation/cipher_aead_lifecycle_adapter_quality_checks.yaml
+  overclaim_guard: Dispatcher output is a conservative triage label only. It must
+    not be treated as a final security claim without manual API-contract review and
+    minimized evidence.
+  next_triage_action: review_contracts_before_escalation
+  adapter: aead_adapter
+  source_count: 3
+  dispatcher_input:
+    source_campaign: cipher_aead_lifecycle_adapter_recipe_v1
+    oracle_type: differential_oracle
+    family: aead_lifecycle
+    target: cross_library
+    input_id: aead_semantic_observation_aggregate
+    raw_exit_code: 0
+    raw_stdout_summary: ''
+    raw_stderr_summary: ''
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: cross-library AEAD behavior remains observation unless contract
+      violation
+    observed_behavior: cross-library semantic observation
+    control_behavior: ''
+    differential_context:
+      semantic_observation_count: 3
+    evidence_files: *id002

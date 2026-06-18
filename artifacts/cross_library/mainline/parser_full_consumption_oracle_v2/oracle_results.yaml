@@ -1,0 +1,503 @@
+schema: parser_full_consumption_oracle_results_v2
+results:
+- oracle_type: parser_oracle
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: x509_der_certificate__valid_object__asn1parse
+  observed_behavior:
+    command: openssl asn1parse -inform DER
+    level: low_level_asn1parse
+    returncode: 0
+    behavior: accepted
+    stderr_excerpt: ''
+  expected_behavior: accept
+  classification: expected_accept
+  candidate_level: none
+  evidence:
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/valid_object/asn1parse.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/valid_object/asn1parse.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/x509_der_certificate.valid.der
+  confidence: high
+  overclaim_guard: This is a conservative parser-oracle classification. It is not
+    a confirmed security claim and requires API-contract and app-level triage before
+    escalation.
+  next_triage_action: record_baseline
+- oracle_type: parser_oracle
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: x509_der_certificate__valid_object__x509
+  observed_behavior:
+    command: openssl x509 -inform DER -noout
+    level: app_level
+    returncode: 0
+    behavior: accepted
+    stderr_excerpt: ''
+  expected_behavior: accept
+  classification: expected_accept
+  candidate_level: none
+  evidence:
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/valid_object/x509.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/valid_object/x509.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/x509_der_certificate.valid.der
+  confidence: high
+  overclaim_guard: This is a conservative parser-oracle classification. It is not
+    a confirmed security claim and requires API-contract and app-level triage before
+    escalation.
+  next_triage_action: record_baseline
+- oracle_type: parser_oracle
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: x509_der_certificate__valid_object_plus_malformed_tail__asn1parse
+  observed_behavior:
+    command: openssl asn1parse -inform DER
+    level: low_level_asn1parse
+    returncode: 1
+    behavior: rejected
+    stderr_excerpt: '80DB5B95E1740000:error:0680009B:asn1 encoding routines:ASN1_get_object:too
+      long:../crypto/asn1/asn1_lib.c:95:
+
+      '
+  expected_behavior: reject
+  classification: negative_control_support
+  candidate_level: none
+  evidence:
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/valid_object_plus_malformed_tail/asn1parse.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/valid_object_plus_malformed_tail/asn1parse.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/x509_der_certificate.valid_plus_malformed_tail.der
+  confidence: high
+  overclaim_guard: This is a conservative parser-oracle classification. It is not
+    a confirmed security claim and requires API-contract and app-level triage before
+    escalation.
+  next_triage_action: record_low_level_tail_detection
+- oracle_type: parser_oracle
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: x509_der_certificate__valid_object_plus_malformed_tail__x509
+  observed_behavior:
+    command: openssl x509 -inform DER -noout
+    level: app_level
+    returncode: 0
+    behavior: accepted
+    stderr_excerpt: ''
+  expected_behavior: reject
+  classification: semantic_gap_candidate
+  candidate_level: manual_review_required
+  evidence:
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/valid_object_plus_malformed_tail/x509.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/valid_object_plus_malformed_tail/x509.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/x509_der_certificate.valid_plus_malformed_tail.der
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/valid_object_plus_malformed_tail/asn1parse.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/valid_object_plus_malformed_tail/asn1parse.stderr.log
+  confidence: medium
+  overclaim_guard: This is a conservative parser-oracle classification. It is not
+    a confirmed security claim and requires API-contract and app-level triage before
+    escalation.
+  next_triage_action: collect_app_level_contract_and_user_script_risk
+- oracle_type: parser_oracle
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: x509_der_certificate__malformed_tail_only__asn1parse
+  observed_behavior:
+    command: openssl asn1parse -inform DER
+    level: low_level_asn1parse
+    returncode: 1
+    behavior: rejected
+    stderr_excerpt: '804B988629780000:error:0680009B:asn1 encoding routines:ASN1_get_object:too
+      long:../crypto/asn1/asn1_lib.c:95:
+
+      '
+  expected_behavior: reject
+  classification: negative_control_support
+  candidate_level: none
+  evidence:
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/malformed_tail_only/asn1parse.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/malformed_tail_only/asn1parse.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/x509_der_certificate.malformed_tail_only.der
+  confidence: high
+  overclaim_guard: This is a conservative parser-oracle classification. It is not
+    a confirmed security claim and requires API-contract and app-level triage before
+    escalation.
+  next_triage_action: record_negative_control
+- oracle_type: parser_oracle
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: x509_der_certificate__malformed_tail_only__x509
+  observed_behavior:
+    command: openssl x509 -inform DER -noout
+    level: app_level
+    returncode: 1
+    behavior: rejected
+    stderr_excerpt: 'Could not read certificate from /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/x509_der_certificate.malformed_tail_only.der
+
+      Unable to load certificate
+
+      '
+  expected_behavior: reject
+  classification: expected_reject
+  candidate_level: none
+  evidence:
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/malformed_tail_only/x509.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/malformed_tail_only/x509.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/x509_der_certificate.malformed_tail_only.der
+  confidence: high
+  overclaim_guard: This is a conservative parser-oracle classification. It is not
+    a confirmed security claim and requires API-contract and app-level triage before
+    escalation.
+  next_triage_action: record_negative_control
+- oracle_type: parser_oracle
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: pkcs8_private_key_der__valid_object__asn1parse
+  observed_behavior:
+    command: openssl asn1parse -inform DER
+    level: low_level_asn1parse
+    returncode: 0
+    behavior: accepted
+    stderr_excerpt: ''
+  expected_behavior: accept
+  classification: expected_accept
+  candidate_level: none
+  evidence:
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object/asn1parse.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object/asn1parse.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/pkcs8_private_key_der.valid.der
+  confidence: high
+  overclaim_guard: This is a conservative parser-oracle classification. It is not
+    a confirmed security claim and requires API-contract and app-level triage before
+    escalation.
+  next_triage_action: record_baseline
+- oracle_type: parser_oracle
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: pkcs8_private_key_der__valid_object__pkey_private_pubout
+  observed_behavior:
+    command: openssl pkey -inform DER -pubout
+    level: app_level
+    returncode: 0
+    behavior: accepted
+    stderr_excerpt: ''
+  expected_behavior: accept
+  classification: expected_accept
+  candidate_level: none
+  evidence:
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object/pkey_private_pubout.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object/pkey_private_pubout.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/pkcs8_private_key_der.valid.der
+  confidence: high
+  overclaim_guard: This is a conservative parser-oracle classification. It is not
+    a confirmed security claim and requires API-contract and app-level triage before
+    escalation.
+  next_triage_action: record_baseline
+- oracle_type: parser_oracle
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: pkcs8_private_key_der__valid_object__pkcs8
+  observed_behavior:
+    command: openssl pkcs8 -inform DER -nocrypt
+    level: app_level
+    returncode: 0
+    behavior: accepted
+    stderr_excerpt: ''
+  expected_behavior: accept
+  classification: expected_accept
+  candidate_level: none
+  evidence:
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object/pkcs8.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object/pkcs8.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/pkcs8_private_key_der.valid.der
+  confidence: high
+  overclaim_guard: This is a conservative parser-oracle classification. It is not
+    a confirmed security claim and requires API-contract and app-level triage before
+    escalation.
+  next_triage_action: record_baseline
+- oracle_type: parser_oracle
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: pkcs8_private_key_der__valid_object_plus_malformed_tail__asn1parse
+  observed_behavior:
+    command: openssl asn1parse -inform DER
+    level: low_level_asn1parse
+    returncode: 1
+    behavior: rejected
+    stderr_excerpt: '809B5E6081750000:error:0680009B:asn1 encoding routines:ASN1_get_object:too
+      long:../crypto/asn1/asn1_lib.c:95:
+
+      '
+  expected_behavior: reject
+  classification: negative_control_support
+  candidate_level: none
+  evidence:
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object_plus_malformed_tail/asn1parse.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object_plus_malformed_tail/asn1parse.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/pkcs8_private_key_der.valid_plus_malformed_tail.der
+  confidence: high
+  overclaim_guard: This is a conservative parser-oracle classification. It is not
+    a confirmed security claim and requires API-contract and app-level triage before
+    escalation.
+  next_triage_action: record_low_level_tail_detection
+- oracle_type: parser_oracle
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: pkcs8_private_key_der__valid_object_plus_malformed_tail__pkey_private_pubout
+  observed_behavior:
+    command: openssl pkey -inform DER -pubout
+    level: app_level
+    returncode: 0
+    behavior: accepted
+    stderr_excerpt: ''
+  expected_behavior: reject
+  classification: semantic_gap_candidate
+  candidate_level: manual_review_required
+  evidence:
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object_plus_malformed_tail/pkey_private_pubout.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object_plus_malformed_tail/pkey_private_pubout.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/pkcs8_private_key_der.valid_plus_malformed_tail.der
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object_plus_malformed_tail/asn1parse.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object_plus_malformed_tail/asn1parse.stderr.log
+  confidence: medium
+  overclaim_guard: This is a conservative parser-oracle classification. It is not
+    a confirmed security claim and requires API-contract and app-level triage before
+    escalation.
+  next_triage_action: collect_app_level_contract_and_user_script_risk
+- oracle_type: parser_oracle
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: pkcs8_private_key_der__valid_object_plus_malformed_tail__pkcs8
+  observed_behavior:
+    command: openssl pkcs8 -inform DER -nocrypt
+    level: app_level
+    returncode: 0
+    behavior: accepted
+    stderr_excerpt: ''
+  expected_behavior: reject
+  classification: semantic_gap_candidate
+  candidate_level: manual_review_required
+  evidence:
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object_plus_malformed_tail/pkcs8.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object_plus_malformed_tail/pkcs8.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/pkcs8_private_key_der.valid_plus_malformed_tail.der
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object_plus_malformed_tail/asn1parse.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/valid_object_plus_malformed_tail/asn1parse.stderr.log
+  confidence: medium
+  overclaim_guard: This is a conservative parser-oracle classification. It is not
+    a confirmed security claim and requires API-contract and app-level triage before
+    escalation.
+  next_triage_action: collect_app_level_contract_and_user_script_risk
+- oracle_type: parser_oracle
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: pkcs8_private_key_der__malformed_tail_only__asn1parse
+  observed_behavior:
+    command: openssl asn1parse -inform DER
+    level: low_level_asn1parse
+    returncode: 1
+    behavior: rejected
+    stderr_excerpt: '80DB749BAE7D0000:error:0680009B:asn1 encoding routines:ASN1_get_object:too
+      long:../crypto/asn1/asn1_lib.c:95:
+
+      '
+  expected_behavior: reject
+  classification: negative_control_support
+  candidate_level: none
+  evidence:
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/malformed_tail_only/asn1parse.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/malformed_tail_only/asn1parse.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/pkcs8_private_key_der.malformed_tail_only.der
+  confidence: high
+  overclaim_guard: This is a conservative parser-oracle classification. It is not
+    a confirmed security claim and requires API-contract and app-level triage before
+    escalation.
+  next_triage_action: record_negative_control
+- oracle_type: parser_oracle
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: pkcs8_private_key_der__malformed_tail_only__pkey_private_pubout
+  observed_behavior:
+    command: openssl pkey -inform DER -pubout
+    level: app_level
+    returncode: 1
+    behavior: rejected
+    stderr_excerpt: 'Could not read key from /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/pkcs8_private_key_der.malformed_tail_only.der
+
+      '
+  expected_behavior: reject
+  classification: expected_reject
+  candidate_level: none
+  evidence:
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/malformed_tail_only/pkey_private_pubout.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/malformed_tail_only/pkey_private_pubout.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/pkcs8_private_key_der.malformed_tail_only.der
+  confidence: high
+  overclaim_guard: This is a conservative parser-oracle classification. It is not
+    a confirmed security claim and requires API-contract and app-level triage before
+    escalation.
+  next_triage_action: record_negative_control
+- oracle_type: parser_oracle
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: pkcs8_private_key_der__malformed_tail_only__pkcs8
+  observed_behavior:
+    command: openssl pkcs8 -inform DER -nocrypt
+    level: app_level
+    returncode: 1
+    behavior: rejected
+    stderr_excerpt: 'Error decrypting key
+
+      802BAF83FB700000:error:0680008E:asn1 encoding routines:asn1_d2i_read_bio:not
+      enough data:../crypto/asn1/a_d2i_fp.c:216:
+
+      '
+  expected_behavior: reject
+  classification: expected_reject
+  candidate_level: none
+  evidence:
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/malformed_tail_only/pkcs8.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/pkcs8_private_key_der/malformed_tail_only/pkcs8.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/pkcs8_private_key_der.malformed_tail_only.der
+  confidence: high
+  overclaim_guard: This is a conservative parser-oracle classification. It is not
+    a confirmed security claim and requires API-contract and app-level triage before
+    escalation.
+  next_triage_action: record_negative_control
+- oracle_type: parser_oracle
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: public_key_der__valid_object__asn1parse
+  observed_behavior:
+    command: openssl asn1parse -inform DER
+    level: low_level_asn1parse
+    returncode: 0
+    behavior: accepted
+    stderr_excerpt: ''
+  expected_behavior: accept
+  classification: expected_accept
+  candidate_level: none
+  evidence:
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/valid_object/asn1parse.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/valid_object/asn1parse.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/public_key_der.valid.der
+  confidence: high
+  overclaim_guard: This is a conservative parser-oracle classification. It is not
+    a confirmed security claim and requires API-contract and app-level triage before
+    escalation.
+  next_triage_action: record_baseline
+- oracle_type: parser_oracle
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: public_key_der__valid_object__pkey_public_pubout
+  observed_behavior:
+    command: openssl pkey -pubin -inform DER -pubout
+    level: app_level
+    returncode: 0
+    behavior: accepted
+    stderr_excerpt: ''
+  expected_behavior: accept
+  classification: expected_accept
+  candidate_level: none
+  evidence:
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/valid_object/pkey_public_pubout.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/valid_object/pkey_public_pubout.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/public_key_der.valid.der
+  confidence: high
+  overclaim_guard: This is a conservative parser-oracle classification. It is not
+    a confirmed security claim and requires API-contract and app-level triage before
+    escalation.
+  next_triage_action: record_baseline
+- oracle_type: parser_oracle
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: public_key_der__valid_object_plus_malformed_tail__asn1parse
+  observed_behavior:
+    command: openssl asn1parse -inform DER
+    level: low_level_asn1parse
+    returncode: 1
+    behavior: rejected
+    stderr_excerpt: '800B65EE3F7F0000:error:0680009B:asn1 encoding routines:ASN1_get_object:too
+      long:../crypto/asn1/asn1_lib.c:95:
+
+      '
+  expected_behavior: reject
+  classification: negative_control_support
+  candidate_level: none
+  evidence:
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/valid_object_plus_malformed_tail/asn1parse.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/valid_object_plus_malformed_tail/asn1parse.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/public_key_der.valid_plus_malformed_tail.der
+  confidence: high
+  overclaim_guard: This is a conservative parser-oracle classification. It is not
+    a confirmed security claim and requires API-contract and app-level triage before
+    escalation.
+  next_triage_action: record_low_level_tail_detection
+- oracle_type: parser_oracle
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: public_key_der__valid_object_plus_malformed_tail__pkey_public_pubout
+  observed_behavior:
+    command: openssl pkey -pubin -inform DER -pubout
+    level: app_level
+    returncode: 0
+    behavior: accepted
+    stderr_excerpt: ''
+  expected_behavior: reject
+  classification: semantic_gap_candidate
+  candidate_level: manual_review_required
+  evidence:
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/valid_object_plus_malformed_tail/pkey_public_pubout.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/valid_object_plus_malformed_tail/pkey_public_pubout.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/public_key_der.valid_plus_malformed_tail.der
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/valid_object_plus_malformed_tail/asn1parse.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/valid_object_plus_malformed_tail/asn1parse.stderr.log
+  confidence: medium
+  overclaim_guard: This is a conservative parser-oracle classification. It is not
+    a confirmed security claim and requires API-contract and app-level triage before
+    escalation.
+  next_triage_action: collect_app_level_contract_and_user_script_risk
+- oracle_type: parser_oracle
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: public_key_der__malformed_tail_only__asn1parse
+  observed_behavior:
+    command: openssl asn1parse -inform DER
+    level: low_level_asn1parse
+    returncode: 1
+    behavior: rejected
+    stderr_excerpt: '809B01ACBB750000:error:0680009B:asn1 encoding routines:ASN1_get_object:too
+      long:../crypto/asn1/asn1_lib.c:95:
+
+      '
+  expected_behavior: reject
+  classification: negative_control_support
+  candidate_level: none
+  evidence:
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/malformed_tail_only/asn1parse.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/malformed_tail_only/asn1parse.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/public_key_der.malformed_tail_only.der
+  confidence: high
+  overclaim_guard: This is a conservative parser-oracle classification. It is not
+    a confirmed security claim and requires API-contract and app-level triage before
+    escalation.
+  next_triage_action: record_negative_control
+- oracle_type: parser_oracle
+  family: parser_full_consumption_oracle
+  target: openssl
+  input_id: public_key_der__malformed_tail_only__pkey_public_pubout
+  observed_behavior:
+    command: openssl pkey -pubin -inform DER -pubout
+    level: app_level
+    returncode: 1
+    behavior: rejected
+    stderr_excerpt: 'Could not read key of Public Key from /home/wen/work/crypto-pattern-fuzz/artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/public_key_der.malformed_tail_only.der
+
+      '
+  expected_behavior: reject
+  classification: expected_reject
+  candidate_level: none
+  evidence:
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/malformed_tail_only/pkey_public_pubout.stdout.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/public_key_der/malformed_tail_only/pkey_public_pubout.stderr.log
+  - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/public_key_der.malformed_tail_only.der
+  confidence: high
+  overclaim_guard: This is a conservative parser-oracle classification. It is not
+    a confirmed security claim and requires API-contract and app-level triage before
+    escalation.
+  next_triage_action: record_negative_control

@@ -1,0 +1,92 @@
+schema: crypto_library_oracle_decision_rules_v1
+rules:
+- rule_id: execution_sanitizer_or_crash
+  condition: ASAN/UBSAN/crash/timeout/OOM
+  classification: candidate_event
+  next_action: high_priority_triage
+  overclaim_guard: candidate labels require follow-up triage and must not be treated
+    as final security claims
+- rule_id: normal_reject
+  condition: library rejects malformed or invalid input safely
+  classification: safe_reject
+  next_action: record_baseline
+  overclaim_guard: candidate labels require follow-up triage and must not be treated
+    as final security claims
+- rule_id: cross_library_accept_reject_difference
+  condition: different libraries accept/reject same input
+  classification: semantic_observation
+  next_action: review_contracts_before_escalation
+  overclaim_guard: candidate labels require follow-up triage and must not be treated
+    as final security claims
+- rule_id: full_consumption_gap_with_app_success
+  condition: low-level parser leaves trailing bytes while app-level path succeeds
+  classification: semantic_gap_candidate
+  next_action: collect_app_level_control
+  overclaim_guard: candidate labels require follow-up triage and must not be treated
+    as final security claims
+- rule_id: full_consumption_gap_low_level_only
+  condition: low-level parser consumes prefix only without app-level success
+  classification: semantic_observation
+  next_action: document_api_level
+  overclaim_guard: candidate labels require follow-up triage and must not be treated
+    as final security claims
+- rule_id: modified_tag_rejected
+  condition: tampered AEAD tag is rejected
+  classification: expected_negative_control
+  next_action: record_baseline
+  overclaim_guard: candidate labels require follow-up triage and must not be treated
+    as final security claims
+- rule_id: modified_tag_accepted
+  condition: tampered AEAD tag is accepted under valid decrypt contract
+  classification: semantic_gap_candidate
+  next_action: minimize_and_recheck
+  overclaim_guard: candidate labels require follow-up triage and must not be treated
+    as final security claims
+- rule_id: modified_signature_rejected
+  condition: tampered signature is rejected
+  classification: expected_negative_control
+  next_action: record_baseline
+  overclaim_guard: candidate labels require follow-up triage and must not be treated
+    as final security claims
+- rule_id: modified_signature_accepted
+  condition: tampered signature is accepted under valid verify contract
+  classification: semantic_gap_candidate
+  next_action: minimize_and_recheck
+  overclaim_guard: candidate labels require follow-up triage and must not be treated
+    as final security claims
+- rule_id: roundtrip_success
+  condition: parse/export/parse or from_bytes/to_bytes remains equivalent
+  classification: roundtrip_success
+  next_action: record_baseline
+  overclaim_guard: candidate labels require follow-up triage and must not be treated
+    as final security claims
+- rule_id: roundtrip_mismatch
+  condition: roundtrip changes semantic value without documented canonicalization
+  classification: semantic_observation
+  next_action: check_contract_and_canonicalization
+  overclaim_guard: candidate labels require follow-up triage and must not be treated
+    as final security claims
+- rule_id: unsupported_api
+  condition: target lacks equivalent API or export path
+  classification: unsupported
+  next_action: exclude_from_candidate_queue
+  overclaim_guard: candidate labels require follow-up triage and must not be treated
+    as final security claims
+- rule_id: invalid_contract
+  condition: harness violates documented API precondition
+  classification: invalid_contract
+  next_action: repair_or_exclude
+  overclaim_guard: candidate labels require follow-up triage and must not be treated
+    as final security claims
+- rule_id: failed_init_then_query_guarded
+  condition: query after failed init safely rejects or returns zero state
+  classification: safe_reject_or_state_guard
+  next_action: record_lifecycle_baseline
+  overclaim_guard: candidate labels require follow-up triage and must not be treated
+    as final security claims
+- rule_id: failed_init_then_query_abnormal
+  condition: query after failed init triggers crash/sanitizer/unsafe state
+  classification: robustness_candidate
+  next_action: triage_as_lifecycle_event
+  overclaim_guard: candidate labels require follow-up triage and must not be treated
+    as final security claims

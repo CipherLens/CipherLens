@@ -1,0 +1,52 @@
+schema: crypto_oracle_next_bulk_campaign_plan_v1
+plans:
+- plan_id: batch_connect_existing_roundtrip_results
+  input_sources:
+  - crypto_roundtrip_metamorphic_oracle_v1
+  adapters:
+  - serialization_roundtrip_adapter
+  output_oracles:
+  - roundtrip_oracle
+  requires_real_run: false
+- plan_id: batch_connect_existing_lifecycle_results
+  input_sources:
+  - stateful_lifecycle_valid_contract_v1
+  - secure_heap_lifecycle_candidate
+  adapters:
+  - mac_digest_adapter
+  - lifecycle_adapter
+  output_oracles:
+  - lifecycle_oracle
+  - execution_oracle
+  requires_real_run: false
+- plan_id: batch_connect_existing_aead_results
+  input_sources:
+  - cipher_aead_lifecycle_adapter_recipe_v1
+  adapters:
+  - aead_adapter
+  output_oracles:
+  - crypto_semantic_oracle
+  - negative_control_oracle
+  requires_real_run: false
+- plan_id: batch_generate_negative_control_baseline
+  input_sources:
+  - modified tag/signature/ciphertext/parser control manifests
+  adapters:
+  - aead_adapter
+  - sign_verify_adapter
+  - encrypt_decrypt_adapter
+  - parser_adapter
+  output_oracles:
+  - negative_control_oracle
+  requires_real_run: bounded smoke only when compact controls are missing
+- plan_id: batch_prepare_pkey_sign_verify_campaign
+  input_sources:
+  - future PKEY sign/verify compact run summary
+  adapters:
+  - sign_verify_adapter
+  - lifecycle_adapter
+  output_oracles:
+  - crypto_semantic_oracle
+  - negative_control_oracle
+  - lifecycle_oracle
+  requires_real_run: yes, as a separate bounded campaign

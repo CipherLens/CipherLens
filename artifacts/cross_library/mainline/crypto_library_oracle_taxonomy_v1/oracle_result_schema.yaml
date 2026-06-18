@@ -1,0 +1,45 @@
+schema: crypto_library_oracle_result_schema_v1
+required_fields:
+- oracle_type
+- family
+- target
+- input_id
+- observed_behavior
+- expected_behavior
+- classification
+- candidate_level
+- evidence
+- confidence
+- overclaim_guard
+- next_triage_action
+field_descriptions:
+  oracle_type: One of execution_oracle, parser_oracle, roundtrip_oracle, crypto_semantic_oracle,
+    lifecycle_oracle, differential_oracle, negative_control_oracle.
+  family: Harness or vulnerability-pattern family name.
+  target: Library/version/build target.
+  input_id: Stable seed/case identifier.
+  observed_behavior: Observed return code, stdout/stderr signal, parser state, or
+    semantic event.
+  expected_behavior: Expected behavior according to API contract or negative-control
+    design.
+  classification: safe_reject, semantic_observation, candidate_event, semantic_gap_candidate,
+    robustness_candidate, API_contract_gap_candidate, unsupported, invalid_contract,
+    expected_negative_control.
+  candidate_level: none, observation, low, medium, high_priority_triage.
+  evidence: Paths to compact logs, summaries, case manifests, or sanitizer evidence.
+  confidence: low, medium, high with rationale.
+  overclaim_guard: Plain-language guard preventing premature security claims.
+  next_triage_action: Record baseline, repair harness, add control, minimize, or queue
+    for manual review.
+candidate_label_vocabulary:
+- candidate_event
+- semantic_gap_candidate
+- robustness_candidate
+- API_contract_gap_candidate
+non_candidate_labels:
+- safe_reject
+- semantic_observation
+- unsupported
+- invalid_contract
+- expected_negative_control
+- roundtrip_success

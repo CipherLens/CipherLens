@@ -1,0 +1,161 @@
+schema: crypto_library_oracle_taxonomy_v1
+oracle_types:
+- oracle_name: execution_oracle
+  purpose: Detect process-level abnormal termination and sanitizer-visible memory
+    or undefined-behavior events.
+  input_type:
+  - compiled harness
+  - library API call sequence
+  - sanitizer runtime output
+  expected_signal:
+  - asan
+  - ubsan
+  - sigsegv
+  - abort
+  - timeout
+  - oom
+  - crash_like_nonzero_exit
+  candidate_level: candidate_event
+  example_cases:
+  - ASAN heap-buffer-overflow
+  - UBSAN integer overflow
+  - timeout in deterministic API harness
+  false_positive_risks:
+  - environmental sanitizer noise
+  - intentional harness exit code
+  - resource limits unrelated to API behavior
+  conservative_label: execution_candidate_event
+- oracle_name: parser_oracle
+  purpose: Classify parser accept/reject behavior, structural consumption, and encoding-boundary
+    handling.
+  input_type:
+  - DER
+  - PEM
+  - ASN.1 container
+  - PKCS/X.509/key material
+  expected_signal:
+  - accept
+  - reject
+  - full_consumption
+  - trailing_garbage
+  - invalid_length
+  - invalid_tag
+  - truncated_input
+  candidate_level: semantic_observation_by_default
+  example_cases:
+  - DER parser accepts prefix with trailing bytes
+  - X.509 parser rejects malformed inner boundary
+  false_positive_risks:
+  - low-level API intentionally accepts prefixes
+  - application layer performs missing validation
+  - format variants are library-specific
+  conservative_label: parser_semantic_observation_or_gap
+- oracle_name: roundtrip_oracle
+  purpose: Check parse/export/parse and byte/string conversion consistency.
+  input_type:
+  - parsed object
+  - serialized object
+  - BIGNUM bytes
+  - DER/PEM data
+  expected_signal:
+  - roundtrip_success
+  - roundtrip_mismatch
+  - normal_reject
+  - unsupported_api
+  candidate_level: semantic_observation_unless_contract_violation
+  example_cases:
+  - BIGNUM from_bytes/to_bytes consistency
+  - DER parse-export-parse comparison
+  false_positive_risks:
+  - canonicalization changes
+  - lossy export API
+  - unsupported equivalent operation
+  conservative_label: roundtrip_semantic_observation
+- oracle_name: crypto_semantic_oracle
+  purpose: Check cryptographic semantic invariants under valid API contracts.
+  input_type:
+  - encrypt/decrypt sequence
+  - sign/verify sequence
+  - MAC sequence
+  - digest sequence
+  expected_signal:
+  - same_plaintext_after_decrypt
+  - verify_accepts_valid_signature
+  - one_shot_streaming_match
+  - expected_auth_failure
+  candidate_level: semantic_gap_candidate_only_when_valid_contract_breaks
+  example_cases:
+  - AEAD encrypt then decrypt
+  - MAC one-shot vs streaming
+  - digest one-shot vs streaming
+  false_positive_risks:
+  - expected authentication failure
+  - invalid key or nonce contract
+  - provider-specific unavailable algorithms
+  conservative_label: crypto_semantic_observation_or_gap
+- oracle_name: lifecycle_oracle
+  purpose: Classify API state-machine behavior across init/update/final/reset/reuse
+    and failed-init paths.
+  input_type:
+  - API call sequence
+  - object lifecycle trace
+  - stateful context
+  expected_signal:
+  - valid_sequence_success
+  - safe_reject
+  - state_guard
+  - robustness_event
+  - api_contract_gap
+  candidate_level: robustness_candidate_or_API_contract_gap_candidate
+  example_cases:
+  - init/update/final
+  - reset/reuse
+  - failed-init followed by query
+  - secure heap state query
+  false_positive_risks:
+  - invalid contract treated as bug
+  - documented undefined state
+  - test harness violates object ownership
+  conservative_label: lifecycle_robustness_or_contract_gap
+- oracle_name: differential_oracle
+  purpose: Compare behavior across libraries, versions, or app-level versus low-level
+    APIs.
+  input_type:
+  - paired run result
+  - cross-library target matrix
+  - cross-version target matrix
+  expected_signal:
+  - same_behavior
+  - different_behavior
+  - version_delta
+  - app_low_level_delta
+  candidate_level: semantic_observation_by_default
+  example_cases:
+  - mbedTLS vs Botan AEAD lifecycle
+  - OpenSSL app-level command vs low-level decoder
+  false_positive_risks:
+  - different API contracts
+  - different abstraction levels
+  - unsupported feature parity
+  conservative_label: differential_semantic_observation
+- oracle_name: negative_control_oracle
+  purpose: Verify that intentionally invalid inputs fail in the expected way.
+  input_type:
+  - modified tag
+  - modified signature
+  - malformed DER
+  - tampered ciphertext
+  expected_signal:
+  - expected_negative_control
+  - unexpected_accept
+  - safe_reject
+  candidate_level: unexpected_accept_observation_or_semantic_gap_candidate
+  example_cases:
+  - modified AEAD tag rejected
+  - modified signature rejected
+  - malformed DER rejected
+  false_positive_risks:
+  - test mutates non-authenticated bytes
+  - API caller checks failure elsewhere
+  - ambiguous input validity
+  conservative_label: negative_control_observation_or_gap

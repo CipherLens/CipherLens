@@ -1,0 +1,29 @@
+schema: oracle_v1_do_not_commit_list_v1
+task_name: oracle_v1_release_readiness_check
+do_not_commit_patterns:
+- artifacts/**/compiled_cases/
+- artifacts/**/work/
+- artifacts/**/*.bin
+- artifacts/**/*.so
+- artifacts/**/*.a
+- artifacts/**/*.log when large or temporary
+- artifacts/campaigns/** unrelated to oracle v1
+- artifacts/sprints/** unrelated to oracle v1
+- artifacts/triage/** unrelated to oracle v1
+- artifacts/cross_library/seed_enrichment/**
+- artifacts/cross_library/replay/** unrelated to oracle v1
+- artifacts/cross_library/behavior_guided/**
+- artifacts/cross_library/bootstrap/** smoke binaries
+- data/wolfssl_collect/** unrelated generated build logs
+- analysis/* files not listed in oracle_v1_push_checklist.md
+- config/target_libraries.yaml unless separately reviewed
+- analysis/cross_library_bootstrap.py unless separately reviewed
+known_dirty_unrelated_examples:
+- analysis/cross_library_bootstrap.py
+- config/target_libraries.yaml
+- artifacts/campaigns/**/work/
+- artifacts/sprints/**/compiled_cases/
+- artifacts/triage/**/work/
+- data/wolfssl_collect/**/build_info.txt
+reason: These are historical noise, temporary outputs, compiled artifacts, or unrelated
+  generated data outside the oracle v1 release scope.

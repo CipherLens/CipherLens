@@ -1,0 +1,108 @@
+schema: oracle_v1_module_index_v1
+modules:
+- module_name: crypto_library_oracle_taxonomy_v1
+  implementation_file: analysis/crypto_library_oracle_taxonomy.py
+  artifact_dir: artifacts/cross_library/mainline/crypto_library_oracle_taxonomy_v1
+  role_in_oracle_v1: 定义 oracle taxonomy、decision rules、统一 result schema，并给后续 dispatcher
+    提供分类边界。
+  implementation_exists: true
+  artifact_dir_exists: true
+  generated_files:
+  - oracle_taxonomy.yaml
+  - oracle_decision_rules.yaml
+  - oracle_result_schema.yaml
+  - reclassified_existing_results.yaml
+  - oracle_gap_analysis.md
+  - next_campaign_plan.yaml
+  - quality_report.yaml
+  quality_report: artifacts/cross_library/mainline/crypto_library_oracle_taxonomy_v1/quality_report.yaml
+  quality_status: pass_oracle_taxonomy_ready
+- module_name: parser_full_consumption_oracle_v2
+  implementation_file: analysis/parser_full_consumption_oracle.py
+  artifact_dir: artifacts/cross_library/mainline/parser_full_consumption_oracle_v2
+  role_in_oracle_v1: 验证 DER full-consumption / trailing-garbage parser oracle，形成 app-level
+    与 low-level 行为对照。
+  implementation_exists: true
+  artifact_dir_exists: true
+  generated_files:
+  - case_matrix.yaml
+  - oracle_results.yaml
+  - classification_summary.yaml
+  - app_vs_low_level_analysis.md
+  - negative_control_report.yaml
+  - resume_progress_snippet.md
+  - quality_report.yaml
+  quality_report: artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/quality_report.yaml
+  quality_status: pass_parser_full_consumption_oracle_ready
+- module_name: central_oracle_dispatcher_v1
+  implementation_file: analysis/central_oracle_dispatcher.py
+  artifact_dir: artifacts/cross_library/mainline/central_oracle_dispatcher_v1
+  role_in_oracle_v1: 将不同 campaign 的 raw observation 归一为保守分类标签和 candidate queue 入口规则。
+  implementation_exists: true
+  artifact_dir_exists: true
+  generated_files:
+  - dispatcher_design.md
+  - dispatcher_input_schema.yaml
+  - dispatcher_output_schema.yaml
+  - dispatch_rules.yaml
+  - dispatched_parser_results.yaml
+  - integration_plan.yaml
+  - quality_report.yaml
+  quality_report: artifacts/cross_library/mainline/central_oracle_dispatcher_v1/quality_report.yaml
+  quality_status: pass_central_oracle_dispatcher_ready
+- module_name: crypto_oracle_bulk_adapter_registry_v1
+  implementation_file: analysis/crypto_oracle_bulk_adapter_registry.py
+  artifact_dir: artifacts/cross_library/mainline/crypto_oracle_bulk_adapter_registry_v1
+  role_in_oracle_v1: 登记批量 adapter、输入输出契约和既有 campaign 到 dispatcher 的映射。
+  implementation_exists: true
+  artifact_dir_exists: true
+  generated_files:
+  - adapter_registry.yaml
+  - adapter_input_contracts.yaml
+  - adapter_output_examples.yaml
+  - bulk_dispatch_mapping.yaml
+  - existing_campaign_adapter_report.yaml
+  - crypto_oracle_common_patterns.md
+  - next_bulk_campaign_plan.yaml
+  - quality_report.yaml
+  quality_report: artifacts/cross_library/mainline/crypto_oracle_bulk_adapter_registry_v1/quality_report.yaml
+  quality_status: pass_bulk_adapter_registry_ready
+- module_name: batch_connect_existing_oracle_results_v1
+  implementation_file: analysis/batch_connect_existing_oracle_results.py
+  artifact_dir: artifacts/cross_library/mainline/batch_connect_existing_oracle_results_v1
+  role_in_oracle_v1: 把既有结果批量接入 unified oracle ledger，并产出 candidate / semantic observation
+    / safe reject 三类队列。
+  implementation_exists: true
+  artifact_dir_exists: true
+  generated_files:
+  - unified_oracle_ledger.yaml
+  - candidate_queue.yaml
+  - semantic_observation_queue.yaml
+  - safe_reject_baseline.yaml
+  - unsupported_or_missing_report.yaml
+  - adapter_dispatch_report.yaml
+  - classification_statistics.yaml
+  - resume_progress_snippet.md
+  - quality_report.yaml
+  quality_report: artifacts/cross_library/mainline/batch_connect_existing_oracle_results_v1/quality_report.yaml
+  quality_status: pass_existing_oracle_results_connected
+- module_name: pkey_sign_verify_lifecycle_oracle_v1
+  implementation_file: analysis/pkey_sign_verify_lifecycle_oracle.py
+  artifact_dir: artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1
+  role_in_oracle_v1: 验证 PKEY sign/verify 的 crypto semantic、negative control 与 lifecycle
+    oracle 接入 dispatcher。
+  implementation_exists: true
+  artifact_dir_exists: true
+  generated_files:
+  - case_matrix.yaml
+  - raw_run_summary.yaml
+  - dispatcher_inputs.yaml
+  - oracle_results.yaml
+  - candidate_queue_delta.yaml
+  - negative_control_report.yaml
+  - cross_library_consistency_report.yaml
+  - classification_statistics.yaml
+  - resume_progress_snippet.md
+  - quality_report.yaml
+  quality_report: artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1/quality_report.yaml
+  quality_status: pass_pkey_sign_verify_oracle_ready

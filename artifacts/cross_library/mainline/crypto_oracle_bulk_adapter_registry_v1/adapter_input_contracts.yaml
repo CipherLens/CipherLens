@@ -1,0 +1,133 @@
+schema: crypto_oracle_adapter_input_contracts_v1
+contracts:
+- adapter_name: parser_adapter
+  minimum_common_fields: &id001
+  - source_campaign
+  - family
+  - target
+  - input_id
+  - expected_behavior
+  - observed_behavior
+  - evidence_files
+  adapter_specific_fields:
+  - input_format
+  - parser_return
+  - consumed_len
+  - input_len
+  - app_command_status
+  - low_level_status
+  must_not_assume:
+  - normal reject means candidate
+  - unsupported API means candidate
+  - schema example is a real experiment
+- adapter_name: serialization_roundtrip_adapter
+  minimum_common_fields: *id001
+  adapter_specific_fields:
+  - parse_status
+  - export_status
+  - reparse_status
+  - value_equal
+  - unsupported_reason
+  must_not_assume:
+  - normal reject means candidate
+  - unsupported API means candidate
+  - schema example is a real experiment
+- adapter_name: sign_verify_adapter
+  minimum_common_fields: *id001
+  adapter_specific_fields:
+  - sign_status
+  - verify_status
+  - signature_variant
+  - key_variant
+  - digest_variant
+  must_not_assume:
+  - normal reject means candidate
+  - unsupported API means candidate
+  - schema example is a real experiment
+- adapter_name: encrypt_decrypt_adapter
+  minimum_common_fields: *id001
+  adapter_specific_fields:
+  - encrypt_status
+  - decrypt_status
+  - plaintext_equal
+  - mutation_kind
+  - auth_or_padding_status
+  must_not_assume:
+  - normal reject means candidate
+  - unsupported API means candidate
+  - schema example is a real experiment
+- adapter_name: aead_adapter
+  minimum_common_fields: *id001
+  adapter_specific_fields:
+  - encrypt_status
+  - decrypt_status
+  - tag_variant
+  - aad_variant
+  - ciphertext_variant
+  - plaintext_equal
+  must_not_assume:
+  - normal reject means candidate
+  - unsupported API means candidate
+  - schema example is a real experiment
+- adapter_name: mac_digest_adapter
+  minimum_common_fields: *id001
+  adapter_specific_fields:
+  - one_shot_output
+  - streaming_output
+  - final_status
+  - reset_status
+  - reuse_status
+  must_not_assume:
+  - normal reject means candidate
+  - unsupported API means candidate
+  - schema example is a real experiment
+- adapter_name: kdf_rng_adapter
+  minimum_common_fields: *id001
+  adapter_specific_fields:
+  - input_material
+  - salt_info_variant
+  - output_equal
+  - status_code
+  - health_status
+  must_not_assume:
+  - normal reject means candidate
+  - unsupported API means candidate
+  - schema example is a real experiment
+- adapter_name: lifecycle_adapter
+  minimum_common_fields: *id001
+  adapter_specific_fields:
+  - sequence_id
+  - call_steps
+  - state_after_error
+  - exit_signal
+  - sanitizer_signal
+  must_not_assume:
+  - normal reject means candidate
+  - unsupported API means candidate
+  - schema example is a real experiment
+- adapter_name: differential_adapter
+  minimum_common_fields: *id001
+  adapter_specific_fields:
+  - left_target
+  - right_target
+  - left_behavior
+  - right_behavior
+  - contract_context
+  must_not_assume:
+  - normal reject means candidate
+  - unsupported API means candidate
+  - schema example is a real experiment
+- adapter_name: execution_adapter
+  minimum_common_fields: *id001
+  adapter_specific_fields:
+  - exit_code
+  - signal
+  - asan
+  - ubsan
+  - timeout
+  - oom
+  - stderr_excerpt
+  must_not_assume:
+  - normal reject means candidate
+  - unsupported API means candidate
+  - schema example is a real experiment

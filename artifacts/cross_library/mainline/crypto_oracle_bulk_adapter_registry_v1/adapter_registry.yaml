@@ -1,0 +1,310 @@
+schema: crypto_oracle_adapter_registry_v1
+adapters:
+- adapter_name: parser_adapter
+  supported_families:
+  - x509_der_parse
+  - asn1_nested_parse
+  - pkcs_container_parse
+  - pkey_der_parse
+  source_result_fields:
+  - input_format
+  - parser_return
+  - consumed_len
+  - input_len
+  - app_command_status
+  - low_level_status
+  mapped_oracle_type:
+  - parser_oracle
+  - negative_control_oracle
+  - differential_oracle
+  mapped_dispatcher_fields:
+  - observed_behavior
+  - expected_behavior
+  - control_behavior
+  - differential_context
+  - evidence_files
+  candidate_upgrade_conditions:
+  - app-level success plus low-level full-consumption or trailing-tail support
+  false_positive_risks:
+  - low-level APIs may intentionally parse one object
+  - app command may document prefix consumption
+  conservative_labels:
+  - expected_accept
+  - expected_reject
+  - negative_control_support
+  - unexpected_accept_observation
+  - semantic_gap_candidate
+- adapter_name: serialization_roundtrip_adapter
+  supported_families:
+  - pkcs8_parse_export
+  - der_pem_roundtrip
+  - bignum_from_bytes_to_bytes
+  - public_private_key_serialization
+  source_result_fields:
+  - parse_status
+  - export_status
+  - reparse_status
+  - value_equal
+  - unsupported_reason
+  mapped_oracle_type:
+  - roundtrip_oracle
+  mapped_dispatcher_fields:
+  - observed_behavior
+  - expected_behavior
+  - evidence_files
+  candidate_upgrade_conditions:
+  - semantic mismatch after valid non-lossy roundtrip and contract review
+  false_positive_risks:
+  - canonicalization
+  - lossy export APIs
+  - unsupported equivalent operation
+  conservative_labels:
+  - roundtrip_success
+  - semantic_observation
+  - unsupported
+- adapter_name: sign_verify_adapter
+  supported_families:
+  - pkey_sign_verify
+  - signature_modified_control
+  - wrong_key_verify
+  - wrong_digest_verify
+  source_result_fields:
+  - sign_status
+  - verify_status
+  - signature_variant
+  - key_variant
+  - digest_variant
+  mapped_oracle_type:
+  - crypto_semantic_oracle
+  - negative_control_oracle
+  mapped_dispatcher_fields:
+  - observed_behavior
+  - expected_behavior
+  - control_behavior
+  - evidence_files
+  candidate_upgrade_conditions:
+  - modified signature accepted under valid verify contract
+  false_positive_risks:
+  - invalid key setup
+  - ambiguous digest defaults
+  - unsupported signature scheme
+  conservative_labels:
+  - expected_accept
+  - expected_negative_control
+  - unexpected_accept_observation
+  - semantic_gap_candidate
+- adapter_name: encrypt_decrypt_adapter
+  supported_families:
+  - cipher_encrypt_decrypt
+  - wrong_padding
+  - wrong_key
+  - wrong_nonce
+  - modified_ciphertext
+  source_result_fields:
+  - encrypt_status
+  - decrypt_status
+  - plaintext_equal
+  - mutation_kind
+  - auth_or_padding_status
+  mapped_oracle_type:
+  - crypto_semantic_oracle
+  - negative_control_oracle
+  mapped_dispatcher_fields:
+  - observed_behavior
+  - expected_behavior
+  - control_behavior
+  - evidence_files
+  candidate_upgrade_conditions:
+  - invalid ciphertext accepted as valid plaintext under a valid contract
+  false_positive_risks:
+  - unauthenticated modes can decrypt modified ciphertext
+  - padding errors are expected negative controls
+  conservative_labels:
+  - expected_accept
+  - expected_negative_control
+  - semantic_observation
+  - semantic_gap_candidate
+- adapter_name: aead_adapter
+  supported_families:
+  - aead_encrypt_decrypt
+  - modified_aead_tag
+  - modified_aad
+  - modified_ciphertext
+  - wrong_nonce
+  source_result_fields:
+  - encrypt_status
+  - decrypt_status
+  - tag_variant
+  - aad_variant
+  - ciphertext_variant
+  - plaintext_equal
+  mapped_oracle_type:
+  - crypto_semantic_oracle
+  - negative_control_oracle
+  mapped_dispatcher_fields:
+  - observed_behavior
+  - expected_behavior
+  - control_behavior
+  - evidence_files
+  candidate_upgrade_conditions:
+  - modified tag/AAD/ciphertext accepted under valid AEAD contract
+  false_positive_risks:
+  - control mutates unauthenticated field
+  - API returns expected authentication failure
+  conservative_labels:
+  - expected_accept
+  - expected_negative_control
+  - unexpected_accept_observation
+  - semantic_gap_candidate
+- adapter_name: mac_digest_adapter
+  supported_families:
+  - mac_streaming_consistency
+  - digest_streaming_consistency
+  - split_update
+  - empty_update
+  - reset_reuse
+  source_result_fields:
+  - one_shot_output
+  - streaming_output
+  - final_status
+  - reset_status
+  - reuse_status
+  mapped_oracle_type:
+  - crypto_semantic_oracle
+  - lifecycle_oracle
+  mapped_dispatcher_fields:
+  - observed_behavior
+  - expected_behavior
+  - control_behavior
+  - evidence_files
+  candidate_upgrade_conditions:
+  - same valid message/key produces inconsistent output without contract explanation
+  false_positive_risks:
+  - stateful API invalid reuse
+  - provider-specific algorithm availability
+  conservative_labels:
+  - roundtrip_success
+  - expected_accept
+  - safe_reject_or_state_guard
+  - semantic_observation
+- adapter_name: kdf_rng_adapter
+  supported_families:
+  - kdf_determinism
+  - kdf_salt_info_variation
+  - rng_status_health
+  source_result_fields:
+  - input_material
+  - salt_info_variant
+  - output_equal
+  - status_code
+  - health_status
+  mapped_oracle_type:
+  - crypto_semantic_oracle
+  - lifecycle_oracle
+  mapped_dispatcher_fields:
+  - observed_behavior
+  - expected_behavior
+  - control_behavior
+  - evidence_files
+  candidate_upgrade_conditions:
+  - KDF invariants fail under identical input or RNG reports abnormal execution signal
+  false_positive_risks:
+  - randomized KDF settings
+  - RNG nondeterminism expected
+  - missing entropy source in environment
+  conservative_labels:
+  - expected_accept
+  - semantic_observation
+  - safe_reject_or_state_guard
+- adapter_name: lifecycle_adapter
+  supported_families:
+  - init_update_final
+  - failed_init_then_query
+  - free_then_access
+  - reset_reuse
+  - secure_heap_lifecycle
+  source_result_fields:
+  - sequence_id
+  - call_steps
+  - state_after_error
+  - exit_signal
+  - sanitizer_signal
+  mapped_oracle_type:
+  - lifecycle_oracle
+  - execution_oracle
+  mapped_dispatcher_fields:
+  - observed_behavior
+  - expected_behavior
+  - control_behavior
+  - sanitizer_signal
+  - timeout_signal
+  - evidence_files
+  candidate_upgrade_conditions:
+  - crash/sanitizer/timeout or robustness candidate after valid state-machine probe
+  false_positive_risks:
+  - invalid API contract
+  - object ownership violation
+  - documented undefined state
+  conservative_labels:
+  - safe_reject_or_state_guard
+  - robustness_candidate
+  - API_contract_gap_candidate
+  - candidate_event
+- adapter_name: differential_adapter
+  supported_families:
+  - cross_library_behavior
+  - cross_version_behavior
+  - app_vs_low_level_behavior
+  source_result_fields:
+  - left_target
+  - right_target
+  - left_behavior
+  - right_behavior
+  - contract_context
+  mapped_oracle_type:
+  - differential_oracle
+  mapped_dispatcher_fields:
+  - observed_behavior
+  - expected_behavior
+  - differential_context
+  - evidence_files
+  candidate_upgrade_conditions:
+  - behavior delta plus explicit contract evidence and controls
+  false_positive_risks:
+  - different abstraction level
+  - different supported feature set
+  - different documented contracts
+  conservative_labels:
+  - semantic_observation
+  - version_delta_needs_triage
+- adapter_name: execution_adapter
+  supported_families:
+  - crash_or_timeout
+  - asan_event
+  - ubsan_event
+  - abort_event
+  - oom_event
+  source_result_fields:
+  - exit_code
+  - signal
+  - asan
+  - ubsan
+  - timeout
+  - oom
+  - stderr_excerpt
+  mapped_oracle_type:
+  - execution_oracle
+  mapped_dispatcher_fields:
+  - raw_exit_code
+  - sanitizer_signal
+  - timeout_signal
+  - raw_stderr_summary
+  - evidence_files
+  candidate_upgrade_conditions:
+  - ASAN/UBSAN/crash/timeout/OOM signal
+  false_positive_risks:
+  - environment sanitizer noise
+  - intentional harness exit code
+  - resource limit unrelated to target API
+  conservative_labels:
+  - candidate_event

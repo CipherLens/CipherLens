@@ -1,0 +1,123 @@
+schema: pkey_sign_verify_cross_library_consistency_report_v1
+task_name: pkey_sign_verify_lifecycle_oracle_v1
+rows:
+- input_variant: empty_message_sign_verify
+  target_count: 4
+  classifications:
+  - expected_accept
+  - unsupported
+  consistent: false
+  items:
+  - target: openssl-system-cli
+    classification: expected_accept
+    candidate_level: none
+  - target: mbedtls-3.6.4-asan
+    classification: expected_accept
+    candidate_level: none
+  - target: mbedtls-4.1.0-asan
+    classification: unsupported
+    candidate_level: none
+  - target: botan-3.10.0-asan
+    classification: expected_accept
+    candidate_level: none
+  interpretation: cross_target_environment_or_api_delta_observation
+- input_variant: failed_init_or_invalid_key_path
+  target_count: 4
+  classifications:
+  - safe_reject_or_state_guard
+  - unsupported
+  consistent: false
+  items:
+  - target: openssl-system-cli
+    classification: safe_reject_or_state_guard
+    candidate_level: none
+  - target: mbedtls-3.6.4-asan
+    classification: safe_reject_or_state_guard
+    candidate_level: none
+  - target: mbedtls-4.1.0-asan
+    classification: unsupported
+    candidate_level: none
+  - target: botan-3.10.0-asan
+    classification: safe_reject_or_state_guard
+    candidate_level: none
+  interpretation: cross_target_environment_or_api_delta_observation
+- input_variant: modified_signature_verify
+  target_count: 4
+  classifications:
+  - expected_negative_control
+  - unsupported
+  consistent: false
+  items:
+  - target: openssl-system-cli
+    classification: expected_negative_control
+    candidate_level: none
+  - target: mbedtls-3.6.4-asan
+    classification: expected_negative_control
+    candidate_level: none
+  - target: mbedtls-4.1.0-asan
+    classification: unsupported
+    candidate_level: none
+  - target: botan-3.10.0-asan
+    classification: expected_negative_control
+    candidate_level: none
+  interpretation: cross_target_environment_or_api_delta_observation
+- input_variant: valid_sign_verify
+  target_count: 4
+  classifications:
+  - expected_accept
+  - unsupported
+  consistent: false
+  items:
+  - target: openssl-system-cli
+    classification: expected_accept
+    candidate_level: none
+  - target: mbedtls-3.6.4-asan
+    classification: expected_accept
+    candidate_level: none
+  - target: mbedtls-4.1.0-asan
+    classification: unsupported
+    candidate_level: none
+  - target: botan-3.10.0-asan
+    classification: expected_accept
+    candidate_level: none
+  interpretation: cross_target_environment_or_api_delta_observation
+- input_variant: wrong_key_verify
+  target_count: 4
+  classifications:
+  - expected_negative_control
+  - unsupported
+  consistent: false
+  items:
+  - target: openssl-system-cli
+    classification: expected_negative_control
+    candidate_level: none
+  - target: mbedtls-3.6.4-asan
+    classification: expected_negative_control
+    candidate_level: none
+  - target: mbedtls-4.1.0-asan
+    classification: unsupported
+    candidate_level: none
+  - target: botan-3.10.0-asan
+    classification: expected_negative_control
+    candidate_level: none
+  interpretation: cross_target_environment_or_api_delta_observation
+- input_variant: wrong_message_verify
+  target_count: 4
+  classifications:
+  - expected_negative_control
+  - unsupported
+  consistent: false
+  items:
+  - target: openssl-system-cli
+    classification: expected_negative_control
+    candidate_level: none
+  - target: mbedtls-3.6.4-asan
+    classification: expected_negative_control
+    candidate_level: none
+  - target: mbedtls-4.1.0-asan
+    classification: unsupported
+    candidate_level: none
+  - target: botan-3.10.0-asan
+    classification: expected_negative_control
+    candidate_level: none
+  interpretation: cross_target_environment_or_api_delta_observation

@@ -1,0 +1,84 @@
+schema: crypto_library_next_campaign_plan_v1
+campaigns:
+- campaign_id: parser_full_consumption_oracle_v2
+  priority: 1
+  goal: Unify full-consumption and trailing-garbage parser rules across low-level
+    and app-level APIs.
+  inputs:
+  - valid DER prefix
+  - trailing garbage variants
+  - app-level control path
+  oracle_types:
+  - parser_oracle
+  - differential_oracle
+  expected_outputs:
+  - semantic_observation
+  - semantic_gap_candidate when app-level success proves a contract-relevant gap
+  candidate_escalation_conditions:
+  - full-consumption gap plus app-level success or documented caller-risk contract
+- campaign_id: secure_heap_lifecycle_oracle_v2
+  priority: 2
+  goal: Normalize failed-init/query/done/reinit secure heap state-machine results.
+  inputs:
+  - failed init
+  - pre-init query
+  - done then query
+  - reinit after done
+  oracle_types:
+  - lifecycle_oracle
+  - execution_oracle
+  expected_outputs:
+  - state_guard
+  - safe_reject
+  - robustness_candidate
+  candidate_escalation_conditions:
+  - sanitizer/crash/timeout or unsafe state after valid robustness probe
+- campaign_id: pkey_sign_verify_lifecycle_oracle_v1
+  priority: 3
+  goal: Add bounded PKEY sign/verify lifecycle baseline without broad fuzz expansion.
+  inputs:
+  - valid key
+  - valid signature
+  - modified signature
+  - wrong key control
+  oracle_types:
+  - crypto_semantic_oracle
+  - negative_control_oracle
+  - lifecycle_oracle
+  expected_outputs:
+  - verify_success
+  - expected_negative_control
+  - semantic_observation
+  candidate_escalation_conditions:
+  - modified signature accepted under valid verify contract or sanitizer/crash/timeout
+- campaign_id: negative_control_oracle_v1
+  priority: 4
+  goal: Centralize modified tag/signature/ciphertext/parser negative controls.
+  inputs:
+  - modified AEAD tag
+  - modified signature
+  - malformed DER length/tag
+  oracle_types:
+  - negative_control_oracle
+  expected_outputs:
+  - expected_negative_control
+  - unexpected_accept_observation
+  - semantic_gap_candidate
+  candidate_escalation_conditions:
+  - unexpected accept with valid negative-control construction and contract evidence
+- campaign_id: cross_version_differential_oracle_v1
+  priority: 5
+  goal: Normalize cross-version and cross-implementation behavior deltas under explicit
+    API contracts.
+  inputs:
+  - paired version runs
+  - library matrix summaries
+  - known safe controls
+  oracle_types:
+  - differential_oracle
+  expected_outputs:
+  - same_behavior
+  - semantic_observation
+  - version_delta_needs_triage
+  candidate_escalation_conditions:
+  - delta plus contract violation evidence plus control proving valid input path

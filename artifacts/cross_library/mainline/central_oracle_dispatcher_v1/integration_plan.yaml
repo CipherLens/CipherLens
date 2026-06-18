@@ -1,0 +1,42 @@
+schema: central_oracle_dispatcher_integration_plan_v1
+campaigns:
+- campaign_id: parser_full_consumption_oracle_v2
+  status: integrated_and_verified
+  input_adapter: parser_result_to_dispatch_input
+  oracle_types:
+  - parser_oracle
+  - negative_control_oracle
+  candidate_queue_entry_condition: semantic_gap_candidate only after app-level success
+    plus low-level tail/full-consumption support
+- campaign_id: secure_heap_lifecycle_oracle_v2
+  status: next
+  input_adapter: map lifecycle sequence summaries to lifecycle_oracle records
+  oracle_types:
+  - lifecycle_oracle
+  - execution_oracle
+  candidate_queue_entry_condition: sanitizer/crash/timeout or robustness_candidate
+    after API-contract review
+- campaign_id: pkey_sign_verify_lifecycle_oracle_v1
+  status: next
+  input_adapter: map sign/verify and modified-signature controls to crypto_semantic_oracle
+    records
+  oracle_types:
+  - crypto_semantic_oracle
+  - negative_control_oracle
+  - lifecycle_oracle
+  candidate_queue_entry_condition: modified signature accepted under valid verify
+    contract
+- campaign_id: negative_control_oracle_v1
+  status: planned
+  input_adapter: normalize modified tag/signature/ciphertext/parser controls
+  oracle_types:
+  - negative_control_oracle
+  candidate_queue_entry_condition: unexpected accept with valid control construction
+    and contract evidence
+- campaign_id: cross_version_differential_oracle_v1
+  status: planned
+  input_adapter: normalize cross-version/cross-library behavior matrices
+  oracle_types:
+  - differential_oracle
+  candidate_queue_entry_condition: differential delta plus contract evidence and controls;
+    default is observation

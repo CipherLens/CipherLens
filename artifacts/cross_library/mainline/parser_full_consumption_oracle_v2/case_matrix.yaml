@@ -1,0 +1,152 @@
+schema: parser_full_consumption_case_matrix_v2
+sample_generation:
+  openssl_path: /usr/bin/openssl
+  generated: true
+cases:
+- case_id: x509_der_certificate__valid_object__asn1parse
+  object_type: x509_der_certificate
+  input_variant: valid_object
+  input_description: Pure valid DER object.
+  expected_behavior: accept
+  command_under_test: openssl asn1parse -inform DER
+  oracle_type: parser_oracle
+- case_id: x509_der_certificate__valid_object__x509
+  object_type: x509_der_certificate
+  input_variant: valid_object
+  input_description: Pure valid DER object.
+  expected_behavior: accept
+  command_under_test: openssl x509 -inform DER -noout
+  oracle_type: parser_oracle
+- case_id: x509_der_certificate__valid_object_plus_malformed_tail__asn1parse
+  object_type: x509_der_certificate
+  input_variant: valid_object_plus_malformed_tail
+  input_description: Valid DER object followed by malformed ASN.1 tail bytes.
+  expected_behavior: reject
+  command_under_test: openssl asn1parse -inform DER
+  oracle_type: parser_oracle
+- case_id: x509_der_certificate__valid_object_plus_malformed_tail__x509
+  object_type: x509_der_certificate
+  input_variant: valid_object_plus_malformed_tail
+  input_description: Valid DER object followed by malformed ASN.1 tail bytes.
+  expected_behavior: reject
+  command_under_test: openssl x509 -inform DER -noout
+  oracle_type: parser_oracle
+- case_id: x509_der_certificate__malformed_tail_only__asn1parse
+  object_type: x509_der_certificate
+  input_variant: malformed_tail_only
+  input_description: Malformed ASN.1 tail bytes without a valid leading object.
+  expected_behavior: reject
+  command_under_test: openssl asn1parse -inform DER
+  oracle_type: parser_oracle
+- case_id: x509_der_certificate__malformed_tail_only__x509
+  object_type: x509_der_certificate
+  input_variant: malformed_tail_only
+  input_description: Malformed ASN.1 tail bytes without a valid leading object.
+  expected_behavior: reject
+  command_under_test: openssl x509 -inform DER -noout
+  oracle_type: parser_oracle
+- case_id: pkcs8_private_key_der__valid_object__asn1parse
+  object_type: pkcs8_private_key_der
+  input_variant: valid_object
+  input_description: Pure valid DER object.
+  expected_behavior: accept
+  command_under_test: openssl asn1parse -inform DER
+  oracle_type: parser_oracle
+- case_id: pkcs8_private_key_der__valid_object__pkey_private_pubout
+  object_type: pkcs8_private_key_der
+  input_variant: valid_object
+  input_description: Pure valid DER object.
+  expected_behavior: accept
+  command_under_test: openssl pkey -inform DER -pubout
+  oracle_type: parser_oracle
+- case_id: pkcs8_private_key_der__valid_object__pkcs8
+  object_type: pkcs8_private_key_der
+  input_variant: valid_object
+  input_description: Pure valid DER object.
+  expected_behavior: accept
+  command_under_test: openssl pkcs8 -inform DER -nocrypt
+  oracle_type: parser_oracle
+- case_id: pkcs8_private_key_der__valid_object_plus_malformed_tail__asn1parse
+  object_type: pkcs8_private_key_der
+  input_variant: valid_object_plus_malformed_tail
+  input_description: Valid DER object followed by malformed ASN.1 tail bytes.
+  expected_behavior: reject
+  command_under_test: openssl asn1parse -inform DER
+  oracle_type: parser_oracle
+- case_id: pkcs8_private_key_der__valid_object_plus_malformed_tail__pkey_private_pubout
+  object_type: pkcs8_private_key_der
+  input_variant: valid_object_plus_malformed_tail
+  input_description: Valid DER object followed by malformed ASN.1 tail bytes.
+  expected_behavior: reject
+  command_under_test: openssl pkey -inform DER -pubout
+  oracle_type: parser_oracle
+- case_id: pkcs8_private_key_der__valid_object_plus_malformed_tail__pkcs8
+  object_type: pkcs8_private_key_der
+  input_variant: valid_object_plus_malformed_tail
+  input_description: Valid DER object followed by malformed ASN.1 tail bytes.
+  expected_behavior: reject
+  command_under_test: openssl pkcs8 -inform DER -nocrypt
+  oracle_type: parser_oracle
+- case_id: pkcs8_private_key_der__malformed_tail_only__asn1parse
+  object_type: pkcs8_private_key_der
+  input_variant: malformed_tail_only
+  input_description: Malformed ASN.1 tail bytes without a valid leading object.
+  expected_behavior: reject
+  command_under_test: openssl asn1parse -inform DER
+  oracle_type: parser_oracle
+- case_id: pkcs8_private_key_der__malformed_tail_only__pkey_private_pubout
+  object_type: pkcs8_private_key_der
+  input_variant: malformed_tail_only
+  input_description: Malformed ASN.1 tail bytes without a valid leading object.
+  expected_behavior: reject
+  command_under_test: openssl pkey -inform DER -pubout
+  oracle_type: parser_oracle
+- case_id: pkcs8_private_key_der__malformed_tail_only__pkcs8
+  object_type: pkcs8_private_key_der
+  input_variant: malformed_tail_only
+  input_description: Malformed ASN.1 tail bytes without a valid leading object.
+  expected_behavior: reject
+  command_under_test: openssl pkcs8 -inform DER -nocrypt
+  oracle_type: parser_oracle
+- case_id: public_key_der__valid_object__asn1parse
+  object_type: public_key_der
+  input_variant: valid_object
+  input_description: Pure valid DER object.
+  expected_behavior: accept
+  command_under_test: openssl asn1parse -inform DER
+  oracle_type: parser_oracle
+- case_id: public_key_der__valid_object__pkey_public_pubout
+  object_type: public_key_der
+  input_variant: valid_object
+  input_description: Pure valid DER object.
+  expected_behavior: accept
+  command_under_test: openssl pkey -pubin -inform DER -pubout
+  oracle_type: parser_oracle
+- case_id: public_key_der__valid_object_plus_malformed_tail__asn1parse
+  object_type: public_key_der
+  input_variant: valid_object_plus_malformed_tail
+  input_description: Valid DER object followed by malformed ASN.1 tail bytes.
+  expected_behavior: reject
+  command_under_test: openssl asn1parse -inform DER
+  oracle_type: parser_oracle
+- case_id: public_key_der__valid_object_plus_malformed_tail__pkey_public_pubout
+  object_type: public_key_der
+  input_variant: valid_object_plus_malformed_tail
+  input_description: Valid DER object followed by malformed ASN.1 tail bytes.
+  expected_behavior: reject
+  command_under_test: openssl pkey -pubin -inform DER -pubout
+  oracle_type: parser_oracle
+- case_id: public_key_der__malformed_tail_only__asn1parse
+  object_type: public_key_der
+  input_variant: malformed_tail_only
+  input_description: Malformed ASN.1 tail bytes without a valid leading object.
+  expected_behavior: reject
+  command_under_test: openssl asn1parse -inform DER
+  oracle_type: parser_oracle
+- case_id: public_key_der__malformed_tail_only__pkey_public_pubout
+  object_type: public_key_der
+  input_variant: malformed_tail_only
+  input_description: Malformed ASN.1 tail bytes without a valid leading object.
+  expected_behavior: reject
+  command_under_test: openssl pkey -pubin -inform DER -pubout
+  oracle_type: parser_oracle
