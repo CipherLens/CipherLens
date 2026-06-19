@@ -1,0 +1,36 @@
+schema: glm_sdk_false_missing_fix_report_v1
+task_name: glm_sdk_false_missing_rootcause_v1
+files_changed:
+  - analysis/glm_connectivity_diagnose.py
+files_not_changed:
+  - analysis/glm_client.py
+root_cause:
+  previous_primary_cause: sdk_missing
+  actual_issue: optional SDK packages zai/openai were missing and misclassified as the primary SDK failure even though zhipuai was installed and importable.
+  required_sdk_path: zhipuai.ZhipuAI
+fix_summary:
+  - classify missing zhipuai as blocking sdk_missing
+  - classify zhipuai import failure as sdk_import_failed
+  - classify missing ZhipuAI symbol as sdk_version_incompatible
+  - classify local ZhipuAI constructor failure as client_init_failed
+  - classify missing zai/openai as optional_sdk_missing
+  - choose primary_cause from blocking candidates rather than optional SDK findings
+verification:
+  py_compile:
+    command: PYTHONPATH=. python3 -m py_compile analysis/glm_connectivity_diagnose.py analysis/glm_client.py
+    passed: true
+  connectivity_diagnose_v5:
+    command: PYTHONPATH=. python3 analysis/glm_connectivity_diagnose.py --repo-root . --previous-sprint artifacts/sprints/glm_slot_filling_token_budget_fix_v1 --out-dir artifacts/cross_library/mainline/glm_connectivity_diagnose_current_v5
+    passed: true
+    primary_cause: network_dns_failure
+    sdk_missing_still_primary: false
+  full_mainline_pipeline_integration:
+    command: PYTHONPATH=. python3 analysis/full_mainline_pipeline_integration.py
+    passed: true
+    quality_status: pass_full_mainline_pipeline_integration_ready
+    glm_available: false
+    fallback_used: true
+api_key_logged: false
+git_add_commit_push: false
+packages_installed: false
+

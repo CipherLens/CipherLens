@@ -116,13 +116,25 @@ def package_probe() -> dict[str, Any]:
             "installed": spec is not None,
             "version": "",
             "import_error": "",
+            "import_error_message": "",
+            "required_symbol": "",
+            "required_symbol_available": None,
+            "required_symbol_error": "",
+            "required_symbol_error_message": "",
         }
         if spec is not None:
             try:
                 module = importlib.import_module(package)
                 item["version"] = str(getattr(module, "__version__", "") or "")
+                if package == "zhipuai":
+                    item["required_symbol"] = "ZhipuAI"
+                    item["required_symbol_available"] = hasattr(module, "ZhipuAI")
+                    if not item["required_symbol_available"]:
+                        item["required_symbol_error"] = "AttributeError"
+                        item["required_symbol_error_message"] = "zhipuai.ZhipuAI is not available"
             except Exception as exc:  # noqa: BLE001 - import probing must be best-effort.
                 item["import_error"] = type(exc).__name__
+                item["import_error_message"] = str(exc)[:200]
         rows.append(item)
     return {
         "schema": "python_package_probe_v1",
@@ -194,16 +206,26 @@ def client_probe(env_doc: dict[str, Any], package_doc: dict[str, Any]) -> dict[s
     packages = {item["package"]: item for item in package_doc.get("packages", [])}
     clients = []
 
-    def skipped(name: str, reason: str, package: str | None = None) -> dict[str, Any]:
+    def skipped(
+        name: str,
+        reason: str,
+        package: str | None = None,
+        *,
+        client_init_attempted: bool = False,
+        client_init_success: bool = False,
+        sanitized_error: str | None = None,
+    ) -> dict[str, Any]:
         return {
             "client": name,
             "package": package or "",
             "package_installed": bool(packages.get(package or "", {}).get("installed")) if package else True,
             "attempted": True,
+            "client_init_attempted": client_init_attempted,
+            "client_init_success": client_init_success,
             "real_request_attempted": False,
             "success": False,
             "exception_type": reason,
-            "sanitized_error": f"real GLM request skipped: {reason}",
+            "sanitized_error": sanitized_error or f"real GLM request skipped: {reason}",
         }
 
     if not key_present:
@@ -213,18 +235,70 @@ def client_probe(env_doc: dict[str, Any], package_doc: dict[str, Any]) -> dict[s
     else:
         clients.append(skipped("repo_utils_query_llm", "request_not_attempted_by_diagnosis_policy", "zhipuai"))
 
+    zhipuai_ready = False
     for package, label in [("zhipuai", "zhipuai_sdk"), ("zai", "zai_sdk")]:
         if not packages.get(package, {}).get("installed"):
-            clients.append(skipped(label, "sdk_missing", package))
+            reason = "sdk_missing" if package == "zhipuai" else "optional_sdk_missing"
+            clients.append(skipped(label, reason, package))
+        elif package == "zhipuai" and packages.get(package, {}).get("import_error"):
+            clients.append(
+                skipped(
+                    label,
+                    "sdk_import_failed",
+                    package,
+                    sanitized_error=str(packages.get(package, {}).get("import_error_message", ""))[:200],
+                )
+            )
+        elif package == "zhipuai" and not packages.get(package, {}).get("required_symbol_available"):
+            clients.append(
+                skipped(
+                    label,
+                    "sdk_version_incompatible",
+                    package,
+                    sanitized_error=str(
+                        packages.get(package, {}).get("required_symbol_error_message", "")
+                        or "zhipuai.ZhipuAI is not available"
+                    )[:200],
+                )
+            )
         elif not key_present:
             clients.append(skipped(label, "api_key_missing", package))
         elif not model_present:
             clients.append(skipped(label, "model_missing", package))
+        elif package == "zhipuai":
+            try:
+                module = importlib.import_module("zhipuai")
+                zhipu_client = getattr(module, "ZhipuAI")
+                kwargs: dict[str, Any] = {"api_key": "diagnostic-redacted-key"}
+                if base_url_present:
+                    kwargs["base_url"] = os.environ.get("GLM_BASE_URL") or os.environ.get("OPENAI_BASE_URL")
+                zhipu_client(**kwargs)
+                zhipuai_ready = True
+                clients.append(
+                    skipped(
+                        label,
+                        "request_not_attempted_by_diagnosis_policy",
+                        package,
+                        client_init_attempted=True,
+                        client_init_success=True,
+                    )
+                )
+            except Exception as exc:  # noqa: BLE001 - diagnosis should classify init failures.
+                clients.append(
+                    skipped(
+                        label,
+                        "client_init_failed",
+                        package,
+                        client_init_attempted=True,
+                        client_init_success=False,
+                        sanitized_error=str(exc)[:200],
+                    )
+                )
         else:
             clients.append(skipped(label, "request_not_attempted_by_diagnosis_policy", package))
 
     if not packages.get("openai", {}).get("installed"):
-        clients.append(skipped("openai_compatible_client", "sdk_missing", "openai"))
+        clients.append(skipped("openai_compatible_client", "optional_sdk_missing", "openai"))
     elif not base_url_present:
         clients.append(skipped("openai_compatible_client", "base_url_missing", "openai"))
     elif not key_present:
@@ -239,7 +313,8 @@ def client_probe(env_doc: dict[str, Any], package_doc: dict[str, Any]) -> dict[s
         "generated_at": now_iso(),
         "client_probe_attempted": True,
         "real_glm_request_attempted": False,
-        "note": "No real GLM request is attempted when GLM_MODEL is absent.",
+        "note": "No real GLM request is attempted by this diagnosis; it only probes environment, packages, network, and local client construction.",
+        "primary_sdk_ready": zhipuai_ready,
         "env_alias_state": {
             "GLM_API_KEY_present": bool(variables.get("GLM_API_KEY", {}).get("present")),
             "ZHIPUAI_API_KEY_present": bool(variables.get("ZHIPUAI_API_KEY", {}).get("present")),
@@ -311,12 +386,60 @@ def root_cause_candidates(
             'Export the alias before retrying: export ZHIPUAI_API_KEY="$GLM_API_KEY"',
         )
 
-    for package, code in [("zhipuai", "sdk_missing"), ("zai", "sdk_missing"), ("openai", "sdk_missing")]:
+    zhipuai = packages.get("zhipuai", {})
+    if not zhipuai.get("installed"):
+        add(
+            "sdk_missing",
+            "high",
+            "The required zhipuai SDK package for analysis.glm_client is not installed.",
+            ["package probe: zhipuai installed=false"],
+            "Install zhipuai in the active virtual environment before retrying.",
+        )
+    elif zhipuai.get("import_error"):
+        add(
+            "sdk_import_failed",
+            "high",
+            "The zhipuai package is installed but cannot be imported.",
+            [
+                f"package probe: zhipuai import_error={zhipuai.get('import_error', '')}",
+                f"sanitized import message: {zhipuai.get('import_error_message', '')}",
+            ],
+            "Inspect the installed zhipuai package and its dependencies in the active virtual environment.",
+        )
+    elif not zhipuai.get("required_symbol_available"):
+        add(
+            "sdk_version_incompatible",
+            "high",
+            "The zhipuai package imports, but zhipuai.ZhipuAI is not available.",
+            [
+                "package probe: zhipuai installed=true",
+                "required symbol: ZhipuAI unavailable",
+            ],
+            "Use a zhipuai SDK version that exposes from zhipuai import ZhipuAI.",
+        )
+
+    zhipuai_client = next(
+        (item for item in client_doc.get("clients", []) if item.get("client") == "zhipuai_sdk"),
+        {},
+    )
+    if zhipuai_client.get("exception_type") == "client_init_failed":
+        add(
+            "client_init_failed",
+            "high",
+            "The zhipuai SDK is importable, but ZhipuAI client construction failed.",
+            [
+                "client probe: zhipuai client_init_attempted=true",
+                f"client probe: sanitized_error={zhipuai_client.get('sanitized_error', '')}",
+            ],
+            "Check GLM_BASE_URL/SDK constructor compatibility without printing API keys.",
+        )
+
+    for package in ["zai", "openai"]:
         if not packages.get(package, {}).get("installed"):
             add(
-                code,
+                "optional_sdk_missing",
                 "low",
-                f"Optional client package {package!r} is not installed.",
+                f"Optional client package {package!r} is not installed, but zhipuai is the repository GLM SDK path.",
                 [f"package probe: {package} installed=false"],
                 f"Install {package} only if that client path is the intended GLM access path.",
             )
@@ -357,7 +480,28 @@ def root_cause_candidates(
             "Resolve model/env configuration first, then retry with request/response logging enabled.",
         )
 
-    primary = candidates[0]["code"] if candidates else "unknown_connection_error"
+    if (
+        zhipuai.get("installed")
+        and not zhipuai.get("import_error")
+        and zhipuai.get("required_symbol_available")
+        and zhipuai_client.get("client_init_success")
+        and not client_doc.get("real_glm_request_attempted")
+    ):
+        add(
+            "request_not_attempted_by_diagnosis_policy",
+            "medium",
+            "The active zhipuai SDK path is importable and client construction succeeds; this diagnostic did not attempt a real GLM request.",
+            [
+                "package probe: zhipuai installed=true",
+                "package probe: from zhipuai import ZhipuAI available",
+                "client probe: zhipuai client_init_success=true",
+                "real_glm_request_attempted=false",
+            ],
+            "Run the main GLM workflow or a request-enabled diagnostic to classify network/auth/model errors.",
+        )
+
+    blocking = [item for item in candidates if item.get("code") != "optional_sdk_missing"]
+    primary = blocking[0]["code"] if blocking else "unknown_connection_error"
     return {
         "schema": "root_cause_candidates_v1",
         "generated_at": now_iso(),

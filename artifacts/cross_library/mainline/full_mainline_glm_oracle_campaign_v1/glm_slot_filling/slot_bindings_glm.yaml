@@ -1,0 +1,109 @@
+schema: slot_bindings_glm_v1
+items:
+- family: pkey_sign_verify
+  oracle_type: crypto_semantic_oracle
+  glm_parse_ok: true
+  slot_bindings:
+  - slot: oracle_results
+    binding: oracle_results.yaml
+    validation_note: Matches run_count and result_count of raw_run_summary.
+  - slot: raw_run_summary
+    binding: raw_run_summary.yaml
+    validation_note: Matches run_count of oracle_results.
+  - slot: case_matrix
+    binding: case_matrix.yaml
+    validation_note: Provides schema and counts for test cases.
+  triage_notes:
+  - note: Recipe configured for pkey_sign_verify family targeting specified mbedtls
+      and Botan libraries with lifecycle and modified-signature negative controls.
+  token_budget_or_truncation: false
+- family: cipher_aead_lifecycle
+  oracle_type: crypto_semantic_oracle
+  glm_parse_ok: true
+  slot_bindings:
+  - slot: oracle_type
+    binding: crypto_semantic_oracle
+    validation_note: Matches the specified oracle_type in the context.
+  - slot: target_libraries
+    binding:
+    - mbedtls-3.6.4-asan
+    - mbedtls-4.1.0-asan
+    - botan-3.10.0-asan
+    validation_note: Matches the specified target libraries in the context.
+  - slot: goal
+    binding: AEAD encrypt/decrypt and modified-tag rejection
+    validation_note: Matches the specified goal in the context.
+  triage_notes:
+  - note: Based on the provided context, all 24 cases compile and run successfully.
+      24 encrypt/decrypt operations succeeded, 3 modified-tag rejections succeeded,
+      and 3 semantic observations (likely related to modified tags) were reported.
+  token_budget_or_truncation: false
+- family: crypto_roundtrip_metamorphic
+  oracle_type: roundtrip_oracle
+  glm_parse_ok: true
+  slot_bindings:
+  - slot: oracle_type
+    binding: roundtrip_oracle
+    validation_note: Specified in the adapter recipe.
+  - slot: target_libraries
+    binding:
+    - mbedtls-3.6.4-asan
+    - mbedtls-4.1.0-asan
+    - botan-3.10.0-asan
+    validation_note: Specified in the adapter recipe.
+  - slot: goal
+    binding: roundtrip metamorphic consistency and conservative semantic observations
+    validation_note: Specified in the adapter recipe.
+  - slot: cases/generated_case_manifest.yaml
+    binding:
+      schema: crypto_roundtrip_generated_case_manifest_v1
+      case_count: 45
+      item_count: 0
+      run_count: 0
+      result_count: 0
+      summary_counts:
+        generated_case_count: 45
+    validation_note: Derived from compact context.
+  - slot: compile/compile_summary.yaml
+    binding:
+      schema: crypto_roundtrip_compile_summary_v1
+      case_count: 0
+      item_count: 45
+      run_count: 0
+      result_count: 0
+      summary_counts:
+        compile_success_count: 45
+        compile_failed_count: 0
+    validation_note: Derived from compact context.
+  - slot: run/run_summary.yaml
+    binding:
+      schema: crypto_roundtrip_run_summary_v1
+      case_count: 0
+      item_count: 45
+      run_count: 0
+      result_count: 0
+      summary_counts:
+        run_success_count: 45
+        run_failed_count: 0
+        roundtrip_success_count: 15
+        roundtrip_mismatch_count: 0
+        semantic_observation_count: 30
+        normal_reject_count: 30
+        invalid_contract_count: 0
+    validation_note: Derived from compact context.
+  triage_notes:
+  - note: Triage based on provided context and adapter recipe goal.
+  token_budget_or_truncation: false
+- family: der_parser_full_consumption
+  oracle_type: parser_oracle
+  glm_parse_ok: true
+  slot_bindings:
+  - slot: oracle_results
+    binding: oracle_results.yaml
+    validation_note: Results file for parser oracle.
+  - slot: case_matrix
+    binding: case_matrix.yaml
+    validation_note: Test case matrix for parser oracle.
+  triage_notes:
+  - note: Migrates parser full-consumption oracle from artifacts/cross_library/mainline/parser_full_consumption_oracle_v2.
+  token_budget_or_truncation: false

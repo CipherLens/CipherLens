@@ -1,0 +1,32 @@
+schema: root_cause_candidates_v1
+generated_at: '2026-06-19T11:33:28+00:00'
+previous_sprint: /home/wen/work/crypto-pattern-fuzz/artifacts/sprints/glm_slot_filling_token_budget_fix_v1
+primary_cause: request_not_attempted_by_diagnosis_policy
+candidates:
+- code: optional_sdk_missing
+  confidence: low
+  summary: Optional client package 'zai' is not installed, but zhipuai is the repository GLM SDK path.
+  evidence:
+  - 'package probe: zai installed=false'
+  recommended_fix: Install zai only if that client path is the intended GLM access path.
+- code: optional_sdk_missing
+  confidence: low
+  summary: Optional client package 'openai' is not installed, but zhipuai is the repository GLM SDK path.
+  evidence:
+  - 'package probe: openai installed=false'
+  recommended_fix: Install openai only if that client path is the intended GLM access path.
+- code: request_not_attempted_by_diagnosis_policy
+  confidence: medium
+  summary: The active zhipuai SDK path is importable and client construction succeeds; this diagnostic
+    did not attempt a real GLM request.
+  evidence:
+  - 'package probe: zhipuai installed=true'
+  - 'package probe: from zhipuai import ZhipuAI available'
+  - 'client probe: zhipuai client_init_success=true'
+  - real_glm_request_attempted=false
+  recommended_fix: Run the main GLM workflow or a request-enabled diagnostic to classify network/auth/model
+    errors.
+root_cause_candidates_generated: true
+confirmed_vulnerability_claim: false
+slot_bindings_generated: false
+real_glm_request_attempted: false

@@ -1,0 +1,127 @@
+schema: adapter_recipes_glm_v1
+items:
+- family: pkey_sign_verify
+  oracle_type: crypto_semantic_oracle
+  target_libraries: &id001
+  - mbedtls-3.6.4-asan
+  - mbedtls-4.1.0-asan
+  - botan-3.10.0-asan
+  glm_parse_ok: true
+  glm_finish_reason: stop
+  glm_content_preview: "```yaml\nadapter_recipe:\n  family: pkey_sign_verify\n  oracle_type:\
+    \ crypto_semantic_oracle\n  target_libraries:\n    - mbedtls-3.6.4-asan\n    -\
+    \ mbedtls-4.1.0-asan\n    - botan-3.10.0-asan\n  preserved_features:\n    - sign/verify\
+    \ lifecycle\n    - modified-signature negative controls\n  unsupported_or_lost_features:\
+    \ []\n  oracle_observables:\n    - modified-signature\n\nslot_bindings:\n  - slot:\
+    \ oracle_results\n    binding: oracle_results.yaml\n    validation_note: \"Matches\
+    \ run_count and result_count of raw_run_"
+  adapter_recipe:
+    family: pkey_sign_verify
+    oracle_type: crypto_semantic_oracle
+    target_libraries:
+    - mbedtls-3.6.4-asan
+    - mbedtls-4.1.0-asan
+    - botan-3.10.0-asan
+    preserved_features:
+    - sign/verify lifecycle
+    - modified-signature negative controls
+    unsupported_or_lost_features: []
+    oracle_observables:
+    - modified-signature
+  local_guardrails:
+    direct_c_generation_allowed: false
+    candidate_is_triage_only: true
+    source_artifact: artifacts/cross_library/mainline/pkey_sign_verify_lifecycle_oracle_v1
+- family: cipher_aead_lifecycle
+  oracle_type: crypto_semantic_oracle
+  target_libraries: *id001
+  glm_parse_ok: true
+  glm_finish_reason: stop
+  glm_content_preview: "```yaml\nadapter_recipe:\n  family: cipher_aead_lifecycle\n\
+    \  oracle_type: crypto_semantic_oracle\n  target_libraries:\n    - mbedtls-3.6.4-asan\n\
+    \    - mbedtls-4.1.0-asan\n    - botan-3.10.0-asan\n  preserved_features:\n  \
+    \  - AEAD encrypt/decrypt\n    - Modified-tag rejection\n  unsupported_or_lost_features:\
+    \ []\n  oracle_observables:\n    - AEAD encrypt/decrypt success\n    - Modified-tag\
+    \ rejection success\n    - Semantic observation (modified tag)\n\nslot_bindings:\n\
+    \  - slot: oracle_type\n    binding: crypto_seman"
+  adapter_recipe:
+    family: cipher_aead_lifecycle
+    oracle_type: crypto_semantic_oracle
+    target_libraries:
+    - mbedtls-3.6.4-asan
+    - mbedtls-4.1.0-asan
+    - botan-3.10.0-asan
+    preserved_features:
+    - AEAD encrypt/decrypt
+    - Modified-tag rejection
+    unsupported_or_lost_features: []
+    oracle_observables:
+    - AEAD encrypt/decrypt success
+    - Modified-tag rejection success
+    - Semantic observation (modified tag)
+  local_guardrails:
+    direct_c_generation_allowed: false
+    candidate_is_triage_only: true
+    source_artifact: artifacts/cross_library/mainline/cipher_aead_lifecycle_adapter_recipe_v1
+- family: crypto_roundtrip_metamorphic
+  oracle_type: roundtrip_oracle
+  target_libraries: *id001
+  glm_parse_ok: true
+  glm_finish_reason: stop
+  glm_content_preview: "```yaml\nadapter_recipe:\n  family: crypto_roundtrip_metamorphic\n\
+    \  oracle_type: roundtrip_oracle\n  target_libraries:\n    - mbedtls-3.6.4-asan\n\
+    \    - mbedtls-4.1.0-asan\n    - botan-3.10.0-asan\n  preserved_features:\n  \
+    \  - roundtrip_consistency\n    - conservative_semantic_observations\n  unsupported_or_lost_features:\n\
+    \    - none_specified\n  oracle_observables:\n    - roundtrip_success\n    - roundtrip_mismatch\n\
+    \    - semantic_observation\n    - normal_reject\n    - invalid_contract\n\nslot_bindings:\n\
+    \  - slot: "
+  adapter_recipe:
+    family: crypto_roundtrip_metamorphic
+    oracle_type: roundtrip_oracle
+    target_libraries:
+    - mbedtls-3.6.4-asan
+    - mbedtls-4.1.0-asan
+    - botan-3.10.0-asan
+    preserved_features:
+    - roundtrip_consistency
+    - conservative_semantic_observations
+    unsupported_or_lost_features:
+    - none_specified
+    oracle_observables:
+    - roundtrip_success
+    - roundtrip_mismatch
+    - semantic_observation
+    - normal_reject
+    - invalid_contract
+  local_guardrails:
+    direct_c_generation_allowed: false
+    candidate_is_triage_only: true
+    source_artifact: artifacts/cross_library/mainline/crypto_roundtrip_metamorphic_oracle_v1
+- family: der_parser_full_consumption
+  oracle_type: parser_oracle
+  target_libraries: *id001
+  glm_parse_ok: true
+  glm_finish_reason: stop
+  glm_content_preview: "```yaml\nadapter_recipe:\n  family: der_parser_full_consumption\n\
+    \  oracle_type: parser_oracle\n  target_libraries:\n    - mbedtls-3.6.4-asan\n\
+    \    - mbedtls-4.1.0-asan\n    - botan-3.10.0-asan\n  preserved_features: []\n\
+    \  unsupported_or_lost_features: []\n  oracle_observables:\n    - oracle_results.yaml\n\
+    \    - case_matrix.yaml\n\nslot_bindings:\n  - slot: oracle_results\n    binding:\
+    \ oracle_results.yaml\n    validation_note: \"Results file for parser oracle.\"\
+    \n  - slot: case_matrix\n    binding: case_matrix.yaml\n   "
+  adapter_recipe:
+    family: der_parser_full_consumption
+    oracle_type: parser_oracle
+    target_libraries:
+    - mbedtls-3.6.4-asan
+    - mbedtls-4.1.0-asan
+    - botan-3.10.0-asan
+    preserved_features: []
+    unsupported_or_lost_features: []
+    oracle_observables:
+    - oracle_results.yaml
+    - case_matrix.yaml
+  local_guardrails:
+    direct_c_generation_allowed: false
+    candidate_is_triage_only: true
+    source_artifact: artifacts/cross_library/mainline/parser_full_consumption_oracle_v2

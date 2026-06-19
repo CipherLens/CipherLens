@@ -1,0 +1,43 @@
+schema: candidate_queue_delta_v1
+items:
+- input:
+    source_campaign: full_mainline_glm_oracle_campaign_v1
+    oracle_type: parser_oracle
+    family: der_parser_full_consumption
+    target: openssl
+    input_id: x509_der_certificate__valid_object_plus_malformed_tail__x509
+    raw_exit_code: 0
+    raw_stdout_summary: ''
+    raw_stderr_summary: ''
+    sanitizer_signal: ''
+    timeout_signal: false
+    expected_behavior: reject
+    observed_behavior:
+      command: openssl x509 -inform DER -noout
+      level: app_level
+      returncode: 0
+      behavior: accepted
+      stderr_excerpt: ''
+    control_behavior: low_level_reject_negative_control_support
+    differential_context:
+      source_artifact: parser_full_consumption_oracle_v2/oracle_results.yaml
+    evidence_files: &id001
+    - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/valid_object_plus_malformed_tail/x509.stdout.log
+    - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/valid_object_plus_malformed_tail/x509.stderr.log
+    - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/inputs/x509_der_certificate.valid_plus_malformed_tail.der
+    - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/valid_object_plus_malformed_tail/asn1parse.stdout.log
+    - artifacts/cross_library/mainline/parser_full_consumption_oracle_v2/logs/command_runs/x509_der_certificate/valid_object_plus_malformed_tail/asn1parse.stderr.log
+  dispatched:
+    oracle_type: parser_oracle
+    source_campaign: full_mainline_glm_oracle_campaign_v1
+    family: der_parser_full_consumption
+    target: openssl
+    input_id: x509_der_certificate__valid_object_plus_malformed_tail__x509
+    classification: semantic_gap_candidate
+    candidate_level: manual_review_required
+    confidence: medium
+    evidence: *id001
+    overclaim_guard: Dispatcher output is a conservative triage label only. It must
+      not be treated as a final security claim without manual API-contract review
+      and minimized evidence.
+    next_triage_action: collect_app_level_contract_and_user_script_risk
