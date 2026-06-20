@@ -1,0 +1,49 @@
+schema: analysis_mainline_entrypoints_v1
+entrypoints:
+- name: full_mainline_pipeline_integration
+  path: analysis/full_mainline_pipeline_integration.py
+  role: read-only full pipeline architecture/index smoke
+  network_required: false
+- name: full_mainline_glm_oracle_campaign
+  path: analysis/full_mainline_glm_oracle_campaign.py
+  role: one-click bounded GLM/oracle mainline smoke runner
+  network_required: only with --probe-mode live and GLM call path
+  supports_probe_modes:
+  - live
+  - existing
+  supported_parameters:
+  - --repo-root
+  - --out-dir
+  - --targets
+  - --families
+  - --seed-source
+  - --execution-mode
+  - --oracle-mode
+  - --probe-mode
+  - --max-families
+  - --max-cases
+  - --max-compile-jobs
+  - --glm-required
+  - --allow-fallback
+  - --dry-run
+  ready_targets:
+  - mbedtls-3.6.4-asan
+  - mbedtls-4.1.0-asan
+  - botan-3.10.0-asan
+  blocked_targets:
+    openssl-3.5.5-asan: blocked_asan_runtime_incompatible
+    wolfssl-asan: blocked_include_lib_missing
+- name: glm_live_probe
+  path: analysis/glm_live_probe.py
+  role: minimal GLM live probe with secret redaction
+  network_required: true
+- name: oracle_pipeline_integration
+  path: analysis/oracle_pipeline_integration.py
+  role: oracle v1 ledger/candidate/safe baseline integration
+  network_required: false
+- name: central_oracle_dispatcher
+  path: analysis/central_oracle_dispatcher.py
+  role: central conservative oracle dispatch rules
+  network_required: false
+temporary_script_policy: Do not create temporary helper scripts in analysis root;
+  use artifacts/cross_library/mainline/<task>/scratch/ and delete at task end.

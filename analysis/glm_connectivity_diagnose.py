@@ -650,7 +650,7 @@ def report(
             "- adapter_validate_executed: `false`",
             "- render/compile/run executed: `false`",
             "- feedback/pattern bank modified: `false`",
-            "- confirmed vulnerability claim: `false`",
+            "- externally verified issue claim: `false`",
             "",
         ]
     )

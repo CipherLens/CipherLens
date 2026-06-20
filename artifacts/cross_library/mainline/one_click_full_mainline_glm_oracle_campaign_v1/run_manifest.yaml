@@ -1,0 +1,68 @@
+schema: pipeline_run_manifest_v1
+task_name: one_click_full_mainline_glm_oracle_campaign_v1
+status: completed
+dry_run: false
+max_families: 5
+max_cases: 60
+max_compile_jobs: 80
+selected_family_count: 5
+generated_case_count: 10
+compile_run_jobs: 10
+targets:
+  schema: target_selection_status_v1
+  requested_targets:
+  - mbedtls-3.6.4-asan
+  - mbedtls-4.1.0-asan
+  - botan-3.10.0-asan
+  ready_targets:
+  - mbedtls-3.6.4-asan
+  - mbedtls-4.1.0-asan
+  - botan-3.10.0-asan
+  blocked_targets: []
+  items:
+  - target: mbedtls-3.6.4-asan
+    status: ready
+  - target: mbedtls-4.1.0-asan
+    status: ready
+  - target: botan-3.10.0-asan
+    status: ready
+families:
+- pkey_sign_verify
+- mac_digest_lifecycle
+- aead_lifecycle
+- der_parser_full_consumption
+- roundtrip_metamorphic
+unsupported_families: []
+seed_source: mixed
+execution_mode: syntax_only
+oracle_mode: dispatch
+glm_live_probe:
+  probe_mode: existing
+  returncode: 0
+  stdout: ''
+  stderr: ''
+  probe_dir: artifacts/cross_library/mainline/glm_live_probe_v1
+  quality:
+    task_name: glm_live_probe_and_mainline_status_refresh_v1
+    glm_available: true
+    request_success: true
+    response_is_ok: true
+    api_key_logged: false
+    quality_status: pass_glm_live_probe
+  result:
+    key_present: true
+    key_masked: 2d***B6
+    model: glm-4-flash-250414
+    base_url_present: true
+    sdk: zhipuai.ZhipuAI
+    request_attempted: true
+    request_success: true
+    response_preview: OK
+    response_is_ok: true
+    error_type: ''
+    error_sanitized: ''
+    api_key_logged: false
+  note: GLM live status is read from an existing successful live probe artifact. Historical
+    adapter artifacts may still need explicit regeneration.
+probe_mode: existing
+api_key_logged: false
