@@ -1,0 +1,41 @@
+id: openssl_cms_ed448_signed_attributes_regression
+card_type: concrete_pattern
+framework_family: protocol_policy_semantic
+status: partial
+source_evidence:
+- path: datasets/openssl/poc_artifacts/issue_30291/metadata.json
+  poc_id: OPENSSL-ISSUE-30291
+source_libraries:
+- openssl
+affected_domain: parser_or_container_semantics
+trigger_mechanism: policy, setup, signature, or container semantic accept/reject mismatch
+expected_harness_shape: derive from framework_family card plus target-specific API card
+input_model: protocol, certificate, signature, setup parameter, or container semantic case
+mutation_strategy: use framework mutation slots and refine from source evidence
+oracle_expectation: classify as candidate_event, semantic_gap_candidate, semantic_observation, safe_reject,
+  unsupported, or blocked; do not overclaim
+triage_policy: requires reviewed evidence before promotion beyond observation
+target_api_card_requirements:
+- api_card
+- constraints
+- call_sequence
+- negative_feedback
+- mapping_gate
+related_templates: []
+related_adapter_recipes: []
+mapping_requirements:
+  required_inputs:
+  - source_api_or_operation
+  - target_api_candidate
+  - target_runtime_status
+  - target_knowledge_status
+  decision_outputs:
+  - usable_mapping
+  - candidate_mapping
+  - blocked_mapping
+  - missing_mapping
+  - needs_human_review
+confidence_level: inferred_from_repo
+needs_human_review: true
+notes: 'Reviewed in taxonomy_review_and_card_priority_v1: evidence describes CMS signed-attribute/signature
+  policy behavior; protocol_policy_semantic fits better than ASN.1 boundary or output-length families.'

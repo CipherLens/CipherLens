@@ -745,20 +745,49 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--out-dir", required=True)
+    parser.add_argument("--orchestrator-mode", choices=["stage_contract", "legacy_smoke"], default="stage_contract")
     parser.add_argument("--max-families", type=int, default=5)
     parser.add_argument("--max-cases", type=int, default=60)
     parser.add_argument("--max-compile-jobs", type=int, default=80)
     parser.add_argument("--targets", default=",".join(READY_TARGETS))
     parser.add_argument("--families", default="pkey_sign_verify,mac_digest_lifecycle,aead_lifecycle,roundtrip,parser_full_consumption")
     parser.add_argument("--seed-source", choices=["pattern_bank", "existing_mainline", "wycheproof", "mixed"], default="mixed")
-    parser.add_argument("--execution-mode", choices=["syntax_only", "existing_harness", "compile_run"], default="syntax_only")
+    parser.add_argument("--execution-mode", choices=["syntax_only", "runtime_smoke", "existing_harness", "compile_run"], default="syntax_only")
     parser.add_argument("--oracle-mode", choices=["classify_only", "dispatch"], default="dispatch")
-    parser.add_argument("--probe-mode", choices=["live", "existing"], default="live")
+    parser.add_argument("--probe-mode", choices=["live", "existing", "manual"], default="live")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--glm-required", action="store_true", default=True)
     group.add_argument("--allow-fallback", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
+    if args.orchestrator_mode == "stage_contract":
+        from analysis.card_contract_loader import split_csv
+        from analysis.stage_based_orchestrator import run_stage_based_orchestrator
+
+        report = run_stage_based_orchestrator(
+            repo_root=Path(args.repo_root),
+            out_dir=Path(args.out_dir),
+            targets=split_csv(args.targets),
+            families=split_csv(args.families),
+            execution_mode=args.execution_mode,
+            oracle_mode=args.oracle_mode,
+            probe_mode=args.probe_mode,
+            max_families=args.max_families,
+            max_cases=args.max_cases,
+            max_compile_jobs=args.max_compile_jobs,
+        )
+        print(
+            "stage-based mainline campaign:",
+            report.get("quality_status"),
+            "families=",
+            report.get("family_count", 0),
+            "targets=",
+            report.get("target_count", 0),
+            "cases=",
+            report.get("case_count", 0),
+        )
+        return
+
     args.glm_required = not args.allow_fallback
     report = run_campaign(args)
     print(

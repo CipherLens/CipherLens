@@ -1,0 +1,42 @@
+id: wolfssl_x509_date_parser_boundary
+card_type: concrete_pattern
+framework_family: x509_asn1_inner_boundary
+status: executable_draft
+source_evidence:
+- path: data/wolfssl_collect/WOLFSSL-POC-0003/metadata.json
+  poc_id: WOLFSSL-POC-0003
+source_libraries:
+- wolfssl
+affected_domain: parser_or_container_semantics
+trigger_mechanism: nested parser, certificate, extension, or container boundary mutation
+expected_harness_shape: derive from framework_family card plus target-specific API card
+input_model: certificate, ASN.1, PKCS, or CMS container bytes with nested field mutations
+mutation_strategy: use framework mutation slots and refine from source evidence
+oracle_expectation: classify as candidate_event, semantic_gap_candidate, semantic_observation, safe_reject,
+  unsupported, or blocked; do not overclaim
+triage_policy: requires reviewed evidence before promotion beyond observation
+target_api_card_requirements:
+- api_card
+- constraints
+- call_sequence
+- negative_feedback
+- mapping_gate
+related_templates: []
+related_adapter_recipes:
+- adapter_recipes/openssl/d2i_X509.x509_asn1_inner_boundary.yaml
+mapping_requirements:
+  required_inputs:
+  - source_api_or_operation
+  - target_api_candidate
+  - target_runtime_status
+  - target_knowledge_status
+  decision_outputs:
+  - usable_mapping
+  - candidate_mapping
+  - blocked_mapping
+  - missing_mapping
+  - needs_human_review
+confidence_level: evidence_backed
+needs_human_review: true
+notes: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment retained
+  from PoC/template evidence.

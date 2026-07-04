@@ -1,0 +1,59 @@
+generated_by: taxonomy_review_and_card_priority_v1
+status: card_layout_policy_reviewed
+note: Do not create only seven broad cards. Expand knowledge from PoC/issue evidence into framework, concrete-pattern,
+  and target-specific layers.
+card_strategy:
+  framework_family_card:
+    purpose: Defines harness shape, mutation slots, oracle type, triage labels, and shared safety/semantic
+      interpretation for a framework family.
+    recommended_dir: knowledge_raw/family_cards/<framework_family>.yaml
+    examples:
+    - knowledge_raw/family_cards/buffer_canary_boundary.yaml
+    - knowledge_raw/family_cards/x509_asn1_inner_boundary.yaml
+  concrete_pattern_card:
+    purpose: Maps PoC/issue evidence to a concrete reusable pattern under a framework family.
+    recommended_dir: knowledge_raw/pattern_cards/<framework_family>/<concrete_pattern>.yaml
+    required_fields:
+    - concrete_pattern
+    - framework_family
+    - source_evidence
+    - source_library
+    - source_api_or_cli_path
+    - root_cause_or_patch_semantics
+    - oracle_observables
+    - mutation_points
+    - migration_notes
+  target_api_card:
+    purpose: Defines target-library APIs, constraints, call sequences, ownership rules, return-code semantics,
+      parser consumption behavior, and cleanup rules.
+    recommended_dir: knowledge_raw/api_cards/<target>/<family_or_pattern>.yaml
+    examples:
+    - knowledge_raw/api_cards/openssl/x509_asn1_inner_boundary.yaml
+    - knowledge_raw/api_cards/wolfssl/pkcs_container_parsing.yaml
+  constraints:
+    purpose: Target-specific API constraints, argument ownership, buffer length rules, parser input lifetime,
+      and expected error behavior.
+    recommended_dir: knowledge_raw/constraints/<target>/<family_or_pattern>.yaml
+  call_sequences:
+    purpose: Known-valid setup/trigger/cleanup sequences for a target library and family or concrete pattern.
+    recommended_dir: knowledge_raw/call_sequences/<target>/<family_or_pattern>.yaml
+  negative_feedback:
+    purpose: Evidence that a mapping, candidate, mutation, or target API path is blocked, invalid, unsupported,
+      or safe-reject only.
+    recommended_dir: knowledge_raw/negative_feedback/<target>/<family_or_pattern>.yaml
+  mapping_gate:
+    purpose: Rules and evidence used to decide usable / candidate / blocked API mappings for a framework
+      family or concrete pattern.
+    recommended_dir: knowledge_raw/mapping_gate/<framework_family_or_pattern>.yaml
+recommended_expansion_order:
+- Map PoC/issue evidence to a framework_family.
+- Extract or refine a concrete_pattern card from the evidence.
+- Add target-specific API cards and constraints for each migration target.
+- Add call sequences and negative feedback from local tests or reviewed artifacts.
+- Feed reviewed cards into the mapping gate and adapter recipe layer.
+non_goals:
+- Do not create a single coarse card per top-level framework family and treat it as complete.
+- Do not create target API cards without evidence or reviewed API constraints.
+- Do not convert normal reject behavior or unsupported APIs into findings.
+priority_plan:
+  source: config/card_expansion_priority.yaml

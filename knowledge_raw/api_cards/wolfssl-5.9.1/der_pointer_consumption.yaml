@@ -1,0 +1,34 @@
+schema: target_api_card_v1
+target: wolfssl-5.9.1
+framework_family: der_pointer_consumption
+status: evidence_backed_compile_smoke
+knowledge_status: evidence_backed_compile_smoke
+candidate_apis: &id001
+- api: wc_RsaPrivateKeyDecode
+  role: trigger
+  language: c
+  header: wolfssl/wolfcrypt/rsa.h
+  library: wolfssl
+  compile_smoke: passed
+  evidence_path: /home/wen/work/install-wolfssl-5.9.1-asan/include/wolfssl/wolfcrypt/rsa.h:390
+- api: wc_RsaPublicKeyDecode
+  role: trigger
+  language: c
+  header: wolfssl/wolfcrypt/rsa.h
+  library: wolfssl
+  compile_smoke: passed
+  evidence_path: /home/wen/work/install-wolfssl-5.9.1-asan/include/wolfssl/wolfcrypt/rsa.h:397
+- api: wc_FreeRsaKey
+  role: teardown
+  language: c
+  header: wolfssl/wolfcrypt/rsa.h
+  library: wolfssl
+  compile_smoke: passed_via_decode_smoke
+  evidence_path: /home/wen/work/install-wolfssl-5.9.1-asan/include/wolfssl/wolfcrypt/rsa.h:300
+api_candidates: *id001
+blocked_reason: ''
+evidence_sources:
+- artifacts/cross_library/mainline/p0_botan_wolfssl_api_evidence_cards_v1/api_existence_audit.yaml
+- artifacts/cross_library/mainline/p0_botan_wolfssl_api_evidence_cards_v1/compile_smoke/compile_smoke_report.yaml
+claim_policy: compile_smoke_confirms public signature only; no runtime behavior claim
+needs_human_review: false

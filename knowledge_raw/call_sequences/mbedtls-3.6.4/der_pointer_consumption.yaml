@@ -1,0 +1,62 @@
+id: mbedtls-3.6.4::der_pointer_consumption
+target: mbedtls-3.6.4
+framework_family: der_pointer_consumption
+concrete_pattern: framework_family_level
+source: p0_mbedtls_api_evidence_cards_v1
+needs_human_review: false
+runtime_status: ready
+knowledge_status: signature_compile_smoke_evidence_backed
+evidence_paths:
+- artifacts/cross_library/mainline/p0_mbedtls_api_evidence_cards_v1/api_existence_audit.yaml
+- artifacts/cross_library/mainline/p0_mbedtls_api_evidence_cards_v1/compile_smoke/compile_smoke_report.yaml
+- knowledge_raw/api_constraints/mbedtls
+- knowledge_raw/unit_tests/mbedtls
+required_headers:
+- mbedtls/pk.h
+link_libraries:
+- mbedcrypto
+call_sequences:
+- api: mbedtls_pk_parse_key
+  setup_sequence:
+  - mbedtls_pk_context ctx
+  - mbedtls_pk_init(&ctx)
+  call_sequence:
+  - ret = mbedtls_pk_parse_key(&ctx, der_input, der_len, NULL, 0, NULL, NULL)
+  teardown_sequence:
+  - mbedtls_pk_free(&ctx)
+  mutation_slots:
+  - der_input
+  - der_len
+  - trailing_garbage_bytes
+  - trailing_garbage_len
+  expected_oracle_candidates:
+  - parser_full_consumption_oracle
+  - semantic_reject_or_consistent_return_observation
+  needs_human_review: false
+- api: mbedtls_pk_parse_public_key
+  setup_sequence:
+  - mbedtls_pk_context ctx
+  - mbedtls_pk_init(&ctx)
+  call_sequence:
+  - ret = mbedtls_pk_parse_public_key(&ctx, der_input, der_len)
+  teardown_sequence:
+  - mbedtls_pk_free(&ctx)
+  mutation_slots:
+  - der_input
+  - der_len
+  - trailing_garbage_bytes
+  - trailing_garbage_len
+  expected_oracle_candidates:
+  - parser_full_consumption_oracle
+  - semantic_reject_or_consistent_return_observation
+  needs_human_review: false
+setup_sequence:
+- mbedtls_pk_context ctx
+- mbedtls_pk_init(&ctx)
+call_sequence:
+- ret = mbedtls_pk_parse_key(&ctx, der_input, der_len, NULL, 0, NULL, NULL)
+- ret = mbedtls_pk_parse_public_key(&ctx, der_input, der_len)
+teardown_sequence:
+- mbedtls_pk_free(&ctx)
+card_type: call_sequence
+status: evidence_backed

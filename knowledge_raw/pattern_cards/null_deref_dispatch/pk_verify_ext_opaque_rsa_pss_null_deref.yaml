@@ -1,0 +1,45 @@
+id: pk_verify_ext_opaque_rsa_pss_null_deref
+card_type: concrete_pattern
+framework_family: null_deref_dispatch
+status: partial
+source_evidence:
+- path: data/pocs/core10/MBEDTLS-POC-0003/metadata.json
+  poc_id: MBEDTLS-POC-0003
+- path: normalized_templates/pk/pk_verify_ext_null_deref/template_meta.yaml
+  poc_id: MBEDTLS-POC-0003
+source_libraries:
+- mbedtls
+affected_domain: key_or_signature_semantics
+trigger_mechanism: invalid dispatch, missing method state, or NULL internal object path
+expected_harness_shape: derive from framework_family card plus target-specific API card
+input_model: object or key material selected to exercise mismatched operation dispatch
+mutation_strategy: use framework mutation slots and refine from source evidence
+oracle_expectation: classify as candidate_event, semantic_gap_candidate, semantic_observation, safe_reject,
+  unsupported, or blocked; do not overclaim
+triage_policy: requires reviewed evidence before promotion beyond observation
+target_api_card_requirements:
+- api_card
+- constraints
+- call_sequence
+- negative_feedback
+- mapping_gate
+related_templates:
+- normalized_templates/pk/pk_verify_ext_null_deref/template_meta.yaml
+related_adapter_recipes:
+- adapter_recipes/openssl/EVP_DigestVerify.null_deref_dispatch.yaml
+mapping_requirements:
+  required_inputs:
+  - source_api_or_operation
+  - target_api_candidate
+  - target_runtime_status
+  - target_knowledge_status
+  decision_outputs:
+  - usable_mapping
+  - candidate_mapping
+  - blocked_mapping
+  - missing_mapping
+  - needs_human_review
+confidence_level: inferred_from_repo
+needs_human_review: true
+notes: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment retained
+  from PoC/template evidence.

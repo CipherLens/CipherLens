@@ -1,0 +1,45 @@
+id: openssl_evp_cipher_ctx_copy_uninit_state
+card_type: concrete_pattern
+framework_family: object_state_lifecycle
+status: executable_draft
+source_evidence:
+- path: datasets/openssl/poc_artifacts/issue_8980/metadata.json
+  poc_id: OPENSSL-ISSUE-8980
+- path: normalized_templates/openssl/evp_cipher_ctx_copy_uninit_state/template_meta.yaml
+  poc_id: OPENSSL-ISSUE-8980
+source_libraries:
+- openssl
+affected_domain: crypto_operation_semantics
+trigger_mechanism: object state transition, stale state, or uninitialized lifecycle operation
+expected_harness_shape: derive from framework_family card plus target-specific API card
+input_model: API lifecycle sequence with setup/update/final/copy/free variants
+mutation_strategy: use framework mutation slots and refine from source evidence
+oracle_expectation: classify as candidate_event, semantic_gap_candidate, semantic_observation, safe_reject,
+  unsupported, or blocked; do not overclaim
+triage_policy: requires reviewed evidence before promotion beyond observation
+target_api_card_requirements:
+- api_card
+- constraints
+- call_sequence
+- negative_feedback
+- mapping_gate
+related_templates:
+- normalized_templates/openssl/evp_cipher_ctx_copy_uninit_state/template_meta.yaml
+related_adapter_recipes:
+- adapter_recipes/openssl/ASN1_STRING_set.object_state_lifecycle.yaml
+mapping_requirements:
+  required_inputs:
+  - source_api_or_operation
+  - target_api_candidate
+  - target_runtime_status
+  - target_knowledge_status
+  decision_outputs:
+  - usable_mapping
+  - candidate_mapping
+  - blocked_mapping
+  - missing_mapping
+  - needs_human_review
+confidence_level: evidence_backed
+needs_human_review: false
+notes: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment retained
+  from PoC/template evidence.

@@ -1,0 +1,49 @@
+id: der_pointer_consumption
+framework_family: der_pointer_consumption
+card_type: framework_family
+status: executable_draft
+description: DER parser accepts input without consuming all bytes, accepts trailing garbage, or exposes
+  pointer-consumption differences
+harness_shape:
+  input_kind: byte_buffer
+  trigger: parse valid prefix plus tail
+  observables:
+  - return_code
+  - consumed_length
+  - object_created
+input_model: DER byte buffer with explicit total length and mutable tail segment
+mutation_slots:
+- trailing_garbage
+- truncated_der
+- length_field_mutation
+- valid_prefix_plus_tail
+oracle_contract:
+  oracle_type: parser_full_consumption_oracle
+  pass_condition: valid input is accepted and consumed length equals input length
+  candidate_condition: parser accepts input while leaving unconsumed bytes or accepting malformed tail
+    semantics
+  safe_reject_condition: malformed input is rejected without sanitizer evidence
+  unsupported_condition: target API does not expose length or consumption signal needed by oracle
+  blocked_condition: target runtime is blocked or required parser API is unavailable
+triage_outputs:
+- candidate_event
+- semantic_gap_candidate
+- semantic_observation
+- safe_reject
+- unsupported
+- blocked
+required_target_cards:
+- api_card
+- constraints
+- call_sequence
+- negative_feedback
+- mapping_gate
+concrete_patterns:
+- rsa_der_top_level_sequence_trailing_garbage
+evidence_paths:
+- data/pocs/core10/MBEDTLS-POC-0020/metadata.json
+- normalized_templates/rsa/rsa_der_trailing_garbage/template_meta.yaml
+confidence_level: evidence_backed
+needs_human_review: false
+notes: Executable draft card. Schema is ready for orchestrator consumption; target behavior still requires
+  review.

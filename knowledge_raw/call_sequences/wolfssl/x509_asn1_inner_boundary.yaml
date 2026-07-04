@@ -1,0 +1,58 @@
+schema: target_call_sequence_card_v1
+target_library: wolfssl
+family: x509_asn1_inner_boundary
+card_status: schema_ready_evidence_draft
+source: x509_wolfssl_rag_promotion_apply_v1
+selected_api: wolfSSL_d2i_X509
+call_sequence:
+  - step: 1
+    action: prepare_der_buffer
+    detail: Prepare an unsigned char input buffer containing the DER payload and a separate input_len.
+  - step: 2
+    action: initialize_pointer
+    detail: Set const unsigned char *p = input before invoking the parser.
+  - step: 3
+    action: parse_x509_der
+    detail: Call wolfSSL_d2i_X509(NULL, &p, input_len).
+  - step: 4
+    action: record_return_object
+    detail: Record whether the returned WOLFSSL_X509 * object is NULL or non-NULL.
+  - step: 5
+    action: compute_consumed
+    detail: Compute consumed = (size_t)(p - input).
+  - step: 6
+    action: compute_remaining
+    detail: Compute remaining = input_len - consumed when consumed <= input_len.
+  - step: 7
+    action: cleanup
+    detail: If object != NULL, call wolfSSL_X509_free(object).
+  - step: 8
+    action: emit_runtime_observation_fields
+    detail: Emit return_object_present, input_len, consumed, remaining, consumed_equals_input_len, and cleanup_performed.
+required_headers:
+  - wolfssl/options.h
+  - wolfssl/ssl.h
+required_observables:
+  - return_object_present
+  - input_len
+  - consumed
+  - remaining
+  - consumed_equals_input_len
+  - cleanup_performed
+guardrails:
+  - Runtime code must not treat a non-NULL object return as full-buffer acceptance without consumed_equals_input_len.
+  - Runtime code must keep malformed DER reject behavior separate from candidate classification.
+evidence:
+  - path: /home/wen/work/clean_sources/wolfssl/wolfssl/ssl.h
+    symbol: wolfSSL_d2i_X509
+    evidence_kind: header_declaration
+    line_range: 3494-3495
+  - path: /home/wen/work/clean_sources/wolfssl/src/x509.c
+    symbol: wolfSSL_d2i_X509
+    evidence_kind: pointer_advancing_implementation
+    line_range: 4103-4121
+  - path: /home/wen/work/clean_sources/wolfssl/src/x509.c
+    symbol: wolfSSL_X509_free
+    evidence_kind: cleanup_implementation
+    line_range: 3816-3821
+claim_level: evidence_backed_call_sequence_no_runtime_observation

@@ -1,0 +1,37 @@
+schema: canonical_seed_card_v1
+seed_id: seed_p1_mbedtls_poc_0017_x509_inner_boundary
+priority: P1
+source_kind: poc
+source_library: mbedtls
+source_reference:
+  path: data/pocs/core10/MBEDTLS-POC-0017
+  status: available
+family: x509_asn1_inner_boundary
+concrete_pattern: x509_inner_boundary
+oracle_kind: inner_asn1_boundary_oracle
+template_kind: template_guided
+target_selection_policy:
+  preferred_target: openssl
+  selection_status: ready_for_manual_slot_binding
+  reason: OpenSSL d2i_X509 evidence and recipe exist; binding is the next non-runtime
+    step
+payload_profile:
+  payload_kind: inner_asn1_boundary_mutation
+  profile_status: not_runtime_closed
+expected_observations:
+- observation: malformed X.509 inner ASN.1 boundary should produce safe parser rejection
+    or clear failure signal
+- observation: manual slot binding must precede adapter validation and runtime
+safety_guardrails:
+- guardrail: do not mark X.509 seed closed before validation/runtime artifacts exist
+- guardrail: do not create candidate queue entry during seed promotion
+current_status: ready_for_manual_slot_binding
+aliases: []
+related_artifacts:
+- path: artifacts/cross_library/mainline/seed_registry_alignment_v1/pilot_seed_promotion_plan.yaml
+- path: artifacts/cross_library/mainline/seed_registry_minimal_integration_v1/seed_registry_proposal.yaml
+- path: artifacts/cross_library/mainline/seed_card_pilot_and_astlite_recovery_v1/
+- path: normalized_templates/x509/x509_asn1_inner_boundary/
+- path: adapter_recipes/openssl/d2i_X509.x509_asn1_inner_boundary.yaml
+- path: artifacts/cross_library/mainline/remaining_pilot_seed_fast_lane_planning_v1/
+notes: Promoted canonical seed for next X.509 manual binding step; not a runtime result.

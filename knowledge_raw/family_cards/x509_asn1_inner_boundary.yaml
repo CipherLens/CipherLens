@@ -1,0 +1,62 @@
+id: x509_asn1_inner_boundary
+framework_family: x509_asn1_inner_boundary
+card_type: framework_family
+status: executable_draft
+description: nested ASN.1/X.509 structures, certificate/container substructure boundaries, text-field/date/extension
+  parsing, and inner parser bounds
+harness_shape:
+  input_kind: structured_der_or_certificate
+  trigger: nested ASN.1/container boundary mutation
+  observables:
+  - return_code
+  - parser_error
+  - object_state
+  - sanitizer_signal
+input_model: certificate, ASN.1, PKCS, or CMS container bytes with nested field mutations
+mutation_slots:
+- nested_length_field
+- x509_extension_length
+- malformed_certificate_field
+- oversized_asn1_time
+- string_field_boundary
+oracle_contract:
+  oracle_type: x509_asn1_boundary_oracle
+  pass_condition: well-formed container parses or rejects according to expected baseline
+  candidate_condition: malformed nested structure is accepted unexpectedly or reaches unsafe parser behavior
+  safe_reject_condition: malformed nested structure is rejected without unsafe memory evidence
+  unsupported_condition: target API lacks comparable nested parser surface
+  blocked_condition: target runtime is blocked or parser setup depends on unavailable assets
+triage_outputs:
+- candidate_event
+- semantic_gap_candidate
+- semantic_observation
+- safe_reject
+- unsupported
+- blocked
+required_target_cards:
+- api_card
+- constraints
+- call_sequence
+- negative_feedback
+- mapping_gate
+concrete_patterns:
+- x509_asn1_inner_substructure_boundary
+- wolfssl_x509_certificate_parser_memory_safety
+- wolfssl_x509_text_field_boundary
+- wolfssl_x509_date_parser_boundary
+- wolfssl_x509_authority_key_identifier_boundary
+- wolfssl_pkcs7_ori_oid_boundary
+evidence_paths:
+- data/pocs/core10/MBEDTLS-POC-0017/metadata.json
+- data/wolfssl_collect/WOLFSSL-POC-0001/metadata.json
+- data/wolfssl_collect/WOLFSSL-POC-0002/metadata.json
+- data/wolfssl_collect/WOLFSSL-POC-0003/metadata.json
+- data/wolfssl_collect/WOLFSSL-POC-0004/metadata.json
+- data/wolfssl_collect/WOLFSSL-POC-0007/metadata.json
+- normalized_templates/wolfssl_family/asn1_nested_boundary/template_meta.yaml
+- normalized_templates/wolfssl_family/x509_parsing/family_template_spec.yaml
+- normalized_templates/x509/x509_asn1_inner_boundary/template_meta.yaml
+confidence_level: evidence_backed
+needs_human_review: false
+notes: Executable draft card. Schema is ready for orchestrator consumption; target behavior still requires
+  review.

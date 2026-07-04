@@ -1,0 +1,69 @@
+id: mbedtls-3.6.4::object_state_lifecycle
+target: mbedtls-3.6.4
+framework_family: object_state_lifecycle
+concrete_pattern: framework_family_level
+source: p0_mbedtls_api_evidence_cards_v1
+needs_human_review: false
+runtime_status: ready
+knowledge_status: signature_compile_smoke_evidence_backed
+behavior_validation_status: not_claimed
+evidence_paths:
+- artifacts/cross_library/mainline/p0_mbedtls_api_evidence_cards_v1/api_existence_audit.yaml
+- artifacts/cross_library/mainline/p0_mbedtls_api_evidence_cards_v1/compile_smoke/compile_smoke_report.yaml
+- knowledge_raw/api_constraints/mbedtls
+- knowledge_raw/unit_tests/mbedtls
+api_candidates: &id001
+- api: mbedtls_asn1_store_named_data
+  name: mbedtls_asn1_store_named_data
+  header: mbedtls/asn1write.h
+  library: mbedcrypto
+  signature_source: /home/wen/work/install-mbedtls-3.6.4-asan/include/mbedtls/asn1write.h:379
+  signature_excerpt: mbedtls_asn1_named_data *mbedtls_asn1_store_named_data(mbedtls_asn1_named_data
+    **list, const char *oid, size_t oid_len, const unsigned char *val, size_t val_len);
+  compile_smoke_verified: true
+  status: evidence_backed
+- api: mbedtls_asn1_free_named_data_list
+  name: mbedtls_asn1_free_named_data_list
+  header: mbedtls/asn1.h
+  library: mbedcrypto
+  signature_source: /home/wen/work/install-mbedtls-3.6.4-asan/include/mbedtls/asn1.h:622
+  signature_excerpt: void mbedtls_asn1_free_named_data_list(mbedtls_asn1_named_data
+    **head);
+  compile_smoke_verified: true
+  status: evidence_backed
+candidate_apis: *id001
+required_headers:
+- mbedtls/asn1.h
+- mbedtls/asn1write.h
+link_libraries:
+- mbedcrypto
+setup_sequence:
+- mbedtls_asn1_named_data *head = NULL
+call_sequence:
+- item = mbedtls_asn1_store_named_data(&head, oid_bytes, oid_len, first_value, first_value_len)
+- item = mbedtls_asn1_store_named_data(&head, oid_bytes, oid_len, second_value, second_value_len)
+teardown_sequence:
+- mbedtls_asn1_free_named_data_list(&head)
+ownership_rules:
+- caller owns list head and must free it with mbedtls_asn1_free_named_data_list
+return_code_semantics: function returns mbedtls_asn1_named_data pointer or NULL on
+  allocation failure
+output_semantics: list node value and length are caller-observable through returned/list
+  structure
+constraints:
+- selected_api must be mbedtls_asn1_store_named_data for trigger operations
+- selected_headers must include mbedtls/asn1.h and mbedtls/asn1write.h
+- selected_libraries must include mbedcrypto
+- setup must initialize mbedtls_asn1_named_data *head = NULL
+- teardown must call mbedtls_asn1_free_named_data_list(&head)
+- zero-length update/reuse semantics require runtime oracle evidence before classification
+negative_cases:
+- record semantic_observation or safe behavior only after runtime oracle evidence
+mapping_notes: Public ASN.1 store/free APIs are signature-backed target API candidates
+  for object state lifecycle.
+blocked_policy: do not classify behavior without explicit runtime oracle evidence
+confidence_level: compile_smoke_signature_evidence_backed
+notes: This card validates API availability and signature/linkage only; it does not
+  claim vulnerability behavior.
+card_type: constraints
+status: evidence_backed

@@ -1,0 +1,37 @@
+schema: canonical_seed_card_v1
+seed_id: seed_p1_mbedtls_poc_0004_pkcs_padding_outlen
+priority: P1
+source_kind: poc
+source_library: mbedtls
+source_reference:
+  path: data/pocs/core10/MBEDTLS-POC-0004
+  status: available
+family: return_code_outlen_semantic
+concrete_pattern: pkcs_padding_outlen
+oracle_kind: return_code_outlen_oracle
+template_kind: template_guided
+target_selection_policy:
+  accepted_target: openssl
+  target_api: EVP_DecryptFinal_ex
+  selection_status: closed_baseline_record
+  reason: OpenSSL exact payload/profile was recorded as safe reject and no candidate
+payload_profile:
+  payload_kind: invalid_padding_block
+  profile_status: closed_exact_payload_profile
+expected_observations:
+- observation: invalid padding path should return error without unsafe output length
+    state
+- observation: safe reject remains a valid baseline outcome
+safety_guardrails:
+- guardrail: do not promote safe reject baseline into candidate queue
+- guardrail: do not rerun runtime from seed registry promotion task
+current_status: closed_no_candidate_for_exact_payload_profile
+aliases: []
+related_artifacts:
+- path: artifacts/cross_library/mainline/seed_registry_alignment_v1/pilot_seed_promotion_plan.yaml
+- path: artifacts/cross_library/mainline/seed_registry_minimal_integration_v1/seed_registry_proposal.yaml
+- path: artifacts/cross_library/mainline/seed_card_pilot_and_astlite_recovery_v1/
+- path: artifacts/cross_library/mainline/campaign_feedback_queue_v2_openssl/
+- path: artifacts/cross_library/mainline/manual_slot_binding_completion_v2_openssl/
+notes: Canonical seed card promoted as closed baseline record; no source generation
+  or runtime executed in this task.

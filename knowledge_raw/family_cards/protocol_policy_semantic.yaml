@@ -1,0 +1,58 @@
+id: protocol_policy_semantic
+framework_family: protocol_policy_semantic
+card_type: framework_family
+status: partial
+description: protocol, certificate, key-usage, signature-policy, setup-parameter, or container-level semantic
+  checks where the main oracle is accept/reject consistency rather than pointer consumption, crash, or
+  lifecycle state
+harness_shape:
+  input_kind: protocol_or_container_semantic_case
+  trigger: policy, setup, signature, or attribute mutation
+  observables:
+  - return_code
+  - verification_result
+  - error_stack
+  - output_state
+input_model: protocol, certificate, signature, setup parameter, or container semantic case
+mutation_slots:
+- policy_flag_mutation
+- key_usage_mutation
+- signature_algorithm_mismatch
+- invalid_attribute_combination
+- invalid_setup_parameter
+oracle_contract:
+  oracle_type: protocol_policy_semantic_oracle
+  pass_condition: valid policy case behaves according to expected baseline
+  candidate_condition: invalid policy/setup/signature/container case is accepted or reported inconsistently
+  safe_reject_condition: invalid policy case is rejected with documented safe state
+  unsupported_condition: target lacks comparable policy surface or required algorithm/provider
+  blocked_condition: target runtime is blocked or policy assets are unavailable
+triage_outputs:
+- candidate_event
+- semantic_gap_candidate
+- semantic_observation
+- safe_reject
+- unsupported
+- blocked
+required_target_cards:
+- api_card
+- constraints
+- call_sequence
+- negative_feedback
+- mapping_gate
+concrete_patterns:
+- tls13_key_usage_verify_result_semantic
+- psa_aead_invalid_shortened_tag_setup
+- openssl_rsa_tiny_key_digest_sign_rejection
+- openssl_cms_ed448_signed_attributes_regression
+evidence_paths:
+- data/pocs/core10/MBEDTLS-POC-0027/metadata.json
+- data/pocs/core10/MBEDTLS-POC-0028/metadata.json
+- datasets/openssl/poc_artifacts/issue_21935/metadata.json
+- datasets/openssl/poc_artifacts/issue_30291/metadata.json
+- knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0027.yaml
+- normalized_templates/openssl/rsa_tiny_key_digest_sign_null_deref/template_meta.yaml
+- normalized_templates/psa/psa_aead_invalid_shortened_tag_setup/template_meta.yaml
+confidence_level: inferred_from_repo
+needs_human_review: true
+notes: This family is policy accept/reject semantics and is distinct from return-code/output-length consistency.

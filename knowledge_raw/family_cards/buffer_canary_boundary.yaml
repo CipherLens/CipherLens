@@ -1,0 +1,63 @@
+id: buffer_canary_boundary
+framework_family: buffer_canary_boundary
+card_type: framework_family
+status: partial
+description: caller-provided buffer, explicit length, truncation, overwrite, out-of-bounds write, underflow,
+  or canary-after-buffer boundary behavior
+harness_shape:
+  input_kind: caller_buffer_or_sized_field
+  trigger: boundary length or sized field mutation
+  observables:
+  - return_code
+  - canary_state
+  - sanitizer_signal
+  - written_length
+input_model: caller-provided buffer, serialized field, or length-prefixed byte sequence
+mutation_slots:
+- boundary_length
+- truncation
+- padding_length
+- output_buffer_size
+- serialized_value_size
+oracle_contract:
+  oracle_type: buffer_boundary_oracle
+  pass_condition: valid size succeeds without canary or sanitizer signal
+  candidate_condition: mutation corrupts canary, writes out of bounds, or reports unsafe length
+  safe_reject_condition: invalid size is rejected or truncated safely
+  unsupported_condition: target API does not write to caller buffer or expose comparable size field
+  blocked_condition: target runtime is blocked or required input construction is unavailable
+triage_outputs:
+- candidate_event
+- semantic_gap_candidate
+- semantic_observation
+- safe_reject
+- unsupported
+- blocked
+required_target_cards:
+- api_card
+- constraints
+- call_sequence
+- negative_feedback
+- mapping_gate
+concrete_patterns:
+- bignum_negative_mpi_write_string_small_buffer
+- bignum_mpi_sub_abs_limb_boundary
+- pem_encrypted_empty_decoded_buffer_underflow
+- wolfssl_pkcs7_signeddata_attribute_boundary
+- wolfssl_ssl_session_deserialization_boundary
+- wolfssl_tls_alpn_protocol_list_boundary
+evidence_paths:
+- data/pocs/core10/MBEDTLS-POC-0001/metadata.json
+- data/pocs/core10/MBEDTLS-POC-0002/metadata.json
+- data/pocs/core10/MBEDTLS-POC-0011/metadata.json
+- data/wolfssl_collect/WOLFSSL-POC-0006/metadata.json
+- data/wolfssl_collect/WOLFSSL-POC-0009/metadata.json
+- data/wolfssl_collect/WOLFSSL-POC-0010/metadata.json
+- normalized_templates/bignum/mpi_sub_abs/template_meta.yaml
+- normalized_templates/bignum/mpi_write_string/template_meta.yaml
+- normalized_templates/pem/pem_encrypted_empty_decoded_buffer_underflow/template_meta.yaml
+- normalized_templates/wolfssl_family/pkcs_container_parsing/template_meta.yaml
+confidence_level: inferred_from_repo
+needs_human_review: true
+notes: Executable draft card. Schema is ready for orchestrator consumption; target behavior still requires
+  review.

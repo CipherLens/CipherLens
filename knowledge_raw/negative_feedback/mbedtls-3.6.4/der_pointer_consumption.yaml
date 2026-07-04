@@ -1,0 +1,80 @@
+id: mbedtls-3.6.4::der_pointer_consumption
+target: mbedtls-3.6.4
+framework_family: der_pointer_consumption
+concrete_pattern: framework_family_level
+source: repo_inventory
+needs_human_review: true
+runtime_status: ready
+knowledge_status: partial
+evidence_paths:
+- knowledge_raw/api_constraints/mbedtls
+- knowledge_raw/unit_tests/mbedtls
+api_candidates:
+- api: mbedtls_pk_parse_key
+  confidence_level: inferred_from_repo
+  status: candidate
+- api: mbedtls_rsa_parse_key
+  confidence_level: inferred_from_repo
+  status: candidate
+- api: mbedtls_rsa_parse_pubkey
+  confidence_level: inferred_from_repo
+  status: candidate
+required_headers: []
+link_libraries: []
+setup_sequence:
+- needs_review
+call_sequence:
+- needs_review
+teardown_sequence:
+- needs_review
+ownership_rules:
+- needs_review
+return_code_semantics: needs_review
+output_semantics: needs_review
+constraints:
+- needs_review
+negative_cases:
+- safe_reject
+- unsupported
+- blocked
+- invalid_contract
+- semantic_observation
+mapping_notes: framework-target skeleton; candidate APIs are draft hints when present
+blocked_policy: respect target runtime_status and mapping gate before generation
+confidence_level: inferred_from_repo
+notes: Schema-ready target skeleton. It does not claim complete target behavior validation.
+card_type: negative_feedback
+status: executable_draft
+negative_feedback:
+- pattern: rsa_der_top_level_sequence_trailing_garbage
+  observation: bounded_runtime_smoke_run_success_without_sanitizer_crash_timeout;
+    observation_only
+  do_not_claim:
+  - release_forbidden_issue_claim
+  - release_forbidden_exploitability_claim
+  - release_forbidden_cve_style_claim
+  allowed_classification:
+  - semantic_observation
+  - runtime_smoke_observation
+  evidence_source: artifacts/cross_library/mainline/p0_mbedtls_oracle_feedback_v1/oracle_triage_report.yaml
+  next_required_evidence_for_candidate:
+  - differential_behavior
+  - sanitizer_or_crash
+  - oracle_specific_mismatch
+  - repeated_target_comparison
+- pattern: rsa_der_top_level_sequence_trailing_garbage
+  observation: deterministic_der_payload_runtime_success_without_sanitizer_crash_timeout;
+    clean_der_accepts_and_trailing_der_rejects; observation_only
+  evidence_source: artifacts/cross_library/mainline/p0_der_payload_oracle_enrichment_v1/p0_der_enriched_runtime/der_payload_oracle_report.yaml
+  oracle_boundary: runtime success with deterministic DER payload is still observation-only
+  candidate_event_requires:
+  - differential_behavior
+  - explicit_consumed_length_mismatch
+  - oracle_specific_mismatch
+  - sanitizer_or_crash
+  allowed_classification:
+  - semantic_observation
+  do_not_claim:
+  - release_forbidden_issue_claim
+  - release_forbidden_exploitability_claim
+  - release_forbidden_cve_style_claim

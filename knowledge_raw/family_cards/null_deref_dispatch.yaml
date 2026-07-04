@@ -1,0 +1,53 @@
+id: null_deref_dispatch
+framework_family: null_deref_dispatch
+card_type: framework_family
+status: partial
+description: NULL pointer, invalid object type, method dispatch mismatch, public-only key misuse, or type-specific
+  dispatch failure
+harness_shape:
+  input_kind: api_sequence_or_key_object
+  trigger: invalid dispatch or missing internal object state
+  observables:
+  - return_code
+  - error_stack
+  - sanitizer_signal
+input_model: object or key material selected to exercise mismatched operation dispatch
+mutation_slots:
+- wrong_key_type
+- public_key_used_for_private_operation
+- missing_method_callback
+- null_internal_pointer
+oracle_contract:
+  oracle_type: dispatch_null_safety_oracle
+  pass_condition: valid dispatch succeeds or documented invalid dispatch is safely rejected
+  candidate_condition: invalid dispatch reaches NULL object path, unsafe success, or sanitizer evidence
+  safe_reject_condition: invalid object or operation is rejected with safe error
+  unsupported_condition: target cannot express comparable dispatch mismatch
+  blocked_condition: target runtime is blocked or required algorithm/provider is unavailable
+triage_outputs:
+- candidate_event
+- semantic_gap_candidate
+- semantic_observation
+- safe_reject
+- unsupported
+- blocked
+required_target_cards:
+- api_card
+- constraints
+- call_sequence
+- negative_feedback
+- mapping_gate
+concrete_patterns:
+- pk_verify_ext_opaque_rsa_pss_null_deref
+- openssl_pkey_public_only_sign_null_deref
+- openssl_pkcs12_pbmac1_null_salt_info_path
+evidence_paths:
+- data/pocs/core10/MBEDTLS-POC-0003/metadata.json
+- datasets/openssl/poc_artifacts/issue_19524/metadata.json
+- datasets/openssl/poc_artifacts/issue_30581/metadata.json
+- normalized_templates/openssl/pkey_public_only_sign_null_deref/template_meta.yaml
+- normalized_templates/pk/pk_verify_ext_null_deref/template_meta.yaml
+confidence_level: inferred_from_repo
+needs_human_review: true
+notes: Executable draft card. Schema is ready for orchestrator consumption; target behavior still requires
+  review.

@@ -1,0 +1,70 @@
+schema: negative_feedback_card_v1
+target: wolfssl-5.9.1
+framework_family: der_pointer_consumption
+status: evidence_backed_observation_policy
+negative_feedback:
+- pattern: rsa_der_top_level_sequence_trailing_garbage
+  observation: compile_smoke_only; no runtime behavior claim
+  do_not_claim:
+  - issue_confirmation_claim
+  - exploitability_claim
+  - cve_style_claim
+  - severity_escalation_claim
+  allowed_classification:
+  - api_signature_evidence
+  - compile_smoke_observation
+  - blocked_no_api_evidence
+  evidence_source: artifacts/cross_library/mainline/p0_botan_wolfssl_api_evidence_cards_v1/compile_smoke/compile_smoke_report.yaml
+  next_required_evidence_for_candidate:
+  - differential_behavior
+  - sanitizer_or_crash
+  - oracle_specific_mismatch
+  - repeated_target_comparison
+- pattern: rsa_der_top_level_sequence_trailing_garbage
+  observation: deterministic_der_payload_runtime_success_without_sanitizer_crash_timeout;
+    clean_der_accepts_and_trailing_der_accepts_with_unconsumed_trailing_bytes; semantic_gap_candidate_requires_triage
+  evidence_source: artifacts/cross_library/mainline/p0_der_payload_oracle_enrichment_v1/p0_der_enriched_runtime/der_payload_oracle_report.yaml
+  oracle_boundary: runtime success alone is observation-only; consumed-length mismatch
+    is a triage candidate, not a vulnerability conclusion
+  candidate_event_requires:
+  - explicit_consumed_length_mismatch
+  - target_api_contract_review
+  - repeated_target_comparison
+  allowed_classification:
+  - semantic_observation
+  - candidate_event
+  do_not_claim:
+  - issue_confirmation_claim
+  - exploitability_claim
+  - cve_style_claim
+  - severity_escalation_claim
+- observation_id: caller_full_consumption_check_required_after_idx_contract_audit
+  pattern: rsa_der_top_level_sequence_trailing_garbage
+  observation: wolfssl_low_level_rsa_decode_success_with_idx_short_of_input_len_matches_inOutIdx_offset_contract
+  evidence_source: artifacts/cross_library/mainline/p0_wolfssl_der_consumption_contract_triage_v1/wolfssl_consumption_triage_report.yaml
+  contract_audit_source: artifacts/cross_library/mainline/p0_wolfssl_der_consumption_contract_triage_v1/wolfssl_api_contract_audit.yaml
+  reclassification: caller_full_consumption_check_required
+  oracle_policy: ret_zero_is_decode_success_only; full_consumption_requires_consumed_idx_equals_input_len
+  allowed_classification:
+  - semantic_observation
+  candidate_event_retained: false
+  do_not_claim:
+  - issue_confirmation_claim
+  - exploitability_claim
+  - cve_style_claim
+  - severity_escalation_claim
+- observation_id: p0_der_oracle_contract_persist_v1_runtime_reclassification
+  pattern: rsa_der_top_level_sequence_trailing_garbage
+  observation: runtime_replay_after_contract_persist_reclassified_wolfssl_trailing_der_as_caller_full_consumption_check_required
+  evidence_source: artifacts/cross_library/mainline/p0_der_oracle_contract_persist_v1/p0_der_reclassification_report.yaml
+  runtime_report: artifacts/cross_library/mainline/p0_der_oracle_contract_persist_v1/p0_der_enriched_runtime_after_contract/der_payload_oracle_report.yaml
+  oracle_policy: for_wolfssl_low_level_der_decode_full_consumption_requires_ret_zero_and_consumed_idx_equals_input_len
+  allowed_classification:
+  - semantic_observation
+  candidate_event_retained: false
+  do_not_claim:
+  - issue_confirmation_claim
+  - exploitability_claim
+  - cve_style_claim
+  - severity_escalation_claim
+blocked_reason: ''

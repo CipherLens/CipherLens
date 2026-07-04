@@ -1,0 +1,470 @@
+generated_by: taxonomy_review_and_card_priority_v1
+status: poc_driven_taxonomy_reviewed
+note: Framework families are harness/oracle-level categories. Concrete patterns are derived from PoC/issue/template/recipe
+  evidence and should not be treated as complete support claims.
+framework_families:
+- id: buffer_canary_boundary
+  description: caller-provided buffer, explicit length, truncation, overwrite, out-of-bounds write, underflow,
+    or canary-after-buffer boundary behavior
+  oracle_types:
+  - crash_sanitizer_oracle
+  - canary_boundary_oracle
+  - return_code_outlen_semantic
+  typical_mutations:
+  - boundary_length
+  - truncation
+  - padding_length
+  - output_buffer_size
+  - serialized_value_size
+- id: der_pointer_consumption
+  description: DER parser accepts input without consuming all bytes, accepts trailing garbage, or exposes
+    pointer-consumption differences
+  oracle_types:
+  - parser_full_consumption
+  - pointer_consumption_semantic_oracle
+  - differential_oracle
+  typical_mutations:
+  - trailing_garbage
+  - truncated_der
+  - length_field_mutation
+  - valid_prefix_plus_tail
+- id: x509_asn1_inner_boundary
+  description: nested ASN.1/X.509 structures, certificate/container substructure boundaries, text-field/date/extension
+    parsing, and inner parser bounds
+  oracle_types:
+  - parser_oracle
+  - differential_oracle
+  - crash_sanitizer_oracle
+  typical_mutations:
+  - nested_length_field
+  - x509_extension_length
+  - malformed_certificate_field
+  - oversized_asn1_time
+  - string_field_boundary
+- id: return_code_outlen_semantic
+  description: return-code and caller-visible output length/output buffer semantic consistency
+  oracle_types:
+  - crypto_semantic_oracle
+  - invalid_padding_output_length_oracle
+  - differential_oracle
+  typical_mutations:
+  - invalid_padding
+  - output_length_pointer
+  - error_path_state
+  - finalization_boundary
+- id: crash_sanitizer_oracle
+  description: sanitizer-visible crash, abort, invalid memory access, assertion failure, or memory-safety
+    observation layer
+  oracle_types:
+  - execution_oracle
+  - crash_sanitizer_oracle
+  typical_mutations:
+  - malformed_input_seed
+  - oversized_internal_field
+  - invalid_serialized_state
+  - cleanup_path_error
+- id: object_state_lifecycle
+  description: object lifecycle, state-machine ordering, stale pointer/stale length, uninitialized context,
+    copy/dup/init/update/final/free sequencing
+  oracle_types:
+  - lifecycle_oracle
+  - crypto_semantic_oracle
+  - crash_sanitizer_oracle
+  typical_mutations:
+  - missing_init
+  - duplicate_uninitialized_context
+  - stale_length_after_zero_update
+  - cleanup_after_error
+  - public_private_state_mismatch
+- id: null_deref_dispatch
+  description: NULL pointer, invalid object type, method dispatch mismatch, public-only key misuse, or
+    type-specific dispatch failure
+  oracle_types:
+  - execution_oracle
+  - lifecycle_oracle
+  - crash_sanitizer_or_safe_error_oracle
+  typical_mutations:
+  - wrong_key_type
+  - public_key_used_for_private_operation
+  - missing_method_callback
+  - null_internal_pointer
+- id: protocol_policy_semantic
+  description: protocol, certificate, key-usage, signature-policy, setup-parameter, or container-level
+    semantic checks where the main oracle is accept/reject consistency rather than pointer consumption,
+    crash, or lifecycle state
+  oracle_types:
+  - crypto_semantic_oracle
+  - differential_oracle
+  - protocol_policy_oracle
+  typical_mutations:
+  - policy_flag_mutation
+  - key_usage_mutation
+  - signature_algorithm_mismatch
+  - invalid_attribute_combination
+  - invalid_setup_parameter
+concrete_patterns:
+- id: bignum_negative_mpi_write_string_small_buffer
+  framework_family: buffer_canary_boundary
+  source_libraries:
+  - mbedtls
+  source_evidence:
+  - path: data/pocs/core10/MBEDTLS-POC-0001/metadata.json
+    poc_id: MBEDTLS-POC-0001
+  - path: normalized_templates/bignum/mpi_write_string/template_meta.yaml
+    poc_id: MBEDTLS-POC-0001
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: false
+  review_note: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment
+    retained from PoC/template evidence.
+- id: bignum_mpi_sub_abs_limb_boundary
+  framework_family: buffer_canary_boundary
+  source_libraries:
+  - mbedtls
+  source_evidence:
+  - path: data/pocs/core10/MBEDTLS-POC-0002/metadata.json
+    poc_id: MBEDTLS-POC-0002
+  - path: normalized_templates/bignum/mpi_sub_abs/template_meta.yaml
+    poc_id: MBEDTLS-POC-0002
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: false
+  review_note: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment
+    retained from PoC/template evidence.
+- id: pk_verify_ext_opaque_rsa_pss_null_deref
+  framework_family: null_deref_dispatch
+  source_libraries:
+  - mbedtls
+  source_evidence:
+  - path: data/pocs/core10/MBEDTLS-POC-0003/metadata.json
+    poc_id: MBEDTLS-POC-0003
+  - path: normalized_templates/pk/pk_verify_ext_null_deref/template_meta.yaml
+    poc_id: MBEDTLS-POC-0003
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: false
+  review_note: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment
+    retained from PoC/template evidence.
+- id: cipher_pkcs_padding_invalid_outlen_underflow
+  framework_family: return_code_outlen_semantic
+  source_libraries:
+  - mbedtls
+  source_evidence:
+  - path: data/pocs/core10/MBEDTLS-POC-0004/metadata.json
+    poc_id: MBEDTLS-POC-0004
+  - path: normalized_templates/cipher/cipher_pkcs_padding_outlen_underflow/template_meta.yaml
+    poc_id: MBEDTLS-POC-0004
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: false
+  review_note: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment
+    retained from PoC/template evidence.
+- id: asn1_store_named_data_zero_len_stale_state
+  framework_family: object_state_lifecycle
+  source_libraries:
+  - mbedtls
+  source_evidence:
+  - path: data/pocs/core10/MBEDTLS-POC-0005/metadata.json
+    poc_id: MBEDTLS-POC-0005
+  - path: normalized_templates/asn1/asn1_store_named_data_zero_len_stale_state/template_meta.yaml
+    poc_id: MBEDTLS-POC-0005
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: false
+  review_note: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment
+    retained from PoC/template evidence.
+- id: pem_encrypted_empty_decoded_buffer_underflow
+  framework_family: buffer_canary_boundary
+  source_libraries:
+  - mbedtls
+  source_evidence:
+  - path: data/pocs/core10/MBEDTLS-POC-0011/metadata.json
+    poc_id: MBEDTLS-POC-0011
+  - path: normalized_templates/pem/pem_encrypted_empty_decoded_buffer_underflow/template_meta.yaml
+    poc_id: MBEDTLS-POC-0011
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: true
+  review_note: PEM decoded-buffer underflow is mapped to buffer boundary for now; parser/container-specific
+    treatment may be needed later.
+- id: x509_asn1_inner_substructure_boundary
+  framework_family: x509_asn1_inner_boundary
+  source_libraries:
+  - mbedtls
+  source_evidence:
+  - path: data/pocs/core10/MBEDTLS-POC-0017/metadata.json
+    poc_id: MBEDTLS-POC-0017
+  - path: normalized_templates/x509/x509_asn1_inner_boundary/template_meta.yaml
+    poc_id: MBEDTLS-POC-0017
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: false
+  review_note: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment
+    retained from PoC/template evidence.
+- id: rsa_der_top_level_sequence_trailing_garbage
+  framework_family: der_pointer_consumption
+  source_libraries:
+  - mbedtls
+  source_evidence:
+  - path: data/pocs/core10/MBEDTLS-POC-0020/metadata.json
+    poc_id: MBEDTLS-POC-0020
+  - path: normalized_templates/rsa/rsa_der_trailing_garbage/template_meta.yaml
+    poc_id: MBEDTLS-POC-0020
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: false
+  review_note: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment
+    retained from PoC/template evidence.
+- id: tls13_key_usage_verify_result_semantic
+  framework_family: protocol_policy_semantic
+  source_libraries:
+  - mbedtls
+  source_evidence:
+  - path: data/pocs/core10/MBEDTLS-POC-0027/metadata.json
+    poc_id: MBEDTLS-POC-0027
+  - path: knowledge_raw/poc_patterns/mbedtls/MBEDTLS-POC-0027.yaml
+    poc_id: MBEDTLS-POC-0027
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: false
+  review_note: 'Reviewed in taxonomy_review_and_card_priority_v1: evidence describes TLS/certificate policy
+    propagation through verify_result flags, so protocol_policy_semantic fits better than output-length,
+    crash, or lifecycle families.'
+- id: psa_aead_invalid_shortened_tag_setup
+  framework_family: protocol_policy_semantic
+  source_libraries:
+  - mbedtls
+  source_evidence:
+  - path: data/pocs/core10/MBEDTLS-POC-0028/metadata.json
+    poc_id: MBEDTLS-POC-0028
+  - path: normalized_templates/psa/psa_aead_invalid_shortened_tag_setup/template_meta.yaml
+    poc_id: MBEDTLS-POC-0028
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: false
+  review_note: 'Reviewed in taxonomy_review_and_card_priority_v1: evidence describes invalid AEAD setup
+    parameter acceptance/rejection semantics, so protocol_policy_semantic fits better than buffer or output-length
+    families.'
+- id: openssl_evp_cipher_ctx_copy_uninit_state
+  framework_family: object_state_lifecycle
+  source_libraries:
+  - openssl
+  source_evidence:
+  - path: datasets/openssl/poc_artifacts/issue_8980/metadata.json
+    poc_id: OPENSSL-ISSUE-8980
+  - path: normalized_templates/openssl/evp_cipher_ctx_copy_uninit_state/template_meta.yaml
+    poc_id: OPENSSL-ISSUE-8980
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: false
+  review_note: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment
+    retained from PoC/template evidence.
+- id: openssl_evp_cipher_ctx_dup_uninit_state
+  framework_family: object_state_lifecycle
+  source_libraries:
+  - openssl
+  source_evidence:
+  - path: datasets/openssl/poc_artifacts/issue_8980/metadata.json
+    poc_id: OPENSSL-ISSUE-8980
+  - path: normalized_templates/openssl/evp_cipher_ctx_dup_uninit_state/template_meta.yaml
+    poc_id: OPENSSL-ISSUE-8980
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: false
+  review_note: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment
+    retained from PoC/template evidence.
+- id: openssl_evp_mac_get_size_uninit_lifecycle
+  framework_family: object_state_lifecycle
+  source_libraries:
+  - openssl
+  source_evidence:
+  - path: datasets/openssl/poc_artifacts/issue_22842/metadata.json
+    poc_id: OPENSSL-ISSUE-22842
+  - path: normalized_templates/openssl/evp_mac_get_size_uninit_lifecycle/template_meta.yaml
+    poc_id: OPENSSL-ISSUE-22842
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: false
+  review_note: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment
+    retained from PoC/template evidence.
+- id: openssl_pkey_public_only_sign_null_deref
+  framework_family: null_deref_dispatch
+  source_libraries:
+  - openssl
+  source_evidence:
+  - path: datasets/openssl/poc_artifacts/issue_19524/metadata.json
+    poc_id: OPENSSL-ISSUE-19524
+  - path: normalized_templates/openssl/pkey_public_only_sign_null_deref/template_meta.yaml
+    poc_id: OPENSSL-ISSUE-19524
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: false
+  review_note: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment
+    retained from PoC/template evidence.
+- id: openssl_rsa_tiny_key_digest_sign_rejection
+  framework_family: protocol_policy_semantic
+  source_libraries:
+  - openssl
+  source_evidence:
+  - path: datasets/openssl/poc_artifacts/issue_21935/metadata.json
+    poc_id: OPENSSL-ISSUE-21935
+  - path: normalized_templates/openssl/rsa_tiny_key_digest_sign_null_deref/template_meta.yaml
+    poc_id: OPENSSL-ISSUE-21935
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: false
+  review_note: 'Reviewed in taxonomy_review_and_card_priority_v1: evidence describes key capability and
+    digest-sign policy rejection semantics; protocol_policy_semantic fits better than null dereference
+    alone.'
+- id: wolfssl_x509_certificate_parser_memory_safety
+  framework_family: x509_asn1_inner_boundary
+  source_libraries:
+  - wolfssl
+  source_evidence:
+  - path: data/wolfssl_collect/WOLFSSL-POC-0001/metadata.json
+    poc_id: WOLFSSL-POC-0001
+  - path: normalized_templates/wolfssl_family/x509_parsing/family_template_spec.yaml
+    poc_id: wolfssl_family::x509_parsing
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: true
+  review_note: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment
+    retained from PoC/template evidence.
+- id: wolfssl_x509_text_field_boundary
+  framework_family: x509_asn1_inner_boundary
+  source_libraries:
+  - wolfssl
+  source_evidence:
+  - path: data/wolfssl_collect/WOLFSSL-POC-0002/metadata.json
+    poc_id: WOLFSSL-POC-0002
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: true
+  review_note: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment
+    retained from PoC/template evidence.
+- id: wolfssl_x509_date_parser_boundary
+  framework_family: x509_asn1_inner_boundary
+  source_libraries:
+  - wolfssl
+  source_evidence:
+  - path: data/wolfssl_collect/WOLFSSL-POC-0003/metadata.json
+    poc_id: WOLFSSL-POC-0003
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: true
+  review_note: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment
+    retained from PoC/template evidence.
+- id: wolfssl_x509_authority_key_identifier_boundary
+  framework_family: x509_asn1_inner_boundary
+  source_libraries:
+  - wolfssl
+  source_evidence:
+  - path: data/wolfssl_collect/WOLFSSL-POC-0004/metadata.json
+    poc_id: WOLFSSL-POC-0004
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: true
+  review_note: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment
+    retained from PoC/template evidence.
+- id: wolfssl_dtls13_ack_record_memory_safety
+  framework_family: crash_sanitizer_oracle
+  source_libraries:
+  - wolfssl
+  source_evidence:
+  - path: data/wolfssl_collect/WOLFSSL-POC-0005/metadata.json
+    poc_id: WOLFSSL-POC-0005
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: true
+  review_note: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment
+    retained from PoC/template evidence.
+- id: wolfssl_pkcs7_signeddata_attribute_boundary
+  framework_family: buffer_canary_boundary
+  source_libraries:
+  - wolfssl
+  source_evidence:
+  - path: data/wolfssl_collect/WOLFSSL-POC-0006/metadata.json
+    poc_id: WOLFSSL-POC-0006
+  - path: normalized_templates/wolfssl_family/pkcs_container_parsing/template_meta.yaml
+    poc_id: wolfssl_family::pkcs_container_parsing
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: true
+  review_note: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment
+    retained from PoC/template evidence.
+- id: wolfssl_pkcs7_ori_oid_boundary
+  framework_family: x509_asn1_inner_boundary
+  source_libraries:
+  - wolfssl
+  source_evidence:
+  - path: data/wolfssl_collect/WOLFSSL-POC-0007/metadata.json
+    poc_id: WOLFSSL-POC-0007
+  - path: normalized_templates/wolfssl_family/asn1_nested_boundary/template_meta.yaml
+    poc_id: wolfssl_family::asn1_nested_boundary
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: true
+  review_note: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment
+    retained from PoC/template evidence.
+- id: wolfssl_tls13_pqc_keyshare_cleanup_lifecycle
+  framework_family: object_state_lifecycle
+  source_libraries:
+  - wolfssl
+  source_evidence:
+  - path: data/wolfssl_collect/WOLFSSL-POC-0008/metadata.json
+    poc_id: WOLFSSL-POC-0008
+  - path: normalized_templates/wolfssl_family/tls_protocol_state_lifecycle/family_template_spec.yaml
+    poc_id: wolfssl_family::tls_protocol_state_lifecycle
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: true
+  review_note: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment
+    retained from PoC/template evidence.
+- id: wolfssl_ssl_session_deserialization_boundary
+  framework_family: buffer_canary_boundary
+  source_libraries:
+  - wolfssl
+  source_evidence:
+  - path: data/wolfssl_collect/WOLFSSL-POC-0009/metadata.json
+    poc_id: WOLFSSL-POC-0009
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: true
+  review_note: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment
+    retained from PoC/template evidence.
+- id: wolfssl_tls_alpn_protocol_list_boundary
+  framework_family: buffer_canary_boundary
+  source_libraries:
+  - wolfssl
+  source_evidence:
+  - path: data/wolfssl_collect/WOLFSSL-POC-0010/metadata.json
+    poc_id: WOLFSSL-POC-0010
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: true
+  review_note: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment
+    retained from PoC/template evidence.
+- id: openssl_pkcs12_pbmac1_null_salt_info_path
+  framework_family: null_deref_dispatch
+  source_libraries:
+  - openssl
+  source_evidence:
+  - path: datasets/openssl/poc_artifacts/issue_30581/metadata.json
+    poc_id: OPENSSL-ISSUE-30581
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: true
+  review_note: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment
+    retained from PoC/template evidence.
+- id: openssl_cms_ed448_signed_attributes_regression
+  framework_family: protocol_policy_semantic
+  source_libraries:
+  - openssl
+  source_evidence:
+  - path: datasets/openssl/poc_artifacts/issue_30291/metadata.json
+    poc_id: OPENSSL-ISSUE-30291
+  status: observed_material
+  needs_card_expansion: true
+  needs_human_review: false
+  review_note: 'Reviewed in taxonomy_review_and_card_priority_v1: evidence describes CMS signed-attribute/signature
+    policy behavior; protocol_policy_semantic fits better than ASN.1 boundary or output-length families.'

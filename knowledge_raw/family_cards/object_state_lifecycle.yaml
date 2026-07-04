@@ -1,0 +1,62 @@
+id: object_state_lifecycle
+framework_family: object_state_lifecycle
+card_type: framework_family
+status: executable_draft
+description: object lifecycle, state-machine ordering, stale pointer/stale length, uninitialized context,
+  copy/dup/init/update/final/free sequencing
+harness_shape:
+  input_kind: api_sequence
+  trigger: state transition or ordering mutation
+  observables:
+  - return_code
+  - object_state
+  - output_state
+  - sanitizer_signal
+input_model: API lifecycle sequence with setup/update/final/copy/free variants
+mutation_slots:
+- missing_init
+- duplicate_uninitialized_context
+- stale_length_after_zero_update
+- cleanup_after_error
+- public_private_state_mismatch
+oracle_contract:
+  oracle_type: lifecycle_oracle
+  pass_condition: valid lifecycle sequence succeeds and cleanup is safe
+  candidate_condition: invalid ordering or stale state produces unsafe success, unsafe state, or sanitizer
+    evidence
+  safe_reject_condition: invalid ordering is rejected or produces documented safe error state
+  unsupported_condition: target lacks comparable lifecycle state or observable result
+  blocked_condition: target runtime is blocked or lifecycle API cannot be called in local setup
+triage_outputs:
+- candidate_event
+- semantic_gap_candidate
+- semantic_observation
+- safe_reject
+- unsupported
+- blocked
+required_target_cards:
+- api_card
+- constraints
+- call_sequence
+- negative_feedback
+- mapping_gate
+concrete_patterns:
+- asn1_store_named_data_zero_len_stale_state
+- openssl_evp_cipher_ctx_copy_uninit_state
+- openssl_evp_cipher_ctx_dup_uninit_state
+- openssl_evp_mac_get_size_uninit_lifecycle
+- wolfssl_tls13_pqc_keyshare_cleanup_lifecycle
+evidence_paths:
+- data/pocs/core10/MBEDTLS-POC-0005/metadata.json
+- data/wolfssl_collect/WOLFSSL-POC-0008/metadata.json
+- datasets/openssl/poc_artifacts/issue_22842/metadata.json
+- datasets/openssl/poc_artifacts/issue_8980/metadata.json
+- normalized_templates/asn1/asn1_store_named_data_zero_len_stale_state/template_meta.yaml
+- normalized_templates/openssl/evp_cipher_ctx_copy_uninit_state/template_meta.yaml
+- normalized_templates/openssl/evp_cipher_ctx_dup_uninit_state/template_meta.yaml
+- normalized_templates/openssl/evp_mac_get_size_uninit_lifecycle/template_meta.yaml
+- normalized_templates/wolfssl_family/tls_protocol_state_lifecycle/family_template_spec.yaml
+confidence_level: evidence_backed
+needs_human_review: false
+notes: Executable draft card. Schema is ready for orchestrator consumption; target behavior still requires
+  review.

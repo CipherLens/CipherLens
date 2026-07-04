@@ -1,0 +1,71 @@
+schema: target_api_card_v1
+target_library: wolfssl
+family: x509_asn1_inner_boundary
+card_status: schema_ready_evidence_draft
+source: x509_wolfssl_rag_promotion_apply_v1
+primary_api: wolfSSL_d2i_X509
+associated_apis:
+  - wolfSSL_X509_d2i
+  - wolfSSL_X509_load_certificate_buffer
+cleanup_api: wolfSSL_X509_free
+contract:
+  input_kind: DER buffer pointer with explicit byte length
+  return_semantics: returns WOLFSSL_X509 pointer on parse success and NULL on parse failure
+  consumed_length_visibility:
+    wolfSSL_d2i_X509: visible through caller-supplied const unsigned char ** pointer advancement
+    wolfSSL_X509_d2i: not directly visible because the API takes a const byte pointer and length
+  pointer_advancement_behavior: wolfSSL_d2i_X509 advances the caller-supplied input pointer by the parsed certificate length on success
+  full_consumption_guardrail: full-buffer acceptance must be checked by computing consumed = p - input and requiring consumed == input_len; object return alone is not sufficient
+  ownership: successful parse returns a WOLFSSL_X509 object owned by the caller
+  cleanup_api: wolfSSL_X509_free
+  malformed_der_behavior: malformed or unparseable DER is represented as NULL return through this pointer-return API
+api_candidates:
+  - api: wolfSSL_d2i_X509
+    role: primary_pointer_consuming_x509_der_parser
+    status: selected
+    required_observables:
+      - return_object_present
+      - input_len
+      - consumed
+      - remaining
+      - consumed_equals_input_len
+  - api: wolfSSL_X509_d2i
+    role: related_x509_der_parser_without_direct_consumed_length_observable
+    status: supporting_evidence
+  - api: wolfSSL_X509_load_certificate_buffer
+    role: related_buffer_loader_for_asn1_format
+    status: supporting_evidence
+evidence:
+  - path: /home/wen/work/clean_sources/wolfssl/wolfssl/ssl.h
+    symbol: wolfSSL_d2i_X509
+    evidence_kind: header_declaration
+    line_range: 3494-3495
+  - path: /home/wen/work/clean_sources/wolfssl/wolfssl/openssl/ssl.h
+    symbol: wolfSSL_d2i_X509
+    evidence_kind: openssl_compat_header_declaration
+    line_range: 491-497
+  - path: /home/wen/work/clean_sources/wolfssl/src/x509.c
+    symbol: wolfSSL_d2i_X509
+    evidence_kind: source_implementation
+    line_range: 4103-4121
+  - path: /home/wen/work/clean_sources/wolfssl/src/x509.c
+    symbol: wolfSSL_X509_d2i
+    evidence_kind: related_source_implementation
+    line_range: 4127-4190
+  - path: /home/wen/work/clean_sources/wolfssl/src/x509.c
+    symbol: wolfSSL_X509_free
+    evidence_kind: cleanup_source_implementation
+    line_range: 3816-3821
+  - path: /home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c
+    symbol: wolfSSL_d2i_X509
+    evidence_kind: test_usage
+    line_range: 564-571
+  - path: artifacts/cross_library/mainline/x509_wolfssl_source_evidence_collection_v1/wolfssl_x509_contract_evidence.yaml
+    symbol: wolfSSL_d2i_X509
+    evidence_kind: contract_triage_summary
+    line_range: contract.full_consumption_contract
+notes:
+  - This canonical card promotes the previous proposal into wolfSSL X.509 RAG knowledge.
+  - Runtime classification must preserve the distinction between successful object parse and full-buffer consumption.
+  - Exact replay should prefer wolfSSL_d2i_X509 because pointer advancement makes consumed length observable.
+claim_level: evidence_backed_knowledge_card_no_runtime_observation

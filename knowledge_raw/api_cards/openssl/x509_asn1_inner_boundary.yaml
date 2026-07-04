@@ -1,0 +1,47 @@
+id: openssl::x509_asn1_inner_boundary
+target: openssl
+framework_family: x509_asn1_inner_boundary
+concrete_pattern: framework_family_level
+source: repo_inventory
+needs_human_review: true
+runtime_status: baseline_only
+knowledge_status: partial
+evidence_paths:
+- knowledge_raw/api_constraints/openssl
+- knowledge_raw/unit_tests/openssl
+api_candidates:
+- api: d2i_X509
+  confidence_level: inferred_from_repo
+  status: candidate
+- api: PEM_read_bio_X509
+  confidence_level: inferred_from_repo
+  status: candidate
+- api: X509_get_ext_d2i
+  confidence_level: inferred_from_repo
+  status: candidate
+- api: PKCS7_parse
+  confidence_level: inferred_from_repo
+  status: candidate
+required_headers: []
+link_libraries: []
+setup_sequence:
+- needs_review
+call_sequence:
+- needs_review
+teardown_sequence:
+- needs_review
+ownership_rules:
+- needs_review
+return_code_semantics: needs_review
+output_semantics: needs_review
+constraints:
+- needs_review
+negative_cases:
+- record safe_reject, unsupported, blocked, invalid_contract, and semantic_observation labels only after
+  review
+mapping_notes: framework-target skeleton; candidate APIs are draft hints when present
+blocked_policy: respect target runtime_status and mapping gate before generation
+confidence_level: inferred_from_repo
+notes: Schema-ready target skeleton. It does not claim complete target behavior validation.
+card_type: target_api_card
+status: executable_draft

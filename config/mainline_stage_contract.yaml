@@ -1,0 +1,167 @@
+schema: mainline_stage_contract_v1
+task_name: stage_based_orchestrator_v1
+status: planning_contract
+description: >
+  Stage contract for converting taxonomy, knowledge cards, and mapping-gate
+  evidence into traceable campaign/render/oracle plans without executing
+  runtime harnesses.
+allowed_orchestrator_modes:
+  - stage_contract
+  - legacy_smoke
+default_orchestrator_mode: stage_contract
+stages:
+  - id: load_taxonomy
+    input: config/family_taxonomy.yaml
+    output: taxonomy_report.yaml
+  - id: load_cards
+    input:
+      - knowledge_raw/family_cards
+      - knowledge_raw/pattern_cards
+      - knowledge_raw/api_cards
+      - knowledge_raw/constraints
+      - knowledge_raw/call_sequences
+      - knowledge_raw/negative_feedback
+    output: card_load_report.yaml
+  - id: validate_card_contract
+    input: config/orchestrator_card_contract.yaml
+    output: card_contract_validation.yaml
+  - id: mapping_gate
+    input: knowledge_raw/mapping_gate
+    output: mapping_gate_report.yaml
+  - id: campaign_plan
+    input:
+      - taxonomy_report.yaml
+      - card_load_report.yaml
+      - mapping_gate_report.yaml
+    output: campaign_plan.yaml
+  - id: load_templates
+    description: Load normalized templates and adapter recipes for selected framework families and concrete patterns.
+    inputs:
+      - normalized_templates/
+      - adapter_recipes/
+      - campaign_plan.yaml
+      - card_load_report.yaml
+    outputs:
+      - template_pack.yaml
+  - id: render_plan
+    inputs:
+      - campaign_plan.yaml
+      - template_pack.yaml
+    output: render_plan.yaml
+    runtime_executed: false
+  - id: build_slot_filling_plan
+    description: Build constrained slot filling plan from cards, mapping gate, template pack, and target status.
+    inputs:
+      - campaign_plan.yaml
+      - render_plan.yaml
+      - template_pack.yaml
+      - knowledge_raw/family_cards/
+      - knowledge_raw/pattern_cards/
+      - knowledge_raw/api_cards/
+      - knowledge_raw/constraints/
+      - knowledge_raw/call_sequences/
+      - knowledge_raw/negative_feedback/
+      - knowledge_raw/mapping_gate/
+    outputs:
+      - slot_filling_plan.yaml
+  - id: manual_glm_handoff
+    description: Generate a manual GLM request when live GLM execution is unavailable or disabled.
+    inputs:
+      - slot_filling_plan.yaml
+      - template_pack.yaml
+    outputs:
+      - manual_glm_request.md
+      - manual_glm_expected_output_schema.yaml
+  - id: syntax_only_execution_plan
+    output: syntax_only_execution_plan.yaml
+    runtime_harness_executed: false
+    binary_artifacts_created: false
+  - id: oracle_plan
+    output: oracle_plan.yaml
+  - id: triage_plan
+    output: triage_plan.yaml
+  - id: feedback_plan
+    output: feedback_plan.yaml
+    main_feedback_written: false
+  - id: render_cases
+    description: Render small runnable/syntax cases from render plan and target cards.
+    inputs:
+      - render_plan.yaml
+      - knowledge_raw/api_cards/
+      - knowledge_raw/call_sequences/
+      - knowledge_raw/constraints/
+    outputs:
+      - rendered_cases_manifest.yaml
+    runtime_ready_only: true
+  - id: compile_cases
+    description: Compile rendered cases for runtime-ready targets only.
+    inputs:
+      - rendered_cases_manifest.yaml
+    outputs:
+      - compile_report.yaml
+    runtime_ready_only: true
+  - id: run_cases
+    description: Run compiled cases with timeout and sanitizer-aware environment.
+    inputs:
+      - compile_report.yaml
+    outputs:
+      - run_report.yaml
+    runtime_ready_only: true
+    timeout_required: true
+  - id: analyze_runtime_results
+    description: Analyze return codes, stderr/stdout, sanitizer/crash signals, and blocked targets.
+    inputs:
+      - run_report.yaml
+    outputs:
+      - runtime_analyze_report.yaml
+    observation_only: true
+target_runtime_policy:
+  openssl: baseline_only
+  mbedtls-3.6.4: runtime_ready
+  mbedtls-4.1.0: runtime_ready
+  botan-3.10.0: runtime_ready
+  wolfssl: runtime_ready_if_preflight_passes
+claim_policy:
+  status: observation_only_until_runtime_evidence
+  forbidden_promotions:
+    - release_forbidden_term_001
+    - release_forbidden_term_002
+    - release_forbidden_term_003
+quality_requirements:
+  stage_based_orchestrator_connected: true
+  campaign_plan_created: true
+  render_plan_created: true
+  oracle_stage_connected: true
+  runtime_harness_executed: false_for_syntax_only_true_for_runtime_smoke
+  full_fuzzing: false
+runtime_harness_rules:
+  syntax_only:
+    compile_cases: false
+    run_cases: false
+  runtime_smoke:
+    max_cases_default: 20
+    per_target_family_default: 2
+    timeout_seconds_default: 10
+    full_fuzzing: false
+  target_rules:
+    runtime_ready: compile_and_run_allowed
+    baseline_only: plan_only_by_default
+    blocked_runtime: do_not_execute_record_blocked_reason
+    wolfssl_preflight:
+      install_root: ${WOLFSSL_ROOT:-/home/wen/work/install-wolfssl-5.9.1-asan}
+      required_headers:
+        - wolfssl/options.h
+        - wolfssl/ssl.h
+      required_library:
+        - libwolfssl.so
+        - libwolfssl.a
+      required_tools:
+        - wolfssl-config
+        - pkg-config wolfssl
+  required_result_fields:
+    - stdout_log
+    - stderr_log
+    - returncode
+    - timeout
+    - signal
+    - sanitizer_summary

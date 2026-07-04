@@ -1,0 +1,45 @@
+id: psa_aead_invalid_shortened_tag_setup
+card_type: concrete_pattern
+framework_family: protocol_policy_semantic
+status: partial
+source_evidence:
+- path: data/pocs/core10/MBEDTLS-POC-0028/metadata.json
+  poc_id: MBEDTLS-POC-0028
+- path: normalized_templates/psa/psa_aead_invalid_shortened_tag_setup/template_meta.yaml
+  poc_id: MBEDTLS-POC-0028
+source_libraries:
+- mbedtls
+affected_domain: crypto_operation_semantics
+trigger_mechanism: policy, setup, signature, or container semantic accept/reject mismatch
+expected_harness_shape: derive from framework_family card plus target-specific API card
+input_model: protocol, certificate, signature, setup parameter, or container semantic case
+mutation_strategy: use framework mutation slots and refine from source evidence
+oracle_expectation: classify as candidate_event, semantic_gap_candidate, semantic_observation, safe_reject,
+  unsupported, or blocked; do not overclaim
+triage_policy: requires reviewed evidence before promotion beyond observation
+target_api_card_requirements:
+- api_card
+- constraints
+- call_sequence
+- negative_feedback
+- mapping_gate
+related_templates:
+- normalized_templates/psa/psa_aead_invalid_shortened_tag_setup/template_meta.yaml
+related_adapter_recipes: []
+mapping_requirements:
+  required_inputs:
+  - source_api_or_operation
+  - target_api_candidate
+  - target_runtime_status
+  - target_knowledge_status
+  decision_outputs:
+  - usable_mapping
+  - candidate_mapping
+  - blocked_mapping
+  - missing_mapping
+  - needs_human_review
+confidence_level: inferred_from_repo
+needs_human_review: true
+notes: 'Reviewed in taxonomy_review_and_card_priority_v1: evidence describes invalid AEAD setup parameter
+  acceptance/rejection semantics, so protocol_policy_semantic fits better than buffer or output-length
+  families.'

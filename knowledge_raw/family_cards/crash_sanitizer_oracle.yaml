@@ -1,0 +1,49 @@
+id: crash_sanitizer_oracle
+framework_family: crash_sanitizer_oracle
+card_type: framework_family
+status: partial
+description: sanitizer-visible crash, abort, invalid memory access, assertion failure, or memory-safety
+  observation layer
+harness_shape:
+  input_kind: malformed_input_or_api_sequence
+  trigger: sanitizer-observable execution path
+  observables:
+  - asan
+  - ubsan
+  - segv
+  - abort
+  - timeout
+input_model: family-specific malformed input or API sequence selected to maximize crash observability
+mutation_slots:
+- malformed_input_seed
+- oversized_internal_field
+- invalid_serialized_state
+- cleanup_path_error
+oracle_contract:
+  oracle_type: execution_oracle
+  pass_condition: valid control path exits normally without sanitizer evidence
+  candidate_condition: explicit sanitizer, abort, segv, or timeout evidence is observed
+  safe_reject_condition: malformed input is rejected without sanitizer evidence
+  unsupported_condition: local environment cannot run sanitizer or required target path
+  blocked_condition: target runtime is blocked or sanitizer harness is unavailable
+triage_outputs:
+- candidate_event
+- semantic_gap_candidate
+- semantic_observation
+- safe_reject
+- unsupported
+- blocked
+required_target_cards:
+- api_card
+- constraints
+- call_sequence
+- negative_feedback
+- mapping_gate
+concrete_patterns:
+- wolfssl_dtls13_ack_record_memory_safety
+evidence_paths:
+- data/wolfssl_collect/WOLFSSL-POC-0005/metadata.json
+confidence_level: inferred_from_repo
+needs_human_review: true
+notes: This family can also act as a cross-cutting oracle layer attached to parser, boundary, or lifecycle
+  families.

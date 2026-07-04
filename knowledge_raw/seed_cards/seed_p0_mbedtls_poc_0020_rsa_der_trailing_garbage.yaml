@@ -1,0 +1,36 @@
+schema: canonical_seed_card_v1
+seed_id: seed_p0_mbedtls_poc_0020_rsa_der_trailing_garbage
+priority: P0
+source_kind: poc
+source_library: mbedtls
+source_reference:
+  path: data/pocs/core10/MBEDTLS-POC-0020
+  status: available
+family: der_pointer_consumption
+concrete_pattern: rsa_der_trailing_garbage
+oracle_kind: pointer_consumption_oracle
+template_kind: template_guided
+target_selection_policy:
+  baseline_target: botan-3.10.0
+  selection_status: closed_baseline_record
+  reason: P0 exact payload/profile already recorded as no candidate in prior artifacts
+payload_profile:
+  payload_kind: valid_der_object_with_trailing_bytes
+  profile_status: closed_exact_payload_profile
+expected_observations:
+- observation: DER parser consumption should be explicit and observation-only until
+    oracle stage
+- observation: closed baseline should not re-enter active campaign automatically
+safety_guardrails:
+- guardrail: do not write candidate queue entry from seed registry promotion
+- guardrail: do not treat normal safe rejection as a finding
+current_status: closed_no_candidate_for_exact_payload_profile
+aliases: []
+related_artifacts:
+- path: artifacts/cross_library/mainline/seed_registry_alignment_v1/pilot_seed_promotion_plan.yaml
+- path: artifacts/cross_library/mainline/seed_registry_minimal_integration_v1/seed_registry_proposal.yaml
+- path: artifacts/cross_library/mainline/seed_card_pilot_and_astlite_recovery_v1/
+- path: artifacts/cross_library/mainline/campaign_feedback_queue_v2_openssl/five_seed_status_update_after_campaign_feedback.yaml
+- path: artifacts/cross_library/mainline/p0_der_oracle_contract_persist_v1/
+notes: Canonical seed card promoted from artifact-level pilot records; no runtime
+  executed in this task.

@@ -1,0 +1,73 @@
+id: mbedtls-3.6.4::der_pointer_consumption
+target: mbedtls-3.6.4
+framework_family: der_pointer_consumption
+concrete_pattern: framework_family_level
+source: p0_mbedtls_api_evidence_cards_v1
+needs_human_review: false
+runtime_status: ready
+knowledge_status: signature_compile_smoke_evidence_backed
+behavior_validation_status: not_claimed
+evidence_paths:
+- artifacts/cross_library/mainline/p0_mbedtls_api_evidence_cards_v1/api_existence_audit.yaml
+- artifacts/cross_library/mainline/p0_mbedtls_api_evidence_cards_v1/compile_smoke/compile_smoke_report.yaml
+- knowledge_raw/api_constraints/mbedtls
+- knowledge_raw/unit_tests/mbedtls
+api_candidates: &id001
+- api: mbedtls_pk_parse_key
+  name: mbedtls_pk_parse_key
+  header: mbedtls/pk.h
+  library: mbedcrypto
+  signature_source: /home/wen/work/install-mbedtls-3.6.4-asan/include/mbedtls/pk.h:1109
+  signature_excerpt: int mbedtls_pk_parse_key(mbedtls_pk_context *ctx, const unsigned
+    char *key, size_t keylen, const unsigned char *pwd, size_t pwdlen, int (*f_rng)(void
+    *, unsigned char *, size_t), void *p_rng);
+  compile_smoke_verified: true
+  status: evidence_backed
+- api: mbedtls_pk_parse_public_key
+  name: mbedtls_pk_parse_public_key
+  header: mbedtls/pk.h
+  library: mbedcrypto
+  signature_source: /home/wen/work/install-mbedtls-3.6.4-asan/include/mbedtls/pk.h:1143
+  signature_excerpt: int mbedtls_pk_parse_public_key(mbedtls_pk_context *ctx, const
+    unsigned char *key, size_t keylen);
+  compile_smoke_verified: true
+  status: evidence_backed
+candidate_apis: *id001
+removed_candidates:
+- name: mbedtls_rsa_parse_key
+  reason: not exported in installed public headers; found only in library/internal
+    headers or source
+- name: mbedtls_rsa_parse_pubkey
+  reason: not exported in installed public headers; found only in library/internal
+    headers or source
+required_headers:
+- mbedtls/pk.h
+link_libraries:
+- mbedcrypto
+setup_sequence:
+- mbedtls_pk_context ctx
+- mbedtls_pk_init(&ctx)
+call_sequence:
+- ret = mbedtls_pk_parse_key(&ctx, der_input, der_len, NULL, 0, NULL, NULL)
+- ret = mbedtls_pk_parse_public_key(&ctx, der_input, der_len)
+teardown_sequence:
+- mbedtls_pk_free(&ctx)
+ownership_rules:
+- caller owns mbedtls_pk_context and must call mbedtls_pk_free
+return_code_semantics: 0 indicates parse success; nonzero indicates rejection/error
+output_semantics: parse result is represented by initialized pk context on success
+constraints:
+- DER input pointer and length must be caller supplied
+- private key parse and public key parse use different accepted object formats
+negative_cases:
+- record safe_reject, unsupported, invalid_contract, and semantic_observation labels
+  only after runtime evidence
+mapping_notes: Public PK parser APIs are signature-backed target API candidates. RSA
+  parser internals are removed from public target candidates.
+blocked_policy: do not use internal mbedtls_rsa_parse_key or mbedtls_rsa_parse_pubkey
+  as target API candidates
+confidence_level: compile_smoke_signature_evidence_backed
+notes: This card validates API availability and signature/linkage only; it does not
+  claim vulnerability behavior.
+card_type: target_api_card
+status: evidence_backed

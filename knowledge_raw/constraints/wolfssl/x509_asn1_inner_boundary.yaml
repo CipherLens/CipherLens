@@ -1,0 +1,57 @@
+schema: target_constraints_card_v1
+target_library: wolfssl
+family: x509_asn1_inner_boundary
+card_status: schema_ready_evidence_draft
+source: x509_wolfssl_rag_promotion_apply_v1
+selected_api: wolfSSL_d2i_X509
+constraints:
+  - id: real_der_payload_required
+    rule: Input must be a real DER X.509 payload buffer with an explicit byte length.
+    required: true
+    evidence:
+      - path: /home/wen/work/clean_sources/wolfssl/wolfssl/ssl.h
+        line_range: 3494-3495
+  - id: d2i_style_pointer_advancement_required
+    rule: The adapter must call wolfSSL_d2i_X509 with a caller-owned const unsigned char ** so pointer advancement can be observed.
+    required: true
+    evidence:
+      - path: /home/wen/work/clean_sources/wolfssl/src/x509.c
+        line_range: 4103-4121
+  - id: consumed_and_remaining_must_be_recorded
+    rule: The adapter must record consumed = p - input and remaining = input_len - consumed.
+    required: true
+    evidence:
+      - path: artifacts/cross_library/mainline/x509_wolfssl_source_evidence_collection_v1/wolfssl_x509_contract_evidence.yaml
+        line_range: contract.full_consumption_contract
+  - id: object_return_not_full_consumption
+    rule: A non-NULL WOLFSSL_X509 return value must not be treated as full-buffer acceptance unless consumed == input_len.
+    required: true
+    evidence:
+      - path: artifacts/cross_library/mainline/x509_wolfssl_source_evidence_collection_v1/wolfssl_x509_contract_evidence.yaml
+        line_range: contract.full_consumption_contract
+  - id: cleanup_required
+    rule: If wolfSSL_d2i_X509 returns a WOLFSSL_X509 object, release it with wolfSSL_X509_free.
+    required: true
+    evidence:
+      - path: /home/wen/work/clean_sources/wolfssl/wolfssl/ssl.h
+        line_range: 3468-3470
+      - path: /home/wen/work/clean_sources/wolfssl/src/x509.c
+        line_range: 3816-3821
+  - id: malformed_der_parse_failure_only
+    rule: Malformed DER should be recorded as parse failure or reject; do not turn a normal parse failure into a bug claim.
+    required: true
+    evidence:
+      - path: /home/wen/work/clean_sources/wolfssl/src/x509.c
+        line_range: 4127-4165
+negative_constraints:
+  - Do not infer full-buffer acceptance from wolfSSL_X509_d2i object return alone.
+  - Do not infer full-buffer acceptance from wolfSSL_d2i_X509 object return without checking pointer advancement.
+  - Do not classify malformed DER parse failure as a candidate without a later runtime and oracle stage.
+required_observables:
+  - input_len
+  - consumed
+  - remaining
+  - consumed_equals_input_len
+  - return_object_present
+  - cleanup_performed
+claim_level: evidence_backed_constraints_no_runtime_observation

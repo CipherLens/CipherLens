@@ -1,0 +1,47 @@
+id: return_code_outlen_semantic
+framework_family: return_code_outlen_semantic
+card_type: framework_family
+status: executable_draft
+description: return-code and caller-visible output length/output buffer semantic consistency
+harness_shape:
+  input_kind: api_sequence_with_output_state
+  trigger: error path updates return code and output length/state
+  observables:
+  - return_code
+  - output_length
+  - output_buffer_state
+input_model: crypto operation finalization or padding check with caller-visible output state
+mutation_slots:
+- invalid_padding
+- output_length_pointer
+- error_path_state
+- finalization_boundary
+oracle_contract:
+  oracle_type: return_code_outlen_semantic_oracle
+  pass_condition: valid finalization succeeds and output state is internally consistent
+  candidate_condition: error return leaves nonzero, underflowed, or unsafe caller-visible output state
+  safe_reject_condition: invalid input returns error and leaves output state safe
+  unsupported_condition: target does not expose output length or equivalent state
+  blocked_condition: target runtime is blocked or setup cannot reach finalization path
+triage_outputs:
+- candidate_event
+- semantic_gap_candidate
+- semantic_observation
+- safe_reject
+- unsupported
+- blocked
+required_target_cards:
+- api_card
+- constraints
+- call_sequence
+- negative_feedback
+- mapping_gate
+concrete_patterns:
+- cipher_pkcs_padding_invalid_outlen_underflow
+evidence_paths:
+- data/pocs/core10/MBEDTLS-POC-0004/metadata.json
+- normalized_templates/cipher/cipher_pkcs_padding_outlen_underflow/template_meta.yaml
+confidence_level: evidence_backed
+needs_human_review: false
+notes: Executable draft card. Schema is ready for orchestrator consumption; target behavior still requires
+  review.

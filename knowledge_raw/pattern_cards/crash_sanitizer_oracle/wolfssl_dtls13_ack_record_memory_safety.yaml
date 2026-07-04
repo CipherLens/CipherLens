@@ -1,0 +1,42 @@
+id: wolfssl_dtls13_ack_record_memory_safety
+card_type: concrete_pattern
+framework_family: crash_sanitizer_oracle
+status: partial
+source_evidence:
+- path: data/wolfssl_collect/WOLFSSL-POC-0005/metadata.json
+  poc_id: WOLFSSL-POC-0005
+source_libraries:
+- wolfssl
+affected_domain: protocol_state_or_policy
+trigger_mechanism: sanitizer-observable malformed input or execution path
+expected_harness_shape: derive from framework_family card plus target-specific API card
+input_model: family-specific malformed input or API sequence selected to maximize crash observability
+mutation_strategy: use framework mutation slots and refine from source evidence
+oracle_expectation: classify as candidate_event, semantic_gap_candidate, semantic_observation, safe_reject,
+  unsupported, or blocked; do not overclaim
+triage_policy: requires reviewed evidence before promotion beyond observation
+target_api_card_requirements:
+- api_card
+- constraints
+- call_sequence
+- negative_feedback
+- mapping_gate
+related_templates: []
+related_adapter_recipes:
+- adapter_recipes/openssl/PEM_read_bio_PrivateKey.crash_sanitizer_oracle.yaml
+mapping_requirements:
+  required_inputs:
+  - source_api_or_operation
+  - target_api_candidate
+  - target_runtime_status
+  - target_knowledge_status
+  decision_outputs:
+  - usable_mapping
+  - candidate_mapping
+  - blocked_mapping
+  - missing_mapping
+  - needs_human_review
+confidence_level: inferred_from_repo
+needs_human_review: true
+notes: Reviewed in taxonomy_review_and_card_priority_v1; existing framework_family assignment retained
+  from PoC/template evidence.

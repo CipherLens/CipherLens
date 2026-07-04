@@ -27,7 +27,7 @@ The 30 app-level validation gap candidates are valid DER prefix plus malformed t
 
 This is not crash evidence. There is no ASAN/UBSAN report, SEGV, heap overflow, stack overflow, or use-after-free signal in the current result.
 
-This is not a confirmed vulnerability and must not be described as a CVE. The current label is `app_level_validation_gap_candidate`. A stronger claim would require documentation review, caller-impact analysis, and a minimized upstream-quality reproducer.
+This is not a validated issue and must not be described as a CVE. The current label is `app_level_validation_gap_candidate`. A stronger claim would require documentation review, caller-impact analysis, and a minimized upstream-quality reproducer.
 
 If an upstream issue is prepared later, cite the existing minimal reproducer and summaries under:
 
