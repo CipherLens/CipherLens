@@ -1,0 +1,195 @@
+schema: cipherlens_libdkimpp_public_key_threat_model_v1
+
+scope:
+  project: halon/libdkimpp
+  project_commit: 9defa162eebc644b006b7a51e92162640a810ee9
+  cipherlens_branch: experiment/libdkimpp-public-key-impact-v1
+  cipherlens_baseline: 3d2b8d5c59bbabdf6c064eaf3017784fa6303e1c
+  crypto_backend: OpenSSL 3.5.5
+  component: DKIM::PublicKey::Parse
+  behavior: RSA SubjectPublicKeyInfo with trailing DER data is accepted
+  phase: bounded_local_consistency_experiments
+
+status_definitions:
+  confirmed: Direct source inspection or existing reproducible dynamic evidence supports the statement.
+  inferred: The statement follows from confirmed mechanics but has not been reproduced at the stated integration boundary.
+  unproven: Evidence is absent or insufficient; the statement must not be reported as a security impact.
+
+current_classification:
+  status: confirmed
+  value: production_reachable_candidate
+  security_vulnerability_confirmed: false
+  rationale:
+    - status: confirmed
+      statement: The production DNS-to-RSA-verification route reaches d2i_PUBKEY without checking full input consumption.
+    - status: confirmed
+      statement: Canonical SPKI and the three tailed SPKIs parse to the same RSA key and preserve signature verification in the existing harness.
+    - status: confirmed
+      statement: The full-consumption fix control preserves canonical input and rejects all three tailed inputs.
+    - status: unproven
+      statement: No victim-domain impersonation, trust bypass, revocation bypass, or real downstream policy bypass has been demonstrated.
+
+attacker_capabilities:
+  attacker_controls_record_for_own_domain: true
+  victim_domain_control: false
+  victim_private_key_control: false
+  status: confirmed
+  notes:
+    - The tested record and matching signature use only a synthetic, attacker-owned test domain and a public test key.
+    - Victim-domain DNS records and victim private keys are explicitly outside attacker control in this threat model.
+
+protected_assets:
+  - asset: DKIM authentication result integrity
+    status: confirmed
+  - asset: Cross-validator consistency for a DNS DKIM key record
+    status: inferred
+  - asset: DMARC and mail-filter decisions derived from DKIM
+    status: unproven
+  - asset: Key-cache, deduplication, fingerprint, rotation, and revocation state
+    status: unproven
+  - asset: Audit-log identity for the key actually used to verify a message
+    status: unproven
+
+trust_boundaries:
+  - boundary: DNS TXT response to Validatory::GetPublicKey
+    status: confirmed
+    notes: For the synthetic test domain, the default resolver or public CustomDNSResolver callback supplies the actor-controlled record; victim-domain records are explicitly excluded.
+  - boundary: TagList p= value to Base64-decoded bytes
+    status: confirmed
+    notes: Whitespace is removed from p= before Base64_Decode.
+  - boundary: Decoded bytes to OpenSSL EVP_PKEY/RSA object
+    status: confirmed
+    notes: d2i_PUBKEY advances its input pointer, but the caller does not compare it with the end pointer.
+  - boundary: Parsed PublicKey object to signature and policy checks
+    status: confirmed
+    notes: The parsed RSA object reaches RSA_verify; h=, k=, and t=s constraints are checked separately.
+  - boundary: DKIM result to DMARC/filter/mail-acceptance policy
+    status: unproven
+    notes: No public downstream integration with such a decision was found in the audited GitHub evidence.
+
+actors:
+  - actor: Sender controlling its own signing domain, selector, DNS TXT record, and private key
+    capability_status: confirmed
+    security_gain_status: unproven
+    notes: This actor can already publish the canonical key and create a valid aligned signature, so tailed DER has no demonstrated additional authorization benefit.
+  - actor: Tenant delegated control of a selector and corresponding private key
+    capability_status: inferred
+    security_gain_status: unproven
+    notes: Impact requires a separate caller policy that grants more authority to one representation than another.
+  - actor: DNS response manipulator without the signing private key
+    capability_status: unproven
+    security_gain_status: unproven
+    notes: Reusing the same public key does not create a valid signature; DNS compromise or cache poisoning is outside the confirmed facts.
+  - actor: Operator or component able to inject CustomDNSResolver results
+    capability_status: confirmed
+    security_gain_status: unproven
+    notes: The callback is public API, but no real caller using it for cache or policy logic was found.
+
+attacker_controlled_inputs:
+  - input: DKIM selector and signing domain for the actor's own synthetic test domain
+    status: confirmed
+    constraints: They determine selector._domainkey.domain and must still satisfy signature/domain checks.
+  - input: DNS TXT key-record text for the actor's own synthetic test domain
+    status: confirmed
+  - input: Base64 p= content for that test-domain record, including decoded bytes after a valid SPKI
+    status: confirmed
+  - input: DKIM signature bytes created with the actor's own public test key material
+    status: confirmed
+    constraints: RSA_verify must still succeed with the parsed public key.
+
+victim_inputs_not_attacker_controlled:
+  - input: Victim-domain DNS TXT records
+    attacker_controlled: false
+    status: confirmed
+  - input: Victim-domain DKIM private key
+    attacker_controlled: false
+    status: confirmed
+
+confirmed_security_relevant_controls:
+  - control: Empty p= is rejected as a revoked key.
+    source: src/PublicKey.cpp:105-111
+  - control: Parsed key type must be RSA/RSA2 on the RSA path.
+    source: src/PublicKey.cpp:127-138
+  - control: Key-record h= can restrict the digest algorithm.
+    source: src/PublicKey.cpp:72-88 and src/Validatory.cpp:176-180
+  - control: Key-record t=s requires exact signing-domain and identity-domain match.
+    source: src/PublicKey.cpp:172-177 and src/Validatory.cpp:184-189
+  - control: RSA_verify must return 1.
+    source: src/Validatory.cpp:258-270
+  - control: Fix control requires d2i_PUBKEY to consume the complete decoded input.
+    source: caller_audit/fix_controls/libdkimpp_public_key_full_consumption.patch
+
+negative_findings:
+  - area: cache
+    status: confirmed
+    finding: No DNS TXT or public-key cache exists in libdkim++ at the fixed commit; headerCache is only a per-message signed-header map.
+  - area: hash_or_fingerprint
+    status: confirmed
+    finding: No hash or fingerprint of the raw TXT record, p= text, decoded DER, or parsed RSA key is computed for identity or policy.
+  - area: equality_or_deduplication
+    status: confirmed
+    finding: No public-key equality or deduplication operation exists in the library production path.
+  - area: trust_allowlist_blocklist
+    status: confirmed
+    finding: No public-key-based trust list, allowlist, or blocklist exists in the library source.
+  - area: logging_or_auditing
+    status: confirmed
+    finding: The library does not log raw DNS/key material; the bundled tool prints domain, selector, result, and exception text only.
+  - area: key_rotation
+    status: confirmed
+    finding: No key-rotation state machine exists; the bundled verification loop performs a new lookup for each signature.
+  - area: revocation
+    status: confirmed
+    finding: Revocation is limited to RFC 6376 empty p= handling; no fingerprinted revocation store exists.
+  - area: downstream_policy
+    status: unproven
+    finding: Public indexed GitHub evidence did not expose a real caller whose DMARC, filter, cache, or trust decision consumes this library result.
+
+abuse_cases:
+  - id: AC-1-validator-split
+    status: inferred
+    preconditions:
+      - A strict validator rejects trailing SPKI bytes.
+      - libdkim++ validates the same signed message and DNS key record.
+    effect: The same message may receive different DKIM results across validators.
+    demonstrated_security_impact: false
+  - id: AC-2-raw-fingerprint-bypass
+    status: unproven
+    preconditions:
+      - A real caller blocks or revokes a key by hashing raw p= text or decoded DER.
+      - The verification path separately canonicalizes through libdkim++ and accepts the tailed representation.
+    effect: A raw-representation block entry might not match while the same RSA key still verifies.
+    demonstrated_security_impact: false
+  - id: AC-3-cache-identity-split
+    status: unproven
+    preconditions:
+      - A cache or deduplicator keys entries by raw record or p= bytes instead of selector/domain or canonical key identity.
+    effect: Equivalent keys might occupy distinct entries or receive inconsistent metadata.
+    demonstrated_security_impact: false
+  - id: AC-4-dmarc-or-filter-flip
+    status: unproven
+    preconditions:
+      - DKIM is the only aligned authentication mechanism.
+      - A downstream maps libdkim++ DKIM pass to DMARC pass or a mail-accept action.
+      - The attacker gains something unavailable with a canonical record.
+    effect: A tailed record might change a downstream disposition relative to a strict parser.
+    demonstrated_security_impact: false
+
+upgrade_criteria:
+  all_required: true
+  criteria:
+    - A real, version-pinned downstream caller and exact call point are identified.
+    - Attacker capabilities are narrower than simply controlling both the signing DNS record and matching private key.
+    - The tailed representation changes a cache, trust, revocation, DMARC, or filtering decision.
+    - The changed decision grants a security-relevant benefit not obtainable with the canonical record.
+    - The effect reproduces in a complete message path with negative controls and the full-consumption fix removes it.
+  current_status: unproven
+
+non_claims:
+  - status: confirmed
+    statement: This audit does not claim a libdkim++ vulnerability.
+  - status: confirmed
+    statement: Parser acceptance alone is not treated as authentication bypass.
+  - status: confirmed
+    statement: A synthetic cache or DMARC model cannot establish real downstream impact by itself.
+

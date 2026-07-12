@@ -1,0 +1,155 @@
+schema: cipherlens_libdkimpp_public_key_impact_hypotheses_v1
+
+status_definitions:
+  confirmed: Supported directly by fixed-commit source or existing dynamic evidence.
+  inferred: Mechanically plausible from confirmed facts but not reproduced at the stated boundary.
+  unproven: Missing a real caller, end-to-end result, or attacker benefit.
+
+hypotheses:
+  - id: H1-cross-validator-accept-reject
+    title: The same DKIM key record produces an accept/reject split across implementations.
+    mechanism_status: inferred
+    impact_status: unproven
+    supporting_evidence:
+      - status: confirmed
+        statement: libdkim++ accepts all three tailed SPKI inputs and the fix control rejects them.
+      - status: confirmed
+        statement: Go crypto/x509.ParsePKIXPublicKey explicitly errors when ASN.1 parsing leaves trailing data.
+      - status: inferred
+        statement: A version-pinned Go DKIM verifier using that parser should reject the same tailed p= corpus.
+    missing_evidence:
+      - Execute an identical DNS record and signed-message corpus through version-pinned implementations.
+      - Confirm the comparator actually uses the strict parser on the DKIM RSA path.
+    security_interpretation: A parser split is interoperability evidence, not automatically an authorization bypass.
+
+  - id: H2-distinct-raw-identity-same-key
+    title: Raw record, p= text, and decoded DER identities differ while canonical RSA identity stays equal.
+    mechanism_status: confirmed
+    impact_status: unproven
+    supporting_evidence:
+      - status: confirmed
+        statement: Each tailed input differs from canonical input.
+      - status: confirmed
+        statement: libdkim++ reserializes all accepted variants to the same canonical SPKI and the same RSA key verifies the signature.
+    expected_observables:
+      - raw_txt_sha256 differs
+      - p_text_sha256 differs
+      - decoded_der_sha256 differs
+      - canonical_spki_sha256 is equal
+      - rsa_modulus_and_exponent are equal
+    missing_evidence:
+      - A real caller that uses a non-canonical identity for cache, deduplication, trust, or audit.
+
+  - id: H3-cache-or-dedup-split
+    title: Equivalent keys occupy different cache or deduplication entries.
+    mechanism_status: unproven
+    impact_status: unproven
+    preconditions:
+      - Cache identity includes raw TXT, p= text, or decoded DER.
+      - Verification identity uses the parsed RSA object.
+    possible_effects:
+      - cache amplification
+      - inconsistent metadata
+      - stale policy state
+    counterevidence:
+      - status: confirmed
+        statement: libdkim++ itself has no DNS/public-key cache or key deduplication.
+      - status: unproven
+        statement: No public downstream custom resolver with such a cache was found.
+    security_interpretation: Keep as a caller-specific hypothesis; a synthetic cache alone cannot upgrade severity.
+
+  - id: H4-raw-fingerprint-revocation-or-blocklist-bypass
+    title: A block or revocation entry keyed by raw representation fails to match an equivalent tailed key.
+    mechanism_status: unproven
+    impact_status: unproven
+    preconditions:
+      - A real caller fingerprints raw p= text or decoded DER.
+      - The block/revocation lookup and libdkim++ verification use different representations.
+      - The attacker can change the record representation after the fingerprint is enrolled.
+    positive_oracle:
+      - canonical representation is blocked or revoked
+      - tailed representation misses the block or revocation lookup
+      - tailed representation still verifies the same message in unpatched libdkim++
+      - full-consumption fix prevents the bypass
+    counterevidence:
+      - status: confirmed
+        statement: RFC-style empty p= revocation is checked before DER parsing and is not bypassed by these variants.
+      - status: confirmed
+        statement: No fingerprint revocation store, whitelist, or blacklist exists in libdkim++.
+
+  - id: H5-full-libdkimpp-dkim-result-flip
+    title: A complete Validatory flow passes with tailed p= in baseline and fails with the fix control.
+    mechanism_status: inferred
+    impact_status: unproven
+    supporting_evidence:
+      - status: confirmed
+        statement: Parser-level accepted variants preserve signature verification.
+      - status: confirmed
+        statement: Bundled production flow passes the parsed RSA pointer into RSA_verify.
+    missing_evidence:
+      - Run a deterministic .eml through GetSignature, GetPublicKey with a mock resolver, and CheckSignature for all four records.
+    expected_result:
+      baseline: canonical and all tailed records return DKIM pass
+      fix_control: canonical returns DKIM pass and all tailed records return key parse failure
+
+  - id: H6-dmarc-or-filter-disposition-flip
+    title: The DKIM result split changes DMARC or mail-filter disposition.
+    mechanism_status: unproven
+    impact_status: unproven
+    preconditions:
+      - RFC5322.From aligns with the DKIM d= domain.
+      - SPF is absent or fails, making DKIM the only DMARC pass route.
+      - A real caller maps the libdkim++ result into DMARC or accept/quarantine/reject policy.
+    experimental_models:
+      - deterministic DMARC evaluator fed with recorded DKIM results
+      - minimal filter policy mapping DKIM pass to accept and fail to quarantine
+    required_real_world_evidence:
+      - exact downstream project and call point
+      - deployed policy semantics
+      - attacker benefit unavailable with a canonical key record
+    security_interpretation: A synthetic disposition flip demonstrates propagation only, not exploitability.
+
+  - id: H7-victim-domain-impersonation
+    title: Tailed DER enables signing as a domain without its private key or DNS authority.
+    mechanism_status: unproven
+    impact_status: unproven
+    negative_evidence:
+      - status: confirmed
+        statement: All accepted variants decode to the same RSA public key.
+      - status: confirmed
+        statement: RSA_verify still requires a valid signature from the matching private key.
+      - status: confirmed
+        statement: No key substitution, algorithm confusion, or signature forgery has been observed.
+    required_oracle: A valid aligned DKIM result for a victim domain without control of its private key or authoritative key record.
+    current_assessment: No evidence supports this hypothesis; do not claim impersonation.
+
+  - id: H8-operational-interoperability-or-availability
+    title: A non-canonical but libdkim++-accepted record causes inconsistent delivery across receivers.
+    mechanism_status: inferred
+    impact_status: unproven
+    preconditions:
+      - Some validators reject the record while libdkim++ accepts it.
+      - A sender or operator publishes the tailed record.
+    likely_effect: Deliverability inconsistency or operational debugging cost.
+    security_interpretation: This may be a conformance/interoperability defect even if no security boundary is crossed.
+
+prioritization:
+  - rank: 1
+    hypothesis: H1-cross-validator-accept-reject
+    reason: Lowest-cost way to establish the exact parser differential with a strict reference.
+  - rank: 2
+    hypothesis: H5-full-libdkimpp-dkim-result-flip
+    reason: Confirms propagation through the complete production API chain without inventing caller policy.
+  - rank: 3
+    hypothesis: H2-distinct-raw-identity-same-key
+    reason: Produces the identity matrix needed to evaluate any future cache/trust caller.
+  - rank: 4
+    hypothesis: H6-dmarc-or-filter-disposition-flip
+    reason: Run only as a clearly labeled propagation model or after a real downstream is identified.
+  - rank: 5
+    hypothesis: H3-cache-or-dedup-split
+    reason: Do not implement beyond a model until a real custom resolver/cache is found.
+  - rank: 6
+    hypothesis: H4-raw-fingerprint-revocation-or-blocklist-bypass
+    reason: Highest potential security relevance but currently lacks every caller-specific precondition.
+

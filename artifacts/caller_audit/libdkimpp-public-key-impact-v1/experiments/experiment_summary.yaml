@@ -1,0 +1,173 @@
+schema: cipherlens_libdkimpp_public_key_experiment_summary_v1
+generated_date: 2026-07-12
+
+scope:
+  status: confirmed
+  kind: bounded_local_consistency_and_regression_test
+  network_dns_used: false
+  external_mail_service_used: false
+  real_domain_or_server_tested: false
+  synthetic_dmarc_or_filter_model_implemented: false
+  exploit_or_policy_bypass_implemented: false
+
+revisions:
+  cipherlens_branch: experiment/libdkimpp-public-key-impact-v1
+  cipherlens_baseline: 3d2b8d5c59bbabdf6c064eaf3017784fa6303e1c
+  libdkimpp_baseline: 9defa162eebc644b006b7a51e92162640a810ee9
+  libdkimpp_fix_control: 9defa162eebc644b006b7a51e92162640a810ee9+full_consumption_fix_control
+  external_original_worktree_clean: true
+
+environment:
+  openssl:
+    version: OpenSSL 3.5.5
+    include_dir: /home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5/include
+    crypto_library: /home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5/libcrypto.a
+    ssl_library: /home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5/libssl.a
+  cxx:
+    compiler: Ubuntu clang 18.1.3
+    asan_enabled: true
+    ubsan_enabled: true
+    asan_runtime_errors: 0
+    ubsan_runtime_errors: 0
+  go:
+    version: go version go1.26.5 linux/amd64
+    archive: go1.26.5.linux-amd64.tar.gz
+    archive_sha256: 5c2c3b16caefa1d968a94c1daca04a7ca301a496d9b086e17ad77bb81393f053
+    source: https://go.dev/dl/go1.26.5.linux-amd64.tar.gz
+    execution_path: /tmp/cipherlens-go1.26.5/bin/go
+    toolchain_mode: local
+    module_proxy: disabled
+    telemetry: disabled
+
+threat_model_controls:
+  status: confirmed
+  attacker_controls_record_for_own_domain: true
+  victim_domain_control: false
+  victim_private_key_control: false
+
+parser_matrix:
+  status: confirmed
+  file: parser_matrix.jsonl
+  rows: 18
+  implementations: 3
+  cases_per_implementation: 6
+  corpus:
+    - canonical
+    - tail_0500
+    - tail_3000
+    - tail_020100
+    - invalid_der
+    - different_key
+  canonical_spki_sha256: 7f23cb8c4f7c72fb3442c79f79b4c2f5c1d0bc1d366e0a9e8f1e76cf38d41253
+  different_key_spki_sha256: 4ab731ac0530cf698d47b283d2f6f9bbcd39ff1914deeffa2b406e63f5af27d2
+  results:
+    libdkimpp_baseline:
+      accepted:
+        - canonical
+        - tail_0500
+        - tail_3000
+        - tail_020100
+        - different_key
+      rejected:
+        - invalid_der
+    libdkimpp_fix_control:
+      accepted:
+        - canonical
+        - different_key
+      rejected:
+        - tail_0500
+        - tail_3000
+        - tail_020100
+        - invalid_der
+    go_crypto_x509:
+      revision: go1.26.5
+      accepted:
+        - canonical
+        - different_key
+      rejected:
+        - tail_0500
+        - tail_3000
+        - tail_020100
+        - invalid_der
+  differential_cases:
+    - tail_0500
+    - tail_3000
+    - tail_020100
+  key_equivalence:
+    status: confirmed
+    statement: All accepted canonical and tailed cases normalize to the same RSA SubjectPublicKeyInfo digest.
+
+dkim_regression_matrix:
+  status: confirmed
+  file: dkim_regression_matrix.jsonl
+  rows: 16
+  implementations: 2
+  cases_per_implementation: 8
+  api_chain:
+    - GetSignature
+    - GetPublicKey
+    - CheckSignature
+  resolver: in_memory_CustomDNSResolver
+  baseline:
+    pass:
+      - canonical
+      - tail_0500
+      - tail_3000
+      - tail_020100
+    fail:
+      - invalid_signature
+      - different_key
+    permerror:
+      - revoked_empty_p
+      - invalid_der
+  fix_control:
+    pass:
+      - canonical
+    fail:
+      - invalid_signature
+      - different_key
+    permerror:
+      - tail_0500
+      - tail_3000
+      - tail_020100
+      - revoked_empty_p
+      - invalid_der
+  differential_cases:
+    - tail_0500
+    - tail_3000
+    - tail_020100
+  regression_controls:
+    canonical_preserved: true
+    invalid_signature_rejected: true
+    different_key_rejected: true
+    revoked_empty_p_rejected: true
+    invalid_der_rejected: true
+
+conclusions:
+  parser_differential:
+    status: confirmed
+    statement: The baseline accepts three tailed SPKIs that the fix control and Go crypto/x509 reject.
+  dkim_chain_difference:
+    status: confirmed
+    statement: The same three records pass the baseline Validatory chain and produce permerror at key parsing under the fix control.
+  additional_attacker_security_gain:
+    status: unproven
+    statement: The tested own-domain signer can obtain the same DKIM pass using the canonical record, and no victim-domain or victim-private-key control is assumed.
+  real_policy_impact:
+    status: unproven
+    statement: No real DMARC, gateway, filtering, cache, revocation, or authorization decision was exercised.
+  vulnerability_claim:
+    status: unproven
+    statement: These bounded experiments do not establish a security vulnerability.
+
+final_conclusion:
+  status: confirmed
+  value: dkim_interoperability_difference
+  rationale: A parser differential propagates through the local libdkim++ Validatory chain, while no additional security benefit over the canonical record is demonstrated.
+
+tests:
+  command: LIBDKIMPP_ROOT=/home/yvxi/workplace/third_party/caller-audit/libdkimpp PYTHONPATH=. python3 -m unittest tests.test_caller_audit_v0_1 tests.test_der_spki_pipeline tests.test_fix_control_patches tests.test_libdkimpp_fix_control
+  ran: 9
+  passed: 8
+  skipped: 1
+  failed: 0
