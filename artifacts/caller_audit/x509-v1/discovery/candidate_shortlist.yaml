@@ -1,0 +1,104 @@
+schema: cipherlens_x509_candidate_shortlist_v1
+
+scope:
+  repository: https://github.com/cisco/mlspp
+  local_repository: /home/yvxi/workplace/third_party/caller-audit/mlspp
+  fixed_commit: 92aaa4134fa45ec39957a7c81a342401fba7feb2
+  method: local_static_source_audit
+  network_or_service_testing: false
+  harness_implemented: false
+  caller_audit_module_modified: false
+  security_rating_performed: false
+
+status_definitions:
+  confirmed: Direct evidence exists in the fixed local source.
+  inferred: The conclusion follows from source or build metadata but was not exercised.
+  unproven: The fixed local source does not provide enough evidence.
+
+candidates:
+  - id: cisco_mlspp_der_certificate_parse
+    static_quality_classification: exact_single_certificate_candidate
+    evidence_status: confirmed
+    repository: https://github.com/cisco/mlspp
+    fixed_commit: 92aaa4134fa45ec39957a7c81a342401fba7feb2
+    exact_callsite:
+      file: lib/hpke/src/certificate.cpp
+      line: 96
+      function: Certificate::ParsedCertificate::parse
+      parser_api: d2i_X509
+    input:
+      source: One independently bounded X509Credential::CertData.data bytes value.
+      length_semantics: der.data() and static_cast<int>(der.size()) define the parser interval.
+      status: confirmed
+    exactly_one_certificate:
+      value: true
+      status: confirmed
+      rationale:
+        - Certificate is a singular object constructed from one bytes value.
+        - X509Credential parses each certificate-chain element in a separate Certificate construction.
+        - CertData declares one bytes data field.
+    full_consumption:
+      checked: false
+      status: confirmed
+      evidence: The advanced buf pointer is not compared with der.data() + der.size().
+    complete_data_flow:
+      status: confirmed
+      steps:
+        - tls::istream decodes vector<X509Credential::CertData>
+        - X509Credential constructor iterates separately bounded cert.data elements
+        - Certificate(const bytes& der)
+        - ParsedCertificate::parse
+        - d2i_X509
+        - leaf public-key and signature-scheme extraction
+        - adjacent certificate signature checks through X509_verify
+        - MLS credential public-key comparison through X509Credential::valid_for in LeafNode::sign and credential-binding paths
+        - LeafNode::verify separately checks the X509 signature scheme and verifies with its stored SignaturePublicKey
+    parsed_certificate_uses:
+      chain_signature_validation:
+        status: confirmed
+        api: X509_verify
+      identity_or_key_binding:
+        status: confirmed
+        mechanism: Leaf certificate public key is compared with the MLS SignaturePublicKey.
+      fingerprint:
+        status: confirmed
+        mechanism: X509_digest with EVP_sha256.
+      raw_representation:
+        status: confirmed
+        mechanism: Original der is retained in Certificate::raw and raw equality is representation-sensitive.
+    production_reachability:
+      status: confirmed
+      value: production_library_path
+      limitation: Real application deployment is unproven and was not investigated.
+    local_regression_suitability:
+      status: inferred
+      rationale:
+        - The API exposes the advanced input pointer for a direct full-consumption oracle.
+        - The canonical input can be one locally generated self-signed DER certificate.
+        - A local mutation can append inert bytes without involving a network or service.
+        - Existing parsed and raw representations expose deterministic comparison points.
+    build:
+      system: CMake
+      status: inferred
+      evidence:
+        - lib/hpke is an add_library target.
+        - The target uses find_package(OpenSSL REQUIRED).
+        - No build was performed in this static-only phase.
+    existing_equivalent_fix:
+      status: unproven
+      local_checkout_observation: No full-consumption comparison exists at the fixed commit.
+      limitation: No internet issue or pull-request search was performed after scope was narrowed.
+    security_interpretation:
+      status: unproven
+      statement: Static evidence alone does not establish any security effect.
+
+excluded_callsites:
+  - parser_api: PEM_read_bio_X509
+    file: lib/hpke/src/certificate.cpp
+    line: 405
+    classification: stream_or_multi_object_semantics
+    evidence_status: confirmed
+  - parser_api: d2i_X509_bio
+    classification: needs_manual_review
+    evidence_status: confirmed
+    reason: No callsite in the fixed local checkout.
