@@ -1,0 +1,23 @@
+diff --git a/src/PublicKey.cpp b/src/PublicKey.cpp
+index 96af961..6f92c6d 100644
+--- a/src/PublicKey.cpp
++++ b/src/PublicKey.cpp
+@@ -119,11 +119,18 @@ void PublicKey::Parse(const std::string& signature)
+ 		{
+ 			std::string tmp = Base64_Decode(ptmp);
+ 			const unsigned char *tmp2 = (const unsigned char*)tmp.c_str();
++			const unsigned char *tmp_end = tmp2 + tmp.size();
+ 			EVP_PKEY* publicKey = d2i_PUBKEY(nullptr, &tmp2, tmp.size());
+ 
+ 			if (publicKey == nullptr)
+ 				throw DKIM::PermanentError("Public key could not be loaded (invalid DER data)");
+ 
++			if (tmp2 != tmp_end)
++			{
++				EVP_PKEY_free(publicKey);
++				throw DKIM::PermanentError("Public key contains trailing DER data");
++			}
++
+ #if OPENSSL_VERSION_NUMBER < 0x10100000
+ 			if (publicKey->type != EVP_PKEY_RSA && publicKey->type != EVP_PKEY_RSA2)
+ #else
