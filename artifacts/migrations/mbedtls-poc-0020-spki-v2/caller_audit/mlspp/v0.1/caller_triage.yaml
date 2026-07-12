@@ -1,0 +1,147 @@
+schema: cipherlens_caller_audit_v0_1
+project:
+  name: cisco/mlspp
+  repo_path: /home/yvxi/workplace/third_party/caller-audit/mlspp
+  repository_url: https://github.com/cisco/mlspp.git
+  expected_commit: 92aaa4134fa45ec39957a7c81a342401fba7feb2
+candidate:
+  source_case: MBEDTLS-POC-0020
+  source_pattern: top_level_der_trailing_data
+  target_library: openssl
+  target_api: d2i_PrivateKey
+  component: lib/hpke RSASignature::deserialize_private
+  crypto_backend: OpenSSL 3.5.5
+repository:
+  repository_root: /home/yvxi/workplace/third_party/caller-audit/mlspp
+  remote_origin: https://github.com/cisco/mlspp.git
+  branch: main
+  commit: 92aaa4134fa45ec39957a7c81a342401fba7feb2
+  commit_date: '2026-04-13T09:29:45-10:00'
+  status_short: ?? build-cipherlens/
+  submodules:
+  - 3bbc2809d3625cb83a0d7cbd413bd6ad769d46d4 vcpkg (2022.02.02-11414-g3bbc2809d3)
+static_checks:
+  call_site_count: 1
+  production_call_site_count: 1
+  production_without_full_consumption_check: 1
+  items:
+  - path: lib/hpke/src/rsa.cpp
+    line: 92
+    classification: production
+    full_consumption_check_found: false
+    matched_check_patterns: []
+dynamic_evidence:
+  baseline_phase:
+    baseline_case: canonical
+    baseline:
+      input_len: 1192
+      accepted: true
+      input_differs: false
+      canonical_roundtrip: true
+      public_key_equal: true
+      signature_verifies: true
+    baseline_passed: true
+    mutation_cases:
+      tail_0500:
+        input_len: 1194
+        accepted: true
+        input_differs: true
+        canonical_roundtrip: true
+        public_key_equal: true
+        signature_verifies: true
+      tail_3000:
+        input_len: 1194
+        accepted: true
+        input_differs: true
+        canonical_roundtrip: true
+        public_key_equal: true
+        signature_verifies: true
+      tail_020100:
+        input_len: 1195
+        accepted: true
+        input_differs: true
+        canonical_roundtrip: true
+        public_key_equal: true
+        signature_verifies: true
+    mutation_case_passes:
+      tail_0500: true
+      tail_3000: true
+      tail_020100: true
+    mutation_pass_count: 3
+    expected_mutation_count: 3
+    mutations_passed: true
+    summaries:
+      mlspp_rsa_private:
+        baseline_ok: true
+        mutations_accepted: 3
+        mutations_rejected: false
+    markers: []
+  fix_control_phase:
+    baseline_case: canonical
+    baseline:
+      input_len: 1192
+      accepted: true
+      input_differs: false
+      canonical_roundtrip: true
+      public_key_equal: true
+      signature_verifies: true
+    baseline_passed: true
+    mutation_cases:
+      tail_0500:
+        input_len: 1194
+        accepted: false
+        input_differs: true
+        canonical_roundtrip: false
+        public_key_equal: false
+        signature_verifies: false
+      tail_3000:
+        input_len: 1194
+        accepted: false
+        input_differs: true
+        canonical_roundtrip: false
+        public_key_equal: false
+        signature_verifies: false
+      tail_020100:
+        input_len: 1195
+        accepted: false
+        input_differs: true
+        canonical_roundtrip: false
+        public_key_equal: false
+        signature_verifies: false
+    mutation_case_passes:
+      tail_0500: true
+      tail_3000: true
+      tail_020100: true
+    mutation_pass_count: 3
+    expected_mutation_count: 3
+    mutations_passed: true
+    summaries:
+      mlspp_rsa_private:
+        baseline_ok: true
+        mutations_accepted: false
+        mutations_rejected: 3
+    markers: []
+  baseline_passed: true
+  mutation_candidate_confirmed: true
+  fix_control_passed: true
+  asan_error: false
+  ubsan_error: false
+reachability:
+  public_api_exposed: true
+  production_reachable: false
+  attacker_controlled_input: false
+  official_protocol_route_found: false
+  security_impact_demonstrated: false
+verdict:
+  status: downgraded_unreachable
+  reason: Caller behavior and fix control are confirmed, but no production or official
+    protocol route was demonstrated.
+  baseline_passed: true
+  dynamic_candidate_confirmed: true
+  fix_control_passed: true
+  production_call_sites_without_check: 1
+  production_reachable: false
+  attacker_controlled_input: false
+  official_protocol_route_found: false
+  security_impact_demonstrated: false
+  vulnerability_confirmed: false

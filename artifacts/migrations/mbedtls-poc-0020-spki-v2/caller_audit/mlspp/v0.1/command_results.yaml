@@ -1,0 +1,106 @@
+- name: prepare_fix_control_worktree
+  command: 'PYTHONPATH=. python3 -m caller_audit.worktree --repo "/home/yvxi/workplace/third_party/caller-audit/mlspp"
+    --commit "92aaa4134fa45ec39957a7c81a342401fba7feb2" --worktree "/home/yvxi/workplace/third_party/caller-audit/mlspp-fix-control"
+    --patch "caller_audit/fix_controls/mlspp_rsa_full_consumption.patch"
+
+    '
+  cwd: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/caller_audit/examples/../..
+  returncode: 0
+  duration_seconds: 137.449
+  stdout_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1/logs/00_prepare_fix_control_worktree.stdout.log
+  stderr_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1/logs/00_prepare_fix_control_worktree.stderr.log
+  allow_failure: false
+- name: configure_fix_mlspp
+  command: 'rm -rf "/home/yvxi/workplace/third_party/caller-audit/mlspp-fix-control-build"
+    && cmake -S "/home/yvxi/workplace/third_party/caller-audit/mlspp-fix-control"
+    -B "/home/yvxi/workplace/third_party/caller-audit/mlspp-fix-control-build" -G
+    Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=clang++ -DOPENSSL_ROOT_DIR="/home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5"
+    -DOPENSSL_INCLUDE_DIR="/home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5/include"
+    -DOPENSSL_CRYPTO_LIBRARY="/home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5/libcrypto.a"
+    -DOPENSSL_SSL_LIBRARY="/home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5/libssl.a"
+    -DTESTING=OFF -DSANITIZERS=ON -DDISABLE_PQ=ON
+
+    '
+  cwd: /home/yvxi/workplace/third_party/caller-audit/mlspp-fix-control
+  returncode: 0
+  duration_seconds: 1.001
+  stdout_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1/logs/01_configure_fix_mlspp.stdout.log
+  stderr_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1/logs/01_configure_fix_mlspp.stderr.log
+  allow_failure: false
+- name: build_fix_mlspp
+  command: cmake --build "/home/yvxi/workplace/third_party/caller-audit/mlspp-fix-control-build"
+    -j4
+  cwd: /home/yvxi/workplace/third_party/caller-audit/mlspp-fix-control
+  returncode: 0
+  duration_seconds: 14.542
+  stdout_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1/logs/02_build_fix_mlspp.stdout.log
+  stderr_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1/logs/02_build_fix_mlspp.stderr.log
+  allow_failure: false
+- name: configure_baseline_harness
+  command: 'rm -rf "/home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1-build/baseline"
+    && cmake -S caller_audit/harnesses/mlspp_rsa -B "/home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1-build/baseline"
+    -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=clang++ -DMLSPP_ROOT="/home/yvxi/workplace/third_party/caller-audit/mlspp"
+    -DMLSPP_BUILD="/home/yvxi/workplace/third_party/caller-audit/mlspp/build-cipherlens"
+    -DOPENSSL_ROOT_DIR="/home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5"
+    -DOPENSSL_INCLUDE_DIR="/home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5/include"
+    -DOPENSSL_CRYPTO_LIBRARY="/home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5/libcrypto.a"
+    -DOPENSSL_SSL_LIBRARY="/home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5/libssl.a"
+
+    '
+  cwd: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/caller_audit/examples/../..
+  returncode: 0
+  duration_seconds: 0.784
+  stdout_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1/logs/03_configure_baseline_harness.stdout.log
+  stderr_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1/logs/03_configure_baseline_harness.stderr.log
+  allow_failure: false
+- name: build_baseline_harness
+  command: cmake --build "/home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1-build/baseline"
+    -j4
+  cwd: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/caller_audit/examples/../..
+  returncode: 0
+  duration_seconds: 0.889
+  stdout_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1/logs/04_build_baseline_harness.stdout.log
+  stderr_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1/logs/04_build_baseline_harness.stderr.log
+  allow_failure: false
+- name: run_caller_harness
+  command: '"/home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1-build/baseline/mlspp_rsa_trailing_garbage"'
+  cwd: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/caller_audit/examples/../..
+  returncode: 0
+  duration_seconds: 0.06
+  stdout_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1/logs/05_run_caller_harness.stdout.log
+  stderr_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1/logs/05_run_caller_harness.stderr.log
+  allow_failure: false
+- name: configure_fix_harness
+  command: 'rm -rf "/home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1-build/fix"
+    && cmake -S caller_audit/harnesses/mlspp_rsa -B "/home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1-build/fix"
+    -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=clang++ -DMLSPP_ROOT="/home/yvxi/workplace/third_party/caller-audit/mlspp-fix-control"
+    -DMLSPP_BUILD="/home/yvxi/workplace/third_party/caller-audit/mlspp-fix-control-build"
+    -DOPENSSL_ROOT_DIR="/home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5"
+    -DOPENSSL_INCLUDE_DIR="/home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5/include"
+    -DOPENSSL_CRYPTO_LIBRARY="/home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5/libcrypto.a"
+    -DOPENSSL_SSL_LIBRARY="/home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5/libssl.a"
+
+    '
+  cwd: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/caller_audit/examples/../..
+  returncode: 0
+  duration_seconds: 0.613
+  stdout_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1/logs/06_configure_fix_harness.stdout.log
+  stderr_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1/logs/06_configure_fix_harness.stderr.log
+  allow_failure: false
+- name: build_fix_harness
+  command: cmake --build "/home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1-build/fix"
+    -j4
+  cwd: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/caller_audit/examples/../..
+  returncode: 0
+  duration_seconds: 0.707
+  stdout_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1/logs/07_build_fix_harness.stdout.log
+  stderr_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1/logs/07_build_fix_harness.stderr.log
+  allow_failure: false
+- name: run_fix_control_harness
+  command: '"/home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1-build/fix/mlspp_rsa_trailing_garbage"'
+  cwd: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/caller_audit/examples/../..
+  returncode: 0
+  duration_seconds: 0.083
+  stdout_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1/logs/08_run_fix_control_harness.stdout.log
+  stderr_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/migrations/mbedtls-poc-0020-spki-v2/caller_audit/mlspp/v0.1/logs/08_run_fix_control_harness.stderr.log
+  allow_failure: false
