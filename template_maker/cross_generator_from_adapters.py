@@ -3212,6 +3212,17 @@ def extract_x509_malformed_der_helper(source_template_dir: Path) -> str:
     return helper or x509_malformed_der_helper_fallback()
 
 
+RSA_PUBLIC_SPKI_HEX = (
+    "30819f300d06092a864886f70d010101050003818d00"
+    "308189028181009f091e6968b474f76f0e9c237c1d895996"
+    "ae704b4f6d706acec8d2daac6209bf524aa3f658d0283a"
+    "dba1077f6cbe92e425dcde52290b239cade91be86c884254"
+    "34986806e85734e159768f3dfea932baaa9409d25bace8ee"
+    "9dce0cdde0903207299de575ae60feccf0daf82334ab836"
+    "38539b0da74072f253acea8afc8e66bb70203010001"
+)
+
+
 def render_der_pointer_consumption_harness(
     adapter: Dict[str, Any],
     source_template_dir: Path,
@@ -3223,7 +3234,9 @@ def render_der_pointer_consumption_harness(
         extra_headers.append("openssl/x509.h")
 
     adapter_for_includes = dict(adapter)
-    adapter_for_includes["include_headers"] = list(adapter.get("include_headers") or []) + extra_headers
+    adapter_for_includes["include_headers"] = (
+        list(adapter.get("include_headers") or []) + extra_headers
+    )
     include_lines = render_include_lines(adapter_for_includes, [])
     helpers = extract_der_helpers(source_template_dir)
 
@@ -3231,7 +3244,16 @@ def render_der_pointer_consumption_harness(
     input_block = strip_code_fence(adapter.get("input_construction_block", ""))
     trigger_block = strip_code_fence(adapter.get("trigger_block", ""))
     cleanup_block = strip_code_fence(adapter.get("cleanup_block", ""))
+    positive_control_block = strip_code_fence(
+        adapter.get("positive_control_block", "")
+    )
     target_api = adapter.get("target_api", "unknown_target_api")
+
+    target_base_expr = (
+        f'"{RSA_PUBLIC_SPKI_HEX}"'
+        if target_api == "d2i_RSA_PUBKEY"
+        else "select_base_der_hex(der_kind)"
+    )
 
     return f'''#include <stdio.h>
 #include <stdlib.h>
@@ -3252,6 +3274,7 @@ int main(void)
     const char *base_hex = NULL;
     unsigned char der[MAX_DER_SIZE];
     size_t der_len = 0;
+    size_t base_len = 0;
     size_t trailing_len = 0;
     const unsigned char *p = NULL;
     long consumed_len = 0;
@@ -3260,7 +3283,7 @@ int main(void)
     setbuf(stdout, NULL);
     memset(der, 0, sizeof(der));
 
-    base_hex = select_base_der_hex(der_kind);
+    base_hex = {target_base_expr};
     if (base_hex == NULL) {{
         printf("[ERROR] unsupported DER_KIND: %s\\n", der_kind);
         return 2;
@@ -3283,6 +3306,18 @@ int main(void)
         return 2;
     }}
 
+    base_len = der_len - trailing_len;
+    if (base_len == 0) {{
+        printf("[ERROR] DER base input is empty.\\n");
+        return 2;
+    }}
+
+    /*
+     * Positive control: the target decoder must first accept the pure
+     * base DER object and consume it exactly.
+     */
+{indent_block(positive_control_block, 4)}
+
     /*
      * Adapter-generated initialization.
      */
@@ -3300,7 +3335,9 @@ int main(void)
 {indent_block(trigger_block, 4)}
 
     printf("ret=%d\\n", ret);
+    printf("base_len=%zu\\n", base_len);
     printf("der_len=%zu\\n", der_len);
+    printf("trailing_len=%zu\\n", trailing_len);
     printf("consumed_len=%ld\\n", consumed_len);
 
     if (ret == 0 && consumed_len < (long) der_len) {{
@@ -3322,6 +3359,55 @@ int main(void)
 '''
 
 
+def der_positive_control_block(target_api: str, input_buffer: str) -> str:
+    if target_api == "d2i_PrivateKey":
+        object_decl = "EVP_PKEY *positive_obj = NULL;"
+        decode_call = (
+            "positive_obj = d2i_PrivateKey("
+            "EVP_PKEY_RSA, NULL, &positive_p, (long) base_len);"
+        )
+        cleanup_call = "EVP_PKEY_free(positive_obj);"
+    elif target_api == "d2i_RSAPrivateKey":
+        object_decl = "RSA *positive_obj = NULL;"
+        decode_call = (
+            "positive_obj = d2i_RSAPrivateKey("
+            "NULL, &positive_p, (long) base_len);"
+        )
+        cleanup_call = "RSA_free(positive_obj);"
+    elif target_api == "d2i_RSA_PUBKEY":
+        object_decl = "RSA *positive_obj = NULL;"
+        decode_call = (
+            "positive_obj = d2i_RSA_PUBKEY("
+            "NULL, &positive_p, (long) base_len);"
+        )
+        cleanup_call = "RSA_free(positive_obj);"
+    else:
+        raise ValueError(
+            f"unsupported DER positive-control target API: {target_api!r}"
+        )
+
+    return f'''const unsigned char *positive_p = {input_buffer};
+{object_decl}
+long positive_consumed_len = 0;
+
+{decode_call}
+positive_consumed_len = (long)(positive_p - {input_buffer});
+
+printf("positive_control ret=%d base_len=%zu consumed_len=%ld\\n",
+       positive_obj != NULL ? 0 : -1,
+       base_len,
+       positive_consumed_len);
+
+if (positive_obj == NULL ||
+    positive_consumed_len != (long) base_len) {{
+    printf("[TRIAGE] DER positive control failed before trailing-garbage probe.\\n");
+    {cleanup_call}
+    return 2;
+}}
+
+printf("[OK] DER positive control decoded and consumed base input exactly.\\n");
+{cleanup_call}'''
+
 
 def render_der_pointer_consumption_from_recipe(
     adapter: Dict[str, Any],
@@ -3334,53 +3420,77 @@ def render_der_pointer_consumption_from_recipe(
     if recipe.get("harness_family") != "der_pointer_consumption":
         raise ValueError("recipe harness_family must be der_pointer_consumption")
     if recipe.get("oracle_type") != "pointer_consumption_semantic_oracle":
-        raise ValueError("recipe oracle_type must be pointer_consumption_semantic_oracle")
+        raise ValueError(
+            "recipe oracle_type must be pointer_consumption_semantic_oracle"
+        )
 
     target_api = recipe.get("target_api")
-    if target_api not in {"d2i_PrivateKey", "d2i_RSAPrivateKey", "d2i_RSA_PUBKEY"}:
+    if target_api not in {
+        "d2i_PrivateKey",
+        "d2i_RSAPrivateKey",
+        "d2i_RSA_PUBKEY",
+    }:
         raise ValueError(
             "der_pointer_consumption recipe renderer currently supports only "
             "d2i_PrivateKey, d2i_RSAPrivateKey, d2i_RSA_PUBKEY"
         )
 
-    pointer_var = c_identifier(slot(adapter, recipe, "pointer_variable"), "p")
-    consumed_var = c_identifier(slot(adapter, recipe, "consumed_len_variable"), "consumed_len")
-    ret_var = c_identifier(slot(adapter, recipe, "return_code_variable"), "ret")
-    input_buffer = c_identifier(slot(adapter, recipe, "input_buffer"), "der")
-    input_len = c_identifier(slot(adapter, recipe, "input_length"), "der_len")
-    decoded_object = c_identifier(slot(adapter, recipe, "decoded_object"), "obj")
+    pointer_var = c_identifier(
+        slot(adapter, recipe, "pointer_variable"), "p"
+    )
+    consumed_var = c_identifier(
+        slot(adapter, recipe, "consumed_len_variable"), "consumed_len"
+    )
+    ret_var = c_identifier(
+        slot(adapter, recipe, "return_code_variable"), "ret"
+    )
+    input_buffer = c_identifier(
+        slot(adapter, recipe, "input_buffer"), "der"
+    )
+    input_len = c_identifier(
+        slot(adapter, recipe, "input_length"), "der_len"
+    )
+    decoded_object = c_identifier(
+        slot(adapter, recipe, "decoded_object"), "obj"
+    )
 
+    positive_control_block = der_positive_control_block(
+        target_api, input_buffer
+    )
     include_headers = list(recipe.get("include_headers") or [])
 
     if target_api == "d2i_PrivateKey":
         init_block = f"EVP_PKEY *{decoded_object} = NULL;"
         trigger_block = (
-            f"{decoded_object} = d2i_PrivateKey(EVP_PKEY_RSA, NULL, &{pointer_var}, {input_len});\n"
+            f"{decoded_object} = d2i_PrivateKey("
+            f"EVP_PKEY_RSA, NULL, &{pointer_var}, {input_len});\n"
             f"{ret_var} = ({decoded_object} != NULL) ? 0 : -1;\n"
             f"{consumed_var} = (long)({pointer_var} - {input_buffer});"
         )
         cleanup_block = f"EVP_PKEY_free({decoded_object});"
         include_headers.extend(["openssl/evp.h", "openssl/rsa.h"])
-
     elif target_api == "d2i_RSAPrivateKey":
         init_block = f"RSA *{decoded_object} = NULL;"
         trigger_block = (
-            f"{decoded_object} = d2i_RSAPrivateKey(NULL, &{pointer_var}, {input_len});\n"
+            f"{decoded_object} = d2i_RSAPrivateKey("
+            f"NULL, &{pointer_var}, {input_len});\n"
             f"{ret_var} = ({decoded_object} != NULL) ? 0 : -1;\n"
             f"{consumed_var} = (long)({pointer_var} - {input_buffer});"
         )
         cleanup_block = f"RSA_free({decoded_object});"
         include_headers.extend(["openssl/rsa.h", "openssl/evp.h"])
-
     else:
         init_block = f"RSA *{decoded_object} = NULL;"
         trigger_block = (
-            f"{decoded_object} = d2i_RSA_PUBKEY(NULL, &{pointer_var}, {input_len});\n"
+            f"{decoded_object} = d2i_RSA_PUBKEY("
+            f"NULL, &{pointer_var}, {input_len});\n"
             f"{ret_var} = ({decoded_object} != NULL) ? 0 : -1;\n"
             f"{consumed_var} = (long)({pointer_var} - {input_buffer});"
         )
         cleanup_block = f"RSA_free({decoded_object});"
-        include_headers.extend(["openssl/evp.h", "openssl/rsa.h", "openssl/x509.h"])
+        include_headers.extend(
+            ["openssl/evp.h", "openssl/rsa.h", "openssl/x509.h"]
+        )
 
     recipe_adapter = dict(adapter)
     recipe_adapter["include_headers"] = include_headers
@@ -3391,6 +3501,7 @@ def render_der_pointer_consumption_from_recipe(
     )
     recipe_adapter["trigger_block"] = trigger_block
     recipe_adapter["cleanup_block"] = cleanup_block
+    recipe_adapter["positive_control_block"] = positive_control_block
     recipe_adapter["target_api"] = target_api
 
     return render_der_pointer_consumption_harness(
@@ -3399,8 +3510,6 @@ def render_der_pointer_consumption_from_recipe(
         source_meta,
         mask_report,
     )
-
-
 
 def render_x509_asn1_inner_boundary_from_recipe(
     adapter: Dict[str, Any],

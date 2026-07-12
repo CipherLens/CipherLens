@@ -283,17 +283,24 @@ def is_valid_case(template_id: str, raw_values: Dict[str, Any]) -> bool:
 
     if template_id.startswith("RSA_DER_TOP_LEVEL_SEQUENCE_TRAILING_GARBAGE"):
         der_kind = str(raw_values.get("DER_KIND", "")).strip().lower()
+        parse_api_kind = str(raw_values.get("PARSE_API_KIND", "")).strip().lower()
         trailing_bytes = raw_values.get("TRAILING_GARBAGE_BYTES")
         trailing_len = parse_int_or_none(raw_values.get("TRAILING_GARBAGE_LEN"))
         decoded_len = hex_byte_len_or_none(trailing_bytes)
 
         template_id_lower = template_id.lower()
-        if "d2i_rsaprivatekey" in template_id_lower and der_kind != "private":
-            return False
-        if "d2i_privatekey" in template_id_lower and der_kind != "private":
-            return False
-        if "d2i_rsa_pubkey" in template_id_lower and der_kind != "public":
-            return False
+
+        if "d2i_rsaprivatekey" in template_id_lower:
+            if der_kind != "private" or parse_api_kind != "rsa_private":
+                return False
+
+        if "d2i_privatekey" in template_id_lower:
+            if der_kind != "private" or parse_api_kind != "pk_private":
+                return False
+
+        if "d2i_rsa_pubkey" in template_id_lower:
+            if der_kind != "public" or parse_api_kind != "rsa_public":
+                return False
 
         if decoded_len is None or trailing_len is None:
             return False
