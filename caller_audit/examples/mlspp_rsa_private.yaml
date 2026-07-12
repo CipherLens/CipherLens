@@ -1,0 +1,89 @@
+schema: cipherlens_caller_audit_config_v0
+
+project:
+  name: cisco/mlspp
+  repo_path: "${MLSPP_ROOT}"
+  repository_url: "https://github.com/cisco/mlspp.git"
+  expected_commit: "92aaa4134fa45ec39957a7c81a342401fba7feb2"
+
+candidate:
+  source_case: MBEDTLS-POC-0020
+  source_pattern: top_level_der_trailing_data
+  target_library: openssl
+  target_api: d2i_PrivateKey
+  component: "lib/hpke RSASignature::deserialize_private"
+  crypto_backend: "OpenSSL 3.5.5"
+
+scan:
+  api_patterns:
+    - '\bd2i_PrivateKey\s*\('
+  include_globs:
+    - "lib/hpke/src/**/*.cpp"
+    - "lib/hpke/src/**/*.h"
+    - "src/**/*.cpp"
+    - "include/**/*.h"
+    - "test/**/*.cpp"
+    - "lib/**/test/**/*.cpp"
+  exclude_globs:
+    - "build*/**"
+  test_markers:
+    - "/test/"
+    - "/tests/"
+    - "/example/"
+    - "/examples/"
+    - "/third_party/"
+  context_lines: 12
+  full_consumption_patterns:
+    - '\bdata_ptr\s*==\s*(?:enc|skm)\.data\(\)\s*\+\s*(?:enc|skm)\.size\(\)'
+    - '\bdata_ptr\s*!=\s*(?:enc|skm)\.data\(\)\s*\+\s*(?:enc|skm)\.size\(\)'
+
+environment:
+  MLSPP_ROOT: "${MLSPP_ROOT}"
+  MLSPP_BUILD: "${MLSPP_BUILD}"
+  HARNESS_BUILD: "${HARNESS_BUILD}"
+  ASAN_OPTIONS: "detect_leaks=1:abort_on_error=1"
+  UBSAN_OPTIONS: "print_stacktrace=1:halt_on_error=1"
+
+commands:
+  - name: verify_project_build
+    cwd: "${MLSPP_ROOT}"
+    command: 'test -f "${MLSPP_BUILD}/lib/hpke/libhpke.a"'
+    timeout_seconds: 30
+  - name: build_caller_harness
+    cwd: "${HARNESS_BUILD}"
+    command: 'cmake --build . -j4'
+    timeout_seconds: 1200
+  - name: run_caller_harness
+    cwd: "${HARNESS_BUILD}"
+    command: './mlspp_rsa_trailing_garbage'
+    timeout_seconds: 300
+
+dynamic:
+  markers:
+    baseline_success:
+      - "case=canonical"
+      - "canonical_roundtrip=1"
+      - "signature_verifies=1"
+    candidate_success:
+      - "candidate_hits=3"
+      - "MLSPP_RSA_PRIVATE_TRAILING_GARBAGE=CALLER_CANDIDATE_CONFIRMED"
+    fix_control_success:
+      - "MLSPP_RSA_PRIVATE_TRAILING_GARBAGE=FIX_CONTROL_PASS"
+    asan_error:
+      - "AddressSanitizer"
+      - "heap-buffer-overflow"
+      - "use-after-free"
+    ubsan_error:
+      - "UndefinedBehaviorSanitizer"
+      - "runtime error:"
+
+reachability:
+  public_api_exposed: true
+  production_reachable: false
+  attacker_controlled_input: false
+  official_protocol_route_found: false
+  security_impact_demonstrated: false
+  notes:
+    - >
+      RSA wrapper behavior is confirmed, but no official MLS RSA CipherSuite
+      or in-repository production import route was demonstrated.

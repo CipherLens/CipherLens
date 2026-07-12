@@ -1,0 +1,16 @@
+diff --git a/lib/hpke/src/rsa.cpp b/lib/hpke/src/rsa.cpp
+index 6931907..b47679c 100644
+--- a/lib/hpke/src/rsa.cpp
++++ b/lib/hpke/src/rsa.cpp
+@@ -94,6 +94,11 @@ RSASignature::deserialize_private(const bytes& skm) const
+   if (pkey == nullptr) {
+     throw openssl_error();
+   }
++  if (data_ptr != skm.data() + skm.size()) {
++    EVP_PKEY_free(pkey);
++    throw std::runtime_error(
++      "RSA private key contains trailing data");
++  }
+   return std::make_unique<RSASignature::PrivateKey>(pkey);
+ }
+ 

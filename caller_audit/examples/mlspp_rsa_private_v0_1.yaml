@@ -1,0 +1,180 @@
+schema: cipherlens_caller_audit_config_v0_1
+
+project:
+  name: cisco/mlspp
+  repo_path: "${MLSPP_ROOT}"
+  repository_url: "https://github.com/cisco/mlspp.git"
+  expected_commit: "92aaa4134fa45ec39957a7c81a342401fba7feb2"
+
+candidate:
+  source_case: "MBEDTLS-POC-0020"
+  source_pattern: "top_level_der_trailing_data"
+  target_library: "openssl"
+  target_api: "d2i_PrivateKey"
+  component: "lib/hpke RSASignature::deserialize_private"
+  crypto_backend: "OpenSSL 3.5.5"
+
+scan:
+  api_patterns:
+    - '\bd2i_PrivateKey\s*\('
+  include_globs:
+    - "lib/hpke/src/**/*.cpp"
+    - "lib/hpke/src/**/*.h"
+  exclude_globs:
+    - "build*/**"
+  test_markers:
+    - "/test/"
+    - "/tests/"
+  context_lines: 12
+  full_consumption_patterns:
+    - '\bdata_ptr\s*==\s*skm\.data\(\)\s*\+\s*skm\.size\(\)'
+    - '\bdata_ptr\s*!=\s*skm\.data\(\)\s*\+\s*skm\.size\(\)'
+
+environment:
+  MLSPP_ROOT: "${MLSPP_ROOT}"
+  MLSPP_BUILD: "${MLSPP_BUILD}"
+  OPENSSL_ROOT: "${OPENSSL_ROOT}"
+  FIX_SRC: "${MLSPP_FIX_SRC}"
+  FIX_BUILD: "${MLSPP_FIX_BUILD}"
+  BASELINE_HARNESS_BUILD: "${BASELINE_HARNESS_BUILD}"
+  FIX_HARNESS_BUILD: "${FIX_HARNESS_BUILD}"
+  HARNESS_SRC: "{repo}/../unused"
+  ASAN_OPTIONS: "detect_leaks=1:abort_on_error=1"
+  UBSAN_OPTIONS: "print_stacktrace=1:halt_on_error=1"
+
+commands:
+  - name: prepare_fix_control_worktree
+    cwd: "{config_dir}/../.."
+    command: >
+      PYTHONPATH=. python3 -m caller_audit.worktree
+      --repo "${MLSPP_ROOT}"
+      --commit "92aaa4134fa45ec39957a7c81a342401fba7feb2"
+      --worktree "${MLSPP_FIX_SRC}"
+      --patch "caller_audit/fix_controls/mlspp_rsa_full_consumption.patch"
+    timeout_seconds: 600
+
+  - name: configure_fix_mlspp
+    cwd: "${MLSPP_FIX_SRC}"
+    command: >
+      rm -rf "${MLSPP_FIX_BUILD}" &&
+      cmake -S "${MLSPP_FIX_SRC}" -B "${MLSPP_FIX_BUILD}" -G Ninja
+      -DCMAKE_BUILD_TYPE=Debug
+      -DCMAKE_CXX_COMPILER=clang++
+      -DOPENSSL_ROOT_DIR="${OPENSSL_ROOT}"
+      -DOPENSSL_INCLUDE_DIR="${OPENSSL_ROOT}/include"
+      -DOPENSSL_CRYPTO_LIBRARY="${OPENSSL_ROOT}/libcrypto.a"
+      -DOPENSSL_SSL_LIBRARY="${OPENSSL_ROOT}/libssl.a"
+      -DTESTING=OFF
+      -DSANITIZERS=ON
+      -DDISABLE_PQ=ON
+    timeout_seconds: 1200
+
+  - name: build_fix_mlspp
+    cwd: "${MLSPP_FIX_SRC}"
+    command: 'cmake --build "${MLSPP_FIX_BUILD}" -j4'
+    timeout_seconds: 1800
+
+  - name: configure_baseline_harness
+    cwd: "{config_dir}/../.."
+    command: >
+      rm -rf "${BASELINE_HARNESS_BUILD}" &&
+      cmake
+      -S caller_audit/harnesses/mlspp_rsa
+      -B "${BASELINE_HARNESS_BUILD}"
+      -G Ninja
+      -DCMAKE_BUILD_TYPE=Debug
+      -DCMAKE_CXX_COMPILER=clang++
+      -DMLSPP_ROOT="${MLSPP_ROOT}"
+      -DMLSPP_BUILD="${MLSPP_BUILD}"
+      -DOPENSSL_ROOT_DIR="${OPENSSL_ROOT}"
+      -DOPENSSL_INCLUDE_DIR="${OPENSSL_ROOT}/include"
+      -DOPENSSL_CRYPTO_LIBRARY="${OPENSSL_ROOT}/libcrypto.a"
+      -DOPENSSL_SSL_LIBRARY="${OPENSSL_ROOT}/libssl.a"
+    timeout_seconds: 600
+
+  - name: build_baseline_harness
+    cwd: "{config_dir}/../.."
+    command: 'cmake --build "${BASELINE_HARNESS_BUILD}" -j4'
+    timeout_seconds: 1200
+
+  - name: run_caller_harness
+    cwd: "{config_dir}/../.."
+    command: '"${BASELINE_HARNESS_BUILD}/mlspp_rsa_trailing_garbage"'
+    timeout_seconds: 300
+
+  - name: configure_fix_harness
+    cwd: "{config_dir}/../.."
+    command: >
+      rm -rf "${FIX_HARNESS_BUILD}" &&
+      cmake
+      -S caller_audit/harnesses/mlspp_rsa
+      -B "${FIX_HARNESS_BUILD}"
+      -G Ninja
+      -DCMAKE_BUILD_TYPE=Debug
+      -DCMAKE_CXX_COMPILER=clang++
+      -DMLSPP_ROOT="${MLSPP_FIX_SRC}"
+      -DMLSPP_BUILD="${MLSPP_FIX_BUILD}"
+      -DOPENSSL_ROOT_DIR="${OPENSSL_ROOT}"
+      -DOPENSSL_INCLUDE_DIR="${OPENSSL_ROOT}/include"
+      -DOPENSSL_CRYPTO_LIBRARY="${OPENSSL_ROOT}/libcrypto.a"
+      -DOPENSSL_SSL_LIBRARY="${OPENSSL_ROOT}/libssl.a"
+    timeout_seconds: 600
+
+  - name: build_fix_harness
+    cwd: "{config_dir}/../.."
+    command: 'cmake --build "${FIX_HARNESS_BUILD}" -j4'
+    timeout_seconds: 1200
+
+  - name: run_fix_control_harness
+    cwd: "{config_dir}/../.."
+    command: '"${FIX_HARNESS_BUILD}/mlspp_rsa_trailing_garbage"'
+    timeout_seconds: 300
+
+dynamic:
+  baseline_command: run_caller_harness
+  fix_control_command: run_fix_control_harness
+
+  baseline_phase:
+    baseline_case: canonical
+    baseline_required:
+      accepted: true
+      canonical_roundtrip: true
+      public_key_equal: true
+      signature_verifies: true
+    mutation_cases:
+      - tail_0500
+      - tail_3000
+      - tail_020100
+    expected_mutation_count: 3
+    mutation_required:
+      accepted: true
+      input_differs: true
+      canonical_roundtrip: true
+      public_key_equal: true
+      signature_verifies: true
+
+  fix_control_phase:
+    baseline_case: canonical
+    baseline_required:
+      accepted: true
+      canonical_roundtrip: true
+      public_key_equal: true
+      signature_verifies: true
+    mutation_cases:
+      - tail_0500
+      - tail_3000
+      - tail_020100
+    expected_mutation_count: 3
+    mutation_required:
+      accepted: false
+      input_differs: true
+      canonical_roundtrip: false
+      public_key_equal: false
+      signature_verifies: false
+
+reachability:
+  public_api_exposed: true
+  production_reachable: false
+  attacker_controlled_input: false
+  official_protocol_route_found: false
+  security_impact_demonstrated: false

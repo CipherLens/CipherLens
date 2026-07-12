@@ -1,0 +1,33 @@
+schema: cipherlens_caller_audit_recipe_v0_1
+recipe_id: x509_full_consumption
+object_kind: x509_certificate
+target_apis:
+  - d2i_X509
+  - d2i_X509_bio
+  - PEM_read_bio_X509
+static:
+  pointer_full_consumption_patterns:
+    - '\b(?:p|data_ptr|cursor)\s*==\s*[^;\n]+\+\s*(?:len|size|input_len|der_len)\b'
+    - '\b(?:p|data_ptr|cursor)\s*!=\s*[^;\n]+\+\s*(?:len|size|input_len|der_len)\b'
+  bio_full_consumption_patterns:
+    - '\bBIO_eof\s*\('
+    - '\bBIO_pending\s*\('
+    - '\bBIO_ctrl_pending\s*\('
+dynamic_properties:
+  baseline:
+    - accepted
+    - canonical_roundtrip
+    - certificate_digest_equal
+    - subject_equal
+    - issuer_equal
+    - serial_equal
+    - public_key_equal
+  mutation:
+    - accepted
+    - input_differs
+    - canonical_roundtrip
+    - certificate_digest_equal
+    - chain_result_equal
+  fix_control:
+    - baseline_accepted
+    - mutations_rejected

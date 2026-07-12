@@ -1,0 +1,26 @@
+schema: cipherlens_caller_audit_recipe_v0_1
+recipe_id: public_key_full_consumption
+object_kind: public_key
+target_apis:
+  - d2i_PUBKEY
+  - d2i_PublicKey
+  - d2i_RSA_PUBKEY
+static:
+  full_consumption_patterns:
+    - '\b(?:p|data_ptr|cursor)\s*==\s*[^;\n]+\+\s*(?:len|size|input_len|der_len)\b'
+    - '\b(?:p|data_ptr|cursor)\s*!=\s*[^;\n]+\+\s*(?:len|size|input_len|der_len)\b'
+dynamic_properties:
+  baseline:
+    - accepted
+    - canonical_roundtrip
+    - public_key_fingerprint_equal
+    - signature_verifies
+  mutation:
+    - accepted
+    - input_differs
+    - canonical_roundtrip
+    - public_key_fingerprint_equal
+    - signature_verifies
+  fix_control:
+    - baseline_accepted
+    - mutations_rejected
