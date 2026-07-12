@@ -1,0 +1,156 @@
+schema: cipherlens_caller_audit_v0_1
+project:
+  name: halon/libdkimpp
+  repo_path: /home/yvxi/workplace/third_party/caller-audit/libdkimpp
+  repository_url: https://github.com/halon/libdkimpp.git
+  expected_commit: 9defa162eebc644b006b7a51e92162640a810ee9
+candidate:
+  source_case: MBEDTLS-POC-0020
+  source_pattern: top_level_der_trailing_data
+  target_library: openssl
+  target_api: d2i_PUBKEY
+  component: DKIM::PublicKey::Parse
+  crypto_backend: OpenSSL 3.5.5
+  input_object: DKIM DNS TXT p= public-key field
+repository:
+  repository_root: /home/yvxi/workplace/third_party/caller-audit/libdkimpp
+  remote_origin: https://github.com/halon/libdkimpp.git
+  branch: ''
+  commit: 9defa162eebc644b006b7a51e92162640a810ee9
+  commit_date: '2025-09-02T22:16:27+02:00'
+  status_short: ''
+  submodules: []
+static_checks:
+  call_site_count: 1
+  production_call_site_count: 1
+  production_without_full_consumption_check: 1
+  items:
+  - path: src/PublicKey.cpp
+    line: 122
+    classification: production
+    full_consumption_check_found: false
+    matched_check_patterns: []
+dynamic_evidence:
+  baseline_phase:
+    baseline_case: canonical
+    baseline:
+      input_len: 294
+      accepted: true
+      input_differs: false
+      canonical_roundtrip: true
+      public_key_equal: true
+      signature_verifies: true
+    baseline_passed: true
+    mutation_cases:
+      tail_0500:
+        input_len: 296
+        accepted: true
+        input_differs: true
+        canonical_roundtrip: true
+        public_key_equal: true
+        signature_verifies: true
+      tail_3000:
+        input_len: 296
+        accepted: true
+        input_differs: true
+        canonical_roundtrip: true
+        public_key_equal: true
+        signature_verifies: true
+      tail_020100:
+        input_len: 297
+        accepted: true
+        input_differs: true
+        canonical_roundtrip: true
+        public_key_equal: true
+        signature_verifies: true
+    mutation_case_passes:
+      tail_0500: true
+      tail_3000: true
+      tail_020100: true
+    mutation_pass_count: 3
+    expected_mutation_count: 3
+    mutations_passed: true
+    summaries:
+      libdkimpp_public_key:
+        baseline_ok: true
+        mutations_accepted: 3
+        mutations_rejected: false
+    markers: []
+  fix_control_phase:
+    baseline_case: canonical
+    baseline:
+      input_len: 294
+      accepted: true
+      input_differs: false
+      canonical_roundtrip: true
+      public_key_equal: true
+      signature_verifies: true
+    baseline_passed: true
+    mutation_cases:
+      tail_0500:
+        input_len: 296
+        accepted: false
+        input_differs: true
+        canonical_roundtrip: false
+        public_key_equal: false
+        signature_verifies: false
+      tail_3000:
+        input_len: 296
+        accepted: false
+        input_differs: true
+        canonical_roundtrip: false
+        public_key_equal: false
+        signature_verifies: false
+      tail_020100:
+        input_len: 297
+        accepted: false
+        input_differs: true
+        canonical_roundtrip: false
+        public_key_equal: false
+        signature_verifies: false
+    mutation_case_passes:
+      tail_0500: true
+      tail_3000: true
+      tail_020100: true
+    mutation_pass_count: 3
+    expected_mutation_count: 3
+    mutations_passed: true
+    summaries:
+      libdkimpp_public_key:
+        baseline_ok: true
+        mutations_accepted: false
+        mutations_rejected: 3
+    markers: []
+  baseline_passed: true
+  mutation_candidate_confirmed: true
+  fix_control_passed: true
+  asan_error: false
+  ubsan_error: false
+reachability:
+  public_api_exposed: true
+  production_reachable: true
+  attacker_controlled_input: true
+  official_protocol_route_found: true
+  security_impact_demonstrated: false
+  notes:
+  - 'DKIM public-key material is obtained from DNS TXT and passed through PublicKey::Parse
+    to d2i_PUBKEY before RSA signature verification.
+
+    '
+  - 'A remote sender can publish a non-canonical key record for a domain it controls,
+    but no victim-domain impersonation or policy bypass has been demonstrated.
+
+    '
+verdict:
+  status: production_reachable_candidate
+  reason: Caller behavior and fix control are confirmed on a production-reachable
+    attacker-controlled path.
+  baseline_passed: true
+  dynamic_candidate_confirmed: true
+  fix_control_passed: true
+  production_call_sites_without_check: 1
+  production_reachable: true
+  attacker_controlled_input: true
+  official_protocol_route_found: true
+  security_impact_demonstrated: false
+  vulnerability_confirmed: false

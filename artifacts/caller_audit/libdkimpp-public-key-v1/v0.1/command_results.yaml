@@ -1,0 +1,78 @@
+- name: prepare_fix_control_worktree
+  command: 'PYTHONPATH=. python3 -m caller_audit.worktree --repo "/home/yvxi/workplace/third_party/caller-audit/libdkimpp"
+    --commit "9defa162eebc644b006b7a51e92162640a810ee9" --worktree "/home/yvxi/workplace/third_party/caller-audit/libdkimpp-fix-control"
+    --patch "caller_audit/fix_controls/libdkimpp_public_key_full_consumption.patch"
+
+    '
+  cwd: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/caller_audit/examples/../..
+  returncode: 0
+  duration_seconds: 0.064
+  stdout_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/logs/00_prepare_fix_control_worktree.stdout.log
+  stderr_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/logs/00_prepare_fix_control_worktree.stderr.log
+  allow_failure: false
+- name: configure_baseline_harness
+  command: 'rm -rf "/home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/caller_audit/libdkimpp-public-key-v1/v0.1-build/baseline"
+    && cmake -S caller_audit/harnesses/libdkimpp_public_key -B "/home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/caller_audit/libdkimpp-public-key-v1/v0.1-build/baseline"
+    -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=clang++ -DLIBDKIMPP_ROOT="/home/yvxi/workplace/third_party/caller-audit/libdkimpp"
+    -DOPENSSL_ROOT_DIR="/home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5"
+    -DOPENSSL_INCLUDE_DIR="/home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5/include"
+    -DOPENSSL_CRYPTO_LIBRARY="/home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5/libcrypto.a"
+    -DOPENSSL_SSL_LIBRARY="/home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5/libssl.a"
+
+    '
+  cwd: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/caller_audit/examples/../..
+  returncode: 0
+  duration_seconds: 1.018
+  stdout_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/logs/01_configure_baseline_harness.stdout.log
+  stderr_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/logs/01_configure_baseline_harness.stderr.log
+  allow_failure: false
+- name: build_baseline_harness
+  command: cmake --build "/home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/caller_audit/libdkimpp-public-key-v1/v0.1-build/baseline"
+    -j4
+  cwd: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/caller_audit/examples/../..
+  returncode: 0
+  duration_seconds: 1.795
+  stdout_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/logs/02_build_baseline_harness.stdout.log
+  stderr_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/logs/02_build_baseline_harness.stderr.log
+  allow_failure: false
+- name: run_caller_harness
+  command: '"/home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/caller_audit/libdkimpp-public-key-v1/v0.1-build/baseline/libdkimpp_public_key_audit"'
+  cwd: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/caller_audit/examples/../..
+  returncode: 0
+  duration_seconds: 0.054
+  stdout_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/logs/03_run_caller_harness.stdout.log
+  stderr_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/logs/03_run_caller_harness.stderr.log
+  allow_failure: false
+- name: configure_fix_harness
+  command: 'rm -rf "/home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/caller_audit/libdkimpp-public-key-v1/v0.1-build/fix"
+    && cmake -S caller_audit/harnesses/libdkimpp_public_key -B "/home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/caller_audit/libdkimpp-public-key-v1/v0.1-build/fix"
+    -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=clang++ -DLIBDKIMPP_ROOT="/home/yvxi/workplace/third_party/caller-audit/libdkimpp-fix-control"
+    -DOPENSSL_ROOT_DIR="/home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5"
+    -DOPENSSL_INCLUDE_DIR="/home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5/include"
+    -DOPENSSL_CRYPTO_LIBRARY="/home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5/libcrypto.a"
+    -DOPENSSL_SSL_LIBRARY="/home/yvxi/workplace/CryptoPoc/clean_sources/openssl-3.5.5/libssl.a"
+
+    '
+  cwd: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/caller_audit/examples/../..
+  returncode: 0
+  duration_seconds: 0.636
+  stdout_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/logs/04_configure_fix_harness.stdout.log
+  stderr_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/logs/04_configure_fix_harness.stderr.log
+  allow_failure: false
+- name: build_fix_harness
+  command: cmake --build "/home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/caller_audit/libdkimpp-public-key-v1/v0.1-build/fix"
+    -j4
+  cwd: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/caller_audit/examples/../..
+  returncode: 0
+  duration_seconds: 1.57
+  stdout_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/logs/05_build_fix_harness.stdout.log
+  stderr_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/logs/05_build_fix_harness.stderr.log
+  allow_failure: false
+- name: run_fix_control_harness
+  command: '"/home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/caller_audit/libdkimpp-public-key-v1/v0.1-build/fix/libdkimpp_public_key_audit"'
+  cwd: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/caller_audit/examples/../..
+  returncode: 0
+  duration_seconds: 0.082
+  stdout_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/logs/06_run_fix_control_harness.stdout.log
+  stderr_log: /home/yvxi/workplace/CryptoPoc/CipherLens-poc0020/artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/logs/06_run_fix_control_harness.stderr.log
+  allow_failure: false
