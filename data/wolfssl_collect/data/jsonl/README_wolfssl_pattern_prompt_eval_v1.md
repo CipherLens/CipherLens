@@ -4,7 +4,7 @@
 
 - File: data/jsonl/wolfssl_pattern_prompt_eval_v1.jsonl
 - Format: JSON Lines
-- Total samples: 4
+- Total samples: 10
 - Library: wolfSSL
 - Task type: vulnerability_pattern_search
 
@@ -36,7 +36,7 @@ This dataset is derived from:
 - inventory/wolfssl_pattern_summary.md
 - inventory/wolfssl_pattern_recipes.json
 - prompts/pattern_*.md
-- WOLFSSL-POC-0001 to WOLFSSL-POC-0004 metadata files
+- WOLFSSL-POC-0001 to WOLFSSL-POC-0010 metadata files
 
 ## Samples
 
@@ -46,6 +46,12 @@ This dataset is derived from:
 | wolfssl_pattern_02 | Pattern-02 | WOLFSSL-POC-0002 | openssl_compat_x509_text_extraction |
 | wolfssl_pattern_03 | Pattern-03 | WOLFSSL-POC-0003 | x509_time_setter_getter_api |
 | wolfssl_pattern_04 | Pattern-04 | WOLFSSL-POC-0004 | x509_authority_key_identifier_reencode |
+| wolfssl_pattern_05 | Pattern-05 | WOLFSSL-POC-0005 | dtls13_ack_record_serialization |
+| wolfssl_pattern_06 | Pattern-06 | WOLFSSL-POC-0006 | pkcs7_signeddata_attribute_encoding |
+| wolfssl_pattern_07 | Pattern-07 | WOLFSSL-POC-0007 | pkcs7_ori_recipient_decryption |
+| wolfssl_pattern_08 | Pattern-08 | WOLFSSL-POC-0008 | tls13_pqc_hybrid_keyshare_processing |
+| wolfssl_pattern_09 | Pattern-09 | WOLFSSL-POC-0009 | ssl_session_deserialization |
+| wolfssl_pattern_10 | Pattern-10 | WOLFSSL-POC-0010 | alpn_protocol_selection |
 
 ## JSONL Schema
 
@@ -63,7 +69,7 @@ Each line is a JSON object with the following fields:
 
 ## Quality Guarantees
 
-All four samples are based on Q1 strict reproduction candidates.
+All ten samples are based on Q1 strict reproduction candidates.
 
 Each related PoC has:
 
@@ -87,6 +93,17 @@ Expected model output should include:
 - matched recipe slots
 - why the code matches the pattern
 - suggested mutation or test input shape
+
+## Regeneration
+
+From the `data/wolfssl_collect` directory:
+
+```bash
+python3 scripts/build_wolfssl_pattern_jsonl.py
+```
+
+The generator infers the dataset root from its own location. Use `--dataset-root`,
+`--recipe`, or `--output` to override repository-relative defaults.
 
 ## Limitations
 

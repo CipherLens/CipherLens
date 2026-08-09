@@ -4,7 +4,7 @@
 
 - File: data/jsonl/wolfssl_code_localization_eval_v1.jsonl
 - Format: JSON Lines
-- Total samples: 4
+- Total samples: 10
 - Library: wolfSSL
 - Task type: vulnerability_code_localization
 
@@ -40,6 +40,12 @@ The dataset is intended for:
 | wolfssl_pattern_02 | Pattern-02 | WOLFSSL-POC-0002 | wolfSSL_X509_NAME_get_text_by_NID | src/ssl.c |
 | wolfssl_pattern_03 | Pattern-03 | WOLFSSL-POC-0003 | wolfSSL_X509_set_notAfter | src/x509.c |
 | wolfssl_pattern_04 | Pattern-04 | WOLFSSL-POC-0004 | CertFromX509 | src/x509.c |
+| wolfssl_pattern_05 | Pattern-05 | WOLFSSL-POC-0005 | Dtls13WriteAckMessage | src/dtls13.c |
+| wolfssl_pattern_06 | Pattern-06 | WOLFSSL-POC-0006 | wc_PKCS7_BuildSignedAttributes | wolfcrypt/src/pkcs7.c |
+| wolfssl_pattern_07 | Pattern-07 | WOLFSSL-POC-0007 | wc_PKCS7_DecryptOri | wolfcrypt/src/pkcs7.c |
+| wolfssl_pattern_08 | Pattern-08 | WOLFSSL-POC-0008 | TLSX_KeyShare_ProcessPqcHybridClient | src/tls.c |
+| wolfssl_pattern_09 | Pattern-09 | WOLFSSL-POC-0009 | wolfSSL_d2i_SSL_SESSION | src/ssl_sess.c |
+| wolfssl_pattern_10 | Pattern-10 | WOLFSSL-POC-0010 | wolfSSL_select_next_proto | src/ssl.c |
 
 ## JSONL Fields
 
@@ -100,6 +106,20 @@ Each related PoC has:
 - fixed-release validation
 - current-version validation
 - sanitizer crash or safe-rejection evidence
+
+## Regeneration
+
+The generator requires a directory containing the named vulnerable and fixed wolfSSL
+source builds. From the `data/wolfssl_collect` directory, either pass it explicitly:
+
+```bash
+python3 scripts/build_wolfssl_code_localization_jsonl.py \
+  --build-root /path/to/wolfssl_repro
+```
+
+or set `WOLFSSL_REPRO_BUILD_ROOT`. The output records build directory names and
+repository-relative source paths; it does not embed the host's absolute build path.
+Use `--dataset-root`, `--input`, or `--output` to override other defaults.
 
 ## Current Limitations
 

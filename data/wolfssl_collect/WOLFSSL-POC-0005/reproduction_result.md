@@ -64,7 +64,6 @@ Observed behavior:
 
 ### Evidence Logs
 
-- logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-dtls13-ack/build_info.txt
 - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-dtls13-ack/dtls13_ack_overflow_min_repro_from_builddir.log
 - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-dtls13-ack/dtls13_ack_overflow_min_from_builddir_exit_code.txt
 - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-dtls13-ack/asan_grep_result_from_builddir.txt
@@ -113,7 +112,6 @@ Observed behavior:
 
 ### Evidence Logs
 
-- logs/fixed_version/wolfssl-v5.9.1-stable-asan-dtls13-ack/build_info.txt
 - logs/fixed_version/wolfssl-v5.9.1-stable-asan-dtls13-ack/dtls13_ack_overflow_fixed_repro.log
 - logs/fixed_version/wolfssl-v5.9.1-stable-asan-dtls13-ack/dtls13_ack_overflow_fixed_exit_code.txt
 - logs/fixed_version/wolfssl-v5.9.1-stable-asan-dtls13-ack/asan_grep_result.txt
@@ -162,7 +160,6 @@ Observed behavior:
 
 ### Evidence Logs
 
-- logs/current_version/wolfssl-current-asan-dtls13-ack/build_info.txt
 - logs/current_version/wolfssl-current-asan-dtls13-ack/dtls13_ack_overflow_current_repro.log
 - logs/current_version/wolfssl-current-asan-dtls13-ack/dtls13_ack_overflow_current_exit_code.txt
 - logs/current_version/wolfssl-current-asan-dtls13-ack/asan_grep_result.txt

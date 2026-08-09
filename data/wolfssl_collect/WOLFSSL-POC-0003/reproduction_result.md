@@ -104,7 +104,6 @@ Both notAfter and notBefore paths triggered AddressSanitizer heap-buffer-overflo
 
 ### Evidence Logs
 
-- logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-x509date/build_info.txt
 - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-x509date/ldd.txt
 - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-x509date/after_repro.log
 - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-x509date/after_exit_code.txt
@@ -168,7 +167,6 @@ The exit code 1 is expected for the fixed version because the oversized ASN1_TIM
 
 ### Evidence Logs
 
-- logs/fixed_version/wolfssl-v5.9.1-stable-asan-x509date/build_info.txt
 - logs/fixed_version/wolfssl-v5.9.1-stable-asan-x509date/ldd.txt
 - logs/fixed_version/wolfssl-v5.9.1-stable-asan-x509date/after_repro.log
 - logs/fixed_version/wolfssl-v5.9.1-stable-asan-x509date/after_exit_code.txt
@@ -232,7 +230,6 @@ The exit code 1 is expected because the oversized ASN1_TIME length is rejected b
 
 ### Evidence Logs
 
-- logs/current_version/wolfssl-current-asan-x509date/build_info.txt
 - logs/current_version/wolfssl-current-asan-x509date/ldd.txt
 - logs/current_version/wolfssl-current-asan-x509date/after_repro.log
 - logs/current_version/wolfssl-current-asan-x509date/after_exit_code.txt

@@ -148,7 +148,6 @@ The broader grep output only contains the harness debug message:
 
 ### Evidence Logs
 
-- logs/fixed_version/wolfssl-v3.11.0-stable-asan-certfields/build_info.txt
 - logs/fixed_version/wolfssl-v3.11.0-stable-asan-certfields/ldd.txt
 - logs/fixed_version/wolfssl-v3.11.0-stable-asan-certfields/poc_certfields_min_repro.log
 - logs/fixed_version/wolfssl-v3.11.0-stable-asan-certfields/poc_certfields_min_exit_code.txt
@@ -200,7 +199,6 @@ Observed behavior:
 
 ### Evidence Logs
 
-- logs/current_version/wolfssl-current-asan-certfields/build_info.txt
 - logs/current_version/wolfssl-current-asan-certfields/ldd.txt
 - logs/current_version/wolfssl-current-asan-certfields/poc_certfields_min_repro.log
 - logs/current_version/wolfssl-current-asan-certfields/poc_certfields_min_exit_code.txt

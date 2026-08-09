@@ -109,7 +109,6 @@ The harness performs:
 
 ### Evidence Logs
 
-- logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-akid/build_info.txt
 - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-akid/akid_repro.log
 - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-akid/akid_exit_code.txt
 - logs/vulnerable_version/wolfssl-v5.9.0-stable-asan-akid-long/akid_long_repro.log
@@ -166,7 +165,6 @@ The exit code 1 is expected because the fixed version safely rejects the oversiz
 
 ### Evidence Logs
 
-- logs/fixed_version/wolfssl-v5.9.1-stable-asan-akid/build_info.txt
 - logs/fixed_version/wolfssl-v5.9.1-stable-asan-akid/akid_repro.log
 - logs/fixed_version/wolfssl-v5.9.1-stable-asan-akid/akid_exit_code.txt
 - logs/fixed_version/wolfssl-v5.9.1-stable-asan-akid/asan_grep_result.txt
@@ -222,7 +220,6 @@ The exit code 1 is expected because the current version safely rejects the overs
 
 ### Evidence Logs
 
-- logs/current_version/wolfssl-current-asan-akid/build_info.txt
 - logs/current_version/wolfssl-current-asan-akid/ldd.txt
 - logs/current_version/wolfssl-current-asan-akid/akid_repro.log
 - logs/current_version/wolfssl-current-asan-akid/akid_exit_code.txt

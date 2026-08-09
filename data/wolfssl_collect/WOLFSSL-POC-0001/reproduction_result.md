@@ -359,7 +359,6 @@ Absent signals:
 
 ### Evidence Logs
 
-- logs/current_version/wolfssl-current-asan-extra/build_info.txt
 - logs/current_version/wolfssl-current-asan-extra/server_repro.log
 - logs/current_version/wolfssl-current-asan-extra/server_dtls_repro.log
 - logs/current_version/wolfssl-current-asan-extra/client_repro.log

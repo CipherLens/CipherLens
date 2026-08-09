@@ -36,9 +36,12 @@ python3 scripts/validate_wolfssl_code_localization_jsonl.py
 
 echo "[*] checking manifest"
 test -f inventory/wolfssl_artifact_manifest.txt
-grep -q "^README.md$" inventory/wolfssl_artifact_manifest.txt
-grep -q "data/jsonl/wolfssl_pattern_prompt_eval_v1.jsonl" inventory/wolfssl_artifact_manifest.txt
-grep -q "data/jsonl/wolfssl_code_localization_eval_v1.jsonl" inventory/wolfssl_artifact_manifest.txt
-grep -q "inventory/wolfssl_pattern_recipes.json" inventory/wolfssl_artifact_manifest.txt
+while IFS= read -r manifest_path; do
+    [[ -z "$manifest_path" || "$manifest_path" == \#* ]] && continue
+    test -e "$manifest_path" || {
+        echo "[ERROR] manifest target does not exist: $manifest_path" >&2
+        exit 1
+    }
+done < inventory/wolfssl_artifact_manifest.txt
 
 echo "[OK] wolfSSL dataset validation passed"
