@@ -1,0 +1,39 @@
+contract_id: bad
+schema_version: cipherlens.vc.v0_1
+source:
+  pattern_id: MBEDTLS-POC-0020
+  library: MbedTLS
+  buggy_version: old
+  fixed_version: new
+roles: [PARSE, PARSE, DECODE]
+states:
+  - name: bad_state
+    kind: unknown
+  - name: bad_state
+    kind: initial
+transitions:
+  - from: UNDECLARED
+    on: VERIFY
+    expected: required
+guards: []
+mutation:
+  strategy: invented_strategy
+  witness_ref: tests/contract_miner/fixtures/invalid/multiple_errors/missing.seq
+oracle:
+  memory_safety: []
+  bug_candidate: []
+  fixed_or_safe: []
+  contract_violation:
+    relation: parser accepts an invalid contract state
+    independent_of_generator: false
+effect:
+  summary: Invalid fixture for aggregate validation.
+  sinks: [invented_sink]
+  surprise: true
+fidelity:
+  target_states: [BROKEN]
+  divergence_required: false
+provenance:
+  miner: test
+  derived_from: []
+  human_reviewed: false

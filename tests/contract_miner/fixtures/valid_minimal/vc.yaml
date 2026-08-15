@@ -1,0 +1,42 @@
+contract_id: RSA_DER_FULL_CONSUMPTION
+schema_version: cipherlens.vc.v0_2
+source:
+  pattern_id: MBEDTLS-POC-0020
+  library: mbedtls
+  buggy_version: "a7f651cf160a3753367e032c4471699822b37e30^1"
+  fixed_version: "a7f651cf160a3753367e032c4471699822b37e30"
+  references:
+    - data/pocs/core10/MBEDTLS-POC-0020/reproduction_result.md
+roles: [PARSE]
+states:
+  - name: INPUT_READY
+    kind: initial
+  - name: PARSE_COMPLETE
+    kind: terminal
+transitions:
+  - from: INPUT_READY
+    on: PARSE
+    expected: required
+    to: PARSE_COMPLETE
+guards: []
+mutation:
+  strategy: input_tail
+  witness_ref: tests/contract_miner/fixtures/valid_minimal/witness.min.seq
+oracle:
+  memory_safety: []
+  bug_candidate: []
+  fixed_or_safe: []
+  contract_violation:
+    relation: successful PARSE accepts bytes outside the top-level DER object
+    independent_of_generator: true
+effect:
+  summary: A parser accepts a non-exact single-object DER input.
+  sinks: []
+fidelity:
+  target_states: [PARSE_COMPLETE]
+  divergence_required: false
+provenance:
+  miner: manual
+  derived_from:
+    - data/pocs/core10/MBEDTLS-POC-0020/reproduction_result.md
+  human_reviewed: false

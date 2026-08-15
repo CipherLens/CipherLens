@@ -1,0 +1,74 @@
+contract_id: ASN1_NAMED_DATA_STALE_STATE
+schema_version: cipherlens.vc.v0_2
+source:
+  pattern_id: MBEDTLS-POC-0005
+  library: mbedtls
+  buggy_version: "2df7ab7c0c3d5bb8a31481073c494521d10d4eba^"
+  fixed_version: "2df7ab7c0c3d5bb8a31481073c494521d10d4eba"
+  references:
+    - CVE-2025-48965
+    - data/pocs/core10/MBEDTLS-POC-0005/reproduction_result.md
+roles: [INIT, UPDATE, FREE]
+states:
+  - name: EMPTY
+    kind: initial
+  - name: POPULATED
+    kind: intermediate
+  - name: CLEARED
+    kind: intermediate
+  - name: FREED
+    kind: terminal
+  - name: NULL_DEREFERENCE
+    kind: error
+transitions:
+  - from: EMPTY
+    on: INIT
+    expected: required
+    to: POPULATED
+  - from: POPULATED
+    on: UPDATE
+    expected: allowed_with_guard
+    to: CLEARED
+    guard_ref: zero_length_value
+  - from: CLEARED
+    on: FREE
+    expected: required
+    to: FREED
+  - from: FREED
+    on: UPDATE
+    expected: forbidden
+guards:
+  - id: zero_length_value
+    description: The replacement value length is zero.
+mutation:
+  strategy: state_reuse
+  witness_ref: tests/contract_miner/fixtures/valid_full/witness.min.seq
+  points:
+    - name: VALUE_LEN
+      placeholder: "[VALUE_LEN]"
+      type: size_t
+      constraint: The first and reuse value lengths are equal and nonzero.
+oracle:
+  memory_safety:
+    - no_null_pointer_dereference
+  bug_candidate:
+    - stale_length_skips_reallocation
+    - signal_sigsegv_on_reuse
+  fixed_or_safe:
+    - length_cleared_after_zero_length_update
+    - reuse_reallocates_valid_pointer
+  contract_violation:
+    relation: after a zero-length UPDATE, a same-length reuse dereferences a null pointer instead of reallocating or rejecting
+    independent_of_generator: true
+effect:
+  summary: Stale pointer-length state reaches a null pointer dereference.
+  sinks: [crypto_result]
+fidelity:
+  target_states: [POPULATED, CLEARED, FREED]
+  divergence_required: true
+provenance:
+  miner: manual
+  derived_from:
+    - data/pocs/core10/MBEDTLS-POC-0005/reproduction_result.md
+    - data/pocs/core10/MBEDTLS-POC-0005/fix_commits.txt
+  human_reviewed: true

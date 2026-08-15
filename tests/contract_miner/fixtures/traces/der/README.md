@@ -1,0 +1,1 @@
+At seq 0, the expected M2 divergence is a return/out-state asymmetry: the buggy `mbedtls_rsa_parse_key` event returns `0` with `parse_result="success"`, while the fixed event returns `-16512` with `parse_result="reject"`; role and both state fields intentionally remain `null` because M1 performs no DER role/state inference.

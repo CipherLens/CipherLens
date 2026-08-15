@@ -1,0 +1,1 @@
+The expected M2 divergences are an out-state asymmetry at seq 1 (`len_cleared=false` buggy versus `true` fixed) and a sanitizer/fatal-signal asymmetry at seq 2 (buggy `signal_sigsegv` and trace termination versus fixed `reused_ptr_valid=true` with no sanitizer event); role and both state fields intentionally remain `null` because M1 performs no stale-state role/state inference.
