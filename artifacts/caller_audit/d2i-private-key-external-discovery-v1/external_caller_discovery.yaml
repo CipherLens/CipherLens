@@ -1,0 +1,42 @@
+schema: cipherlens_external_caller_discovery_v1
+candidate_id: openssl-d2i-privatekey-full-consumption-gap
+search_queries:
+- '"d2i_PrivateKey("'
+- d2i_PrivateKey
+- '"EVP_PKEY *d2i_PrivateKey"'
+- d2i_PrivateKey DER
+- d2i_PrivateKey ASN.1
+- d2i_PrivateKey "key parsing"
+- d2i_PrivateKey PKCS8
+repositories:
+- name: cisco/mlspp
+  url: https://github.com/cisco/mlspp
+  file: lib/hpke/src/rsa.cpp
+  symbol: hpke::RSASignature::deserialize_private
+  api_usage: d2i_PrivateKey in lib/hpke/src/rsa.cpp
+  evidence:
+  - query="d2i_PrivateKey("
+  - file_url=https://github.com/cisco/mlspp/blob/main/lib/hpke/src/rsa.cpp
+  - "fragment=std::unique_ptr<Signature::PrivateKey>\nRSASignature::deserialize_private(const\
+    \ bytes& skm) const\n{\n  const auto* data_ptr = skm.data();\n  auto* pkey = d2i_PrivateKey(\n\
+    \    EVP_PKEY_RSA, nullptr, &data_ptr, static_cast<int>(skm.size()));\n  return\
+    \ std::make_unique<RSASignature::PrivateKey>(pkey);\n}"
+  - query=d2i_PrivateKey
+  relevance: high
+  reason: 'External source context is security-relevant: signature, privatekey.'
+- name: openssl/openssl
+  url: https://github.com/openssl/openssl
+  file: test/x509_test.c
+  symbol: x509_test
+  api_usage: d2i_PrivateKey in test/x509_test.c
+  evidence:
+  - query="d2i_PrivateKey("
+  - file_url=https://github.com/openssl/openssl/blob/master/test/x509_test.c
+  - fragment=privkey = d2i_PrivateKey(EVP_PKEY_EC, NULL, &p, sizeof(privkeydata));
+  relevance: medium
+  reason: External source context shows crypto/API usage, but path appears to be test/docs/example/benchmark
+    code.
+unknowns: []
+claim_policy:
+  vulnerability: not_assessed
+  security_impact: not_assessed

@@ -1,0 +1,16 @@
+schema: cipherlens_candidate_context_pack_v1
+candidate_id: openssl-d2i-privatekey-full-consumption-gap
+library: OpenSSL
+api_or_function: d2i_PrivateKey
+semantic_type: full_consumption_gap
+trigger_condition: valid DER private key with trailing bytes
+evidence:
+  - source: knowledge_raw/api_constraints/openssl/3.5.5/d2i_PrivateKey.md
+    observation: d2i_PrivateKey DER-decodes a private key and advances the caller-visible input pointer after successful decode.
+  - source: knowledge_raw/api_constraints/openssl/3.5.5/d2i_PrivateKey.md
+    observation: Returned EVP_PKEY ownership belongs to the caller; full-consumption behavior can be observed by comparing the advanced pointer with the end of the supplied DER buffer.
+  - source: weak_candidate_construction
+    observation: This context pack intentionally omits project name, repository, and caller symbol to evaluate source-level caller discovery.
+claim_policy:
+  vulnerability: not_assessed
+  security_impact: not_assessed

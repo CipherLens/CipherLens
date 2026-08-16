@@ -1,0 +1,116 @@
+schema: cipherlens_impact_exploration_v1
+source_context_pack:
+  path: /home/wen/work/crypto-pattern-fuzz/artifacts/caller_audit/x509-v1/candidate_context_pack.yaml
+  schema: cipherlens_candidate_context_pack_v1
+  candidate_id: x509_parsing__generic_mut_001__der_valid_plus_trailing_garbage
+  sha256: cad46610e4a31b9719b4ef38cd255999605800c903cfe1e4c8d49db7d43f7e58
+generated_by: caller_audit.impact_runner
+timestamp: '2026-08-12T13:24:53.089545+00:00'
+provider:
+  name: codex
+  interface: utils.agent_provider.AgentProvider
+  backend: codex-cli
+  model: gpt-5.6-luna
+  reasoning_effort: high
+  sandbox: read-only
+  ephemeral: true
+  workspace: /home/wen/work/clean_sources/openssl-3.5.5
+  timeout_seconds: 900
+result:
+  caller_chain:
+  - SSL_dane_tlsa_add -> dane_tlsa_add -> d2i_X509
+  - tls_process_server_certificate -> d2i_X509
+  - tls_process_client_certificate -> d2i_X509
+  - SSL_use_certificate_ASN1 -> d2i_X509 -> SSL_use_certificate
+  - SSL_CTX_use_certificate_ASN1 -> d2i_X509 -> SSL_CTX_use_certificate
+  - ossl_store_handle_load_result -> try_cert -> d2i_X509_AUX/d2i_X509
+  - OSSL_CRMF_ENCRYPTEDKEY_get1_encCert -> OSSL_CRMF_ENCRYPTEDVALUE_get1_encCert ->
+    d2i_X509
+  - X509_load_cert_file_ex -> d2i_X509_bio -> ASN1_item_d2i_bio
+  candidate_id: x509_parsing__generic_mut_001__der_valid_plus_trailing_garbage
+  confidence: high
+  evidence:
+  - crypto/x509/x_x509.c:126-132 defines the X509 ASN.1 sequence and expands IMPLEMENT_ASN1_FUNCTIONS(X509),
+    which supplies d2i_X509.
+  - include/openssl/asn1t.h:812-820 shows the generated d2i wrapper delegates to ASN1_item_d2i.
+  - crypto/asn1/tasn_dec.c:158-180 shows ASN1_item_d2i invokes the generic decoder
+    with the caller-supplied length and returns the decoded object.
+  - crypto/asn1/tasn_dec.c:469-501 checks that the contents of the current SEQUENCE
+    are fully consumed, then updates the input pointer to the end of that ASN.1 object.
+  - crypto/asn1/tasn_dec.c:1180-1205 checks that a definite-length ASN.1 object does
+    not exceed the supplied input length; this is a bound check for the object, not
+    a comparison requiring the whole supplied buffer to be consumed.
+  - crypto/x509/x_all.c:227-230 shows d2i_X509_bio delegates to ASN1_item_d2i_bio.
+  - crypto/asn1/a_d2i_fp.c:58-76 reads one ASN.1 object from the BIO and passes the
+    resulting object-length buffer to ASN1_item_d2i_ex; the BIO wrapper does not expose
+    a caller-side full-buffer pointer comparison.
+  - ssl/ssl_lib.c:330-343, function dane_tlsa_add, calls d2i_X509 and compares the
+    resulting pointer against the original data and declared length.
+  - ssl/statem/statem_clnt.c:2038-2047, function tls_process_server_certificate, checks
+    certbytes == certstart + cert_len after d2i_X509.
+  - ssl/statem/statem_srvr.c:3705-3712, function tls_process_client_certificate, checks
+    certbytes == certstart + l after d2i_X509.
+  - ssl/ssl_rsa.c:111-130 and :362-381, functions SSL_use_certificate_ASN1 and SSL_CTX_use_certificate_ASN1,
+    call d2i_X509 with a length but do not inspect the advanced pointer afterward.
+  - crypto/store/store_result.c:472-515, function try_cert, attempts d2i_X509_AUX
+    and then d2i_X509 and records a certificate when either returns non-NULL; no full-input
+    comparison is present in this function.
+  - crypto/crmf/crmf_lib.c:867-888, function OSSL_CRMF_ENCRYPTEDVALUE_get1_encCert,
+    decodes decrypted bytes with d2i_X509 and checks only for a non-NULL result.
+  - crypto/x509/by_file.c:90-156, function X509_load_cert_file_ex, uses d2i_X509_bio
+    for ASN.1 files and adds the returned certificate without an explicit trailing-data
+    check.
+  - ssl/t1_trce.c:1300-1328, function ssl_print_certificate, detects q != p + 3 +
+    clen and emits a trailing-garbage diagnostic after parsing.
+  - fuzz/x509.c:34-79 uses the advanced pointer to parse multiple consecutive ASN.1
+    objects, demonstrating intended incremental-pointer usage in a fuzzing caller.
+  findings:
+  - d2i_X509 is generated from the X509 ASN.1 sequence definition and ultimately calls
+    the generic ASN.1 decoder.
+  - The decoder validates the internal length and fields of the X509 SEQUENCE, advances
+    the caller's input pointer to the end of the decoded certificate, and returns
+    an X509 object or NULL.
+  - The low-level memory API receives a maximum input length but the inspected generic
+    wrapper does not require the final pointer to equal the original pointer plus
+    that length. Full-buffer consumption is therefore observable through the advanced
+    pointer and must be enforced by callers when required.
+  - Several TLS protocol callers explicitly enforce full consumption after d2i_X509.
+    The DANE full-certificate path also performs an explicit pointer-and-length equality
+    check.
+  - Several certificate-loading and object-store paths inspect only whether d2i_X509
+    or d2i_X509_bio returned an object. The inspected bodies do not add an explicit
+    full-input comparison.
+  - The BIO variant reads one ASN.1 object from the stream before invoking the decoder;
+    any surrounding handling of subsequent stream bytes is outside d2i_X509 itself.
+  - The trace formatter records trailing bytes as a diagnostic, while the fuzz harness
+    intentionally relies on pointer advancement to decode multiple objects. These
+    are distinct caller behaviors around the same API.
+  guards:
+  - 'Explicit full-consumption guard in ssl/ssl_lib.c:dane_tlsa_add: d2i_X509 success
+    plus p >= data and dlen == p - data.'
+  - 'Explicit full-consumption guard in ssl/statem/statem_clnt.c:tls_process_server_certificate:
+    certbytes == certstart + cert_len.'
+  - 'Explicit full-consumption guard in ssl/statem/statem_srvr.c:tls_process_client_certificate:
+    certbytes == certstart + l.'
+  - 'Diagnostic trailing-byte check in ssl/t1_trce.c:ssl_print_certificate: q != p
+    + 3 + clen; this emits text rather than changing the d2i_X509 result.'
+  - No pointer-end check observed in ssl/ssl_rsa.c:SSL_use_certificate_ASN1 or SSL_CTX_use_certificate_ASN1.
+  - No pointer-end check observed in crypto/store/store_result.c:try_cert, crypto/crmf/crmf_lib.c:OSSL_CRMF_ENCRYPTEDVALUE_get1_encCert,
+    or crypto/x509/by_file.c:X509_load_cert_file_ex.
+  propagation: {}
+  summary: Explored d2i_X509, its ASN.1 implementation, BIO wrapper, and bounded in-workspace
+    callers. The API decodes one length-delimited X.509 object, advances the input
+    pointer past that object, and does not itself require the caller-supplied buffer
+    to end at the same position. Some TLS and DANE callers validate full consumption;
+    several certificate-loading and store paths inspected only decode success.
+  unknowns:
+  - The repository does not identify the external application or harness that produced
+    the Candidate Context Pack app_replay observation.
+  - Caller behavior outside the current OpenSSL workspace was not inspected.
+  - For BIO-based callers, the effect of bytes remaining in the underlying stream
+    depends on the surrounding stream lifecycle, which is not determined by d2i_X509
+    itself.
+claim_policy:
+  runner_assigned_status: false
+  vulnerability: not_assessed_by_runner
+  security_impact: not_assessed_by_runner

@@ -1,0 +1,67 @@
+schema: cipherlens_security_impact_v1
+source_context_pack:
+  path: /home/wen/work/crypto-pattern-fuzz/artifacts/caller_audit/cmac-caller-discovery-v1/impactlift/candidate_context_pack.yaml
+  schema: cipherlens_candidate_context_pack_v1
+  candidate_id: openssl-evp-mac-update-evp-mac-final-mac-lifecycle-semantic-divergence
+  sha256: 90dafe34802e079853be5215105e3b41e2c21b6c50e1001e3f7ad20341764e0f
+source_impact_exploration:
+  path: /home/wen/work/crypto-pattern-fuzz/artifacts/caller_audit/cmac-caller-discovery-v1/impactlift/impact_exploration.yaml
+  schema: cipherlens_impact_exploration_v1
+  candidate_id: openssl-evp-mac-update-evp-mac-final-mac-lifecycle-semantic-divergence
+  sha256: abf2fbf855cfb81b0ded66b8ef62df6b97b326f2b761d90a03e753a586b22778
+source_exploitability:
+  path: /home/wen/work/crypto-pattern-fuzz/artifacts/caller_audit/cmac-caller-discovery-v1/impactlift/exploitability.yaml
+  schema: cipherlens_exploitability_v1
+  candidate_id: openssl-evp-mac-update-evp-mac-final-mac-lifecycle-semantic-divergence
+  sha256: eccba7067f72ecfae5699a09c87c42196de6e8603c34a1a179f7af93c22f544c
+generated_by: caller_audit.security_impact_runner
+timestamp: '2026-08-14T06:29:59.150758+00:00'
+provider:
+  name: codex
+  interface: utils.agent_provider.AgentProvider
+  backend: codex-cli
+  model: gpt-5.6-luna
+  reasoning_effort: high
+  sandbox: read-only
+  ephemeral: true
+  workspace: /home/wen/work/crypto-pattern-fuzz
+  timeout_seconds: 900
+result:
+  affected_security_properties:
+  - unknown
+  candidate_id: openssl-evp-mac-update-evp-mac-final-mac-lifecycle-semantic-divergence
+  confidence: low
+  impact_evidence:
+  - artifacts/triage/mac_cmac_double_final_minimal/results/cmac_double_final_summary.json:120-177
+    records successful repeated EVP_MAC_final and EVP_MAC_update-after-final calls,
+    but only reports return values, output lengths, and bytes; it does not show downstream
+    security use.
+  - artifacts/triage/mac_lifecycle_v2_minimal/cases/min_openssl_cmac_v2_lifecycle.c:50-80
+    exercises lifecycle sequences in a generated harness, not an application security
+    decision path.
+  - artifacts/caller_audit/cmac-caller-discovery-v1/caller_discovery.yaml:29-41 identifies
+    an external lua-openssl caller, but the source is unavailable locally and input
+    provenance, call-sequence control, and result handling are unverified.
+  - The Impact Exploration and Exploitability artifacts explicitly report that no
+    higher-level authentication, authorization, integrity, confidentiality, or other
+    security-sensitive consumer of the MAC result was observed.
+  - The evidence is most consistent with a possible MAC lifecycle semantic gap or
+    API contract divergence; it does not establish that accepted data reaches a security
+    decision or causes a security-property failure.
+  security_classification: insufficient_evidence
+  unknowns:
+  - Whether untrusted input controls EVP_MAC_update bytes, lengths, or lifecycle sequencing
+    through the external Lua binding.
+  - Whether the external binding permits repeated finalization or update-after-final
+    and how it propagates results or errors.
+  - Whether any deployed caller uses the resulting MAC for authentication, authorization,
+    integrity verification, confidentiality protection, or another security decision.
+  - Whether repeated-final or update-after-final behavior varies across OpenSSL versions,
+    providers, MAC implementations, or parameter configurations.
+  - Whether the observed lifecycle behavior can produce an incorrect, stale, truncated,
+    or otherwise security-relevant MAC in a real caller.
+claim_policy:
+  runner_assigned_vulnerability: false
+  vulnerability: not_assessed_by_runner
+  cve: not_assessed_by_runner
+  security_impact: assessment_only

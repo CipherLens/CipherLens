@@ -1,0 +1,122 @@
+schema: cipherlens_impact_exploration_v1
+source_context_pack:
+  path: /home/wen/work/crypto-pattern-fuzz/artifacts/caller_audit/cmac-caller-discovery-v1/impactlift/candidate_context_pack.yaml
+  schema: cipherlens_candidate_context_pack_v1
+  candidate_id: openssl-evp-mac-update-evp-mac-final-mac-lifecycle-semantic-divergence
+  sha256: 90dafe34802e079853be5215105e3b41e2c21b6c50e1001e3f7ad20341764e0f
+generated_by: caller_audit.impact_runner
+timestamp: '2026-08-14T06:28:26.295091+00:00'
+provider:
+  name: codex
+  interface: utils.agent_provider.AgentProvider
+  backend: codex-cli
+  model: gpt-5.6-luna
+  reasoning_effort: high
+  sandbox: read-only
+  ephemeral: true
+  workspace: /home/wen/work/crypto-pattern-fuzz
+  timeout_seconds: 900
+result:
+  caller_chain:
+  - artifacts/triage/mac_cmac_double_final_minimal/cases/min_cmac_double_final_openssl.c:106-112
+    main -> run_case:36-104 -> EVP_MAC_init:76 -> optional EVP_MAC_update:78 -> EVP_MAC_final:80
+    -> EVP_MAC_final:83 -> EVP_MAC_update:86 -> EVP_MAC_final:87
+  - artifacts/triage/mac_lifecycle_v2_minimal/cases/min_openssl_cmac_v2_lifecycle.c:112-130
+    main -> run_case:25-110 -> EVP_MAC_init:59 -> EVP_MAC_update:61 -> EVP_MAC_final:64
+    -> sequence-specific follow-up calls:68-80
+  - 'Context-pack external evidence only: zhaozg/lua-openssl src/mac.c, openssl_mac_ctx_update
+    -> EVP_MAC_update/EVP_MAC_final'
+  candidate_id: openssl-evp-mac-update-evp-mac-final-mac-lifecycle-semantic-divergence
+  confidence: medium
+  evidence:
+  - knowledge_base/api_cards/openssl/EVP_MAC_final.yaml:1-4,10-18 defines EVP_MAC_final(EVP_MAC_CTX
+    *ctx, unsigned char *out, size_t *outl, size_t outsize), with initialized-context
+    and sufficiently sized-output preconditions.
+  - artifacts/triage/mac_cmac_double_final_minimal/results/cmac_lifecycle_doc_review.md:12-18
+    records implementation references stating EVP_MAC_final delegates to the provider
+    final callback, the CMAC provider delegates to CMAC_Final, and CMAC_Final does
+    not mark the context finalized.
+  - artifacts/triage/mac_cmac_double_final_minimal/results/cmac_lifecycle_doc_review.md:20-25
+    records CMAC_Final length-query/repeat usage and CMAC_resume documentation; the
+    generic MAC lifecycle documentation is also noted at lines 24-25.
+  - artifacts/triage/mac_cmac_double_final_minimal/results/cmac_double_final_summary.json:120-132
+    records OpenSSL CMAC AES-128-CBC results with first_final_ret=1, second_final_ret=1,
+    third_final_ret=1, update_ret=1, and outl values of 16.
+  - artifacts/triage/mac_cmac_double_final_minimal/results/cmac_double_final_summary.json:135-177
+    records the same successful follow-up sequence for AES-128-CBC and AES-256-CBC
+    variants, including update after the second final.
+  - artifacts/triage/mac_cmac_double_final_minimal/results/cmac_double_final_summary.json:4-8
+    records no ASAN, UBSAN, or SEGV evidence in the summarized runs.
+  - artifacts/triage/mac_cmac_double_final_minimal/cases/min_cmac_double_final_openssl.c:66-87
+    shows CMAC fetch, initialization, optional update, first final, second final,
+    update after second final, and third final calls.
+  - artifacts/triage/mac_lifecycle_v2_minimal/cases/min_openssl_cmac_v2_lifecycle.c:50-80
+    shows the bounded CMAC lifecycle sequences for update-after-final, repeated final,
+    and update-after-second-final.
+  - artifacts/caller_audit/cmac-caller-discovery-v1/caller_discovery.yaml:29-41 records
+    the supplied external caller-discovery result for zhaozg/lua-openssl src/mac.c
+    and symbol openssl_mac_ctx_update; the source itself is not present in this workspace.
+  findings:
+  - The named APIs are represented in the workspace as OpenSSL EVP_MAC lifecycle APIs.
+    EVP_MAC_update is used with an explicit input pointer and length, while EVP_MAC_final
+    writes a MAC to a caller-provided output buffer and reports its length through
+    outl.
+  - The checked-in OpenSSL implementation files are absent. Low-level implementation
+    behavior is therefore based on the repository's documentation-review artifact,
+    which transcribes references to crypto/evp/mac_lib.c, providers/implementations/macs/cmac_prov.c,
+    and crypto/cmac/cmac.c.
+  - The recorded CMAC sequences allow a second EVP_MAC_final, allow EVP_MAC_update
+    after finalization, and allow a subsequent final call; the recorded outputs use
+    16-byte MAC lengths and distinct output bytes.
+  - The local callers are focused triage and generated harnesses, not an upper-level
+    application integration. They observe return values, output lengths, output bytes,
+    and cleanup behavior.
+  - The supplied Candidate Context Pack reports an external lua-openssl caller in
+    src/mac.c::openssl_mac_ctx_update, but that repository and source file are not
+    checked into the current workspace.
+  - No parser-style full-input-consumption check is associated with these streaming
+    MAC APIs. The relevant boundary is the explicit length passed to EVP_MAC_update
+    and the output capacity passed to EVP_MAC_final.
+  - The workspace evidence records conditional sequencing around initialization and
+    the first final call, but no local application code that consumes the resulting
+    MAC or relies on a terminal-state rejection was found.
+  guards:
+  - artifacts/triage/mac_cmac_double_final_minimal/cases/min_cmac_double_final_openssl.c:66-74
+    checks EVP_MAC_fetch() for NULL before proceeding and constructs the CMAC cipher
+    parameter list.
+  - artifacts/triage/mac_cmac_double_final_minimal/cases/min_cmac_double_final_openssl.c:76-81
+    only performs the optional update and first final when initialization and the
+    optional update have succeeded.
+  - artifacts/triage/mac_cmac_double_final_minimal/cases/min_cmac_double_final_openssl.c:82-84
+    only performs the second final when the first final returned success; calls after
+    that are intentionally exercised at lines 86-87.
+  - artifacts/triage/mac_lifecycle_v2_minimal/cases/min_openssl_cmac_v2_lifecycle.c:50-65
+    checks fetched MAC/context availability, initialization success, and update success
+    before the first final.
+  - artifacts/triage/mac_lifecycle_v2_minimal/cases/min_openssl_cmac_v2_lifecycle.c:66-81
+    gates follow-up sequences on final1_ret == 1, but does not add a terminal-state
+    guard before update-after-final or update-after-second-final.
+  - artifacts/triage/mac_lifecycle_v2_minimal/cases/min_openssl_cmac_v2_lifecycle.c:104-108
+    null-checks context and MAC objects before freeing them.
+  - knowledge_base/api_cards/openssl/EVP_MAC_final.yaml:13-18 lists initialized-context,
+    valid-update-sequence, and sufficiently sized output as API preconditions; it
+    does not document a full-input-consumption guard.
+  propagation: {}
+  summary: Explored EVP_MAC_update and EVP_MAC_final through the workspace API card,
+    CMAC lifecycle documentation artifacts, bounded OpenSSL CMAC harnesses, and the
+    supplied caller-discovery record. The local evidence shows the calls and observed
+    lifecycle outputs, but the OpenSSL implementation and the reported lua-openssl
+    upper-level caller are not present locally.
+  unknowns:
+  - No upper-level application caller source found in current workspace; local call
+    sites are triage/generated harnesses.
+  - The OpenSSL implementation files cited by the documentation review are not checked
+    into the current workspace.
+  - The external zhaozg/lua-openssl src/mac.c caller was supplied by mock external
+    code-search evidence and was not locally inspected.
+  - No downstream caller use of the returned MAC or caller-side lifecycle assumption
+    was observed.
+claim_policy:
+  runner_assigned_status: false
+  vulnerability: not_assessed_by_runner
+  security_impact: not_assessed_by_runner

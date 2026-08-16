@@ -1,0 +1,55 @@
+schema: cipherlens_caller_discovery_v1
+source_candidate_description:
+  path: /home/wen/work/crypto-pattern-fuzz/artifacts/caller_audit/cmac-caller-discovery-v1/cmac_candidate.yaml
+  schema: cipherlens_caller_discovery_candidate_v1
+  candidate_id: openssl-evp-mac-update-evp-mac-final-mac-lifecycle-semantic-divergence
+  sha256: fcb825f4a4152b2409b2932f10512945220f644efe446cdb3341e869d6661fe0
+generated_by: caller_audit.caller_discovery_runner
+timestamp: '2026-08-14T00:00:00+00:00'
+provider:
+  name: local-evidence-caller-discovery
+  interface: utils.agent_provider.AgentProvider
+  backend: local-artifact-scan
+  network: true
+  external_code_search: mock-external-code-search
+  evidence_roots: []
+  workspace_roots: []
+candidate: &id001
+  library: OpenSSL
+  api:
+  - EVP_MAC_update
+  - EVP_MAC_final
+  family: mac_lifecycle_semantic_divergence
+  behavior:
+  - update_after_final_allowed
+  - repeated_final_allowed
+  evidence:
+  - artifacts/triage/mac_cmac_double_final_minimal/results/cmac_double_final_summary.json
+repositories: &id002
+- name: zhaozg/lua-openssl
+  url: https://github.com/zhaozg/lua-openssl
+  confidence: high
+call_sites: &id003
+- repository: zhaozg/lua-openssl
+  file: src/mac.c
+  symbol: openssl_mac_ctx_update
+  matched_api: EVP_MAC_update, EVP_MAC_final
+evidence: &id004
+- source: mock-external-code-search
+  search_query: '"EVP_MAC_update" "EVP_MAC_final" CMAC'
+  matched_source: 'https://github.com/zhaozg/lua-openssl/blob/v0.x/src/mac.c: static
+    int openssl_mac_ctx_update(lua_State *L) {'
+unknowns: &id005 []
+claim_policy: &id006
+  caller_discovery_only: true
+  vulnerability: not_assessed
+  security_impact: not_assessed
+result:
+  candidate_id: openssl-evp-mac-update-evp-mac-final-mac-lifecycle-semantic-divergence
+  candidate: *id001
+  repositories: *id002
+  call_sites: *id003
+  evidence: *id004
+  unknowns: *id005
+  claim_policy: *id006
+  discovered_callers: []

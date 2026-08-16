@@ -1,0 +1,199 @@
+schema: cipherlens_candidate_context_pack_v1
+candidate_id: libdkimpp-public-key
+logical_candidate_id: openssl-d2i-pubkey-full-consumption-gap
+library: openssl
+version: OpenSSL 3.5.5
+family: unknown
+semantic_type:
+  status: production_reachable_candidate
+  reason: Caller behavior and fix control are confirmed on a production-reachable
+    attacker-controlled path.
+  baseline_passed: true
+  dynamic_candidate_confirmed: true
+  fix_control_passed: true
+  production_call_sites_without_check: 1
+  production_reachable: true
+  attacker_controlled_input: true
+  official_protocol_route_found: true
+  security_impact_demonstrated: false
+  vulnerability_confirmed: false
+api_or_function: d2i_PUBKEY
+trigger_condition: DKIM DNS TXT p= public-key field
+observed_behavior: &id001
+  baseline_phase:
+    baseline_case: canonical
+    baseline:
+      input_len: 294
+      accepted: true
+      input_differs: false
+      canonical_roundtrip: true
+      public_key_equal: true
+      signature_verifies: true
+    baseline_passed: true
+    mutation_cases:
+      tail_0500:
+        input_len: 296
+        accepted: true
+        input_differs: true
+        canonical_roundtrip: true
+        public_key_equal: true
+        signature_verifies: true
+      tail_3000:
+        input_len: 296
+        accepted: true
+        input_differs: true
+        canonical_roundtrip: true
+        public_key_equal: true
+        signature_verifies: true
+      tail_020100:
+        input_len: 297
+        accepted: true
+        input_differs: true
+        canonical_roundtrip: true
+        public_key_equal: true
+        signature_verifies: true
+    mutation_case_passes:
+      tail_0500: true
+      tail_3000: true
+      tail_020100: true
+    mutation_pass_count: 3
+    expected_mutation_count: 3
+    mutations_passed: true
+    summaries:
+      libdkimpp_public_key:
+        baseline_ok: true
+        mutations_accepted: 3
+        mutations_rejected: false
+    markers: []
+  fix_control_phase:
+    baseline_case: canonical
+    baseline:
+      input_len: 294
+      accepted: true
+      input_differs: false
+      canonical_roundtrip: true
+      public_key_equal: true
+      signature_verifies: true
+    baseline_passed: true
+    mutation_cases:
+      tail_0500:
+        input_len: 296
+        accepted: false
+        input_differs: true
+        canonical_roundtrip: false
+        public_key_equal: false
+        signature_verifies: false
+      tail_3000:
+        input_len: 296
+        accepted: false
+        input_differs: true
+        canonical_roundtrip: false
+        public_key_equal: false
+        signature_verifies: false
+      tail_020100:
+        input_len: 297
+        accepted: false
+        input_differs: true
+        canonical_roundtrip: false
+        public_key_equal: false
+        signature_verifies: false
+    mutation_case_passes:
+      tail_0500: true
+      tail_3000: true
+      tail_020100: true
+    mutation_pass_count: 3
+    expected_mutation_count: 3
+    mutations_passed: true
+    summaries:
+      libdkimpp_public_key:
+        baseline_ok: true
+        mutations_accepted: false
+        mutations_rejected: 3
+    markers: []
+  baseline_passed: true
+  mutation_candidate_confirmed: true
+  fix_control_passed: true
+  asan_error: false
+  ubsan_error: false
+expected_behavior: unknown
+oracle_evidence: *id001
+testcase: MBEDTLS-POC-0020
+harness: unknown
+status: production_reachable_candidate
+current_classification: production_reachable_candidate
+impactlift_eligibility:
+  status: eligible
+  reason: latest explicit lifecycle classification remains candidate-like
+unresolved_questions: []
+source_artifacts:
+- artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/caller_triage.yaml
+- artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/dynamic_evidence.yaml
+- artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/static_checks.yaml
+provenance:
+  generated_by: analysis.candidate_context_pack
+  source: &id002
+    role: candidate_emission
+    path: artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/caller_triage.yaml
+    artifact: caller_triage.yaml
+    schema: cipherlens_caller_audit_v0_1
+    generated_by: unknown
+  sources:
+  - *id002
+  - role: caller_audit
+    path: artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/dynamic_evidence.yaml
+    artifact: dynamic_evidence.yaml
+    schema: unknown
+    generated_by: unknown
+  - role: caller_audit
+    path: artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/static_checks.yaml
+    artifact: static_checks.yaml
+    schema: unknown
+    generated_by: unknown
+  field_sources:
+    candidate_id:
+      field: cli.candidate_id
+      source: builder_input
+    logical_candidate_id:
+      field: cli.logical_candidate_id
+      source: builder_input
+    library:
+      field: target_library
+      source: existing_artifact
+    version:
+      field: crypto_backend
+      source: existing_artifact
+    family:
+      field: unknown
+      source: unknown
+    semantic_type:
+      field: verdict
+      source: existing_artifact
+    api_or_function:
+      field: target_api
+      source: existing_artifact
+    trigger_condition:
+      field: input_object
+      source: existing_artifact
+    observed_behavior:
+      field: dynamic_evidence
+      source: existing_artifact
+    expected_behavior:
+      field: unknown
+      source: unknown
+    oracle_evidence:
+      field: dynamic_evidence
+      source: existing_artifact
+    testcase:
+      field: source_case
+      source: existing_artifact
+    harness:
+      field: unknown
+      source: unknown
+  lifecycle_states:
+  - classification: production_reachable_candidate
+    path: artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/caller_triage.yaml
+    field: verdict.status
+claim_policy:
+  vulnerability: not_assessed
+  security_impact: not_assessed
+  propagation: not_assessed

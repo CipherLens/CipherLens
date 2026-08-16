@@ -1,0 +1,112 @@
+schema: cipherlens_impact_exploration_v1
+source_context_pack:
+  path: /home/wen/work/crypto-pattern-fuzz/artifacts/caller_audit/x509-v1/candidate_context_pack.yaml
+  schema: cipherlens_candidate_context_pack_v1
+  candidate_id: x509_parsing__generic_mut_001__der_valid_plus_trailing_garbage
+  sha256: cad46610e4a31b9719b4ef38cd255999605800c903cfe1e4c8d49db7d43f7e58
+generated_by: caller_audit.impact_runner
+timestamp: '2026-08-12T14:45:02.835475+00:00'
+provider:
+  name: codex
+  interface: utils.agent_provider.AgentProvider
+  backend: codex-cli
+  model: gpt-5.6-luna
+  reasoning_effort: high
+  sandbox: read-only
+  ephemeral: true
+  workspace: /home/wen/work/mlspp
+  timeout_seconds: 900
+result:
+  caller_chain:
+  - Credential::x509 (src/credential.cpp:262-265) -> X509Credential::X509Credential
+    (src/credential.cpp:47-72) -> Certificate::Certificate(const bytes&) (lib/hpke/src/certificate.cpp:377-382)
+    -> Certificate::ParsedCertificate::parse (lib/hpke/src/certificate.cpp:92-102)
+    -> d2i_X509 (lib/hpke/src/certificate.cpp:96)
+  - X509Credential::operator>> (src/credential.cpp:98-108) -> X509Credential::X509Credential
+    (src/credential.cpp:47-72) -> Certificate::Certificate(const bytes&) -> d2i_X509
+  - Session::Inner::import_handshake (src/session.cpp:197-220) -> tls::get<MLSMessage>
+    (src/session.cpp:200) -> generic TLS variant/struct decoding (lib/tls_syntax/include/tls/tls_syntax.h:466-473,
+    543-575) -> Credential decoding -> X509Credential::operator>>
+  candidate_id: x509_parsing__generic_mut_001__der_valid_plus_trailing_garbage
+  confidence: high
+  evidence:
+  - 'lib/hpke/src/certificate.cpp:92-102, Certificate::ParsedCertificate::parse: initializes
+    a pointer at der.data(), calls d2i_X509 with der.size(), checks only whether the
+    returned X509 pointer is null, and does not compare the advanced pointer with
+    the end of the input.'
+  - lib/hpke/src/certificate.cpp:196-212, ParsedCertificate constructor derives certificate
+    fields, public key information, hashes, names, extensions, CA status, digest,
+    and validity times from the returned X509 object.
+  - lib/hpke/src/certificate.cpp:377-382, Certificate::Certificate(const bytes&) stores
+    the parsed object while assigning raw directly from the caller-provided der bytes.
+  - src/credential.cpp:47-72, X509Credential validates that the chain is non-empty,
+    parses every chain element as a Certificate, derives the leaf public key/signature
+    scheme, and checks each adjacent certificate with Certificate::valid_from.
+  - src/credential.cpp:98-108, X509Credential deserialization reads the TLS certificate
+    vector and reconstructs the credential through the same DER parsing constructor.
+  - lib/tls_syntax/include/tls/tls_syntax.h:286-312, the TLS vector reader checks
+    that the declared vector size fits the remaining buffer, decodes elements from
+    an exact sub-buffer, and consumes that declared field.
+  - lib/tls_syntax/include/tls/tls_syntax.h:327-331, tls::unmarshal constructs an
+    istream and invokes r >> value without an explicit final r.empty() check.
+  - lib/tls_syntax/test/tls_syntax.cpp:129-137, the test helper explicitly checks
+    r.empty(), but this check is not present in the production tls::unmarshal abbreviation.
+  - lib/hpke/test/certificate.cpp:45-59 and 565-572, repository tests construct Certificate
+    objects from DER and compare parsed DER-based certificates with PEM-parsed certificates.
+  - test/credential.cpp:43-48, 136-143, and 202-211, repository tests construct X509
+    credentials, inspect retained der_chain bytes, and exercise TLS marshal/unmarshal
+    round trips.
+  findings:
+  - The named API is used through Certificate::ParsedCertificate::parse. On a successful
+    d2i_X509 call, OpenSSL parses one X.509 object from the supplied pointer and advances
+    the pointer; this call site discards the advanced pointer after the null check.
+  - No repository check was found that requires the d2i_X509-consumed pointer to equal
+    der.data() + der.size(). The DER byte-string boundary is enforced by the surrounding
+    TLS vector reader where applicable, but the DER parser's consumption of that bounded
+    byte string is not checked here.
+  - Certificate::Certificate(const bytes&) retains the original input bytes in raw,
+    while ParsedCertificate stores and processes the X509 object returned by OpenSSL.
+    The source therefore keeps both the caller-provided byte representation and the
+    parsed representation.
+  - 'X509Credential performs chain-level checks after parsing: the chain must be non-empty,
+    the leaf public-key algorithm must be supported, and adjacent certificates must
+    pass Certificate::valid_from. These checks operate on parsed X509 objects rather
+    than on a DER-consumption counter.'
+  - The direct library API is exercised by hpke certificate tests and the higher-level
+    MLS X509Credential API is exercised by credential and session tests. No separate
+    application-specific caller of d2i_X509 was found in the checkout.
+  - TLS deserialization can reach X509Credential::operator>> through generic struct
+    and variant decoding. The production tls::unmarshal helper does not itself assert
+    that the outer input stream is empty after decoding, while the nested certificate
+    byte vector is decoded within its declared length.
+  guards:
+  - Certificate::ParsedCertificate::parse checks d2i_X509's returned pointer for null
+    at lib/hpke/src/certificate.cpp:97-99.
+  - X509Credential rejects an empty certificate chain at src/credential.cpp:50-52.
+  - X509Credential parses every chain element and checks adjacent certificate signatures
+    with valid_from at src/credential.cpp:54-71.
+  - The TLS vector reader checks declared length against remaining bytes at lib/tls_syntax/include/tls/tls_syntax.h:288-293
+    and decodes the vector from an exact bounded sub-buffer at lines 298-312.
+  - No explicit full-DER-consumption check was found after d2i_X509 at lib/hpke/src/certificate.cpp:96.
+  - No explicit outer-stream exhaustion check was found in tls::unmarshal at lib/tls_syntax/include/tls/tls_syntax.h:327-331;
+    an exhaustion assertion appears only in the test helper at lib/tls_syntax/test/tls_syntax.cpp:133-137.
+  propagation: {}
+  summary: Explored d2i_X509 and its repository call paths. The OpenSSL call is wrapped
+    by Certificate::ParsedCertificate::parse, which checks only parse success and
+    does not inspect the pointer advanced by d2i_X509. The parsed X509 object feeds
+    certificate metadata, public-key extraction, and chain-signature checks, while
+    the original DER bytes are retained by Certificate::raw and X509Credential::der_chain.
+    Relevant callers exist in the MLS credential library, generic TLS deserialization,
+    session parsing, and tests. No separate application-specific caller was found.
+  unknowns:
+  - No separate application-layer caller found; observed callers are library code,
+    protocol/session code, and tests.
+  - The supplied harness and runtime replay implementation are not present in the
+    current checkout, so the repository exploration does not independently reproduce
+    the Context Pack's oracle observations.
+  - The exact OpenSSL version and provider configuration used by the Context Pack
+    are not identified in the inspected source.
+claim_policy:
+  runner_assigned_status: false
+  vulnerability: not_assessed_by_runner
+  security_impact: not_assessed_by_runner

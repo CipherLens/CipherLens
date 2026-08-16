@@ -1,0 +1,80 @@
+schema: cipherlens_candidate_context_pack_v1
+candidate_id: openssl-evp-mac-update-evp-mac-final-mac-lifecycle-semantic-divergence
+library: OpenSSL
+version: unknown
+family: mac_lifecycle_semantic_divergence
+semantic_type: mac_lifecycle_semantic_divergence
+api_or_function: EVP_MAC_update, EVP_MAC_final
+trigger_condition: update_after_final_allowed; repeated_final_allowed
+observed_behavior:
+  candidate_behavior:
+  - update_after_final_allowed
+  - repeated_final_allowed
+  repositories_discovered:
+  - zhaozg/lua-openssl
+  call_sites_discovered:
+  - zhaozg/lua-openssl:src/mac.c:openssl_mac_ctx_update:EVP_MAC_update, EVP_MAC_final
+  assessment_boundary: caller_discovery_only
+oracle_evidence:
+  candidate_evidence:
+  - artifacts/triage/mac_cmac_double_final_minimal/results/cmac_double_final_summary.json
+  caller_discovery_artifact: /home/wen/work/crypto-pattern-fuzz/artifacts/caller_audit/cmac-caller-discovery-v1/caller_discovery.yaml
+  caller_discovery_evidence: &id001
+  - source: mock-external-code-search
+    search_query: '"EVP_MAC_update" "EVP_MAC_final" CMAC'
+    matched_source: 'https://github.com/zhaozg/lua-openssl/blob/v0.x/src/mac.c: static
+      int openssl_mac_ctx_update(lua_State *L) {'
+source_artifacts:
+- /home/wen/work/crypto-pattern-fuzz/artifacts/caller_audit/cmac-caller-discovery-v1/caller_discovery.yaml
+- artifacts/triage/mac_cmac_double_final_minimal/results/cmac_double_final_summary.json
+caller_discovery_evidence:
+  repositories:
+  - name: zhaozg/lua-openssl
+    url: https://github.com/zhaozg/lua-openssl
+    confidence: high
+  call_sites:
+  - repository: zhaozg/lua-openssl
+    file: src/mac.c
+    symbol: openssl_mac_ctx_update
+    matched_api: EVP_MAC_update, EVP_MAC_final
+  evidence: *id001
+  unknowns: []
+  claim_policy:
+    caller_discovery_only: true
+    vulnerability: not_assessed
+    security_impact: not_assessed
+provenance:
+  generated_by: analysis.candidate_context_pack
+  source:
+    role: caller_discovery
+    path: /home/wen/work/crypto-pattern-fuzz/artifacts/caller_audit/cmac-caller-discovery-v1/caller_discovery.yaml
+    artifact: caller_discovery.yaml
+    schema: cipherlens_caller_discovery_v1
+    generated_by: unknown
+  sources:
+  - role: caller_discovery
+    path: /home/wen/work/crypto-pattern-fuzz/artifacts/caller_audit/cmac-caller-discovery-v1/caller_discovery.yaml
+    artifact: caller_discovery.yaml
+    schema: cipherlens_caller_discovery_v1
+    generated_by: unknown
+  field_sources:
+    candidate_id:
+      field: source_candidate_description.candidate_id
+      source: caller_discovery
+    library:
+      field: candidate.library
+      source: caller_discovery
+    family:
+      field: candidate.family
+      source: caller_discovery
+    api_or_function:
+      field: candidate.api
+      source: caller_discovery
+    caller_discovery_evidence:
+      field: repositories/call_sites/evidence
+      source: caller_discovery
+claim_policy:
+  vulnerability: not_assessed
+  security_impact: not_assessed
+  cve: not_assessed
+  propagation: not_assessed

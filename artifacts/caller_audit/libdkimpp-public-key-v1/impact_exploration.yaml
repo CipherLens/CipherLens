@@ -1,0 +1,116 @@
+schema: cipherlens_impact_exploration_v1
+source_context_pack:
+  path: /home/wen/work/crypto-pattern-fuzz/artifacts/caller_audit/libdkimpp-public-key-v1/candidate_context_pack.yaml
+  schema: cipherlens_candidate_context_pack_v1
+  candidate_id: libdkimpp-public-key
+  sha256: 7eca574a930d85ee36278a944d5e09036cdda6e828adaa525108fb9057126d25
+generated_by: caller_audit.impact_runner
+timestamp: '2026-08-13T00:00:00+00:00'
+provider:
+  name: impactlift-static-exploration
+  interface: utils.agent_provider.AgentProvider
+  backend: deterministic-local-provider
+  model: none
+  reasoning_effort: manual-evidence-synthesis
+  workspace: /home/wen/work/crypto-pattern-fuzz
+  source_artifacts:
+  - artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/caller_triage.yaml
+  - artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/static_checks.yaml
+  - artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/dynamic_evidence.yaml
+  - artifacts/caller_audit/libdkimpp-public-key-impact-v1/data_flow.md
+  - artifacts/caller_audit/libdkimpp-public-key-impact-v1/experiments/experiment_summary.yaml
+  - caller_audit/fix_controls/libdkimpp_public_key_full_consumption.patch
+result:
+  candidate_id: libdkimpp-public-key
+  summary: Explored the libdkim++ d2i_PUBKEY caller chain. DKIM public-key text from
+    the DNS TXT p= field is whitespace-normalized, base64-decoded, and passed to d2i_PUBKEY
+    through DKIM::PublicKey::Parse. The production call site checks only that d2i_PUBKEY
+    returns an EVP_PKEY and that the key type is RSA/RSA2; it does not compare the
+    advanced DER pointer with the decoded input end. The parsed RSA key then reaches
+    DKIM key-record constraints and RSA_verify. This is a propagated full-consumption
+    candidate, not a vulnerability confirmation.
+  findings:
+  - 'The audited production call site is src/PublicKey.cpp:122: EVP_PKEY* publicKey
+    = d2i_PUBKEY(nullptr, &tmp2, tmp.size()).'
+  - PublicKey::Parse obtains p= from the DKIM key tag list, rejects missing or empty
+    p=, removes whitespace, base64-decodes it into tmp, and passes tmp/tmp.size()
+    to d2i_PUBKEY.
+  - The baseline caller checks publicKey != nullptr and then requires EVP_PKEY_base_id(publicKey)
+    to be RSA/RSA2; no tmp2 == tmp.data() + tmp.size() check is present in the baseline.
+  - The fix-control patch records tmp_end = tmp2 + tmp.size() before d2i_PUBKEY and
+    rejects if tmp2 != tmp_end, preserving canonical input and rejecting the tailed
+    inputs.
+  - Dynamic evidence records canonical SPKI accepted with signature verification,
+    and tail_0500, tail_3000, and tail_020100 accepted by the baseline with canonical_roundtrip=true,
+    public_key_equal=true, and signature_verifies=true.
+  - Dynamic fix-control evidence records the same three tailed cases rejected before
+    key use, while canonical still passes.
+  - After parsing, PublicKey::Parse stores the RSA key with EVP_PKEY_get1_RSA; later
+    Validatory::CheckSignature enforces h=, k=, t=s constraints and calls RSA_verify
+    with pub.GetRSAPublicKey().
+  - 'The existing impact experiment shows parser-level differential behavior: libdkim++
+    baseline accepts tailed SPKI variants, while libdkim++ fix-control and Go crypto/x509
+    reject them.'
+  evidence:
+  - 'artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/call_sites.jsonl: src/PublicKey.cpp:122
+    is the single production d2i_PUBKEY call site and the context shows no end-pointer
+    comparison after the call.'
+  - 'artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/static_checks.yaml: call_site_count=1,
+    production_call_site_count=1, production_without_full_consumption_check=1.'
+  - 'artifacts/caller_audit/libdkimpp-public-key-v1/v0.1/dynamic_evidence.yaml: baseline
+    accepts canonical plus tail_0500, tail_3000, tail_020100 with signature_verifies=true;
+    fix-control rejects the three tailed cases.'
+  - 'caller_audit/fix_controls/libdkimpp_public_key_full_consumption.patch: adds tmp_end
+    and rejects when tmp2 != tmp_end with PermanentError("Public key contains trailing
+    DER data").'
+  - 'artifacts/caller_audit/libdkimpp-public-key-impact-v1/data_flow.md: documents
+    RFC5322 message -> Validatory -> DNS TXT p= -> Base64_Decode -> d2i_PUBKEY ->
+    EVP_PKEY_get1_RSA -> RSA_verify.'
+  - 'artifacts/caller_audit/libdkimpp-public-key-impact-v1/experiments/parser_matrix.jsonl:
+    baseline accepts tailed SPKI variants with the same canonical_spki_sha256, fix-control
+    and Go reject the tailed variants.'
+  - 'artifacts/caller_audit/libdkimpp-public-key-impact-v1/experiments/dkim_regression_matrix.jsonl:
+    baseline DKIM result is pass for the three tailed records; fix-control result
+    is permerror at key parsing.'
+  confidence: high
+  caller_chain:
+  - RFC 5322 message -> DKIM::Validatory constructor parses message and collects DKIM-Signature
+    headers.
+  - DKIM::Validatory::GetSignature -> DKIM::Signature::Parse and CheckBodyHash.
+  - DKIM::Validatory::GetPublicKey builds selector + "._domainkey." + signing domain,
+    then obtains DNS TXT through CustomDNSResolver or DKIM::Util::Resolver::GetTXT.
+  - DNS TXT key record -> DKIM::PublicKey::Parse(publicKey).
+  - DKIM::PublicKey::Parse -> TagList::Parse -> required p= tag -> whitespace removal
+    -> Base64_Decode(p=).
+  - Decoded SPKI bytes -> d2i_PUBKEY(nullptr, &tmp2, tmp.size()) at src/PublicKey.cpp:122.
+  - Returned EVP_PKEY -> RSA/RSA2 type check -> EVP_PKEY_get1_RSA -> PublicKey::m_publicKeyRSA.
+  - DKIM::Validatory::CheckSignature -> key-record constraints h=/k=/t=s -> canonicalized
+    signed-header hash -> RSA_verify(..., pub.GetRSAPublicKey()).
+  guards:
+  - Missing p= is rejected with PermanentError("Missing public key (p)").
+  - Empty p= is rejected as revoked with PermanentError("Public key is revoked (p)").
+  - Invalid DER that causes d2i_PUBKEY to return null is rejected with PermanentError("Public
+    key could not be loaded (invalid DER data)").
+  - Parsed EVP_PKEY must have RSA/RSA2 base id on the RSA signature path.
+  - CheckSignature enforces key-record h= digest restrictions, k= key type consistency,
+    and t=s identity-domain equality.
+  - RSA_verify must return 1 for DKIM verification success.
+  - 'Baseline guard gap: no decoded-DER full-consumption check after d2i_PUBKEY.'
+  - 'Fix-control guard: tmp2 must equal tmp_end after d2i_PUBKEY, otherwise the key
+    is rejected before RSA extraction.'
+  propagation: {}
+  unknowns:
+  - No real downstream DMARC evaluator, mail gateway, filtering rule, cache, revocation
+    store, allowlist, blocklist, or authorization decision was exercised.
+  - No victim-domain DNS record control, victim private-key control, or signature
+    forgery path is demonstrated.
+  - The existing experiments use deterministic local messages and an in-memory CustomDNSResolver
+    rather than real DNS or an external mail service.
+  - Whether any deployed caller treats parser accept/reject differences as a security-relevant
+    decision remains unknown.
+  - Whether a real caller stores raw p=, decoded DER, or parsed-key fingerprints for
+    policy decisions remains unknown.
+claim_policy:
+  runner_assigned_status: false
+  vulnerability: not_assessed_by_runner
+  security_impact: not_assessed_by_runner

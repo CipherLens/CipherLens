@@ -1,0 +1,140 @@
+schema: cipherlens_caller_discovery_schema_v1
+artifact_schema: cipherlens_caller_discovery_v1
+context_pack_schema: cipherlens_candidate_context_pack_v1
+candidate_description_schema: cipherlens_caller_discovery_candidate_v1
+accepted_input_schemas:
+  - cipherlens_candidate_context_pack_v1
+  - cipherlens_caller_discovery_candidate_v1
+required_candidate_fields:
+  - library
+  - api
+  - family
+required_result_fields:
+  - candidate
+  - repositories
+  - call_sites
+  - evidence
+  - unknowns
+  - claim_policy
+optional_result_fields:
+  - candidate_id
+  - discovered_callers
+field_types:
+  candidate_id:
+    type: string
+  candidate:
+    type: object
+    additionalProperties: false
+    required:
+      - library
+      - api
+      - family
+    properties:
+      library:
+        type: string
+      api:
+        type: array
+        items:
+          type: string
+      family:
+        type: string
+      behavior:
+        type: array
+        items:
+          type: string
+      evidence:
+        type: array
+        items:
+          type: string
+  repositories:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - url
+        - confidence
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+        confidence:
+          type: string
+          enum:
+            - high
+            - medium
+            - low
+            - unknown
+  call_sites:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - repository
+        - file
+        - symbol
+        - matched_api
+      properties:
+        repository:
+          type: string
+        file:
+          type: string
+        symbol:
+          type: string
+        matched_api:
+          type: string
+  evidence:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - search_query
+        - matched_source
+      properties:
+        search_query:
+          type: string
+        matched_source:
+          type: string
+        source:
+          type: string
+  unknowns:
+    type: array
+    items:
+      type: string
+  discovered_callers:
+    type: array
+    items:
+      type: object
+  claim_policy:
+    type: object
+    additionalProperties: false
+    required:
+      - caller_discovery_only
+      - vulnerability
+      - security_impact
+    properties:
+      caller_discovery_only:
+        type: boolean
+      vulnerability:
+        type: string
+        enum:
+          - not_assessed
+      security_impact:
+        type: string
+        enum:
+          - not_assessed
+additional_result_fields: false
+allowed_confidence:
+  - high
+  - medium
+  - low
+  - unknown
+claim_policy:
+  caller_discovery_only: true
+  vulnerability_inference: false
+  exploitability_inference: false
+  security_impact_inference: false

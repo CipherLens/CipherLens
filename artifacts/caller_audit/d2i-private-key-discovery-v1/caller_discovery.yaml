@@ -1,0 +1,1008 @@
+schema: cipherlens_source_caller_discovery_v1
+candidate_id: openssl-d2i-privatekey-full-consumption-gap
+searched_workspace: /home/wen/work
+generated_by: caller_audit.source_caller_discovery
+timestamp: '2026-08-13T09:14:52.680853+00:00'
+source_context_pack:
+  path: /home/wen/work/crypto-pattern-fuzz/artifacts/caller_audit/d2i-private-key-discovery-v1/candidate_context_pack.yaml
+  schema: cipherlens_candidate_context_pack_v1
+  candidate_id: openssl-d2i-privatekey-full-consumption-gap
+  sha256: 3533f70e6461b008cc111525319c588676ddb6b19d1d0410754c0fde222be1f7
+discovered_callers:
+- repository:
+    name: mlspp
+    path: /home/wen/work/mlspp
+  file: lib/hpke/src/rsa.cpp
+  symbol: hpke::RSASignature::deserialize_private
+  api_usage: d2i_PrivateKey at lib/hpke/src/rsa.cpp:92
+  evidence:
+  - '/home/wen/work/mlspp/lib/hpke/src/rsa.cpp:92: auto* pkey = d2i_PrivateKey('
+  - '/home/wen/work/mlspp/lib/hpke/src/rsa.cpp:92: inferred_symbol=hpke::RSASignature::deserialize_private'
+  - '/home/wen/work/mlspp/lib/hpke/src/rsa.cpp:context:84: '
+  - '/home/wen/work/mlspp/lib/hpke/src/rsa.cpp:context:85:   return raw;'
+  - '/home/wen/work/mlspp/lib/hpke/src/rsa.cpp:context:86: }'
+  - '/home/wen/work/mlspp/lib/hpke/src/rsa.cpp:context:87: '
+  - '/home/wen/work/mlspp/lib/hpke/src/rsa.cpp:context:88: std::unique_ptr<Signature::PrivateKey>'
+  - '/home/wen/work/mlspp/lib/hpke/src/rsa.cpp:context:89: RSASignature::deserialize_private(const
+    bytes& skm) const'
+  - '/home/wen/work/mlspp/lib/hpke/src/rsa.cpp:context:90: {'
+  - '/home/wen/work/mlspp/lib/hpke/src/rsa.cpp:context:91:   const auto* data_ptr
+    = skm.data();'
+  - '/home/wen/work/mlspp/lib/hpke/src/rsa.cpp:context:92:   auto* pkey = d2i_PrivateKey('
+  - '/home/wen/work/mlspp/lib/hpke/src/rsa.cpp:context:93:     EVP_PKEY_RSA, nullptr,
+    &data_ptr, static_cast<int>(skm.size()));'
+  - '/home/wen/work/mlspp/lib/hpke/src/rsa.cpp:context:94:   if (pkey == nullptr)
+    {'
+  - '/home/wen/work/mlspp/lib/hpke/src/rsa.cpp:context:95:     throw openssl_error();'
+  - '/home/wen/work/mlspp/lib/hpke/src/rsa.cpp:context:96:   }'
+  - '/home/wen/work/mlspp/lib/hpke/src/rsa.cpp:context:97:   return std::make_unique<RSASignature::PrivateKey>(pkey);'
+  - '/home/wen/work/mlspp/lib/hpke/src/rsa.cpp:context:98: }'
+  - '/home/wen/work/mlspp/lib/hpke/src/rsa.cpp:context:99: '
+  - '/home/wen/work/mlspp/lib/hpke/src/rsa.cpp:context:100: bytes'
+  relevance: high
+  reason: 'Source context is security-relevant: mls.'
+- repository:
+    name: clean_sources
+    path: /home/wen/work/clean_sources
+  file: openssl-3.5.5/apps/speed.c
+  symbol: EVP_PKEY_CTX_free
+  api_usage: d2i_PrivateKey at openssl-3.5.5/apps/speed.c:3305
+  evidence:
+  - '/home/wen/work/clean_sources/openssl-3.5.5/apps/speed.c:3305: st = (rsa_key =
+    d2i_PrivateKey(EVP_PKEY_RSA, NULL, &p,'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/apps/speed.c:3305: inferred_symbol=EVP_PKEY_CTX_free'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/apps/speed.c:context:3297:                 &&
+    EVP_PKEY_keygen(genctx, &rsa_key) > 0;'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/apps/speed.c:context:3298:             BN_free(bn);'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/apps/speed.c:context:3299:             bn
+    = NULL;'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/apps/speed.c:context:3300:             EVP_PKEY_CTX_free(genctx);'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/apps/speed.c:context:3301:             genctx
+    = NULL;'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/apps/speed.c:context:3302:         }
+    else {'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/apps/speed.c:context:3303:             const
+    unsigned char *p = rsa_keys[testnum].data;'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/apps/speed.c:context:3304: '
+  - '/home/wen/work/clean_sources/openssl-3.5.5/apps/speed.c:context:3305:             st
+    = (rsa_key = d2i_PrivateKey(EVP_PKEY_RSA, NULL, &p,'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/apps/speed.c:context:3306:                       rsa_keys[testnum].length))'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/apps/speed.c:context:3307:                 !=
+    NULL;'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/apps/speed.c:context:3308:         }'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/apps/speed.c:context:3309: '
+  - '/home/wen/work/clean_sources/openssl-3.5.5/apps/speed.c:context:3310:         for
+    (i = 0; st && i < loopargs_len; i++) {'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/apps/speed.c:context:3311:             loopargs[i].rsa_sign_ctx[testnum]
+    = EVP_PKEY_CTX_new(rsa_key, NULL);'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/apps/speed.c:context:3312:             loopargs[i].sigsize
+    = loopargs[i].buflen;'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/apps/speed.c:context:3313:             if
+    (loopargs[i].rsa_sign_ctx[testnum] == NULL'
+  relevance: medium
+  reason: Source context shows crypto/API parsing usage.
+- repository:
+    name: clean_sources
+    path: /home/wen/work/clean_sources
+  file: openssl-3.5.5/test/x509_test.c
+  symbol: test_get_argument_count
+  api_usage: d2i_PrivateKey at openssl-3.5.5/test/x509_test.c:304
+  evidence:
+  - '/home/wen/work/clean_sources/openssl-3.5.5/test/x509_test.c:304: privkey = d2i_PrivateKey(EVP_PKEY_EC,
+    NULL, &p, sizeof(privkeydata));'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/test/x509_test.c:304: inferred_symbol=test_get_argument_count'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/test/x509_test.c:context:296:         TEST_error("Must
+    specify a certificate file self-signed with RSA-PSS.\n");'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/test/x509_test.c:context:297:         return
+    0;'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/test/x509_test.c:context:298:     }'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/test/x509_test.c:context:299: '
+  - '/home/wen/work/clean_sources/openssl-3.5.5/test/x509_test.c:context:300:     p
+    = pubkeydata;'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/test/x509_test.c:context:301:     pubkey
+    = d2i_PUBKEY(NULL, &p, sizeof(pubkeydata));'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/test/x509_test.c:context:302: '
+  - '/home/wen/work/clean_sources/openssl-3.5.5/test/x509_test.c:context:303:     p
+    = privkeydata;'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/test/x509_test.c:context:304:     privkey
+    = d2i_PrivateKey(EVP_PKEY_EC, NULL, &p, sizeof(privkeydata));'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/test/x509_test.c:context:305: '
+  - '/home/wen/work/clean_sources/openssl-3.5.5/test/x509_test.c:context:306:     if
+    (pubkey == NULL || privkey == NULL) {'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/test/x509_test.c:context:307:         BIO_printf(bio_err,
+    "Failed to create keys\n");'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/test/x509_test.c:context:308:         return
+    0;'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/test/x509_test.c:context:309:     }'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/test/x509_test.c:context:310: '
+  - '/home/wen/work/clean_sources/openssl-3.5.5/test/x509_test.c:context:311:     /*
+    Note this digest is different from the certificate digest */'
+  - '/home/wen/work/clean_sources/openssl-3.5.5/test/x509_test.c:context:312:     signmd
+    = EVP_MD_fetch(NULL, "SHA384", NULL);'
+  relevance: medium
+  reason: Source context shows crypto/API parsing usage, but path appears to be test/example/benchmark
+    code.
+- repository:
+    name: clean_sources
+    path: /home/wen/work/clean_sources
+  file: wolfssl/tests/api.c
+  symbol: ExpectIntEQ
+  api_usage: d2i_PrivateKey at wolfssl/tests/api.c:17275
+  evidence:
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:17275: ExpectNotNull(priv =
+    d2i_PrivateKey(EVP_PKEY_RSA, NULL,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:17275: inferred_symbol=ExpectIntEQ'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17267:         X509_EXTENSION_free(sid_ext);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17268:     }'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17269:     ExpectIntEQ(X509_REQ_add_extensions(x509,
+    exts), 1);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17270:     ExpectTrue((f
+    = XFOPEN(key_fname, "rb")) != XBADFILE);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17271:     ExpectIntGT(derSz
+    = (int)XFREAD(der, 1, sizeof(der), f), 0);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17272:     if (f !=
+    XBADFILE)'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17273:         XFCLOSE(f);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17274:     pt = der;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17275:     ExpectNotNull(priv
+    = d2i_PrivateKey(EVP_PKEY_RSA, NULL,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17276:                                         (const
+    unsigned char**)&pt, derSz));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17277:     ExpectIntGT(X509_REQ_sign(x509,
+    priv, EVP_sha256()), 0);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17278:     pt = der;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17279:     ExpectIntGT(derSz
+    = i2d_X509_REQ(x509, &pt), 0);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17280:     X509_REQ_free(x509);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17281:     x509 = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17282:     ExpectNull(d2i_X509_REQ_INFO(&x509,
+    NULL, derSz));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17283:     pt = badDer;'
+  relevance: medium
+  reason: Source context shows crypto/API parsing usage, but path appears to be test/example/benchmark
+    code.
+- repository:
+    name: clean_sources
+    path: /home/wen/work/clean_sources
+  file: wolfssl/tests/api.c
+  symbol: ExpectIntGT
+  api_usage: d2i_PrivateKey at wolfssl/tests/api.c:16442
+  evidence:
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:16442: ExpectNotNull(pkey =
+    d2i_PrivateKey(EVP_PKEY_RSA, NULL, &p, bytes));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:16442: inferred_symbol=ExpectIntGT'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16434:         file
+    = XBADFILE;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16435:     }'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16436: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16437:     p = pkcs8_buffer;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16438: #ifdef OPENSSL_ALL'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16439:     /* Try to
+    decode - auto-detect key type. */'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16440:     ExpectNotNull(pkey
+    = d2i_AutoPrivateKey(NULL, &p, bytes));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16441: #else'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16442:     ExpectNotNull(pkey
+    = d2i_PrivateKey(EVP_PKEY_RSA, NULL, &p, bytes));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16443: #endif'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16444: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16445:     /* Get PEM
+    encoded RSA PKCS#8 data. */'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16446:     ExpectTrue((file
+    = XFOPEN(rsaPemPkcs8File, "rb")) != XBADFILE);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16447:     ExpectIntGT((bytes
+    = (int)XFREAD(pkcs8_buffer, 1, sizeof(pkcs8_buffer),'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16448:         file)),
+    0);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16449:     if (file
+    != XBADFILE) {'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16450:         XFCLOSE(file);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:16533: ExpectNotNull(pkey =
+    d2i_PrivateKey(EVP_PKEY_EC, NULL, &p, bytes));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:16533: inferred_symbol=ExpectIntGT'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16525:         file
+    = XBADFILE;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16526:     }'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16527:'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16528:     p = pkcs8_buffer;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16529: #ifdef OPENSSL_ALL'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16530:     /* Try to
+    decode - auto-detect key type. */'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16531:     ExpectNotNull(pkey
+    = d2i_AutoPrivateKey(NULL, &p, bytes));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16532: #else'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16533:     ExpectNotNull(pkey
+    = d2i_PrivateKey(EVP_PKEY_EC, NULL, &p, bytes));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16534: #endif'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16535:'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16536:     /* Get PEM
+    encoded RSA PKCS#8 data. */'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16537:     ExpectTrue((file
+    = XFOPEN(ecPemPkcs8File, "rb")) != XBADFILE);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16538:     ExpectNotNull(XMEMSET(pkcs8_buffer,
+    0, sizeof(pkcs8_buffer)));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16539:     ExpectIntGT((bytes
+    = (int)XFREAD(pkcs8_buffer, 1, sizeof(pkcs8_buffer),'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16540:         file)),
+    0);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:16541:     if (file
+    != XBADFILE) {'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:17039: ExpectNotNull(priv =
+    d2i_PrivateKey(EVP_PKEY_RSA, NULL,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:17039: inferred_symbol=ExpectIntGT'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17031:     ExpectIntEQ(X509_add_ext(x509,
+    ext, -1), 1);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17032:     ExpectTrue((f
+    = XFOPEN(key_fname, "rb")) != XBADFILE);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17033:     ExpectIntGT(derSz
+    = (int)XFREAD(der, 1, sizeof(der), f), 0);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17034:     if (f !=
+    XBADFILE) {'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17035:         XFCLOSE(f);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17036:         f = XBADFILE;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17037:     }'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17038:     pt = der;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17039:     ExpectNotNull(priv
+    = d2i_PrivateKey(EVP_PKEY_RSA, NULL,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17040:         (const
+    unsigned char**)&pt, derSz));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17041:     ExpectIntGT(X509_sign(x509,
+    priv, EVP_sha256()), 0);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17042:     sk_GENERAL_NAME_pop_free(gns,
+    GENERAL_NAME_free);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17043:     gns = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17044:     ExpectNotNull(gns
+    = (GENERAL_NAMES*)X509_get_ext_d2i(x509,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17045:         NID_subject_alt_name,
+    NULL, NULL));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17046:'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:17047:     ExpectIntEQ(sk_GENERAL_NAME_num(NULL),
+    0);'
+  relevance: medium
+  reason: Source context shows crypto/API parsing usage, but path appears to be test/example/benchmark
+    code.
+- repository:
+    name: clean_sources
+    path: /home/wen/work/clean_sources
+  file: wolfssl/tests/api.c
+  symbol: defined
+  api_usage: d2i_PrivateKey at wolfssl/tests/api.c:20005
+  evidence:
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:20005: ExpectNotNull(pkey =
+    d2i_PrivateKey(EVP_PKEY_RSA, NULL, &server_key,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:20005: inferred_symbol=defined'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:19997:     {'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:19998:         EVP_PKEY*
+    pkey = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:19999:         const
+    unsigned char* server_key ='
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20000:             (const
+    unsigned char*)server_key_der_2048;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20001:         unsigned
+    char buf[FOURK_BUF];'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20002:         unsigned
+    char* pt = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20003:         int bufSz
+    = 0;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20004: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20005:         ExpectNotNull(pkey
+    = d2i_PrivateKey(EVP_PKEY_RSA, NULL, &server_key,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20006:             (long)sizeof_server_key_der_2048));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20007:         ExpectIntEQ(i2d_PrivateKey(pkey,
+    NULL), 1193);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20008:         pt =
+    buf;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20009:         ExpectIntEQ((bufSz
+    = i2d_PrivateKey(pkey, &pt)), 1193);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20010:         ExpectIntNE((pt
+    - buf), 0);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20011:         ExpectIntEQ(XMEMCMP(buf,
+    server_key_der_2048, bufSz), 0);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20012:         EVP_PKEY_free(pkey);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20013:     }'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:20024: ExpectNotNull((pkey =
+    d2i_PrivateKey(EVP_PKEY_EC, NULL, &client_key,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:20024: inferred_symbol=defined'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20016:     {'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20017:         EVP_PKEY*
+    pkey = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20018:         const
+    unsigned char* client_key ='
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20019:             (const
+    unsigned char*)ecc_clikey_der_256;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20020:         unsigned
+    char buf[FOURK_BUF];'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20021:         unsigned
+    char* pt = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20022:         int bufSz
+    = 0;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20023:'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20024:         ExpectNotNull((pkey
+    = d2i_PrivateKey(EVP_PKEY_EC, NULL, &client_key,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20025:             (long)sizeof_ecc_clikey_der_256)));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20026:         ExpectIntEQ(i2d_PrivateKey(pkey,
+    NULL), 121);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20027:         pt =
+    buf;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20028:         ExpectIntEQ((bufSz
+    = i2d_PrivateKey(pkey, &pt)), 121);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20029:         ExpectIntNE((pt
+    - buf), 0);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20030:         ExpectIntEQ(XMEMCMP(buf,
+    ecc_clikey_der_256, bufSz), 0);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20031:         EVP_PKEY_free(pkey);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:20032:     }'
+  relevance: medium
+  reason: Source context shows crypto/API parsing usage, but path appears to be test/example/benchmark
+    code.
+- repository:
+    name: clean_sources
+    path: /home/wen/work/clean_sources
+  file: wolfssl/tests/api.c
+  symbol: test_X509_REQ
+  api_usage: d2i_PrivateKey at wolfssl/tests/api.c:22815
+  evidence:
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:22815: ExpectNotNull(priv =
+    d2i_PrivateKey(EVP_PKEY_RSA, NULL, &rsaPriv,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:22815: inferred_symbol=test_X509_REQ'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:22807: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:22808:     ExpectNotNull(name
+    = X509_NAME_new());'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:22809:     ExpectIntEQ(X509_NAME_add_entry_by_txt(name,
+    "commonName", MBSTRING_UTF8,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:22810:         (byte*)"wolfssl.com",
+    11, 0, 1), WOLFSSL_SUCCESS);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:22811:     ExpectIntEQ(X509_NAME_add_entry_by_txt(name,
+    "emailAddress", MBSTRING_UTF8,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:22812:         (byte*)"support@wolfssl.com",
+    19, -1, 1), WOLFSSL_SUCCESS);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:22813: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:22814: #ifndef NO_RSA'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:22815:     ExpectNotNull(priv
+    = d2i_PrivateKey(EVP_PKEY_RSA, NULL, &rsaPriv,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:22816:         (long)sizeof_client_key_der_2048));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:22817:     ExpectNotNull(pub
+    = d2i_PUBKEY(NULL, &rsaPub,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:22818:         (long)sizeof_client_keypub_der_2048));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:22819:     ExpectNotNull(req
+    = X509_REQ_new());'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:22820:     ExpectIntEQ(X509_REQ_set_subject_name(NULL,
+    name), WC_NO_ERR_TRACE(WOLFSSL_FAILURE));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:22821:     ExpectIntEQ(X509_REQ_set_subject_name(req,
+    NULL), WC_NO_ERR_TRACE(WOLFSSL_FAILURE));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:22822:     ExpectIntEQ(X509_REQ_set_subject_name(req,
+    name), WOLFSSL_SUCCESS);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:22823:     ExpectIntEQ(X509_REQ_set_pubkey(NULL,
+    pub), WC_NO_ERR_TRACE(WOLFSSL_FAILURE));'
+  relevance: medium
+  reason: Source context shows crypto/API parsing usage, but path appears to be test/example/benchmark
+    code.
+- repository:
+    name: clean_sources
+    path: /home/wen/work/clean_sources
+  file: wolfssl/tests/api.c
+  symbol: test_wolfSSL_CTX_use_PrivateKey
+  api_usage: d2i_PrivateKey at wolfssl/tests/api.c:2546
+  evidence:
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:2546: ExpectNotNull(pkey = d2i_PrivateKey(EVP_PKEY_RSA,
+    NULL, &p,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:2546: inferred_symbol=test_wolfSSL_CTX_use_PrivateKey'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2538:     /* No data.
+    */'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2539:     ExpectIntEQ(wolfSSL_CTX_use_PrivateKey(ctx,
+    pkey), WC_NO_ERR_TRACE(WOLFSSL_FAILURE));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2540:     wolfSSL_EVP_PKEY_free(pkey);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2541:     pkey = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2542: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2543: #if defined(USE_CERT_BUFFERS_2048)'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2544: #if !defined(NO_RSA)'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2545:     p = client_key_der_2048;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2546:     ExpectNotNull(pkey
+    = d2i_PrivateKey(EVP_PKEY_RSA, NULL, &p,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2547:         sizeof_client_key_der_2048));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2548: #if defined(WOLFSSL_KEY_GEN)'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2549:     ExpectIntEQ(wolfSSL_CTX_use_PrivateKey(ctx,
+    pkey), WOLFSSL_SUCCESS);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2550: #else'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2551:     ExpectIntEQ(wolfSSL_CTX_use_PrivateKey(ctx,
+    pkey), WC_NO_ERR_TRACE(WOLFSSL_FAILURE));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2552: #endif'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2553:     wolfSSL_EVP_PKEY_free(pkey);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2554:     pkey = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:2559: ExpectNotNull(pkey = d2i_PrivateKey(EVP_PKEY_DSA,
+    NULL, &p,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:2559: inferred_symbol=test_wolfSSL_CTX_use_PrivateKey'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2555: #endif'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2556: #if defined(WOLFSSL_QT)
+    || defined(OPENSSL_ALL) || defined(WOLFSSL_OPENSSH)'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2557: #ifndef NO_DSA'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2558:     p = dsa_key_der_2048;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2559:     ExpectNotNull(pkey
+    = d2i_PrivateKey(EVP_PKEY_DSA, NULL, &p,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2560:         sizeof_dsa_key_der_2048));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2561: #if !defined(HAVE_SELFTEST)
+    && (defined(WOLFSSL_KEY_GEN) || \'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2562:     defined(WOLFSSL_CERT_GEN))'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2563:     /* Not supported
+    in ProcessBuffer. */'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2564:     ExpectIntEQ(wolfSSL_CTX_use_PrivateKey(ctx,
+    pkey), WC_NO_ERR_TRACE(WOLFSSL_BAD_FILE));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2565: #else'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2566:     ExpectIntEQ(wolfSSL_CTX_use_PrivateKey(ctx,
+    pkey), WC_NO_ERR_TRACE(WOLFSSL_FAILURE));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2567: #endif'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:2575: ExpectNotNull(pkey = d2i_PrivateKey(EVP_PKEY_DH,
+    NULL, &p,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:2575: inferred_symbol=test_wolfSSL_CTX_use_PrivateKey'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2568:     wolfSSL_EVP_PKEY_free(pkey);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2569:     pkey = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2570: #endif'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2571: #endif /* WOLFSSL_QT
+    || OPENSSL_ALL || WOLFSSL_OPENSSH */'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2572: #if !defined(NO_DH)
+    && defined(OPENSSL_ALL) && \'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2573:     (!defined(HAVE_FIPS)
+    || FIPS_VERSION_GT(2,0))'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2574:     p = dh_ffdhe_statickey_der_2048;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2575:     ExpectNotNull(pkey
+    = d2i_PrivateKey(EVP_PKEY_DH, NULL, &p,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2576:         sizeof_dh_ffdhe_statickey_der_2048));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2577:     /* Not supported.
+    */'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2578:     ExpectIntEQ(wolfSSL_CTX_use_PrivateKey(ctx,
+    pkey), WC_NO_ERR_TRACE(WOLFSSL_FAILURE));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2579:     wolfSSL_EVP_PKEY_free(pkey);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2580:     pkey = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2581: #endif'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2582: #endif /* USE_CERT_BUFFERS_2048
+    */'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2583: #if defined(HAVE_ECC)
+    && defined(USE_CERT_BUFFERS_256)'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:2585: ExpectNotNull(pkey = d2i_PrivateKey(EVP_PKEY_EC,
+    NULL, &p,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:2585: inferred_symbol=test_wolfSSL_CTX_use_PrivateKey'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2584:     p = ecc_clikey_der_256;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2585:     ExpectNotNull(pkey
+    = d2i_PrivateKey(EVP_PKEY_EC, NULL, &p,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2586:         sizeof_ecc_clikey_der_256));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2587:     ExpectIntEQ(wolfSSL_CTX_use_PrivateKey(ctx,
+    pkey), WOLFSSL_SUCCESS);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2588:     wolfSSL_EVP_PKEY_free(pkey);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2589:     pkey = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2590: #endif'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2591:     ExpectNotNull(pkey
+    = wolfSSL_EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2592:         (unsigned
+    char*)"01234567012345670123456701234567", 32));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api.c:context:2593:     ExpectIntEQ(wolfSSL_CTX_use_PrivateKey(ctx,
+    pkey), WC_NO_ERR_TRACE(WOLFSSL_FAILURE));'
+  relevance: medium
+  reason: Source context shows crypto/API parsing usage, but path appears to be test/example/benchmark
+    code.
+- repository:
+    name: clean_sources
+    path: /home/wen/work/clean_sources
+  file: wolfssl/tests/api/test_ecc.c
+  symbol: defined
+  api_usage: d2i_PrivateKey at wolfssl/tests/api/test_ecc.c:1858
+  evidence:
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ecc.c:1858: ExpectNotNull(pkey
+    = d2i_PrivateKey(EVP_PKEY_EC, NULL, &der, outLen));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ecc.c:1858: inferred_symbol=defined'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ecc.c:context:1850: #if defined(OPENSSL_EXTRA)
+    && defined(HAVE_ALL_CURVES)'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ecc.c:context:1851:     {'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ecc.c:context:1852:         /*
+    test importing private only into a PKEY struct */'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ecc.c:context:1853:         EC_KEY*   ec
+    = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ecc.c:context:1854:         EVP_PKEY*
+    pkey = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ecc.c:context:1855:         const
+    unsigned char* der;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ecc.c:context:1856: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ecc.c:context:1857:         der
+    = output;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ecc.c:context:1858:         ExpectNotNull(pkey
+    = d2i_PrivateKey(EVP_PKEY_EC, NULL, &der, outLen));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ecc.c:context:1859: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ecc.c:context:1860:         der
+    = output;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ecc.c:context:1861:         ExpectNotNull(ec
+    = d2i_ECPrivateKey(NULL, &der, outLen));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ecc.c:context:1862:         ExpectIntEQ(EVP_PKEY_assign_EC_KEY(pkey,
+    ec), SSL_SUCCESS);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ecc.c:context:1863:         if
+    (EXPECT_FAIL()) {'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ecc.c:context:1864:             EC_KEY_free(ec);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ecc.c:context:1865:         }'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ecc.c:context:1866:         EVP_PKEY_free(pkey);
+    /* EC_KEY should be free''d by free''ing pkey */'
+  relevance: medium
+  reason: Source context shows crypto/API parsing usage, but path appears to be test/example/benchmark
+    code.
+- repository:
+    name: clean_sources
+    path: /home/wen/work/clean_sources
+  file: wolfssl/tests/api/test_evp_pkey.c
+  symbol: test_wolfSSL_EVP_PKEY_derive
+  api_usage: d2i_PrivateKey at wolfssl/tests/api/test_evp_pkey.c:2055
+  evidence:
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:2055: ExpectNotNull((pkey
+    = d2i_PrivateKey(EVP_PKEY_DH, NULL, &key,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:2055: inferred_symbol=test_wolfSSL_EVP_PKEY_derive'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2047:     size_t
+    skeylen;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2048:     EVP_PKEY
+    *pkey = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2049:     EVP_PKEY
+    *peerkey = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2050:     const
+    unsigned char* key;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2051: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2052:
+    #if !defined(NO_DH) && defined(WOLFSSL_DH_EXTRA)'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2053:     /*
+    DH */'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2054:     key
+    = dh_key_der_2048;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2055:     ExpectNotNull((pkey
+    = d2i_PrivateKey(EVP_PKEY_DH, NULL, &key,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2056:         sizeof_dh_key_der_2048)));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2057:     ExpectIntEQ(DH_generate_key(EVP_PKEY_get0_DH(pkey)),
+    1);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2058:     key
+    = dh_key_der_2048;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2059:     ExpectNotNull((peerkey
+    = d2i_PrivateKey(EVP_PKEY_DH, NULL, &key,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2060:         sizeof_dh_key_der_2048)));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2061:     ExpectIntEQ(DH_generate_key(EVP_PKEY_get0_DH(peerkey)),
+    1);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2062:     ExpectNotNull(ctx
+    = EVP_PKEY_CTX_new(pkey, NULL));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2063:     ExpectIntEQ(EVP_PKEY_derive_init(ctx),
+    1);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:2059: ExpectNotNull((peerkey
+    = d2i_PrivateKey(EVP_PKEY_DH, NULL, &key,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:2059: inferred_symbol=test_wolfSSL_EVP_PKEY_derive'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2051:'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2064:     ExpectIntEQ(EVP_PKEY_derive_set_peer(ctx,
+    peerkey), 1);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2065:     ExpectIntEQ(EVP_PKEY_derive(ctx,
+    NULL, &skeylen), 1);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2066:     ExpectNotNull(skey
+    = (unsigned char*)XMALLOC(skeylen, NULL,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2067:         DYNAMIC_TYPE_OPENSSL));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:2083: ExpectNotNull((pkey
+    = d2i_PrivateKey(EVP_PKEY_EC, NULL, &key,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:2083: inferred_symbol=test_wolfSSL_EVP_PKEY_derive'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2075:     pkey
+    = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2076:     XFREE(skey,
+    NULL, DYNAMIC_TYPE_OPENSSL);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2077:     skey
+    = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2078:
+    #endif'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2079:'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2080:
+    #ifdef HAVE_ECC'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2081:     /*
+    ECDH */'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2082:     key
+    = ecc_clikey_der_256;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2083:     ExpectNotNull((pkey
+    = d2i_PrivateKey(EVP_PKEY_EC, NULL, &key,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2084:         sizeof_ecc_clikey_der_256)));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2085:     key
+    = ecc_clikeypub_der_256;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2086:     ExpectNotNull((peerkey
+    = d2i_PUBKEY(NULL, &key,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2087:         sizeof_ecc_clikeypub_der_256)));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2088:     ExpectNotNull(ctx
+    = EVP_PKEY_CTX_new(pkey, NULL));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2089:     ExpectIntEQ(EVP_PKEY_derive_init(ctx),
+    1);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2090:     ExpectIntEQ(EVP_PKEY_derive_set_peer(ctx,
+    peerkey), 1);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:2091:     ExpectIntEQ(EVP_PKEY_derive(ctx,
+    NULL, &skeylen), 1);'
+  relevance: medium
+  reason: Source context shows crypto/API parsing usage, but path appears to be test/example/benchmark
+    code.
+- repository:
+    name: clean_sources
+    path: /home/wen/work/clean_sources
+  file: wolfssl/tests/api/test_evp_pkey.c
+  symbol: test_wolfSSL_EVP_PKEY_set1_get1_DSA
+  api_usage: d2i_PrivateKey at wolfssl/tests/api/test_evp_pkey.c:791
+  evidence:
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:791: ExpectNotNull(d2i_PrivateKey(EVP_PKEY_DSA,
+    &pkey, &dsaKeyDer,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:791: inferred_symbol=test_wolfSSL_EVP_PKEY_set1_get1_DSA'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:783: #endif
+    /* END USE_CERT_BUFFERS_1024 */'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:784: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:785:     /*
+    Create hash to later Sign and Verify */'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:786:     ExpectIntEQ(SHA1_Init(&sha),
+    WOLFSSL_SUCCESS);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:787:     ExpectIntEQ(SHA1_Update(&sha,
+    tmp, bytes), WOLFSSL_SUCCESS);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:788:     ExpectIntEQ(SHA1_Final(hash,&sha),
+    WOLFSSL_SUCCESS);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:789: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:790:     /*
+    Initialize pkey with der format dsa key */'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:791:     ExpectNotNull(d2i_PrivateKey(EVP_PKEY_DSA,
+    &pkey, &dsaKeyDer,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:792:         (long)dsaKeySz));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:793: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:794:     /*
+    Test wolfSSL_EVP_PKEY_get1_DSA */'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:795:     /*
+    Should Fail: NULL argument */'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:796:     ExpectNull(dsa
+    = EVP_PKEY_get0_DSA(NULL));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:797:     ExpectNull(dsa
+    = EVP_PKEY_get1_DSA(NULL));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:798:     /*
+    Should Pass: Initialized pkey argument */'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_evp_pkey.c:context:799:     ExpectNotNull(dsa
+    = EVP_PKEY_get0_DSA(pkey));'
+  relevance: medium
+  reason: Source context shows crypto/API parsing usage, but path appears to be test/example/benchmark
+    code.
+- repository:
+    name: clean_sources
+    path: /home/wen/work/clean_sources
+  file: wolfssl/tests/api/test_ossl_asn1.c
+  symbol: defined
+  api_usage: d2i_PrivateKey at wolfssl/tests/api/test_ossl_asn1.c:2466
+  evidence:
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_asn1.c:2466: ExpectNotNull(key
+    = d2i_PrivateKey(EVP_PKEY_EC, NULL, &in,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_asn1.c:2466: inferred_symbol=defined'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_asn1.c:context:2458: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_asn1.c:context:2459:     ExpectNotNull(bootstrap
+    = DPP_BOOTSTRAPPING_KEY_new());'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_asn1.c:context:2460: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_asn1.c:context:2461:     der
+    = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_asn1.c:context:2462:     ExpectIntEQ(i2d_DPP_BOOTSTRAPPING_KEY(NULL,
+    &der), -1);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_asn1.c:context:2463:     ExpectIntEQ(wolfSSL_ASN1_item_i2d(bootstrap,
+    &der, NULL), -1);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_asn1.c:context:2464:     ExpectIntEQ(i2d_DPP_BOOTSTRAPPING_KEY(bootstrap,
+    &der), -1);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_asn1.c:context:2465: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_asn1.c:context:2466:     ExpectNotNull(key
+    = d2i_PrivateKey(EVP_PKEY_EC, NULL, &in,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_asn1.c:context:2467:                                        (long)sizeof_ecc_clikey_der_256));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_asn1.c:context:2468:     ExpectNotNull(eckey
+    = EVP_PKEY_get1_EC_KEY(key));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_asn1.c:context:2469:     ExpectNotNull(group
+    = EC_KEY_get0_group(eckey));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_asn1.c:context:2470:     ExpectNotNull(point
+    = EC_KEY_get0_public_key(eckey));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_asn1.c:context:2471:     nid
+    = EC_GROUP_get_curve_name(group);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_asn1.c:context:2472: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_asn1.c:context:2473:     ec_obj
+    = OBJ_nid2obj(EVP_PKEY_EC);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_asn1.c:context:2474:     group_obj
+    = OBJ_nid2obj(nid);'
+  relevance: medium
+  reason: Source context shows crypto/API parsing usage, but path appears to be test/example/benchmark
+    code.
+- repository:
+    name: clean_sources
+    path: /home/wen/work/clean_sources
+  file: wolfssl/tests/api/test_ossl_pem.c
+  symbol: ExpectIntEQ
+  api_usage: d2i_PrivateKey at wolfssl/tests/api/test_ossl_pem.c:311
+  evidence:
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:311: ExpectNull(d2i_PrivateKey(EVP_PKEY_EC,
+    &pkey, &server_key,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:311: inferred_symbol=ExpectIntEQ'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:303: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:304:     ExpectNotNull(bio
+    = wolfSSL_BIO_new(wolfSSL_BIO_s_mem()));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:305:     ExpectIntEQ(BIO_set_write_buf_size(bio,
+    4096),'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:306:         WC_NO_ERR_TRACE(WOLFSSL_FAILURE));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:307:     ExpectNotNull(pub_bio
+    = wolfSSL_BIO_new(wolfSSL_BIO_s_mem()));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:308:     ExpectIntEQ(BIO_set_write_buf_size(pub_bio,
+    4096),'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:309:         WC_NO_ERR_TRACE(WOLFSSL_FAILURE));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:310: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:311:     ExpectNull(d2i_PrivateKey(EVP_PKEY_EC,
+    &pkey, &server_key,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:312:         (long)sizeof_server_key_der_2048));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:313:     ExpectNull(pkey);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:314: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:315:     ExpectNotNull(wolfSSL_d2i_PrivateKey(EVP_PKEY_RSA,
+    &pkey, &server_key,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:316:         (long)sizeof_server_key_der_2048));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:317:     ExpectIntEQ(PEM_write_bio_PrivateKey(NULL,
+    pkey, NULL, NULL, 0, NULL, NULL),'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:318:         WC_NO_ERR_TRACE(WOLFSSL_FAILURE));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:319:     ExpectIntEQ(PEM_write_bio_PrivateKey(bio,  NULL,
+    NULL, NULL, 0, NULL, NULL),'
+  relevance: medium
+  reason: Source context shows crypto/API parsing usage, but path appears to be test/example/benchmark
+    code.
+- repository:
+    name: clean_sources
+    path: /home/wen/work/clean_sources
+  file: wolfssl/tests/api/test_ossl_pem.c
+  symbol: defined
+  api_usage: d2i_PrivateKey at wolfssl/tests/api/test_ossl_pem.c:735
+  evidence:
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:735: ExpectNull(d2i_PrivateKey(EVP_PKEY_RSA,
+    &pkey, &server_key,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:735: inferred_symbol=defined'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:727: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:728:         ExpectTrue((f
+    = XFOPEN("./certs/ecc-key.der", "rb")) != XBADFILE);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:729:         ExpectIntGT(bytes
+    = (size_t)XFREAD(buf, 1, sizeof(buf), f), 0);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:730:         if
+    (f != XBADFILE)'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:731:             XFCLOSE(f);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:732: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:733:         server_key
+    = buf;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:734:         pkey
+    = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:735:         ExpectNull(d2i_PrivateKey(EVP_PKEY_RSA,
+    &pkey, &server_key,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:736:             (long
+    int)bytes));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:737:         ExpectNull(pkey);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:738:         ExpectNotNull(d2i_PrivateKey(EVP_PKEY_EC,
+    &pkey, &server_key,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:739:             (long
+    int)bytes));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:740:         ExpectIntEQ(SSL_CTX_use_PrivateKey(ctx,
+    pkey), SSL_SUCCESS);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:741: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:742:         EVP_PKEY_free(pkey);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:743:         pkey
+    = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:738: ExpectNotNull(d2i_PrivateKey(EVP_PKEY_EC,
+    &pkey, &server_key,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:738: inferred_symbol=defined'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:732:'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:741:'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:744:         SSL_CTX_free(ctx);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:745:         server_key
+    = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_pem.c:context:746:     }'
+  relevance: medium
+  reason: Source context shows crypto/API parsing usage, but path appears to be test/example/benchmark
+    code.
+- repository:
+    name: clean_sources
+    path: /home/wen/work/clean_sources
+  file: wolfssl/tests/api/test_ossl_x509_crypto.c
+  symbol: test_wolfSSL_X509_check_private_key
+  api_usage: d2i_PrivateKey at wolfssl/tests/api/test_ossl_x509_crypto.c:51
+  evidence:
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:51: ExpectNotNull(d2i_PrivateKey(EVP_PKEY_RSA,
+    &pkey, &key,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:51: inferred_symbol=test_wolfSSL_X509_check_private_key'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:43:     X509*  x509
+    = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:44:     EVP_PKEY*
+    pkey = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:45:     const
+    byte* key;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:46: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:47:     /*
+    Check with correct key */'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:48:     ExpectNotNull((x509
+    = X509_load_certificate_file(cliCertFile,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:49:         SSL_FILETYPE_PEM)));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:50:     key
+    = client_key_der_2048;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:51:     ExpectNotNull(d2i_PrivateKey(EVP_PKEY_RSA,
+    &pkey, &key,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:52:         (long)sizeof_client_key_der_2048));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:53:     ExpectIntEQ(X509_check_private_key(x509,
+    pkey), 1);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:54:     EVP_PKEY_free(pkey);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:55:     pkey
+    = NULL;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:56: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:57:     /*
+    Check with wrong key */'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:58:     key
+    = server_key_der_2048;'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:59:     ExpectNotNull(d2i_PrivateKey(EVP_PKEY_RSA,
+    &pkey, &key,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:59: ExpectNotNull(d2i_PrivateKey(EVP_PKEY_RSA,
+    &pkey, &key,'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:59: inferred_symbol=test_wolfSSL_X509_check_private_key'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:56:'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:60:         (long)sizeof_server_key_der_2048));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:61:     ExpectIntEQ(X509_check_private_key(x509,
+    pkey), 0);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:62:'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:63:     /*
+    test for incorrect parameter */'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:64:     ExpectIntEQ(X509_check_private_key(NULL,
+    pkey), 0);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:65:     ExpectIntEQ(X509_check_private_key(x509,
+    NULL), 0);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:66:     ExpectIntEQ(X509_check_private_key(NULL,
+    NULL), 0);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_crypto.c:context:67:'
+  relevance: medium
+  reason: Source context shows crypto/API parsing usage, but path appears to be test/example/benchmark
+    code.
+- repository:
+    name: clean_sources
+    path: /home/wen/work/clean_sources
+  file: wolfssl/tests/api/test_ossl_x509_pk.c
+  symbol: XMEMCPY
+  api_usage: d2i_PrivateKey at wolfssl/tests/api/test_ossl_x509_pk.c:208
+  evidence:
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_pk.c:208: ExpectNotNull(d2i_PrivateKey(EVP_PKEY_DSA,
+    &evpKey, &dsaKeyDer, bytes));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_pk.c:208: inferred_symbol=XMEMCPY'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_pk.c:context:200:         ExpectTrue((fp
+    = XFOPEN("./certs/dsa2048.der", "rb")) != XBADFILE);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_pk.c:context:201:         ExpectIntGT(bytes
+    = (word32) XFREAD(tmp, 1, sizeof(tmp), fp), 0);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_pk.c:context:202:         if
+    (fp != XBADFILE)'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_pk.c:context:203:             XFCLOSE(fp);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_pk.c:context:204:     }'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_pk.c:context:205:
+    #endif'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_pk.c:context:206: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_pk.c:context:207:     /*
+    Initialize pkey with der format dsa key */'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_pk.c:context:208:     ExpectNotNull(d2i_PrivateKey(EVP_PKEY_DSA,
+    &evpKey, &dsaKeyDer, bytes));'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_pk.c:context:209: '
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_pk.c:context:210:     ExpectNotNull(pubKey
+    = X509_PUBKEY_new());'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_pk.c:context:211:     ExpectIntEQ(X509_PUBKEY_set(&pubKey,
+    evpKey), 1);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_pk.c:context:212:     ExpectIntEQ(X509_PUBKEY_get0_param(&obj,
+    &pk, &ppklen, &pa, pubKey), 1);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_pk.c:context:213:     ExpectNotNull(pk);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_pk.c:context:214:     ExpectNotNull(pa);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_pk.c:context:215:     ExpectIntGT(ppklen,
+    0);'
+  - '/home/wen/work/clean_sources/wolfssl/tests/api/test_ossl_x509_pk.c:context:216:     X509_ALGOR_get0(&pa_oid,
+    &pptype, &pval, pa);'
+  relevance: medium
+  reason: Source context shows crypto/API parsing usage, but path appears to be test/example/benchmark
+    code.
+- repository:
+    name: clean_sources
+    path: /home/wen/work/clean_sources
+  file: wolfssl/wolfcrypt/test/test.c
+  symbol: wc_ecc_shared_secret
+  api_usage: d2i_PrivateKey at wolfssl/wolfcrypt/test/test.c:65002
+  evidence:
+  - '/home/wen/work/clean_sources/wolfssl/wolfcrypt/test/test.c:65002: privKey = d2i_PrivateKey(WC_EVP_PKEY_EC,
+    NULL, &cp,'
+  - '/home/wen/work/clean_sources/wolfssl/wolfcrypt/test/test.c:65002: inferred_symbol=wc_ecc_shared_secret'
+  - '/home/wen/work/clean_sources/wolfssl/wolfcrypt/test/test.c:context:64994:     else'
+  - '/home/wen/work/clean_sources/wolfssl/wolfcrypt/test/test.c:context:64995:         ret
+    = 0;'
+  - '/home/wen/work/clean_sources/wolfssl/wolfcrypt/test/test.c:context:64996: '
+  - '/home/wen/work/clean_sources/wolfssl/wolfcrypt/test/test.c:context:64997: #endif
+    /* HAVE_ECC_DHE */'
+  - '/home/wen/work/clean_sources/wolfssl/wolfcrypt/test/test.c:context:64998: '
+  - '/home/wen/work/clean_sources/wolfssl/wolfcrypt/test/test.c:context:64999: #if
+    !defined(WOLFCRYPT_ONLY) && defined(OPENSSL_EXTRA)'
+  - '/home/wen/work/clean_sources/wolfssl/wolfcrypt/test/test.c:context:65000:     (void)pkey;'
+  - '/home/wen/work/clean_sources/wolfssl/wolfcrypt/test/test.c:context:65001:     cp
+    = ecc_clikey_der_256;'
+  - '/home/wen/work/clean_sources/wolfssl/wolfcrypt/test/test.c:context:65002:     privKey
+    = d2i_PrivateKey(WC_EVP_PKEY_EC, NULL, &cp,'
+  - '/home/wen/work/clean_sources/wolfssl/wolfcrypt/test/test.c:context:65003:                                                   sizeof_ecc_clikey_der_256);'
+  - '/home/wen/work/clean_sources/wolfssl/wolfcrypt/test/test.c:context:65004:     if
+    (privKey == NULL) {'
+  - '/home/wen/work/clean_sources/wolfssl/wolfcrypt/test/test.c:context:65005:         ERROR_OUT(WC_TEST_RET_ENC_NC,
+    exit_onlycb);'
+  - '/home/wen/work/clean_sources/wolfssl/wolfcrypt/test/test.c:context:65006:     }'
+  - '/home/wen/work/clean_sources/wolfssl/wolfcrypt/test/test.c:context:65007:     pkey
+    = (ecc_key*)privKey->ecc->internal;'
+  - '/home/wen/work/clean_sources/wolfssl/wolfcrypt/test/test.c:context:65008:     pkey->devId
+    = devId;'
+  - '/home/wen/work/clean_sources/wolfssl/wolfcrypt/test/test.c:context:65009: '
+  - '/home/wen/work/clean_sources/wolfssl/wolfcrypt/test/test.c:context:65010:     p
+    = ecc_clikeypub_der_256;'
+  relevance: medium
+  reason: Source context shows crypto/API parsing usage, but path appears to be test/example/benchmark
+    code.
+- repository:
+    name: openssl
+    path: /home/wen/work/openssl-3.5.5-asan-src
+  file: apps/speed.c
+  symbol: EVP_PKEY_CTX_free
+  api_usage: d2i_PrivateKey at apps/speed.c:3305
+  evidence:
+  - '/home/wen/work/openssl-3.5.5-asan-src/apps/speed.c:3305: st = (rsa_key = d2i_PrivateKey(EVP_PKEY_RSA,
+    NULL, &p,'
+  - '/home/wen/work/openssl-3.5.5-asan-src/apps/speed.c:3305: inferred_symbol=EVP_PKEY_CTX_free'
+  - '/home/wen/work/openssl-3.5.5-asan-src/apps/speed.c:context:3297:                 &&
+    EVP_PKEY_keygen(genctx, &rsa_key) > 0;'
+  - '/home/wen/work/openssl-3.5.5-asan-src/apps/speed.c:context:3298:             BN_free(bn);'
+  - '/home/wen/work/openssl-3.5.5-asan-src/apps/speed.c:context:3299:             bn
+    = NULL;'
+  - '/home/wen/work/openssl-3.5.5-asan-src/apps/speed.c:context:3300:             EVP_PKEY_CTX_free(genctx);'
+  - '/home/wen/work/openssl-3.5.5-asan-src/apps/speed.c:context:3301:             genctx
+    = NULL;'
+  - '/home/wen/work/openssl-3.5.5-asan-src/apps/speed.c:context:3302:         } else
+    {'
+  - '/home/wen/work/openssl-3.5.5-asan-src/apps/speed.c:context:3303:             const
+    unsigned char *p = rsa_keys[testnum].data;'
+  - '/home/wen/work/openssl-3.5.5-asan-src/apps/speed.c:context:3304: '
+  - '/home/wen/work/openssl-3.5.5-asan-src/apps/speed.c:context:3305:             st
+    = (rsa_key = d2i_PrivateKey(EVP_PKEY_RSA, NULL, &p,'
+  - '/home/wen/work/openssl-3.5.5-asan-src/apps/speed.c:context:3306:                       rsa_keys[testnum].length))'
+  - '/home/wen/work/openssl-3.5.5-asan-src/apps/speed.c:context:3307:                 !=
+    NULL;'
+  - '/home/wen/work/openssl-3.5.5-asan-src/apps/speed.c:context:3308:         }'
+  - '/home/wen/work/openssl-3.5.5-asan-src/apps/speed.c:context:3309: '
+  - '/home/wen/work/openssl-3.5.5-asan-src/apps/speed.c:context:3310:         for
+    (i = 0; st && i < loopargs_len; i++) {'
+  - '/home/wen/work/openssl-3.5.5-asan-src/apps/speed.c:context:3311:             loopargs[i].rsa_sign_ctx[testnum]
+    = EVP_PKEY_CTX_new(rsa_key, NULL);'
+  - '/home/wen/work/openssl-3.5.5-asan-src/apps/speed.c:context:3312:             loopargs[i].sigsize
+    = loopargs[i].buflen;'
+  - '/home/wen/work/openssl-3.5.5-asan-src/apps/speed.c:context:3313:             if
+    (loopargs[i].rsa_sign_ctx[testnum] == NULL'
+  relevance: medium
+  reason: Source context shows crypto/API parsing usage.
+- repository:
+    name: openssl
+    path: /home/wen/work/openssl-3.5.5-asan-src
+  file: test/x509_test.c
+  symbol: test_get_argument_count
+  api_usage: d2i_PrivateKey at test/x509_test.c:304
+  evidence:
+  - '/home/wen/work/openssl-3.5.5-asan-src/test/x509_test.c:304: privkey = d2i_PrivateKey(EVP_PKEY_EC,
+    NULL, &p, sizeof(privkeydata));'
+  - '/home/wen/work/openssl-3.5.5-asan-src/test/x509_test.c:304: inferred_symbol=test_get_argument_count'
+  - '/home/wen/work/openssl-3.5.5-asan-src/test/x509_test.c:context:296:         TEST_error("Must
+    specify a certificate file self-signed with RSA-PSS.\n");'
+  - '/home/wen/work/openssl-3.5.5-asan-src/test/x509_test.c:context:297:         return
+    0;'
+  - '/home/wen/work/openssl-3.5.5-asan-src/test/x509_test.c:context:298:     }'
+  - '/home/wen/work/openssl-3.5.5-asan-src/test/x509_test.c:context:299: '
+  - '/home/wen/work/openssl-3.5.5-asan-src/test/x509_test.c:context:300:     p = pubkeydata;'
+  - '/home/wen/work/openssl-3.5.5-asan-src/test/x509_test.c:context:301:     pubkey
+    = d2i_PUBKEY(NULL, &p, sizeof(pubkeydata));'
+  - '/home/wen/work/openssl-3.5.5-asan-src/test/x509_test.c:context:302: '
+  - '/home/wen/work/openssl-3.5.5-asan-src/test/x509_test.c:context:303:     p = privkeydata;'
+  - '/home/wen/work/openssl-3.5.5-asan-src/test/x509_test.c:context:304:     privkey
+    = d2i_PrivateKey(EVP_PKEY_EC, NULL, &p, sizeof(privkeydata));'
+  - '/home/wen/work/openssl-3.5.5-asan-src/test/x509_test.c:context:305: '
+  - '/home/wen/work/openssl-3.5.5-asan-src/test/x509_test.c:context:306:     if (pubkey
+    == NULL || privkey == NULL) {'
+  - '/home/wen/work/openssl-3.5.5-asan-src/test/x509_test.c:context:307:         BIO_printf(bio_err,
+    "Failed to create keys\n");'
+  - '/home/wen/work/openssl-3.5.5-asan-src/test/x509_test.c:context:308:         return
+    0;'
+  - '/home/wen/work/openssl-3.5.5-asan-src/test/x509_test.c:context:309:     }'
+  - '/home/wen/work/openssl-3.5.5-asan-src/test/x509_test.c:context:310: '
+  - '/home/wen/work/openssl-3.5.5-asan-src/test/x509_test.c:context:311:     /* Note
+    this digest is different from the certificate digest */'
+  - '/home/wen/work/openssl-3.5.5-asan-src/test/x509_test.c:context:312:     signmd
+    = EVP_MD_fetch(NULL, "SHA384", NULL);'
+  relevance: medium
+  reason: Source context shows crypto/API parsing usage, but path appears to be test/example/benchmark
+    code.
+unknowns: []
+claim_policy:
+  vulnerability: not_assessed
+  security_impact: not_assessed
