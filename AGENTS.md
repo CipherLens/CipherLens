@@ -1812,3 +1812,42 @@ oracle-based migration validation
 * Please respond to the user in Chinese.
 * Keep code, file names, CLI flags, and error messages in their original English form.
 * Summaries, explanations, and task reports should be written in Chinese.
+
+---
+
+## VulnContract Miner Work Area
+
+A new top-level package `contract_miner/` is being added. It implements
+Vulnerability Contract mining (Contribution 1): learning transferable
+security contracts from buggy/fixed behavioral differences.
+
+Placement rules for this work area:
+
+* All new business logic goes into `contract_miner/`. Do not add logic to
+  `tools/`; `tools/contract_miner_cli.py` may exist as a thin CLI wrapper only.
+* `contract_miner/` must be importable and testable WITHOUT any real
+  cryptographic library build. All pure-logic modules must accept
+  trace/sequence data as input and must not shell out to compilers.
+* Execution-dependent code (building libraries, running instrumented
+  harnesses) goes into `contract_miner/exec/` and must be guarded so that
+  importing `contract_miner` never triggers a build.
+* Do not modify `runner/`, `analyzer/`, `migration/`, `template_maker/`,
+  or `analysis/`. Read-only imports from them are allowed.
+* Do not write into `artifacts/`, `data/`, `knowledge_raw/`, or `datasets/`.
+  New outputs go to `artifacts/contract_mining/<slug>/` only, created by
+  the CLI, never by import-time code.
+* All outputs must be deterministic: sorted keys, no timestamps in
+  committed fixtures, no random ordering.
+* No new third-party dependencies without explicit approval. PyYAML and
+  the standard library are preferred.
+* Tests must use the repository's existing `unittest` style (see
+  `tests/test_caller_audit_v0_1.py`). Do not introduce pytest.
+* Every milestone must keep
+  `PYTHONPATH=. python3 -m unittest discover -s tests -v` green before it
+  is considered done. The known-good baseline is 7 PASS / 2 SKIP / 0 FAIL
+  (the two skips are MLSPP_ROOT and LIBDKIMPP_ROOT not configured; new
+  contract_miner tests must not increase the skip count silently).
+* Git discipline: never run `git add .`; stage files explicitly; never
+  commit or push without explicit user approval; never create, delete,
+  or switch branches/worktrees autonomously; report `git status --short`
+  and `git diff --stat` at the end of every session.

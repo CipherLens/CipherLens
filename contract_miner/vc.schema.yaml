@@ -1,0 +1,136 @@
+schema_version: cipherlens.vc.v0_2
+
+objects:
+  contract:
+    required:
+      - contract_id
+      - schema_version
+      - source
+      - roles
+      - states
+      - transitions
+      - guards
+      - mutation
+      - oracle
+      - effect
+      - fidelity
+      - provenance
+    optional: []
+  source:
+    required: [pattern_id, library, buggy_version, fixed_version]
+    optional: [references]
+  state:
+    required: [name, kind]
+    optional: []
+  transition:
+    required: [from, on, expected]
+    optional: [to, guard_ref]
+  guard:
+    required: [id, description]
+    optional: []
+  mutation:
+    required: [strategy, witness_ref]
+    optional: [points]
+  mutation_point:
+    required: [name, placeholder, type, constraint]
+    optional: []
+  oracle:
+    required: [memory_safety, bug_candidate, fixed_or_safe, contract_violation]
+    optional: []
+  contract_violation:
+    required: [relation, independent_of_generator]
+    optional: []
+  effect:
+    required: [summary, sinks]
+    optional: []
+  fidelity:
+    required: [target_states, divergence_required]
+    optional: []
+  provenance:
+    required: [miner, derived_from, human_reviewed]
+    optional: []
+
+fields:
+  contract_id:
+    type: string
+    pattern: '^[A-Z][A-Z0-9_]{2,63}$'
+  schema_version:
+    type: string
+    literal: cipherlens.vc.v0_2
+  source.pattern_id: {type: string}
+  source.library: {type: string, lowercase: true}
+  source.buggy_version: {type: string}
+  source.fixed_version: {type: string}
+  states[].name:
+    type: string
+    pattern: '^[A-Z][A-Z0-9_]*$'
+  states[].kind: {type: string, enum: state_kinds}
+  transitions[].from: {type: string}
+  transitions[].on: {type: string}
+  transitions[].expected: {type: string, enum: transition_expected}
+  transitions[].to: {type: string}
+  transitions[].guard_ref: {type: string}
+  guards[].id: {type: string}
+  guards[].description: {type: string}
+  mutation.strategy: {type: string, enum: mutation_strategies}
+  mutation.witness_ref: {type: string}
+  mutation.points[].name: {type: string}
+  mutation.points[].placeholder: {type: string}
+  mutation.points[].type: {type: string}
+  mutation.points[].constraint: {type: string}
+  oracle.contract_violation.relation: {type: string}
+  oracle.contract_violation.independent_of_generator:
+    type: boolean
+    literal: true
+  effect.summary: {type: string}
+  fidelity.divergence_required: {type: boolean}
+  provenance.miner: {type: string}
+  provenance.human_reviewed: {type: boolean}
+
+lists:
+  source.references: {item_type: string}
+  roles: {item_type: string, min_items: 1, enum: roles}
+  states: {item_type: object, min_items: 1}
+  transitions: {item_type: object}
+  guards: {item_type: object}
+  mutation.points: {item_type: object}
+  oracle.memory_safety: {item_type: string}
+  oracle.bug_candidate: {item_type: string}
+  oracle.fixed_or_safe: {item_type: string}
+  effect.sinks: {item_type: string, enum: effect_sinks}
+  fidelity.target_states: {item_type: string}
+  provenance.derived_from: {item_type: string}
+
+enums:
+  roles:
+    - INIT
+    - SETUP
+    - UPDATE
+    - FINAL
+    - PARSE
+    - VERIFY
+    - SIGN
+    - QUERY
+    - RESET
+    - REINIT
+    - DUP
+    - COPY
+    - FREE
+    - ABORT
+  state_kinds: [initial, intermediate, terminal, error]
+  transition_expected: [forbidden, required, allowed_with_guard]
+  effect_sinks:
+    - authentication_decision
+    - signature_verification
+    - certificate_acceptance
+    - handshake_state
+    - key_export
+    - trust_decision
+    - output_file
+    - crypto_result
+  mutation_strategies:
+    - sequence_replay
+    - input_tail
+    - length_boundary
+    - state_reuse
+    - value_substitution
