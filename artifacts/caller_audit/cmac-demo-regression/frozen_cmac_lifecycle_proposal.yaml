@@ -1,0 +1,51 @@
+schema: cipherlens_frozen_demo_proposal_v1
+proposal_id: frozen-cmac-lifecycle-openssl-evp-mac-v1
+family: mac_lifecycle
+target_library: openssl
+generated_by: frozen_verified_proposal_from_saved_glm_and_rag_artifacts
+generation_mode: regression_replay
+source_rag_artifacts:
+  - artifacts/cross_library/mainline/one_click_full_mainline_glm_oracle_campaign_v1/rag_context/rag_context_index.yaml
+  - artifacts/cross_library/mainline/one_click_full_mainline_glm_oracle_campaign_v1/glm_slot_filling/glm_mapping_results.yaml
+  - artifacts/cross_library/mainline/one_click_full_mainline_glm_oracle_campaign_v1/glm_slot_filling/glm_usage_report.yaml
+  - adapter_recipes/openssl_mbedtls/mac_lifecycle.recipe_slot.yaml
+  - artifacts/triage/mac_cmac_double_final_minimal/results/cmac_double_final_summary.json
+model:
+  provider: GLM
+  model: glm-4-flash-250414
+  source_usage_report: artifacts/cross_library/mainline/one_click_full_mainline_glm_oracle_campaign_v1/glm_slot_filling/glm_usage_report.yaml
+created_at: '2026-08-16T00:00:00+00:00'
+validated: true
+validator: caller_audit.demo_replay_pipeline.validate_frozen_proposal
+template_id: openssl_evp_mac_cmac_lifecycle_replay_v1
+slots:
+  mac_algorithm: CMAC
+  cipher: AES-128-CBC
+  key_hex: '000102030405060708090a0b0c0d0e0f'
+  prefix_message: authorized-prefix
+  post_final_message: post-final-data
+  apis:
+    - EVP_MAC_fetch
+    - EVP_MAC_CTX_new
+    - EVP_MAC_init
+    - EVP_MAC_update
+    - EVP_MAC_final
+    - EVP_MAC_CTX_free
+  lifecycle_sequence:
+    - init
+    - update
+    - final
+    - repeated_final
+    - update_after_final
+    - final_after_post_update
+  oracle_requirements:
+    - record return codes
+    - record output lengths
+    - record output tags
+    - classify lifecycle behavior from fresh runtime execution
+claim_policy:
+  vulnerability: not_assessed
+  cve: not_assessed
+  security_impact: not_assessed
+notes:
+  - Frozen proposal is replayed for demo stability; replay regenerates harness, runtime, oracle, and candidate artifacts.

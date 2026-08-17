@@ -15,7 +15,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import yaml
 
@@ -136,6 +136,25 @@ def stage_report(stage_dir: Path, stage_name: str, status: str, details: dict[st
             "quality_status": status,
             "blocking": status.startswith("blocked"),
         },
+    )
+
+
+def emit_progress(
+    progress_callback: Callable[[dict[str, Any]], None] | None,
+    stage_id: str,
+    status: str,
+    message: str,
+    summary: dict[str, Any] | None = None,
+) -> None:
+    if progress_callback is None:
+        return
+    progress_callback(
+        {
+            "stage": stage_id,
+            "status": status,
+            "message": message,
+            "summary": summary or {},
+        }
     )
 
 
@@ -535,7 +554,7 @@ def remove_transient_files(out_dir: Path) -> dict[str, Any]:
     return {"schema": "cleanup_manifest_v1", "deleted_transient_count": len(deleted), "deleted_transient_files": deleted}
 
 
-def run_campaign(args: argparse.Namespace) -> dict[str, Any]:
+def run_campaign(args: argparse.Namespace, progress_callback: Callable[[dict[str, Any]], None] | None = None) -> dict[str, Any]:
     repo = Path(args.repo_root).resolve()
     out_dir = (repo / args.out_dir).resolve() if not Path(args.out_dir).is_absolute() else Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -553,6 +572,7 @@ def run_campaign(args: argparse.Namespace) -> dict[str, Any]:
         "stage_10_cleanup_and_quality",
     ]
 
+    emit_progress(progress_callback, "family_selection", "running", "Checking model and target prerequisites.")
     live_probe = run_live_probe(repo, out_dir) if args.probe_mode == "live" else read_existing_probe(repo)
     glm_available = bool(live_probe.get("quality", {}).get("glm_available"))
     if args.glm_required and not glm_available and not args.allow_fallback:
@@ -576,8 +596,10 @@ def run_campaign(args: argparse.Namespace) -> dict[str, Any]:
                 "api_key_logged": False,
             },
         )
+        emit_progress(progress_callback, "family_selection", "blocked", "GLM prerequisite check blocked the run.", blocked)
         return blocked
 
+    emit_progress(progress_callback, "family_selection", "running", "Selecting family, target, and seed inputs.")
     target_status = resolve_targets(split_csv(args.targets))
     seed_index = discover_seed_sources(repo, args.seed_source)
     families, unsupported_families = select_families(repo, min(args.max_families, 5), split_csv(args.families))
@@ -596,12 +618,28 @@ def run_campaign(args: argparse.Namespace) -> dict[str, Any]:
             "blocked_target_count": len(target_status["blocked_targets"]),
         },
     )
+    emit_progress(
+        progress_callback,
+        "family_selection",
+        "completed" if families else "partial",
+        "Family and target inputs selected." if families else "No supported family was selected.",
+        {"selected_family_count": len(families), "ready_target_count": len(target_status["ready_targets"])},
+    )
 
+    emit_progress(progress_callback, "knowledge_retrieval", "running", "Loading target-library knowledge context.")
     rag_dir = out_dir / "rag_context"
     rag_context = collect_rag_context(repo, families)
     write_yaml(rag_dir / "rag_context_index.yaml", rag_context)
     stage_report(rag_dir, stage_names[1], "ready" if rag_context["context_file_count"] else "missing_or_not_found", {"context_file_count": rag_context["context_file_count"]})
+    emit_progress(
+        progress_callback,
+        "knowledge_retrieval",
+        "completed" if rag_context["context_file_count"] else "partial",
+        "Knowledge context prepared." if rag_context["context_file_count"] else "Knowledge context is partial; no context files were found.",
+        rag_context,
+    )
 
+    emit_progress(progress_callback, "model_proposal", "running", "Running model-assisted mapping.")
     glm_dir = out_dir / "glm_slot_filling"
     write_yaml(glm_dir / "selected_patterns.yaml", {"schema": "selected_patterns_v1", "items": families})
     write_yaml(glm_dir / "rag_context_index.yaml", rag_context)
@@ -623,25 +661,83 @@ def run_campaign(args: argparse.Namespace) -> dict[str, Any]:
             "existing_artifact_used": bool(glm_result["usage"].get("existing_artifact_used")),
         },
     )
+    emit_progress(
+        progress_callback,
+        "model_proposal",
+        "completed" if glm_result["usage"]["success_count"] else "partial" if args.allow_fallback else "blocked",
+        "Model-assisted mapping completed." if glm_result["usage"]["success_count"] else "Model-assisted mapping used fallback or was blocked.",
+        glm_result["usage"],
+    )
 
+    emit_progress(progress_callback, "validation", "running", "Reconciling model output with deterministic stage contract.")
+    emit_progress(
+        progress_callback,
+        "validation",
+        "partial",
+        "One-click mainline does not emit separate slot validation artifacts.",
+        {"validated_bindings": None, "usable_bindings": None},
+    )
+
+    emit_progress(progress_callback, "binding", "running", "Preparing adapter recipes and slot bindings.")
     recipe_dir = out_dir / "adapter_recipes"
     write_yaml(recipe_dir / "adapter_recipes_glm.yaml", {"schema": "adapter_recipes_glm_v1", "items": glm_result["recipes"]})
     write_yaml(recipe_dir / "slot_bindings_glm.yaml", {"schema": "slot_bindings_glm_v1", "items": glm_result["slots"]})
     stage_report(recipe_dir, stage_names[3], "ready", {"adapter_recipe_count": len(glm_result["recipes"]), "slot_binding_count": len(glm_result["slots"])})
+    emit_progress(
+        progress_callback,
+        "binding",
+        "completed",
+        "Binding artifacts prepared.",
+        {"adapter_recipe_count": len(glm_result["recipes"]), "slot_binding_count": len(glm_result["slots"])},
+    )
 
+    emit_progress(progress_callback, "testcase_generation", "running", "Rendering testcase sources from prepared bindings.")
     case_dir = out_dir / "cases"
     cases = generate_cases(case_dir, families, min(args.max_cases, 60))
     stage_report(case_dir, stage_names[4], "ready", {"generated_case_count": len(cases)})
+    emit_progress(progress_callback, "testcase_generation", "completed", "Testcase sources generated.", {"generated_case_count": len(cases)})
 
+    emit_progress(progress_callback, "build", "running", "Building generated testcase sources.")
     compile_dir = out_dir / "compile_run"
     compile_result = compile_cases(cases, compile_dir, min(args.max_compile_jobs, 80), args.execution_mode)
     stage_report(compile_dir, stage_names[5], "ready", compile_result["summary"])
+    build_status = "failed" if compile_result["summary"].get("compile_failed") else "completed"
+    emit_progress(progress_callback, "build", build_status, "Build stage completed.", compile_result["summary"])
+    if args.execution_mode == "syntax_only":
+        emit_progress(
+            progress_callback,
+            "runtime",
+            "planned",
+            "Runtime was not executed by syntax-only mainline.",
+            {"execution_mode": args.execution_mode, "runtime_harness_executed": False},
+        )
+    else:
+        emit_progress(
+            progress_callback,
+            "runtime",
+            "blocked" if compile_result["summary"].get("unsupported") else "partial",
+            "Runtime execution is not available in this one-click smoke path.",
+            {"execution_mode": args.execution_mode, "runtime_harness_executed": False},
+        )
 
+    emit_progress(progress_callback, "evaluation", "running", "Evaluating generated result records.")
     oracle_dir = out_dir / "oracle"
     oracle_counts = oracle_from_raw(compile_result["results"], oracle_dir, args.oracle_mode)
     stage_report(oracle_dir, stage_names[6], "ready", oracle_counts)
     stage_report(oracle_dir / "central_dispatcher", stage_names[7], "ready", {"dispatcher_mode": "conservative_delta"})
     stage_report(oracle_dir / "ledger_and_candidate_queue", stage_names[8], "ready", oracle_counts)
+    emit_progress(progress_callback, "evaluation", "completed", "Evaluation completed.", oracle_counts)
+    emit_progress(progress_callback, "result_record", "completed", "Result record queues updated.", oracle_counts)
+    if int(oracle_counts.get("new_candidate_count") or 0) > 0:
+        emit_progress(progress_callback, "context_exploration", "running", "Candidate emitted; context exploration can be routed.", oracle_counts)
+    else:
+        emit_progress(
+            progress_callback,
+            "context_exploration",
+            "not_triggered",
+            "No candidate was emitted, so context exploration was not triggered.",
+            oracle_counts,
+        )
 
     cleanup_manifest = remove_transient_files(out_dir)
     write_yaml(out_dir / "cleanup_manifest.yaml", cleanup_manifest)

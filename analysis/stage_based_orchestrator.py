@@ -12,7 +12,7 @@ import importlib.util
 import os
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import yaml
 
@@ -33,6 +33,25 @@ from tools.templates.template_schema_inventory_v1 import build_template_pack
 
 
 TASK_NAME = "stage_based_orchestrator_v1"
+
+
+def emit_progress(
+    progress_callback: Callable[[dict[str, Any]], None] | None,
+    stage_id: str,
+    status: str,
+    message: str,
+    summary: dict[str, Any] | None = None,
+) -> None:
+    if progress_callback is None:
+        return
+    progress_callback(
+        {
+            "stage": stage_id,
+            "status": status,
+            "message": message,
+            "summary": summary or {},
+        }
+    )
 
 LEGACY_FAMILY_ALIASES = {
     "parser_full_consumption": "der_pointer_consumption",
@@ -1021,9 +1040,11 @@ def run_stage_based_orchestrator(
     max_families: int,
     max_cases: int,
     max_compile_jobs: int,
+    progress_callback: Callable[[dict[str, Any]], None] | None = None,
 ) -> dict[str, Any]:
     repo_root = repo_root.resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
+    emit_progress(progress_callback, "family_selection", "running", "Loading family taxonomy and target runtime preflight.")
     bundle = load_card_bundle(repo_root)
     selected_families, unsupported_families = _canonical_families(bundle, families, max_families)
     target_rows = _target_rows(targets)
@@ -1035,6 +1056,14 @@ def run_stage_based_orchestrator(
     blocked_targets = sorted({row["target"] for row in target_rows if row["runtime_status"] == "blocked_runtime"})
     baseline_targets = sorted({row["target"] for row in target_rows if row["runtime_status"] == "baseline_only"})
     ready_targets = sorted({row["target"] for row in target_rows if row["runtime_status"] == "runtime_ready"})
+    emit_progress(
+        progress_callback,
+        "family_selection",
+        "completed" if selected_families else "partial",
+        "Family and target inputs selected." if selected_families else "No supported family was selected.",
+        {"selected_family_count": len(selected_families), "ready_target_count": len(ready_targets), "blocked_target_count": len(blocked_targets)},
+    )
+    emit_progress(progress_callback, "knowledge_retrieval", "running", "Loading knowledge cards and stage contract.")
 
     stage_trace = {
         "schema": "stage_trace_v1",
@@ -1090,6 +1119,13 @@ def run_stage_based_orchestrator(
             "contract_path": "config/orchestrator_card_contract.yaml",
             "stage_contract_path": "config/mainline_stage_contract.yaml",
         },
+    )
+    emit_progress(
+        progress_callback,
+        "knowledge_retrieval",
+        "completed" if bundle["summary"]["framework_family_cards_loaded"] else "partial",
+        "Knowledge card context loaded.",
+        {"family_card_count": bundle["summary"]["framework_family_cards_loaded"], "api_card_count": bundle["summary"]["target_api_cards_loaded"], "constraint_count": bundle["summary"]["constraints_loaded"], "call_sequence_count": bundle["summary"]["call_sequences_loaded"]},
     )
 
     mapping_gate = {
@@ -1197,8 +1233,17 @@ def run_stage_based_orchestrator(
             "status": "external_manual_slot_bindings_loaded",
         }
     else:
+        emit_progress(progress_callback, "model_proposal", "running", "Running model-assisted slot filling.")
         slot_doc, glm_report = _call_glm_for_slots(slot_plan, probe_mode)
         write_yaml(out_dir / "slot_bindings.yaml", slot_doc)
+    emit_progress(
+        progress_callback,
+        "model_proposal",
+        "completed" if glm_report.get("status") in {"ok", "existing_probe_slots_loaded", "external_manual_slot_bindings_loaded"} else "partial",
+        "Model-assisted slot filling completed.",
+        glm_report,
+    )
+    emit_progress(progress_callback, "validation", "running", "Validating slot bindings and adapter compatibility.")
     write_yaml(out_dir / "glm_slot_filling_report.yaml", glm_report)
     slot_validation_report, adapter_validation_report = _validate_slots(slot_doc, out_dir, slot_plan)
     if not manual_waiting:
@@ -1231,6 +1276,20 @@ def run_stage_based_orchestrator(
         and adapter_validation_report.get("adapter_validation_passed")
         and int(slot_validation_report.get("usable_bindings", 0) or 0) > 0
     )
+    emit_progress(
+        progress_callback,
+        "validation",
+        "completed" if slot_ok else "partial",
+        "Slot validation produced usable runtime bindings." if slot_ok else "Slot validation did not produce usable runtime bindings.",
+        {"slot_validation_passed": slot_validation_report.get("slot_validation_passed", False), "usable_bindings": slot_validation_report.get("usable_bindings", 0), "invalid_bindings": slot_validation_report.get("invalid_bindings", 0)},
+    )
+    emit_progress(
+        progress_callback,
+        "binding",
+        "completed" if slot_ok else "blocked",
+        "Runtime binding prepared." if slot_ok else "Runtime smoke is unavailable because no usable runtime binding was produced.",
+        {"usable_bindings": slot_validation_report.get("usable_bindings", 0)},
+    )
     if manual_waiting:
         write_yaml(
             out_dir / "rendered_cases_manifest.yaml",
@@ -1245,6 +1304,9 @@ def run_stage_based_orchestrator(
         write_yaml(out_dir / "run_report.yaml", {"schema": "run_report_v1", "status": "waiting_for_manual_slot_bindings", "reason": "manual_glm_request_created_no_slot_bindings_yet"})
         write_yaml(out_dir / "runtime_analyze_report.yaml", {"schema": "runtime_analyze_report_v1", "status": "waiting_for_manual_slot_bindings", "reason": "manual_glm_request_created_no_slot_bindings_yet"})
     elif execution_mode == "runtime_smoke" and not slot_ok:
+        emit_progress(progress_callback, "testcase_generation", "blocked", "Testcase rendering blocked because no usable runtime binding was produced.")
+        emit_progress(progress_callback, "build", "blocked", "Build blocked because no runtime testcase was rendered.")
+        emit_progress(progress_callback, "runtime", "blocked", "Runtime smoke is unavailable because no usable runtime binding was produced.")
         reason = "no_usable_slot_bindings" if slot_validation_report.get("slot_validation_passed") else "slot_validation_failed"
         status = "waiting_for_valid_slot_bindings" if reason == "no_usable_slot_bindings" else "partial"
         write_yaml(
@@ -1340,6 +1402,9 @@ def run_stage_based_orchestrator(
         },
     )
     if execution_mode == "runtime_smoke" and slot_ok and not manual_waiting:
+        emit_progress(progress_callback, "testcase_generation", "running", "Rendering runtime smoke testcase sources.")
+        emit_progress(progress_callback, "build", "running", "Compiling runtime smoke testcases.")
+        emit_progress(progress_callback, "runtime", "running", "Executing runtime smoke harnesses.")
         runtime_summary = run_runtime_harness_bridge(
             repo_root=repo_root,
             out_dir=out_dir,
@@ -1352,6 +1417,25 @@ def run_stage_based_orchestrator(
             max_compile_jobs=max_compile_jobs,
             timeout_seconds=10,
         )
+        emit_progress(progress_callback, "testcase_generation", "completed", "Runtime smoke testcase sources rendered.", runtime_summary)
+        emit_progress(
+            progress_callback,
+            "build",
+            "completed" if runtime_summary.get("compile_failed", 0) == 0 else "failed",
+            "Runtime smoke build completed.",
+            runtime_summary,
+        )
+        emit_progress(
+            progress_callback,
+            "runtime",
+            "completed" if runtime_summary.get("runtime_harness_executed") else "blocked",
+            "Runtime smoke execution completed." if runtime_summary.get("runtime_harness_executed") else "Runtime smoke did not execute.",
+            runtime_summary,
+        )
+    elif execution_mode != "runtime_smoke":
+        emit_progress(progress_callback, "testcase_generation", "planned", "Runtime testcase generation is not part of syntax check.")
+        emit_progress(progress_callback, "build", "planned", "Runtime build is not part of syntax check.")
+        emit_progress(progress_callback, "runtime", "planned", "Runtime was not executed by syntax check level.")
 
     fault_surface_report = fault_surface_engine.run(
         _build_fault_surface_seed_context(
@@ -1365,6 +1449,7 @@ def run_stage_based_orchestrator(
         )
     )
     write_yaml(out_dir / "fault_surface_report.yaml", fault_surface_report)
+    emit_progress(progress_callback, "evaluation", "running", "Evaluating runtime smoke observations.")
 
     expected_all_family = len(family_set) == len(bundle["framework_families"])
     expected_all_target = len(target_set) == len(TARGET_RUNTIME_STATUS)
@@ -1448,6 +1533,15 @@ def run_stage_based_orchestrator(
         "candidate_event_count": runtime_summary.get("candidate_event_count", 0),
     }
     write_yaml(out_dir / "quality_report.yaml", quality)
+    emit_progress(progress_callback, "evaluation", "completed", "Evaluation artifacts updated.", quality)
+    emit_progress(progress_callback, "result_record", "completed", "Result record summary updated.", quality)
+    emit_progress(
+        progress_callback,
+        "context_exploration",
+        "not_triggered",
+        "Context exploration is only routed when candidate artifacts are emitted.",
+        quality,
+    )
     write_text(
         out_dir / "README.md",
         "\n".join(
