@@ -1,5 +1,30 @@
 # Current Pipeline v2
 
+## Canonical Contract and Transfer Foundation
+
+The canonical v2 method begins by separating historical validation semantics
+from target migration eligibility:
+
+```text
+validated Vulnerability Contract v0.3
+  -> Transfer Signature v0.1
+  -> target semantic facts
+  -> deterministic eligibility
+```
+
+The Vulnerability Contract defines what must be validated. Transfer Signature
+is the Contract-derived Target Eligibility Specification: it defines the typed
+capabilities, excluded semantics, and observability obligations that a target
+semantic surface must satisfy before migration. The current implementation is
+limited to this foundation and does not yet implement CandidateBinding or the
+formal Matcher.
+
+The scheduler, A/B/C/D paths, RAG metadata, API cards, adapter recipes, and
+candidate scores described below are legacy implementation components and
+evidence sources. They do not define Transfer Signature truth and cannot decide
+eligibility. The canonical TS semantics and boundary are specified in
+`docs/transfer_signature_v0_1.md`.
+
 ## Old Linear Chain
 
 The earlier mainline was:

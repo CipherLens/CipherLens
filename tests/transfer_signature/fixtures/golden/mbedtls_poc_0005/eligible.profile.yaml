@@ -1,0 +1,198 @@
+evidence:
+- evidence_id: SYNTHETIC_FIXTURE
+  kind: test_fixture
+  path: tests/transfer_signature/fixtures/synthetic_target_evidence.md
+  sha256: ce22039fbb11b7e25e9127ba020c9338e01b4ea93eab7a475964a952555ef220
+facts:
+- assertion: 'TRUE'
+  coverage: SURFACE
+  epistemic_status: VERIFIED
+  evidence_refs:
+  - SYNTHETIC_FIXTURE
+  fact_id: F_RC_EXECUTION_SHAPE
+  fact_type: execution_shape
+  parameters:
+    continuity: single_subject
+    participant_refs:
+    - SYNTHETIC_UPDATE
+    - SYNTHETIC_UPDATE
+    - SYNTHETIC_UPDATE
+    roles:
+    - UPDATE
+    - UPDATE
+    - UPDATE
+    subject_roles:
+    - stateful_context
+    - stateful_context
+    - stateful_context
+  subject_ref: SYNTHETIC_STATE_SURFACE
+- assertion: 'TRUE'
+  coverage: SURFACE
+  epistemic_status: VERIFIED
+  evidence_refs:
+  - SYNTHETIC_FIXTURE
+  fact_id: F_RC_INTERVENTION_ZERO_THEN_REUSE
+  fact_type: equivalent_intervention
+  parameters:
+    kind: state_reuse_sequence
+    target_role: stateful_context
+  subject_ref: SYNTHETIC_STATE_SURFACE
+- assertion: 'TRUE'
+  coverage: SURFACE
+  epistemic_status: VERIFIED
+  evidence_refs:
+  - SYNTHETIC_FIXTURE
+  fact_id: F_RC_OBJECT_NAMED_DATA_CONTEXT
+  fact_type: object_role
+  parameters:
+    role: stateful_context
+    value_type: state
+  subject_ref: SYNTHETIC_STATE_OBJECT
+- assertion: 'TRUE'
+  coverage: SURFACE
+  epistemic_status: VERIFIED
+  evidence_refs:
+  - SYNTHETIC_FIXTURE
+  fact_id: F_RC_OBJECT_VALUE_BYTES
+  fact_type: object_role
+  parameters:
+    role: encoded_input
+    value_type: bytes
+  subject_ref: SYNTHETIC_VALUE
+- assertion: 'TRUE'
+  coverage: SURFACE
+  epistemic_status: VERIFIED
+  evidence_refs:
+  - SYNTHETIC_FIXTURE
+  fact_id: F_RC_OPERATION_UPDATE_STATEFUL_CONTEXT
+  fact_type: operation_role
+  parameters:
+    role: UPDATE
+    subject_role: stateful_context
+  subject_ref: SYNTHETIC_UPDATE
+- assertion: 'TRUE'
+  coverage: SURFACE
+  epistemic_status: VERIFIED
+  evidence_refs:
+  - SYNTHETIC_FIXTURE
+  fact_id: F_RC_PRECONDITION_SAME_IDENTIFIER_REUSE
+  fact_type: precondition_shape
+  parameters:
+    operand_roles:
+    - stateful_context
+    - encoded_input
+    predicate_id: same_identifier_equal_nonzero_reuse
+  subject_ref: SYNTHETIC_STATE_SURFACE
+- assertion: 'FALSE'
+  coverage: SURFACE
+  epistemic_status: VERIFIED
+  evidence_refs:
+  - SYNTHETIC_FIXTURE
+  fact_id: F_ES_01_ATOMIC_CLEAR_PRECLUDES_INCONSISTENT_INTERMEDIATE_STATE
+  fact_type: atomic_clear_semantics
+  parameters:
+    intervention_kind: state_reuse_sequence
+    operation_role: UPDATE
+  subject_ref: SYNTHETIC_STATE_SURFACE
+- assertion: 'FALSE'
+  coverage: SURFACE
+  epistemic_status: VERIFIED
+  evidence_refs:
+  - SYNTHETIC_FIXTURE
+  fact_id: F_ES_02_MANDATORY_TERMINALIZATION_PRECLUDES_FOLLOWUP
+  fact_type: terminalization_after_operation
+  parameters:
+    intervention_kind: state_reuse_sequence
+    operation_role: UPDATE
+  subject_ref: SYNTHETIC_STATE_SURFACE
+- assertion: 'TRUE'
+  coverage: SURFACE
+  epistemic_status: VERIFIED
+  evidence_refs:
+  - SYNTHETIC_FIXTURE
+  fact_id: F_RO_OBSERVABLE_BUFFER_PRESENT_AFTER_ZERO
+  fact_type: observable_channel
+  parameters:
+    observable_ref: BUFFER_PRESENT_AFTER_ZERO
+    operation_role: UPDATE
+    phase: after_step
+    semantic_role: object_state
+    value_type: boolean
+  subject_ref: SYNTHETIC_STATE_CHANNEL
+- assertion: 'TRUE'
+  coverage: SURFACE
+  epistemic_status: VERIFIED
+  evidence_refs:
+  - SYNTHETIC_FIXTURE
+  fact_id: F_RO_OBSERVABLE_CORRELATION
+  fact_type: observable_correlation
+  parameters:
+    correlation_scope: same_subject
+    observable_refs:
+    - BUFFER_PRESENT_AFTER_ZERO
+    - STORED_LENGTH_AFTER_ZERO
+    - REUSE_FATAL_EVENT
+    participant_refs:
+    - SYNTHETIC_STATE_CHANNEL
+  subject_ref: SYNTHETIC_STATE_SURFACE
+- assertion: 'TRUE'
+  coverage: SURFACE
+  epistemic_status: VERIFIED
+  evidence_refs:
+  - SYNTHETIC_FIXTURE
+  fact_id: F_RO_OBSERVABLE_REUSE_FATAL_EVENT
+  fact_type: observable_channel
+  parameters:
+    observable_ref: REUSE_FATAL_EVENT
+    operation_role: UPDATE
+    phase: after_step
+    semantic_role: fatal_event
+    value_type: event
+  subject_ref: SYNTHETIC_STATE_CHANNEL
+- assertion: 'TRUE'
+  coverage: SURFACE
+  epistemic_status: VERIFIED
+  evidence_refs:
+  - SYNTHETIC_FIXTURE
+  fact_id: F_RO_OBSERVABLE_STORED_LENGTH_AFTER_ZERO
+  fact_type: observable_channel
+  parameters:
+    observable_ref: STORED_LENGTH_AFTER_ZERO
+    operation_role: UPDATE
+    phase: after_step
+    semantic_role: object_state
+    value_type: integer
+  subject_ref: SYNTHETIC_STATE_CHANNEL
+profile_id: ASN1_NAMED_DATA_STATE_CONSISTENCY_ELIGIBLE_PROFILE
+schema_version: cipherlens.target_semantic_profile.v0.1
+subjects:
+- semantic_roles:
+  - stateful_context
+  - encoded_input
+  subject_kind: API_GROUP
+  subject_ref: SYNTHETIC_STATE_SURFACE
+  surface_ref: synthetic:object-state-surface
+- semantic_roles:
+  - stateful_context
+  subject_kind: API
+  subject_ref: SYNTHETIC_UPDATE
+  surface_ref: synthetic:object-state-surface
+- semantic_roles:
+  - stateful_context
+  subject_kind: OBJECT
+  subject_ref: SYNTHETIC_STATE_OBJECT
+  surface_ref: synthetic:object-state-surface
+- semantic_roles:
+  - encoded_input
+  subject_kind: OBJECT
+  subject_ref: SYNTHETIC_VALUE
+  surface_ref: synthetic:object-state-surface
+- semantic_roles:
+  - stateful_context
+  subject_kind: OBSERVATION_CHANNEL
+  subject_ref: SYNTHETIC_STATE_CHANNEL
+  surface_ref: synthetic:object-state-surface
+target_scope:
+  library: synthetic-target
+  surface_ref: synthetic:object-state-surface
+  version: '1.0'

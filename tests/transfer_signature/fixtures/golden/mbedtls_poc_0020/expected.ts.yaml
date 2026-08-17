@@ -1,0 +1,173 @@
+contract_family: input_consumption
+excluded_semantics:
+- constraint_id: ES_01_MANDATORY_COMPLETE_INPUT_ENFORCEMENT
+  derivation_refs:
+  - D_ES_01_MANDATORY_COMPLETE_INPUT_ENFORCEMENT
+  parameters:
+    operation_role: PARSE
+  type: mandatory_complete_input_enforcement
+provenance:
+  derivations:
+  - constraint_ref: ES_01_MANDATORY_COMPLETE_INPUT_ENFORCEMENT
+    derivation_id: D_ES_01_MANDATORY_COMPLETE_INPUT_ENFORCEMENT
+    method: family_rule
+    rule_id: ts.input_consumption.v0_1
+    source_refs:
+    - contract:/expected_relation
+    - family_rule:ts.input_consumption.v0_1
+    - evidence:REPRODUCTION
+    - evidence:POC
+    - evidence:FIX_COMMITS
+  - constraint_ref: RC_EXECUTION_SHAPE
+    derivation_id: D_RC_EXECUTION_SHAPE
+    method: direct_projection
+    rule_id: ts.direct.execution_shape.v0_1
+    source_refs:
+    - contract:/execution/steps
+  - constraint_ref: RC_INTERVENTION_APPEND_TRAILING_DATA
+    derivation_id: D_RC_INTERVENTION_APPEND_TRAILING_DATA
+    method: direct_projection
+    rule_id: ts.direct.intervention.v0_1
+    source_refs:
+    - contract:/intervention/actions/0
+    - evidence:POC
+    - evidence:REPRODUCTION
+  - constraint_ref: RC_OBJECT_RSA_DER_INPUT
+    derivation_id: D_RC_OBJECT_RSA_DER_INPUT
+    method: direct_projection
+    rule_id: ts.direct.object_role.v0_1
+    source_refs:
+    - contract:/context/objects/0
+  - constraint_ref: RC_OPERATION_PARSE_ENCODED_INPUT
+    derivation_id: D_RC_OPERATION_PARSE_ENCODED_INPUT
+    method: direct_projection
+    rule_id: ts.direct.operation_role.v0_1
+    source_refs:
+    - contract:/execution/steps/0
+  - constraint_ref: RC_PRECONDITION_VALID_PREFIX_WITH_TAIL
+    derivation_id: D_RC_PRECONDITION_VALID_PREFIX_WITH_TAIL
+    method: direct_projection
+    rule_id: ts.direct.precondition_shape.v0_1
+    source_refs:
+    - contract:/context/preconditions/0
+  - constraint_ref: RO_OBSERVABLE_CONSUMED_LENGTH
+    derivation_id: D_RO_OBSERVABLE_CONSUMED_LENGTH
+    method: direct_projection
+    rule_id: ts.direct.observable_ref.v0_1
+    source_refs:
+    - contract:/observable_evidence/observables/1
+    - contract:/expected_relation
+  - constraint_ref: RO_OBSERVABLE_CORRELATION
+    derivation_id: D_RO_OBSERVABLE_CORRELATION
+    method: family_rule
+    rule_id: ts.input_consumption.v0_1
+    source_refs:
+    - contract:/observable_evidence/observables
+    - family_rule:ts.input_consumption.v0_1
+  - constraint_ref: RO_OBSERVABLE_INPUT_LENGTH
+    derivation_id: D_RO_OBSERVABLE_INPUT_LENGTH
+    method: direct_projection
+    rule_id: ts.direct.observable_ref.v0_1
+    source_refs:
+    - contract:/observable_evidence/observables/2
+    - contract:/expected_relation
+  - constraint_ref: RO_OBSERVABLE_PARSE_OUTCOME
+    derivation_id: D_RO_OBSERVABLE_PARSE_OUTCOME
+    method: direct_projection
+    rule_id: ts.direct.observable_ref.v0_1
+    source_refs:
+    - contract:/observable_evidence/observables/0
+    - contract:/expected_relation
+  evidence:
+  - evidence_id: FIX_COMMITS
+    kind: patch
+    path: data/pocs/core10/MBEDTLS-POC-0020/fix_commits.txt
+    sha256: e5c025cf076c7744198188f99af3a6d8be081f7ee13216454bfdc2446bebff15
+  - evidence_id: POC
+    kind: poc
+    path: data/pocs/core10/MBEDTLS-POC-0020/poc/poc_rsa_trailing_garbage.c
+    sha256: 099687f8d8b10207a47f0db9ff6e2b5704581c8a9e759218fe703ebc0cf2b1e9
+  - evidence_id: REPRODUCTION
+    kind: buggy_run
+    path: data/pocs/core10/MBEDTLS-POC-0020/reproduction_result.md
+    sha256: a507ad46bb240870b4096c19d4dd2bde36ee163ea0e219e414a3c8e88381e129
+  producer:
+    mode: deterministic_family_rule
+    name: transfer_signature
+    version: v0.1
+required_capabilities:
+- constraint_id: RC_EXECUTION_SHAPE
+  derivation_refs:
+  - D_RC_EXECUTION_SHAPE
+  parameters:
+    continuity: single_subject
+    roles:
+    - PARSE
+    subject_roles:
+    - encoded_input
+  type: supports_execution_shape
+- constraint_id: RC_INTERVENTION_APPEND_TRAILING_DATA
+  derivation_refs:
+  - D_RC_INTERVENTION_APPEND_TRAILING_DATA
+  parameters:
+    kind: append_input_tail
+    target_role: encoded_input
+  type: permits_equivalent_intervention
+- constraint_id: RC_OBJECT_RSA_DER_INPUT
+  derivation_refs:
+  - D_RC_OBJECT_RSA_DER_INPUT
+  parameters:
+    role: encoded_input
+    value_type: bytes
+  type: supports_object_role
+- constraint_id: RC_OPERATION_PARSE_ENCODED_INPUT
+  derivation_refs:
+  - D_RC_OPERATION_PARSE_ENCODED_INPUT
+  parameters:
+    role: PARSE
+    subject_role: encoded_input
+  type: supports_operation_role
+- constraint_id: RC_PRECONDITION_VALID_PREFIX_WITH_TAIL
+  derivation_refs:
+  - D_RC_PRECONDITION_VALID_PREFIX_WITH_TAIL
+  parameters:
+    operand_roles:
+    - encoded_input
+    predicate_id: valid_object_plus_nonempty_external_tail
+  type: supports_precondition_shape
+required_observability:
+- constraint_id: RO_OBSERVABLE_CONSUMED_LENGTH
+  derivation_refs:
+  - D_RO_OBSERVABLE_CONSUMED_LENGTH
+  parameters:
+    observable_ref: CONSUMED_LENGTH
+  type: contract_observable_resolvable
+- constraint_id: RO_OBSERVABLE_CORRELATION
+  derivation_refs:
+  - D_RO_OBSERVABLE_CORRELATION
+  parameters:
+    correlation_scope: same_run
+    observable_refs:
+    - PARSE_OUTCOME
+    - CONSUMED_LENGTH
+    - INPUT_LENGTH
+  type: observable_set_correlatable
+- constraint_id: RO_OBSERVABLE_INPUT_LENGTH
+  derivation_refs:
+  - D_RO_OBSERVABLE_INPUT_LENGTH
+  parameters:
+    observable_ref: INPUT_LENGTH
+  type: contract_observable_resolvable
+- constraint_id: RO_OBSERVABLE_PARSE_OUTCOME
+  derivation_refs:
+  - D_RO_OBSERVABLE_PARSE_OUTCOME
+  parameters:
+    observable_ref: PARSE_OUTCOME
+  type: contract_observable_resolvable
+schema_version: cipherlens.transfer_signature.v0.1
+signature_id: RSA_DER_FULL_CONSUMPTION_TS_V0_1
+source_contract_digest: b8a45d8c9ff405714d44f09caa8e7de7aeafc8c4bc9f01374f7aac90a2a342bb
+source_contract_ref: contract:RSA_DER_FULL_CONSUMPTION
+source_validation_refs:
+- validation_digest: 17d324710aefc93dd56d7c8cea605a81b527778f2c374e0418a7aa567b5d82e3
+  validation_id: RSA_DER_FULL_CONSUMPTION_SOURCE_VALIDATION

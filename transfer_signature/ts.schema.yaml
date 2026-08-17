@@ -1,0 +1,73 @@
+schema_version: cipherlens.transfer_signature.v0.1
+document_kind: transfer_signature
+closed: true
+required_top_level:
+- schema_version
+- signature_id
+- source_contract_ref
+- source_contract_digest
+- source_validation_refs
+- contract_family
+- required_capabilities
+- excluded_semantics
+- required_observability
+- provenance
+constraint_classes:
+  required_capabilities:
+  - supports_operation_role
+  - supports_object_role
+  - supports_precondition_shape
+  - permits_equivalent_intervention
+  - supports_execution_shape
+  excluded_semantics:
+  - mandatory_complete_input_enforcement
+  - failure_output_transactionality
+  - atomic_clear_precludes_inconsistent_intermediate_state
+  - mandatory_terminalization_precludes_followup
+  required_observability:
+  - contract_observable_resolvable
+  - observable_set_correlatable
+objects:
+  source_validation_ref:
+    required: [validation_id, validation_digest]
+    optional: []
+  constraint:
+    required: [constraint_id, type, parameters, derivation_refs]
+    optional: []
+  provenance:
+    required: [producer, evidence, derivations]
+    optional: []
+  producer:
+    required: [name, version, mode]
+    optional: []
+  evidence:
+    required: [evidence_id, kind, path, sha256]
+    optional: []
+  derivation:
+    required: [derivation_id, constraint_ref, method, rule_id, source_refs]
+    optional: []
+derivation_methods:
+- direct_projection
+- family_rule
+- structured_metadata
+- reviewed_proposal
+parameter_keys:
+  supports_operation_role: [role, subject_role]
+  supports_object_role: [role, value_type]
+  supports_precondition_shape: [predicate_id, operand_roles]
+  permits_equivalent_intervention: [kind, target_role]
+  supports_execution_shape: [roles, subject_roles, continuity]
+  mandatory_complete_input_enforcement: [operation_role]
+  failure_output_transactionality: [operation_role, output_role]
+  atomic_clear_precludes_inconsistent_intermediate_state: [operation_role, intervention_kind]
+  mandatory_terminalization_precludes_followup: [operation_role, intervention_kind]
+  contract_observable_resolvable: [observable_ref]
+  observable_set_correlatable: [observable_refs, correlation_scope]
+forbidden_fields:
+- target_api
+- candidate_binding
+- candidate_ref
+- score
+- verdict
+- target_result
+- expected_relation

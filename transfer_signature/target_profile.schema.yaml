@@ -1,0 +1,73 @@
+schema_version: cipherlens.target_semantic_profile.v0.1
+document_kind: target_semantic_profile
+closed: true
+required_top_level:
+- schema_version
+- profile_id
+- target_scope
+- subjects
+- facts
+- evidence
+objects:
+  target_scope:
+    required: [library, version, surface_ref]
+    optional: []
+  subject:
+    required: [subject_ref, subject_kind, surface_ref, semantic_roles]
+    optional: []
+  fact:
+    required: [fact_id, subject_ref, coverage, fact_type, parameters, assertion, epistemic_status, evidence_refs]
+    optional: []
+  evidence:
+    required: [evidence_id, kind, path, sha256]
+    optional: []
+assertions: [TRUE, FALSE, UNKNOWN]
+epistemic_statuses: [VERIFIED, INFERRED, PROPOSED]
+coverage: [SUBJECT, SURFACE]
+subject_kinds:
+- API
+- API_GROUP
+- WRAPPER
+- INTERFACE
+- OBJECT_MODEL
+- CALL_SURFACE
+- OBJECT
+- OBSERVATION_CHANNEL
+subject_fields: [subject_ref, subject_kind, surface_ref, semantic_roles]
+fact_types:
+- operation_role
+- object_role
+- precondition_shape
+- equivalent_intervention
+- execution_shape
+- complete_input_enforcement
+- failure_output_transactionality
+- atomic_clear_semantics
+- terminalization_after_operation
+- observable_channel
+- observable_correlation
+fact_parameter_keys:
+  operation_role: [role, subject_role]
+  object_role: [role, value_type]
+  precondition_shape: [predicate_id, operand_roles]
+  equivalent_intervention: [kind, target_role]
+  execution_shape: [roles, subject_roles, continuity, participant_refs]
+  complete_input_enforcement: [operation_role]
+  failure_output_transactionality: [operation_role, output_role]
+  atomic_clear_semantics: [operation_role, intervention_kind]
+  terminalization_after_operation: [operation_role, intervention_kind]
+  observable_channel: [observable_ref, semantic_role, value_type, phase, operation_role]
+  observable_correlation: [observable_refs, correlation_scope, participant_refs]
+continuities: [single_subject, multi_subject]
+correlation_scopes: [same_run, same_step, same_subject]
+evidence_kinds:
+- official_doc
+- source
+- test
+- runtime_probe
+- adapter_recipe
+- api_card
+- rag
+- llm_proposal
+- manual_review
+- test_fixture

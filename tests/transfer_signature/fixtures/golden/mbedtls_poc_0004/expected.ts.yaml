@@ -1,0 +1,187 @@
+contract_family: failure_output_integrity
+excluded_semantics:
+- constraint_id: ES_01_FAILURE_OUTPUT_TRANSACTIONALITY
+  derivation_refs:
+  - D_ES_01_FAILURE_OUTPUT_TRANSACTIONALITY
+  parameters:
+    operation_role: FINAL
+    output_role: output_length
+  type: failure_output_transactionality
+provenance:
+  derivations:
+  - constraint_ref: ES_01_FAILURE_OUTPUT_TRANSACTIONALITY
+    derivation_id: D_ES_01_FAILURE_OUTPUT_TRANSACTIONALITY
+    method: family_rule
+    rule_id: ts.failure_output_integrity.v0_1
+    source_refs:
+    - contract:/expected_relation
+    - family_rule:ts.failure_output_integrity.v0_1
+    - evidence:REPRODUCTION
+    - evidence:POC
+    - evidence:FIX_COMMITS
+  - constraint_ref: RC_EXECUTION_SHAPE
+    derivation_id: D_RC_EXECUTION_SHAPE
+    method: direct_projection
+    rule_id: ts.direct.execution_shape.v0_1
+    source_refs:
+    - contract:/execution/steps
+  - constraint_ref: RC_INTERVENTION_SET_INVALID_PADDING
+    derivation_id: D_RC_INTERVENTION_SET_INVALID_PADDING
+    method: direct_projection
+    rule_id: ts.direct.intervention.v0_1
+    source_refs:
+    - contract:/intervention/actions/0
+    - evidence:POC
+    - evidence:REPRODUCTION
+  - constraint_ref: RC_OBJECT_CIPHER_CONTEXT
+    derivation_id: D_RC_OBJECT_CIPHER_CONTEXT
+    method: direct_projection
+    rule_id: ts.direct.object_role.v0_1
+    source_refs:
+    - contract:/context/objects/0
+  - constraint_ref: RC_OBJECT_CIPHER_INPUT
+    derivation_id: D_RC_OBJECT_CIPHER_INPUT
+    method: direct_projection
+    rule_id: ts.direct.object_role.v0_1
+    source_refs:
+    - contract:/context/objects/1
+  - constraint_ref: RC_OPERATION_FINAL_STATEFUL_CONTEXT
+    derivation_id: D_RC_OPERATION_FINAL_STATEFUL_CONTEXT
+    method: direct_projection
+    rule_id: ts.direct.operation_role.v0_1
+    source_refs:
+    - contract:/execution/steps/0
+  - constraint_ref: RC_PRECONDITION_INVALID_PADDING
+    derivation_id: D_RC_PRECONDITION_INVALID_PADDING
+    method: direct_projection
+    rule_id: ts.direct.precondition_shape.v0_1
+    source_refs:
+    - contract:/context/preconditions/0
+  - constraint_ref: RO_OBSERVABLE_CORRELATION
+    derivation_id: D_RO_OBSERVABLE_CORRELATION
+    method: family_rule
+    rule_id: ts.failure_output_integrity.v0_1
+    source_refs:
+    - contract:/observable_evidence/observables
+    - family_rule:ts.failure_output_integrity.v0_1
+  - constraint_ref: RO_OBSERVABLE_FINAL_OUTCOME
+    derivation_id: D_RO_OBSERVABLE_FINAL_OUTCOME
+    method: direct_projection
+    rule_id: ts.direct.observable_ref.v0_1
+    source_refs:
+    - contract:/observable_evidence/observables/0
+    - contract:/expected_relation
+  - constraint_ref: RO_OBSERVABLE_OUTPUT_LENGTH_AFTER
+    derivation_id: D_RO_OBSERVABLE_OUTPUT_LENGTH_AFTER
+    method: direct_projection
+    rule_id: ts.direct.observable_ref.v0_1
+    source_refs:
+    - contract:/observable_evidence/observables/2
+    - contract:/expected_relation
+  - constraint_ref: RO_OBSERVABLE_OUTPUT_LENGTH_BEFORE
+    derivation_id: D_RO_OBSERVABLE_OUTPUT_LENGTH_BEFORE
+    method: direct_projection
+    rule_id: ts.direct.observable_ref.v0_1
+    source_refs:
+    - contract:/observable_evidence/observables/1
+    - contract:/expected_relation
+  evidence:
+  - evidence_id: FIX_COMMITS
+    kind: patch
+    path: data/pocs/core10/MBEDTLS-POC-0004/fix_commits.txt
+    sha256: 7af2288d853bfb48c450f9185d53d9990c75a3d2c8156dd68d121cc4325ec13f
+  - evidence_id: POC
+    kind: poc
+    path: data/pocs/core10/MBEDTLS-POC-0004/poc/poc_get_pkcs_padding_outlen.c
+    sha256: 6f8607869fdc04cb675e532af4b5f2d348221ead0bdafbbcb2bd43b59791237c
+  - evidence_id: REPRODUCTION
+    kind: buggy_run
+    path: data/pocs/core10/MBEDTLS-POC-0004/reproduction_result.md
+    sha256: df89c7fa4bdb2bfb2f3ea6a6b7b112b5f3a25174d0844a3bcf01dd9f4d69c35d
+  producer:
+    mode: deterministic_family_rule
+    name: transfer_signature
+    version: v0.1
+required_capabilities:
+- constraint_id: RC_EXECUTION_SHAPE
+  derivation_refs:
+  - D_RC_EXECUTION_SHAPE
+  parameters:
+    continuity: single_subject
+    roles:
+    - FINAL
+    subject_roles:
+    - stateful_context
+  type: supports_execution_shape
+- constraint_id: RC_INTERVENTION_SET_INVALID_PADDING
+  derivation_refs:
+  - D_RC_INTERVENTION_SET_INVALID_PADDING
+  parameters:
+    kind: set_invalid_parameter
+    target_role: encoded_input
+  type: permits_equivalent_intervention
+- constraint_id: RC_OBJECT_CIPHER_CONTEXT
+  derivation_refs:
+  - D_RC_OBJECT_CIPHER_CONTEXT
+  parameters:
+    role: stateful_context
+    value_type: state
+  type: supports_object_role
+- constraint_id: RC_OBJECT_CIPHER_INPUT
+  derivation_refs:
+  - D_RC_OBJECT_CIPHER_INPUT
+  parameters:
+    role: encoded_input
+    value_type: bytes
+  type: supports_object_role
+- constraint_id: RC_OPERATION_FINAL_STATEFUL_CONTEXT
+  derivation_refs:
+  - D_RC_OPERATION_FINAL_STATEFUL_CONTEXT
+  parameters:
+    role: FINAL
+    subject_role: stateful_context
+  type: supports_operation_role
+- constraint_id: RC_PRECONDITION_INVALID_PADDING
+  derivation_refs:
+  - D_RC_PRECONDITION_INVALID_PADDING
+  parameters:
+    operand_roles:
+    - encoded_input
+    predicate_id: invalid_pkcs7_padding
+  type: supports_precondition_shape
+required_observability:
+- constraint_id: RO_OBSERVABLE_CORRELATION
+  derivation_refs:
+  - D_RO_OBSERVABLE_CORRELATION
+  parameters:
+    correlation_scope: same_step
+    observable_refs:
+    - FINAL_OUTCOME
+    - OUTPUT_LENGTH_BEFORE
+    - OUTPUT_LENGTH_AFTER
+  type: observable_set_correlatable
+- constraint_id: RO_OBSERVABLE_FINAL_OUTCOME
+  derivation_refs:
+  - D_RO_OBSERVABLE_FINAL_OUTCOME
+  parameters:
+    observable_ref: FINAL_OUTCOME
+  type: contract_observable_resolvable
+- constraint_id: RO_OBSERVABLE_OUTPUT_LENGTH_AFTER
+  derivation_refs:
+  - D_RO_OBSERVABLE_OUTPUT_LENGTH_AFTER
+  parameters:
+    observable_ref: OUTPUT_LENGTH_AFTER
+  type: contract_observable_resolvable
+- constraint_id: RO_OBSERVABLE_OUTPUT_LENGTH_BEFORE
+  derivation_refs:
+  - D_RO_OBSERVABLE_OUTPUT_LENGTH_BEFORE
+  parameters:
+    observable_ref: OUTPUT_LENGTH_BEFORE
+  type: contract_observable_resolvable
+schema_version: cipherlens.transfer_signature.v0.1
+signature_id: CIPHER_FAILURE_OUTPUT_PRESERVATION_TS_V0_1
+source_contract_digest: d3078db60491de216dcc1c9167a0f51a1d679a838ad70a772c06f660581ec725
+source_contract_ref: contract:CIPHER_FAILURE_OUTPUT_PRESERVATION
+source_validation_refs:
+- validation_digest: 3885e34cdaa7d92c62c92a6b4c09c779a4190170775caec278668fa97efed585
+  validation_id: CIPHER_FAILURE_OUTPUT_PRESERVATION_SOURCE_VALIDATION
