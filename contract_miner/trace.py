@@ -8,10 +8,7 @@ from pathlib import Path
 import re
 from typing import Any, Mapping
 
-import yaml
-
-
-_VC_SCHEMA_PATH = Path(__file__).with_name("vc.schema.yaml")
+from contract_miner.roles import OPERATION_ROLES
 _HEADER_FIELDS = (
     "record_type",
     "format",
@@ -42,6 +39,10 @@ _OUT_STATE_FIELDS = (
     "parse_result",
     "len_cleared",
     "reused_ptr_valid",
+    "output_length_before",
+    "output_length_after",
+    "buffer_present",
+    "stored_length",
 )
 _STATE_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]*$")
 _SANITIZER_PATTERN = re.compile(r"^(asan|signal)_[a-z0-9_]+$")
@@ -373,9 +374,13 @@ def _validate_out_state(
     for key in sorted(set(out_state) - set(_OUT_STATE_FIELDS), key=str):
         errors.append(f"T7 {path}.out_state.{key}: unknown key")
         valid = False
-    for key in ("tag_written", "len_cleared", "reused_ptr_valid"):
+    for key in ("tag_written", "len_cleared", "reused_ptr_valid", "buffer_present"):
         if key in out_state and type(out_state[key]) is not bool:
             errors.append(f"T7 {path}.out_state.{key}: expected boolean")
+            valid = False
+    for key in ("output_length_before", "output_length_after", "stored_length"):
+        if key in out_state and (type(out_state[key]) is not int or out_state[key] < 0):
+            errors.append(f"T7 {path}.out_state.{key}: expected non-negative integer")
             valid = False
     if "tag_value" in out_state:
         tag_value = out_state["tag_value"]
@@ -399,14 +404,7 @@ def _validate_out_state(
 
 
 def _load_role_vocabulary() -> frozenset[str]:
-    try:
-        schema = yaml.safe_load(_VC_SCHEMA_PATH.read_text(encoding="utf-8"))
-        roles = schema["enums"]["roles"]
-    except (OSError, yaml.YAMLError, KeyError, TypeError) as exc:
-        raise RuntimeError(f"cannot load role vocabulary from vc.schema.yaml: {exc}") from exc
-    if not isinstance(roles, list) or not all(type(role) is str for role in roles):
-        raise RuntimeError("vc.schema.yaml enums.roles must be a list of strings")
-    return frozenset(roles)
+    return OPERATION_ROLES
 
 
 def _header_mapping(header: TraceHeader) -> dict[str, Any]:

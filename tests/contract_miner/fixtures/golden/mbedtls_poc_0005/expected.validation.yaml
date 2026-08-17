@@ -1,0 +1,72 @@
+buggy:
+  errors: []
+  relation_results:
+  - evidence_bindings:
+    - observable_id: BUFFER_PRESENT_AFTER_ZERO
+      present: true
+      source: after_step:STORE_ZERO
+      value: false
+      value_type: boolean
+    - observable_id: STORED_LENGTH_AFTER_ZERO
+      present: true
+      source: after_step:STORE_ZERO
+      value: 4
+      value_type: integer
+    missing_observables: []
+    reason_code: BUFFER_ABSENT_WITH_NONZERO_LENGTH
+    relation_id: POINTER_LENGTH_CONSISTENT
+    result: BROKEN
+  - evidence_bindings:
+    - observable_id: REUSE_FATAL_EVENT
+      present: true
+      source: after_step:STORE_REUSE
+      value: signal_sigsegv
+      value_type: event
+    missing_observables: []
+    reason_code: FATAL_EVENT_OBSERVED
+    relation_id: REUSE_NO_FATAL_EVENT
+    result: BROKEN
+contract_id: ASN1_NAMED_DATA_STATE_CONSISTENCY
+fixed:
+  errors: []
+  relation_results:
+  - evidence_bindings:
+    - observable_id: BUFFER_PRESENT_AFTER_ZERO
+      present: true
+      source: after_step:STORE_ZERO
+      value: false
+      value_type: boolean
+    - observable_id: STORED_LENGTH_AFTER_ZERO
+      present: true
+      source: after_step:STORE_ZERO
+      value: 0
+      value_type: integer
+    missing_observables: []
+    reason_code: STATE_INVARIANT_HELD
+    relation_id: POINTER_LENGTH_CONSISTENT
+    result: HOLDS
+  - evidence_bindings:
+    - observable_id: REUSE_FATAL_EVENT
+      present: true
+      source: after_step:STORE_REUSE
+      value: null
+      value_type: event
+    missing_observables: []
+    reason_code: NO_FATAL_EVENT
+    relation_id: REUSE_NO_FATAL_EVENT
+    result: HOLDS
+provenance:
+  buggy_trace: tests/contract_miner/fixtures/golden/mbedtls_poc_0005/buggy.trace.jsonl
+  contract_sha256: b699b92ee8f71e0e0cc06b519325236ea2d8b806f5d232f3d61c8307ba9ceeb7
+  divergence_id: MBEDTLS_POC_0005_SOURCE_PAIR
+  fixed_trace: tests/contract_miner/fixtures/golden/mbedtls_poc_0005/fixed.trace.jsonl
+reason_codes:
+- SOURCE_WITNESSES_DISTINGUISHED
+schema_version: cipherlens.source_validation.v0_1
+source_pair:
+  buggy_revision: 2df7ab7c0c3d5bb8a31481073c494521d10d4eba^
+  fixed_revision: 2df7ab7c0c3d5bb8a31481073c494521d10d4eba
+  library: mbedtls
+  pair_kind: same_library_fix
+status: PASS
+validation_id: ASN1_NAMED_DATA_STATE_CONSISTENCY_SOURCE_VALIDATION

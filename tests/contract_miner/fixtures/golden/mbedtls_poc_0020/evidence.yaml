@@ -1,0 +1,54 @@
+schema_version: cipherlens.mining_input.v0_1
+contract_id: RSA_DER_FULL_CONSUMPTION
+contract_family: input_consumption
+family_rule: parser_full_consumption_v1
+source:
+  pattern_id: MBEDTLS-POC-0020
+  library: mbedtls
+  buggy_revision: "a7f651cf160a3753367e032c4471699822b37e30^1"
+  fixed_revision: "a7f651cf160a3753367e032c4471699822b37e30"
+  references: ["PR-8804", "ISSUE-8799"]
+context:
+  objects:
+    - object_id: RSA_DER_INPUT
+      semantic_role: encoded_input
+      value_type: bytes
+  states:
+    - {state_id: INPUT_READY, kind: initial}
+    - {state_id: PARSE_COMPLETE, kind: terminal}
+  preconditions:
+    - precondition_id: VALID_PREFIX_WITH_TAIL
+      predicate_id: valid_object_plus_nonempty_external_tail
+      operand_refs: [RSA_DER_INPUT]
+intervention:
+  actions:
+    - action_id: APPEND_TRAILING_DATA
+      kind: append_input_tail
+      target_ref: RSA_DER_INPUT
+      parameters:
+        - {name: tail_length, value_type: integer, value: 3, constraint_id: positive}
+      evidence_refs: [POC, REPRODUCTION]
+execution:
+  steps:
+    - step_id: PARSE_KEY
+      role: PARSE
+      target_ref: RSA_DER_INPUT
+      pre_state_ref: INPUT_READY
+      precondition_refs: [VALID_PREFIX_WITH_TAIL]
+      input_refs: [APPEND_TRAILING_DATA]
+rule_parameters:
+  parse_step_ref: PARSE_KEY
+evidence:
+  - evidence_id: REPRODUCTION
+    kind: buggy_run
+    path: data/pocs/core10/MBEDTLS-POC-0020/reproduction_result.md
+    sha256: a507ad46bb240870b4096c19d4dd2bde36ee163ea0e219e414a3c8e88381e129
+  - evidence_id: POC
+    kind: poc
+    path: data/pocs/core10/MBEDTLS-POC-0020/poc/poc_rsa_trailing_garbage.c
+    sha256: 099687f8d8b10207a47f0db9ff6e2b5704581c8a9e759218fe703ebc0cf2b1e9
+  - evidence_id: FIX_COMMITS
+    kind: patch
+    path: data/pocs/core10/MBEDTLS-POC-0020/fix_commits.txt
+    sha256: e5c025cf076c7744198188f99af3a6d8be081f7ee13216454bfdc2446bebff15
+human_review: {status: reviewed}

@@ -1,0 +1,139 @@
+context:
+  objects:
+  - object_id: CIPHER_CONTEXT
+    semantic_role: stateful_context
+    value_type: state
+  - object_id: CIPHER_INPUT
+    semantic_role: encoded_input
+    value_type: bytes
+  preconditions:
+  - operand_refs:
+    - CIPHER_INPUT
+    precondition_id: INVALID_PADDING
+    predicate_id: invalid_pkcs7_padding
+  states:
+  - kind: intermediate
+    state_id: CIPHER_READY
+  - kind: error
+    state_id: CIPHER_ERROR
+contract_family: failure_output_integrity
+contract_id: CIPHER_FAILURE_OUTPUT_PRESERVATION
+execution:
+  steps:
+  - input_refs:
+    - CIPHER_INPUT
+    - SET_INVALID_PADDING
+    pre_state_ref: CIPHER_READY
+    precondition_refs:
+    - INVALID_PADDING
+    role: FINAL
+    step_id: CIPHER_FINAL
+    target_ref: CIPHER_CONTEXT
+expected_relation:
+  aggregation: all_of
+  relations:
+  - criticality: primary
+    operands:
+      expectation: reject
+      outcome_ref: FINAL_OUTCOME
+    relation_id: INVALID_INPUT_REJECTED
+    type: outcome_requirement
+  - criticality: primary
+    operands:
+      after_ref: OUTPUT_LENGTH_AFTER
+      before_ref: OUTPUT_LENGTH_BEFORE
+      outcome_ref: FINAL_OUTCOME
+    relation_id: OUTPUT_PRESERVED
+    type: output_preserved_on_failure
+  summary: Invalid padding must be rejected without changing caller-visible output
+    length.
+intervention:
+  actions:
+  - action_id: SET_INVALID_PADDING
+    evidence_refs:
+    - POC
+    - REPRODUCTION
+    kind: set_invalid_parameter
+    parameters:
+    - constraint_id: exceeds_input_length
+      name: padding_byte
+      value: 128
+      value_type: integer
+    target_ref: CIPHER_INPUT
+observable_evidence:
+  observables:
+  - extraction:
+      field: ret
+      kind: normalized_return
+      rule_id: mbedtls_zero_is_success
+    observable_id: FINAL_OUTCOME
+    provenance_refs: &id001
+    - REPRODUCTION
+    - POC
+    - FIX_COMMITS
+    requirement: required
+    semantic_role: operation_outcome
+    source:
+      phase: after_step
+      step_ref: CIPHER_FINAL
+    value_type: outcome
+  - extraction:
+      field: output_length_before
+      kind: out_state_field
+    observable_id: OUTPUT_LENGTH_BEFORE
+    provenance_refs: *id001
+    requirement: conditional
+    semantic_role: output_length
+    source:
+      phase: after_step
+      step_ref: CIPHER_FINAL
+    value_type: integer
+  - extraction:
+      field: output_length_after
+      kind: out_state_field
+    observable_id: OUTPUT_LENGTH_AFTER
+    provenance_refs: *id001
+    requirement: conditional
+    semantic_role: output_length
+    source:
+      phase: after_step
+      step_ref: CIPHER_FINAL
+    value_type: integer
+provenance:
+  evidence:
+  - evidence_id: REPRODUCTION
+    kind: buggy_run
+    path: data/pocs/core10/MBEDTLS-POC-0004/reproduction_result.md
+    sha256: df89c7fa4bdb2bfb2f3ea6a6b7b112b5f3a25174d0844a3bcf01dd9f4d69c35d
+  - evidence_id: POC
+    kind: poc
+    path: data/pocs/core10/MBEDTLS-POC-0004/poc/poc_get_pkcs_padding_outlen.c
+    sha256: 6f8607869fdc04cb675e532af4b5f2d348221ead0bdafbbcb2bd43b59791237c
+  - evidence_id: FIX_COMMITS
+    kind: patch
+    path: data/pocs/core10/MBEDTLS-POC-0004/fix_commits.txt
+    sha256: 7af2288d853bfb48c450f9185d53d9990c75a3d2c8156dd68d121cc4325ec13f
+  field_origins:
+  - field_path: /expected_relation
+    method: family_rule
+    rule_id: failure_output_preservation_v1
+    source_refs: *id001
+  - field_path: /observable_evidence
+    method: family_rule
+    rule_id: failure_output_preservation_v1
+    source_refs: *id001
+  human_review:
+    status: reviewed
+  producer:
+    mode: deterministic_family_rule
+    name: contract_miner
+    version: v0.3
+schema_version: cipherlens.vc.v0_3
+source:
+  buggy_revision: 94f07689d6af26030184c176ba44ecd148eff75a^1
+  fixed_revision: 94f07689d6af26030184c176ba44ecd148eff75a
+  library: mbedtls
+  pattern_id: MBEDTLS-POC-0004
+  references:
+  - PR-9082
+  - ISSUE-9083

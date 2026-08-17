@@ -1,0 +1,53 @@
+schema_version: cipherlens.mining_input.v0_1
+contract_id: CIPHER_FAILURE_OUTPUT_PRESERVATION
+contract_family: failure_output_integrity
+family_rule: failure_output_preservation_v1
+source:
+  pattern_id: MBEDTLS-POC-0004
+  library: mbedtls
+  buggy_revision: "94f07689d6af26030184c176ba44ecd148eff75a^1"
+  fixed_revision: "94f07689d6af26030184c176ba44ecd148eff75a"
+  references: ["PR-9082", "ISSUE-9083"]
+context:
+  objects:
+    - {object_id: CIPHER_CONTEXT, semantic_role: stateful_context, value_type: state}
+    - {object_id: CIPHER_INPUT, semantic_role: encoded_input, value_type: bytes}
+  states:
+    - {state_id: CIPHER_READY, kind: intermediate}
+    - {state_id: CIPHER_ERROR, kind: error}
+  preconditions:
+    - precondition_id: INVALID_PADDING
+      predicate_id: invalid_pkcs7_padding
+      operand_refs: [CIPHER_INPUT]
+intervention:
+  actions:
+    - action_id: SET_INVALID_PADDING
+      kind: set_invalid_parameter
+      target_ref: CIPHER_INPUT
+      parameters:
+        - {name: padding_byte, value_type: integer, value: 128, constraint_id: exceeds_input_length}
+      evidence_refs: [POC, REPRODUCTION]
+execution:
+  steps:
+    - step_id: CIPHER_FINAL
+      role: FINAL
+      target_ref: CIPHER_CONTEXT
+      pre_state_ref: CIPHER_READY
+      precondition_refs: [INVALID_PADDING]
+      input_refs: [CIPHER_INPUT, SET_INVALID_PADDING]
+rule_parameters:
+  final_step_ref: CIPHER_FINAL
+evidence:
+  - evidence_id: REPRODUCTION
+    kind: buggy_run
+    path: data/pocs/core10/MBEDTLS-POC-0004/reproduction_result.md
+    sha256: df89c7fa4bdb2bfb2f3ea6a6b7b112b5f3a25174d0844a3bcf01dd9f4d69c35d
+  - evidence_id: POC
+    kind: poc
+    path: data/pocs/core10/MBEDTLS-POC-0004/poc/poc_get_pkcs_padding_outlen.c
+    sha256: 6f8607869fdc04cb675e532af4b5f2d348221ead0bdafbbcb2bd43b59791237c
+  - evidence_id: FIX_COMMITS
+    kind: patch
+    path: data/pocs/core10/MBEDTLS-POC-0004/fix_commits.txt
+    sha256: 7af2288d853bfb48c450f9185d53d9990c75a3d2c8156dd68d121cc4325ec13f
+human_review: {status: reviewed}

@@ -1,0 +1,37 @@
+schema_version: cipherlens.divergence.v0_1
+divergence_id: MBEDTLS_POC_0005_SOURCE_PAIR
+source_pair:
+  library: mbedtls
+  buggy_revision: "2df7ab7c0c3d5bb8a31481073c494521d10d4eba^"
+  fixed_revision: "2df7ab7c0c3d5bb8a31481073c494521d10d4eba"
+  pair_kind: same_library_fix
+intervention_refs: [ZERO_THEN_REUSE]
+evidence_refs: [REPRODUCTION, POC, FIX_COMMITS]
+deltas:
+  - delta_id: BUFFER_PRESENT_AFTER_ZERO
+    step_ref: STORE_ZERO
+    semantic_role: object_state
+    value_type: boolean
+    buggy: {present: true, value: false}
+    fixed: {present: true, value: false}
+    comparison: equal
+    source_refs: [REPRODUCTION, POC]
+  - delta_id: STORED_LENGTH_AFTER_ZERO
+    step_ref: STORE_ZERO
+    semantic_role: object_state
+    value_type: integer
+    buggy: {present: true, value: 4}
+    fixed: {present: true, value: 0}
+    comparison: not_equal
+    source_refs: [REPRODUCTION, POC]
+  - delta_id: REUSE_FATAL_EVENT
+    step_ref: STORE_REUSE
+    semantic_role: fatal_event
+    value_type: event
+    buggy: {present: true, value: signal_sigsegv}
+    fixed: {present: true, value: null}
+    comparison: not_equal
+    source_refs: [REPRODUCTION]
+provenance:
+  producer: manual_evidence_normalization_v1
+  source_refs: [REPRODUCTION, POC, FIX_COMMITS]

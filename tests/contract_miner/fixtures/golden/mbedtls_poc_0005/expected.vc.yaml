@@ -1,0 +1,158 @@
+context:
+  objects:
+  - object_id: NAMED_DATA_CONTEXT
+    semantic_role: stateful_context
+    value_type: state
+  - object_id: VALUE_BYTES
+    semantic_role: encoded_input
+    value_type: bytes
+  preconditions:
+  - operand_refs:
+    - NAMED_DATA_CONTEXT
+    - VALUE_BYTES
+    precondition_id: SAME_IDENTIFIER_REUSE
+    predicate_id: same_identifier_equal_nonzero_reuse
+  states:
+  - kind: intermediate
+    state_id: POPULATED
+  - kind: intermediate
+    state_id: CLEARED
+contract_family: object_state_consistency
+contract_id: ASN1_NAMED_DATA_STATE_CONSISTENCY
+execution:
+  steps:
+  - input_refs:
+    - VALUE_BYTES
+    - ZERO_THEN_REUSE
+    precondition_refs:
+    - SAME_IDENTIFIER_REUSE
+    role: UPDATE
+    step_id: STORE_INITIAL
+    target_ref: NAMED_DATA_CONTEXT
+  - input_refs:
+    - ZERO_THEN_REUSE
+    pre_state_ref: POPULATED
+    precondition_refs:
+    - SAME_IDENTIFIER_REUSE
+    role: UPDATE
+    step_id: STORE_ZERO
+    target_ref: NAMED_DATA_CONTEXT
+  - input_refs:
+    - VALUE_BYTES
+    - ZERO_THEN_REUSE
+    pre_state_ref: CLEARED
+    precondition_refs:
+    - SAME_IDENTIFIER_REUSE
+    role: UPDATE
+    step_id: STORE_REUSE
+    target_ref: NAMED_DATA_CONTEXT
+expected_relation:
+  aggregation: all_of
+  relations:
+  - criticality: primary
+    operands:
+      buffer_present_ref: BUFFER_PRESENT_AFTER_ZERO
+      invariant_id: buffer_absent_implies_length_zero
+      length_ref: STORED_LENGTH_AFTER_ZERO
+    relation_id: POINTER_LENGTH_CONSISTENT
+    type: state_invariant
+  - criticality: primary
+    operands:
+      fatal_event_ref: REUSE_FATAL_EVENT
+    relation_id: REUSE_NO_FATAL_EVENT
+    type: no_fatal_event
+  summary: Clearing a value must preserve pointer-length consistency and subsequent
+    reuse must not cause a fatal event.
+intervention:
+  actions:
+  - action_id: ZERO_THEN_REUSE
+    evidence_refs:
+    - POC
+    - REPRODUCTION
+    kind: state_reuse_sequence
+    parameters:
+    - name: first_value_length
+      value: 4
+      value_type: integer
+    - name: cleared_value_length
+      value: 0
+      value_type: integer
+    - name: reuse_value_length
+      value: 4
+      value_type: integer
+    target_ref: NAMED_DATA_CONTEXT
+observable_evidence:
+  observables:
+  - extraction:
+      field: buffer_present
+      kind: out_state_field
+    observable_id: BUFFER_PRESENT_AFTER_ZERO
+    provenance_refs: &id001
+    - REPRODUCTION
+    - POC
+    - FIX_COMMITS
+    requirement: required
+    semantic_role: object_state
+    source:
+      phase: after_step
+      step_ref: STORE_ZERO
+    value_type: boolean
+  - extraction:
+      field: stored_length
+      kind: out_state_field
+    observable_id: STORED_LENGTH_AFTER_ZERO
+    provenance_refs: *id001
+    requirement: required
+    semantic_role: object_state
+    source:
+      phase: after_step
+      step_ref: STORE_ZERO
+    value_type: integer
+  - extraction:
+      field: sanitizer_event
+      kind: trace_field
+    observable_id: REUSE_FATAL_EVENT
+    provenance_refs: *id001
+    requirement: required
+    semantic_role: fatal_event
+    source:
+      phase: after_step
+      step_ref: STORE_REUSE
+    value_type: event
+provenance:
+  evidence:
+  - evidence_id: REPRODUCTION
+    kind: buggy_run
+    path: data/pocs/core10/MBEDTLS-POC-0005/reproduction_result.md
+    sha256: 5c9ed659870d6a8d7ad3c9cf0e4b5c63a0b4622794a54735a1a01df64b0df88a
+  - evidence_id: POC
+    kind: poc
+    path: data/pocs/core10/MBEDTLS-POC-0005/poc/poc_asn1_store_named_data_null_deref.c
+    sha256: 6ad9bc2dbcce00aa70a0e571ce1fa6ab6b34bcd5ca0c6ffd7e9a14551a45947e
+  - evidence_id: FIX_COMMITS
+    kind: patch
+    path: data/pocs/core10/MBEDTLS-POC-0005/fix_commits.txt
+    sha256: aeb55d64e28ac8fc3b48151b6f6238a4ae4a369e129c5305fef55e05056f090f
+  field_origins:
+  - field_path: /expected_relation
+    method: family_rule
+    rule_id: pointer_length_state_consistency_v1
+    source_refs: *id001
+  - field_path: /observable_evidence
+    method: family_rule
+    rule_id: pointer_length_state_consistency_v1
+    source_refs: *id001
+  human_review:
+    status: reviewed
+  producer:
+    mode: deterministic_family_rule
+    name: contract_miner
+    version: v0.3
+schema_version: cipherlens.vc.v0_3
+source:
+  buggy_revision: 2df7ab7c0c3d5bb8a31481073c494521d10d4eba^
+  fixed_revision: 2df7ab7c0c3d5bb8a31481073c494521d10d4eba
+  library: mbedtls
+  pattern_id: MBEDTLS-POC-0005
+  references:
+  - CVE-2025-48965

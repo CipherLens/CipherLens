@@ -1,0 +1,29 @@
+schema_version: cipherlens.divergence.v0_1
+divergence_id: MBEDTLS_POC_0004_SOURCE_PAIR
+source_pair:
+  library: mbedtls
+  buggy_revision: "94f07689d6af26030184c176ba44ecd148eff75a^1"
+  fixed_revision: "94f07689d6af26030184c176ba44ecd148eff75a"
+  pair_kind: same_library_fix
+intervention_refs: [SET_INVALID_PADDING]
+evidence_refs: [REPRODUCTION, POC, FIX_COMMITS]
+deltas:
+  - delta_id: FINAL_RETURN
+    step_ref: CIPHER_FINAL
+    semantic_role: return_value
+    value_type: integer
+    buggy: {present: true, value: -25088}
+    fixed: {present: true, value: -25088}
+    comparison: equal
+    source_refs: [REPRODUCTION]
+  - delta_id: FINAL_OUTPUT_LENGTH
+    step_ref: CIPHER_FINAL
+    semantic_role: output_length
+    value_type: integer
+    buggy: {present: true, value: 18446744073709551504}
+    fixed: {present: true, value: 0}
+    comparison: not_equal
+    source_refs: [REPRODUCTION, POC]
+provenance:
+  producer: manual_evidence_normalization_v1
+  source_refs: [REPRODUCTION, POC, FIX_COMMITS]

@@ -1,0 +1,29 @@
+schema_version: cipherlens.divergence.v0_1
+divergence_id: MBEDTLS_POC_0020_SOURCE_PAIR
+source_pair:
+  library: mbedtls
+  buggy_revision: "a7f651cf160a3753367e032c4471699822b37e30^1"
+  fixed_revision: "a7f651cf160a3753367e032c4471699822b37e30"
+  pair_kind: same_library_fix
+intervention_refs: [APPEND_TRAILING_DATA]
+evidence_refs: [REPRODUCTION, POC, FIX_COMMITS]
+deltas:
+  - delta_id: PARSE_RETURN
+    step_ref: PARSE_KEY
+    semantic_role: return_value
+    value_type: integer
+    buggy: {present: true, value: 0}
+    fixed: {present: true, value: -16512}
+    comparison: not_equal
+    source_refs: [REPRODUCTION]
+  - delta_id: CONSUMPTION
+    step_ref: PARSE_KEY
+    semantic_role: consumed_length
+    value_type: integer
+    buggy: {present: true, value: 101}
+    fixed: {present: false}
+    comparison: only_buggy
+    source_refs: [POC, REPRODUCTION]
+provenance:
+  producer: manual_evidence_normalization_v1
+  source_refs: [REPRODUCTION, POC, FIX_COMMITS]
