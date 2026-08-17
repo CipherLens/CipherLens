@@ -259,6 +259,87 @@ def _is_cross_cutting_oracle_layer(family_id: str, family: dict[str, Any], card:
     )
 
 
+def _string_list(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, list):
+        out: list[str] = []
+        for item in value:
+            out.extend(_string_list(item))
+        return [item for item in out if item]
+    if isinstance(value, (str, int, float, bool)):
+        text = str(value).strip()
+        return [text] if text else []
+    return []
+
+
+def _family_behavior_contract(family_id: str, card: dict[str, Any]) -> dict[str, Any]:
+    """Expose frontend-ready contract sections from existing family-card fields."""
+    if not isinstance(card, dict) or not card:
+        return {"source": "", "sections": []}
+    harness_shape = card.get("harness_shape") if isinstance(card.get("harness_shape"), dict) else {}
+    oracle_contract = card.get("oracle_contract") if isinstance(card.get("oracle_contract"), dict) else {}
+    sections = [
+        {
+            "id": "trigger_condition",
+            "title": "Trigger Condition",
+            "body": _string_list(harness_shape.get("trigger")),
+            "source_field": "harness_shape.trigger",
+        },
+        {
+            "id": "vulnerability_intervention",
+            "title": "Vulnerability Intervention",
+            "body": _string_list(card.get("mutation_slots"))[:4],
+            "source_field": "mutation_slots",
+        },
+        {
+            "id": "critical_execution",
+            "title": "Critical Execution",
+            "body": _string_list(card.get("input_model")),
+            "source_field": "input_model",
+        },
+        {
+            "id": "expected_relation",
+            "title": "Expected Relation",
+            "body": _string_list(
+                [
+                    oracle_contract.get("pass_condition"),
+                    oracle_contract.get("candidate_condition"),
+                ]
+            ),
+            "source_field": "oracle_contract.pass_condition + oracle_contract.candidate_condition",
+        },
+        {
+            "id": "observable_evidence",
+            "title": "Observable Evidence",
+            "body": _string_list(harness_shape.get("observables")),
+            "source_field": "harness_shape.observables",
+        },
+    ]
+    return {
+        "source": f"knowledge_raw/family_cards/{family_id}.yaml",
+        "sections": sections,
+        "oracle_type": oracle_contract.get("oracle_type", ""),
+    }
+
+
+def _family_transfer_signature(family_id: str, card: dict[str, Any]) -> dict[str, Any]:
+    """Derive compact migration-signature tags from real family-card constraints."""
+    if not isinstance(card, dict) or not card:
+        return {"source": "", "tags": []}
+    harness_shape = card.get("harness_shape") if isinstance(card.get("harness_shape"), dict) else {}
+    tags: list[str] = []
+    tags.extend(_string_list(card.get("required_target_cards"))[:2])
+    tags.extend(_string_list(harness_shape.get("observables"))[:2])
+    tags.extend(_string_list(card.get("mutation_slots"))[:2])
+    deduped = list(dict.fromkeys(tag.replace("_", " ") for tag in tags if tag))
+    return {
+        "source": f"knowledge_raw/family_cards/{family_id}.yaml",
+        "derivation": "required_target_cards + harness_shape.observables + mutation_slots",
+        "tags": deduped[:6],
+    }
+
+
 def _library_label(value: str) -> str:
     if value == "openssl":
         return "OpenSSL"
@@ -972,6 +1053,8 @@ class DemoApiState:
                     "status": row.get("orchestrator_consumable", "available"),
                     "supported_libraries": targets,
                     "supported_library_labels": [_library_label(target) for target in targets],
+                    "behavior_contract": _family_behavior_contract(family_id, card if isinstance(card, dict) else {}),
+                    "transfer_signature": _family_transfer_signature(family_id, card if isinstance(card, dict) else {}),
                     "capability": {
                         "model_ready": live_ready,
                         "syntax_ready": live_ready,
