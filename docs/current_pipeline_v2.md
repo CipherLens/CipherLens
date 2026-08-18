@@ -31,14 +31,18 @@ ELIGIBLE evaluation + explicit verified mapping
   -> VALID / INVALID / INCOMPLETE
 ```
 
-This is not the formal Matcher. There is no RAG-to-provider orchestration,
-ranking, fact-resolution loop, Template–Binding merge, source adaptation,
-execution trace, Contract verdict, or UNKNOWN rerun in this Batch. Provider
-output cannot directly establish VERIFIED facts, eligibility, CandidateBinding
-validity, or vulnerability truth. The detailed boundaries are specified in
+The Batch 4B foundation now implements the formal Contract-guided Matcher
+orchestration from deterministic RecallQuery and multi-subject candidate
+assembly through proposal, fact resolution, TS hard filtering, concrete
+observability, post-gate ranking, and canonical CandidateBinding validation.
+It still does not implement Template–Binding merge, source adaptation,
+execution trace, Contract verdict, or UNKNOWN rerun. Provider output cannot
+directly establish VERIFIED facts, eligibility, CandidateBinding validity, or
+vulnerability truth. The detailed boundaries are specified in
 `docs/binding_proposal_v0_1.md`,
 `docs/llm_role_proposal_provider_v0_1.md`, and
-`docs/candidate_binding_v0_1.md`.
+`docs/candidate_binding_v0_1.md`; Matcher-specific orchestration is specified in
+`docs/matcher_v0_1.md`.
 
 The scheduler, A/B/C/D paths, RAG metadata, API cards, adapter recipes, and
 candidate scores described below are legacy implementation components and
