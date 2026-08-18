@@ -1,0 +1,50 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.execution_witness.v0.1
+type: object
+additionalProperties: false
+required: [schema_version, witness_id, status, attempt_outcome, contract_ref, contract_digest, candidate_binding_ref, candidate_binding_digest, merge_ref, merge_digest, merge_validation_ref, merge_validation_digest, bound_source_ref, bound_source_digest, source_map_ref, source_map_digest, build_spec_ref, build_spec_digest, build_record_ref, build_record_digest, run_spec_ref, run_spec_digest, run_record_ref, run_record_digest, source_artifact_digest, binary_digest, input_artifact_digests, raw_artifact_manifest, acquisition_integrity, reason_codes, registry_version]
+properties:
+  schema_version: {const: cipherlens.execution_witness.v0.1}
+  witness_id: {type: string}
+  status: {enum: [VALID_WITNESS, PARTIAL_WITNESS, INVALID_WITNESS]}
+  attempt_outcome: {enum: [WITNESS_FORMED, LINEAGE_INTEGRITY_FAILED]}
+  contract_ref: {type: string}
+  contract_digest: {$ref: '#/$defs/sha256'}
+  candidate_binding_ref: {type: string}
+  candidate_binding_digest: {$ref: '#/$defs/sha256'}
+  merge_ref: {type: string}
+  merge_digest: {$ref: '#/$defs/sha256'}
+  merge_validation_ref: {type: string}
+  merge_validation_digest: {$ref: '#/$defs/sha256'}
+  bound_source_ref: {type: string}
+  bound_source_digest: {$ref: '#/$defs/sha256'}
+  source_map_ref: {type: string}
+  source_map_digest: {$ref: '#/$defs/sha256'}
+  build_spec_ref: {type: string}
+  build_spec_digest: {$ref: '#/$defs/sha256'}
+  build_record_ref: {type: string}
+  build_record_digest: {$ref: '#/$defs/sha256'}
+  run_spec_ref: {type: string}
+  run_spec_digest: {$ref: '#/$defs/sha256'}
+  run_record_ref: {type: string}
+  run_record_digest: {$ref: '#/$defs/sha256'}
+  source_artifact_digest: {$ref: '#/$defs/sha256'}
+  binary_digest: {$ref: '#/$defs/sha256'}
+  input_artifact_digests: {type: array, items: {$ref: '#/$defs/sha256'}}
+  raw_artifact_manifest: {type: array, items: {$ref: '#/$defs/artifact'}}
+  acquisition_integrity: {$ref: '#/$defs/integrity'}
+  reason_codes: {$ref: '#/$defs/strings'}
+  registry_version: {type: string}
+$defs:
+  sha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+  strings: {type: array, items: {type: string}}
+  artifact:
+    type: object
+    additionalProperties: false
+    required: [artifact_ref, artifact_digest]
+    properties: {artifact_ref: {type: string}, artifact_digest: {$ref: '#/$defs/sha256'}}
+  integrity:
+    type: object
+    additionalProperties: false
+    required: [framework_complete, artifact_integrity, lineage_integrity, required_channels_complete]
+    properties: {framework_complete: {type: boolean}, artifact_integrity: {type: boolean}, lineage_integrity: {type: boolean}, required_channels_complete: {type: boolean}}

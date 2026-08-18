@@ -1,0 +1,48 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.run_spec.v0.1
+type: object
+additionalProperties: false
+required: [schema_version, run_spec_id, build_spec_ref, build_spec_digest, build_record_ref, build_record_digest, binary_ref, binary_digest, input_artifacts, argv, environment_profile, working_directory_profile, timeout_policy, instrumentation_profile, required_capture_refs, expected_phases, expected_markers, required_channels, registry_version]
+properties:
+  schema_version: {const: cipherlens.run_spec.v0.1}
+  run_spec_id: {type: string}
+  build_spec_ref: {type: string}
+  build_spec_digest: {$ref: '#/$defs/sha256'}
+  build_record_ref: {type: string}
+  build_record_digest: {$ref: '#/$defs/sha256'}
+  binary_ref: {type: string}
+  binary_digest: {$ref: '#/$defs/sha256'}
+  input_artifacts: {type: array, items: {$ref: '#/$defs/artifact'}}
+  argv: {$ref: '#/$defs/strings'}
+  environment_profile: {$ref: '#/$defs/profile'}
+  working_directory_profile: {$ref: '#/$defs/working_directory'}
+  timeout_policy: {$ref: '#/$defs/timeout'}
+  instrumentation_profile: {$ref: '#/$defs/profile'}
+  required_capture_refs: {$ref: '#/$defs/strings'}
+  expected_phases: {$ref: '#/$defs/strings'}
+  expected_markers: {$ref: '#/$defs/strings'}
+  required_channels: {$ref: '#/$defs/strings'}
+  registry_version: {type: string}
+$defs:
+  sha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+  strings: {type: array, items: {type: string}}
+  artifact:
+    type: object
+    additionalProperties: false
+    required: [artifact_ref, artifact_digest]
+    properties: {artifact_ref: {type: string}, artifact_digest: {$ref: '#/$defs/sha256'}}
+  profile:
+    type: object
+    additionalProperties: false
+    required: [profile_ref, profile_digest]
+    properties: {profile_ref: {type: string}, profile_digest: {$ref: '#/$defs/sha256'}}
+  working_directory:
+    type: object
+    additionalProperties: false
+    required: [profile_ref, logical_directory]
+    properties: {profile_ref: {type: string}, logical_directory: {type: string}}
+  timeout:
+    type: object
+    additionalProperties: false
+    required: [policy_ref, limit_seconds]
+    properties: {policy_ref: {type: string}, limit_seconds: {type: integer, minimum: 1}}

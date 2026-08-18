@@ -1,0 +1,57 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.violation_evidence_package.v0.1
+type: object
+additionalProperties: false
+required: [schema_version, package_id, contract_ref, contract_digest, candidate_binding_ref, candidate_binding_digest, merge_ref, merge_digest, merge_validation_ref, merge_validation_digest, bound_source_ref, bound_source_digest, source_map_ref, source_map_digest, build_spec_ref, build_spec_digest, build_record_ref, build_record_digest, run_spec_ref, run_spec_digest, run_record_ref, run_record_digest, witness_ref, witness_digest, trace_ref, trace_digest, broken_relation_evaluations, execution_verdict_ref, execution_verdict_digest, supporting_raw_artifacts, reproduction_metadata_refs, claim_policy, registry_version]
+properties:
+  schema_version: {const: cipherlens.violation_evidence_package.v0.1}
+  package_id: {type: string}
+  contract_ref: {type: string}
+  contract_digest: {$ref: '#/$defs/sha256'}
+  candidate_binding_ref: {type: string}
+  candidate_binding_digest: {$ref: '#/$defs/sha256'}
+  merge_ref: {type: string}
+  merge_digest: {$ref: '#/$defs/sha256'}
+  merge_validation_ref: {type: string}
+  merge_validation_digest: {$ref: '#/$defs/sha256'}
+  bound_source_ref: {type: string}
+  bound_source_digest: {$ref: '#/$defs/sha256'}
+  source_map_ref: {type: string}
+  source_map_digest: {$ref: '#/$defs/sha256'}
+  build_spec_ref: {type: string}
+  build_spec_digest: {$ref: '#/$defs/sha256'}
+  build_record_ref: {type: string}
+  build_record_digest: {$ref: '#/$defs/sha256'}
+  run_spec_ref: {type: string}
+  run_spec_digest: {$ref: '#/$defs/sha256'}
+  run_record_ref: {type: string}
+  run_record_digest: {$ref: '#/$defs/sha256'}
+  witness_ref: {type: string}
+  witness_digest: {$ref: '#/$defs/sha256'}
+  trace_ref: {type: string}
+  trace_digest: {$ref: '#/$defs/sha256'}
+  broken_relation_evaluations: {type: array, minItems: 1, items: {$ref: '#/$defs/ref_digest'}}
+  execution_verdict_ref: {type: string}
+  execution_verdict_digest: {$ref: '#/$defs/sha256'}
+  supporting_raw_artifacts: {type: array, items: {$ref: '#/$defs/artifact'}}
+  reproduction_metadata_refs: {$ref: '#/$defs/strings'}
+  claim_policy: {$ref: '#/$defs/claim'}
+  registry_version: {type: string}
+$defs:
+  sha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+  strings: {type: array, items: {type: string}}
+  ref_digest:
+    type: object
+    additionalProperties: false
+    required: [ref, digest]
+    properties: {ref: {type: string}, digest: {$ref: '#/$defs/sha256'}}
+  artifact:
+    type: object
+    additionalProperties: false
+    required: [artifact_ref, artifact_digest]
+    properties: {artifact_ref: {type: string}, artifact_digest: {$ref: '#/$defs/sha256'}}
+  claim:
+    type: object
+    additionalProperties: false
+    required: [execution_relation_violation, confirmed_vulnerability, cve, exploitability]
+    properties: {execution_relation_violation: {const: true}, confirmed_vulnerability: {const: false}, cve: {const: false}, exploitability: {const: not_assessed}}

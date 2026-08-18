@@ -1,0 +1,39 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.execution_verdict.v0.1
+type: object
+additionalProperties: false
+required: [schema_version, verdict_id, contract_ref, contract_digest, candidate_binding_ref, candidate_binding_digest, merge_ref, merge_digest, witness_ref, witness_digest, trace_ref, trace_digest, relation_evaluations, verdict, supporting_broken_relation_refs, non_evaluable_relation_refs, reason_codes, evidence_sufficiency_summary, producer, registry_version]
+properties:
+  schema_version: {const: cipherlens.execution_verdict.v0.1}
+  verdict_id: {type: string}
+  contract_ref: {type: string}
+  contract_digest: {$ref: '#/$defs/sha256'}
+  candidate_binding_ref: {type: string}
+  candidate_binding_digest: {$ref: '#/$defs/sha256'}
+  merge_ref: {type: string}
+  merge_digest: {$ref: '#/$defs/sha256'}
+  witness_ref: {type: string}
+  witness_digest: {$ref: '#/$defs/sha256'}
+  trace_ref: {type: string}
+  trace_digest: {$ref: '#/$defs/sha256'}
+  relation_evaluations: {type: array, minItems: 1, items: {$ref: '#/$defs/ref_digest'}}
+  verdict: {enum: [SATISFIED, VIOLATED, UNKNOWN]}
+  supporting_broken_relation_refs: {$ref: '#/$defs/strings'}
+  non_evaluable_relation_refs: {$ref: '#/$defs/strings'}
+  reason_codes: {$ref: '#/$defs/strings'}
+  evidence_sufficiency_summary: {$ref: '#/$defs/summary'}
+  producer: {type: string}
+  registry_version: {type: string}
+$defs:
+  sha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+  strings: {type: array, items: {type: string}}
+  ref_digest:
+    type: object
+    additionalProperties: false
+    required: [ref, digest]
+    properties: {ref: {type: string}, digest: {$ref: '#/$defs/sha256'}}
+  summary:
+    type: object
+    additionalProperties: false
+    required: [total, holds, broken, not_evaluable, witness_status]
+    properties: {total: {type: integer, minimum: 1}, holds: {type: integer, minimum: 0}, broken: {type: integer, minimum: 0}, not_evaluable: {type: integer, minimum: 0}, witness_status: {enum: [VALID_WITNESS, PARTIAL_WITNESS]}}

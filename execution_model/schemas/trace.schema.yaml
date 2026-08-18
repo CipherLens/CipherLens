@@ -1,0 +1,62 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.structured_execution_trace.v0.1
+type: object
+additionalProperties: false
+required: [schema_version, trace_id, witness_ref, witness_digest, run_record_ref, run_record_digest, merge_ref, merge_digest, candidate_binding_ref, candidate_binding_digest, contract_ref, contract_digest, semantic_observations, process_evidence, execution_sequence, correlation_groups, ordering_edges, integrity_summary, registry_version]
+properties:
+  schema_version: {const: cipherlens.structured_execution_trace.v0.1}
+  trace_id: {type: string}
+  witness_ref: {type: string}
+  witness_digest: {$ref: '#/$defs/sha256'}
+  run_record_ref: {type: string}
+  run_record_digest: {$ref: '#/$defs/sha256'}
+  merge_ref: {type: string}
+  merge_digest: {$ref: '#/$defs/sha256'}
+  candidate_binding_ref: {type: string}
+  candidate_binding_digest: {$ref: '#/$defs/sha256'}
+  contract_ref: {type: string}
+  contract_digest: {$ref: '#/$defs/sha256'}
+  semantic_observations: {type: array, items: {$ref: '#/$defs/observation'}}
+  process_evidence: {type: array, items: {$ref: '#/$defs/process_evidence'}}
+  execution_sequence: {$ref: '#/$defs/strings'}
+  correlation_groups: {$ref: '#/$defs/strings'}
+  ordering_edges: {type: array, items: {type: array, minItems: 2, maxItems: 2, items: {type: string}}}
+  integrity_summary: {$ref: '#/$defs/integrity'}
+  registry_version: {type: string}
+$defs:
+  sha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+  nullable_sha: {oneOf: [{$ref: '#/$defs/sha256'}, {type: 'null'}]}
+  strings: {type: array, items: {type: string}}
+  observation:
+    type: object
+    additionalProperties: false
+    required: [observation_id, contract_observable_ref, observation_binding_ref, capture_binding_ref, source_map_record_ref, semantic_role, subject_ref, identity_group_ref, operation_ref, phase, correlation_group_ref, status, value_presence, value, value_artifact_ref, value_artifact_digest, evidence_refs, sequence_index]
+    properties:
+      observation_id: {type: string}
+      contract_observable_ref: {type: string}
+      observation_binding_ref: {type: string}
+      capture_binding_ref: {type: string}
+      source_map_record_ref: {type: string}
+      semantic_role: {type: string}
+      subject_ref: {type: string}
+      identity_group_ref: {type: string}
+      operation_ref: {type: string}
+      phase: {type: string}
+      correlation_group_ref: {type: string}
+      status: {enum: [PRESENT, OBSERVED_ABSENCE, NOT_REACHED, CHANNEL_UNAVAILABLE, ACQUISITION_FAILED, INVALID_VALUE, CONFLICTING_EVIDENCE]}
+      value_presence: {enum: [VALUE, ARTIFACT, EXPLICIT_NULL, NONE]}
+      value: {type: [string, integer, boolean, 'null']}
+      value_artifact_ref: {type: [string, 'null']}
+      value_artifact_digest: {$ref: '#/$defs/nullable_sha'}
+      evidence_refs: {$ref: '#/$defs/strings'}
+      sequence_index: {type: integer, minimum: 0}
+  process_evidence:
+    type: object
+    additionalProperties: false
+    required: [evidence_id, evidence_type, artifact_refs]
+    properties: {evidence_id: {type: string}, evidence_type: {type: string}, artifact_refs: {$ref: '#/$defs/strings'}}
+  integrity:
+    type: object
+    additionalProperties: false
+    required: [status, reason_codes, conflicting_observation_refs]
+    properties: {status: {enum: [VALID, CONFLICTING]}, reason_codes: {$ref: '#/$defs/strings'}, conflicting_observation_refs: {$ref: '#/$defs/strings'}}

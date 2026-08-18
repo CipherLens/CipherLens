@@ -1,0 +1,52 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.execution_handoff.v0.1
+type: object
+additionalProperties: false
+required: [schema_version, handoff_id, contract_ref, contract_digest, candidate_binding_ref, candidate_binding_digest, merge_ref, merge_digest, merge_validation_ref, merge_validation_digest, bound_source_ref, bound_source_digest, source_map_ref, source_map_digest, source_artifact_ref, source_artifact_digest, build_intent_seed, observation_capture_refs, identity_refs, operation_refs, registry_version]
+properties:
+  schema_version: {const: cipherlens.execution_handoff.v0.1}
+  handoff_id: {type: string}
+  contract_ref: {type: string}
+  contract_digest: {$ref: '#/$defs/sha256'}
+  candidate_binding_ref: {type: string}
+  candidate_binding_digest: {$ref: '#/$defs/sha256'}
+  merge_ref: {type: string}
+  merge_digest: {$ref: '#/$defs/sha256'}
+  merge_validation_ref: {type: string}
+  merge_validation_digest: {$ref: '#/$defs/sha256'}
+  bound_source_ref: {type: string}
+  bound_source_digest: {$ref: '#/$defs/sha256'}
+  source_map_ref: {type: string}
+  source_map_digest: {$ref: '#/$defs/sha256'}
+  source_artifact_ref: {type: string}
+  source_artifact_digest: {$ref: '#/$defs/sha256'}
+  build_intent_seed: {$ref: '#/$defs/build_intent_seed'}
+  observation_capture_refs: {$ref: '#/$defs/strings'}
+  identity_refs: {$ref: '#/$defs/strings'}
+  operation_refs: {$ref: '#/$defs/strings'}
+  registry_version: {type: string}
+$defs:
+  sha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+  strings: {type: array, items: {type: string}}
+  scope:
+    type: object
+    additionalProperties: false
+    required: [library, version, surface_ref]
+    properties: {library: {type: string}, version: {type: string}, surface_ref: {type: string}}
+  hints:
+    type: object
+    additionalProperties: false
+    required: [target_scope, language, renderer_id, renderer_version]
+    properties:
+      target_scope: {$ref: '#/$defs/scope'}
+      language: {type: string}
+      renderer_id: {type: string}
+      renderer_version: {type: string}
+  build_intent_seed:
+    type: object
+    additionalProperties: false
+    required: [seed_ref, seed_digest, hints]
+    properties:
+      seed_ref: {type: string}
+      seed_digest: {$ref: '#/$defs/sha256'}
+      hints: {$ref: '#/$defs/hints'}

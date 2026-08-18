@@ -1,0 +1,59 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.build_spec.v0.1
+type: object
+additionalProperties: false
+required: [schema_version, build_spec_id, execution_handoff_ref, execution_handoff_digest, merge_ref, merge_digest, bound_source_ref, bound_source_digest, source_map_ref, source_map_digest, source_artifact_ref, source_artifact_digest, build_intent_seed_ref, build_intent_seed_digest, language, toolchain, compile_units, include_configs, compile_flags, library_inputs, link_flags, expected_output, instrumentation_profile, environment_profile, registry_version]
+properties:
+  schema_version: {const: cipherlens.build_spec.v0.1}
+  build_spec_id: {type: string}
+  execution_handoff_ref: {type: string}
+  execution_handoff_digest: {$ref: '#/$defs/sha256'}
+  merge_ref: {type: string}
+  merge_digest: {$ref: '#/$defs/sha256'}
+  bound_source_ref: {type: string}
+  bound_source_digest: {$ref: '#/$defs/sha256'}
+  source_map_ref: {type: string}
+  source_map_digest: {$ref: '#/$defs/sha256'}
+  source_artifact_ref: {type: string}
+  source_artifact_digest: {$ref: '#/$defs/sha256'}
+  build_intent_seed_ref: {type: string}
+  build_intent_seed_digest: {$ref: '#/$defs/sha256'}
+  language: {type: string}
+  toolchain: {$ref: '#/$defs/toolchain'}
+  compile_units: {type: array, minItems: 1, items: {$ref: '#/$defs/compile_unit'}}
+  include_configs: {type: array, items: {$ref: '#/$defs/artifact'}}
+  compile_flags: {$ref: '#/$defs/strings'}
+  library_inputs: {type: array, items: {$ref: '#/$defs/artifact'}}
+  link_flags: {$ref: '#/$defs/strings'}
+  expected_output: {$ref: '#/$defs/output'}
+  instrumentation_profile: {$ref: '#/$defs/profile'}
+  environment_profile: {$ref: '#/$defs/profile'}
+  registry_version: {type: string}
+$defs:
+  sha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+  strings: {type: array, items: {type: string}}
+  artifact:
+    type: object
+    additionalProperties: false
+    required: [artifact_ref, artifact_digest]
+    properties: {artifact_ref: {type: string}, artifact_digest: {$ref: '#/$defs/sha256'}}
+  compile_unit:
+    type: object
+    additionalProperties: false
+    required: [artifact_ref, artifact_digest, language]
+    properties: {artifact_ref: {type: string}, artifact_digest: {$ref: '#/$defs/sha256'}, language: {type: string}}
+  toolchain:
+    type: object
+    additionalProperties: false
+    required: [compiler, version_profile_digest]
+    properties: {compiler: {type: string}, version_profile_digest: {$ref: '#/$defs/sha256'}}
+  output:
+    type: object
+    additionalProperties: false
+    required: [artifact_ref, kind]
+    properties: {artifact_ref: {type: string}, kind: {type: string}}
+  profile:
+    type: object
+    additionalProperties: false
+    required: [profile_ref, profile_digest]
+    properties: {profile_ref: {type: string}, profile_digest: {$ref: '#/$defs/sha256'}}

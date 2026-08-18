@@ -1,0 +1,32 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.execution_closure.v0.1
+type: object
+additionalProperties: false
+required: [schema_version, closure_id, verdict_ref, verdict_digest, analysis, plan, record, registry_version]
+properties:
+  schema_version: {const: cipherlens.execution_closure.v0.1}
+  closure_id: {type: string}
+  verdict_ref: {type: string}
+  verdict_digest: {$ref: '#/$defs/sha256'}
+  analysis: {$ref: '#/$defs/analysis'}
+  plan: {$ref: '#/$defs/plan'}
+  record: {$ref: '#/$defs/record'}
+  registry_version: {type: string}
+$defs:
+  sha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+  strings: {type: array, items: {type: string}}
+  analysis:
+    type: object
+    additionalProperties: false
+    required: [reason_codes, missing_evidence]
+    properties: {reason_codes: {$ref: '#/$defs/strings'}, missing_evidence: {$ref: '#/$defs/strings'}}
+  plan:
+    type: object
+    additionalProperties: false
+    required: [route, candidate_binding_mutation_allowed, merge_mutation_allowed, matcher_reentry_required]
+    properties: {route: {enum: [SAME_BINDING_RERUN, SAME_MERGE_COMPLETION, INSTRUMENTATION_REPAIR, WHOLE_BINDING_SWITCH]}, candidate_binding_mutation_allowed: {const: false}, merge_mutation_allowed: {const: false}, matcher_reentry_required: {type: boolean}}
+  record:
+    type: object
+    additionalProperties: false
+    required: [status, result_artifact_refs]
+    properties: {status: {type: string}, result_artifact_refs: {$ref: '#/$defs/strings'}}

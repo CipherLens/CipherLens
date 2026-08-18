@@ -1,0 +1,53 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.relation_instance_evaluation.v0.1
+type: object
+additionalProperties: false
+required: [schema_version, evaluation_id, relation_instance_ref, relation_type, criticality, contract_ref, contract_digest, witness_ref, witness_digest, trace_ref, trace_digest, projection_refs, correlation_refs, evaluator_version, result, reason_code, missing_requirements, invalid_requirements, evidence_bindings, admissibility]
+properties:
+  schema_version: {const: cipherlens.relation_instance_evaluation.v0.1}
+  evaluation_id: {type: string}
+  relation_instance_ref: {type: string}
+  relation_type: {type: string}
+  criticality: {type: string}
+  contract_ref: {type: string}
+  contract_digest: {$ref: '#/$defs/sha256'}
+  witness_ref: {type: string}
+  witness_digest: {$ref: '#/$defs/sha256'}
+  trace_ref: {type: string}
+  trace_digest: {$ref: '#/$defs/sha256'}
+  projection_refs: {type: array, items: {$ref: '#/$defs/ref_digest'}}
+  correlation_refs: {$ref: '#/$defs/strings'}
+  evaluator_version: {type: string}
+  result: {enum: [HOLDS, BROKEN, NOT_EVALUABLE]}
+  reason_code: {type: string}
+  missing_requirements: {$ref: '#/$defs/strings'}
+  invalid_requirements: {$ref: '#/$defs/strings'}
+  evidence_bindings: {type: array, items: {$ref: '#/$defs/evidence_binding'}}
+  admissibility: {$ref: '#/$defs/admissibility'}
+$defs:
+  sha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+  strings: {type: array, items: {type: string}}
+  ref_digest:
+    type: object
+    additionalProperties: false
+    required: [ref, digest]
+    properties: {ref: {type: string}, digest: {$ref: '#/$defs/sha256'}}
+  evidence_binding:
+    type: object
+    additionalProperties: false
+    required: [contract_observable_ref, trace_evidence_refs]
+    properties: {contract_observable_ref: {type: string}, trace_evidence_refs: {$ref: '#/$defs/strings'}}
+  admissibility:
+    type: object
+    additionalProperties: false
+    required: [witness_status, evidence_complete, phase_reached, channel_valid, subject_valid, identity_valid, correlation_valid, provenance_valid, broken_admissible]
+    properties:
+      witness_status: {enum: [VALID_WITNESS, PARTIAL_WITNESS]}
+      evidence_complete: {type: boolean}
+      phase_reached: {type: boolean}
+      channel_valid: {type: boolean}
+      subject_valid: {type: boolean}
+      identity_valid: {type: boolean}
+      correlation_valid: {type: boolean}
+      provenance_valid: {type: boolean}
+      broken_admissible: {type: boolean}

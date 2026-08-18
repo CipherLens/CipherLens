@@ -1,0 +1,40 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.contract_evidence_projection.v0.1
+type: object
+additionalProperties: false
+required: [schema_version, projection_id, trace_ref, trace_digest, contract_ref, contract_digest, candidate_binding_ref, candidate_binding_digest, merge_ref, merge_digest, entries, registry_version]
+properties:
+  schema_version: {const: cipherlens.contract_evidence_projection.v0.1}
+  projection_id: {type: string}
+  trace_ref: {type: string}
+  trace_digest: {$ref: '#/$defs/sha256'}
+  contract_ref: {type: string}
+  contract_digest: {$ref: '#/$defs/sha256'}
+  candidate_binding_ref: {type: string}
+  candidate_binding_digest: {$ref: '#/$defs/sha256'}
+  merge_ref: {type: string}
+  merge_digest: {$ref: '#/$defs/sha256'}
+  entries: {type: array, items: {$ref: '#/$defs/entry'}}
+  registry_version: {type: string}
+$defs:
+  sha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+  strings: {type: array, items: {type: string}}
+  entry:
+    type: object
+    additionalProperties: false
+    required: [contract_observable_ref, semantic_role, observation_binding_ref, merge_capture_ref, source_map_capture_ref, trace_evidence_refs, trace_evidence_digests, observation_status, value_presence, value, sufficiency, correlation_state, missing_requirements, reason_code]
+    properties:
+      contract_observable_ref: {type: string}
+      semantic_role: {type: string}
+      observation_binding_ref: {type: string}
+      merge_capture_ref: {type: string}
+      source_map_capture_ref: {type: string}
+      trace_evidence_refs: {$ref: '#/$defs/strings'}
+      trace_evidence_digests: {type: array, items: {$ref: '#/$defs/sha256'}}
+      observation_status: {enum: [PRESENT, OBSERVED_ABSENCE, NOT_REACHED, CHANNEL_UNAVAILABLE, ACQUISITION_FAILED, INVALID_VALUE, CONFLICTING_EVIDENCE]}
+      value_presence: {enum: [VALUE, ARTIFACT, EXPLICIT_NULL, NONE]}
+      value: {type: [string, integer, boolean, 'null']}
+      sufficiency: {enum: [SUFFICIENT, INSUFFICIENT, CONFLICTING]}
+      correlation_state: {enum: [SATISFIED, NOT_APPLICABLE, INCOMPLETE, INVALID]}
+      missing_requirements: {$ref: '#/$defs/strings'}
+      reason_code: {type: string}

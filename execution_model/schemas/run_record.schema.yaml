@@ -1,0 +1,42 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.run_record.v0.1
+type: object
+additionalProperties: false
+required: [schema_version, run_record_id, run_spec_ref, run_spec_digest, binary_ref, binary_digest, process_start, termination, collection, exit_status, signal, timeout, raw_artifacts, process_events, raw_observations, integrity_reasons, telemetry_ref, registry_version]
+properties:
+  schema_version: {const: cipherlens.run_record.v0.1}
+  run_record_id: {type: string}
+  run_spec_ref: {type: string}
+  run_spec_digest: {$ref: '#/$defs/sha256'}
+  binary_ref: {type: string}
+  binary_digest: {$ref: '#/$defs/sha256'}
+  process_start: {enum: [STARTED, LAUNCH_FAILED]}
+  termination: {enum: [EXITED, SIGNALED, TIMED_OUT, COLLECTION_ABORTED, NOT_STARTED]}
+  collection: {enum: [COMPLETE, PARTIAL, FAILED]}
+  exit_status: {type: [integer, 'null']}
+  signal: {type: [integer, 'null']}
+  timeout: {type: boolean}
+  raw_artifacts: {type: array, items: {$ref: '#/$defs/raw_artifact'}}
+  process_events: {type: array, items: {$ref: '#/$defs/process_event'}}
+  raw_observations: {type: array, items: {$ref: '#/$defs/raw_observation'}}
+  integrity_reasons: {$ref: '#/$defs/strings'}
+  telemetry_ref: {type: string}
+  registry_version: {type: string}
+$defs:
+  sha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+  strings: {type: array, items: {type: string}}
+  raw_artifact:
+    type: object
+    additionalProperties: false
+    required: [artifact_ref, artifact_digest, media_type]
+    properties: {artifact_ref: {type: string}, artifact_digest: {$ref: '#/$defs/sha256'}, media_type: {type: string}}
+  process_event:
+    type: object
+    additionalProperties: false
+    required: [evidence_id, evidence_type, artifact_refs]
+    properties: {evidence_id: {type: string}, evidence_type: {type: string}, artifact_refs: {$ref: '#/$defs/strings'}}
+  raw_observation:
+    type: object
+    additionalProperties: false
+    required: [observation_ref, artifact_ref, artifact_digest]
+    properties: {observation_ref: {type: string}, artifact_ref: {type: string}, artifact_digest: {$ref: '#/$defs/sha256'}}

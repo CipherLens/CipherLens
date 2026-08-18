@@ -1,0 +1,36 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.build_record.v0.1
+type: object
+additionalProperties: false
+required: [schema_version, build_record_id, build_spec_ref, build_spec_digest, result, phases, diagnostic_artifacts, binary_ref, binary_digest, reason_codes, registry_version]
+properties:
+  schema_version: {const: cipherlens.build_record.v0.1}
+  build_record_id: {type: string}
+  build_spec_ref: {type: string}
+  build_spec_digest: {$ref: '#/$defs/sha256'}
+  result: {enum: [BUILT, COMPILE_FAILED, LINK_FAILED, TOOLCHAIN_LAUNCH_FAILED, BUILD_TIMED_OUT, OUTPUT_MISSING, INTEGRITY_FAILED]}
+  phases: {type: array, minItems: 2, maxItems: 2, items: {$ref: '#/$defs/phase'}}
+  diagnostic_artifacts: {$ref: '#/$defs/strings'}
+  binary_ref: {type: [string, 'null']}
+  binary_digest: {oneOf: [{$ref: '#/$defs/sha256'}, {type: 'null'}]}
+  reason_codes: {$ref: '#/$defs/strings'}
+  registry_version: {type: string}
+$defs:
+  sha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+  strings: {type: array, items: {type: string}}
+  nullable_sha: {oneOf: [{$ref: '#/$defs/sha256'}, {type: 'null'}]}
+  phase:
+    type: object
+    additionalProperties: false
+    required: [phase, result, exit_status, stdout_ref, stdout_digest, stderr_ref, stderr_digest, output_ref, output_digest, reason_codes]
+    properties:
+      phase: {enum: [COMPILE, LINK]}
+      result: {enum: [SUCCEEDED, FAILED, NOT_RUN, LAUNCH_FAILED, TIMED_OUT]}
+      exit_status: {type: [integer, 'null']}
+      stdout_ref: {type: string}
+      stdout_digest: {$ref: '#/$defs/sha256'}
+      stderr_ref: {type: string}
+      stderr_digest: {$ref: '#/$defs/sha256'}
+      output_ref: {type: [string, 'null']}
+      output_digest: {$ref: '#/$defs/nullable_sha'}
+      reason_codes: {$ref: '#/$defs/strings'}
