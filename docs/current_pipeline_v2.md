@@ -35,14 +35,25 @@ The Batch 4B foundation now implements the formal Contract-guided Matcher
 orchestration from deterministic RecallQuery and multi-subject candidate
 assembly through proposal, fact resolution, TS hard filtering, concrete
 observability, post-gate ranking, and canonical CandidateBinding validation.
-It still does not implement Template–Binding merge, source adaptation,
-execution trace, Contract verdict, or UNKNOWN rerun. Provider output cannot
-directly establish VERIFIED facts, eligibility, CandidateBinding validity, or
-vulnerability truth. The detailed boundaries are specified in
+The Batch 5B foundation now consumes only a VALID CandidateBinding and
+deterministically projects the complete binding into a canonical
+Template–CandidateBinding Merge, separate Bound Template Source, and canonical
+SourceMap. Declared syntax/glue holes may be resolved only by exact allowlisted
+Programmatic Completion or a PROPOSED constrained adaptation followed by
+trusted rerendering and all 18 deterministic validation checks. Semantic or
+protected-source drift routes to whole-binding switching; components are never
+mixed across CandidateBindings.
+
+The current v2 foundation still does not implement compile/link/run,
+Structured Execution Trace, Contract verdict, or UNKNOWN evidence rerun.
+Provider output cannot directly establish VERIFIED facts, eligibility,
+CandidateBinding validity, trusted source, execution truth, or vulnerability
+truth. The detailed boundaries are specified in
 `docs/binding_proposal_v0_1.md`,
 `docs/llm_role_proposal_provider_v0_1.md`, and
 `docs/candidate_binding_v0_1.md`; Matcher-specific orchestration is specified in
-`docs/matcher_v0_1.md`.
+`docs/matcher_v0_1.md`, and Merge/source/adaptation semantics are specified in
+`docs/template_binding_merge_v0_1.md`.
 
 The scheduler, A/B/C/D paths, RAG metadata, API cards, adapter recipes, and
 candidate scores described below are legacy implementation components and

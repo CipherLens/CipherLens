@@ -1,0 +1,175 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.template_binding_merge.v0.1
+title: CipherLens Template--CandidateBinding Merge v0.1
+type: object
+additionalProperties: false
+required: [schema_version, merge_id, trigger_template_ref, trigger_template_digest, trigger_template_source_artifact_ref, trigger_template_source_artifact_digest, trigger_template_interface_ref, trigger_template_interface_digest, candidate_binding_ref, candidate_binding_digest, candidate_binding_validation_ref, candidate_binding_validation_digest, target_scope, subject_realizations, slot_bindings, anchor_bindings, identity_realizations, observation_capture_bindings, correlation_realizations, adaptation_holes, structural_obligations, construction]
+properties:
+  schema_version: {const: cipherlens.template_binding_merge.v0.1}
+  merge_id: {$ref: '#/$defs/ref'}
+  trigger_template_ref: {$ref: '#/$defs/ref'}
+  trigger_template_digest: {$ref: '#/$defs/sha256'}
+  trigger_template_source_artifact_ref: {type: string, minLength: 1}
+  trigger_template_source_artifact_digest: {$ref: '#/$defs/sha256'}
+  trigger_template_interface_ref: {$ref: '#/$defs/ref'}
+  trigger_template_interface_digest: {$ref: '#/$defs/sha256'}
+  candidate_binding_ref: {$ref: '#/$defs/ref'}
+  candidate_binding_digest: {$ref: '#/$defs/sha256'}
+  candidate_binding_validation_ref: {$ref: '#/$defs/ref'}
+  candidate_binding_validation_digest: {$ref: '#/$defs/sha256'}
+  target_scope: {$ref: '#/$defs/target_scope'}
+  subject_realizations: {type: array, minItems: 1, items: {$ref: '#/$defs/subject'}}
+  slot_bindings: {type: array, minItems: 1, items: {$ref: '#/$defs/slot_binding'}}
+  anchor_bindings: {type: array, items: {$ref: '#/$defs/anchor'}}
+  identity_realizations: {type: array, minItems: 1, items: {$ref: '#/$defs/identity'}}
+  observation_capture_bindings: {type: array, minItems: 1, items: {$ref: '#/$defs/capture'}}
+  correlation_realizations: {type: array, items: {$ref: '#/$defs/correlation'}}
+  adaptation_holes: {type: array, items: {$ref: '#/$defs/hole'}}
+  structural_obligations: {type: array, minItems: 10, maxItems: 10, items: {$ref: '#/$defs/obligation'}}
+  construction: {$ref: '#/$defs/construction'}
+$defs:
+  ref: {type: string, minLength: 2}
+  sha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+  refs: {type: array, items: {$ref: '#/$defs/ref'}, uniqueItems: true}
+  target_scope:
+    type: object
+    additionalProperties: false
+    required: [library, version, surface_ref]
+    properties: {library: {type: string}, version: {type: string}, surface_ref: {type: string}}
+  subject:
+    type: object
+    additionalProperties: false
+    required: [subject_realization_id, subject_binding_ref, identity_group_ref, storage_ref, target_subject_ref, target_type_ref, ownership, lifetime_region, operation_binding_refs, observation_binding_refs, verified_fact_refs, evidence_refs]
+    properties:
+      subject_realization_id: {$ref: '#/$defs/ref'}
+      subject_binding_ref: {$ref: '#/$defs/ref'}
+      identity_group_ref: {$ref: '#/$defs/ref'}
+      storage_ref: {$ref: '#/$defs/ref'}
+      target_subject_ref: {$ref: '#/$defs/ref'}
+      target_type_ref: {$ref: '#/$defs/ref'}
+      ownership: {enum: [CALLER_OWNED, LIBRARY_OWNED, BORROWED]}
+      lifetime_region: {$ref: '#/$defs/ref'}
+      operation_binding_refs: {$ref: '#/$defs/refs'}
+      observation_binding_refs: {$ref: '#/$defs/refs'}
+      verified_fact_refs: {$ref: '#/$defs/refs'}
+      evidence_refs: {$ref: '#/$defs/refs'}
+  slot_binding:
+    type: object
+    additionalProperties: false
+    required: [mapping_id, template_slot_ref, slot_kind, candidate_element_kind, candidate_element_ref, target_semantic_ref, occurrence_index, render_disposition, adaptation_hole_refs, verified_fact_refs, evidence_refs]
+    properties:
+      mapping_id: {$ref: '#/$defs/ref'}
+      template_slot_ref: {$ref: '#/$defs/ref'}
+      slot_kind: {enum: [INPUT, OBJECT, OPERATION, INTERVENTION, OBSERVATION, ORDER_ANCHOR, STATE_ANCHOR]}
+      candidate_element_kind: {enum: [SUBJECT, OPERATION, INPUT, INTERVENTION, OBSERVATION, CONTINUITY, CORRELATION]}
+      candidate_element_ref: {$ref: '#/$defs/ref'}
+      target_semantic_ref: {$ref: '#/$defs/ref'}
+      occurrence_index: {type: integer, minimum: 0}
+      render_disposition: {enum: [DIRECT_SUBSTITUTION, DECLARED_ADAPTATION_HOLE, STRUCTURAL_ANCHOR]}
+      adaptation_hole_refs: {$ref: '#/$defs/refs'}
+      verified_fact_refs: {$ref: '#/$defs/refs'}
+      evidence_refs: {$ref: '#/$defs/refs'}
+  anchor:
+    type: object
+    additionalProperties: false
+    required: [anchor_binding_id, template_slot_ref, slot_kind, candidate_binding_refs, ordered_candidate_refs, identity_group_refs, merge_mapping_refs, verified_fact_refs, evidence_refs]
+    properties:
+      anchor_binding_id: {$ref: '#/$defs/ref'}
+      template_slot_ref: {$ref: '#/$defs/ref'}
+      slot_kind: {enum: [ORDER_ANCHOR, STATE_ANCHOR]}
+      candidate_binding_refs: {$ref: '#/$defs/refs'}
+      ordered_candidate_refs: {$ref: '#/$defs/refs'}
+      identity_group_refs: {$ref: '#/$defs/refs'}
+      merge_mapping_refs: {$ref: '#/$defs/refs'}
+      verified_fact_refs: {$ref: '#/$defs/refs'}
+      evidence_refs: {$ref: '#/$defs/refs'}
+  identity:
+    type: object
+    additionalProperties: false
+    required: [identity_realization_id, identity_group_ref, storage_ref, subject_binding_refs, operation_binding_refs, observation_binding_refs, lifetime_region, ownership, evidence_refs]
+    properties:
+      identity_realization_id: {$ref: '#/$defs/ref'}
+      identity_group_ref: {$ref: '#/$defs/ref'}
+      storage_ref: {$ref: '#/$defs/ref'}
+      subject_binding_refs: {$ref: '#/$defs/refs'}
+      operation_binding_refs: {$ref: '#/$defs/refs'}
+      observation_binding_refs: {$ref: '#/$defs/refs'}
+      lifetime_region: {$ref: '#/$defs/ref'}
+      ownership: {enum: [CALLER_OWNED, LIBRARY_OWNED, BORROWED]}
+      evidence_refs: {$ref: '#/$defs/refs'}
+  capture:
+    type: object
+    additionalProperties: false
+    required: [capture_binding_id, observation_binding_ref, contract_observable_ref, template_observation_slot_ref, target_subject_binding_ref, target_operation_binding_ref, semantic_source_ref, acquisition_kind, phase, value_type, capture_code_ref, adaptation_hole_ref, correlation_refs, participant_refs, execution_trace_field_ref]
+    properties:
+      capture_binding_id: {$ref: '#/$defs/ref'}
+      observation_binding_ref: {$ref: '#/$defs/ref'}
+      contract_observable_ref: {$ref: '#/$defs/ref'}
+      template_observation_slot_ref: {$ref: '#/$defs/ref'}
+      target_subject_binding_ref: {$ref: '#/$defs/ref'}
+      target_operation_binding_ref: {$ref: '#/$defs/ref'}
+      semantic_source_ref: {$ref: '#/$defs/ref'}
+      acquisition_kind: {enum: [RETURN_VALUE, OUT_PARAMETER, BOUND_VALUE, POINTER_DELTA, BUFFER_SNAPSHOT, OBJECT_ACCESSOR, STATE_PROBE, PROCESS_EVENT, TIMING_SOURCE]}
+      phase: {enum: [BEFORE_STEP, DURING_STEP, AFTER_STEP, BETWEEN_STEPS, FOLLOWUP, PROCESS_END]}
+      value_type: {$ref: '#/$defs/ref'}
+      capture_code_ref: {oneOf: [{$ref: '#/$defs/ref'}, {type: 'null'}]}
+      adaptation_hole_ref: {oneOf: [{$ref: '#/$defs/ref'}, {type: 'null'}]}
+      correlation_refs: {$ref: '#/$defs/refs'}
+      participant_refs: {$ref: '#/$defs/refs'}
+      execution_trace_field_ref: {$ref: '#/$defs/ref'}
+  correlation:
+    type: object
+    additionalProperties: false
+    required: [correlation_realization_id, correlation_binding_ref, correlation_kind, subject_binding_refs, operation_binding_refs, intervention_binding_refs, observation_binding_refs, participant_refs, execution_trace_group_ref, verified_fact_refs, evidence_refs]
+    properties:
+      correlation_realization_id: {$ref: '#/$defs/ref'}
+      correlation_binding_ref: {$ref: '#/$defs/ref'}
+      correlation_kind: {$ref: '#/$defs/ref'}
+      subject_binding_refs: {$ref: '#/$defs/refs'}
+      operation_binding_refs: {$ref: '#/$defs/refs'}
+      intervention_binding_refs: {$ref: '#/$defs/refs'}
+      observation_binding_refs: {$ref: '#/$defs/refs'}
+      participant_refs: {$ref: '#/$defs/refs'}
+      execution_trace_group_ref: {$ref: '#/$defs/ref'}
+      verified_fact_refs: {$ref: '#/$defs/refs'}
+      evidence_refs: {$ref: '#/$defs/refs'}
+  hole:
+    type: object
+    additionalProperties: false
+    required: [hole_id, hole_type, required, resolver, syntax_kind, allowed_edit_types, allowed_replacement_digests, semantic_guard_refs, target_region_ref, dependencies, type_constraints]
+    properties:
+      hole_id: {$ref: '#/$defs/ref'}
+      hole_type: {enum: [INCLUDE_IMPORT, NAMESPACE_QUALIFICATION, DECLARATION_SYNTAX, TYPE_COMPATIBLE_CONVERSION, ALLOCATION_GLUE, DEALLOCATION_GLUE, ERROR_VARIABLE_DECLARATION, WRAPPER_GLUE, CONSTANT_SPELLING, ENUM_SPELLING, ACCESSOR_SYNTAX, SAFE_CAST, CONTROL_FLOW_GLUE, OBSERVATION_CAPTURE_GLUE, BUILD_METADATA]}
+      required: {type: boolean}
+      resolver: {enum: [DETERMINISTIC_ONLY, PROPOSAL_ALLOWED]}
+      syntax_kind: {$ref: '#/$defs/ref'}
+      allowed_edit_types: {type: array, minItems: 1, uniqueItems: true, items: {enum: [FILL_HOLE, ADD_DECLARED_INCLUDE, INSERT_DECLARED_BOILERPLATE, REPLACE_DECLARED_EXPRESSION]}}
+      allowed_replacement_digests: {type: array, minItems: 1, uniqueItems: true, items: {$ref: '#/$defs/sha256'}}
+      semantic_guard_refs: {$ref: '#/$defs/refs'}
+      target_region_ref: {$ref: '#/$defs/ref'}
+      dependencies: {$ref: '#/$defs/refs'}
+      type_constraints: {$ref: '#/$defs/refs'}
+  obligation:
+    type: object
+    additionalProperties: false
+    required: [obligation_id, obligation_type, required, typed_refs, ordered_refs, identity_group_refs, template_anchor_refs, candidate_binding_refs, advisory_description]
+    properties:
+      obligation_id: {$ref: '#/$defs/ref'}
+      obligation_type: {enum: [REQUIRED_SLOT_COVERAGE, OPERATION_SEQUENCE_PRESERVED, INTERVENTION_PHASE_PRESERVED, OBSERVATION_PHASE_PRESERVED, INPUT_DATA_DEPENDENCY_PRESERVED, SUBJECT_IDENTITY_PRESERVED, SAME_IDENTITY_ACROSS_OPERATIONS, FOLLOWUP_SEQUENCE_PRESERVED, CORRELATION_RELATION_PRESERVED, CONTROL_FLOW_ANCHOR_PRESERVED]}
+      required: {type: boolean}
+      typed_refs: {$ref: '#/$defs/refs'}
+      ordered_refs: {$ref: '#/$defs/refs'}
+      identity_group_refs: {$ref: '#/$defs/refs'}
+      template_anchor_refs: {$ref: '#/$defs/refs'}
+      candidate_binding_refs: {$ref: '#/$defs/refs'}
+      advisory_description: {type: string, minLength: 1}
+  construction:
+    type: object
+    additionalProperties: false
+    required: [producer, registry_versions, verified_fact_refs, evidence_refs, canonical_upstream_refs]
+    properties:
+      producer: {$ref: '#/$defs/ref'}
+      registry_versions: {$ref: '#/$defs/refs'}
+      verified_fact_refs: {$ref: '#/$defs/refs'}
+      evidence_refs: {$ref: '#/$defs/refs'}
+      canonical_upstream_refs: {$ref: '#/$defs/refs'}

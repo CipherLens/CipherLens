@@ -1,0 +1,35 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.template_binding_merge_validation.v0.1
+title: CipherLens Template--CandidateBinding Merge Validation v0.1
+type: object
+additionalProperties: false
+required: [schema_version, validation_id, merge_ref, merge_digest, bound_source_ref, bound_source_digest, validator_registry_version, status, routing, check_results, reason_codes]
+properties:
+  schema_version: {const: cipherlens.template_binding_merge_validation.v0.1}
+  validation_id: {type: string}
+  merge_ref: {type: string}
+  merge_digest: {$ref: '#/$defs/sha256'}
+  bound_source_ref: {type: string}
+  bound_source_digest: {$ref: '#/$defs/sha256'}
+  validator_registry_version: {const: cipherlens.template_binding_merge_validator_registry.v0.1}
+  status: {enum: [VALID, INVALID, INCOMPLETE]}
+  routing: {enum: [EXECUTION_HANDOFF, CONSTRAINED_ADAPTATION, PROGRAMMATIC_COMPLETION, WHOLE_BINDING_SWITCH]}
+  reason_codes: {type: array, uniqueItems: true, items: {type: string}}
+  check_results:
+    type: array
+    minItems: 18
+    maxItems: 18
+    items:
+      type: object
+      additionalProperties: false
+      required: [check_id, validator_type, result, merge_refs, evidence_refs, reason_code, missing_requirements]
+      properties:
+        check_id: {type: string}
+        validator_type: {enum: [REFERENCE_INTEGRITY, VALID_BINDING_GATE, TARGET_SCOPE_CONSISTENCY, SLOT_COVERAGE, SLOT_MULTIPLICITY, SUBJECT_PRESERVATION, OPERATION_PRESERVATION, INPUT_PRESERVATION, INTERVENTION_PRESERVATION, ORDER_PRESERVATION, STATE_CONTINUITY_PRESERVATION, OBSERVATION_PRESERVATION, CORRELATION_PRESERVATION, STRUCTURAL_OBLIGATION, ADAPTATION_BOUNDARY, FORBIDDEN_SEMANTIC_DRIFT, SOURCE_BINDING_CONSISTENCY, COMPLETENESS]}
+        result: {enum: [PASS, FAIL, INCOMPLETE]}
+        merge_refs: {type: array, items: {type: string}}
+        evidence_refs: {type: array, items: {type: string}}
+        reason_code: {type: string}
+        missing_requirements: {type: array, items: {type: string}}
+$defs:
+  sha256: {type: string, pattern: '^[0-9a-f]{64}$'}

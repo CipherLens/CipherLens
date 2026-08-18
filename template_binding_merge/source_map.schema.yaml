@@ -1,0 +1,53 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.bound_source_map.v0.1
+title: CipherLens Bound SourceMap v0.1
+type: object
+additionalProperties: false
+required: [schema_version, source_map_id, merge_ref, merge_digest, base_template_source_ref, base_template_source_digest, regions, ordered_operation_records, observation_capture_records, identity_storage_records]
+properties:
+  schema_version: {const: cipherlens.bound_source_map.v0.1}
+  source_map_id: {type: string}
+  merge_ref: {type: string}
+  merge_digest: {$ref: '#/$defs/sha256'}
+  base_template_source_ref: {type: string}
+  base_template_source_digest: {$ref: '#/$defs/sha256'}
+  regions: {type: array, minItems: 1, items: {$ref: '#/$defs/region'}}
+  ordered_operation_records: {type: array, items: {$ref: '#/$defs/operation'}}
+  observation_capture_records: {type: array, items: {$ref: '#/$defs/observation'}}
+  identity_storage_records: {type: array, items: {$ref: '#/$defs/identity'}}
+$defs:
+  sha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+  refs: {type: array, uniqueItems: true, items: {type: string}}
+  region:
+    type: object
+    additionalProperties: false
+    required: [region_id, region_kind, source_range, protected, canonical_digest, template_slot_refs, merge_mapping_refs, adaptation_hole_refs, observation_capture_refs]
+    properties:
+      region_id: {type: string}
+      region_kind: {enum: [TEMPLATE_PROTECTED, MAPPING_PROTECTED, ADAPTATION_HOLE]}
+      source_range:
+        type: object
+        additionalProperties: false
+        required: [byte_start, byte_end]
+        properties: {byte_start: {type: integer, minimum: 0}, byte_end: {type: integer, minimum: 0}}
+      protected: {type: boolean}
+      canonical_digest: {$ref: '#/$defs/sha256'}
+      template_slot_refs: {$ref: '#/$defs/refs'}
+      merge_mapping_refs: {$ref: '#/$defs/refs'}
+      adaptation_hole_refs: {$ref: '#/$defs/refs'}
+      observation_capture_refs: {$ref: '#/$defs/refs'}
+  operation:
+    type: object
+    additionalProperties: false
+    required: [record_id, operation_binding_ref, template_slot_ref, merge_mapping_ref, target_symbol_ref, sequence_index, region_ref]
+    properties: {record_id: {type: string}, operation_binding_ref: {type: string}, template_slot_ref: {type: string}, merge_mapping_ref: {type: string}, target_symbol_ref: {type: string}, sequence_index: {type: integer, minimum: 0}, region_ref: {type: string}}
+  observation:
+    type: object
+    additionalProperties: false
+    required: [record_id, observation_binding_ref, capture_binding_ref, semantic_source_ref, acquisition_kind, phase, region_ref]
+    properties: {record_id: {type: string}, observation_binding_ref: {type: string}, capture_binding_ref: {type: string}, semantic_source_ref: {type: string}, acquisition_kind: {type: string}, phase: {type: string}, region_ref: {type: string}}
+  identity:
+    type: object
+    additionalProperties: false
+    required: [record_id, identity_group_ref, storage_ref, subject_binding_refs, region_ref]
+    properties: {record_id: {type: string}, identity_group_ref: {type: string}, storage_ref: {type: string}, subject_binding_refs: {$ref: '#/$defs/refs'}, region_ref: {type: string}}
