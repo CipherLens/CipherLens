@@ -1,0 +1,79 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.binding_proposal.v0.1
+title: CipherLens canonical BindingProposal v0.1
+type: object
+additionalProperties: false
+required: [schema_version, proposal_id, source_references, target_references, provider_provenance, epistemic_status, evidence, role_proposals, subject_proposals, operation_proposals, input_proposals, intervention_proposals, state_continuity_proposals, observation_proposals]
+properties:
+  schema_version: {const: cipherlens.binding_proposal.v0.1}
+  proposal_id: {type: string, pattern: '^proposal:[0-9a-f]{64}$'}
+  source_references: {$ref: '#/$defs/references'}
+  target_references: {$ref: '#/$defs/references'}
+  provider_provenance: {$ref: '#/$defs/provider'}
+  epistemic_status: {const: PROPOSED}
+  evidence:
+    type: array
+    items: {$ref: '#/$defs/evidence'}
+  role_proposals: {$ref: 'payload.schema.yaml#/$defs/proposals'}
+  subject_proposals: {$ref: 'payload.schema.yaml#/$defs/proposals'}
+  operation_proposals: {$ref: 'payload.schema.yaml#/$defs/proposals'}
+  input_proposals: {$ref: 'payload.schema.yaml#/$defs/proposals'}
+  intervention_proposals: {$ref: 'payload.schema.yaml#/$defs/proposals'}
+  state_continuity_proposals: {$ref: 'payload.schema.yaml#/$defs/proposals'}
+  observation_proposals: {$ref: 'payload.schema.yaml#/$defs/proposals'}
+  advisory_rationale: {type: string, minLength: 1}
+  raw_output_artifact_ref: {type: string}
+  raw_output_digest: {$ref: '#/$defs/sha256'}
+$defs:
+  sha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+  references:
+    type: array
+    minItems: 1
+    items:
+      type: object
+      additionalProperties: false
+      required: [artifact_ref, artifact_digest]
+      properties:
+        artifact_ref: {type: string}
+        artifact_digest: {$ref: '#/$defs/sha256'}
+  evidence:
+    type: object
+    additionalProperties: false
+    required: [evidence_ref, kind, artifact_ref, artifact_digest]
+    properties:
+      evidence_ref: {type: string}
+      kind: {type: string}
+      artifact_ref: {type: string}
+      artifact_digest: {$ref: '#/$defs/sha256'}
+  provider:
+    type: object
+    additionalProperties: false
+    required: [provider_kind, usage_plane, auth_class, model_ref, provider_instance_ref, invocation_ref, prompt_template_version, structured_output_schema_version, sandbox_profile, generation_metadata, credential_env]
+    properties:
+      provider_kind: {enum: [CODEX_EXEC, GLM_API, OTHER, TEST_REPLAY]}
+      usage_plane: {enum: [CHATGPT_AUTHENTICATED_LOCAL_CODEX, API_METERED, TEST_REPLAY]}
+      auth_class: {enum: [CHATGPT_AUTHENTICATED_SESSION, API_KEY_ENVIRONMENT, NONE]}
+      model_ref: {type: string}
+      provider_instance_ref: {type: string}
+      invocation_ref: {type: string}
+      prompt_template_version: {type: string}
+      structured_output_schema_version: {const: cipherlens.binding_proposal_payload.v0.1}
+      credential_env: {type: [string, 'null']}
+      sandbox_profile:
+        type: object
+        additionalProperties: false
+        required: [sandbox_mode, working_root, tool_network_policy, ephemeral, ignore_user_config, ignore_rules]
+        properties:
+          sandbox_mode: {enum: [READ_ONLY, NONE]}
+          working_root: {type: string}
+          tool_network_policy: {enum: [DISABLED_REQUIRED, NOT_APPLICABLE]}
+          ephemeral: {type: boolean}
+          ignore_user_config: {type: boolean}
+          ignore_rules: {type: boolean}
+      generation_metadata:
+        type: object
+        additionalProperties: false
+        required: [transport, exit_code]
+        properties:
+          transport: {type: string}
+          exit_code: {type: [integer, 'null']}

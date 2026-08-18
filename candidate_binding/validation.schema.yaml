@@ -1,0 +1,31 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.candidate_binding_validation.v0.1
+title: CipherLens CandidateBindingValidation v0.1
+type: object
+additionalProperties: false
+required: [schema_version, validation_id, candidate_binding_ref, candidate_binding_digest, validator_registry_version, status, check_results, reason_codes]
+properties:
+  schema_version: {const: cipherlens.candidate_binding_validation.v0.1}
+  validation_id: {type: string}
+  candidate_binding_ref: {type: string}
+  candidate_binding_digest: {type: string, pattern: '^[0-9a-f]{64}$'}
+  validator_registry_version: {const: cipherlens.candidate_binding_validator_registry.v0.1}
+  status: {enum: [VALID, INVALID, INCOMPLETE]}
+  reason_codes: {type: array, items: {type: string}}
+  check_results:
+    type: array
+    minItems: 10
+    maxItems: 10
+    items:
+      type: object
+      additionalProperties: false
+      required: [check_id, validator_type, result, binding_refs, verified_fact_refs, evidence_refs, reason_code, missing_requirements]
+      properties:
+        check_id: {type: string}
+        validator_type: {enum: [REFERENCE_INTEGRITY, TARGET_SCOPE, ELIGIBILITY_GATE, SUBJECT_BINDING, OPERATION_BINDING, INPUT_BINDING, INTERVENTION_BINDING, CONTINUITY, OBSERVABILITY, COMPLETENESS]}
+        result: {enum: [PASS, FAIL, INCOMPLETE]}
+        binding_refs: {type: array, items: {type: string}}
+        verified_fact_refs: {type: array, items: {type: string}}
+        evidence_refs: {type: array, items: {type: string}}
+        reason_code: {type: string}
+        missing_requirements: {type: array, items: {type: string}}

@@ -15,9 +15,30 @@ validated Vulnerability Contract v0.3
 The Vulnerability Contract defines what must be validated. Transfer Signature
 is the Contract-derived Target Eligibility Specification: it defines the typed
 capabilities, excluded semantics, and observability obligations that a target
-semantic surface must satisfy before migration. The current implementation is
-limited to this foundation and does not yet implement CandidateBinding or the
-formal Matcher.
+semantic surface must satisfy before migration. The implementation now also
+contains the isolated Batch 3B foundations:
+
+```text
+legacy/current Trigger Template
+  -> stable Trigger Template Interface Manifest
+
+provider payload (advisory only)
+  -> trusted BindingProposal envelope (PROPOSED only)
+
+ELIGIBLE evaluation + explicit verified mapping
+  -> immutable CandidateBinding v0.1
+  -> ten deterministic checks
+  -> VALID / INVALID / INCOMPLETE
+```
+
+This is not the formal Matcher. There is no RAG-to-provider orchestration,
+ranking, fact-resolution loop, Template–Binding merge, source adaptation,
+execution trace, Contract verdict, or UNKNOWN rerun in this Batch. Provider
+output cannot directly establish VERIFIED facts, eligibility, CandidateBinding
+validity, or vulnerability truth. The detailed boundaries are specified in
+`docs/binding_proposal_v0_1.md`,
+`docs/llm_role_proposal_provider_v0_1.md`, and
+`docs/candidate_binding_v0_1.md`.
 
 The scheduler, A/B/C/D paths, RAG metadata, API cards, adapter recipes, and
 candidate scores described below are legacy implementation components and

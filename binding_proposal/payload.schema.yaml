@@ -1,0 +1,30 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.binding_proposal_payload.v0.1
+title: CipherLens BindingProposal provider payload v0.1
+type: object
+additionalProperties: false
+required: [schema_version, role_proposals, subject_proposals, operation_proposals, input_proposals, intervention_proposals, state_continuity_proposals, observation_proposals]
+properties:
+  schema_version: {const: cipherlens.binding_proposal_payload.v0.1}
+  advisory_rationale: {type: string, minLength: 1}
+  role_proposals: {$ref: '#/$defs/proposals'}
+  subject_proposals: {$ref: '#/$defs/proposals'}
+  operation_proposals: {$ref: '#/$defs/proposals'}
+  input_proposals: {$ref: '#/$defs/proposals'}
+  intervention_proposals: {$ref: '#/$defs/proposals'}
+  state_continuity_proposals: {$ref: '#/$defs/proposals'}
+  observation_proposals: {$ref: '#/$defs/proposals'}
+$defs:
+  proposals:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required: [proposal_ref, source_ref, target_ref, semantic_role, related_refs, evidence_hints]
+      properties:
+        proposal_ref: {type: string, minLength: 1}
+        source_ref: {type: string, minLength: 1}
+        target_ref: {type: string, minLength: 1}
+        semantic_role: {type: string, minLength: 1}
+        related_refs: {type: array, items: {type: string, minLength: 1}}
+        evidence_hints: {type: array, items: {type: string, minLength: 1}}

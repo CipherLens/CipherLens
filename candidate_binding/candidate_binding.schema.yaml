@@ -1,0 +1,169 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.candidate_binding.v0.1
+title: CipherLens CandidateBinding v0.1
+type: object
+additionalProperties: false
+required: [schema_version, binding_id, source_contract_ref, source_contract_digest, transfer_signature_ref, transfer_signature_digest, trigger_template_ref, trigger_template_digest, target_profile_ref, target_profile_digest, eligibility_evaluation_ref, eligibility_evaluation_digest, target_scope, subject_bindings, operation_bindings, input_bindings, intervention_bindings, continuity_bindings, observation_bindings, correlation_bindings, construction]
+properties:
+  schema_version: {const: cipherlens.candidate_binding.v0.1}
+  binding_id: {type: string, pattern: '^binding:[0-9a-f]{64}$'}
+  source_contract_ref: {type: string}
+  source_contract_digest: {$ref: '#/$defs/sha256'}
+  transfer_signature_ref: {type: string}
+  transfer_signature_digest: {$ref: '#/$defs/sha256'}
+  trigger_template_ref: {type: string}
+  trigger_template_digest: {$ref: '#/$defs/sha256'}
+  target_profile_ref: {type: string}
+  target_profile_digest: {$ref: '#/$defs/sha256'}
+  eligibility_evaluation_ref: {type: string}
+  eligibility_evaluation_digest: {$ref: '#/$defs/sha256'}
+  target_scope: {$ref: '#/$defs/target_scope'}
+  subject_bindings: {type: array, items: {$ref: '#/$defs/subject'}}
+  operation_bindings: {type: array, items: {$ref: '#/$defs/operation'}}
+  input_bindings: {type: array, items: {$ref: '#/$defs/input'}}
+  intervention_bindings: {type: array, items: {$ref: '#/$defs/intervention'}}
+  continuity_bindings: {type: array, items: {$ref: '#/$defs/continuity'}}
+  observation_bindings: {type: array, items: {$ref: '#/$defs/observation'}}
+  correlation_bindings: {type: array, items: {$ref: '#/$defs/correlation'}}
+  construction: {$ref: '#/$defs/construction'}
+$defs:
+  sha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+  strings: {type: array, items: {type: string, minLength: 1}}
+  target_scope:
+    type: object
+    additionalProperties: false
+    required: [library, version, surface_ref]
+    properties: {library: {type: string}, version: {type: string}, surface_ref: {type: string}}
+  subject:
+    type: object
+    additionalProperties: false
+    required: [subject_binding_id, contract_object_ref, template_object_slot_refs, target_subject_ref, subject_kind, semantic_role, target_type_ref, identity_group_ref, ownership, lifetime, verified_fact_refs, evidence_refs]
+    properties:
+      subject_binding_id: {type: string}
+      contract_object_ref: {type: string}
+      template_object_slot_refs: {$ref: '#/$defs/strings'}
+      target_subject_ref: {type: string}
+      subject_kind: {enum: [API, API_GROUP, WRAPPER, INTERFACE, OBJECT_MODEL, CALL_SURFACE, OBJECT, OBSERVATION_CHANNEL]}
+      semantic_role: {type: string}
+      target_type_ref: {type: string}
+      identity_group_ref: {type: string}
+      ownership: {enum: [CALLER_OWNED, LIBRARY_OWNED, BORROWED]}
+      lifetime: {type: string}
+      verified_fact_refs: {$ref: '#/$defs/strings'}
+      evidence_refs: {$ref: '#/$defs/strings'}
+  operation:
+    type: object
+    additionalProperties: false
+    required: [operation_binding_id, binding_kind, contract_step_ref, template_call_slot_ref, operation_role, target_operation_kind, target_symbol_ref, receiver_subject_binding_ref, argument_binding_refs, participant_binding_refs, sequence_index, verified_fact_refs, evidence_refs]
+    properties:
+      operation_binding_id: {type: string}
+      binding_kind: {enum: [PRIMARY_CONTRACT_STEP, SUPPORTING_SETUP, SUPPORTING_OBSERVATION, FOLLOWUP, SUPPORTING_CLEANUP]}
+      contract_step_ref: {type: string}
+      template_call_slot_ref: {type: string}
+      operation_role: {type: string}
+      target_operation_kind: {type: string}
+      target_symbol_ref: {type: string}
+      receiver_subject_binding_ref: {type: string}
+      argument_binding_refs: {$ref: '#/$defs/strings'}
+      participant_binding_refs: {$ref: '#/$defs/strings'}
+      sequence_index: {type: integer, minimum: 0}
+      verified_fact_refs: {$ref: '#/$defs/strings'}
+      evidence_refs: {$ref: '#/$defs/strings'}
+  input:
+    type: object
+    additionalProperties: false
+    required: [input_binding_id, source_input_ref, template_input_slot_ref, target_operation_binding_ref, target_parameter_ref, input_role, value_type, representation_kind, encoding, construction_strategy_ref, artifact_ref, type_constraints, size_range, ownership, verified_fact_refs, evidence_refs]
+    properties:
+      input_binding_id: {type: string}
+      source_input_ref: {type: string}
+      template_input_slot_ref: {type: string}
+      target_operation_binding_ref: {type: string}
+      target_parameter_ref: {type: string}
+      input_role: {type: string}
+      value_type: {type: string}
+      representation_kind: {enum: [DIRECT_VALUE, ARTIFACT_REF, ENCODED_BYTES]}
+      encoding: {type: string}
+      construction_strategy_ref: {type: string}
+      artifact_ref: {type: [string, 'null']}
+      type_constraints: {$ref: '#/$defs/strings'}
+      size_range:
+        type: object
+        additionalProperties: false
+        required: [minimum, maximum]
+        properties:
+          minimum: {type: [integer, 'null'], minimum: 0}
+          maximum: {type: [integer, 'null'], minimum: 0}
+      ownership: {enum: [CALLER_OWNED, LIBRARY_OWNED, BORROWED]}
+      verified_fact_refs: {$ref: '#/$defs/strings'}
+      evidence_refs: {$ref: '#/$defs/strings'}
+  intervention:
+    type: object
+    additionalProperties: false
+    required: [intervention_binding_id, contract_intervention_ref, template_intervention_ref, target_subject_binding_ref, target_operation_binding_ref, target_parameter_ref, target_state_ref, intervention_kind, application_phase, equivalence_fact_refs, evidence_refs]
+    properties:
+      intervention_binding_id: {type: string}
+      contract_intervention_ref: {type: string}
+      template_intervention_ref: {type: string}
+      target_subject_binding_ref: {type: string}
+      target_operation_binding_ref: {type: string}
+      target_parameter_ref: {type: [string, 'null']}
+      target_state_ref: {type: [string, 'null']}
+      intervention_kind: {type: string}
+      application_phase: {enum: [BEFORE_OPERATION, AT_OPERATION, BETWEEN_OPERATIONS, FOLLOWUP_SEQUENCE]}
+      equivalence_fact_refs: {$ref: '#/$defs/strings'}
+      evidence_refs: {$ref: '#/$defs/strings'}
+  continuity:
+    type: object
+    additionalProperties: false
+    required: [continuity_binding_id, continuity_kind, subject_binding_refs, operation_binding_refs, intervention_binding_refs, observation_binding_refs, verified_fact_refs, evidence_refs]
+    properties:
+      continuity_binding_id: {type: string}
+      continuity_kind: {enum: [SAME_IDENTITY_ACROSS_OPERATIONS, SURVIVES_FAILED_OPERATION, FOLLOWUP_ON_SAME_IDENTITY, BEFORE_AFTER_SAME_IDENTITY, REUSE_AFTER_INTERVENTION]}
+      subject_binding_refs: {$ref: '#/$defs/strings'}
+      operation_binding_refs: {$ref: '#/$defs/strings'}
+      intervention_binding_refs: {$ref: '#/$defs/strings'}
+      observation_binding_refs: {$ref: '#/$defs/strings'}
+      verified_fact_refs: {$ref: '#/$defs/strings'}
+      evidence_refs: {$ref: '#/$defs/strings'}
+  observation:
+    type: object
+    additionalProperties: false
+    required: [observation_binding_id, contract_observable_ref, template_observation_ref, target_subject_binding_ref, target_operation_binding_ref, observable_role, value_type, acquisition_kind, phase, semantic_source_ref, correlation_group_refs, participant_binding_refs, verified_fact_refs, evidence_refs]
+    properties:
+      observation_binding_id: {type: string}
+      contract_observable_ref: {type: string}
+      template_observation_ref: {type: string}
+      target_subject_binding_ref: {type: string}
+      target_operation_binding_ref: {type: string}
+      observable_role: {type: string}
+      value_type: {type: string}
+      acquisition_kind: {enum: [RETURN_VALUE, OUT_PARAMETER, BOUND_VALUE, POINTER_DELTA, BUFFER_SNAPSHOT, OBJECT_ACCESSOR, STATE_PROBE, PROCESS_EVENT, TIMING_SOURCE]}
+      phase: {enum: [BEFORE_STEP, DURING_STEP, AFTER_STEP, BETWEEN_STEPS, FOLLOWUP, PROCESS_END]}
+      semantic_source_ref: {type: string}
+      correlation_group_refs: {$ref: '#/$defs/strings'}
+      participant_binding_refs: {$ref: '#/$defs/strings'}
+      verified_fact_refs: {$ref: '#/$defs/strings'}
+      evidence_refs: {$ref: '#/$defs/strings'}
+  correlation:
+    type: object
+    additionalProperties: false
+    required: [correlation_binding_id, correlation_kind, subject_binding_refs, operation_binding_refs, intervention_binding_refs, observation_binding_refs, participant_binding_refs, verified_fact_refs, evidence_refs]
+    properties:
+      correlation_binding_id: {type: string}
+      correlation_kind: {enum: [SAME_RUN, SAME_STEP, SAME_SUBJECT, SAME_IDENTITY, BEFORE_AFTER_PAIR, MULTI_OPERATION_SEQUENCE]}
+      subject_binding_refs: {$ref: '#/$defs/strings'}
+      operation_binding_refs: {$ref: '#/$defs/strings'}
+      intervention_binding_refs: {$ref: '#/$defs/strings'}
+      observation_binding_refs: {$ref: '#/$defs/strings'}
+      participant_binding_refs: {$ref: '#/$defs/strings'}
+      verified_fact_refs: {$ref: '#/$defs/strings'}
+      evidence_refs: {$ref: '#/$defs/strings'}
+  construction:
+    type: object
+    additionalProperties: false
+    required: [producer, version, verified_fact_refs, evidence_refs]
+    properties:
+      producer: {type: string}
+      version: {type: string}
+      verified_fact_refs: {$ref: '#/$defs/strings'}
+      evidence_refs: {$ref: '#/$defs/strings'}
