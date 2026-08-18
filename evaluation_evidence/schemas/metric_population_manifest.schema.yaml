@@ -1,0 +1,35 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.metric_population_manifest.v0.1
+type: object
+additionalProperties: false
+required: [schema_version, population_manifest_id, population_unit, origin, complete, items]
+properties:
+  schema_version: {const: cipherlens.metric_population_manifest.v0.1}
+  population_manifest_id: {type: string, minLength: 1}
+  population_unit: {type: string, minLength: 1}
+  origin: {enum: [CURRENT_V2, CURRENT_NON_V2, LEGACY, SYNTHETIC, EXTERNAL_UPSTREAM]}
+  complete: {type: boolean}
+  items:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required: [artifact, artifact_type, origin, attributes]
+      properties:
+        artifact: {$ref: '#/$defs/link'}
+        artifact_type: {type: string, minLength: 1}
+        origin: {enum: [CURRENT_V2, CURRENT_NON_V2, LEGACY, SYNTHETIC, EXTERNAL_UPSTREAM]}
+        attributes:
+          type: object
+          additionalProperties: false
+          required: [status]
+          properties:
+            status: {type: [string, 'null']}
+$defs:
+  link:
+    type: object
+    additionalProperties: false
+    required: [ref, digest]
+    properties:
+      ref: {type: string, minLength: 1}
+      digest: {type: string, pattern: '^[0-9a-f]{64}$'}

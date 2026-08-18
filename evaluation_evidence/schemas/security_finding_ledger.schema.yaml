@@ -1,0 +1,57 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.security_finding_ledger.v0.1
+type: object
+additionalProperties: false
+required: [schema_version, ledger_id, producer, git_revision, registry_version, findings]
+properties:
+  schema_version: {const: cipherlens.security_finding_ledger.v0.1}
+  ledger_id: {type: string, minLength: 1}
+  producer: {$ref: '#/$defs/producer'}
+  git_revision: {type: string, pattern: '^[0-9a-f]{40}$'}
+  registry_version: {const: cipherlens.evaluation_evidence_registry.v0.1}
+  findings: {type: array, items: {$ref: '#/$defs/finding'}}
+$defs:
+  link:
+    type: object
+    additionalProperties: false
+    required: [ref, digest]
+    properties:
+      ref: {type: string, minLength: 1}
+      digest: {type: string, pattern: '^[0-9a-f]{64}$'}
+  producer:
+    type: object
+    additionalProperties: false
+    required: [producer_id, producer_version]
+    properties:
+      producer_id: {type: string, minLength: 1}
+      producer_version: {type: string, minLength: 1}
+  target_scope:
+    type: object
+    additionalProperties: false
+    required: [library, version, build_profile]
+    properties:
+      library: {type: string, minLength: 1}
+      version: {type: string, minLength: 1}
+      build_profile: {type: string, minLength: 1}
+  finding:
+    type: object
+    additionalProperties: false
+    required: [finding_id, finding_status, target_scope, affected_component, family, contract, candidate_binding, execution_verdict, violation_package, reproduction_refs, impact_refs, upstream_refs, fix_refs, advisory_refs, origin, public_disclosure_state, allowed_claim_boundary]
+    properties:
+      finding_id: {type: string, minLength: 1}
+      finding_status: {enum: [NOT_A_FINDING, HYPOTHESIS, REPRODUCED_RELATION_BEHAVIOR, V2_VIOLATED_WITNESS, IMPACT_ANALYZED, REPORTED_UPSTREAM, UPSTREAM_ACKNOWLEDGED, FIX_CONFIRMED, CVE_OR_ADVISORY_CONFIRMED, HARDENING_ONLY, SAFE_NEGATIVE]}
+      target_scope: {$ref: '#/$defs/target_scope'}
+      affected_component: {type: string, minLength: 1}
+      family: {type: string, minLength: 1}
+      contract: {anyOf: [{$ref: '#/$defs/link'}, {type: 'null'}]}
+      candidate_binding: {anyOf: [{$ref: '#/$defs/link'}, {type: 'null'}]}
+      execution_verdict: {anyOf: [{$ref: '#/$defs/link'}, {type: 'null'}]}
+      violation_package: {anyOf: [{$ref: '#/$defs/link'}, {type: 'null'}]}
+      reproduction_refs: {type: array, items: {$ref: '#/$defs/link'}}
+      impact_refs: {type: array, items: {$ref: '#/$defs/link'}}
+      upstream_refs: {type: array, items: {$ref: '#/$defs/link'}}
+      fix_refs: {type: array, items: {$ref: '#/$defs/link'}}
+      advisory_refs: {type: array, items: {$ref: '#/$defs/link'}}
+      origin: {enum: [CURRENT_V2, CURRENT_NON_V2, LEGACY, SYNTHETIC, EXTERNAL_UPSTREAM]}
+      public_disclosure_state: {type: string, minLength: 1}
+      allowed_claim_boundary: {type: string, minLength: 1}

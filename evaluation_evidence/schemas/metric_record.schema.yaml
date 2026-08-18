@@ -1,0 +1,58 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.metric_record.v0.1
+type: object
+additionalProperties: false
+required: [schema_version, metric_record_id, metric_definition, population_manifest, experiment_unit_refs, numerator_refs, denominator_refs, numerator_value, denominator_value, derived_value, origin, population_complete, all_source_digests_valid, recompute_status, recompute_trace, caveats, producer, git_revision, registry_version]
+properties:
+  schema_version: {const: cipherlens.metric_record.v0.1}
+  metric_record_id: {type: string, minLength: 1}
+  metric_definition: {$ref: '#/$defs/link'}
+  population_manifest: {$ref: '#/$defs/link'}
+  ledger: {$ref: '#/$defs/link'}
+  experiment_unit_refs: {type: array, items: {$ref: '#/$defs/link'}}
+  numerator_refs: {type: array, items: {$ref: '#/$defs/link'}}
+  denominator_refs: {type: array, items: {$ref: '#/$defs/link'}}
+  numerator_value: {type: integer, minimum: 0}
+  denominator_value: {type: integer, minimum: 0}
+  derived_value:
+    type: object
+    additionalProperties: false
+    required: [kind, numerator, denominator]
+    properties:
+      kind: {enum: [COUNT, RATIO]}
+      numerator: {type: integer, minimum: 0}
+      denominator: {type: integer, minimum: 0}
+  origin: {enum: [CURRENT_V2, CURRENT_NON_V2, LEGACY, SYNTHETIC, EXTERNAL_UPSTREAM]}
+  population_complete: {type: boolean}
+  all_source_digests_valid: {type: boolean}
+  recompute_status: {enum: [RECOMPUTABLE, PARTIALLY_RECOMPUTABLE, NOT_RECOMPUTABLE]}
+  recompute_trace:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required: [step, input_count, output_count, rule_digest]
+      properties:
+        step: {type: string, minLength: 1}
+        input_count: {type: integer, minimum: 0}
+        output_count: {type: integer, minimum: 0}
+        rule_digest: {type: string, pattern: '^[0-9a-f]{64}$'}
+  caveats: {type: array, items: {type: string, minLength: 1}}
+  producer: {$ref: '#/$defs/producer'}
+  git_revision: {type: string, pattern: '^[0-9a-f]{40}$'}
+  registry_version: {const: cipherlens.evaluation_evidence_registry.v0.1}
+$defs:
+  link:
+    type: object
+    additionalProperties: false
+    required: [ref, digest]
+    properties:
+      ref: {type: string, minLength: 1}
+      digest: {type: string, pattern: '^[0-9a-f]{64}$'}
+  producer:
+    type: object
+    additionalProperties: false
+    required: [producer_id, producer_version]
+    properties:
+      producer_id: {type: string, minLength: 1}
+      producer_version: {type: string, minLength: 1}

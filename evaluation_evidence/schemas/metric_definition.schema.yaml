@@ -1,0 +1,50 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.metric_definition.v0.1
+type: object
+additionalProperties: false
+required: [schema_version, metric_definition_id, metric_name, definition_version, research_question_refs, population_unit, selection_rule, numerator_rule, denominator_rule, aggregation_rule, required_artifact_types, allowed_origins, allowed_claim_levels, presentation_rule, forbidden_interpretations]
+properties:
+  schema_version: {const: cipherlens.metric_definition.v0.1}
+  metric_definition_id: {type: string, minLength: 1}
+  metric_name: {type: string, minLength: 1}
+  definition_version: {type: string, minLength: 1}
+  research_question_refs: {type: array, items: {type: string, minLength: 1}}
+  population_unit: {type: string, minLength: 1}
+  selection_rule: {$ref: '#/$defs/rule'}
+  numerator_rule: {$ref: '#/$defs/rule'}
+  denominator_rule: {$ref: '#/$defs/rule'}
+  aggregation_rule: {enum: [COUNT, RATIO]}
+  required_artifact_types: {type: array, minItems: 1, items: {type: string, minLength: 1}}
+  allowed_origins: {type: array, minItems: 1, items: {enum: [CURRENT_V2, CURRENT_NON_V2, LEGACY, SYNTHETIC, EXTERNAL_UPSTREAM]}}
+  allowed_claim_levels: {type: array, minItems: 1, items: {enum: [DESIGN_CLAIM, IMPLEMENTATION_CLAIM, ENGINEERING_VALIDATION_CLAIM, PIPELINE_VALIDATION_CLAIM, LEGACY_BASELINE_CLAIM, CURRENT_CAMPAIGN_RESULT_CLAIM, SECURITY_FINDING_CLAIM, UPSTREAM_CONFIRMED_CLAIM]}}
+  presentation_rule:
+    type: object
+    additionalProperties: false
+    required: [format, scale, decimals]
+    properties:
+      format: {enum: [INTEGER, EXACT_RATIO, PERCENTAGE]}
+      scale: {type: integer, minimum: 0}
+      decimals: {type: integer, minimum: 0}
+  forbidden_interpretations: {type: array, items: {type: string, minLength: 1}}
+$defs:
+  rule:
+    type: object
+    additionalProperties: false
+    required: [kind, predicates]
+    properties:
+      kind: {enum: [ALL, FILTER, NONE]}
+      predicates: {type: array, items: {$ref: '#/$defs/predicate'}}
+  predicate:
+    type: object
+    additionalProperties: false
+    required: [field, comparator, value]
+    properties:
+      field: {type: string, minLength: 1}
+      comparator: {enum: [EQ, NE, IN, EXISTS]}
+      value:
+        oneOf:
+        - {type: string}
+        - {type: integer}
+        - {type: boolean}
+        - {type: 'null'}
+        - {type: array, items: {type: [string, integer, boolean, 'null']}}

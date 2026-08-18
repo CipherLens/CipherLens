@@ -1,0 +1,33 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.experiment_unit.v0.1
+type: object
+additionalProperties: false
+required: [schema_version, experiment_unit_id, research_question_refs, unit_type, target_scope, input_refs, attempt_refs, output_refs, inclusion_status, completion_status, origin, notes]
+properties:
+  schema_version: {const: cipherlens.experiment_unit.v0.1}
+  experiment_unit_id: {type: string, minLength: 1}
+  research_question_refs: {type: array, items: {type: string, minLength: 1}}
+  unit_type: {type: string, minLength: 1}
+  target_scope:
+    type: object
+    additionalProperties: false
+    required: [library, version, build_profile]
+    properties:
+      library: {type: string, minLength: 1}
+      version: {type: string, minLength: 1}
+      build_profile: {type: string, minLength: 1}
+  input_refs: {type: array, items: {$ref: '#/$defs/link'}}
+  attempt_refs: {type: array, items: {$ref: '#/$defs/link'}}
+  output_refs: {type: array, items: {$ref: '#/$defs/link'}}
+  inclusion_status: {enum: [INCLUDED, EXCLUDED]}
+  completion_status: {enum: [COMPLETE, PARTIAL, NOT_RUN, FAILED]}
+  origin: {enum: [CURRENT_V2, CURRENT_NON_V2, LEGACY, SYNTHETIC, EXTERNAL_UPSTREAM]}
+  notes: {type: array, items: {type: string, minLength: 1}}
+$defs:
+  link:
+    type: object
+    additionalProperties: false
+    required: [ref, digest]
+    properties:
+      ref: {type: string, minLength: 1}
+      digest: {type: string, pattern: '^[0-9a-f]{64}$'}

@@ -1,0 +1,34 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.claim_gate_report.v0.1
+type: object
+additionalProperties: false
+required: [schema_version, claim_gate_report_id, claim, gate_result, reason_codes, blocking_refs, required_actions, allowed_wording, forbidden_wording, allowed_report_sections, ppt_usage, producer, registry_version]
+properties:
+  schema_version: {const: cipherlens.claim_gate_report.v0.1}
+  claim_gate_report_id: {type: string, minLength: 1}
+  claim: {$ref: '#/$defs/link'}
+  gate_result: {enum: [ALLOW, ALLOW_WITH_CAVEAT, BLOCK, NEEDS_RERUN, NEEDS_RECOMPUTATION, NEEDS_EXTERNAL_CONFIRMATION, LEGACY_ONLY]}
+  reason_codes: {type: array, items: {type: string, minLength: 1}}
+  blocking_refs: {type: array, items: {$ref: '#/$defs/link'}}
+  required_actions: {type: array, items: {type: string, minLength: 1}}
+  allowed_wording: {type: array, items: {type: string, minLength: 1}}
+  forbidden_wording: {type: array, items: {type: string, minLength: 1}}
+  allowed_report_sections: {type: array, items: {type: string, minLength: 1}}
+  ppt_usage: {type: array, items: {type: string, minLength: 1}}
+  producer: {$ref: '#/$defs/producer'}
+  registry_version: {const: cipherlens.evaluation_evidence_registry.v0.1}
+$defs:
+  link:
+    type: object
+    additionalProperties: false
+    required: [ref, digest]
+    properties:
+      ref: {type: string, minLength: 1}
+      digest: {type: string, pattern: '^[0-9a-f]{64}$'}
+  producer:
+    type: object
+    additionalProperties: false
+    required: [producer_id, producer_version]
+    properties:
+      producer_id: {type: string, minLength: 1}
+      producer_version: {type: string, minLength: 1}

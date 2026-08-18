@@ -1,0 +1,39 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.test_run_record.v0.1
+type: object
+additionalProperties: false
+required: [schema_version, test_run_id, git_revision, command, test_scope, working_profile, test_definition_refs, passed, failed, skipped, xfailed, errors, stdout_artifact, stderr_artifact, summary_artifact, environment_profile, producer]
+properties:
+  schema_version: {const: cipherlens.test_run_record.v0.1}
+  test_run_id: {type: string, minLength: 1}
+  git_revision: {type: string, pattern: '^[0-9a-f]{40}$'}
+  command: {type: array, minItems: 1, items: {type: string, minLength: 1}}
+  test_scope: {type: string, minLength: 1}
+  working_profile: {$ref: '#/$defs/link'}
+  test_definition_refs: {type: array, items: {$ref: '#/$defs/link'}}
+  passed: {$ref: '#/$defs/count'}
+  failed: {$ref: '#/$defs/count'}
+  skipped: {$ref: '#/$defs/count'}
+  xfailed: {$ref: '#/$defs/count'}
+  errors: {$ref: '#/$defs/count'}
+  stdout_artifact: {$ref: '#/$defs/link'}
+  stderr_artifact: {$ref: '#/$defs/link'}
+  summary_artifact: {$ref: '#/$defs/link'}
+  environment_profile: {$ref: '#/$defs/link'}
+  producer: {$ref: '#/$defs/producer'}
+$defs:
+  count: {type: integer, minimum: 0}
+  link:
+    type: object
+    additionalProperties: false
+    required: [ref, digest]
+    properties:
+      ref: {type: string, minLength: 1}
+      digest: {type: string, pattern: '^[0-9a-f]{64}$'}
+  producer:
+    type: object
+    additionalProperties: false
+    required: [producer_id, producer_version]
+    properties:
+      producer_id: {type: string, minLength: 1}
+      producer_version: {type: string, minLength: 1}

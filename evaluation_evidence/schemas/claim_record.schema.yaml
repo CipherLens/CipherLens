@@ -1,0 +1,43 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.claim_record.v0.1
+type: object
+additionalProperties: false
+required: [schema_version, claim_id, claim_taxonomy, statement, scope, evidence_refs, metric_refs, finding_refs, requested_report_sections, requested_ppt_usage, public_disclosure_state, producer, git_revision]
+properties:
+  schema_version: {const: cipherlens.claim_record.v0.1}
+  claim_id: {type: string, minLength: 1}
+  claim_taxonomy: {enum: [DESIGN_CLAIM, IMPLEMENTATION_CLAIM, ENGINEERING_VALIDATION_CLAIM, PIPELINE_VALIDATION_CLAIM, LEGACY_BASELINE_CLAIM, CURRENT_CAMPAIGN_RESULT_CLAIM, SECURITY_FINDING_CLAIM, UPSTREAM_CONFIRMED_CLAIM]}
+  statement: {type: string, minLength: 1}
+  scope:
+    type: object
+    additionalProperties: false
+    required: [current_v2, real_campaign, global_security, confirmed_vulnerability, upstream_acknowledged]
+    properties:
+      current_v2: {type: boolean}
+      real_campaign: {type: boolean}
+      global_security: {type: boolean}
+      confirmed_vulnerability: {type: boolean}
+      upstream_acknowledged: {type: boolean}
+  evidence_refs: {type: array, items: {$ref: '#/$defs/link'}}
+  metric_refs: {type: array, items: {$ref: '#/$defs/link'}}
+  finding_refs: {type: array, items: {$ref: '#/$defs/link'}}
+  requested_report_sections: {type: array, items: {type: string, minLength: 1}}
+  requested_ppt_usage: {type: array, items: {type: string, minLength: 1}}
+  public_disclosure_state: {type: string, minLength: 1}
+  producer: {$ref: '#/$defs/producer'}
+  git_revision: {type: string, pattern: '^[0-9a-f]{40}$'}
+$defs:
+  link:
+    type: object
+    additionalProperties: false
+    required: [ref, digest]
+    properties:
+      ref: {type: string, minLength: 1}
+      digest: {type: string, pattern: '^[0-9a-f]{64}$'}
+  producer:
+    type: object
+    additionalProperties: false
+    required: [producer_id, producer_version]
+    properties:
+      producer_id: {type: string, minLength: 1}
+      producer_version: {type: string, minLength: 1}

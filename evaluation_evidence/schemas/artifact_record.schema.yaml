@@ -1,0 +1,43 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.artifact_record.v0.1
+type: object
+additionalProperties: false
+required: [schema_version, artifact_record_id, artifact_ref, artifact_digest, artifact_type, artifact_schema_version, media_type, producer, git_revision, origin, inventory_state, validation_maturity, execution_scope, synthetic_or_real, public_disclosure_state, parent_refs, source_location, validation_evidence_refs, notes]
+properties:
+  schema_version: {const: cipherlens.artifact_record.v0.1}
+  artifact_record_id: {type: string, minLength: 1}
+  artifact_ref: {type: string, minLength: 1}
+  artifact_digest: {type: [string, 'null'], pattern: '^[0-9a-f]{64}$'}
+  artifact_type: {type: string, minLength: 1}
+  artifact_schema_version: {type: string}
+  media_type: {type: string, minLength: 1}
+  producer: {$ref: '#/$defs/producer'}
+  git_revision: {type: string, pattern: '^[0-9a-f]{40}$'}
+  origin: {enum: [CURRENT_V2, CURRENT_NON_V2, LEGACY, SYNTHETIC, EXTERNAL_UPSTREAM]}
+  inventory_state: {enum: [VERIFIED_PRESENT, PRESENT_UNVERIFIED, REFERENCE_ONLY, LEGACY_ONLY, SYNTHETIC_ONLY, NOT_FOUND]}
+  validation_maturity:
+    type: array
+    uniqueItems: true
+    items: {enum: [SOURCE_PRESENT, DIGEST_VERIFIED, SCHEMA_VALIDATED, TEST_DEFINED, TEST_RUN_RECORDED, UNIT_VALIDATED, GOLDEN_VALIDATED, SYNTHETIC_E2E_VALIDATED, REAL_EXECUTION_REPRODUCED]}
+  execution_scope: {type: string, minLength: 1}
+  synthetic_or_real: {enum: [SYNTHETIC, REAL]}
+  public_disclosure_state: {type: string, minLength: 1}
+  parent_refs: {type: array, items: {$ref: '#/$defs/link'}}
+  source_location: {type: string, minLength: 1}
+  validation_evidence_refs: {type: array, items: {$ref: '#/$defs/link'}}
+  notes: {type: array, items: {type: string, minLength: 1}}
+$defs:
+  link:
+    type: object
+    additionalProperties: false
+    required: [ref, digest]
+    properties:
+      ref: {type: string, minLength: 1}
+      digest: {type: string, pattern: '^[0-9a-f]{64}$'}
+  producer:
+    type: object
+    additionalProperties: false
+    required: [producer_id, producer_version]
+    properties:
+      producer_id: {type: string, minLength: 1}
+      producer_version: {type: string, minLength: 1}

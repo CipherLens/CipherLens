@@ -1,0 +1,31 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: cipherlens.evaluation_evidence_ledger.v0.1
+type: object
+additionalProperties: false
+required: [schema_version, ledger_id, producer, git_revision, registry_version, artifact_records, test_run_records, experiment_units, metric_records, finding_records, claim_records]
+properties:
+  schema_version: {const: cipherlens.evaluation_evidence_ledger.v0.1}
+  ledger_id: {type: string, minLength: 1}
+  producer:
+    type: object
+    additionalProperties: false
+    required: [producer_id, producer_version]
+    properties:
+      producer_id: {type: string, minLength: 1}
+      producer_version: {type: string, minLength: 1}
+  git_revision: {type: string, pattern: '^[0-9a-f]{40}$'}
+  registry_version: {const: cipherlens.evaluation_evidence_registry.v0.1}
+  artifact_records: {type: array, items: {$ref: artifact_record.schema.yaml}}
+  test_run_records: {type: array, items: {$ref: test_run_record.schema.yaml}}
+  experiment_units: {type: array, items: {$ref: experiment_unit.schema.yaml}}
+  metric_records: {type: array, items: {$ref: metric_record.schema.yaml}}
+  finding_records: {type: array, items: {$ref: '#/$defs/link'}}
+  claim_records: {type: array, items: {$ref: claim_record.schema.yaml}}
+$defs:
+  link:
+    type: object
+    additionalProperties: false
+    required: [ref, digest]
+    properties:
+      ref: {type: string, minLength: 1}
+      digest: {type: string, pattern: '^[0-9a-f]{64}$'}
