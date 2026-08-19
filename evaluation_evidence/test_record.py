@@ -20,6 +20,7 @@ def record_test_run(
     test_scope: str, test_definition_refs: Iterable[Mapping[str, str]],
     counts: Mapping[str, int], stdout: bytes, stderr: bytes,
     working_profile: Mapping[str, Any], environment_profile: Mapping[str, Any],
+    result_identities: Mapping[str, Iterable[str]] | None = None,
     producer_id: str = "evaluation-test-recorder", producer_version: str = "0.1",
 ) -> dict[str, Any]:
     expected = {"passed", "failed", "skipped", "xfailed", "errors"}
@@ -30,7 +31,23 @@ def record_test_run(
         raise ValueError("unsafe test-run profile: " + "; ".join(profile_errors))
     stdout_ref = store.put_raw(f"{ref_prefix}/stdout.txt", stdout, media_type="text/plain")
     stderr_ref = store.put_raw(f"{ref_prefix}/stderr.txt", stderr, media_type="text/plain")
-    summary_payload = json.dumps(dict(sorted(counts.items())), sort_keys=True, separators=(",", ":")).encode("utf-8")
+    summary: dict[str, Any]
+    if result_identities is None:
+        summary = dict(sorted(counts.items()))
+    else:
+        summary = {"counts": dict(sorted(counts.items()))}
+        if set(result_identities) != expected:
+            raise ValueError("result_identities must use the same five outcome keys as counts")
+        identities: dict[str, list[str]] = {}
+        for outcome in sorted(expected):
+            values = list(result_identities[outcome])
+            if any(not isinstance(item, str) or not item for item in values):
+                raise ValueError("result identities must be non-empty strings")
+            if len(values) != counts[outcome]:
+                raise ValueError(f"result identity count does not match {outcome}")
+            identities[outcome] = sorted(values)
+        summary["identities"] = identities
+    summary_payload = json.dumps(summary, sort_keys=True, separators=(",", ":")).encode("utf-8")
     summary_ref = store.put_raw(f"{ref_prefix}/summary.json", summary_payload, media_type="application/json")
     working_payload = json.dumps(dict(working_profile), sort_keys=True, separators=(",", ":")).encode("utf-8")
     working_ref = store.put_raw(f"{ref_prefix}/working-profile.json", working_payload, media_type="application/json")
