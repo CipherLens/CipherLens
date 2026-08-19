@@ -6,6 +6,8 @@ import hashlib
 from pathlib import Path
 from typing import Iterable
 
+from .canonical import identified
+
 
 _EXCLUDED_DIRS = {".git", "__pycache__", "CMakeFiles"}
 _EXCLUDED_SUFFIXES = {".a", ".o", ".so", ".pyc"}
@@ -45,6 +47,16 @@ def tree_digest(root: Path) -> tuple[str, int]:
 def source_root_record(root: Path, logical_ref: str) -> dict[str, object]:
     digest, count = tree_digest(root)
     return {"root_ref": logical_ref, "tree_digest": digest, "file_count": count}
+
+
+def materialize_source_identity_record(root: Path, root_ref: str, identity: dict[str, object]) -> dict[str, object]:
+    """Portable identity record for a local source root; no execution involved."""
+    record = source_root_record(root, root_ref)
+    return identified({
+        "schema_version": "cipherlens.source_identity_record.v0.1",
+        "source_root_ref": root_ref, "source_tree_digest": record["tree_digest"], "file_count": record["file_count"],
+        "identity": identity, "preparation_status": "PREPARED_FOR_7D_B",
+    }, "source-identity", "source_identity_id")
 
 
 def find_symbol(root: Path, symbol: str, suffixes: tuple[str, ...] = (".h", ".c", ".cc", ".cpp")) -> dict[str, object] | None:

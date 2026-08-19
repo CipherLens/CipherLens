@@ -19,6 +19,8 @@ class TargetKnowledgeTests(unittest.TestCase):
         (root / "include" / "openssl").mkdir(parents=True)
         (root / "include" / "openssl" / "rsa.h").write_text("RSA *d2i_RSAPrivateKey(void);\n")
         (root / "include" / "openssl" / "evp.h").write_text("int EVP_DecryptFinal_ex(void);\n")
+        (root / "rsa.c").write_text("RSA *d2i_RSAPrivateKey(void) { return 0; }\n")
+        (root / "evp.c").write_text("int EVP_DecryptFinal_ex(void) { return 0; }\n")
         (root / "configdata.pm").write_text("config=v1\n")
         (root / "libcrypto.a").write_bytes(b"fake-static-library")
         return directory
@@ -36,6 +38,10 @@ class TargetKnowledgeTests(unittest.TestCase):
         self.assertTrue(any(item["verification_status"] == "VERIFIED" for item in profile["evidence_records"]))
         self.assertTrue(all(len(item["digest"]) == 64 for item in profile["library_artifacts"]))
         self.assertEqual(profile["library_artifacts"][0]["digest"], expected_library_digest)
+        by_symbol = {item["symbol"]: item for item in profile["symbol_records"]}
+        self.assertEqual(by_symbol["d2i_RSAPrivateKey"]["target_symbol_ref"], "symbol:openssl:3.5.5:d2i_RSAPrivateKey")
+        self.assertIsNotNone(by_symbol["EVP_DecryptFinal_ex"]["header_evidence_ref"])
+        self.assertIsNotNone(by_symbol["EVP_DecryptFinal_ex"]["source_evidence_ref"])
         self.assertEqual(profile["validation_status"], "PREPARED")
 
     def test_config_digest_changes_profile_identity(self):

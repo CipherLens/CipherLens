@@ -65,3 +65,19 @@ def runner_compat_projection(event: Mapping[str, Any]) -> dict[str, Any]:
         "value_artifact_ref": event.get("artifact_ref"),
         "value_artifact_digest": event.get("evidence_digest"),
     }
+
+
+def make_capture_readiness_spec() -> dict[str, Any]:
+    """Preparation-only capture requirements; this is not a witness event."""
+    return identified({
+        "schema_version": "cipherlens.capture_readiness.v0.1",
+        "preparation_status": "PREPARED_FOR_7D_B",
+        "witness_generation": "NOT_EXECUTED",
+        "cases": {
+            "0020": {"required_roles": ["operation_outcome", "consumed_length", "input_length"], "correlation_requirement": "shared operation/input correlation group"},
+            "0004": {"required_roles": ["operation_outcome", "return_value", "output_length_before", "output_length_after"], "correlation_requirement": "same operation and output identity"},
+            "0005": {"required_roles": ["object_state", "state_transition", "fatal_event", "follow_up_behavior"], "correlation_requirement": "same object lifecycle correlation group"},
+        },
+        "safety_rules": ["MISSING_EVENT_IS_NOT_SAFE", "SANITIZER_CRASH_SIGNAL_IS_NOT_A_VERDICT"],
+        "missing_artifacts": [{"expected_future_artifact_type": "real_oracle_event_witness", "preparation_status": "MISSING_ARTIFACT"}],
+    }, "capture-readiness", "capture_readiness_id")

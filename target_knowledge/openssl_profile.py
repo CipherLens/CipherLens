@@ -19,12 +19,21 @@ def materialize_openssl_355_profile(root: Path) -> dict[str, Any]:
     evidence: list[dict[str, Any]] = []
     symbols = []
     for symbol, role in (("d2i_RSAPrivateKey", "rsa_private_key_decode"), ("EVP_DecryptFinal_ex", "cipher_final")):
-        found = find_symbol(root, symbol)
-        if found:
-            found["verification_status"] = verify_evidence_record(found).value
-            found["semantic_role"] = role
-            evidence.append(found)
-            symbols.append({"symbol": symbol, "role": role, "evidence_ref": f"evidence:openssl-3.5.5:{symbol}", "verification_status": found["verification_status"]})
+        header = find_symbol(root, symbol, suffixes=(".h",))
+        source_evidence = find_symbol(root, symbol, suffixes=(".c", ".cc", ".cpp"))
+        records = [item for item in (header, source_evidence) if item is not None]
+        for record in records:
+            record["verification_status"] = verify_evidence_record(record).value
+            record["semantic_role"] = role
+            evidence.append(record)
+        verifier_status = "VERIFIED" if records and all(item["verification_status"] == "VERIFIED" for item in records) else "CANDIDATE"
+        symbols.append({
+            "target_symbol_ref": f"symbol:openssl:3.5.5:{symbol}", "symbol": symbol, "role": role,
+            "header_evidence_ref": f"evidence:openssl-3.5.5:{symbol}:header" if header else None,
+            "source_evidence_ref": f"evidence:openssl-3.5.5:{symbol}:source" if source_evidence else None,
+            "config_evidence_ref": config[0]["artifact_ref"] if config else None,
+            "verification_status": verifier_status,
+        })
     # The legacy cards may inform recall, but no card grants verified target facts.
     evidence.extend([
         {"evidence_type": "API_CARD", "card_ref": "knowledge_raw/api_cards/openssl/rsa_der_trailing_garbage.yaml", "lifecycle": "draft", "verification_status": "CANDIDATE"},

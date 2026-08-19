@@ -6,8 +6,8 @@ import hashlib
 from pathlib import Path
 
 from real_campaign_bridge.build_profile import make_build_environment_profile
-from real_campaign_bridge.capture_bridge import OracleEventStatus, event_line, make_oracle_event, parse_oracle_event, runner_compat_projection
-from real_campaign_bridge.claim_gate_adapter import evaluate_preflight
+from real_campaign_bridge.capture_bridge import OracleEventStatus, event_line, make_capture_readiness_spec, make_oracle_event, parse_oracle_event, runner_compat_projection
+from real_campaign_bridge.claim_gate_adapter import evaluate_7d_b_readiness, evaluate_preflight
 from real_campaign_bridge.differential_pair import make_differential_pair_manifest
 from real_campaign_bridge.evidence_root import EvidenceRoot
 from real_campaign_bridge.population_manifest import make_population_manifest
@@ -18,11 +18,11 @@ class RealCampaignBridgeTests(unittest.TestCase):
     DIGEST = "a" * 64
 
     def _profile(self, revision="buggy"):
-        return make_build_environment_profile(source_root={"ref": "source:mbedtls:0020", "digest": self.DIGEST}, source_identity="source:mbedtls:0020", source_tree_digest=self.DIGEST, compiler_identity={"name": "cc", "version_digest": self.DIGEST}, architecture="x86_64", build_system_config={"digest": self.DIGEST}, compile_flags=["-O0"], link_flags=[], include_roots=["include:mbedtls"], library_inputs=[{"ref": "library:mbedtls", "digest": self.DIGEST}], artifact_outputs=["artifact:binary"], sanitizer_profile="none", dependencies=[], controlled_environment="local-inventory", timeout_seconds=30, target_options={}, input_artifact_digests=[self.DIGEST], reproducibility_status="INVENTORIED", source_revision=revision)
+        return make_build_environment_profile(source_root={"ref": "source:mbedtls:0020", "digest": self.DIGEST}, source_identity="source:mbedtls:0020", source_tree_digest=self.DIGEST, compiler_identity={"name": "cc", "version_digest": self.DIGEST}, compiler_version_evidence={"ref": "compiler:cc", "digest": self.DIGEST}, architecture="x86_64", build_system_config={"digest": self.DIGEST}, compile_flags=["-O0"], link_flags=[], include_roots=["include:mbedtls"], include_path_evidence=[{"ref": "include:mbedtls", "digest": self.DIGEST}], library_inputs=[{"ref": "library:mbedtls", "digest": self.DIGEST}], artifact_outputs=["artifact:binary"], sanitizer_profile="none", dependencies=[], controlled_environment="local-inventory", timeout_seconds=30, target_options={}, input_artifact_digests=[self.DIGEST], reproducibility_status="INVENTORIED", missing_artifacts=[], missing_requirements=[], source_revision=revision)
 
     def _pair(self, buggy, fixed):
         ref = {"ref": "ref:x", "digest": self.DIGEST}
-        return make_differential_pair_manifest(buggy_profile=buggy, fixed_profile=fixed, case_id="0020", family="rsa_der", buggy_source=ref, fixed_source=ref, fix=ref, contract=ref, transfer_signature=ref, template=ref, input_artifact=ref, observation_schema_refs=["schema:observation"], fix_required_change="fix")
+        return make_differential_pair_manifest(buggy_profile=buggy, fixed_profile=fixed, buggy_profile_artifact=ref, fixed_profile_artifact=ref, case_id="0020", family="rsa_der", buggy_source=ref, fixed_source=ref, fix=ref, contract=ref, transfer_signature=ref, template=ref, input_artifact=ref, observation_schema_refs=["schema:observation"], fix_required_change="fix")
 
     def _binding(self, symbol_ref="symbol:openssl:3.5.5:d2i_RSAPrivateKey", status="VALID"):
         return {"binding_id": "binding:x", "validation_status": status, "target_symbol_ref": symbol_ref, "operation_binding_ref": "operation-binding:x", "input_binding_ref": "input-binding:x", "observation_binding_refs": ["observation-binding:x"], "target_scope": {"library": "OpenSSL", "version": "3.5.5", "surface_ref": "surface:openssl:3.5.5"}}
@@ -35,7 +35,9 @@ class RealCampaignBridgeTests(unittest.TestCase):
         pair = {"ref": "differential_pairs/0020.json", "digest": "b" * 64}
         openssl = {"ref": "target_knowledge/openssl.json", "digest": "c" * 64}
         wolf = {"ref": "target_knowledge/wolfssl.json", "digest": "d" * 64}
-        return {case: {"contract": {**contract, "ref": f"contracts/{case}.vc.yaml"}, "pair": {**pair, "ref": f"differential_pairs/{case}.json"}, "openssl_profile": openssl, "wolfssl_profile": wolf} for case in ("0020", "0004", "0005")}
+        build = {"ref": "build_profiles/example.json", "digest": "e" * 64}
+        mbed = {"ref": "target_knowledge/mbedtls.json", "digest": "f" * 64}
+        return {case: {"contract": {**contract, "ref": f"contracts/{case}.vc.yaml"}, "pair": {**pair, "ref": f"differential_pairs/{case}.json"}, "mbedtls_profile": mbed, "openssl_profile": openssl, "wolfssl_profile": wolf, "buggy_build_profile": build, "fixed_build_profile": build, "openssl_build_profile": build, "wolfssl_build_profile": build} for case in ("0020", "0004", "0005")}
 
     def test_rsa_adaptation_declares_required_holes(self):
         result = adapt_target_source(self._merge(), self._binding())
@@ -81,6 +83,8 @@ class RealCampaignBridgeTests(unittest.TestCase):
     def test_pair_allows_only_revision_difference(self):
         pair = self._pair(self._profile("buggy"), self._profile("fixed"))
         self.assertEqual(pair["allowed_difference_axes"], ["source_revision", "fix_required_change"])
+        self.assertEqual(pair["preparation_status"], "PREPARED_FOR_7D_B")
+        self.assertTrue(pair["missing_artifacts"])
         changed = self._profile("fixed")
         changed["compile_flags"] = ["-O2"]
         with self.assertRaises(ValueError):
@@ -115,6 +119,20 @@ class RealCampaignBridgeTests(unittest.TestCase):
         self.assertEqual(output["status"], "PREPARED_FOR_7D_B0_FOUNDATION")
         self.assertIn("NO_REAL_EXECUTION_TRACE", output["blocking_reasons"])
 
+    def test_capture_readiness_covers_all_three_families_without_witness(self):
+        spec = make_capture_readiness_spec()
+        self.assertEqual(spec["preparation_status"], "PREPARED_FOR_7D_B")
+        self.assertIn("consumed_length", spec["cases"]["0020"]["required_roles"])
+        self.assertIn("output_length_before", spec["cases"]["0004"]["required_roles"])
+        self.assertIn("state_transition", spec["cases"]["0005"]["required_roles"])
+        self.assertEqual(spec["witness_generation"], "NOT_EXECUTED")
+
+    def test_7d_b_gate_never_authorizes_7d_c(self):
+        manifest = make_population_manifest(self._evidence())
+        readiness = evaluate_7d_b_readiness(source_identities=[{"x": 1}], build_profiles=[self._profile()], target_profiles=[{"validation_status": "PREPARED"}], differential_pairs=[self._pair(self._profile(), self._profile("fixed"))], population_manifest=manifest, capture_readiness=make_capture_readiness_spec())
+        self.assertEqual(readiness["status"], "PREPARED_FOR_7D_B")
+        self.assertIn("7D-C_REAL_CLAIM", readiness["forbidden_next_stage"])
+
     def test_v2_adaptation_has_no_legacy_free_form_filler_import(self):
         source = (Path(__file__).parents[2] / "real_campaign_bridge" / "target_adaptation.py").read_text(encoding="utf-8")
         self.assertNotIn("adapter_filler", source)
@@ -123,6 +141,13 @@ class RealCampaignBridgeTests(unittest.TestCase):
         fields = dict(self._profile())
         fields.pop("profile_id")
         fields["library_inputs"] = [{"ref": "library:x", "digest": "p" + "ending"}]
+        with self.assertRaises(ValueError):
+            make_build_environment_profile(**fields)
+
+    def test_build_profile_requires_compiler_and_include_evidence(self):
+        fields = dict(self._profile())
+        fields.pop("profile_id")
+        fields.pop("compiler_version_evidence")
         with self.assertRaises(ValueError):
             make_build_environment_profile(**fields)
 
