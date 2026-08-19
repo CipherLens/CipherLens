@@ -64,9 +64,9 @@ class RealCampaignBridgeTests(unittest.TestCase):
         self.assertNotIn("source", result)
 
     def test_event_status_is_not_a_verdict(self):
-        event = make_oracle_event(witness_ref="w", contract_observable_ref="o", observation_binding_ref="b", merge_capture_ref="m", semantic_role="operation_outcome", acquisition_kind="return", phase="after", subject_ref="s", operation_ref="op", correlation_group_ref="g", status=OracleEventStatus.OBSERVED_ABSENCE.value, value_type="int")
+        event = make_oracle_event(witness_ref="w", contract_observable_ref="o", observation_binding_ref="b", merge_capture_ref="m", semantic_role="operation_outcome", acquisition_kind="return", phase="after", subject_ref="s", operation_ref="op", correlation_group_ref="g", status=OracleEventStatus.OBSERVED_ABSENCE.value, value_type="int", channel_active=True, phase_reached=True)
         self.assertEqual(event["verdict_authority"], "NONE")
-        self.assertFalse(runner_compat_projection(event)["value_presence"])
+        self.assertEqual("NONE", runner_compat_projection(event)["value_presence"])
 
     def test_event_round_trip(self):
         event = make_oracle_event(witness_ref="w", contract_observable_ref="o", observation_binding_ref="b", merge_capture_ref="m", semantic_role="output_length", acquisition_kind="memory", phase="after", subject_ref="s", operation_ref="op", correlation_group_ref="g", status="PRESENT", value_type="int", value=0)

@@ -23,6 +23,11 @@ _ROLES = {"operation_outcome", "return_value", "output_length", "consumed_length
 _REQUIRED = {"witness_ref", "contract_observable_ref", "observation_binding_ref", "merge_capture_ref", "semantic_role", "acquisition_kind", "phase", "subject_ref", "operation_ref", "correlation_group_ref", "status", "value_type"}
 
 
+def _sha(value: Any, label: str) -> None:
+    if not isinstance(value, str) or len(value) != 64 or any(char not in "0123456789abcdef" for char in value):
+        raise ValueError(f"{label} must be a lowercase SHA-256 digest")
+
+
 def make_oracle_event(**fields: Any) -> dict[str, Any]:
     missing = sorted(_REQUIRED - set(fields))
     if missing:
@@ -31,6 +36,8 @@ def make_oracle_event(**fields: Any) -> dict[str, Any]:
         raise ValueError("unsupported oracle-event semantic role")
     if fields["status"] not in {item.value for item in OracleEventStatus}:
         raise ValueError("unsupported oracle-event status")
+    if "evidence_digest" in fields:
+        _sha(fields["evidence_digest"], "evidence digest")
     result = {"schema_version": ORACLE_EVENT_SCHEMA, "event_version": "0.1", **fields}
     # Crash/sanitizer observations are process evidence, never a contract verdict.
     result["verdict_authority"] = "NONE"
@@ -46,24 +53,51 @@ def parse_oracle_event(line: str) -> dict[str, Any]:
     if not line.startswith("ORACLE_EVENT_V0_1 "):
         raise ValueError("not a v0.1 oracle event")
     event = json.loads(line[len("ORACLE_EVENT_V0_1 "):])
-    if event.get("schema_version") != ORACLE_EVENT_SCHEMA:
+    if not isinstance(event, dict) or event.get("schema_version") != ORACLE_EVENT_SCHEMA:
         raise ValueError("wrong oracle event schema")
-    return make_oracle_event(**{key: value for key, value in event.items() if key not in {"schema_version", "event_version", "event_digest", "event_id", "verdict_authority"}})
+    supplied_digest = event.get("event_digest")
+    _sha(supplied_digest, "event digest")
+    replayed = make_oracle_event(**{key: value for key, value in event.items() if key not in {"schema_version", "event_version", "event_digest", "event_id", "verdict_authority"}})
+    if supplied_digest != replayed["event_digest"]:
+        raise ValueError("oracle event digest mismatch")
+    if event.get("event_id") != replayed["event_id"]:
+        raise ValueError("oracle event identity mismatch")
+    return replayed
 
 
 def runner_compat_projection(event: Mapping[str, Any]) -> dict[str, Any]:
     """Projection is acquisition metadata only; it cannot turn absence into safety."""
+    if event.get("schema_version") != ORACLE_EVENT_SCHEMA:
+        raise ValueError("unsupported oracle event schema")
     status = str(event["status"])
+    if status == OracleEventStatus.OBSERVED_ABSENCE.value and not (event.get("channel_active", True) is True and event.get("phase_reached", True) is True):
+        raise ValueError("OBSERVED_ABSENCE requires active channel and reached phase")
+    value_presence = "NONE"
+    value = None
+    if status == OracleEventStatus.PRESENT.value:
+        value = event.get("value")
+        value_presence = "EXPLICIT_NULL" if "value" in event and value is None else "VALUE"
     return {
-        "capture_binding_ref": event["observation_binding_ref"],
+        "capture_binding_ref": event["merge_capture_ref"],
         "status": status,
-        "value_presence": status == OracleEventStatus.PRESENT.value,
-        "value": event.get("value"),
+        "value_presence": value_presence,
+        "value": value,
         "sequence_index": int(event.get("sequence_index", 0)),
         "channel_active": status not in {OracleEventStatus.CHANNEL_UNAVAILABLE.value, OracleEventStatus.ACQUISITION_FAILED.value},
         "phase_reached": status not in {OracleEventStatus.NOT_REACHED.value},
         "value_artifact_ref": event.get("artifact_ref"),
-        "value_artifact_digest": event.get("evidence_digest"),
+        "value_artifact_digest": event.get("value_artifact_digest"),
+        "contract_observable_ref": event["contract_observable_ref"],
+        "observation_binding_ref": event["observation_binding_ref"],
+        "merge_capture_ref": event["merge_capture_ref"],
+        "semantic_role": event["semantic_role"],
+        "acquisition_kind": event["acquisition_kind"],
+        "phase": event["phase"],
+        "subject_ref": event["subject_ref"],
+        "operation_ref": event["operation_ref"],
+        "correlation_group_ref": event["correlation_group_ref"],
+        "value_type": event["value_type"],
+        "evidence_digest": event.get("evidence_digest"),
     }
 
 

@@ -49,3 +49,33 @@ def evaluate_7d_b_readiness(*, source_identities: Sequence[Mapping[str, Any]], b
         "allowed_next_stage": ["7D-B"] if not blockers else [], "forbidden_next_stage": ["7D-C_REAL_CLAIM"],
         "real_execution_completed": False, "current_campaign_result": "NOT_GENERATED", "vulnerability_result": "NOT_GENERATED",
     }, "claim-7d-b-readiness", "readiness_id")
+
+
+def evaluate_c0_bridge(*, population_manifest: Mapping[str, Any], profile_mapping: Mapping[str, Any], replay_lineage: Mapping[str, Any]) -> dict[str, Any]:
+    """Gate C0 fixture validation without authorizing a real-campaign claim."""
+
+    blockers: list[str] = []
+    if len(population_manifest.get("units", [])) != 11:
+        blockers.append("POPULATION_NOT_FROZEN_AT_11_UNITS")
+    if profile_mapping.get("status") != "READY_FOR_BUILDSPEC_FIXTURE":
+        blockers.append("BUILD_PROFILE_MAPPING_INCOMPLETE")
+    if replay_lineage.get("classification") != "C0_REPLAY_FIXTURE_NOT_REAL_CAMPAIGN":
+        blockers.append("REPLAY_LINEAGE_CLASSIFICATION_INVALID")
+    if replay_lineage.get("relation_result") not in {"HOLDS", "BROKEN", "NOT_EVALUABLE"}:
+        blockers.append("REPLAY_RELATION_EVALUATION_MISSING")
+    status = "C0_BRIDGE_BLOCKED_WITH_REASONS" if blockers else "C0_BRIDGE_COMPLETED"
+    return identified({
+        "schema_version": "cipherlens.real_campaign_c0_claim_gate.v0.1",
+        "campaign_id": population_manifest["campaign_id"],
+        "status": status, "blocking_reasons": blockers,
+        "population_manifest_ref": population_manifest["manifest_id"],
+        "build_profile_mapping_ref": profile_mapping.get("mapping_id"),
+        "replay_lineage_ref": replay_lineage.get("lineage_id"),
+        "real_execution_completed": False,
+        "current_campaign_result": "NOT_GENERATED",
+        "vulnerability_result": "NOT_GENERATED",
+        "report_real_number_allowed": False,
+        "allowed_claim_levels": ["PIPELINE_VALIDATION_CLAIM", "ENGINEERING_VALIDATION_CLAIM"],
+        "forbidden_claim_levels": ["CURRENT_CAMPAIGN_RESULT_CLAIM", "SECURITY_FINDING_CLAIM", "UPSTREAM_CONFIRMED_CLAIM"],
+        "authority": "C0_REPLAY_ONLY_CLAIM_GATE",
+    }, "claim-c0-readiness", "readiness_id")

@@ -53,6 +53,35 @@ class RunnerConfiguration:
     timeout_policy: Mapping[str, Any]
     compiler_path: str
     timeout_seconds: int = 10
+    include_configs: tuple[Mapping[str, Any], ...] = ()
+    library_inputs: tuple[Mapping[str, Any], ...] = ()
+
+
+def configuration_from_build_profile_mapping(
+    mapping: Mapping[str, Any], *, expected_output: Mapping[str, Any],
+    instrumentation_profile: Mapping[str, Any], environment_profile: Mapping[str, Any],
+    working_directory_profile: Mapping[str, Any], timeout_policy: Mapping[str, Any],
+    compiler_path: str, timeout_seconds: int = 10,
+) -> RunnerConfiguration:
+    """Create runner configuration from a C0 mapping without resolving paths.
+
+    The mapping owns semantic compile/link inputs.  ``compiler_path`` remains
+    local runtime telemetry and is deliberately not added to BuildSpec.
+    """
+
+    if mapping.get("status") != "READY_FOR_BUILDSPEC_FIXTURE":
+        raise ValueError("runner configuration requires complete C0 profile mapping")
+    if mapping.get("authority") != "C0_PREPARATION_ONLY_NO_BUILD_EXECUTION":
+        raise ValueError("runner configuration requires C0 profile mapping authority")
+    return RunnerConfiguration(
+        toolchain=dict(mapping["toolchain"]), compile_flags=tuple(mapping["compile_flags"]),
+        link_flags=tuple(mapping["link_flags"]), expected_output=dict(expected_output),
+        instrumentation_profile=dict(instrumentation_profile), environment_profile=dict(environment_profile),
+        working_directory_profile=dict(working_directory_profile), timeout_policy=dict(timeout_policy),
+        compiler_path=compiler_path, timeout_seconds=timeout_seconds,
+        include_configs=tuple(dict(item) for item in mapping["include_configs"]),
+        library_inputs=tuple(dict(item) for item in mapping["library_inputs"]),
+    )
 
 
 @dataclass(frozen=True)
@@ -112,7 +141,8 @@ class PipelineRunnerBackend:
         build_spec = build_spec_from_handoff(
             handoff, toolchain=config.toolchain,
             compile_units=[{"artifact_ref": handoff["source_artifact_ref"], "artifact_digest": handoff["source_artifact_digest"], "language": handoff["build_intent_seed"]["hints"]["language"]}],
-            include_configs=(), compile_flags=config.compile_flags, library_inputs=(), link_flags=config.link_flags,
+            include_configs=config.include_configs, compile_flags=config.compile_flags,
+            library_inputs=config.library_inputs, link_flags=config.link_flags,
             expected_output=config.expected_output, instrumentation_profile=config.instrumentation_profile, environment_profile=config.environment_profile,
         )
         captured = CapturingRunner(self.runner)

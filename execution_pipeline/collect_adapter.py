@@ -6,6 +6,7 @@ import json
 from typing import Any, Sequence
 
 from execution_model.canonical import raw_digest
+from real_campaign_bridge.capture_bridge import parse_oracle_event, runner_compat_projection
 
 
 def raw_artifact(ref: str, data: bytes, media_type: str = "text/plain") -> dict[str, str]:
@@ -36,6 +37,14 @@ def oracle_event_acquisitions(ref: str, data: bytes, *, allowed_capture_refs: Se
     allowed = set(allowed_capture_refs)
     acquisitions: list[dict[str, Any]] = []
     for line_number, raw_line in enumerate(data.decode("utf-8", errors="strict").splitlines(), 1):
+        if raw_line.startswith("ORACLE_EVENT_V0_1 "):
+            event = parse_oracle_event(raw_line)
+            payload = runner_compat_projection(event)
+            capture_ref = payload["capture_binding_ref"]
+            if capture_ref not in allowed:
+                raise ValueError(f"ORACLE_EVENT_V0_1 line {line_number}: undeclared capture")
+            acquisitions.append({**payload, "evidence_refs": [ref]})
+            continue
         if not raw_line.startswith("ORACLE_EVENT "):
             continue
         payload = json.loads(raw_line.removeprefix("ORACLE_EVENT "))
