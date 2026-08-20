@@ -8,6 +8,7 @@ from .c1_fix3 import make_fix3_claim_gate, make_library_build_provenance_record
 from .c1_fix4 import make_c1_pre_run_gate as make_fix4_pre_run_gate
 from .c1_retry import evaluate_c1_retry_gate, write_blocked_c1_retry_artifacts
 from .c1_fix5 import c1_fix5_audit, write_c1_fix5_blocked_artifacts
+from .c1_fix6 import overlay as make_c1_fix6_overlay, resolution as resolve_c1_fix6_values, write_blocked as write_c1_fix6_artifacts
 from .c1_repair import check_build_run_materialization, make_repair_claim_gate
 from .claim_gate_adapter import evaluate_c0_bridge, evaluate_preflight
 from .replay_lineage import make_c0_replay_lineage
