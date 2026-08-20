@@ -18,3 +18,4 @@ __all__ = ["OracleEventStatus", "adapt_target_source", "build_spec_from_profile_
 from .c1_fix7 import c1_fix7_documents, write_c1_fix7_artifacts
 from .c1_fix8 import c1_fix8_documents, write_c1_fix8_artifacts
 from .c1_fix9 import c1_fix9_documents, write_c1_fix9_artifacts
+from .c1_fix10 import c1_fix10_documents, write_c1_fix10_artifacts
