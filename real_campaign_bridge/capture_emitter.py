@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any, Mapping, Sequence
 
+from trigger_template_interface.capture_region import validate_declared_capture_region
+
 
 CAPTURE_REGION_REF = "region:c1-overlay:oracle-event-capture"
 _REQUIRED = {
@@ -29,15 +31,11 @@ def capture_emitter_binding(
     missing = sorted(_REQUIRED - set(capture))
     if missing:
         raise ValueError("capture binding missing fields: " + ", ".join(missing))
-    region = next(
-        (
-            item
-            for item in source_map_regions
-            if item.get("region_id") == CAPTURE_REGION_REF
-            and item.get("protected") is False
-        ),
-        None,
-    )
+    region = next((
+        item for item in source_map_regions
+        if item.get("capture_region_id", item.get("region_id")) == CAPTURE_REGION_REF
+        and item.get("protected") is False
+    ), None)
     common = {
         "capture_id": capture["capture_binding_id"],
         "observation_binding_ref": capture["observation_binding_ref"],
@@ -54,4 +52,10 @@ def capture_emitter_binding(
             "declared_region_found": False,
             **common,
         }
+    if "capture_region_id" in region:
+        validate_declared_capture_region(region)
+        if capture["semantic_role"] not in region["semantic_roles"]:
+            raise ValueError("semantic role is not allowed by declared capture region")
+        if capture["phase"] != region["phase"]:
+            raise ValueError("capture phase does not match declared capture region")
     return {"status": "READY", "declared_region_found": True, **common}
