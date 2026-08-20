@@ -1,0 +1,128 @@
+context:
+  objects:
+  - object_id: RSA_DER_INPUT
+    semantic_role: encoded_input
+    value_type: bytes
+  preconditions:
+  - operand_refs:
+    - RSA_DER_INPUT
+    precondition_id: VALID_PREFIX_WITH_TAIL
+    predicate_id: valid_object_plus_nonempty_external_tail
+  states:
+  - kind: initial
+    state_id: INPUT_READY
+  - kind: terminal
+    state_id: PARSE_COMPLETE
+contract_family: input_consumption
+contract_id: RSA_DER_FULL_CONSUMPTION
+execution:
+  steps:
+  - input_refs:
+    - APPEND_TRAILING_DATA
+    pre_state_ref: INPUT_READY
+    precondition_refs:
+    - VALID_PREFIX_WITH_TAIL
+    role: PARSE
+    step_id: PARSE_KEY
+    target_ref: RSA_DER_INPUT
+expected_relation:
+  aggregation: all_of
+  relations:
+  - criticality: primary
+    operands:
+      consumed_length_ref: CONSUMED_LENGTH
+      input_length_ref: INPUT_LENGTH
+      outcome_ref: PARSE_OUTCOME
+    relation_id: FULL_CONSUMPTION
+    type: full_consumption_on_success
+  summary: A successful whole-object parse must consume the complete declared input.
+intervention:
+  actions:
+  - action_id: APPEND_TRAILING_DATA
+    evidence_refs:
+    - POC
+    - REPRODUCTION
+    kind: append_input_tail
+    parameters:
+    - constraint_id: positive
+      name: tail_length
+      value: 3
+      value_type: integer
+    target_ref: RSA_DER_INPUT
+observable_evidence:
+  observables:
+  - extraction:
+      field: ret
+      kind: normalized_return
+      rule_id: mbedtls_zero_is_success
+    observable_id: PARSE_OUTCOME
+    provenance_refs: &id001
+    - REPRODUCTION
+    - POC
+    - FIX_COMMITS
+    requirement: required
+    semantic_role: operation_outcome
+    source:
+      phase: after_step
+      step_ref: PARSE_KEY
+    value_type: outcome
+  - extraction:
+      field: consumed_len
+      kind: trace_field
+    observable_id: CONSUMED_LENGTH
+    provenance_refs: *id001
+    requirement: conditional
+    semantic_role: consumed_length
+    source:
+      phase: after_step
+      step_ref: PARSE_KEY
+    value_type: integer
+  - extraction:
+      field: input_len
+      kind: trace_field
+    observable_id: INPUT_LENGTH
+    provenance_refs: *id001
+    requirement: conditional
+    semantic_role: input_length
+    source:
+      phase: after_step
+      step_ref: PARSE_KEY
+    value_type: integer
+provenance:
+  evidence:
+  - evidence_id: REPRODUCTION
+    kind: buggy_run
+    path: data/pocs/core10/MBEDTLS-POC-0020/reproduction_result.md
+    sha256: a507ad46bb240870b4096c19d4dd2bde36ee163ea0e219e414a3c8e88381e129
+  - evidence_id: POC
+    kind: poc
+    path: data/pocs/core10/MBEDTLS-POC-0020/poc/poc_rsa_trailing_garbage.c
+    sha256: 099687f8d8b10207a47f0db9ff6e2b5704581c8a9e759218fe703ebc0cf2b1e9
+  - evidence_id: FIX_COMMITS
+    kind: patch
+    path: data/pocs/core10/MBEDTLS-POC-0020/fix_commits.txt
+    sha256: e5c025cf076c7744198188f99af3a6d8be081f7ee13216454bfdc2446bebff15
+  field_origins:
+  - field_path: /expected_relation
+    method: family_rule
+    rule_id: parser_full_consumption_v1
+    source_refs: *id001
+  - field_path: /observable_evidence
+    method: family_rule
+    rule_id: parser_full_consumption_v1
+    source_refs: *id001
+  human_review:
+    status: reviewed
+  producer:
+    mode: deterministic_family_rule
+    name: contract_miner
+    version: v0.3
+schema_version: cipherlens.vc.v0_3
+source:
+  buggy_revision: a7f651cf160a3753367e032c4471699822b37e30^1
+  fixed_revision: a7f651cf160a3753367e032c4471699822b37e30
+  library: mbedtls
+  pattern_id: MBEDTLS-POC-0020
+  references:
+  - PR-8804
+  - ISSUE-8799
